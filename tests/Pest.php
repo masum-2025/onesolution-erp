@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Platform\Modules\ModuleResolver;
+use App\Platform\Modules\ResolvedModule;
+use App\Platform\Modules\Services\ModuleToggleService;
 use App\Platform\Tenancy\Actions\AddMember;
 use App\Platform\Tenancy\Actions\CreateOrganization;
 use App\Platform\Tenancy\Actions\IssueContextToken;
@@ -101,6 +104,24 @@ function partnerToken(User $user, Partner $partner): string
 function actInOrganization(User $user, Organization $organization): CurrentContext
 {
     return app(ContextResolver::class)->enterOrganization($user, $organization->getKey());
+}
+
+/**
+ * Set an organization's interim plan (commercial data, normally set by the partner).
+ */
+function setPlan(Organization $organization, string $plan): void
+{
+    $organization->forceFill(['plan_key' => $plan])->save();
+}
+
+function toggles(): ModuleToggleService
+{
+    return app(ModuleToggleService::class);
+}
+
+function resolvedModule(string $key, Organization $organization): ResolvedModule
+{
+    return app(ModuleResolver::class)->resolve($key, $organization->fresh());
 }
 
 /**

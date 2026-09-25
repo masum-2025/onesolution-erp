@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/multi-language",
+    "description": "Data labels in several languages.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\MultiLanguage\\": "app/"
+        }
+    }
+}

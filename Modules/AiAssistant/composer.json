@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/ai-assistant",
+    "description": "Ask questions about your data.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\AiAssistant\\": "app/"
+        }
+    }
+}

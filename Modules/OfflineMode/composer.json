@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/offline-mode",
+    "description": "Work without internet and sync later.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\OfflineMode\\": "app/"
+        }
+    }
+}

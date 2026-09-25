@@ -1,0 +1,11 @@
+{
+    "name": "Hrm",
+    "alias": "hrm",
+    "description": "Employees, positions and employment records.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Hrm\\Providers\\HrmServiceProvider"
+    ],
+    "files": []
+}

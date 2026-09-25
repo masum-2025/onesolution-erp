@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
  */
 class OrganizationSettingsResolver
 {
-    public const INHERITABLE = ['country_code', 'default_locale', 'timezone', 'currency_code', 'region'];
+    public const INHERITABLE = ['country_code', 'default_locale', 'timezone', 'currency_code', 'region', 'plan_key'];
 
     public function __construct(private HierarchyService $hierarchy) {}
 

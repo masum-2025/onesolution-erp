@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/multi-currency",
+    "description": "Transactions and reports in several currencies.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\MultiCurrency\\": "app/"
+        }
+    }
+}

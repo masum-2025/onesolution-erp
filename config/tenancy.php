@@ -37,6 +37,8 @@ return [
         'timezone' => 'UTC',
         'currency_code' => env('PLATFORM_DEFAULT_CURRENCY', 'BDT'),
         'region' => env('PLATFORM_DEFAULT_REGION', 'bd'),
+        // Interim plan (see config/plans.php) until Phase 5 billing.
+        'plan_key' => env('PLATFORM_DEFAULT_PLAN', 'starter'),
     ],
 
     // Locales that organization names and UI messages may use.

@@ -1,0 +1,11 @@
+{
+    "name": "AdvancedAudit",
+    "alias": "advanced_audit",
+    "description": "Audit reports, exports and retention.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\AdvancedAudit\\Providers\\AdvancedAuditServiceProvider"
+    ],
+    "files": []
+}

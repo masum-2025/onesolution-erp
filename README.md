@@ -121,7 +121,7 @@ IDOR on every endpoint (using the `Tests\Fixtures\TenantNote` stand-in model), g
 visibility, rejected organization changes, audited moves, partner isolation and no
 partner access to client data.
 
-### Future expansion
+### Future expansion (Phase 1)
 
 - New sector, country or partner: data only (`sector_key`, organization country fields,
   a `partners` row). No code change.
@@ -129,3 +129,91 @@ partner access to client data.
 - Interim authorization (`owner` membership manages) is replaced by Phase 4 permissions;
   `role_id` is already on memberships.
 - Maker-checker for moves and support access for partners: Phase 3 and Phase 5B.
+
+## Module system (Phase 2)
+
+Code: `app/Platform/Modules`. Module folders: `Modules/{Name}` (nwidart/laravel-modules).
+Config: `config/platform_modules.php`, interim plan catalog `config/plans.php`.
+
+### Modules and manifests
+
+Every module folder has `manifest.php` (read by `ModuleRegistry`), `module.json` +
+`composer.json` (nwidart loading/autoload), a service provider and `lang/{en,bn}/module.php`.
+
+```php
+return [
+    'key' => 'payroll',
+    'name' => 'payroll::module.name',          // translation key
+    'requires' => ['hrm', 'attendance'],
+    'sectors' => ['*'],                         // or ['factory', ...]
+    'plans' => ['*'],                           // or ['business', 'enterprise']
+    'permissions' => ['payroll.view', 'payroll.run', 'payroll.approve'],
+    'rules' => [],                              // Phase 3
+    'menu' => [['key' => 'payroll', 'label' => 'payroll::module.menu', 'route' => '/payroll', 'order' => 30]],
+    'is_core' => false,
+    'requires_consent' => false,                // true for AI modules
+];
+```
+
+The registry validates every manifest at load (unknown dependency or plan, foreign
+permission prefix, dependency cycle → exception) and orders modules by dependency.
+nwidart's own global on/off (`modules_statuses.json`) keeps every module loaded;
+per-organization on/off is ours.
+
+Installed: hrm, attendance, payroll, accounting, inventory, crm, factory_erp (factory
+sector only), offline_mode, multi_currency, multi_language, api_integration,
+external_integrations, document_ai, ai_assistant, energy_monitoring, carbon_management,
+advanced_audit, custom_reports (AI, sustainability and governance: business/enterprise plans).
+
+### Resolution — `ModuleResolver::isEnabled($key, $organization)`
+
+1. Available: plan (`organizations.plan_key`, inherited, default `starter`) and effective
+   sector allow it; modules with `requires_consent` need an active consent at the
+   organization or an ancestor.
+2. State (`organization_modules`): the topmost ancestor **lock** wins; otherwise the nearest
+   level that is not `inherit`; otherwise off (core modules: on).
+3. Every required module must itself resolve on.
+
+`GET /api/organizations/{id}/modules` shows each module's state, reason, source
+organization and who locked it. Resolved maps are cached per organization; any change in
+a tree bumps that tree's cache version (works on every cache store).
+
+### Changing modules (owner of the organization; `modules.manage` in Phase 4)
+
+| method | path | notes |
+|---|---|---|
+| POST | /api/organizations/{id}/modules/{key}/enable | `{reason, lock?}`; missing dependencies are enabled too (`auto_enabled`) |
+| POST | /api/organizations/{id}/modules/{key}/disable | `{reason, lock?, confirm?}`; 409 + `dependents` until `confirm=true` |
+| POST | /api/organizations/{id}/modules/{key}/inherit | `{reason}`; remove this level's setting |
+| POST/DELETE | /api/organizations/{id}/modules/{key}/consent | AI consent `{terms_version}` / revoke `{reason}` |
+| POST/DELETE | /api/organizations/{id}/modules/{key}/purge | `{confirm_text: key, reason}`; runs after 7 days, cancellable |
+| GET | /api/menu | enabled modules' menu items for the current organization |
+
+A parent's lock is shown by name in the error. Every write is audited with its reason.
+Turning a module off never deletes data; deletion is only the delayed purge
+(`modules:purge-due`, scheduled daily), executed by services a module tags as
+`module.purgers.{key}` (`App\Platform\Modules\Contracts\PurgesModuleData`).
+
+### Enforcement
+
+- Routes: `->middleware(['auth:sanctum', 'org', 'module:payroll'])` → 403 `module_disabled`.
+- Menu: `GET /api/menu` lists enabled modules only.
+- Jobs: `middleware()` returns `new EnsureModuleEnabledForJob('payroll', $organizationId)`;
+  the job is skipped (not failed) when the module is off.
+- Scheduled tasks: `ModuleScheduler::organizationsWithModule('payroll')`.
+
+### Side effects on disable (`ModuleDisabled` / `ModuleEnabled` events, after commit)
+
+- `api_integration` off: integration tokens (Sanctum tokens named `integration:*`) of every
+  organization in the subtree where it is now off are revoked immediately.
+- AI modules: off without an active consent; revoking consent turns them off.
+- `offline_mode` off (block `/sync`, device wipe flag) and `external_integrations` off (stop
+  webhooks, deactivate third-party keys): the events fire now; the listeners arrive with the
+  offline sync (Phase 7) and integrations features, which own those tables.
+
+### Future expansion (Phase 2)
+
+- New module: add a folder with a manifest; no core change. New plan: add its key to
+  `config/plans.php` (Phase 5: the plans table). New sector: manifest data only.
+- Partner- and platform-level locks (Phase 5B) and `modules.manage` permission (Phase 4)
+  plug into the same resolver and gate.

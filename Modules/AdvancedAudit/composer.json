@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/advanced-audit",
+    "description": "Audit reports, exports and retention.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\AdvancedAudit\\": "app/"
+        }
+    }
+}

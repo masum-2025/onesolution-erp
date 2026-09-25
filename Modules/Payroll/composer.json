@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/payroll",
+    "description": "Salary calculation, approval and payslips.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Payroll\\": "app/"
+        }
+    }
+}

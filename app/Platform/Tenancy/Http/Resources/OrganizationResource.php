@@ -30,6 +30,7 @@ class OrganizationResource extends JsonResource
             'timezone' => $this->timezone,
             'currency_code' => $this->currency_code,
             'region' => $this->region,
+            'plan_key' => $this->plan_key,
             'status' => $this->status->value,
             'version' => $this->version,
             'created_at' => $this->created_at?->toIso8601String(),

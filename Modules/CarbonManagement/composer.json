@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/carbon-management",
+    "description": "Emissions accounting and targets.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\CarbonManagement\\": "app/"
+        }
+    }
+}

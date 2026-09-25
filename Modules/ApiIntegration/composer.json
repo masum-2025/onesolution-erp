@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/api-integration",
+    "description": "API keys for your own systems.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\ApiIntegration\\": "app/"
+        }
+    }
+}

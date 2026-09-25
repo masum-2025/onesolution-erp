@@ -2,6 +2,9 @@
 
 use App\Models\User;
 use App\Platform\Audit\AuditLog;
+use App\Platform\Modules\Models\ModuleConsent;
+use App\Platform\Modules\Models\ModulePurgeRequest;
+use App\Platform\Modules\Models\OrganizationModule;
 use App\Platform\Tenancy\Concerns\BelongsToOrganization;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
@@ -22,6 +25,12 @@ const PLATFORM_MODELS = [
     Organization::class,
     OrganizationMembership::class,
     AuditLog::class,
+    // Module settings per organization level: resolution reads every ancestor's
+    // row, so they cannot be tenant-scoped. Access goes through visible-organization
+    // lookups and the modules.manage gate.
+    OrganizationModule::class,
+    ModuleConsent::class,
+    ModulePurgeRequest::class,
 ];
 
 /**

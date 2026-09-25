@@ -1,0 +1,11 @@
+{
+    "name": "ApiIntegration",
+    "alias": "api_integration",
+    "description": "API keys for your own systems.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ApiIntegration\\Providers\\ApiIntegrationServiceProvider"
+    ],
+    "files": []
+}

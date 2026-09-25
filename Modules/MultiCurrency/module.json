@@ -1,0 +1,11 @@
+{
+    "name": "MultiCurrency",
+    "alias": "multi_currency",
+    "description": "Transactions and reports in several currencies.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\MultiCurrency\\Providers\\MultiCurrencyServiceProvider"
+    ],
+    "files": []
+}

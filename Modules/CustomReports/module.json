@@ -1,0 +1,11 @@
+{
+    "name": "CustomReports",
+    "alias": "custom_reports",
+    "description": "Build and share your own reports.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CustomReports\\Providers\\CustomReportsServiceProvider"
+    ],
+    "files": []
+}

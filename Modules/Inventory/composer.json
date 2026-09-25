@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/inventory",
+    "description": "Items, stock levels and movements.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Inventory\\": "app/"
+        }
+    }
+}

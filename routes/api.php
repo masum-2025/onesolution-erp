@@ -1,5 +1,9 @@
 <?php
 
+use App\Platform\Modules\Http\Controllers\MenuController;
+use App\Platform\Modules\Http\Controllers\ModuleConsentController;
+use App\Platform\Modules\Http\Controllers\ModuleController;
+use App\Platform\Modules\Http\Controllers\ModulePurgeController;
 use App\Platform\Tenancy\Http\Controllers\Api\AuthController;
 use App\Platform\Tenancy\Http\Controllers\Api\MemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\OrganizationController;
@@ -33,6 +37,19 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::post('organizations/{organization}/members', [MemberController::class, 'store'])
         ->middleware('throttle:tenancy-sensitive');
     Route::patch('organizations/{organization}/members/{membership}', [MemberController::class, 'update']);
+
+    // Module system (Phase 2)
+    Route::get('menu', MenuController::class);
+    Route::get('organizations/{organization}/modules', [ModuleController::class, 'index']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('organizations/{organization}/modules/{module}/enable', [ModuleController::class, 'enable']);
+        Route::post('organizations/{organization}/modules/{module}/disable', [ModuleController::class, 'disable']);
+        Route::post('organizations/{organization}/modules/{module}/inherit', [ModuleController::class, 'inherit']);
+        Route::post('organizations/{organization}/modules/{module}/consent', [ModuleConsentController::class, 'store']);
+        Route::delete('organizations/{organization}/modules/{module}/consent', [ModuleConsentController::class, 'destroy']);
+        Route::post('organizations/{organization}/modules/{module}/purge', [ModulePurgeController::class, 'store']);
+        Route::delete('organizations/{organization}/modules/{module}/purge', [ModulePurgeController::class, 'destroy']);
+    });
 });
 
 Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(function () {

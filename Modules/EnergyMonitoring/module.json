@@ -1,0 +1,11 @@
+{
+    "name": "EnergyMonitoring",
+    "alias": "energy_monitoring",
+    "description": "Track electricity, fuel and water use.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EnergyMonitoring\\Providers\\EnergyMonitoringServiceProvider"
+    ],
+    "files": []
+}

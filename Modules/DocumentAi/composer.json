@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/document-ai",
+    "description": "Read invoices and forms automatically.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\DocumentAi\\": "app/"
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "name": "Attendance",
+    "alias": "attendance",
+    "description": "Check-in, leave and shift tracking.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Attendance\\Providers\\AttendanceServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/attendance",
+    "description": "Check-in, leave and shift tracking.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Attendance\\": "app/"
+        }
+    }
+}

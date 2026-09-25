@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/factory-erp",
+    "description": "Production orders, bills of materials and shop floor.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\FactoryErp\\": "app/"
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "name": "Crm",
+    "alias": "crm",
+    "description": "Leads, contacts and follow-ups.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Crm\\Providers\\CrmServiceProvider"
+    ],
+    "files": []
+}

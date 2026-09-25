@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/external-integrations",
+    "description": "Webhooks and third-party connections.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\ExternalIntegrations\\": "app/"
+        }
+    }
+}

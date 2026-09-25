@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/crm",
+    "description": "Leads, contacts and follow-ups.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Crm\\": "app/"
+        }
+    }
+}

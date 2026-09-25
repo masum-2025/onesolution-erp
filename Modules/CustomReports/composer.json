@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/custom-reports",
+    "description": "Build and share your own reports.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\CustomReports\\": "app/"
+        }
+    }
+}

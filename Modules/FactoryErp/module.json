@@ -1,0 +1,11 @@
+{
+    "name": "FactoryErp",
+    "alias": "factory_erp",
+    "description": "Production orders, bills of materials and shop floor.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\FactoryErp\\Providers\\FactoryErpServiceProvider"
+    ],
+    "files": []
+}

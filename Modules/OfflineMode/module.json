@@ -1,0 +1,11 @@
+{
+    "name": "OfflineMode",
+    "alias": "offline_mode",
+    "description": "Work without internet and sync later.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\OfflineMode\\Providers\\OfflineModeServiceProvider"
+    ],
+    "files": []
+}

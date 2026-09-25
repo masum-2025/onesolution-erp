@@ -1,0 +1,20 @@
+{
+    "Hrm": true,
+    "Attendance": true,
+    "Payroll": true,
+    "Accounting": true,
+    "Inventory": true,
+    "Crm": true,
+    "FactoryErp": true,
+    "OfflineMode": true,
+    "MultiCurrency": true,
+    "MultiLanguage": true,
+    "ApiIntegration": true,
+    "ExternalIntegrations": true,
+    "DocumentAi": true,
+    "AiAssistant": true,
+    "EnergyMonitoring": true,
+    "CarbonManagement": true,
+    "AdvancedAudit": true,
+    "CustomReports": true
+}

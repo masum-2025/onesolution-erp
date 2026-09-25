@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/energy-monitoring",
+    "description": "Track electricity, fuel and water use.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\EnergyMonitoring\\": "app/"
+        }
+    }
+}

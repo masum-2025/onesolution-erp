@@ -1,5 +1,6 @@
 <?php
 
+use App\Platform\Modules\Http\Middleware\EnsureModuleEnabled;
 use App\Platform\Tenancy\Http\Middleware\ResolveOrganization;
 use App\Platform\Tenancy\Http\Middleware\ResolvePartner;
 use Illuminate\Foundation\Application;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'org' => ResolveOrganization::class,
             'partner' => ResolvePartner::class,
+            'module' => EnsureModuleEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

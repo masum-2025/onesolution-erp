@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/accounting",
+    "description": "Ledgers, journals and financial statements.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Accounting\\": "app/"
+        }
+    }
+}

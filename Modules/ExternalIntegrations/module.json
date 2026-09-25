@@ -1,0 +1,11 @@
+{
+    "name": "ExternalIntegrations",
+    "alias": "external_integrations",
+    "description": "Webhooks and third-party connections.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ExternalIntegrations\\Providers\\ExternalIntegrationsServiceProvider"
+    ],
+    "files": []
+}

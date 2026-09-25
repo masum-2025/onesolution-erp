@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/hrm",
+    "description": "Employees, positions and employment records.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Hrm\\": "app/"
+        }
+    }
+}

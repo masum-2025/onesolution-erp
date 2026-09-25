@@ -1,0 +1,11 @@
+{
+    "name": "CarbonManagement",
+    "alias": "carbon_management",
+    "description": "Emissions accounting and targets.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CarbonManagement\\Providers\\CarbonManagementServiceProvider"
+    ],
+    "files": []
+}

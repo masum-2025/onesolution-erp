@@ -1,0 +1,11 @@
+{
+    "name": "DocumentAi",
+    "alias": "document_ai",
+    "description": "Read invoices and forms automatically.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DocumentAi\\Providers\\DocumentAiServiceProvider"
+    ],
+    "files": []
+}

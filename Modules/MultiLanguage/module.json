@@ -1,0 +1,11 @@
+{
+    "name": "MultiLanguage",
+    "alias": "multi_language",
+    "description": "Data labels in several languages.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\MultiLanguage\\Providers\\MultiLanguageServiceProvider"
+    ],
+    "files": []
+}

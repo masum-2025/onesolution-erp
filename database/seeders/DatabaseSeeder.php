@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call(HousePartnerSeeder::class);
 
         if (app()->environment('local')) {
-            $this->call(DemoHierarchySeeder::class);
+            $this->call([DemoHierarchySeeder::class, DemoModulesSeeder::class]);
         }
     }
 }

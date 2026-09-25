@@ -28,6 +28,7 @@ class PartnerOrganizationResource extends JsonResource
             'depth' => $this->depth,
             'sector_key' => $this->sector_key,
             'country_code' => $this->country_code,
+            'plan_key' => $this->plan_key,
             'status' => $this->status->value,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
