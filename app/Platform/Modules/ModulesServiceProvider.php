@@ -5,6 +5,7 @@ namespace App\Platform\Modules;
 use App\Platform\Modules\Console\PurgeDueModuleData;
 use App\Platform\Modules\Events\ModuleDisabled;
 use App\Platform\Modules\Listeners\RevokeIntegrationTokens;
+use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -15,7 +16,7 @@ class ModulesServiceProvider extends ServiceProvider
     {
         $this->app->singleton(ModuleRegistry::class, fn ($app) => ModuleRegistry::fromManifests(
             $app->make(ManifestLoader::class)->load(),
-            config('plans.catalog'),
+            $app->make(PlanCatalog::class)->keys(),
         ));
 
         $this->app->singleton(ModuleCache::class);

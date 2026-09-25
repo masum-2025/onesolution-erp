@@ -1,0 +1,42 @@
+{
+    "unlimited": "unlimited",
+    "per_month": "/ month",
+    "limits": {
+        "users": "Staff users",
+        "branches": "Branches",
+        "storage_mb": "Storage (MB)"
+    },
+    "usage": {
+        "title": "Plan and usage",
+        "shared": "Shared with the whole subscription of {name}.",
+        "used_of": "{used} of {max}",
+        "used_unlimited": "{used} used · no limit",
+        "not_measured": "Not measured yet",
+        "nearly_full": "Nearly full. The {plan} plan includes {max}.",
+        "full": "Full. The {plan} plan includes {max}.",
+        "higher_plans": "Available on a higher plan",
+        "package": "Started with the {name} package on {date}.",
+        "package_counts": "{modules} modules, {roles} roles, {rules} settings",
+        "apply": "Apply the package of this sector",
+        "who_changes": "Your service provider changes the plan. Owners and staff count toward users; portal users do not."
+    },
+    "sector": {
+        "roles": "Roles: {list}",
+        "load_failed": "Sectors could not be loaded. Close this window and try again."
+    },
+    "change": {
+        "button": "Change plan",
+        "title": "Change the plan of {name}",
+        "text": "The plan applies to this client and every unit under it.",
+        "choose": "Choose a plan",
+        "current": "Current plan",
+        "effect": "What changes",
+        "modules_off": "These modules stop working: {list}.",
+        "modules_on": "These modules become available: {list}.",
+        "over_limit": "{limit}: {used} in use, the new plan includes {max}. Nothing is removed, but no new ones can be added.",
+        "no_effect": "No module or limit changes.",
+        "data_kept": "Their data and settings are kept and come back if the plan is raised again.",
+        "reason_placeholder": "e.g. Client asked to move to Business from next month",
+        "submit": "Change plan"
+    }
+}

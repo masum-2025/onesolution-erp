@@ -3,6 +3,8 @@
 namespace App\Platform\Tenancy\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Packaging\Actions\ApplySectorPackage;
+use App\Platform\Packaging\Http\PackageSummary;
 use App\Platform\Tenancy\Actions\CreateOrganization;
 use App\Platform\Tenancy\Actions\UpdateOrganization;
 use App\Platform\Tenancy\Context\CurrentContext;
@@ -21,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class OrganizationController extends Controller
@@ -52,19 +55,27 @@ class OrganizationController extends Controller
         return new OrganizationResource($organization);
     }
 
-    public function store(StoreOrganizationRequest $request, CreateOrganization $create): JsonResponse
+    public function store(StoreOrganizationRequest $request, CreateOrganization $create, ApplySectorPackage $apply, PackageSummary $summary): JsonResponse
     {
         $parent = $this->findVisible($request->validated('parent_id'));
         Gate::authorize('create', [Organization::class, $parent]);
 
-        $organization = $create->handle(
-            type: OrganizationType::from($request->validated('type')),
-            attributes: Arr::except($request->validated(), ['parent_id', 'type']),
-            parent: $parent,
-            actor: $request->user(),
-        );
+        // A new company starts with its sector package (modules, rules, roles), as editable data.
+        [$organization, $package] = DB::transaction(function () use ($request, $create, $apply, $parent) {
+            $organization = $create->handle(
+                type: OrganizationType::from($request->validated('type')),
+                attributes: Arr::except($request->validated(), ['parent_id', 'type']),
+                parent: $parent,
+                actor: $request->user(),
+            );
 
-        return (new OrganizationResource($organization))->response()->setStatusCode(201);
+            return [$organization, $apply->handle($organization, $request->user())];
+        });
+
+        return (new OrganizationResource($organization))
+            ->additional(['package' => $package === null ? null : $summary->for($package)])
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function update(UpdateOrganizationRequest $request, string $organization, UpdateOrganization $update): OrganizationResource

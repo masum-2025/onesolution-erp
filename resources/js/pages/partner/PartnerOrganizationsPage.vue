@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Building2, ChevronLeft, ChevronRight, Search } from 'lucide-vue-next';
+import { ArrowRightLeft, Building2, ChevronLeft, ChevronRight, Search } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -8,10 +8,13 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import OrgTypeIcon from '@/components/OrgTypeIcon.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
+import PlanChangeDialog from './PlanChangeDialog.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { countryName } from '@/lib/display';
 import { formatDate, formatNumber } from '@/lib/format';
+import { loadPlans } from '@/lib/packaging';
+import { session } from '@/lib/session';
 import { t } from '@/lib/i18n';
 
 /**
@@ -34,6 +37,17 @@ function go(to) {
 }
 
 const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
+
+// Plans are changed per subscription (top organization), by partner owners and billing staff.
+const canChangePlans = computed(() => ['owner', 'billing'].includes(session.me?.context?.role));
+const plans = useResource(() => loadPlans().catch(() => []));
+const planName = (key) => (plans.data.value ?? []).find((plan) => plan.key === key)?.name ?? key;
+const changing = ref(null);
+
+function planChanged() {
+    changing.value = null;
+    clients.reload();
+}
 </script>
 
 <template>
@@ -63,6 +77,7 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
                             <th class="px-3 py-2.5 text-start font-medium">{{ t('partner.clients.columns.plan') }}</th>
                             <th class="px-3 py-2.5 text-start font-medium">{{ t('partner.clients.columns.status') }}</th>
                             <th class="px-5 py-2.5 text-end font-medium">{{ t('partner.clients.columns.since') }}</th>
+                            <th v-if="canChangePlans" class="px-5 py-2.5"><span class="sr-only">{{ t('core.actions.more') }}</span></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-line">
@@ -78,9 +93,12 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
                             </td>
                             <td class="px-3 py-3 font-mono text-[12.5px] text-fg-2">{{ org.sector_key ?? '—' }}</td>
                             <td class="px-3 py-3 text-fg-2">{{ org.country_code ? countryName(org.country_code) : '—' }}</td>
-                            <td class="px-3 py-3 text-fg-2 capitalize">{{ org.plan_key ?? '—' }}</td>
+                            <td class="px-3 py-3 text-fg-2">{{ org.subscription_plan ? planName(org.subscription_plan) : '—' }}</td>
                             <td class="px-3 py-3"><AppBadge :tone="STATUS_TONES[org.status]" dot>{{ t(`orgs.status.${org.status}`) }}</AppBadge></td>
                             <td class="px-5 py-3 text-end text-muted">{{ formatDate(org.created_at) }}</td>
+                            <td v-if="canChangePlans" class="px-5 py-3 text-end">
+                                <AppButton v-if="org.subscription_plan" size="sm" :icon="ArrowRightLeft" @click="changing = org">{{ t('packaging.change.button') }}</AppButton>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -94,5 +112,7 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
                 </div>
             </footer>
         </section>
+
+        <PlanChangeDialog :open="!!changing" :client="changing" @close="changing = null" @changed="planChanged" />
     </div>
 </template>

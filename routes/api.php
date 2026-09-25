@@ -3,6 +3,10 @@
 use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
 use App\Platform\Modules\Http\Controllers\MenuController;
+use App\Platform\Packaging\Http\Controllers\CatalogController;
+use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
+use App\Platform\Packaging\Http\Controllers\SectorPackageController;
+use App\Platform\Packaging\Http\Controllers\UsageController;
 use App\Platform\Modules\Http\Controllers\ModuleConsentController;
 use App\Platform\Modules\Http\Controllers\ModuleController;
 use App\Platform\Modules\Http\Controllers\ModulePurgeController;
@@ -32,6 +36,12 @@ Route::prefix('auth')->group(function () {
 
 Route::get('me', MeController::class)->middleware('auth:sanctum');
 
+// Plans and sector packages (Phase 5): catalog data for pickers, any signed-in user.
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('plans', [CatalogController::class, 'plans']);
+    Route::get('sectors', [CatalogController::class, 'sectors']);
+});
+
 Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::get('organizations', [OrganizationController::class, 'index']);
     Route::post('organizations', [OrganizationController::class, 'store']);
@@ -58,6 +68,11 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::patch('organizations/{organization}/roles/{role}', [RoleController::class, 'update']);
         Route::delete('organizations/{organization}/roles/{role}', [RoleController::class, 'destroy']);
     });
+
+    // Plan usage and sector packages (Phase 5)
+    Route::get('organizations/{organization}/usage', UsageController::class);
+    Route::post('organizations/{organization}/sector-package', [SectorPackageController::class, 'store'])
+        ->middleware('throttle:tenancy-sensitive');
 
     // Module system (Phase 2)
     Route::get('menu', MenuController::class);
@@ -90,6 +105,8 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(function () {
     Route::get('organizations', [PartnerOrganizationController::class, 'index']);
     Route::get('organizations/{organization}', [PartnerOrganizationController::class, 'show']);
+    Route::get('organizations/{organization}/plan-preview', [PartnerPlanController::class, 'preview']);
+    Route::put('organizations/{organization}/plan', [PartnerPlanController::class, 'update'])->middleware('throttle:tenancy-sensitive');
 
     Route::get('rules', [PartnerRuleController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {

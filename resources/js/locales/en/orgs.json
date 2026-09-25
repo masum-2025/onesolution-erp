@@ -23,7 +23,11 @@
         "archived": "Archived"
     },
     "show": {
-        "tabs": { "overview": "Overview", "settings": "Settings", "members": "Members" },
+        "tabs": {
+            "overview": "Overview",
+            "settings": "Settings",
+            "members": "Members"
+        },
         "details": "Details",
         "children": "Units under this",
         "no_children": "No units under this one yet.",
@@ -59,7 +63,7 @@
         "name_bn": "Name (Bangla)",
         "name_required": "Enter the English name.",
         "sector": "Sector",
-        "sector_hint": "Decides which modules fit, e.g. school, factory, retail.",
+        "sector_hint": "A new company starts with the modules, roles and settings of its sector. Everything can be changed later.",
         "regional": "Regional settings",
         "inherit_hint": "Leave empty to use the value from the level above.",
         "inherit": "Same as the level above",
@@ -69,7 +73,10 @@
         "status_hint": "Suspended or archived units and everything under them cannot be used.",
         "create_submit": "Create unit",
         "created": "{name} was created.",
-        "saved": "Changes saved."
+        "saved": "Changes saved.",
+        "sector_hint_edit": "Changing the sector keeps the current setup. Apply the new sector's package from the overview if you want it.",
+        "sector_required": "Choose the sector of the company.",
+        "created_with_package": "{name} was created with the {package} package: {modules} modules, {roles} roles and {rules} settings."
     },
     "move": {
         "title": "Move {name}",
@@ -101,7 +108,11 @@
         "added": "{email} can now access this organization.",
         "search": "Search members…",
         "you": "You",
-        "status": { "active": "Active", "invited": "Invited", "suspended": "Suspended" },
+        "status": {
+            "active": "Active",
+            "invited": "Invited",
+            "suspended": "Suspended"
+        },
         "actions": "Actions for {name}",
         "make_owner": "Make owner",
         "make_staff": "Make staff",

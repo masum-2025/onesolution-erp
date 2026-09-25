@@ -35,13 +35,14 @@ abstract class TestCase extends BaseTestCase
         $this->baseMigrateDatabases();
 
         $this->artisan('access:sync');
+        $this->artisan('packaging:sync');
     }
 
     /**
      * Send the next request with this API token, as a fresh client would:
      * no cached guard user and no leftover tenant context.
      */
-    protected function asToken(string $token): static
+    public function asToken(string $token): static
     {
         $this->app['auth']->forgetGuards();
         $this->app->make(CurrentContext::class)->clear();

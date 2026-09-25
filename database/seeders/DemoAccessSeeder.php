@@ -17,9 +17,9 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 /**
- * Local-only: the demo school's owner clones four school roles from the
- * templates and gives two of them to a teacher and an accountant. Goes through
- * RoleService, so the same anti-escalation and audit rules apply.
+ * Local-only: gives two of the demo school's roles (made by its sector
+ * package) to a teacher and an accountant. Goes through RoleService, so the
+ * same anti-escalation and audit rules apply.
  */
 class DemoAccessSeeder extends Seeder
 {
@@ -30,16 +30,20 @@ class DemoAccessSeeder extends Seeder
         $branch = Organization::query()->where('partner_id', $partner->id)->where('type', OrganizationType::Branch)->first();
         $owner = User::query()->where('email', 'school.owner@demo.test')->first();
 
-        if ($company === null || $branch === null || $owner === null || Role::query()->where('organization_id', $company->id)->exists()) {
+        if ($company === null || $branch === null || $owner === null || User::query()->where('email', 'teacher@demo.test')->exists()) {
             return;
         }
 
         $contexts->enterOrganization($owner, $company->id);
 
+        // The school package made these roles; create any that are missing.
         $made = [];
         foreach (['principal', 'teacher', 'accountant', 'finance_approver'] as $template) {
-            $name = ['en' => __("access.templates.{$template}.name", [], 'en'), 'bn' => __("access.templates.{$template}.name", [], 'bn')];
-            $made[$template] = $roles->create($company, $name, null, null, $template, $owner, 'Demo data');
+            $made[$template] = Role::query()->where('organization_id', $company->id)->where('template_key', $template)->first()
+                ?? $roles->create($company, [
+                    'en' => __("access.templates.{$template}.name", [], 'en'),
+                    'bn' => __("access.templates.{$template}.name", [], 'bn'),
+                ], null, null, $template, $owner, 'Demo data');
         }
 
         $teacher = $this->demoUser('Demo Teacher', 'teacher@demo.test');

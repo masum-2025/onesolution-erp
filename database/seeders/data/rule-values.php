@@ -57,9 +57,18 @@ return [
         'reason' => 'Bangladesh individual income tax slabs FY 2024-25 (Finance Act 2024). Verify with a tax adviser before use.',
     ],
 
-    // ── Plan defaults (interim plans, config/plans.php) ─────────────────
+    // ── Plan defaults (plans: database/seeders/data/plans.php) ──────────
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'starter', 'value' => 2000, 'reason' => 'Starter plan storage limit.'],
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'business', 'value' => 10000, 'reason' => 'Business plan storage limit.'],
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'enterprise', 'value' => 50000, 'reason' => 'Enterprise plan storage limit.'],
+
+    // Usage limits (PLACEHOLDER numbers until the business confirms them).
+    // Enterprise has no values here, so it stays unlimited.
+    ['key' => 'plans.max_users', 'plan' => 'starter', 'value' => 10, 'reason' => 'Starter plan: up to 10 staff.'],
+    ['key' => 'plans.max_users', 'plan' => 'business', 'value' => 50, 'reason' => 'Business plan: up to 50 staff.'],
+    ['key' => 'plans.max_branches', 'plan' => 'starter', 'value' => 2, 'reason' => 'Starter plan: up to 2 branches.'],
+    ['key' => 'plans.max_branches', 'plan' => 'business', 'value' => 20, 'reason' => 'Business plan: up to 20 branches.'],
+    ['key' => 'plans.max_storage_mb', 'plan' => 'starter', 'value' => 5120, 'reason' => 'Starter plan: 5 GB.'],
+    ['key' => 'plans.max_storage_mb', 'plan' => 'business', 'value' => 51200, 'reason' => 'Business plan: 50 GB.'],
 
 ];

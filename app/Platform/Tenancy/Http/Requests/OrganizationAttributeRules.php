@@ -2,6 +2,7 @@
 
 namespace App\Platform\Tenancy\Http\Requests;
 
+use App\Platform\Packaging\SectorCatalog;
 use Illuminate\Validation\Rule;
 
 /**
@@ -21,7 +22,8 @@ trait OrganizationAttributeRules
 
         $rules = [
             'name' => [$presence, 'array', 'array:'.implode(',', $locales)],
-            'sector_key' => ['sometimes', 'nullable', 'string', 'regex:/^[a-z][a-z0-9_]{1,49}$/'],
+            // Sectors are the sector packages (data): a new sector needs no code.
+            'sector_key' => ['sometimes', 'nullable', 'string', Rule::in(app(SectorCatalog::class)->keys())],
             'country_code' => ['sometimes', 'nullable', 'string', 'regex:/^[A-Z]{2}$/'],
             'default_locale' => ['sometimes', 'nullable', 'string', Rule::in($locales)],
             'timezone' => ['sometimes', 'nullable', 'string', 'timezone:all'],

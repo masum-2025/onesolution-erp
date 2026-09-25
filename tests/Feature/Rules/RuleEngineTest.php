@@ -181,7 +181,7 @@ it('lets a new module add rules through its manifest alone', function () {
             'description' => 'fleet::rules.max_trip_hours.description',
             'overridable_levels' => ['platform', 'company'],
         ]],
-    ]], config('plans.catalog'));
+    ]], app(App\Platform\Packaging\PlanCatalog::class)->keys());
 
     app()->instance(RuleCatalog::class, RuleCatalog::fromModules($registry, app(RuleValueValidator::class)));
     app()->forgetScopedInstances();

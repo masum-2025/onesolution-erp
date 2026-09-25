@@ -69,7 +69,7 @@ it('rejects malformed separation-of-duties pairs in a manifest', function (array
         'rules' => [], 'menu' => [], 'events' => [],
     ];
 
-    ModuleRegistry::fromManifests([$manifest], config('plans.catalog'));
+    ModuleRegistry::fromManifests([$manifest], app(App\Platform\Packaging\PlanCatalog::class)->keys());
 })->with([
     'same permission twice' => [[['demo.run', 'demo.run']]],
     'three entries' => [[['demo.run', 'demo.approve', 'demo.view']]],

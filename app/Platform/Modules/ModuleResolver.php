@@ -6,6 +6,7 @@ use App\Platform\Modules\Enums\ModuleState;
 use App\Platform\Modules\Enums\ResolutionReason;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\OrganizationModule;
+use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Services\HierarchyService;
@@ -31,6 +32,7 @@ class ModuleResolver
         private HierarchyService $hierarchy,
         private OrganizationSettingsResolver $settings,
         private ModuleCache $cache,
+        private PlanCatalog $plans,
     ) {}
 
     public function isEnabled(string $key, Organization $organization): bool
@@ -134,7 +136,8 @@ class ModuleResolver
             ));
 
             $reason = match (true) {
-                ! $module->allowsPlan($plan) => ResolutionReason::NotInPlan,
+                // The plan must include the module, and the module must allow the plan.
+                ! $module->allowsPlan($plan) || ! $this->plans->includes($plan, $key) => ResolutionReason::NotInPlan,
                 ! $module->allowsSector($sector) => ResolutionReason::SectorNotAllowed,
                 $module->requiresConsent && ! $consented->has($key) => ResolutionReason::ConsentMissing,
                 $state === ModuleState::Disabled && $lockRow !== null => ResolutionReason::LockedDisabled,

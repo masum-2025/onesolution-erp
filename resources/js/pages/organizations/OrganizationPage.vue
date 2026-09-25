@@ -11,12 +11,14 @@ import ErrorState from '@/components/ErrorState.vue';
 import OrgTypeIcon from '@/components/OrgTypeIcon.vue';
 import SourceBadge from '@/components/SourceBadge.vue';
 import MembersPanel from './MembersPanel.vue';
+import PlanUsageCard from './PlanUsageCard.vue';
 import MoveDialog from './MoveDialog.vue';
 import OrganizationFormDialog from './OrganizationFormDialog.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { allowedParents, ancestorsOf, childTypesFor, subtreeIds, visibleOrganizations } from '@/lib/organizations';
 import { can, currentOrganization } from '@/lib/session';
+import { loadSectors } from '@/lib/packaging';
 import { formatDate } from '@/lib/format';
 import { settingSource, settingValue } from '@/lib/display';
 import { t } from '@/lib/i18n';
@@ -30,6 +32,8 @@ const organization = useResource(() => api(`/api/organizations/${id.value}`).the
 const settings = useResource(() => api(`/api/organizations/${id.value}/settings`).then((response) => response.data));
 const list = useResource(() => visibleOrganizations());
 const rules = useResource(() => allowedParents(context.id).catch(() => ({})));
+const sectors = useResource(() => loadSectors().catch(() => []));
+const sectorName = (key) => (sectors.data.value ?? []).find((sector) => sector.key === key)?.name ?? key;
 
 const org = computed(() => organization.data.value);
 const ancestors = computed(() => (list.data.value && org.value ? ancestorsOf(list.data.value, org.value.id) : []));
@@ -140,13 +144,14 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
                             <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.name_en') }}</dt><dd class="min-w-0 font-medium text-fg" lang="en">{{ org.name?.en ?? '—' }}</dd></div>
                             <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.name_bn') }}</dt><dd class="min-w-0 font-medium text-fg" lang="bn">{{ org.name?.bn ?? '—' }}</dd></div>
                             <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.type') }}</dt><dd class="text-fg">{{ t(`core.org_types.${org.type}`) }}</dd></div>
-                            <div v-if="org.sector_key" class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.sector') }}</dt><dd class="font-mono text-[13px] text-fg">{{ org.sector_key }}</dd></div>
-                            <div v-if="org.plan_key" class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.show.plan') }}</dt><dd class="text-fg capitalize">{{ org.plan_key }}</dd></div>
+                            <div v-if="org.sector_key" class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.sector') }}</dt><dd class="text-fg">{{ sectorName(org.sector_key) }}</dd></div>
                             <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.show.created') }}</dt><dd class="text-fg">{{ formatDate(org.created_at) }}</dd></div>
                         </dl>
                     </section>
 
-                    <section class="card lg:col-span-2">
+                    <div class="space-y-6 lg:col-span-2">
+                    <PlanUsageCard :key="org.id" :organization="org" />
+                    <section class="card">
                         <header class="flex items-center justify-between border-b border-line px-5 py-4">
                             <h2 class="text-[14.5px] font-semibold text-fg">{{ t('orgs.show.children') }}</h2>
                             <AppButton v-if="canAddChild" variant="ghost" size="sm" :icon="Plus" @click="creating = true">{{ t('orgs.show.add_child') }}</AppButton>
@@ -162,6 +167,7 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
                         </ul>
                         <p v-else class="px-5 py-8 text-center text-[13px] text-muted">{{ t('orgs.show.no_children') }}</p>
                     </section>
+                    </div>
                 </div>
 
                 <section v-else-if="tab === 'settings'" class="card">

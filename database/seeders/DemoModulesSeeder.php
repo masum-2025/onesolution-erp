@@ -2,19 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Platform\Modules\Services\ModuleToggleService;
+use App\Platform\Packaging\Actions\ApplySectorPackage;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Database\Seeder;
 
 /**
- * Local-only: puts the demo group on the "business" plan and turns on
- * payroll (with HR and attendance) for the demo school.
+ * Local-only: puts the demo group on the "business" plan and gives the demo
+ * school its sector package (modules, settings, roles), as onboarding does.
  */
 class DemoModulesSeeder extends Seeder
 {
-    public function run(ModuleToggleService $toggles): void
+    public function run(ApplySectorPackage $apply): void
     {
         $partner = Partner::query()->where('is_house', true)->firstOrFail();
 
@@ -26,6 +26,6 @@ class DemoModulesSeeder extends Seeder
         }
 
         $group->forceFill(['plan_key' => 'business'])->save();
-        $toggles->enable($company, 'payroll', 'Demo data');
+        $apply->handle($company->fresh());
     }
 }

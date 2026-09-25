@@ -93,4 +93,46 @@ return [
         'category' => 'access',
         'sort_order' => 50,
     ],
+
+    // Usage limits of a subscription (the whole tree under its top organization).
+    // null = unlimited. Plan values are data (rule-values.php). A partner value is a
+    // default for plans that set none (plans sit below partners in the hierarchy);
+    // per-client deals come with the partner layer (Phase 5B). Organizations
+    // themselves can never change their limits.
+    [
+        'key' => 'plans.max_users',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1],
+        'nullable' => true,
+        'default' => null,
+        'label' => 'rules.core.plans_max_users.label',
+        'description' => 'rules.core.plans_max_users.description',
+        'overridable_levels' => ['platform', 'plan', 'partner'],
+        'category' => 'plan',
+        'sort_order' => 60,
+    ],
+    [
+        'key' => 'plans.max_branches',
+        'type' => 'integer',
+        'schema' => ['minimum' => 0],
+        'nullable' => true,
+        'default' => null,
+        'label' => 'rules.core.plans_max_branches.label',
+        'description' => 'rules.core.plans_max_branches.description',
+        'overridable_levels' => ['platform', 'plan', 'partner'],
+        'category' => 'plan',
+        'sort_order' => 61,
+    ],
+    [
+        'key' => 'plans.max_storage_mb',
+        'type' => 'integer',
+        'schema' => ['minimum' => 0],
+        'nullable' => true,
+        'default' => null,
+        'label' => 'rules.core.plans_max_storage_mb.label',
+        'description' => 'rules.core.plans_max_storage_mb.description',
+        'overridable_levels' => ['platform', 'plan', 'partner'],
+        'category' => 'plan',
+        'sort_order' => 62,
+    ],
 ];

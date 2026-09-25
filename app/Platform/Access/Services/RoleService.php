@@ -100,15 +100,42 @@ class RoleService
         $this->assertGrantable($permissions, $organization);
         $this->assertNoConflict($permissions, $organization);
 
-        return DB::transaction(function () use ($organization, $name, $description, $permissions, $template, $actor, $reason) {
+        return $this->store($organization, $name, $description, $permissions, $template?->key, $actor, $reason);
+    }
+
+    /**
+     * Onboarding only (ApplySectorPackage): a new company has no administrator
+     * yet, so nobody's own permissions can bound the grant. Separation of
+     * duties still applies. Names come from the template in every language.
+     */
+    public function createFromTemplateForPackage(Organization $organization, RoleTemplate $template, ?User $actor, string $reason): Role
+    {
+        $permissions = $this->normalize($this->templatePermissions($template));
+        $this->assertNoConflict($permissions, $organization);
+
+        $locales = (array) config('tenancy.supported_locales');
+        $name = array_combine($locales, array_map(fn (string $locale) => $template->label($locale), $locales));
+        $description = array_combine($locales, array_map(fn (string $locale) => $template->description($locale), $locales));
+
+        return $this->store($organization, $name, $description, $permissions, $template->key, $actor, $reason);
+    }
+
+    /**
+     * @param  array<string, string|null>  $name
+     * @param  array<string, string|null>|null  $description
+     * @param  list<string>  $permissions  Already checked.
+     */
+    private function store(Organization $organization, array $name, ?array $description, array $permissions, ?string $templateKey, ?User $actor, ?string $reason): Role
+    {
+        return DB::transaction(function () use ($organization, $name, $description, $permissions, $templateKey, $actor, $reason) {
             $role = Role::create([
                 'organization_id' => $organization->getKey(),
-                'key' => $this->uniqueKey($organization, $name, $template?->key),
+                'key' => $this->uniqueKey($organization, $name, $templateKey),
                 'name' => $this->cleanTexts($name),
                 'description' => $description === null ? null : ($this->cleanTexts($description) ?: null),
-                'template_key' => $template?->key,
+                'template_key' => $templateKey,
                 'version' => 1,
-                'created_by' => $actor->getKey(),
+                'created_by' => $actor?->getKey(),
             ]);
 
             $this->writePermissions($role, $permissions);

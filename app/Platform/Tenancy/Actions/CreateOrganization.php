@@ -4,6 +4,7 @@ namespace App\Platform\Tenancy\Actions;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Packaging\Services\UsageLimiter;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
@@ -21,6 +22,7 @@ class CreateOrganization
     public function __construct(
         private HierarchyService $hierarchy,
         private AuditLogger $audit,
+        private UsageLimiter $limits,
     ) {}
 
     /**
@@ -44,6 +46,11 @@ class CreateOrganization
         $this->hierarchy->assertDepthAllowed($depth, $owningPartner);
 
         return DB::transaction(function () use ($type, $attributes, $parent, $partner, $depth, $actor) {
+            // Plan limit on branches, counted over the whole subscription.
+            if ($type === OrganizationType::Branch && $parent !== null) {
+                $this->limits->assertBranchAvailable($parent);
+            }
+
             $organization = new Organization;
             $id = $organization->newUniqueId();
 

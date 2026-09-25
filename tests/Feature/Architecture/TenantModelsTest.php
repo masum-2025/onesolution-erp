@@ -7,6 +7,10 @@ use App\Platform\Access\Models\Role;
 use App\Platform\Access\Models\RoleTemplate;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Modules\Models\ModuleConsent;
+use App\Platform\Packaging\Models\OrganizationPackage;
+use App\Platform\Packaging\Models\Plan;
+use App\Platform\Packaging\Models\PlanPrice;
+use App\Platform\Packaging\Models\SectorPackage;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
@@ -52,6 +56,13 @@ const PLATFORM_MODELS = [
     RoleTemplate::class,
     Role::class,
     MembershipRole::class,
+    // Plans and sector packages are platform data. What a package did to a
+    // company is written only by ApplySectorPackage and read through
+    // visible-organization lookups (like module settings).
+    Plan::class,
+    PlanPrice::class,
+    SectorPackage::class,
+    OrganizationPackage::class,
 ];
 
 /**

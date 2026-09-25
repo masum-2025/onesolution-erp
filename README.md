@@ -124,8 +124,8 @@ partner access to client data.
 
 ### Future expansion (Phase 1)
 
-- New sector, country or partner: data only (`sector_key`, organization country fields,
-  a `partners` row). No code change.
+- New sector, country or partner: data only (a sector package entry, organization country
+  fields, a `partners` row). No code change.
 - New parent rule for a partner: set `tenancy.allowed_parents` at partner level (data).
 - Authorization is permission-based since Phase 4 (roles live in `membership_roles`).
 - Maker-checker for moves and support access for partners: Phase 3 and Phase 5B.
@@ -133,7 +133,7 @@ partner access to client data.
 ## Module system (Phase 2)
 
 Code: `app/Platform/Modules`. Module folders: `Modules/{Name}` (nwidart/laravel-modules).
-Config: `config/platform_modules.php`, interim plan catalog `config/plans.php`.
+Config: `config/platform_modules.php`. Plans: `database/seeders/data/plans.php` (Phase 5).
 
 ### Modules and manifests
 
@@ -167,8 +167,8 @@ advanced_audit, custom_reports (AI, sustainability and governance: business/ente
 
 ### Resolution — `ModuleResolver::isEnabled($key, $organization)`
 
-1. Available: plan (`organizations.plan_key`, inherited, default `starter`) and effective
-   sector allow it; modules with `requires_consent` need an active consent at the
+1. Available: the plan (`organizations.plan_key` of the top organization, default `starter`)
+   includes the module **and** the manifest allows that plan, and the effective sector allows it; modules with `requires_consent` need an active consent at the
    organization or an ancestor.
 2. State (`organization_modules`): the topmost ancestor **lock** wins; otherwise the nearest
    level that is not `inherit`; otherwise off (core modules: on).
@@ -213,8 +213,8 @@ Turning a module off never deletes data; deletion is only the delayed purge
 
 ### Future expansion (Phase 2)
 
-- New module: add a folder with a manifest; no core change. New plan: add its key to
-  `config/plans.php` (Phase 5: the plans table). New sector: manifest data only.
+- New module: add a folder with a manifest; no core change. New plan or sector: data files
+  (see "Plans, sectors and packaging").
 - Partner- and platform-level locks (Phase 5B) and `modules.manage` permission (Phase 4)
   plug into the same resolver and gate.
 
@@ -375,6 +375,67 @@ them, and `context.roles`. The browser app has a Roles page (permission matrix) 
 - New country or partner: nothing; a partner can add pairs through the rule.
 - Open: role-level rule values API; portal own-records access (Phase 5C); the permission
   list in the offline lease (Phase 7).
+
+## Plans, sectors and packaging (Phase 5)
+
+Code: `app/Platform/Packaging`. Data (the source of truth, read at boot):
+`database/seeders/data/plans.php` and `database/seeders/data/sector-packages.php`.
+`php artisan packaging:sync` mirrors them into `plans`, `plan_prices` and `sector_packages`
+(deploy, seeder and test bootstrap run it); removed entries are deprecated, never deleted.
+
+### Plans
+
+- A plan belongs to a **subscription**: the top organization sets it, every unit below
+  follows. Only the partner console changes it (partner `owner` or `billing`), with a
+  preview first and a reason; audited as `organization.plan_changed`.
+- A module is available when the plan includes it (`modules`, or `*`) **and** its
+  manifest allows the plan.
+- **Downgrade:** modules the new plan leaves out stop everywhere in the tree
+  (`ModuleDisabled` fires once, at the highest unit); their settings and data stay and
+  come back with a higher plan.
+- Prices: integer minor units per currency and period (placeholders until confirmed).
+  There is no invoicing or payment yet.
+
+### Usage limits
+
+Rules `plans.max_users`, `plans.max_branches`, `plans.max_storage_mb` (null = unlimited),
+settable at platform, plan and partner level only; plan values are in `rule-values.php`.
+Plans sit below partners in the rule hierarchy, so a partner value is a default for plans
+without one. Per-client deals are open (Phase 5B).
+
+`UsageLimiter` counts the whole subscription under a row lock: owners and staff (active or
+invited, one person counts once; portal users never), and branches that are not archived.
+Adding a member, reactivating one, making a portal user staff, or adding a branch beyond
+the limit gets 422 `users_limit_reached` / `branches_limit_reached` with `max`, `used` and
+`upgrade` (plans that allow more). A downgrade over a limit is allowed: nothing is
+removed, but nothing new can be added. Storage is enforced once files exist.
+
+### Sector packages (onboarding)
+
+The package keys are the only valid `sector_key` values. When a company is created,
+`ApplySectorPackage` turns on its modules at the company (those the plan lacks are listed
+as "higher plan"), sets its rule values at company level (never over the company's own
+values; skipped with the reason when locked above) and clones its role templates. It is
+applied once per company and package (`organization_packages`), audited, and can be
+applied again after a sector change from the overview.
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/plans | public plans: prices, limits, included modules |
+| GET | /api/sectors | sector packages with their modules and roles |
+| GET | /api/organizations/{id}/usage | plan, limits in use, modules of higher plans, package applied |
+| POST | /api/organizations/{id}/sector-package | apply the current sector's package (`organizations.manage`) |
+| GET | /api/partner/organizations/{id}/plan-preview?plan= | what a change would do, nothing saved |
+| PUT | /api/partner/organizations/{id}/plan | `{plan, reason}`, partner owner/billing, throttled |
+
+### Future expansion (Phase 5)
+
+- New plan: an entry in `plans.php` + its limit values + names in `lang/*/packaging.php`.
+- New sector: an entry in `sector-packages.php` + names. Optionally a module for the
+  sector's own screens. No platform code.
+- New country: prices in its currency are data.
+- Open: per-client limits and partner price lists (5B), self-serve upgrade with payment (5C),
+  storage metering.
 
 ## Browser app (frontend foundation)
 

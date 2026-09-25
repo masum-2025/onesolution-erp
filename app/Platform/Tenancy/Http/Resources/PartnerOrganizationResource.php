@@ -29,6 +29,9 @@ class PartnerOrganizationResource extends JsonResource
             'sector_key' => $this->sector_key,
             'country_code' => $this->country_code,
             'plan_key' => $this->plan_key,
+            // The plan the subscription is on (top organizations only; the default when none is set).
+            'subscription_plan' => $this->parent_id === null ? ($this->plan_key ?? config('tenancy.defaults.plan_key')) : null,
+            'currency_code' => $this->currency_code,
             'status' => $this->status->value,
             'created_at' => $this->created_at?->toIso8601String(),
         ];

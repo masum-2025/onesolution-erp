@@ -59,6 +59,18 @@ return [
             'label' => 'Separation of duties',
             'description' => 'Pairs of permissions one person may not hold together, such as running and approving payroll. Changes need a second person\'s approval.',
         ],
+        'plans_max_users' => [
+            'label' => 'Staff users included',
+            'description' => 'How many owners and staff the whole subscription may have. Portal users do not count. Empty means unlimited.',
+        ],
+        'plans_max_branches' => [
+            'label' => 'Branches included',
+            'description' => 'How many branches the whole subscription may have. Empty means unlimited.',
+        ],
+        'plans_max_storage_mb' => [
+            'label' => 'Storage included (MB)',
+            'description' => 'File storage for the whole subscription. Empty means unlimited.',
+        ],
     ],
 
     'categories' => [
@@ -66,5 +78,6 @@ return [
         'security' => 'Security',
         'data' => 'Data',
         'access' => 'Access',
+        'plan' => 'Plan limits',
     ],
 ];

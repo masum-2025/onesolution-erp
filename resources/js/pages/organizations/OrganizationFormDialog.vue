@@ -5,6 +5,7 @@ import AppDialog from '@/components/AppDialog.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import OrgPicker from '@/components/OrgPicker.vue';
+import SectorPicker from './SectorPicker.vue';
 import { api } from '@/lib/http';
 import { invalidate } from '@/lib/cache';
 import { visibleOrganizations } from '@/lib/organizations';
@@ -96,6 +97,7 @@ function localErrors() {
     if (props.mode === 'create' && !form.parent_id) found.parent_id = t('orgs.form.parent_required');
     if (props.mode === 'create' && !form.type) found.type = t('orgs.form.type_required');
     if (!form.name_en.trim()) found.name_en = t('orgs.form.name_required');
+    if (props.mode === 'create' && form.type === 'company' && !form.sector_key) found.sector_key = t('orgs.form.sector_required');
     if (form.country_code.trim() && !/^[A-Za-z]{2}$/.test(form.country_code.trim())) found.country_code = t('orgs.form.country_invalid');
     if (form.currency_code.trim() && !/^[A-Za-z]{3}$/.test(form.currency_code.trim())) found.currency_code = t('orgs.form.currency_invalid');
     return found;
@@ -108,9 +110,22 @@ async function submit() {
     saving.value = true;
     try {
         const url = props.mode === 'create' ? '/api/organizations' : `/api/organizations/${props.organization.id}`;
-        const { data } = await api(url, { method: props.mode === 'create' ? 'POST' : 'PATCH', body: payload() });
+        const { data, package: applied } = await api(url, { method: props.mode === 'create' ? 'POST' : 'PATCH', body: payload() });
         invalidate('organizations');
-        toast.success(props.mode === 'create' ? t('orgs.form.created', { name: data.display_name }) : t('orgs.form.saved'));
+        if (applied) {
+            // A new company started with its sector package: say what it got.
+            toast.success(
+                t('orgs.form.created_with_package', {
+                    name: data.display_name,
+                    package: applied.package.name,
+                    modules: applied.modules_enabled.length,
+                    roles: applied.roles_created.length,
+                    rules: applied.rules_set.length,
+                }),
+            );
+        } else {
+            toast.success(props.mode === 'create' ? t('orgs.form.created', { name: data.display_name }) : t('orgs.form.saved'));
+        }
         emit('saved', data);
         emit('close');
     } catch (error) {
@@ -180,11 +195,11 @@ const inheritHint = t('orgs.form.inherit_hint');
             <AppField
                 v-if="(mode === 'create' && form.type === 'company') || (mode === 'edit' && organization?.type === 'company')"
                 :label="t('orgs.form.sector')"
-                :hint="t('orgs.form.sector_hint')"
+                :hint="mode === 'create' ? t('orgs.form.sector_hint') : t('orgs.form.sector_hint_edit')"
                 :error="errors.sector_key"
             >
                 <template #default="{ id, invalid, describedby }">
-                    <input :id="id" v-model="form.sector_key" class="field-input font-mono" placeholder="school" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
+                    <SectorPicker :id="id" v-model="form.sector_key" :invalid="invalid" :describedby="describedby" />
                 </template>
             </AppField>
 

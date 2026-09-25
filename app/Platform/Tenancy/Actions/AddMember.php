@@ -4,12 +4,14 @@ namespace App\Platform\Tenancy\Actions;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Packaging\Services\UsageLimiter;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Exceptions\MembershipConflict;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Gives an existing identity a membership in an organization.
@@ -17,7 +19,7 @@ use App\Platform\Tenancy\Models\OrganizationMembership;
  */
 class AddMember
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(private AuditLogger $audit, private UsageLimiter $limits) {}
 
     public function handle(
         Organization $organization,
@@ -26,6 +28,11 @@ class AddMember
         AccessScope $accessScope = AccessScope::Own,
         ?User $actor = null,
     ): OrganizationMembership {
+        return DB::transaction(fn () => $this->add($organization, $user, $type, $accessScope, $actor));
+    }
+
+    private function add(Organization $organization, User $user, MembershipType $type, AccessScope $accessScope, ?User $actor): OrganizationMembership
+    {
         $exists = OrganizationMembership::query()
             ->where('organization_id', $organization->getKey())
             ->where('user_id', $user->getKey())
@@ -34,6 +41,9 @@ class AddMember
         if ($exists) {
             throw MembershipConflict::alreadyMember();
         }
+
+        // Plan limit: owners and staff take a seat in the subscription.
+        $this->limits->assertSeatAvailable($organization, $user, $type);
 
         $membership = OrganizationMembership::create([
             'organization_id' => $organization->getKey(),
