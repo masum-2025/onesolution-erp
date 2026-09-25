@@ -1,58 +1,131 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# One Solutions Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Multi-tenant, multi-organization, multi-sector, multi-country SaaS ERP.
+Sold B2B (direct and white-label through partners) and B2C.
 
-## About Laravel
+- Rules for all code: [CLAUDE.md](CLAUDE.md)
+- Phase-by-phase build plan: [docs/saas-build-prompts.md](docs/saas-build-prompts.md)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Stack: Laravel 13, PHP 8.3+, MySQL 8 (portable to PostgreSQL), Sanctum, Pest.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Local setup (Laragon)
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+# create databases onesolution_erp and onesolution_erp_test (utf8mb4_unicode_ci)
+php artisan migrate --seed      # in APP_ENV=local also seeds a demo tree and prints demo logins
+php artisan test                # runs on onesolution_erp_test (see phpunit.xml)
+vendor/bin/pint                 # code style
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+CI (`.github/workflows/tests.yml`) runs the suite on MySQL 8 and PostgreSQL 16.
 
-## Contributing
+## Tenancy foundation (Phase 1)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Code: `app/Platform/Tenancy`, `app/Platform/Audit`. Config: `config/tenancy.php`.
 
-## Code of Conduct
+### Hierarchy
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+Partner (house or white-label reseller)
+ └─ Group ─ Company ─ Branch ─ Department      (table: organizations)
+```
 
-## Security Vulnerabilities
+- Every organization has exactly one `partner_id`, copied from its parent and never
+  editable (a platform "transfer client" action comes later).
+- Tree columns: `parent_id`, `root_id` (top group), `path` (`/{root}/{…}/{id}/`), `depth`.
+  All subtree queries use `path LIKE 'prefix%'` — no recursive or vendor SQL.
+- Allowed parent types and max depth: `config('tenancy.allowed_parents')`, `max_depth`
+  (move to the rule engine in Phase 3).
+- `country_code`, `default_locale`, `timezone`, `currency_code`, `region`: `null` means
+  inherit from the nearest ancestor, then `config('tenancy.defaults')`.
+  `GET /api/organizations/{id}/settings` shows each value and where it comes from.
+- Tree position changes only through `HierarchyService::move()` (cycle-safe, same
+  partner, rebuilds the subtree, audited with a reason). Any other write to tree
+  columns throws.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Identity, memberships and context
 
-## License
+- One `users` row per person. Access goes through memberships:
+  `organization_user` (client area: `owner|staff|portal`, `access_scope own|descendants`)
+  or `partner_users` (partner console: `owner|sales|support|billing`).
+- Flow: `POST /api/auth/login` → token with **no** context + list of contexts →
+  `POST /api/auth/context {organization_id | partner_id}` → verified, stored **on the
+  token**, old token revoked. Every later request reads the context only from the token
+  (`org` / `partner` middleware) and re-checks membership, organization and partner status.
+- `CurrentContext` (scoped singleton) holds user, partner, organization, company, group,
+  ancestors, locale, country, region and the visible subtree.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Visibility
+
+| membership at | reads | writes (tenant-scoped data) |
+|---|---|---|
+| company / branch / department | whole company subtree | whole company subtree |
+| group, `access_scope=descendants` | all companies of the group | group node only (read-only aggregate) |
+| group, `access_scope=own` | group node only | group node only |
+| partner console | own clients' organization metadata only | — |
+
+Branch-level restriction inside a company arrives with Phase 4 permissions.
+Out-of-scope ids always return **404**, never 403, so ids cannot be probed.
+
+### Making a model tenant-scoped
+
+```php
+use App\Platform\Tenancy\Concerns\BelongsToOrganization;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+
+class Invoice extends Model
+{
+    use BelongsToOrganization, HasUlids;
+}
+```
+
+The table needs `organization_id` (`foreignUlid`). The trait adds a global scope,
+fills `organization_id` from the context on create, refuses any change to it, and
+refuses writes outside the writable subtree. Without a context, queries throw
+`MissingTenantContext` (fail closed). Trusted system code opts out explicitly with
+`withoutGlobalScope(OrganizationScope::class)`.
+`tests/Feature/Architecture/TenantModelsTest` fails if a new model skips the trait
+or ULIDs, or if raw SQL appears in `app/`.
+
+### API
+
+| method | path | notes |
+|---|---|---|
+| POST | /api/auth/login | throttled per email + IP |
+| POST | /api/auth/context | throttled |
+| POST | /api/auth/logout | |
+| GET/POST | /api/organizations | list visible / create child (owner) |
+| GET/PATCH | /api/organizations/{id} | tree fields rejected with "use move" |
+| GET | /api/organizations/{id}/settings | effective values + source |
+| POST | /api/organizations/{id}/move | `{new_parent_id, reason}`, owner, throttled |
+| GET/POST | /api/organizations/{id}/members | owner |
+| PATCH | /api/organizations/{id}/members/{membershipId} | owner, not own membership |
+| GET | /api/partner/organizations(/{id}) | partner console, metadata only |
+
+All inputs use Form Requests that reject unknown fields. Errors carry a translated
+`message` (en, bn) and a stable `code`.
+
+### Audit
+
+`audit_logs` is append-only (model refuses update/delete). Phase 1 records:
+organization created/updated/moved, membership added/changed, login, failed login,
+context entered.
+
+### Tests
+
+`tests/Feature/Tenancy/*` cover every Phase 1 acceptance criterion: path building,
+IDOR on every endpoint (using the `Tests\Fixtures\TenantNote` stand-in model), group
+visibility, rejected organization changes, audited moves, partner isolation and no
+partner access to client data.
+
+### Future expansion
+
+- New sector, country or partner: data only (`sector_key`, organization country fields,
+  a `partners` row). No code change.
+- New organization type or parent rule: `config/tenancy.php` now, rule data after Phase 3.
+- Interim authorization (`owner` membership manages) is replaced by Phase 4 permissions;
+  `role_id` is already on memberships.
+- Maker-checker for moves and support access for partners: Phase 3 and Phase 5B.

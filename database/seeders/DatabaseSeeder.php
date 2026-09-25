@@ -2,24 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
+     *
+     * Model events stay on: ULIDs, tree guards and audit entries rely on them.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(HousePartnerSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        if (app()->environment('local')) {
+            $this->call(DemoHierarchySeeder::class);
+        }
     }
 }

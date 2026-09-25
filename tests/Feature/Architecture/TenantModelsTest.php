@@ -1,0 +1,81 @@
+<?php
+
+use App\Models\User;
+use App\Platform\Audit\AuditLog;
+use App\Platform\Tenancy\Concerns\BelongsToOrganization;
+use App\Platform\Tenancy\Models\Organization;
+use App\Platform\Tenancy\Models\OrganizationMembership;
+use App\Platform\Tenancy\Models\Partner;
+use App\Platform\Tenancy\Models\PartnerUser;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Model;
+use Symfony\Component\Finder\Finder;
+
+/**
+ * Platform tables that are not owned by one organization. Anything else that
+ * extends Model must be tenant-scoped. Adding to this list needs a review.
+ */
+const PLATFORM_MODELS = [
+    User::class,
+    Partner::class,
+    PartnerUser::class,
+    Organization::class,
+    OrganizationMembership::class,
+    AuditLog::class,
+];
+
+/**
+ * @return list<class-string<Model>>
+ */
+function applicationModels(): array
+{
+    $models = [];
+
+    foreach ((new Finder)->files()->in(app_path())->name('*.php') as $file) {
+        $class = 'App\\'.str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+
+        if (class_exists($class) && is_subclass_of($class, Model::class) && ! (new ReflectionClass($class))->isAbstract()) {
+            $models[] = $class;
+        }
+    }
+
+    return $models;
+}
+
+it('discovers the application models', function () {
+    expect(applicationModels())->toContain(...PLATFORM_MODELS);
+});
+
+/**
+ * @param  list<class-string<Model>>  $models
+ * @return list<class-string<Model>> Models that do not use the trait.
+ */
+function modelsMissingTrait(array $models, string $trait): array
+{
+    return array_values(array_filter(
+        $models,
+        fn (string $model) => ! in_array($trait, class_uses_recursive($model), true),
+    ));
+}
+
+it('uses ULID keys on every model', function () {
+    expect(modelsMissingTrait(applicationModels(), HasUlids::class))->toBe([]);
+});
+
+it('scopes every business model to an organization', function () {
+    $businessModels = array_values(array_diff(applicationModels(), PLATFORM_MODELS));
+
+    expect(modelsMissingTrait($businessModels, BelongsToOrganization::class))->toBe([]);
+});
+
+it('uses no vendor-specific raw SQL in application code', function () {
+    $pattern = '/\b(whereRaw|orWhereRaw|selectRaw|orderByRaw|havingRaw|groupByRaw|DB::raw|DB::statement|DB::unprepared|DB::select)\s*\(/';
+
+    foreach ((new Finder)->files()->in(app_path())->name('*.php') as $file) {
+        expect(preg_match($pattern, $file->getContents()))->toBe(0, "Raw SQL found in {$file->getRelativePathname()}");
+    }
+});
+
+arch('no debugging helpers')
+    ->expect(['dd', 'dump', 'ray', 'var_dump', 'print_r'])
+    ->not->toBeUsed();
