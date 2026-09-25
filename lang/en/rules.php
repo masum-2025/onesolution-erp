@@ -57,4 +57,9 @@ return [
         ],
     ],
 
+    'categories' => [
+        'organization' => 'Organization',
+        'security' => 'Security',
+        'data' => 'Data',
+    ],
 ];

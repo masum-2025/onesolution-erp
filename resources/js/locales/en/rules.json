@@ -1,0 +1,192 @@
+{
+    "title": "Rules",
+    "text": "Business numbers for every module. Set them here, or let this unit follow the level above.",
+    "search": "Search rules…",
+    "all_modules": "All modules",
+    "modules_nav": "Modules",
+    "changed_here_one": "{count} rule set here",
+    "changed_here_other": "{count} rules set here",
+    "locked_by": "Locked by {name}",
+    "empty_title": "No rules yet",
+    "empty_text": "Rules appear here when modules are installed.",
+    "no_match_title": "No rule matches",
+    "no_match_text": "Try another word or clear the filter.",
+    "undo_reason": "Undone right after the change",
+    "filter": {
+        "label": "Filter rules",
+        "all": "All",
+        "here": "Set here",
+        "locked": "Locked",
+        "pending": "Waiting"
+    },
+    "row": {
+        "pending": "Waiting for approval",
+        "scheduled": "Change scheduled",
+        "locked": "Locked",
+        "locked_here": "Locked for units below"
+    },
+    "value": {
+        "on": "On",
+        "off": "Off",
+        "none": "None",
+        "rows_one": "{count} row",
+        "rows_other": "{count} rows",
+        "structured": "Structured value",
+        "rest": "the rest"
+    },
+    "bounds": {
+        "between": "{min} – {max}",
+        "at_least": "at least {min}",
+        "at_most": "at most {max}",
+        "only": "only {values}",
+        "set_min": "Set a minimum",
+        "set_max": "Set a maximum",
+        "set_allowed": "Allow only these choices",
+        "not_supported": "This kind of rule cannot have limits. Use Lock instead."
+    },
+    "modes": {
+        "set": "Set value",
+        "lock": "Lock value",
+        "constrain": "Set limits",
+        "set_hint": "Applies here and to the units below, unless they set their own.",
+        "lock_hint": "Applies here and to every unit below. They cannot change it.",
+        "constrain_hint": "Units below choose their own value, but only inside these limits."
+    },
+    "columns": {
+        "upto_minor": "Income up to",
+        "rate_percent": "Rate %"
+    },
+    "input": {
+        "required": "Enter a value.",
+        "whole_number": "Enter a whole number.",
+        "min": "Must be {min} or more.",
+        "max": "Must be {max} or less.",
+        "decimal": "Enter a number like 1.5 (up to 8 decimals).",
+        "format": "This value does not have the expected format.",
+        "min_length": "Use at least {min} characters.",
+        "max_length": "Use at most {max} characters.",
+        "max_items": "Choose at most {max}.",
+        "min_items": "Choose at least {min}.",
+        "json": "This is not valid JSON. Check brackets, quotes and commas.",
+        "currency": "Use a 3-letter currency code, e.g. BDT.",
+        "currency_label": "Currency",
+        "amount": "Enter an amount with at most {digits} decimals.",
+        "unit": "Unit",
+        "minutes": "minutes",
+        "hours": "hours",
+        "days": "days",
+        "month": "Month",
+        "day": "Day",
+        "add_row": "Add row",
+        "remove_row": "Remove row {row}",
+        "empty_means_rest": "empty = the rest",
+        "empty_is_none": "Leave empty for none",
+        "cell_required": "Fill in \"{column}\" in every row.",
+        "cell_number": "\"{column}\" must be a whole number.",
+        "cell_format": "\"{column}\" has a value in the wrong format."
+    },
+    "blocked": {
+        "level_not_allowed": "This rule cannot be changed at this level. It is managed higher up.",
+        "module_disabled": "Turn on this rule's module first, then you can change it.",
+        "locked_by_parent": "{name} locked this rule. Ask them if it needs to change."
+    },
+    "drawer": {
+        "tabs": {
+            "change": "Change",
+            "details": "Details",
+            "history": "History",
+            "trace": "How it is decided"
+        },
+        "copy_key": "Copy rule key",
+        "effective": "Value in {org} now",
+        "limits_from_above": "Limits from above: {limits}",
+        "fell_back": "The value set here is outside a parent's limits, so a valid value from above is used.",
+        "pending": "Waiting for approval: {value}",
+        "review_link": "Review in Approvals",
+        "scheduled": "Changes to {value} on {date}.",
+        "no_permission": "You can see this rule. Only owners can change it.",
+        "needs_approval": "This is a sensitive rule. Your change takes effect after another owner approves it.",
+        "mode": "What do you want to do?",
+        "value": "Value",
+        "limits": "Limits for units below",
+        "value_invalid": "Fix the value first.",
+        "bounds_invalid": "Choose at least one valid limit.",
+        "country": "Only for country",
+        "country_hint": "Leave empty to apply in every country.",
+        "country_invalid": "Use a 2-letter country code, e.g. BD.",
+        "schedule": "Start at a later date",
+        "starts": "Starts",
+        "starts_hint": "Until then the current value stays.",
+        "when_invalid": "Choose a date and time in the future.",
+        "reason_placeholder": "e.g. New company policy from 1 July",
+        "save": "Save",
+        "schedule_submit": "Schedule change",
+        "submit_for_approval": "Send for approval"
+    },
+    "preview": {
+        "button": "Preview impact",
+        "changes_one": "{count} unit would change",
+        "changes_other": "{count} units would change",
+        "none": "No unit would see a different value."
+    },
+    "reset": {
+        "title": "Use the value from above",
+        "hint": "Removes what is set at this level. History is kept.",
+        "value": "Reset value",
+        "limits": "Remove limits",
+        "value_title": "Reset to the inherited value?",
+        "limits_title": "Remove the limits for units below?",
+        "text": "\"{rule}\" in {org} will follow the level above again.",
+        "submit": "Reset"
+    },
+    "history": {
+        "empty_title": "No changes yet",
+        "empty_text": "This level has always used the inherited value.",
+        "by": "by {name}",
+        "by_system": "by the system",
+        "restore": "Restore this version",
+        "restore_title": "Restore version {version}?",
+        "restore_text": "The value goes back to {value}. This is saved as a new change.",
+        "actions": {
+            "created": "Changed",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "activated": "Took effect",
+            "closed": "Replaced"
+        }
+    },
+    "trace": {
+        "intro": "Each level can set, limit or lock the value. The first lock wins; otherwise the closest level that sets a value is used, inside every limit from above.",
+        "default": "Built-in default",
+        "used": "Used",
+        "set": "Set: {value}",
+        "lock": "Locked: {value}",
+        "nothing": "Nothing set",
+        "notes": {
+            "ignored_invalid_value": "Ignored: not a valid value"
+        }
+    },
+    "messages": {
+        "saved": "Change saved.",
+        "reset": "Now using the value from above.",
+        "undone": "Change undone."
+    },
+    "approvals": {
+        "title": "Approvals",
+        "text": "Sensitive rule changes wait here until another owner reviews them.",
+        "empty_title": "Nothing waiting for review",
+        "empty_text": "When someone changes a sensitive rule, it shows up here.",
+        "requested_by": "requested by {name}",
+        "new_value": "New value",
+        "starts": "Takes effect {date}",
+        "own_request": "You asked for this change. Another owner must review it.",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approve_title": "Approve this change?",
+        "reject_title": "Reject this change?",
+        "review_text": "\"{rule}\" will be set to {value}.",
+        "approved": "Change approved.",
+        "rejected": "Change rejected.",
+        "no_access": "Only owners can review changes."
+    }
+}

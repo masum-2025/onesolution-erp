@@ -8,6 +8,10 @@ return [
     'pay_cycle' => [
         'label' => 'বেতন চক্র',
         'description' => 'কত দিন পরপর বেতন দেওয়া হয়।',
+        'options' => [
+            'monthly' => 'মাসিক',
+            'biweekly' => 'প্রতি দুই সপ্তাহে',
+        ],
     ],
     'tax_slabs' => [
         'label' => 'আয়করের ধাপ',
@@ -16,5 +20,12 @@ return [
     'salary_approval_levels' => [
         'label' => 'বেতন অনুমোদনের স্তর',
         'description' => 'একটি বেতন প্রক্রিয়া কতজনকে অনুমোদন করতে হবে।',
+    ],
+
+    'categories' => [
+        'approval' => 'অনুমোদন',
+        'cycle' => 'বেতন চক্র',
+        'overtime' => 'ওভারটাইম',
+        'tax' => 'কর',
     ],
 ];

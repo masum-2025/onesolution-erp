@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Middleware\ApplyRequestLocale;
+use App\Http\Middleware\SecurityHeaders;
 use App\Platform\Modules\Http\Middleware\EnsureModuleEnabled;
 use App\Platform\Tenancy\Http\Middleware\ResolveOrganization;
 use App\Platform\Tenancy\Http\Middleware\ResolvePartner;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The browser app calls /api with its session cookie (+ CSRF); tokens keep working.
+        $middleware->statefulApi();
+        $middleware->append(ApplyRequestLocale::class);
+        $middleware->appendToGroup('web', SecurityHeaders::class);
+        $middleware->redirectGuestsTo('/login');
+
         $middleware->alias([
             'org' => ResolveOrganization::class,
             'partner' => ResolvePartner::class,
@@ -22,5 +31,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // The app's own endpoints always answer in JSON, never with an HTML page.
+        $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*', 'session/*') || $request->expectsJson());
     })->create();

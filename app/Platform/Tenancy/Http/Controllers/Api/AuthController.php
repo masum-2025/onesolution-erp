@@ -3,10 +3,9 @@
 namespace App\Platform\Tenancy\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Platform\Tenancy\Actions\AttemptLogin;
 use App\Platform\Tenancy\Actions\IssueContextToken;
-use App\Platform\Tenancy\Enums\MembershipStatus;
+use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use App\Platform\Tenancy\Http\Requests\EnterContextRequest;
 use App\Platform\Tenancy\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
@@ -14,19 +13,23 @@ use Illuminate\Http\Request;
 use Laravel\Sanctum\NewAccessToken;
 use Laravel\Sanctum\PersonalAccessToken;
 
+/**
+ * Token login for API clients (mobile apps, integrations). The browser app
+ * uses the cookie session instead: see SessionController.
+ */
 class AuthController extends Controller
 {
     /**
      * Log in. Returns a token that can only pick a context, plus the
      * organizations and partner consoles the user may enter.
      */
-    public function login(LoginRequest $request, AttemptLogin $attempt, IssueContextToken $tokens): JsonResponse
+    public function login(LoginRequest $request, AttemptLogin $attempt, IssueContextToken $tokens, ListAvailableContexts $contexts): JsonResponse
     {
         $user = $attempt->handle($request->validated('email'), $request->validated('password'));
 
         return response()->json([
             ...$this->tokenPayload($tokens->forLogin($user)),
-            'contexts' => $this->availableContexts($user),
+            'contexts' => $contexts->handle($user),
         ]);
     }
 
@@ -68,42 +71,6 @@ class AuthController extends Controller
                 default => null,
             },
         ];
-    }
-
-    /**
-     * @return array<string, list<array<string, mixed>>>
-     */
-    private function availableContexts(User $user): array
-    {
-        $organizations = $user->memberships()
-            ->with('organization')
-            ->where('status', MembershipStatus::Active)
-            ->get()
-            ->filter(fn ($membership) => $membership->organization->isActive())
-            ->map(fn ($membership) => [
-                'organization_id' => $membership->organization_id,
-                'name' => $membership->organization->displayName(),
-                'type' => $membership->organization->type->value,
-                'membership_type' => $membership->membership_type->value,
-                'is_primary' => $membership->is_primary,
-            ])
-            ->values()
-            ->all();
-
-        $partners = $user->partnerMemberships()
-            ->with('partner')
-            ->where('status', MembershipStatus::Active)
-            ->get()
-            ->filter(fn ($partnerUser) => $partnerUser->partner->isActive())
-            ->map(fn ($partnerUser) => [
-                'partner_id' => $partnerUser->partner_id,
-                'name' => $partnerUser->partner->name,
-                'role' => $partnerUser->role->value,
-            ])
-            ->values()
-            ->all();
-
-        return ['organizations' => $organizations, 'partners' => $partners];
     }
 
     private function revokeCurrentToken(Request $request): void

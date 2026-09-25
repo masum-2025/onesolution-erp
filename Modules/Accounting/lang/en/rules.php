@@ -13,4 +13,9 @@ return [
         'label' => 'Backdated entries allowed (days)',
         'description' => 'How many days back an entry may be dated.',
     ],
+
+    'categories' => [
+        'approval' => 'Approvals',
+        'period' => 'Periods',
+    ],
 ];

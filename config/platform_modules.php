@@ -20,4 +20,8 @@ return [
     // Revoked automatically when api_integration is turned off.
     'integration_token_prefix' => 'integration:',
 
+    // Version of the data-processing terms an admin agrees to when giving
+    // consent for AI modules. Bump it when the terms change.
+    'consent_terms_version' => env('MODULES_CONSENT_TERMS_VERSION', '2026-09'),
+
 ];

@@ -1,0 +1,131 @@
+{
+    "optional": "optional",
+    "language": "Language",
+    "breadcrumb": "Breadcrumb",
+    "user_menu": "Account menu",
+    "languages": { "en": "English", "bn": "বাংলা" },
+    "actions": {
+        "cancel": "Cancel",
+        "close": "Close",
+        "confirm": "Confirm",
+        "dismiss": "Dismiss",
+        "edit": "Edit",
+        "more": "More actions",
+        "next": "Next",
+        "previous": "Previous",
+        "retry": "Try again",
+        "save": "Save changes",
+        "undo": "Undo"
+    },
+    "auth": {
+        "sign_out": "Sign out",
+        "signed_out": "You have been signed out."
+    },
+    "confirm": {
+        "reason": "Reason",
+        "reason_hint": "Saved in the audit log. At least 5 characters.",
+        "reason_placeholder": "Why is this change needed?",
+        "reason_short": "Write a reason of at least 5 characters.",
+        "reason_long": "Keep the reason under 500 characters.",
+        "type_to_confirm": "Type {word} to confirm",
+        "type_mismatch": "The text does not match. Type it exactly as shown."
+    },
+    "context": {
+        "all": "All workspaces",
+        "partner": "Partner",
+        "partner_console": "Partner console",
+        "switch": "Switch workspace",
+        "switch_to": "Switch to",
+        "switched": "You are now working in {name}."
+    },
+    "errors": {
+        "network": "Cannot reach the server. Check your internet connection and try again.",
+        "server": "Something went wrong on our side. Try again in a moment.",
+        "throttled": "Too many attempts. Wait {seconds} seconds and try again."
+    },
+    "levels": {
+        "platform": "Platform",
+        "partner": "Partner",
+        "plan": "Plan",
+        "group": "Group",
+        "company": "Company",
+        "branch": "Branch",
+        "department": "Department",
+        "role": "Role",
+        "user": "User"
+    },
+    "membership_types": { "owner": "Owner", "staff": "Staff", "portal": "Portal user" },
+    "partner_roles": { "owner": "Owner", "sales": "Sales", "support": "Support", "billing": "Billing" },
+    "nav": {
+        "label": "Main navigation",
+        "open": "Open navigation",
+        "workspace": "Workspace",
+        "apps": "Apps",
+        "overview": "Overview",
+        "organizations": "Organizations",
+        "modules": "Modules",
+        "rules": "Rules",
+        "approvals": "Approvals",
+        "clients": "Clients",
+        "partner_rules": "Partner rules"
+    },
+    "not_found": {
+        "title": "This page does not exist",
+        "text": "The link may be old or mistyped. Go back to the start and try again.",
+        "home": "Go to start"
+    },
+    "org_picker": {
+        "placeholder": "Choose an organization",
+        "search": "Search organizations…",
+        "empty": "No organization matches.",
+        "scope": "Showing for"
+    },
+    "org_types": {
+        "root": "Top level",
+        "group": "Group",
+        "company": "Company",
+        "branch": "Branch",
+        "department": "Department",
+        "personal": "Personal"
+    },
+    "palette": {
+        "title": "Search and jump",
+        "trigger": "Search or jump to…",
+        "open_label": "Open search (Ctrl K)",
+        "placeholder": "Type a page, organization or rule…",
+        "pages": "Pages",
+        "organizations": "Organizations",
+        "rules": "Rules",
+        "switch_to": "Switch workspace",
+        "actions": "Actions",
+        "dark_mode": "Switch to dark mode",
+        "light_mode": "Switch to light mode",
+        "navigate": "to move",
+        "open": "to open",
+        "no_results": "Nothing found. Try another word."
+    },
+    "session": {
+        "ended": "Your session has ended. Sign in again to continue.",
+        "context_ended": "Your access to that workspace has ended. Choose where to work.",
+        "expiring": "Your access to this workspace ends in {minutes} minutes.",
+        "stay": "Stay signed in",
+        "renewed": "You can keep working."
+    },
+    "source": {
+        "self": "Set here",
+        "default": "Default",
+        "inherited": "Inherited",
+        "inherited_from": "From {name}"
+    },
+    "states": {
+        "loading": "Loading…",
+        "error_title": "Could not load this",
+        "offline_title": "You are offline"
+    },
+    "theme": {
+        "label": "Appearance",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+    }
+}

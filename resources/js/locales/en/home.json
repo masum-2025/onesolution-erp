@@ -1,0 +1,37 @@
+{
+    "greeting": {
+        "morning": "Good morning, {name}",
+        "afternoon": "Good afternoon, {name}",
+        "evening": "Good evening, {name}"
+    },
+    "subtitle": "Here is what is happening in {org} ({type}).",
+    "stats": {
+        "units": "Units",
+        "units_hint": "Organizations you can see",
+        "modules": "Modules on",
+        "modules_hint": "Turned on for this organization",
+        "of": "{value} / {total}",
+        "rules_here": "Rules set here",
+        "rules_hint": "Out of {total} rules",
+        "approvals": "Waiting for approval",
+        "approvals_hint": "Rule changes to review",
+        "approvals_no_access": "Only owners review changes"
+    },
+    "settings": {
+        "title": "Regional settings",
+        "text": "Language, money and time used by this organization.",
+        "view_all": "View all"
+    },
+    "actions": {
+        "title": "Quick actions",
+        "modules": "Manage modules",
+        "modules_text": "Turn features on or off for any unit",
+        "rules": "Review rules",
+        "rules_text": "Grace periods, overtime, fiscal year and more",
+        "structure": "Organization structure",
+        "structure_text": "Add branches and departments",
+        "members": "Invite members",
+        "members_text": "Give people access to this organization"
+    },
+    "read_only_note": "You can view everything here. Changes need an owner of this organization."
+}

@@ -1,11 +1,320 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/inter/wght.css';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+/*
+ * Bangla: Hind Siliguri, only for Bengali characters (unicode-range), scaled
+ * up a little so it sits at the same visual size as Inter next to it.
+ */
+@font-face {
+    font-family: 'Hind Siliguri';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    size-adjust: 110%;
+    unicode-range: U+0964-0965, U+0980-09FF, U+200C-200D, U+25CC;
+    src: url('../../node_modules/@fontsource/hind-siliguri/files/hind-siliguri-bengali-400-normal.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Hind Siliguri';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    size-adjust: 110%;
+    unicode-range: U+0964-0965, U+0980-09FF, U+200C-200D, U+25CC;
+    src: url('../../node_modules/@fontsource/hind-siliguri/files/hind-siliguri-bengali-500-normal.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Hind Siliguri';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    size-adjust: 110%;
+    unicode-range: U+0964-0965, U+0980-09FF, U+200C-200D, U+25CC;
+    src: url('../../node_modules/@fontsource/hind-siliguri/files/hind-siliguri-bengali-600-normal.woff2') format('woff2');
+}
+
 @source '../**/*.blade.php';
-@source '../**/*.js';
+@source '../js/**/*.{js,vue}';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Components use only these semantic names, so a theme or a
+ * partner brand changes everything at once. The brand color (--brand) is set
+ * at runtime from partner data; every other brand shade is derived from it.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter Variable', 'Hind Siliguri', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', Consolas, monospace;
+
+    --color-canvas: var(--c-canvas);
+    --color-surface: var(--c-surface);
+    --color-raised: var(--c-raised);
+    --color-subtle: var(--c-subtle);
+    --color-line: var(--c-line);
+    --color-line-strong: var(--c-line-strong);
+    --color-fg: var(--c-fg);
+    --color-fg-2: var(--c-fg-2);
+    --color-muted: var(--c-muted);
+    --color-faint: var(--c-faint);
+
+    --color-brand: var(--brand);
+    --color-brand-fg: var(--brand-fg);
+    --color-brand-hover: var(--brand-hover);
+    --color-brand-soft: var(--brand-soft);
+    --color-brand-text: var(--brand-text);
+
+    --color-ok: var(--c-ok);
+    --color-ok-soft: var(--c-ok-soft);
+    --color-warn: var(--c-warn);
+    --color-warn-soft: var(--c-warn-soft);
+    --color-bad: var(--c-bad);
+    --color-bad-soft: var(--c-bad-soft);
+
+    --shadow-xs: 0 1px 2px rgb(16 16 20 / 0.05);
+    --shadow-card: 0 1px 2px rgb(16 16 20 / 0.04), 0 1px 1px rgb(16 16 20 / 0.02);
+    --shadow-pop: 0 8px 24px -6px rgb(16 16 20 / 0.14), 0 2px 6px -2px rgb(16 16 20 / 0.08);
+    --shadow-dialog: 0 28px 64px -16px rgb(16 16 20 / 0.28), 0 8px 20px -8px rgb(16 16 20 / 0.12);
+
+    --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    --animate-shimmer: shimmer 1.6s linear infinite;
+    --animate-fade-in: fade-in 160ms var(--ease-soft);
+    --animate-rise: rise 200ms var(--ease-soft);
+    --animate-pop: pop 180ms var(--ease-soft);
+
+    @keyframes shimmer {
+        from { background-position: 200% 0; }
+        to { background-position: -200% 0; }
+    }
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes rise {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pop {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+    }
+}
+
+:root {
+    --brand: #4f46e5;
+    --brand-fg: #ffffff;
+    --brand-hover: color-mix(in oklab, var(--brand) 88%, black);
+    --brand-soft: color-mix(in oklab, var(--brand) 9%, var(--c-surface));
+    --brand-text: color-mix(in oklab, var(--brand) 85%, black);
+
+    --c-canvas: #f7f7f8;
+    --c-surface: #ffffff;
+    --c-raised: #ffffff;
+    --c-subtle: #f3f3f5;
+    --c-line: #e8e8ec;
+    --c-line-strong: #d6d6dc;
+    --c-fg: #111114;
+    --c-fg-2: #3c3c44;
+    --c-muted: #6a6a75;
+    --c-faint: #a0a0aa;
+
+    --c-ok: #047857;
+    --c-ok-soft: #ecfdf5;
+    --c-warn: #b45309;
+    --c-warn-soft: #fffbeb;
+    --c-bad: #dc2626;
+    --c-bad-soft: #fef2f2;
+
+    color-scheme: light;
+}
+
+.dark {
+    --brand-hover: color-mix(in oklab, var(--brand) 85%, white);
+    --brand-soft: color-mix(in oklab, var(--brand) 16%, var(--c-surface));
+    --brand-text: color-mix(in oklab, var(--brand) 55%, white);
+
+    --c-canvas: #0a0a0c;
+    --c-surface: #121215;
+    --c-raised: #18181c;
+    --c-subtle: #1c1c21;
+    --c-line: #25252b;
+    --c-line-strong: #34343c;
+    --c-fg: #f4f4f6;
+    --c-fg-2: #d2d2d8;
+    --c-muted: #9d9da8;
+    --c-faint: #6a6a75;
+
+    --c-ok: #34d399;
+    --c-ok-soft: color-mix(in oklab, #34d399 12%, var(--c-surface));
+    --c-warn: #fbbf24;
+    --c-warn-soft: color-mix(in oklab, #fbbf24 12%, var(--c-surface));
+    --c-bad: #f87171;
+    --c-bad-soft: color-mix(in oklab, #f87171 12%, var(--c-surface));
+
+    color-scheme: dark;
+}
+
+@layer base {
+    html {
+        font-family: var(--font-sans);
+        font-feature-settings: 'cv11', 'ss01', 'ss03';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        background: var(--c-canvas);
+        color: var(--c-fg);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-size: 14px;
+        line-height: 1.55;
+        min-height: 100dvh;
+    }
+
+    /* Bangla script reads better slightly larger with more line height. */
+    :lang(bn) body {
+        line-height: 1.7;
+    }
+
+    ::selection {
+        background: color-mix(in oklab, var(--brand) 24%, transparent);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+        border-radius: 6px;
+    }
+
+    [v-cloak] {
+        display: none;
+    }
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--c-line-strong) transparent;
+    }
+}
+
+@layer components {
+    .card {
+        background: var(--c-surface);
+        border: 1px solid var(--c-line);
+        border-radius: 14px;
+        box-shadow: var(--shadow-card);
+    }
+
+    .skeleton {
+        border-radius: 6px;
+        background: linear-gradient(90deg, var(--c-subtle) 0%, var(--c-line) 50%, var(--c-subtle) 100%);
+        background-size: 200% 100%;
+        animation: var(--animate-shimmer);
+    }
+
+    .kbd {
+        display: inline-flex;
+        align-items: center;
+        min-width: 1.25rem;
+        height: 1.25rem;
+        padding-inline: 0.3rem;
+        border: 1px solid var(--c-line-strong);
+        border-block-end-width: 2px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--c-muted);
+        background: var(--c-surface);
+    }
+
+    .field-input {
+        width: 100%;
+        min-height: 2.5rem;
+        padding-inline: 0.75rem;
+        border: 1px solid var(--c-line-strong);
+        border-radius: 9px;
+        background: var(--c-surface);
+        color: var(--c-fg);
+        box-shadow: var(--shadow-xs);
+        transition: border-color 120ms, box-shadow 120ms;
+    }
+
+    .field-input::placeholder {
+        color: var(--c-faint);
+    }
+
+    .field-input:hover {
+        border-color: color-mix(in oklab, var(--c-line-strong) 60%, var(--c-muted));
+    }
+
+    .field-input:focus {
+        outline: none;
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand) 20%, transparent);
+    }
+
+    .field-input[aria-invalid='true'] {
+        border-color: var(--c-bad);
+    }
+
+    .field-input[aria-invalid='true']:focus {
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-bad) 20%, transparent);
+    }
+
+    .field-input:disabled {
+        background: var(--c-subtle);
+        color: var(--c-muted);
+        cursor: not-allowed;
+    }
+
+    textarea.field-input {
+        padding-block: 0.55rem;
+        min-height: 5rem;
+        resize: vertical;
+    }
+
+    select.field-input {
+        appearance: none;
+        padding-inline-end: 2.25rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a8a95' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+    }
+
+    [dir='rtl'] select.field-input {
+        background-position: left 0.7rem center;
+    }
+
+    .brand-mark {
+        display: inline-grid;
+        place-items: center;
+        color: var(--brand-fg);
+        font-weight: 650;
+        background:
+            radial-gradient(120% 120% at 0% 0%, color-mix(in oklab, var(--brand) 70%, white) 0%, transparent 60%),
+            var(--brand);
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 1px 2px color-mix(in oklab, var(--brand) 40%, transparent);
+    }
+
+    .glass {
+        background: color-mix(in oklab, var(--c-canvas) 78%, transparent);
+        backdrop-filter: saturate(1.6) blur(14px);
+        -webkit-backdrop-filter: saturate(1.6) blur(14px);
+    }
+
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+    }
 }

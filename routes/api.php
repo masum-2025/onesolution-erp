@@ -8,6 +8,7 @@ use App\Platform\Rules\Http\Controllers\OrganizationRuleController;
 use App\Platform\Rules\Http\Controllers\PartnerRuleController;
 use App\Platform\Rules\Http\Controllers\RuleApprovalController;
 use App\Platform\Tenancy\Http\Controllers\Api\AuthController;
+use App\Platform\Tenancy\Http\Controllers\Api\MeController;
 use App\Platform\Tenancy\Http\Controllers\Api\MemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\OrganizationController;
 use App\Platform\Tenancy\Http\Controllers\Api\PartnerOrganizationController;
@@ -26,6 +27,8 @@ Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
     });
 });
+
+Route::get('me', MeController::class)->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::get('organizations', [OrganizationController::class, 'index']);

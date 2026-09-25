@@ -13,4 +13,9 @@ return [
         'label' => 'Employee code format',
         'description' => 'Pattern for new employee codes, e.g. EMP-{YYYY}-{SEQ:4}.',
     ],
+
+    'categories' => [
+        'employment' => 'Employment',
+        'numbering' => 'Numbering',
+    ],
 ];

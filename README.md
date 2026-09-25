@@ -313,3 +313,74 @@ Phase 1–2 tunables now read rules: `tenancy.allowed_parents`, `tenancy.max_dep
 - Role-level values resolve already; writing them arrives with Phase 4 roles. The interim
   `rules.manage` gate (owner) becomes the `rules.edit.{module}` permission in Phase 4.
 - A rule editor UI arrives with the frontend; the API already returns everything it needs.
+
+## Browser app (frontend foundation)
+
+Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:
+`resources/views/app.blade.php` (every non-API path). Screens for Phases 1–3: sign-in,
+choose workspace, overview, organizations (tree, details, settings, members, move),
+modules (on/off, lock, consent, data deletion), rules (editor, preview, history,
+trace), approvals, and the partner console (clients, partner rules).
+
+```bash
+npm install
+npm run dev      # Vite dev server (hot reload) next to `php artisan serve`
+npm run build    # production build + bundle budget check
+npm test         # Vitest unit/component tests (tests/js)
+```
+
+### Sign-in for the browser: cookie session, no tokens in the browser
+
+| method | path | notes |
+|---|---|---|
+| POST | /session/login | `{email, password}` → session cookie + `contexts`; throttled, audited |
+| POST | /session/context | `{organization_id}` or `{partner_id}` → membership checked, session id renewed, audited |
+| POST | /session/logout | session invalidated |
+| GET | /api/me | user, active context (re-verified), `contexts`, `can` flags, brand |
+
+The chosen context is stored server-side in the session (`ContextSource`), bound to
+the user and expiring after the rule `tenancy.token_ttl_minutes`; ids in the body,
+query or headers are ignored, exactly as with tokens. Mobile apps and integrations keep
+using `/api/auth/*` tokens; a token always wins over a session. Requests carry the
+CSRF token (`XSRF-TOKEN` cookie → `X-XSRF-TOKEN` header) and `X-Locale` (bn/en).
+
+### Security
+
+- Page shell: nonce-based Content Security Policy (no inline code without the nonce,
+  no third-party origins), `X-Frame-Options: DENY`, `nosniff`, strict referrer policy.
+- No `v-html` / `innerHTML`, no browser storage except UI preferences (theme,
+  language) — enforced by `tests/Feature/Frontend/FrontendSourceTest.php`.
+- `can` flags from `/api/me` only shape the UI; every endpoint keeps its own checks.
+- Brand values are validated server-side before they reach the page (hex color only).
+
+### Design system
+
+Tokens in `resources/css/app.css` (`--c-*` surfaces and text, `--brand*`). A partner
+provides one primary color; lighter/darker shades and a readable text color are derived
+at runtime, so white-label brands need no build. Light, dark and system themes; Inter
+for Latin, Hind Siliguri for Bangla (Bengali range only, size-matched); CSS logical
+properties only (RTL-ready, checked by a test). Reusable parts in `resources/js/components`.
+
+### Translations
+
+UI text: `resources/js/locales/{en,bn}/{namespace}.json`, loaded per screen. Counts and
+numbers use the language's own digits. Server messages follow the user's language.
+Data labels (rule names, categories, choices) come translated from the API; a module adds
+`categories` and `{rule}.options` to its `lang/{locale}/rules.php`. The key sets of
+`en` and `bn` must match (test).
+
+### Performance
+
+Every screen is a lazy chunk. Budget, checked on every build
+(`scripts/check-bundle-size.js`): first-load JS ≤ 80 KB gzip, CSS ≤ 30 KB gzip
+(currently about 51 KB and 17 KB).
+
+### Future expansion (frontend)
+
+- New language: add `resources/js/locales/{locale}/*.json` and the locale in
+  `config/tenancy.php`; RTL languages already work through logical properties.
+- New partner brand: data (partner settings today, `partner_brands` in Phase 5B).
+- New module screens: a lazy route + a locale namespace; menu entries come from the
+  manifest. No change to the shell.
+- Phase 4 permissions replace the owner-based `can` flags server-side; the UI keeps
+  reading `can`. Phase 7 adds IndexedDB and the sync queue behind `lib/http.js`.

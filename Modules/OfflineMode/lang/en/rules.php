@@ -13,4 +13,10 @@ return [
         'label' => 'Allow payments offline',
         'description' => 'Allow recording payments while offline.',
     ],
+
+    'categories' => [
+        'lease' => 'Offline access',
+        'payments' => 'Payments',
+        'storage' => 'Storage',
+    ],
 ];

@@ -8,6 +8,15 @@ return [
     'weekend_days' => [
         'label' => 'Weekend days',
         'description' => 'Days of the week that are not working days.',
+        'options' => [
+            'sat' => 'Saturday',
+            'sun' => 'Sunday',
+            'mon' => 'Monday',
+            'tue' => 'Tuesday',
+            'wed' => 'Wednesday',
+            'thu' => 'Thursday',
+            'fri' => 'Friday',
+        ],
     ],
     'half_day_after_minutes' => [
         'label' => 'Half day after (minutes late)',
@@ -16,5 +25,11 @@ return [
     'geo_fence_required' => [
         'label' => 'Location check required',
         'description' => 'Check-in is only allowed inside the workplace area.',
+    ],
+
+    'categories' => [
+        'calendar' => 'Calendar',
+        'check_in' => 'Check-in',
+        'lateness' => 'Lateness',
     ],
 ];

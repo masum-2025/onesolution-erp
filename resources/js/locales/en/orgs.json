@@ -1,0 +1,119 @@
+{
+    "index": {
+        "title": "Organizations",
+        "text": "Your groups, companies, branches and departments. Settings and rules flow down this tree.",
+        "add": "Add unit",
+        "search": "Search by name…",
+        "count_one": "{count} unit",
+        "count_other": "{count} units",
+        "empty_title": "No organizations to show",
+        "empty_text": "Units you can access will appear here.",
+        "no_match": "No unit matches your search."
+    },
+    "tree": {
+        "expand": "Show units under {name}",
+        "collapse": "Hide units under {name}",
+        "expand_all": "Expand all",
+        "collapse_all": "Collapse all",
+        "you_are_here": "You are here"
+    },
+    "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "archived": "Archived"
+    },
+    "show": {
+        "tabs": { "overview": "Overview", "settings": "Settings", "members": "Members" },
+        "details": "Details",
+        "children": "Units under this",
+        "no_children": "No units under this one yet.",
+        "add_child": "Add unit",
+        "move": "Move to another parent",
+        "plan": "Plan",
+        "created": "Created",
+        "not_found_title": "Organization not found",
+        "not_found_text": "It does not exist, or it is outside the organizations you can see.",
+        "back": "Back to organizations"
+    },
+    "settings": {
+        "title": "Regional settings",
+        "text": "Empty values are inherited from the level above.",
+        "fields": {
+            "country_code": "Country",
+            "currency_code": "Currency",
+            "default_locale": "Language",
+            "timezone": "Time zone",
+            "region": "Data region"
+        }
+    },
+    "form": {
+        "create_title": "Add a unit",
+        "create_text": "Create a company, branch or department under an existing unit.",
+        "edit_title": "Edit organization",
+        "parent": "Place under",
+        "parent_required": "Choose where this unit belongs.",
+        "type": "Type",
+        "type_required": "Choose the type of unit.",
+        "no_child_types": "Nothing can be added under this unit. Choose another parent.",
+        "name_en": "Name (English)",
+        "name_bn": "Name (Bangla)",
+        "name_required": "Enter the English name.",
+        "sector": "Sector",
+        "sector_hint": "Decides which modules fit, e.g. school, factory, retail.",
+        "regional": "Regional settings",
+        "inherit_hint": "Leave empty to use the value from the level above.",
+        "inherit": "Same as the level above",
+        "country_invalid": "Use the 2-letter country code, e.g. BD.",
+        "currency_invalid": "Use the 3-letter currency code, e.g. BDT.",
+        "status": "Status",
+        "status_hint": "Suspended or archived units and everything under them cannot be used.",
+        "create_submit": "Create unit",
+        "created": "{name} was created.",
+        "saved": "Changes saved."
+    },
+    "move": {
+        "title": "Move {name}",
+        "text": "Everything under this unit moves with it.",
+        "new_parent": "New parent",
+        "parent_required": "Choose the new parent.",
+        "reason_placeholder": "e.g. Branch reorganized under the Chattogram company",
+        "note": "Inherited settings and rules will now come from the new parent. The move is recorded in the audit log.",
+        "submit": "Move unit",
+        "done": "{name} was moved."
+    },
+    "members": {
+        "add": "Add member",
+        "add_title": "Add a member",
+        "add_text": "Give an existing account access to {name}.",
+        "email": "Email",
+        "email_hint": "The person must already have an account.",
+        "email_invalid": "Enter a valid email address.",
+        "role": "Access",
+        "role_hint": {
+            "owner": "can change everything",
+            "staff": "can work and view",
+            "portal": "sees only their own records"
+        },
+        "scope": "Can see",
+        "scope_hint": "Group members can see only the group, or every company in it.",
+        "scope_own": "Only this group",
+        "scope_descendants": "All companies in the group",
+        "added": "{email} can now access this organization.",
+        "search": "Search members…",
+        "you": "You",
+        "status": { "active": "Active", "invited": "Invited", "suspended": "Suspended" },
+        "actions": "Actions for {name}",
+        "make_owner": "Make owner",
+        "make_staff": "Make staff",
+        "suspend": "Suspend access",
+        "suspend_title": "Suspend {name}?",
+        "suspend_text": "They will not be able to open this organization until someone reactivates them.",
+        "suspended": "{name} was suspended.",
+        "reactivate": "Reactivate",
+        "reactivated": "{name} can access this organization again.",
+        "updated": "Access updated.",
+        "empty_title": "No members yet",
+        "empty_text": "Add people so they can work in this organization.",
+        "no_match": "No member matches your search."
+    }
+}

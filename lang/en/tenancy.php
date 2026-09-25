@@ -39,6 +39,8 @@ return [
 
     'messages' => [
         'logged_out' => 'You have been logged out.',
+        'context_entered' => 'Organization selected.',
+        'javascript_required' => 'This app needs JavaScript. Turn it on in your browser settings, then reload the page.',
     ],
 
 ];

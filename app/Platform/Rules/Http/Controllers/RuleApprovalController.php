@@ -49,11 +49,18 @@ class RuleApprovalController extends Controller
             ->orderBy('created_at')
             ->get();
 
+        $organizations = Organization::query()
+            ->whereKey($pending->pluck('scope_id')->unique()->values())
+            ->get()
+            ->mapWithKeys(fn (Organization $node) => [$node->getKey() => $node->displayName()]);
+        $people = $this->presenter->userNames($pending->pluck('created_by'));
+
         return response()->json(['data' => $pending->map(fn (RuleValue $row) => [
             ...$this->presenter->row($row),
             'rule' => $row->rule_key,
             'label' => $this->catalog->has($row->rule_key) ? $this->catalog->get($row->rule_key)->label() : $row->rule_key,
-            'scope' => ['level' => $row->scope_type->value, 'id' => $row->scope_id],
+            'scope' => ['level' => $row->scope_type->value, 'id' => $row->scope_id, 'name' => $organizations[$row->scope_id] ?? null],
+            'requested_by' => $row->created_by === null ? null : ['id' => $row->created_by, 'name' => $people[$row->created_by] ?? null],
         ])->values()]);
     }
 

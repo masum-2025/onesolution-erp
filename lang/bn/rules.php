@@ -57,4 +57,9 @@ return [
         ],
     ],
 
+    'categories' => [
+        'organization' => 'প্রতিষ্ঠান',
+        'security' => 'নিরাপত্তা',
+        'data' => 'ডেটা',
+    ],
 ];

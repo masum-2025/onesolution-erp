@@ -1,0 +1,86 @@
+{
+    "title": "Modules",
+    "text": "Turn features on or off for each unit. Units below follow unless they choose otherwise or you lock it.",
+    "search": "Search modules…",
+    "on": "On",
+    "off": "Off",
+    "core": "Always on",
+    "locked_by": "Locked by {name}",
+    "locked_here": "Locked for units below",
+    "needs": "Needs {name}",
+    "read_only": "You can see module settings. Only owners can change them.",
+    "empty_title": "No modules here",
+    "empty_text": "Try another filter or search word.",
+    "undo_reason": "Undone right after the change",
+    "categories": {
+        "business": "Business",
+        "governance": "Governance",
+        "ai": "AI",
+        "platform": "Platform",
+        "sustainability": "Sustainability"
+    },
+    "filter": {
+        "label": "Show modules",
+        "all": "All · {count}",
+        "on": "On · {count}",
+        "off": "Off · {count}"
+    },
+    "actions": {
+        "turn_on": "Turn on {name}",
+        "turn_off": "Turn off {name}",
+        "turn_on_short": "Turn on",
+        "turn_off_short": "Turn off",
+        "inherit": "Follow the level above",
+        "consent": "Give consent…",
+        "withdraw_consent": "Withdraw consent…",
+        "purge": "Delete module data…",
+        "more": "More actions for {name}"
+    },
+    "confirm": {
+        "on_title": "Turn on {name}?",
+        "on_text": "It becomes available in {org} and the units below it.",
+        "off_title": "Turn off {name}?",
+        "off_text": "People in {org} and below lose access to it. No data is deleted.",
+        "lock": "Lock for units below",
+        "lock_hint": "Units below cannot change this themselves.",
+        "dependents_title": "Other modules need this one",
+        "dependents_text": "Turning off {name} also turns off these modules:",
+        "dependents_submit_one": "Turn off {count} module",
+        "dependents_submit_other": "Turn off {count} modules",
+        "inherit_title": "Let {name} follow the level above?",
+        "inherit_text": "This unit's own choice is removed and the parent's setting applies."
+    },
+    "consent": {
+        "title": "Consent for {name}",
+        "text": "This module sends data to an AI service. An administrator must agree to the data-processing terms first.",
+        "agree": "I agree to the data-processing terms (version {version}) for this organization.",
+        "must_agree": "Tick the box to confirm you agree to the terms.",
+        "submit": "Give consent",
+        "withdraw_title": "Withdraw consent for {name}?",
+        "withdraw_text": "The module turns off right away for this organization.",
+        "withdraw": "Withdraw consent"
+    },
+    "purge": {
+        "title": "Delete all {name} data?",
+        "text": "Every record of this module in {org} will be deleted after a waiting period. Until then you can cancel.",
+        "submit": "Schedule deletion",
+        "scheduled": "{name} data will be deleted on {date}.",
+        "cancelled": "Data deletion cancelled.",
+        "undo_reason": "Cancelled right after scheduling"
+    },
+    "messages": {
+        "on": "{name} is on.",
+        "off": "{name} is off.",
+        "also_on": "Also turned on: {names}.",
+        "also_off": "Also turned off: {names}.",
+        "inherited": "{name} now follows the level above.",
+        "undone": "Change undone.",
+        "consent_given": "Consent recorded for {name}.",
+        "consent_withdrawn": "Consent withdrawn. {name} is off."
+    },
+    "app": {
+        "title": "Screens for this module are on the way",
+        "text": "The {module} module is on for your organization. Its pages arrive in its own release.",
+        "back": "Back to modules"
+    }
+}

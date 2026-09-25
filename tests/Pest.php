@@ -105,6 +105,29 @@ function partnerToken(User $user, Partner $partner): string
 }
 
 /**
+ * Sign in the way the browser app does (cookie session, first-party Origin)
+ * and optionally enter an organization or partner console. Factory users
+ * have the password "password".
+ */
+function spaSession(TestCase $test, User $user, ?Organization $organization = null, ?Partner $partner = null): TestCase
+{
+    $test->withHeader('Origin', config('app.url'));
+    $test->postJson('/session/login', ['email' => $user->email, 'password' => 'password'])->assertOk();
+
+    if ($organization !== null) {
+        $test->postJson('/session/context', ['organization_id' => $organization->getKey()])->assertOk();
+    }
+
+    if ($partner !== null) {
+        $test->postJson('/session/context', ['partner_id' => $partner->getKey()])->assertOk();
+    }
+
+    app(CurrentContext::class)->clear();
+
+    return $test;
+}
+
+/**
  * Put the current process into a user's organization context (model-level tests).
  */
 function actInOrganization(User $user, Organization $organization): CurrentContext

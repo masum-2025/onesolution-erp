@@ -49,7 +49,8 @@ return [
                     'type' => 'object',
                     'required' => ['upto_minor', 'rate_percent'],
                     'properties' => [
-                        'upto_minor' => ['type' => ['integer', 'null'], 'minimum' => 0],
+                        // x-format is a display hint only: amounts in minor units of the organization's currency.
+                        'upto_minor' => ['type' => ['integer', 'null'], 'minimum' => 0, 'x-format' => 'money_minor'],
                         'rate_percent' => ['type' => 'string', 'pattern' => '^\d{1,2}(\.\d{1,2})?$'],
                     ],
                     'additionalProperties' => false,

@@ -13,4 +13,9 @@ return [
         'label' => 'কর্মী কোডের ধরন',
         'description' => 'নতুন কর্মী কোডের নমুনা, যেমন EMP-{YYYY}-{SEQ:4}।',
     ],
+
+    'categories' => [
+        'employment' => 'চাকরি',
+        'numbering' => 'নম্বর নির্ধারণ',
+    ],
 ];

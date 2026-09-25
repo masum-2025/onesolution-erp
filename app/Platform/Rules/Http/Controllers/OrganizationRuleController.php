@@ -3,7 +3,6 @@
 namespace App\Platform\Rules\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Modules\ResolvedModule;
 use App\Platform\Rules\Enums\RuleMode;
@@ -43,7 +42,6 @@ class OrganizationRuleController extends Controller
         private RuleService $rules,
         private RulePresenter $presenter,
         private ModuleResolver $modules,
-        private ModuleRegistry $registry,
     ) {}
 
     /**
@@ -66,7 +64,7 @@ class OrganizationRuleController extends Controller
             }
 
             $grouped[$rule->moduleKey]['module'] = $rule->moduleKey;
-            $grouped[$rule->moduleKey]['name'] = $this->moduleName($rule);
+            $grouped[$rule->moduleKey]['name'] = $this->presenter->moduleName($rule);
             $grouped[$rule->moduleKey]['categories'][$rule->category][] = $this->presenter->present(
                 $rule,
                 $resolved[$key],
@@ -80,7 +78,7 @@ class OrganizationRuleController extends Controller
             'module' => $group['module'],
             'name' => $group['name'],
             'categories' => array_map(
-                fn (string $category, array $rules) => ['category' => $category, 'rules' => $rules],
+                fn (string $category, array $rules) => ['category' => $category, 'label' => $rules[0]['category_label'], 'rules' => $rules],
                 array_keys($group['categories']),
                 array_values($group['categories']),
             ),
@@ -178,7 +176,12 @@ class OrganizationRuleController extends Controller
             ->limit(100)
             ->get(['id', 'action', 'old_status', 'new_status', 'snapshot', 'actor_user_id', 'reason', 'created_at']);
 
-        return response()->json(['data' => $entries]);
+        $people = $this->presenter->userNames($entries->pluck('actor_user_id'));
+
+        return response()->json(['data' => $entries->map(fn (RuleValueHistory $entry) => [
+            ...$entry->toArray(),
+            'actor_name' => $people[$entry->actor_user_id] ?? null,
+        ])]);
     }
 
     public function rollback(RollbackRuleRequest $request, string $organization, string $key): JsonResponse
@@ -225,12 +228,5 @@ class OrganizationRuleController extends Controller
     private function moduleEnabled(RuleDefinition $rule, array $modules): bool
     {
         return $rule->moduleKey === RuleCatalog::CORE_MODULE || ($modules[$rule->moduleKey]->enabled ?? false);
-    }
-
-    private function moduleName(RuleDefinition $rule): string
-    {
-        return $rule->moduleKey === RuleCatalog::CORE_MODULE
-            ? __('rules.core_module_name')
-            : $this->registry->get($rule->moduleKey)->label();
     }
 }

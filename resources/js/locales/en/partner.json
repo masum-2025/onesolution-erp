@@ -1,0 +1,24 @@
+{
+    "clients": {
+        "title": "Clients",
+        "text": "Organizations you serve. You see account details only, never their business data.",
+        "search": "Search clients…",
+        "count_one": "{count} organization",
+        "count_other": "{count} organizations",
+        "page": "Page {page} of {pages}",
+        "empty_title": "No clients yet",
+        "empty_text": "Client organizations you sign up will appear here.",
+        "columns": {
+            "name": "Organization",
+            "sector": "Sector",
+            "country": "Country",
+            "plan": "Plan",
+            "status": "Status",
+            "since": "Client since"
+        }
+    },
+    "rules": {
+        "title": "Partner rules",
+        "text": "Defaults for all your clients. Clients can adjust them unless you lock them."
+    }
+}

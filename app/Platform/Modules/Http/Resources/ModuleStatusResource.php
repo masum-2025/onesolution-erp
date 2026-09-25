@@ -34,6 +34,7 @@ class ModuleStatusResource extends JsonResource
             'category' => $module->category,
             'requires' => $module->requires,
             'requires_consent' => $module->requiresConsent,
+            'consent_terms_version' => $module->requiresConsent ? config('platform_modules.consent_terms_version') : null,
             'is_core' => $module->isCore,
             'enabled' => $resolved->enabled,
             'available' => $resolved->available,
