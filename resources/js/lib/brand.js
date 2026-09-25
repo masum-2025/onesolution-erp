@@ -4,7 +4,7 @@ import { reactive } from 'vue';
  * Partner brand at runtime: one primary color in, readable text color and
  * every shade out (the CSS derives the shades). No per-partner builds.
  */
-export const brand = reactive({ name: '', primary_color: '#4F46E5', support_email: null });
+export const brand = reactive({ name: '', primary_color: '#2B4C9B', support_email: null, logo_url: null, mark_url: null, tagline: {} });
 
 function channel(value) {
     const c = value / 255;
@@ -26,9 +26,15 @@ export function readableOn(hex) {
     return contrast(hex, '#FFFFFF') >= contrast(hex, '#111114') ? '#FFFFFF' : '#111114';
 }
 
+/** The brand's tagline in the given language, falling back to English, then any. */
+export function taglineFor(locale) {
+    const tagline = brand.tagline ?? {};
+    return tagline[locale] ?? tagline.en ?? Object.values(tagline)[0] ?? '';
+}
+
 export function applyBrand(next) {
     if (!next) return;
-    const color = /^#[0-9A-Fa-f]{6}$/.test(next.primary_color ?? '') ? next.primary_color : '#4F46E5';
+    const color = /^#[0-9A-Fa-f]{6}$/.test(next.primary_color ?? '') ? next.primary_color : '#2B4C9B';
 
     Object.assign(brand, next, { primary_color: color });
     const root = document.documentElement.style;

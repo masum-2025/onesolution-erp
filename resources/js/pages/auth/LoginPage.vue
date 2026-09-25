@@ -3,12 +3,13 @@ import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowRight, Blocks, Eye, EyeOff, Languages, Lock, ShieldCheck, TriangleAlert } from 'lucide-vue-next';
 import AuthTopBar from '@/layouts/AuthTopBar.vue';
+import BrandLockup from '@/components/BrandLockup.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import { login } from '@/lib/session';
-import { brand } from '@/lib/brand';
+import { brand, taglineFor } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
-import { t } from '@/lib/i18n';
+import { i18n, t } from '@/lib/i18n';
 
 const router = useRouter();
 const route = useRoute();
@@ -75,10 +76,11 @@ onBeforeUnmount(() => clearInterval(countdown));
     <div class="min-h-dvh bg-surface lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
         <!-- Form -->
         <div class="flex min-h-dvh flex-col px-5 py-5 sm:px-10 lg:px-14">
-            <AuthTopBar />
+            <AuthTopBar without-brand />
 
             <div class="flex flex-1 items-center justify-center py-10">
                 <div class="w-full max-w-[380px] animate-rise">
+                    <BrandLockup class="mb-9" />
                     <h1 class="text-[26px] leading-tight font-semibold tracking-[-0.025em] text-fg">{{ t('auth.login.title') }}</h1>
                     <p class="mt-2 text-[14px] text-muted">{{ t('auth.login.subtitle', { brand: brand.name }) }}</p>
 
@@ -165,9 +167,12 @@ onBeforeUnmount(() => clearInterval(countdown));
             <div class="absolute inset-0 opacity-[0.14] [background-image:linear-gradient(currentColor_1px,transparent_1px),linear-gradient(90deg,currentColor_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(75%_65%_at_50%_40%,black,transparent)]" />
 
             <div class="relative flex flex-1 flex-col justify-between p-12 xl:p-14">
-                <span class="inline-flex w-fit items-center gap-2 rounded-full bg-white/12 px-3 py-1.5 text-[12.5px] font-medium ring-1 ring-white/20 backdrop-blur">
-                    <span class="size-1.5 rounded-full bg-current" />
-                    {{ t('auth.showcase.badge') }}
+                <span class="inline-flex w-fit items-center gap-2.5 rounded-full bg-white/12 py-1.5 ps-1.5 pe-3.5 text-[12.5px] font-medium ring-1 ring-white/20 backdrop-blur">
+                    <span class="grid size-7 place-items-center rounded-full bg-white">
+                        <img v-if="brand.mark_url" :src="brand.mark_url" alt="" class="size-5 object-contain" />
+                        <span v-else class="size-1.5 rounded-full bg-brand" />
+                    </span>
+                    {{ taglineFor(i18n.locale) || t('auth.showcase.badge') }}
                 </span>
 
                 <div class="relative mx-auto my-10 w-full max-w-[440px]">

@@ -48,7 +48,7 @@ it('escapes brand data written into the page', function () {
 
     expect($html)->not->toContain('<script>alert(1)</script>')
         ->not->toContain('red;}</style>')
-        ->toContain('--brand:#4F46E5');
+        ->toContain('--brand:#2B4C9B');
 });
 
 it('keeps API and session paths out of the app shell', function () {

@@ -7,6 +7,10 @@
     <meta property="csp-nonce" nonce="{{ Vite::cspNonce() }}">
     <title>{{ $brand['name'] }}</title>
     <link rel="icon" href="{{ $favicon }}">
+    @if ($brand['mark_url'])
+        <link rel="apple-touch-icon" href="{{ $brand['mark_url'] }}">
+    @endif
+    <meta name="theme-color" content="{{ $brand['primary_color'] }}">
     <style nonce="{{ Vite::cspNonce() }}">:root{--brand:{{ $brand['primary_color'] }}}</style>
     <script nonce="{{ Vite::cspNonce() }}">
         // Before first paint: theme and language from this browser's saved preferences.

@@ -20,7 +20,7 @@ describe('partner brand at runtime', () => {
     it('refuses anything that is not a plain hex color', () => {
         applyBrand({ name: 'Bad', primary_color: 'red;}</style><script>' });
 
-        expect(brand.primary_color).toBe('#4F46E5');
-        expect(document.documentElement.style.getPropertyValue('--brand')).toBe('#4F46E5');
+        expect(brand.primary_color).toBe('#2B4C9B');
+        expect(document.documentElement.style.getPropertyValue('--brand')).toBe('#2B4C9B');
     });
 });

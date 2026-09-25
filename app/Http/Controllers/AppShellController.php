@@ -25,13 +25,17 @@ class AppShellController extends Controller
     }
 
     /**
-     * A small SVG icon in the brand color with the brand's first letter,
-     * so every partner gets its own tab icon without uploading one.
+     * The brand's mark, or else a small SVG icon in the brand color with the
+     * brand's first letter, so every partner gets its own tab icon.
      *
-     * @param  array{name: string, primary_color: string}  $brand
+     * @param  array{name: string, primary_color: string, mark_url: string|null}  $brand
      */
     private function favicon(array $brand): string
     {
+        if ($brand['mark_url'] !== null) {
+            return $brand['mark_url'];
+        }
+
         $hex = ltrim($brand['primary_color'], '#');
         [$r, $g, $b] = array_map(fn (string $part) => hexdec($part) / 255, str_split($hex, 2));
         $luminance = 0.2126 * $r + 0.7152 * $g + 0.0722 * $b;

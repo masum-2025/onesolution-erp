@@ -102,7 +102,7 @@
 }
 
 :root {
-    --brand: #4f46e5;
+    --brand: #2b4c9b;
     --brand-fg: #ffffff;
     --brand-hover: color-mix(in oklab, var(--brand) 88%, black);
     --brand-soft: color-mix(in oklab, var(--brand) 9%, var(--c-surface));
@@ -119,7 +119,7 @@
     --c-muted: #6a6a75;
     --c-faint: #a0a0aa;
 
-    --c-ok: #047857;
+    --c-ok: #157f4b;
     --c-ok-soft: #ecfdf5;
     --c-warn: #b45309;
     --c-warn-soft: #fffbeb;

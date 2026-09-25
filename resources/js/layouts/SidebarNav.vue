@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { Blocks, Boxes, Handshake, Home, Network, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
 import ContextSwitcher from './ContextSwitcher.vue';
+import BrandMark from '@/components/BrandMark.vue';
 import UserMenu from './UserMenu.vue';
 import { can, session } from '@/lib/session';
 import { formatNumber } from '@/lib/format';
@@ -40,6 +41,9 @@ function isActive(item) {
 
 <template>
     <div class="flex h-full flex-col">
+        <div class="flex h-14 items-center border-b border-line px-5">
+            <BrandMark size="sm" with-name />
+        </div>
         <div class="p-3">
             <ContextSwitcher />
         </div>
