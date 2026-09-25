@@ -5,6 +5,9 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
+use App\Platform\Rules\Models\RuleDefinitionRecord;
+use App\Platform\Rules\Models\RuleValue;
+use App\Platform\Rules\Models\RuleValueHistory;
 use App\Platform\Tenancy\Concerns\BelongsToOrganization;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
@@ -31,6 +34,12 @@ const PLATFORM_MODELS = [
     OrganizationModule::class,
     ModuleConsent::class,
     ModulePurgeRequest::class,
+    // Rule values live at platform, partner, plan, organization, role and user
+    // scope; resolution reads the whole chain. Writes go through RuleService,
+    // reads through visible-organization lookups.
+    RuleDefinitionRecord::class,
+    RuleValue::class,
+    RuleValueHistory::class,
 ];
 
 /**

@@ -15,7 +15,20 @@ return [
     'sectors' => ['*'],
     'plans' => ['business', 'enterprise'],
     'permissions' => ['ai_assistant.use', 'ai_assistant.manage'],
-    'rules' => [],
+    'rules' => [
+        [
+            'key' => 'ai_assistant.data_scope',
+            'type' => 'enum',
+            'schema' => ['enum' => ['own_records', 'branch', 'company']],
+            'default' => 'own_records',
+            'label' => 'ai_assistant::rules.data_scope.label',
+            'description' => 'ai_assistant::rules.data_scope.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'sensitive' => true,
+            'category' => 'privacy',
+            'sort_order' => 10,
+        ],
+    ],
     'menu' => [
         [
             'key' => 'ai_assistant',

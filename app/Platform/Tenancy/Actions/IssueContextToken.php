@@ -4,6 +4,7 @@ namespace App\Platform\Tenancy\Actions;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Context\ContextResolver;
 use Laravel\Sanctum\NewAccessToken;
 
@@ -16,6 +17,7 @@ class IssueContextToken
     public function __construct(
         private ContextResolver $resolver,
         private AuditLogger $audit,
+        private RuleResolver $rules,
     ) {}
 
     /**
@@ -59,8 +61,12 @@ class IssueContextToken
         return $token;
     }
 
+    /**
+     * Token lifetime from the rule engine, resolved for the context just
+     * entered (organization, partner console, or platform for plain login).
+     */
     private function expiresAt(): \DateTimeInterface
     {
-        return now()->addMinutes((int) config('tenancy.token_ttl_minutes'));
+        return now()->addMinutes((int) $this->rules->get('tenancy.token_ttl_minutes'));
     }
 }

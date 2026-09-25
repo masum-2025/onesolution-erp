@@ -4,6 +4,12 @@ use App\Models\User;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Modules\ResolvedModule;
 use App\Platform\Modules\Services\ModuleToggleService;
+use App\Platform\Rules\Enums\RuleMode;
+use App\Platform\Rules\Models\RuleValue;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
+use App\Platform\Rules\RuleTargets;
+use App\Platform\Rules\Services\RuleService;
 use App\Platform\Tenancy\Actions\AddMember;
 use App\Platform\Tenancy\Actions\CreateOrganization;
 use App\Platform\Tenancy\Actions\IssueContextToken;
@@ -117,6 +123,29 @@ function setPlan(Organization $organization, string $plan): void
 function toggles(): ModuleToggleService
 {
     return app(ModuleToggleService::class);
+}
+
+function ruleService(): RuleService
+{
+    return app(RuleService::class);
+}
+
+/**
+ * Store a platform-level value the way platform tooling does (no approval).
+ */
+function platformRule(string $key, mixed $value, ?string $country = null, RuleMode $mode = RuleMode::Set): RuleValue
+{
+    return ruleService()->set(app(RuleTargets::class)->platform(), $key, $mode, $value, 'Test setup', countryCode: $country, trusted: true);
+}
+
+function orgRule(Organization $organization, string $key, mixed $value, RuleMode $mode = RuleMode::Set, ?User $actor = null): RuleValue
+{
+    return ruleService()->set(app(RuleTargets::class)->organization($organization->fresh()), $key, $mode, $value, 'Test setup', $actor);
+}
+
+function ruleFor(string $key, Organization $organization): mixed
+{
+    return app(RuleResolver::class)->get($key, app(RuleContextFactory::class)->forOrganization($organization->fresh()));
 }
 
 function resolvedModule(string $key, Organization $organization): ResolvedModule

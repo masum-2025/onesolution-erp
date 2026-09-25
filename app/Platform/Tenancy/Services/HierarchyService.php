@@ -4,9 +4,12 @@ namespace App\Platform\Tenancy\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Exceptions\HierarchyViolation;
 use App\Platform\Tenancy\Models\Organization;
+use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +19,11 @@ use Illuminate\Support\Facades\DB;
  */
 class HierarchyService
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(
+        private AuditLogger $audit,
+        private RuleResolver $rules,
+        private RuleContextFactory $contexts,
+    ) {}
 
     /**
      * @return Collection<int, Organization> Root first, parent last.
@@ -58,11 +65,11 @@ class HierarchyService
     }
 
     /**
-     * Enforce the configured parent rules for a type ("root" = no parent).
+     * Enforce the partner's structure rule for a type ("root" = no parent).
      */
-    public function assertValidParent(OrganizationType $type, ?Organization $parent): void
+    public function assertValidParent(OrganizationType $type, ?Organization $parent, Partner $partner): void
     {
-        $allowed = config('tenancy.allowed_parents.'.$type->value, []);
+        $allowed = $this->rules->get('tenancy.allowed_parents', $this->contexts->forPartner($partner))[$type->value] ?? [];
         $parentType = $parent?->type->value ?? 'root';
 
         if (! in_array($parentType, $allowed, true)) {
@@ -70,9 +77,9 @@ class HierarchyService
         }
     }
 
-    public function assertDepthAllowed(int $depth): void
+    public function assertDepthAllowed(int $depth, Partner $partner): void
     {
-        $maxDepth = (int) config('tenancy.max_depth');
+        $maxDepth = (int) $this->rules->get('tenancy.max_depth', $this->contexts->forPartner($partner));
 
         if ($depth > $maxDepth) {
             throw HierarchyViolation::tooDeep($maxDepth);
@@ -108,7 +115,7 @@ class HierarchyService
                 throw HierarchyViolation::alreadyThere();
             }
 
-            $this->assertValidParent($organization->type, $newParent);
+            $this->assertValidParent($organization->type, $newParent, $organization->partner);
 
             $descendants = Organization::query()
                 ->subtreeOf($organization)
@@ -119,7 +126,7 @@ class HierarchyService
 
             $depthDelta = ($newParent->depth + 1) - $organization->depth;
             $deepest = (int) $descendants->max('depth') ?: $organization->depth;
-            $this->assertDepthAllowed(max($deepest, $organization->depth) + $depthDelta);
+            $this->assertDepthAllowed(max($deepest, $organization->depth) + $depthDelta, $organization->partner);
 
             $old = [
                 'parent_id' => $organization->parent_id,

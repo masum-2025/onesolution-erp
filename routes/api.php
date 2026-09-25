@@ -4,6 +4,9 @@ use App\Platform\Modules\Http\Controllers\MenuController;
 use App\Platform\Modules\Http\Controllers\ModuleConsentController;
 use App\Platform\Modules\Http\Controllers\ModuleController;
 use App\Platform\Modules\Http\Controllers\ModulePurgeController;
+use App\Platform\Rules\Http\Controllers\OrganizationRuleController;
+use App\Platform\Rules\Http\Controllers\PartnerRuleController;
+use App\Platform\Rules\Http\Controllers\RuleApprovalController;
 use App\Platform\Tenancy\Http\Controllers\Api\AuthController;
 use App\Platform\Tenancy\Http\Controllers\Api\MemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\OrganizationController;
@@ -50,9 +53,31 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::post('organizations/{organization}/modules/{module}/purge', [ModulePurgeController::class, 'store']);
         Route::delete('organizations/{organization}/modules/{module}/purge', [ModulePurgeController::class, 'destroy']);
     });
+
+    // Rule engine (Phase 3)
+    Route::get('organizations/{organization}/rules', [OrganizationRuleController::class, 'index']);
+    Route::get('organizations/{organization}/rules/{key}', [OrganizationRuleController::class, 'show']);
+    Route::get('organizations/{organization}/rules/{key}/history', [OrganizationRuleController::class, 'history']);
+    Route::get('organizations/{organization}/rule-approvals', [RuleApprovalController::class, 'index']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::put('organizations/{organization}/rules/{key}', [OrganizationRuleController::class, 'update']);
+        Route::delete('organizations/{organization}/rules/{key}', [OrganizationRuleController::class, 'destroy']);
+        Route::post('organizations/{organization}/rules/{key}/preview', [OrganizationRuleController::class, 'preview']);
+        Route::post('organizations/{organization}/rules/{key}/rollback', [OrganizationRuleController::class, 'rollback']);
+        Route::post('organizations/{organization}/rule-approvals/{value}/approve', [RuleApprovalController::class, 'approve']);
+        Route::post('organizations/{organization}/rule-approvals/{value}/reject', [RuleApprovalController::class, 'reject']);
+    });
 });
 
 Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(function () {
     Route::get('organizations', [PartnerOrganizationController::class, 'index']);
     Route::get('organizations/{organization}', [PartnerOrganizationController::class, 'show']);
+
+    Route::get('rules', [PartnerRuleController::class, 'index']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::put('rules/{key}', [PartnerRuleController::class, 'update']);
+        Route::delete('rules/{key}', [PartnerRuleController::class, 'destroy']);
+        Route::post('rule-approvals/{value}/approve', [PartnerRuleController::class, 'approve']);
+        Route::post('rule-approvals/{value}/reject', [PartnerRuleController::class, 'reject']);
+    });
 });

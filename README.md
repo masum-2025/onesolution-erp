@@ -37,8 +37,8 @@ Partner (house or white-label reseller)
   editable (a platform "transfer client" action comes later).
 - Tree columns: `parent_id`, `root_id` (top group), `path` (`/{root}/{…}/{id}/`), `depth`.
   All subtree queries use `path LIKE 'prefix%'` — no recursive or vendor SQL.
-- Allowed parent types and max depth: `config('tenancy.allowed_parents')`, `max_depth`
-  (move to the rule engine in Phase 3).
+- Allowed parent types and max depth are rules: `tenancy.allowed_parents`, `tenancy.max_depth`
+  (platform / partner level).
 - `country_code`, `default_locale`, `timezone`, `currency_code`, `region`: `null` means
   inherit from the nearest ancestor, then `config('tenancy.defaults')`.
   `GET /api/organizations/{id}/settings` shows each value and where it comes from.
@@ -125,7 +125,7 @@ partner access to client data.
 
 - New sector, country or partner: data only (`sector_key`, organization country fields,
   a `partners` row). No code change.
-- New organization type or parent rule: `config/tenancy.php` now, rule data after Phase 3.
+- New parent rule for a partner: set `tenancy.allowed_parents` at partner level (data).
 - Interim authorization (`owner` membership manages) is replaced by Phase 4 permissions;
   `role_id` is already on memberships.
 - Maker-checker for moves and support access for partners: Phase 3 and Phase 5B.
@@ -186,7 +186,7 @@ a tree bumps that tree's cache version (works on every cache store).
 | POST | /api/organizations/{id}/modules/{key}/disable | `{reason, lock?, confirm?}`; 409 + `dependents` until `confirm=true` |
 | POST | /api/organizations/{id}/modules/{key}/inherit | `{reason}`; remove this level's setting |
 | POST/DELETE | /api/organizations/{id}/modules/{key}/consent | AI consent `{terms_version}` / revoke `{reason}` |
-| POST/DELETE | /api/organizations/{id}/modules/{key}/purge | `{confirm_text: key, reason}`; runs after 7 days, cancellable |
+| POST/DELETE | /api/organizations/{id}/modules/{key}/purge | `{confirm_text: key, reason}`; runs after `modules.purge_delay_days` (default 7), cancellable |
 | GET | /api/menu | enabled modules' menu items for the current organization |
 
 A parent's lock is shown by name in the error. Every write is audited with its reason.
@@ -217,3 +217,99 @@ Turning a module off never deletes data; deletion is only the delayed purge
   `config/plans.php` (Phase 5: the plans table). New sector: manifest data only.
 - Partner- and platform-level locks (Phase 5B) and `modules.manage` permission (Phase 4)
   plug into the same resolver and gate.
+
+## Rule engine (Phase 3)
+
+Code: `app/Platform/Rules`. Config: `config/platform_rules.php` (cache only).
+Business numbers are never hardcoded: module code reads them with
+
+```php
+use App\Platform\Rules\Facades\Rules;
+
+Rules::get('attendance.late_grace_minutes');              // current tenant, now
+Rules::get('payroll.overtime_multiplier', asOf: $monthEnd); // value valid at a past date
+Rules::getMany('payroll.');
+```
+
+### Defining rules
+
+A module declares rules in its manifest (`rules`); platform rules live in
+`app/Platform/Rules/core-rules.php`. Labels are translation keys
+(`Modules/{Name}/lang/{en,bn}/rules.php`). A new module adds rules with no core change.
+
+```php
+[
+    'key' => 'attendance.late_grace_minutes',   // must start with the module key
+    'type' => 'integer',                        // boolean integer decimal string enum multi_enum
+                                                // duration money time date json table
+    'schema' => ['minimum' => 0, 'maximum' => 240],   // JSON Schema on top of the type
+    'default' => 10,
+    'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch', 'department'],
+    'requires_approval' => false, 'sensitive' => false,   // either one => maker-checker
+    'country_specific' => false,
+    'label' => 'attendance::rules.late_grace_minutes.label',
+    'description' => 'attendance::rules.late_grace_minutes.description',
+    'category' => 'lateness', 'sort_order' => 10,
+]
+```
+
+Decimals are strings (`"1.5"`), money is `{"amount": <minor units>, "currency": "BDT"}`.
+`php artisan rules:sync` mirrors definitions into `rule_definitions` (run on deploy; the seeder runs it).
+
+### Values and resolution
+
+`rule_values` rows sit at a scope (platform, partner, plan, group, company, branch,
+department, role, user) with a mode: `set`, `constrain` (`{min, max, allowed}` for
+descendants) or `lock` (fixed; descendants ignored). Resolution:
+
+1. start with the default; walk platform → partner → plan → group → … → role → user,
+   using only values in effect at the moment asked (`effective_from` / `effective_to`);
+2. a lock stops the walk;
+3. the result must satisfy every ancestor constraint — otherwise the nearest valid
+   ancestor value is used (or the value is clamped to the limits) and a warning is logged;
+4. country-specific rules prefer the row for the organization's country over the generic row.
+
+`explain()` returns the full per-level trace. Results are cached per chain; cache keys carry
+global / partner / tree versions and expire exactly when a future-dated value starts.
+`snapshot($keys)` returns values plus a `rule_version` for offline leases (Phase 7).
+
+### Changing values — `RuleService`
+
+Checks, in order: level allowed for the rule, country only for country-specific rules,
+module enabled at the organization, JSON Schema, no ancestor lock, inside ancestor limits
+(new limits may only narrow them). `requires_approval` / `sensitive` changes stay
+`pending_approval` until a **different** owner of the same organization or an ancestor
+approves (self-approval is refused). Changes can be scheduled (`effective_from`), reset to
+inherited (history kept, past dates still resolve), rolled back to any version, and
+previewed. Every step writes `rule_value_history` (append-only) and the audit log.
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/organizations/{id}/rules?module= | grouped by module/category: value, source, lock, limits, own values, editable |
+| GET | /api/organizations/{id}/rules/{key} | + full `trace` |
+| PUT | /api/organizations/{id}/rules/{key} | `{mode, value, country_code?, effective_from?, reason}` → 200, or 202 when approval is needed |
+| DELETE | /api/organizations/{id}/rules/{key} | reset to inherited `{reason, slot?: value\|constraint}` |
+| POST | /api/organizations/{id}/rules/{key}/preview | organizations whose value would change |
+| GET / POST | /api/organizations/{id}/rules/{key}/history, …/rollback | `{version, reason}` |
+| GET | /api/organizations/{id}/rule-approvals | pending changes at this level and below |
+| POST | /api/organizations/{id}/rule-approvals/{valueId}/approve \| reject | reject needs a reason |
+| GET / PUT / DELETE | /api/partner/rules(/{key}) | partner level, partner owners only |
+| POST | /api/partner/rule-approvals/{valueId}/approve \| reject | partner maker-checker |
+
+Platform and plan values (no platform admin UI yet): `php artisan rules:set <key> <json> [--plan=] [--country=] [--mode=] [--effective-from=] --reason=...`
+and `php artisan rules:explain <key> [--organization=] [--date=]`.
+
+Seeded data (`database/seeders/data/rule-values.php`): Bangladesh overtime rate, weekend,
+fiscal year, notice period and income tax slabs FY 2024-25, plus plan storage limits.
+**Legal and tax values must be verified by a qualified adviser before production use.**
+
+Phase 1–2 tunables now read rules: `tenancy.allowed_parents`, `tenancy.max_depth`,
+`tenancy.token_ttl_minutes`, `modules.purge_delay_days`.
+
+### Future expansion (Phase 3)
+
+- New country: add rows to the data file (or `rules:set --country=XX`). No code change.
+- New partner or plan defaults: partner console / `rules:set --plan=`. No code change.
+- Role-level values resolve already; writing them arrives with Phase 4 roles. The interim
+  `rules.manage` gate (owner) becomes the `rules.edit.{module}` permission in Phase 4.
+- A rule editor UI arrives with the frontend; the API already returns everything it needs.

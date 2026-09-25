@@ -10,12 +10,14 @@ use App\Platform\Modules\Exceptions\ModuleException;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Modules\ModuleResolver;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Deleting a module's data is separate from disabling it: it needs the module
- * key typed as confirmation, waits a delay (default 7 days), can be cancelled,
+ * key typed as confirmation, waits a delay (rule modules.purge_delay_days), can be cancelled,
  * and is audited at every step.
  */
 class ModulePurgeService
@@ -24,6 +26,8 @@ class ModulePurgeService
         private ModuleRegistry $registry,
         private ModuleResolver $resolver,
         private AuditLogger $audit,
+        private RuleResolver $rules,
+        private RuleContextFactory $contexts,
     ) {}
 
     public function request(Organization $organization, string $key, string $confirmText, string $reason, User $actor): ModulePurgeRequest
@@ -55,7 +59,7 @@ class ModulePurgeService
                 'module_key' => $key,
                 'status' => PurgeStatus::Pending,
                 'requested_by' => $actor->getKey(),
-                'execute_after' => now()->addDays((int) config('platform_modules.purge_delay_days')),
+                'execute_after' => now()->addDays((int) $this->rules->get('modules.purge_delay_days', $this->contexts->forOrganization($organization))),
                 'reason' => $reason,
             ]);
 

@@ -110,7 +110,7 @@ it('blocks an existing token once the partner is suspended', function () {
 
 it('rejects expired tokens', function () {
     $token = orgToken($this->user, $this->w->c1);
-    $this->travel(config('tenancy.token_ttl_minutes') + 1)->minutes();
+    $this->travel(ruleFor('tenancy.token_ttl_minutes', $this->w->c1) + 1)->minutes();
 
     $this->asToken($token)->getJson('/api/organizations')->assertUnauthorized();
 });

@@ -126,7 +126,7 @@ it('rejects moves that break parent type rules', function () {
 })->throws(HierarchyViolation::class);
 
 it('rejects trees deeper than the configured maximum', function () {
-    config(['tenancy.max_depth' => 2]);
+    platformRule('tenancy.max_depth', 2);
     $company = createChild(createGroup(Partner::factory()->create()), OrganizationType::Company, 'Company');
     $branch = createChild($company, OrganizationType::Branch, 'Branch');
 

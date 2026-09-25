@@ -1,0 +1,65 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Platform- and plan-level rule values (data, not code)
+|--------------------------------------------------------------------------
+|
+| Country values are legal / financial facts and MUST be reviewed by a
+| qualified accountant or lawyer before production use. Each entry records
+| its source in `reason`, which goes into the audit log.
+|
+| Money is in minor units (poisha for BDT): 350,000 BDT = 35000000.
+|
+*/
+
+return [
+
+    // ── Bangladesh ───────────────────────────────────────────────────────
+    [
+        'key' => 'payroll.overtime_multiplier',
+        'country' => 'BD',
+        'value' => '2.0',
+        'reason' => 'Bangladesh Labour Act 2006, s.108: overtime at twice the ordinary rate.',
+    ],
+    [
+        'key' => 'attendance.weekend_days',
+        'country' => 'BD',
+        'value' => ['fri'],
+        'reason' => 'Bangladesh: Friday weekly holiday (Labour Act 2006, s.103: one day per week).',
+    ],
+    [
+        'key' => 'accounting.fiscal_year_start',
+        'country' => 'BD',
+        'value' => '07-01',
+        'reason' => 'Bangladesh fiscal year runs July to June.',
+    ],
+    [
+        'key' => 'hrm.notice_period_days',
+        'country' => 'BD',
+        'value' => 60,
+        'reason' => 'Bangladesh Labour Act 2006, s.27: resignation notice for permanent workers.',
+    ],
+    [
+        'key' => 'payroll.tax_slabs',
+        'country' => 'BD',
+        'effective_from' => '2024-07-01',
+        // Cumulative taxable income thresholds, individual taxpayer (general), FY 2024-25.
+        'value' => [
+            ['upto_minor' => 35000000, 'rate_percent' => '0'],
+            ['upto_minor' => 45000000, 'rate_percent' => '5'],
+            ['upto_minor' => 85000000, 'rate_percent' => '10'],
+            ['upto_minor' => 135000000, 'rate_percent' => '15'],
+            ['upto_minor' => 185000000, 'rate_percent' => '20'],
+            ['upto_minor' => 385000000, 'rate_percent' => '25'],
+            ['upto_minor' => null, 'rate_percent' => '30'],
+        ],
+        'reason' => 'Bangladesh individual income tax slabs FY 2024-25 (Finance Act 2024). Verify with a tax adviser before use.',
+    ],
+
+    // ── Plan defaults (interim plans, config/plans.php) ─────────────────
+    ['key' => 'offline_mode.max_cached_records', 'plan' => 'starter', 'value' => 2000, 'reason' => 'Starter plan storage limit.'],
+    ['key' => 'offline_mode.max_cached_records', 'plan' => 'business', 'value' => 10000, 'reason' => 'Business plan storage limit.'],
+    ['key' => 'offline_mode.max_cached_records', 'plan' => 'enterprise', 'value' => 50000, 'reason' => 'Enterprise plan storage limit.'],
+
+];

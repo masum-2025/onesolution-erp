@@ -37,10 +37,11 @@ class CreateOrganization
             throw new InvalidArgumentException('A root organization needs a partner.');
         }
 
-        $this->hierarchy->assertValidParent($type, $parent);
+        $owningPartner = $partner ?? $parent->partner;
+        $this->hierarchy->assertValidParent($type, $parent, $owningPartner);
 
         $depth = $parent ? $parent->depth + 1 : 0;
-        $this->hierarchy->assertDepthAllowed($depth);
+        $this->hierarchy->assertDepthAllowed($depth, $owningPartner);
 
         return DB::transaction(function () use ($type, $attributes, $parent, $partner, $depth, $actor) {
             $organization = new Organization;
