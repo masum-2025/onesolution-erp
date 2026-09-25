@@ -88,7 +88,8 @@
     "blocked": {
         "level_not_allowed": "This rule cannot be changed at this level. It is managed higher up.",
         "module_disabled": "Turn on this rule's module first, then you can change it.",
-        "locked_by_parent": "{name} locked this rule. Ask them if it needs to change."
+        "locked_by_parent": "{name} locked this rule. Ask them if it needs to change.",
+        "no_permission": "You can see this rule. Changing it needs permission to edit this module's settings. Ask an administrator."
     },
     "drawer": {
         "tabs": {
@@ -104,8 +105,8 @@
         "pending": "Waiting for approval: {value}",
         "review_link": "Review in Approvals",
         "scheduled": "Changes to {value} on {date}.",
-        "no_permission": "You can see this rule. Only owners can change it.",
-        "needs_approval": "This is a sensitive rule. Your change takes effect after another owner approves it.",
+        "no_permission": "You can see this rule. Changing it needs permission to edit this module's settings.",
+        "needs_approval": "This is a sensitive rule. Your change takes effect after another person with the approval permission approves it.",
         "mode": "What do you want to do?",
         "value": "Value",
         "limits": "Limits for units below",
@@ -173,13 +174,13 @@
     },
     "approvals": {
         "title": "Approvals",
-        "text": "Sensitive rule changes wait here until another owner reviews them.",
+        "text": "Sensitive rule changes wait here until another person with the approval permission reviews them.",
         "empty_title": "Nothing waiting for review",
         "empty_text": "When someone changes a sensitive rule, it shows up here.",
         "requested_by": "requested by {name}",
         "new_value": "New value",
         "starts": "Takes effect {date}",
-        "own_request": "You asked for this change. Another owner must review it.",
+        "own_request": "You asked for this change. Someone else must review it.",
         "approve": "Approve",
         "reject": "Reject",
         "approve_title": "Approve this change?",
@@ -187,6 +188,6 @@
         "review_text": "\"{rule}\" will be set to {value}.",
         "approved": "Change approved.",
         "rejected": "Change rejected.",
-        "no_access": "Only owners can review changes."
+        "no_access": "Reviewing changes needs the \"Approve setting changes\" permission."
     }
 }

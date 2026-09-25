@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { Blocks, Boxes, Handshake, Home, Network, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
+import { Blocks, Boxes, Handshake, Home, KeyRound, Network, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
 import ContextSwitcher from './ContextSwitcher.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import UserMenu from './UserMenu.vue';
@@ -28,9 +28,10 @@ const workspace = computed(() =>
         : [
               { to: '/', label: t('core.nav.overview'), icon: Home, exact: true },
               { to: '/organizations', label: t('core.nav.organizations'), icon: Network },
+              ...(can('roles.manage') || can('members.manage') ? [{ to: '/roles', label: t('core.nav.roles'), icon: KeyRound }] : []),
               { to: '/modules', label: t('core.nav.modules'), icon: Blocks },
               { to: '/rules', label: t('core.nav.rules'), icon: SlidersHorizontal },
-              ...(can('rules.manage') ? [{ to: '/approvals', label: t('core.nav.approvals'), icon: ShieldCheck, count: props.pendingApprovals }] : []),
+              ...(can('rules.approve') ? [{ to: '/approvals', label: t('core.nav.approvals'), icon: ShieldCheck, count: props.pendingApprovals }] : []),
           ],
 );
 

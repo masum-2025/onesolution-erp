@@ -3,6 +3,7 @@
 namespace App\Platform\Rules\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Access\AccessResolver;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Modules\ResolvedModule;
 use App\Platform\Rules\Enums\RuleMode;
@@ -22,6 +23,7 @@ use App\Platform\Rules\RuleTargets;
 use App\Platform\Rules\Services\RuleService;
 use App\Platform\Tenancy\Http\Controllers\Api\Concerns\FindsVisibleOrganizations;
 use App\Platform\Tenancy\Models\Organization;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -42,6 +44,7 @@ class OrganizationRuleController extends Controller
         private RuleService $rules,
         private RulePresenter $presenter,
         private ModuleResolver $modules,
+        private AccessResolver $access,
     ) {}
 
     /**
@@ -71,6 +74,7 @@ class OrganizationRuleController extends Controller
                 $target,
                 $ownRows->get($key, new Collection),
                 $this->moduleEnabled($rule, $modules),
+                $this->mayEdit($rule, $organization),
             );
         }
 
@@ -101,6 +105,7 @@ class OrganizationRuleController extends Controller
                 $target,
                 $this->ownRows($target)->where('rule_key', $key)->values(),
                 $this->moduleEnabled($rule, $this->modules->resolveAll($organization)),
+                $this->mayEdit($rule, $organization),
             ),
             'trace' => $resolved->trace,
         ]]);
@@ -108,7 +113,7 @@ class OrganizationRuleController extends Controller
 
     public function update(SetRuleRequest $request, string $organization, string $key): JsonResponse
     {
-        [, $target] = $this->load($organization, 'rules.manage');
+        [, $target] = $this->loadForEdit($organization, $key);
 
         $row = $this->rules->set(
             $target,
@@ -134,7 +139,7 @@ class OrganizationRuleController extends Controller
      */
     public function destroy(ResetRuleRequest $request, string $organization, string $key): JsonResponse
     {
-        [, $target] = $this->load($organization, 'rules.manage');
+        [, $target] = $this->loadForEdit($organization, $key);
 
         $slot = match ($request->validated('slot')) {
             'value' => RuleMode::Set,
@@ -152,7 +157,7 @@ class OrganizationRuleController extends Controller
      */
     public function preview(PreviewRuleRequest $request, string $organization, string $key): JsonResponse
     {
-        [, $target] = $this->load($organization, 'rules.manage');
+        [, $target] = $this->loadForEdit($organization, $key);
 
         return response()->json(['data' => $this->rules->preview(
             $target,
@@ -186,7 +191,7 @@ class OrganizationRuleController extends Controller
 
     public function rollback(RollbackRuleRequest $request, string $organization, string $key): JsonResponse
     {
-        [, $target] = $this->load($organization, 'rules.manage');
+        [, $target] = $this->loadForEdit($organization, $key);
 
         $row = $this->rules->rollback($target, $key, (int) $request->validated('version'), $request->validated('reason'), $request->user());
         $pending = $row->status === RuleValueStatus::PendingApproval;
@@ -206,6 +211,28 @@ class OrganizationRuleController extends Controller
         Gate::authorize($ability, $organization);
 
         return [$organization, $this->targets->organization($organization)];
+    }
+
+    /**
+     * Editing needs the rule's own permission (rules.edit.{module} by default) reaching
+     * the organization. A disabled module is reported by RuleService with its own message.
+     *
+     * @return array{0: Organization, 1: RuleTarget}
+     */
+    private function loadForEdit(string $organizationId, string $key): array
+    {
+        [$organization, $target] = $this->load($organizationId, 'view');
+
+        if (! $this->mayEdit($this->catalog->get($key), $organization)) {
+            throw new AuthorizationException(__('tenancy.errors.forbidden'));
+        }
+
+        return [$organization, $target];
+    }
+
+    private function mayEdit(RuleDefinition $rule, Organization $organization): bool
+    {
+        return $this->access->allows($rule->editPermission, $organization, checkModule: false);
     }
 
     /**

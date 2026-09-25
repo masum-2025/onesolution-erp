@@ -26,6 +26,11 @@ class MembershipResource extends JsonResource
             ]),
             'membership_type' => $this->membership_type->value,
             'access_scope' => $this->access_scope->value,
+            'roles' => $this->whenLoaded('roles', fn () => $this->roles->map(fn ($role) => [
+                'id' => $role->id,
+                'name' => $role->displayName(),
+                'organization_id' => $role->organization_id,
+            ])->sortBy('name')->values()->all()),
             'is_primary' => $this->is_primary,
             'status' => $this->status->value,
             'created_at' => $this->created_at?->toIso8601String(),

@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Platform\Access\Models\MembershipRole;
+use App\Platform\Access\Models\Role;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Modules\ResolvedModule;
 use App\Platform\Modules\Services\ModuleToggleService;
@@ -21,8 +23,11 @@ use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Models\Organization;
+use App\Platform\Tenancy\Models\OrganizationMembership;
 use App\Platform\Tenancy\Models\Partner;
 use App\Platform\Tenancy\Models\PartnerUser;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -203,4 +208,62 @@ function tenancyWorld(): object
     $c4 = createChild($g3, OrganizationType::Company, 'C4');
 
     return (object) compact('partnerA', 'partnerB', 'g1', 'c1', 'b1', 'd1', 'c2', 'b2', 'g2', 'c3', 'g3', 'c4');
+}
+
+/*
+|--------------------------------------------------------------------------
+| Access helpers (Phase 4)
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * A role fixture written straight to the tables (setup only; the API and
+ * RoleService are tested separately).
+ *
+ * @param  list<string>  $permissions
+ */
+function makeRole(Organization $organization, array $permissions, string $name = 'Role'): Role
+{
+    $role = Role::create([
+        'organization_id' => $organization->getKey(),
+        'key' => Str::slug($name, '_').'_'.Str::lower(Str::random(6)),
+        'name' => ['en' => $name],
+        'version' => 1,
+    ]);
+
+    DB::table('role_permissions')->insert(array_map(
+        fn (string $key) => ['role_id' => $role->getKey(), 'permission_key' => $key],
+        $permissions,
+    ));
+
+    return $role;
+}
+
+function giveRoles(User $user, Organization $organization, Role ...$roles): OrganizationMembership
+{
+    $membership = OrganizationMembership::query()
+        ->where('user_id', $user->getKey())
+        ->where('organization_id', $organization->getKey())
+        ->firstOrFail();
+
+    foreach ($roles as $role) {
+        MembershipRole::create([
+            'organization_id' => $organization->getKey(),
+            'membership_id' => $membership->getKey(),
+            'role_id' => $role->getKey(),
+        ]);
+    }
+
+    return $membership;
+}
+
+/**
+ * A staff member holding the given roles.
+ */
+function staffWithRoles(Organization $organization, Role ...$roles): User
+{
+    $user = createMember($organization, MembershipType::Staff);
+    giveRoles($user, $organization, ...$roles);
+
+    return $user;
 }

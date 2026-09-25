@@ -10,6 +10,7 @@ abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase {
         migrateFreshUsing as baseMigrateFreshUsing;
+        migrateDatabases as baseMigrateDatabases;
     }
 
     /**
@@ -23,6 +24,17 @@ abstract class TestCase extends BaseTestCase
             '--path' => [database_path('migrations'), base_path('tests/Fixtures/migrations')],
             '--realpath' => true,
         ]);
+    }
+
+    /**
+     * Mirror the permission catalog and role templates once per run, like a
+     * deploy does (role rows reference permissions by key).
+     */
+    protected function migrateDatabases()
+    {
+        $this->baseMigrateDatabases();
+
+        $this->artisan('access:sync');
     }
 
     /**

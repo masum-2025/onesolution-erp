@@ -46,16 +46,18 @@ it('describes the organization context with its path and settings', function () 
         ->and($response->json('data.context.settings.timezone'))->toBe('Asia/Dhaka');
 });
 
-it('gives owners the manage flags and staff none', function (MembershipType $type, bool $can) {
+it('gives owners the manage flags and staff without roles none', function (MembershipType $type, bool $can) {
     $user = createMember($this->w->c1, $type);
     spaSession($this, $user, $this->w->c1);
 
-    expect($this->getJson('/api/me')->json('data.can'))->toBe([
-        'organizations.manage' => $can,
-        'modules.manage' => $can,
-        'rules.manage' => $can,
-        'partner.rules.manage' => false,
-    ]);
+    $me = $this->getJson('/api/me')->json('data');
+
+    expect(array_filter(array_intersect_key($me['can'], array_flip(['organizations.manage', 'modules.manage', 'rules.manage', 'roles.manage', 'members.manage']))))
+        ->toHaveCount($can ? 5 : 0)
+        ->and($me['can']['partner.rules.manage'])->toBeFalse()
+        ->and($me['permissions'] !== [])->toBe($can)
+        // Owners do not hold separation-of-duties permissions without a role.
+        ->and($me['permissions'])->not->toContain('payroll.approve');
 })->with([
     'owner' => [MembershipType::Owner, true],
     'staff' => [MembershipType::Staff, false],
@@ -81,11 +83,9 @@ it('describes a partner console context', function (PartnerUserRole $role, bool 
         ->assertJsonPath('data.context.role', $role->value);
 
     expect($response->json('data.can'))->toBe([
-        'organizations.manage' => false,
-        'modules.manage' => false,
         'rules.manage' => false,
         'partner.rules.manage' => $can,
-    ]);
+    ])->and($response->json('data.permissions'))->toBe([]);
 })->with([
     'owner' => [PartnerUserRole::Owner, true],
     'support' => [PartnerUserRole::Support, false],

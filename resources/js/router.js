@@ -29,9 +29,10 @@ const routes = [
                 path: 'organizations/:id',
                 name: 'organization',
                 component: () => import('./pages/organizations/OrganizationPage.vue'),
-                meta: { context: 'organization', ns: ['orgs'] },
+                meta: { context: 'organization', ns: ['orgs', 'access'] },
             },
             { path: 'modules', name: 'modules', component: () => import('./pages/modules/ModulesPage.vue'), meta: { context: 'organization', ns: ['modules'] } },
+            { path: 'roles', name: 'roles', component: () => import('./pages/access/RolesPage.vue'), meta: { context: 'organization', ns: ['access'] } },
             { path: 'rules', name: 'rules', component: () => import('./pages/rules/RulesPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
             { path: 'approvals', name: 'approvals', component: () => import('./pages/rules/ApprovalsPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
             {

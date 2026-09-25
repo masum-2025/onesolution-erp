@@ -3,6 +3,8 @@
 namespace App\Platform\Tenancy\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Access\AccessResolver;
+use App\Platform\Access\Models\Role;
 use App\Platform\Branding\BrandResolver;
 use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use App\Platform\Tenancy\Context\ContextResolver;
@@ -13,7 +15,6 @@ use App\Platform\Tenancy\Exceptions\TenancyException;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 
 /**
  * Everything the app needs to start: who is signed in, the active context
@@ -30,9 +31,10 @@ class MeController extends Controller
         CurrentContext $context,
         ListAvailableContexts $contexts,
         BrandResolver $brands,
+        AccessResolver $access,
     ): JsonResponse {
         $user = $request->user();
-        $active = $this->activeContext($request, $source, $resolver, $context);
+        $active = $this->activeContext($request, $source, $resolver, $context, $access);
 
         return response()->json(['data' => [
             'user' => [
@@ -42,7 +44,8 @@ class MeController extends Controller
             ],
             'context' => $active,
             'contexts' => $contexts->handle($user),
-            'can' => $this->abilities($context),
+            'permissions' => $access->effective(),
+            'can' => $this->abilities($context, $access),
             'brand' => $brands->for($active === null ? null : $context->partner()),
             'locales' => config('tenancy.supported_locales'),
         ]]);
@@ -51,7 +54,7 @@ class MeController extends Controller
     /**
      * @return array<string, mixed>|null
      */
-    private function activeContext(Request $request, ContextSource $source, ContextResolver $resolver, CurrentContext $context): ?array
+    private function activeContext(Request $request, ContextSource $source, ContextResolver $resolver, CurrentContext $context, AccessResolver $access): ?array
     {
         $organizationId = $source->organizationId($request);
         $partnerId = $organizationId === null ? $source->partnerId($request) : null;
@@ -60,7 +63,7 @@ class MeController extends Controller
             if ($organizationId !== null) {
                 $resolver->enterOrganization($request->user(), $organizationId);
 
-                return $this->organizationContext($context, $source->expiresAt($request));
+                return $this->organizationContext($context, $access, $source->expiresAt($request));
             }
 
             if ($partnerId !== null) {
@@ -86,7 +89,7 @@ class MeController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function organizationContext(CurrentContext $context, ?string $expiresAt): array
+    private function organizationContext(CurrentContext $context, AccessResolver $access, ?string $expiresAt): array
     {
         $organization = $context->organization();
         $membership = $context->membership();
@@ -98,6 +101,7 @@ class MeController extends Controller
             'organization_type' => $organization->type->value,
             'membership_type' => $membership->membership_type->value,
             'access_scope' => $membership->access_scope->value,
+            'roles' => $this->roles($access),
             'path' => $context->ancestors()
                 ->concat([$organization])
                 ->map(fn (Organization $node) => [
@@ -122,16 +126,34 @@ class MeController extends Controller
     }
 
     /**
+     * Roles the member holds here (names only; permissions are listed separately).
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    private function roles(AccessResolver $access): array
+    {
+        return Role::query()
+            ->whereKey($access->roleIds())
+            ->get()
+            ->map(fn (Role $role) => ['id' => $role->getKey(), 'name' => $role->displayName()])
+            ->sortBy('name')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Every permission that works in the current organization, plus two
+     * summaries the UI uses: any rule editing, and the partner console.
+     *
      * @return array<string, bool>
      */
-    private function abilities(CurrentContext $context): array
+    private function abilities(CurrentContext $context, AccessResolver $access): array
     {
-        $organization = $context->hasOrganization() ? $context->organization() : null;
+        $permissions = $access->effective();
 
         return [
-            'organizations.manage' => $organization !== null && Gate::allows('update', $organization),
-            'modules.manage' => $organization !== null && Gate::allows('modules.manage', $organization),
-            'rules.manage' => $organization !== null && Gate::allows('rules.manage', $organization),
+            ...array_fill_keys($permissions, true),
+            'rules.manage' => array_filter($permissions, fn (string $key) => str_starts_with($key, 'rules.edit.')) !== [],
             'partner.rules.manage' => $context->hasPartnerConsole() && $context->partnerUser()->role === PartnerUserRole::Owner,
         ];
     }

@@ -15,6 +15,8 @@ return [
     'sectors' => ['*'],
     'plans' => ['*'],
     'permissions' => ['payroll.view', 'payroll.run', 'payroll.approve'],
+    // Whoever runs payroll must not approve it (default of access.separation_of_duties).
+    'separation_of_duties' => [['payroll.run', 'payroll.approve']],
     'rules' => [
         [
             'key' => 'payroll.overtime_multiplier',

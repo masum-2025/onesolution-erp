@@ -39,7 +39,7 @@ const manage = computed(() => can('organizations.manage'));
 const tabs = computed(() => [
     { key: 'overview', label: t('orgs.show.tabs.overview') },
     { key: 'settings', label: t('orgs.show.tabs.settings') },
-    ...(manage.value ? [{ key: 'members', label: t('orgs.show.tabs.members') }] : []),
+    ...(can('members.manage') ? [{ key: 'members', label: t('orgs.show.tabs.members') }] : []),
 ]);
 
 const tab = computed({
@@ -53,7 +53,7 @@ const moving = ref(false);
 
 const childTypes = (parentType) => childTypesFor(parentType, rules.data.value ?? {});
 const canAddChild = computed(() => manage.value && org.value && childTypes(org.value.type).length > 0);
-const canMove = computed(() => manage.value && org.value && org.value.type !== 'group' && org.value.id !== context.id);
+const canMove = computed(() => can('organizations.move') && org.value && org.value.type !== 'group' && org.value.id !== context.id);
 
 const moveAllowed = (candidate) => {
     if (!org.value || !list.data.value) return false;

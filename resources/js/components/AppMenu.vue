@@ -17,7 +17,7 @@ const root = ref(null);
 const menu = ref(null);
 const id = useId();
 
-function items() {
+function focusableItems() {
     return [...(menu.value?.querySelectorAll('[role="menuitem"]:not([disabled])') ?? [])];
 }
 
@@ -26,7 +26,7 @@ async function toggle(focusFirst = false) {
     if (open.value) {
         document.addEventListener('pointerdown', onOutside, true);
         await nextTick();
-        if (focusFirst) items()[0]?.focus();
+        if (focusFirst) focusableItems()[0]?.focus();
     } else {
         document.removeEventListener('pointerdown', onOutside, true);
     }
@@ -44,7 +44,7 @@ function onOutside(event) {
 }
 
 function onKeydown(event) {
-    const list = items();
+    const list = focusableItems();
     const index = list.indexOf(document.activeElement);
     if (event.key === 'Escape') {
         event.stopPropagation();

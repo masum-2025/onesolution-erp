@@ -3,6 +3,7 @@
 namespace App\Platform\Rules;
 
 use App\Models\User;
+use App\Platform\Access\AccessResolver;
 use App\Platform\Rules\Enums\RuleScope;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Models\Organization;
@@ -35,11 +36,12 @@ class RuleContextFactory
     }
 
     /**
+     * @param  list<string>  $roleIds  Roles of the acting membership (Phase 4), in a stable order.
      * @param  Collection<int, Organization>|null  $ancestors  Root first; loaded when null.
      */
     public function forOrganization(
         Organization $organization,
-        ?string $roleId = null,
+        array $roleIds = [],
         ?User $user = null,
         ?Collection $ancestors = null,
     ): RuleContext {
@@ -65,7 +67,7 @@ class RuleContextFactory
             $levels[] = new RuleLevel(RuleScope::forOrganizationType($node->type), $node->getKey(), $node->displayName());
         }
 
-        if ($roleId !== null) {
+        foreach ($roleIds as $roleId) {
             $levels[] = new RuleLevel(RuleScope::Role, $roleId);
         }
 
@@ -92,7 +94,7 @@ class RuleContextFactory
         if ($context->hasOrganization()) {
             return $this->forOrganization(
                 $context->organization(),
-                $context->membership()->role_id,
+                app(AccessResolver::class)->roleIds(),
                 $context->user(),
                 $context->ancestors(),
             );

@@ -1,6 +1,10 @@
 <?php
 
 use App\Models\User;
+use App\Platform\Access\Models\MembershipRole;
+use App\Platform\Access\Models\Permission;
+use App\Platform\Access\Models\Role;
+use App\Platform\Access\Models\RoleTemplate;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\ModulePurgeRequest;
@@ -40,6 +44,14 @@ const PLATFORM_MODELS = [
     RuleDefinitionRecord::class,
     RuleValue::class,
     RuleValueHistory::class,
+    // Permissions and templates are platform data. Roles are owned by an
+    // organization but used by every unit below it, so members read their
+    // ancestors' roles; writes go through RoleService, reads through
+    // visible-organization lookups (like module settings and rule values).
+    Permission::class,
+    RoleTemplate::class,
+    Role::class,
+    MembershipRole::class,
 ];
 
 /**

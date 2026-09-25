@@ -36,7 +36,7 @@ watch(
         <PageHeader :title="t('rules.title')" :description="t('rules.text')">
             <template #actions>
                 <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" />
-                <AppButton v-if="can('rules.manage')" to="/approvals" :icon="ShieldCheck">{{ t('core.nav.approvals') }}</AppButton>
+                <AppButton v-if="can('rules.approve')" to="/approvals" :icon="ShieldCheck">{{ t('core.nav.approvals') }}</AppButton>
             </template>
         </PageHeader>
 

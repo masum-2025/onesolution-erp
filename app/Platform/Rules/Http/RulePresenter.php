@@ -34,11 +34,12 @@ class RulePresenter
      * @param  Collection<int, RuleValue>  $ownRows  This target's active and pending rows for the rule.
      * @return array<string, mixed>
      */
-    public function present(RuleDefinition $rule, ResolvedRule $resolved, RuleTarget $target, Collection $ownRows, bool $moduleEnabled): array
+    public function present(RuleDefinition $rule, ResolvedRule $resolved, RuleTarget $target, Collection $ownRows, bool $moduleEnabled, bool $permitted = true): array
     {
         $now = now();
         $editBlockedBy = match (true) {
             ! $rule->allowsLevel($target->scope) => 'level_not_allowed',
+            ! $permitted => 'no_permission',
             ! $moduleEnabled => 'module_disabled',
             $resolved->isLockedByAncestor() => 'locked_by_parent',
             default => null,

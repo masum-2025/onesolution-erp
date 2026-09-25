@@ -15,6 +15,8 @@ return [
     'sectors' => ['*'],
     'plans' => ['*'],
     'permissions' => ['accounting.view', 'accounting.post', 'accounting.approve'],
+    // Whoever posts journals must not approve them.
+    'separation_of_duties' => [['accounting.post', 'accounting.approve']],
     'rules' => [
         [
             'key' => 'accounting.fiscal_year_start',

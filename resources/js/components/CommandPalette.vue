@@ -7,6 +7,7 @@ import {
     CornerDownLeft,
     Handshake,
     Home,
+    KeyRound,
     Languages,
     Moon,
     Network,
@@ -20,7 +21,7 @@ import { useModal } from '@/lib/useModal';
 import { api } from '@/lib/http';
 import { i18n, setLocale, t } from '@/lib/i18n';
 import { setTheme, theme } from '@/lib/theme';
-import { currentOrganization, enterContext, session } from '@/lib/session';
+import { can, currentOrganization, enterContext, session } from '@/lib/session';
 import { visibleOrganizations } from '@/lib/organizations';
 import { toast } from '@/lib/toast';
 
@@ -81,10 +82,11 @@ const pages = computed(() => {
     return [
         { id: 'home', label: t('core.nav.overview'), icon: Home, run: () => router.push('/') },
         { id: 'orgs', label: t('core.nav.organizations'), icon: Network, run: () => router.push('/organizations') },
+        (can('roles.manage') || can('members.manage')) && { id: 'roles', label: t('core.nav.roles'), icon: KeyRound, run: () => router.push('/roles') },
         { id: 'modules', label: t('core.nav.modules'), icon: Blocks, run: () => router.push('/modules') },
         { id: 'rules', label: t('core.nav.rules'), icon: SlidersHorizontal, run: () => router.push('/rules') },
-        { id: 'approvals', label: t('core.nav.approvals'), icon: ShieldCheck, run: () => router.push('/approvals') },
-    ];
+        can('rules.approve') && { id: 'approvals', label: t('core.nav.approvals'), icon: ShieldCheck, run: () => router.push('/approvals') },
+    ].filter(Boolean);
 });
 
 const actions = computed(() => [

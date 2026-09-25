@@ -1,5 +1,6 @@
 <?php
 
+use App\Platform\Access\AccessServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
 use App\Platform\Rules\RulesServiceProvider;
 use App\Platform\Tenancy\TenancyServiceProvider;
@@ -10,4 +11,5 @@ return [
     TenancyServiceProvider::class,
     ModulesServiceProvider::class,
     RulesServiceProvider::class,
+    AccessServiceProvider::class,
 ];

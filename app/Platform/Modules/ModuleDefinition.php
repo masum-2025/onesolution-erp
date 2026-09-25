@@ -15,6 +15,7 @@ final readonly class ModuleDefinition
      * @param  list<array<string, mixed>>  $rules  Rule definitions (Phase 3).
      * @param  list<array{key: string, label: string, route: string, icon?: string, order: int}>  $menu
      * @param  list<string>  $events
+     * @param  list<array{0: string, 1: string}>  $separationOfDuties  Permission pairs one person may not hold together.
      */
     public function __construct(
         public string $key,
@@ -31,6 +32,7 @@ final readonly class ModuleDefinition
         public array $events,
         public bool $isCore,
         public bool $requiresConsent,
+        public array $separationOfDuties = [],
     ) {}
 
     /**
@@ -53,6 +55,7 @@ final readonly class ModuleDefinition
             events: array_values($manifest['events'] ?? []),
             isCore: (bool) ($manifest['is_core'] ?? false),
             requiresConsent: (bool) ($manifest['requires_consent'] ?? false),
+            separationOfDuties: array_values(array_map('array_values', $manifest['separation_of_duties'] ?? [])),
         );
     }
 

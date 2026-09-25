@@ -24,7 +24,7 @@ const context = currentOrganization();
 const orgId = ref(context.id);
 const adapter = computed(() => organizationRules(orgId.value));
 
-const approvals = useResource(() => (can('rules.manage') ? api(`/api/organizations/${orgId.value}/rule-approvals`).then((response) => response.data) : Promise.resolve([])));
+const approvals = useResource(() => (can('rules.approve') ? api(`/api/organizations/${orgId.value}/rule-approvals`).then((response) => response.data) : Promise.resolve([])));
 
 // Values are shown as the server stored them; rule details give readable labels.
 const rules = useResource(() =>
@@ -130,7 +130,7 @@ function reload() {
             </li>
         </ul>
 
-        <p v-if="!can('rules.manage')" class="mt-6 flex items-center justify-center gap-2 text-[12.5px] text-muted">
+        <p v-if="!can('rules.approve')" class="mt-6 flex items-center justify-center gap-2 text-[12.5px] text-muted">
             <ShieldX class="size-4" aria-hidden="true" />
             {{ t('rules.approvals.no_access') }}
         </p>

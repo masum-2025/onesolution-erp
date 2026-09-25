@@ -15,7 +15,7 @@
         "rules_hint": "Out of {total} rules",
         "approvals": "Waiting for approval",
         "approvals_hint": "Rule changes to review",
-        "approvals_no_access": "Only owners review changes"
+        "approvals_no_access": "Reviewing changes needs the approval permission"
     },
     "settings": {
         "title": "Regional settings",
@@ -33,5 +33,5 @@
         "members": "Invite members",
         "members_text": "Give people access to this organization"
     },
-    "read_only_note": "You can view everything here. Changes need an owner of this organization."
+    "read_only_note": "You can view everything here. Changes need a role that allows them. Ask an administrator."
 }

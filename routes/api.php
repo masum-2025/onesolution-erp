@@ -1,5 +1,7 @@
 <?php
 
+use App\Platform\Access\Http\Controllers\PermissionController;
+use App\Platform\Access\Http\Controllers\RoleController;
 use App\Platform\Modules\Http\Controllers\MenuController;
 use App\Platform\Modules\Http\Controllers\ModuleConsentController;
 use App\Platform\Modules\Http\Controllers\ModuleController;
@@ -43,6 +45,19 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::post('organizations/{organization}/members', [MemberController::class, 'store'])
         ->middleware('throttle:tenancy-sensitive');
     Route::patch('organizations/{organization}/members/{membership}', [MemberController::class, 'update']);
+    Route::put('organizations/{organization}/members/{membership}/roles', [MemberController::class, 'updateRoles'])
+        ->middleware('throttle:tenancy-sensitive');
+
+    // Roles and permissions (Phase 4)
+    Route::get('organizations/{organization}/permissions', [PermissionController::class, 'index']);
+    Route::get('organizations/{organization}/role-templates', [PermissionController::class, 'templates']);
+    Route::get('organizations/{organization}/roles', [RoleController::class, 'index']);
+    Route::get('organizations/{organization}/roles/{role}', [RoleController::class, 'show']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('organizations/{organization}/roles', [RoleController::class, 'store']);
+        Route::patch('organizations/{organization}/roles/{role}', [RoleController::class, 'update']);
+        Route::delete('organizations/{organization}/roles/{role}', [RoleController::class, 'destroy']);
+    });
 
     // Module system (Phase 2)
     Route::get('menu', MenuController::class);

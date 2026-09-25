@@ -127,7 +127,7 @@ final class ModuleRegistry
             }
         }
 
-        foreach (['requires', 'sectors', 'plans', 'permissions', 'rules', 'menu', 'events'] as $field) {
+        foreach (['requires', 'sectors', 'plans', 'permissions', 'rules', 'menu', 'events', 'separation_of_duties'] as $field) {
             if (isset($manifest[$field]) && ! array_is_list($manifest[$field])) {
                 throw InvalidModuleManifest::because($key, "{$field} must be a list");
             }
@@ -150,6 +150,15 @@ final class ModuleRegistry
         foreach ($manifest['permissions'] ?? [] as $permission) {
             if (! is_string($permission) || ! str_starts_with($permission, $key.'.')) {
                 throw InvalidModuleManifest::because($key, "permission [{$permission}] must start with \"{$key}.\"");
+            }
+        }
+
+        foreach ($manifest['separation_of_duties'] ?? [] as $pair) {
+            $valid = is_array($pair) && count($pair) === 2 && $pair[0] !== $pair[1]
+                && array_filter($pair, fn ($permission) => ! is_string($permission) || ! preg_match('/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_.]*$/', $permission)) === [];
+
+            if (! $valid || ! array_intersect($pair, $manifest['permissions'] ?? [])) {
+                throw InvalidModuleManifest::because($key, 'separation_of_duties entries must be two different permissions, at least one of this module');
             }
         }
 

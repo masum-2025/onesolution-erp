@@ -8,7 +8,7 @@
     "locked_by": "Locked by {name}",
     "locked_here": "Locked for units below",
     "needs": "Needs {name}",
-    "read_only": "You can see module settings. Only owners can change them.",
+    "read_only": "You can see module settings. Changing them needs the \"Turn modules on and off\" permission.",
     "empty_title": "No modules here",
     "empty_text": "Try another filter or search word.",
     "undo_reason": "Undone right after the change",

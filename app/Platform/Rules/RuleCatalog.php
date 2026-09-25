@@ -46,7 +46,22 @@ final class RuleCatalog
 
     public static function fromModules(ModuleRegistry $modules, RuleValueValidator $validator): self
     {
-        $rulesByModule = [self::CORE_MODULE => require __DIR__.'/core-rules.php'];
+        $core = require __DIR__.'/core-rules.php';
+
+        // Separation of duties starts with the pairs the modules declare.
+        $pairs = [];
+        foreach ($modules->all() as $module) {
+            foreach ($module->separationOfDuties as [$first, $second]) {
+                $pairs[] = ['first' => $first, 'second' => $second];
+            }
+        }
+        foreach ($core as $index => $definition) {
+            if ($definition['key'] === 'access.separation_of_duties') {
+                $core[$index]['default'] = $pairs;
+            }
+        }
+
+        $rulesByModule = [self::CORE_MODULE => $core];
 
         foreach ($modules->all() as $key => $module) {
             $rulesByModule[$key] = $module->rules;

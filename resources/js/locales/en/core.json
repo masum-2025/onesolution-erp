@@ -66,6 +66,7 @@
         "modules": "Modules",
         "rules": "Rules",
         "approvals": "Approvals",
+        "roles": "Roles",
         "clients": "Clients",
         "partner_rules": "Partner rules"
     },

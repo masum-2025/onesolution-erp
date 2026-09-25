@@ -31,6 +31,8 @@ class OrganizationController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Organization::class);
+
         $perPage = max(1, min($request->integer('per_page', 50), 100));
 
         $organizations = Organization::query()
@@ -91,7 +93,7 @@ class OrganizationController extends Controller
     {
         $organization = $this->findVisible($organization);
         $newParent = $this->findVisible($request->validated('new_parent_id'));
-        Gate::authorize('move', $organization);
+        Gate::authorize('move', [$organization, $newParent]);
 
         return new OrganizationResource($hierarchy->move(
             $organization,

@@ -18,7 +18,7 @@ const units = useResource(() => visibleOrganizations());
 const modules = useResource(() => api(`/api/organizations/${org.id}/modules`).then((response) => response.data));
 const rules = useResource(() => api(`/api/organizations/${org.id}/rules`).then((response) => response.data));
 const settings = useResource(() => api(`/api/organizations/${org.id}/settings`).then((response) => response.data));
-const approvals = useResource(() => (can('rules.manage') ? api(`/api/organizations/${org.id}/rule-approvals`).then((response) => response.data) : Promise.resolve([])));
+const approvals = useResource(() => (can('rules.approve') ? api(`/api/organizations/${org.id}/rule-approvals`).then((response) => response.data) : Promise.resolve([])));
 
 const greeting = computed(() => {
     const hour = new Date().getHours();
@@ -63,9 +63,9 @@ const stats = computed(() => [
         key: 'approvals',
         icon: ShieldCheck,
         label: t('home.stats.approvals'),
-        value: can('rules.manage') ? (approvals.data.value ? formatNumber(approvals.data.value.length) : null) : '—',
-        hint: can('rules.manage') ? t('home.stats.approvals_hint') : t('home.stats.approvals_no_access'),
-        to: can('rules.manage') ? '/approvals' : null,
+        value: can('rules.approve') ? (approvals.data.value ? formatNumber(approvals.data.value.length) : null) : '—',
+        hint: can('rules.approve') ? t('home.stats.approvals_hint') : t('home.stats.approvals_no_access'),
+        to: can('rules.approve') ? '/approvals' : null,
         loading: approvals.loading.value && !approvals.data.value,
     },
 ]);

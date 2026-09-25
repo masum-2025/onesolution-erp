@@ -11,6 +11,8 @@ const props = defineProps({
     size: { type: String, default: 'md' }, // sm | md | lg
     icon: { type: [Object, Function], default: null },
     tone: { type: String, default: 'brand' }, // brand | bad | warn
+    // Confirmations can open on top of a drawer or another dialog.
+    layer: { type: String, default: 'z-50' },
 });
 
 const emit = defineEmits(['close']);
@@ -31,7 +33,7 @@ const TONES = { brand: 'bg-brand-soft text-brand-text', bad: 'bg-bad-soft text-b
             leave-active-class="transition duration-150"
             leave-to-class="opacity-0"
         >
-            <div v-if="open" class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6" @keydown="onKeydown">
+            <div v-if="open" class="fixed inset-0 flex items-end justify-center sm:items-center sm:p-6" :class="layer" @keydown="onKeydown">
                 <div class="absolute inset-0 bg-[rgb(10_10_14/0.42)] backdrop-blur-[2px]" aria-hidden="true" @click="emit('close')" />
                 <div
                     ref="panel"

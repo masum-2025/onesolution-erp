@@ -2,15 +2,11 @@
 
 namespace App\Platform\Modules;
 
-use App\Models\User;
 use App\Platform\Modules\Console\PurgeDueModuleData;
 use App\Platform\Modules\Events\ModuleDisabled;
 use App\Platform\Modules\Listeners\RevokeIntegrationTokens;
-use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Models\Organization;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class ModulesServiceProvider extends ServiceProvider
@@ -30,17 +26,6 @@ class ModulesServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Interim until Phase 4 permissions: an owner membership in the active context.
-        Gate::define('modules.manage', function (User $user, Organization $organization) {
-            $context = $this->app->make(CurrentContext::class);
-
-            return $context->hasOrganization()
-                && $context->user()?->is($user)
-                && $context->membership()->isOwner()
-                    ? Response::allow()
-                    : Response::deny(__('tenancy.errors.forbidden'));
-        });
-
         Event::listen(ModuleDisabled::class, RevokeIntegrationTokens::class);
 
         // Plan, sector or tree position changes can change every resolved map in the tree.

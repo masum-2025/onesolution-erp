@@ -67,7 +67,8 @@ Partner (house or white-label reseller)
 | group, `access_scope=own` | group node only | group node only |
 | partner console | own clients' organization metadata only | — |
 
-Branch-level restriction inside a company arrives with Phase 4 permissions.
+Reading is company-wide; changes reach only the member's own unit and below and need a
+permission (see "Roles and permissions"). Portal members never read the structure.
 Out-of-scope ids always return **404**, never 403, so ids cannot be probed.
 
 ### Making a model tenant-scoped
@@ -97,12 +98,12 @@ or ULIDs, or if raw SQL appears in `app/`.
 | POST | /api/auth/login | throttled per email + IP |
 | POST | /api/auth/context | throttled |
 | POST | /api/auth/logout | |
-| GET/POST | /api/organizations | list visible / create child (owner) |
+| GET/POST | /api/organizations | list visible (owner/staff) / create child (`organizations.manage`) |
 | GET/PATCH | /api/organizations/{id} | tree fields rejected with "use move" |
 | GET | /api/organizations/{id}/settings | effective values + source |
-| POST | /api/organizations/{id}/move | `{new_parent_id, reason}`, owner, throttled |
-| GET/POST | /api/organizations/{id}/members | owner |
-| PATCH | /api/organizations/{id}/members/{membershipId} | owner, not own membership |
+| POST | /api/organizations/{id}/move | `{new_parent_id, reason}`, `organizations.move` on both, throttled |
+| GET/POST | /api/organizations/{id}/members | `members.manage`; adding an owner: owners only |
+| PATCH | /api/organizations/{id}/members/{membershipId} | `members.manage`, not own membership; owner changes: owners only |
 | GET | /api/partner/organizations(/{id}) | partner console, metadata only |
 
 All inputs use Form Requests that reject unknown fields. Errors carry a translated
@@ -126,8 +127,7 @@ partner access to client data.
 - New sector, country or partner: data only (`sector_key`, organization country fields,
   a `partners` row). No code change.
 - New parent rule for a partner: set `tenancy.allowed_parents` at partner level (data).
-- Interim authorization (`owner` membership manages) is replaced by Phase 4 permissions;
-  `role_id` is already on memberships.
+- Authorization is permission-based since Phase 4 (roles live in `membership_roles`).
 - Maker-checker for moves and support access for partners: Phase 3 and Phase 5B.
 
 ## Module system (Phase 2)
@@ -178,7 +178,7 @@ advanced_audit, custom_reports (AI, sustainability and governance: business/ente
 organization and who locked it. Resolved maps are cached per organization; any change in
 a tree bumps that tree's cache version (works on every cache store).
 
-### Changing modules (owner of the organization; `modules.manage` in Phase 4)
+### Changing modules (`modules.manage` permission)
 
 | method | path | notes |
 |---|---|---|
@@ -278,7 +278,7 @@ global / partner / tree versions and expire exactly when a future-dated value st
 Checks, in order: level allowed for the rule, country only for country-specific rules,
 module enabled at the organization, JSON Schema, no ancestor lock, inside ancestor limits
 (new limits may only narrow them). `requires_approval` / `sensitive` changes stay
-`pending_approval` until a **different** owner of the same organization or an ancestor
+`pending_approval` until a **different** person holding `rules.approve` at the same organization or an ancestor
 approves (self-approval is refused). Changes can be scheduled (`effective_from`), reset to
 inherited (history kept, past dates still resolve), rolled back to any version, and
 previewed. Every step writes `rule_value_history` (append-only) and the audit log.
@@ -310,9 +310,71 @@ Phase 1–2 tunables now read rules: `tenancy.allowed_parents`, `tenancy.max_dep
 
 - New country: add rows to the data file (or `rules:set --country=XX`). No code change.
 - New partner or plan defaults: partner console / `rules:set --plan=`. No code change.
-- Role-level values resolve already; writing them arrives with Phase 4 roles. The interim
-  `rules.manage` gate (owner) becomes the `rules.edit.{module}` permission in Phase 4.
+- Role-level values resolve (a member's roles are levels); an API to write them is still open.
+  Editing needs the rule's `edit_permission` (default `rules.edit.{module}`).
 - A rule editor UI arrives with the frontend; the API already returns everything it needs.
+
+## Roles and permissions (Phase 4)
+
+Code: `app/Platform/Access`. Every permission check answers three questions
+(`AccessResolver::allows($permission, $organization)`):
+
+1. **Held?** An owner holds every permission except both sides of a
+   separation-of-duties pair; everyone else holds what their roles give. Portal members
+   hold nothing here.
+2. **In reach?** The target is the member's own unit or below. A branch admin reads the
+   company but changes only the branch.
+3. **Module on?** A module permission works only where its module is enabled (else 403).
+
+Every catalog permission is also a Gate ability: `Gate::authorize('payroll.run', $org)` or
+the `can:payroll.run` route middleware (the target defaults to the current organization).
+
+### Permissions and templates (data)
+
+- Core permissions: `app/Platform/Access/core-permissions.php`. Module permissions: the
+  manifest `permissions[]`. Every module with rules also gets `rules.edit.{module}`.
+  Labels: `lang/*/access.php` and `Modules/*/lang/*/permissions.php`.
+- Role templates per sector: `database/seeders/data/role-templates.php` (patterns such as
+  `payroll.*`, `*.view`, `!payroll.approve`).
+- `php artisan access:sync` mirrors both into `permissions` / `role_templates` (deploy,
+  seeder and test bootstrap run it). Removed entries are marked deprecated, never deleted.
+
+### Roles
+
+A role belongs to one organization and can be given there and in every unit below it.
+`RoleService` does every write:
+
+- **No escalation:** nobody puts a permission into a role, or gives/removes a role,
+  unless they hold every permission in it (owners may grant anything in their unit).
+- **Separation of duties:** rule `access.separation_of_duties` (default from the manifests'
+  `separation_of_duties`, e.g. payroll.run / payroll.approve). Sensitive, so changes need
+  maker-checker. Checked for one role, for all roles of a member, and for existing holders
+  when a role changes. If a pair is added later, neither side works for people who hold
+  both (fail closed).
+- **Optimistic locking:** updates send `base_version`; a stale one gets 409.
+- A role that is still given to someone cannot be deleted (422 with the count).
+- Audit: `role.created|updated|deleted`, `membership.roles_changed` (with reason).
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/organizations/{id}/permissions | grouped; `blocked_by`: `not_held` / `module_disabled`; SoD pairs |
+| GET | /api/organizations/{id}/role-templates | templates for the sector + `not_grantable` |
+| GET/POST | /api/organizations/{id}/roles | own + inherited roles; create needs `roles.manage` |
+| GET/PATCH/DELETE | /api/organizations/{id}/roles/{role} | changed only where the role is owned |
+| PUT | /api/organizations/{id}/members/{membership}/roles | `{role_ids, reason}`, `members.manage` |
+
+`/api/me` returns `permissions` (those working in the current organization), `can` built from
+them, and `context.roles`. The browser app has a Roles page (permission matrix) and a
+"Change roles" dialog on the Members tab.
+
+### Future expansion (Phase 4)
+
+- New sector: add templates with `sector` set and their names in `lang/*/access.php`. No code.
+- New module: manifest `permissions[]` (+ optional `separation_of_duties`) and a
+  `permissions.php` label file; run `access:sync`. No platform code.
+- New country or partner: nothing; a partner can add pairs through the rule.
+- Open: role-level rule values API; portal own-records access (Phase 5C); the permission
+  list in the offline lease (Phase 7).
 
 ## Browser app (frontend foundation)
 
@@ -382,5 +444,4 @@ Every screen is a lazy chunk. Budget, checked on every build
 - New partner brand: data (partner settings today, `partner_brands` in Phase 5B).
 - New module screens: a lazy route + a locale namespace; menu entries come from the
   manifest. No change to the shell.
-- Phase 4 permissions replace the owner-based `can` flags server-side; the UI keeps
-  reading `can`. Phase 7 adds IndexedDB and the sync queue behind `lib/http.js`.
+- `can` comes from real permissions (Phase 4); the UI keeps reading `can`. Phase 7 adds IndexedDB and the sync queue behind `lib/http.js`.

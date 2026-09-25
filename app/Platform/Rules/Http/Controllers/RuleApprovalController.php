@@ -20,8 +20,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Maker-checker for organization-level rule changes: an owner of the same
- * organization or of an ancestor (other than the requester) reviews them.
+ * Maker-checker for organization-level rule changes: someone holding
+ * rules.approve at the same organization or an ancestor (other than the
+ * requester) reviews them.
  */
 class RuleApprovalController extends Controller
 {
@@ -40,7 +41,7 @@ class RuleApprovalController extends Controller
     public function index(string $organization): JsonResponse
     {
         $organization = $this->findVisible($organization);
-        Gate::authorize('rules.manage', $organization);
+        Gate::authorize('rules.approve', $organization);
 
         $pending = RuleValue::query()
             ->where('status', RuleValueStatus::PendingApproval)
@@ -83,7 +84,7 @@ class RuleApprovalController extends Controller
     private function pendingRow(string $organizationId, string $valueId): RuleValue
     {
         $organization = $this->findVisible($organizationId);
-        Gate::authorize('rules.manage', $organization);
+        Gate::authorize('rules.approve', $organization);
 
         $row = RuleValue::query()->whereKey($valueId)->first();
 

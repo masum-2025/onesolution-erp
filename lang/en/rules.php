@@ -55,11 +55,16 @@ return [
             'label' => 'Waiting period before deleting module data (days)',
             'description' => 'Days between confirming a data deletion and the deletion itself.',
         ],
+        'access_separation_of_duties' => [
+            'label' => 'Separation of duties',
+            'description' => 'Pairs of permissions one person may not hold together, such as running and approving payroll. Changes need a second person\'s approval.',
+        ],
     ],
 
     'categories' => [
         'organization' => 'Organization',
         'security' => 'Security',
         'data' => 'Data',
+        'access' => 'Access',
     ],
 ];

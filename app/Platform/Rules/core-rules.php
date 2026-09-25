@@ -67,4 +67,30 @@ return [
         'category' => 'data',
         'sort_order' => 40,
     ],
+    [
+        'key' => 'access.separation_of_duties',
+        'type' => 'table',
+        // Pairs of permissions one person may not hold together (e.g. run and
+        // approve payroll). The default is built from the module manifests'
+        // `separation_of_duties` (RuleCatalog::fromModules).
+        'schema' => [
+            'items' => [
+                'type' => 'object',
+                'required' => ['first', 'second'],
+                'properties' => [
+                    'first' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]*\.[a-z][a-z0-9_.]*$'],
+                    'second' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]*\.[a-z][a-z0-9_.]*$'],
+                ],
+                'additionalProperties' => false,
+            ],
+        ],
+        'default' => [],
+        'label' => 'rules.core.access_separation_of_duties.label',
+        'description' => 'rules.core.access_separation_of_duties.description',
+        'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+        // Weakening separation of duties needs a second person.
+        'sensitive' => true,
+        'category' => 'access',
+        'sort_order' => 50,
+    ],
 ];

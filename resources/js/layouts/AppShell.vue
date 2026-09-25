@@ -49,7 +49,7 @@ async function loadShellData() {
 
 async function refreshApprovals() {
     const org = currentOrganization();
-    if (!org || !can('rules.manage')) {
+    if (!org || !can('rules.approve')) {
         pendingApprovals.value = 0;
         return;
     }

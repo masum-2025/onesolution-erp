@@ -44,6 +44,7 @@ function submit() {
 <template>
     <AppDialog
         :open="dialog.open"
+        layer="z-[60]"
         :title="dialog.options.title ?? ''"
         :description="dialog.options.message ?? ''"
         :icon="dialog.options.danger ? TriangleAlert : ShieldAlert"

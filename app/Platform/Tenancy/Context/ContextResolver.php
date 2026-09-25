@@ -15,9 +15,10 @@ use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
 /**
  * Turns verified ids (from the API token) into a CurrentContext.
  *
- * Visibility in Phase 1:
- *  - company / branch / department member: the whole company subtree
- *    (branch-level restriction comes with Phase 4 permissions);
+ * Visibility (reading):
+ *  - company / branch / department member: the whole company subtree.
+ *    Changes reach only the member's own unit and below, and need a
+ *    permission (AccessResolver, Phase 4);
  *  - group member with access_scope=descendants: read every company in the
  *    group, write only to the group itself (read-only aggregate);
  *  - group member with access_scope=own: the group node only.
