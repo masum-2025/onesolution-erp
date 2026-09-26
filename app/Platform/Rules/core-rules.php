@@ -328,4 +328,41 @@ return [
         'category' => 'billing',
         'sort_order' => 93,
     ],
+
+    // ── Branded email and SMS (Phase 5B-3b) ──────────────────────────────
+    [
+        'key' => 'mail.custom_domain_allowed',
+        'type' => 'boolean',
+        // Whether a partner may send from its own domain (after DNS checks).
+        'default' => true,
+        'label' => 'rules.core.mail_custom_domain_allowed.label',
+        'description' => 'rules.core.mail_custom_domain_allowed.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'messages',
+        'sort_order' => 100,
+    ],
+    [
+        'key' => 'notifications.sms_enabled',
+        'type' => 'boolean',
+        // SMS costs money per message: off until the partner turns it on.
+        'default' => false,
+        'label' => 'rules.core.notifications_sms_enabled.label',
+        'description' => 'rules.core.notifications_sms_enabled.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'category' => 'messages',
+        'sort_order' => 101,
+    ],
+    [
+        'key' => 'sms.sender_id_requires_approval',
+        'type' => 'boolean',
+        // Where operators register sender IDs (e.g. Bangladesh), the platform approves them first.
+        'default' => true,
+        'label' => 'rules.core.sms_sender_id_requires_approval.label',
+        'description' => 'rules.core.sms_sender_id_requires_approval.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'messages',
+        'sort_order' => 102,
+    ],
 ];

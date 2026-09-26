@@ -129,6 +129,18 @@ return [
             'label' => 'Payment terms (days)',
             'description' => 'How many days after issue an invoice is due.',
         ],
+        'mail_custom_domain_allowed' => [
+            'label' => 'Own sending domain allowed',
+            'description' => 'Whether the partner may send email from its own domain once its DNS records check out.',
+        ],
+        'notifications_sms_enabled' => [
+            'label' => 'Send SMS',
+            'description' => 'Send text messages as well as email. Each message costs money.',
+        ],
+        'sms_sender_id_requires_approval' => [
+            'label' => 'SMS sender ID needs approval',
+            'description' => 'Where operators register sender IDs, the platform approves a partner\'s sender ID before it is used.',
+        ],
     ],
 
     'categories' => [
@@ -139,5 +151,6 @@ return [
         'plan' => 'Plan limits',
         'partner' => 'Partner account',
         'billing' => 'Billing',
+        'messages' => 'Email and SMS',
     ],
 ];

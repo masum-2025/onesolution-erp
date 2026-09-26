@@ -659,6 +659,81 @@ Invoices open as a printable page ("Print or save as PDF").
   currency conversion for payouts (with the multi_currency module); branded invoice
   emails (5B-3b).
 
+## Branded email and SMS (Phase 5B-3b)
+
+Code: `app/Platform/Notifications`. Platform events reach the people who can act on
+them, by email, in the partner's brand and the client's language.
+
+### What is sent, to whom
+
+| notification | when | to |
+|---|---|---|
+| support.requested | a partner asks for support access (not auto-approved) | client owners and staff holding `support.approve`, at the unit or above |
+| support.decided | the client approves or rejects | the partner staff member who asked |
+| exports.ready | a data export is built | the person who asked |
+| billing.invoice_issued | an invoice to a client | client owners and staff holding `billing.view` |
+| billing.partner_invoice_issued | a wholesale invoice | the partner's owners and billing staff (our brand) |
+
+Events (`SupportAccessRequested`, `SupportAccessDecided`, `DataExportReady`,
+`InvoiceIssued`) fire after commit; `SendPlatformNotifications` picks recipients
+(`Recipients`), `Notifier` records one `notification_deliveries` row per person (address
+masked, content encrypted and removed once sent) and queues `DeliverNotification`.
+Portal users never receive these. Links open the partner's own address (a client's own
+domain first).
+
+### Sending domain (per partner)
+
+The owner adds a domain (e.g. `mail.acme.com`); we create a DKIM key (RSA, encrypted at
+rest, never returned by the API) and show four TXT records: ownership, SPF
+(`include:` + `MAIL_SPF_INCLUDE`), DKIM (selector `osYYMM`) and DMARC. Mail goes out
+from `no-reply@` the domain (address, sender name and reply-to are editable), DKIM-signed
+with Symfony's `DkimSigner`, only while all four check out; a later failed check stops it.
+Otherwise mail comes from `MAIL_FROM_ADDRESS` with the partner's product name. Rule
+`mail.custom_domain_allowed` (platform) can switch own domains off per partner.
+
+### SMS
+
+`SmsGateway` contract (driver `SMS_DRIVER`, `log` until a provider is added in 5C). A
+partner's sender ID (3 to 11 characters) needs platform approval where
+`sms.sender_id_requires_approval` (default yes; `php artisan sms:sender approve acme
+--reason=...`); until then the platform's `SMS_DEFAULT_SENDER` is used. SMS is off until
+the partner turns on `notifications.sms_enabled`. People have no phone numbers yet
+(verified phones arrive with 5C), so today only test SMS are sent.
+
+### Wording
+
+Defaults: `lang/{locale}/notifications.php` (`templates.*`). A partner rewords any
+message per channel and language (`notification_templates`): plain text with
+`{{ placeholder }}` slots, only the placeholders the notification offers (others are
+refused), no markup, nothing evaluated; the mail view escapes everything. The editor
+previews with example values; the email preview is served from its own page
+(`/partner-preview/{id}`, its author only, 10 minutes) with a policy that allows inline
+styles and no scripts, in a sandboxed frame.
+
+### API (partner console; owners change, everyone reads)
+
+| method | path |
+|---|---|
+| GET | /api/partner/messaging |
+| POST / PATCH / DELETE | /api/partner/messaging/domain |
+| POST | /api/partner/messaging/domain/verify |
+| POST / DELETE | /api/partner/messaging/sms-sender |
+| POST | /api/partner/messaging/test-email, /test-sms (5 per hour) |
+| GET | /api/partner/templates, /templates/{notification} |
+| PUT / DELETE | /api/partner/templates/{notification}/{channel}/{locale} |
+| POST | /api/partner/templates/{notification}/{channel}/{locale}/preview |
+
+Every change is audited (`partner.mail_*`, `partner.sms_sender_*`, `partner.template_*`).
+
+### Future expansion (Phase 5B-3b)
+
+- New notification: an entry in `NotificationCatalog`, default wording in the lang
+  files, and a listener for its event. Partners can reword it at once.
+- New language: add its wording to `lang/{locale}/notifications.php`. No code.
+- New SMS provider: implement `SmsGateway` and add its driver. No other code.
+- Open: SMS to people (verified phones, 5C), notification preferences for non-essential
+  messages, bounce and complaint handling from the mail provider.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

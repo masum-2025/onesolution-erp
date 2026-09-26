@@ -4,6 +4,7 @@ namespace App\Platform\Billing\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Billing\Events\InvoiceIssued;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Billing\Models\InvoiceLine;
 use App\Platform\Billing\Money;
@@ -79,6 +80,10 @@ class InvoiceIssuer
                 organizationId: $invoice->organization_id,
                 partnerId: $invoice->partner_id,
             );
+
+            if (! $invoice->isCreditNote()) {
+                InvoiceIssued::dispatch($invoice);
+            }
 
             return $invoice;
         });

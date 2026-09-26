@@ -2,6 +2,7 @@
 
 namespace App\Platform\DataExport\Services;
 
+use App\Platform\DataExport\Events\DataExportReady;
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\DataExport\Exceptions\ExportException;
@@ -80,6 +81,8 @@ class DataExportService
                 'completed_at' => now(),
                 'expires_at' => now()->addDays($days),
             ])->save();
+
+            DataExportReady::dispatch($export);
         } catch (Throwable $exception) {
             $disk->delete($path);
             $export->forceFill(['status' => DataExport::FAILED, 'completed_at' => now()])->save();

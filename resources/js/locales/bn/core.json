@@ -90,7 +90,9 @@
         "export": "ডেটা এক্সপোর্ট",
         "partner_plans": "প্ল্যান",
         "partner_billing": "বিলিং",
-        "billing": "বিলিং"
+        "billing": "বিলিং",
+        "partner_messaging": "ইমেইল ও এসএমএস",
+        "partner_templates": "মেসেজের লেখা"
     },
     "not_found": {
         "title": "এই পেজটি নেই",

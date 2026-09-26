@@ -5,6 +5,7 @@ use App\Platform\Billing\BillingServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
 use App\Platform\SupportAccess\SupportAccessServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
+use App\Platform\Notifications\NotificationsServiceProvider;
 use App\Platform\Packaging\PackagingServiceProvider;
 use App\Platform\Partners\PartnersServiceProvider;
 use App\Platform\Rules\RulesServiceProvider;
@@ -22,4 +23,5 @@ return [
     SupportAccessServiceProvider::class,
     DataExportServiceProvider::class,
     BillingServiceProvider::class,
+    NotificationsServiceProvider::class,
 ];

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppShellController;
 use App\Platform\Branding\Http\BrandAssetController;
 use App\Platform\DataExport\Http\DataExportController;
+use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
 use App\Platform\Tenancy\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,11 @@ Route::prefix('session')->group(function () {
 Route::get('brand-assets/{partner}/{kind}', [BrandAssetController::class, 'show'])
     ->where(['partner' => '[0-9A-Za-z]{26}', 'kind' => '[a-z_]+']);
 Route::get('manifest.webmanifest', [BrandAssetController::class, 'manifest']);
+
+// An email preview for the template editor (only its author, for a few minutes).
+Route::get('partner-preview/{preview}', [TemplatePreviewController::class, 'show'])
+    ->middleware('auth:web')
+    ->where('preview', '[A-Za-z0-9]{40}');
 
 // A data export file: only through a short-lived signed link from the export screen.
 Route::get('exports/{export}/download', [DataExportController::class, 'download'])

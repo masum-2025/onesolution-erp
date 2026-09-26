@@ -20,6 +20,10 @@ use App\Platform\Billing\Models\InvoiceLine;
 use App\Platform\Billing\Models\Payout;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\DataExport\Models\DataExport;
+use App\Platform\Notifications\Models\NotificationDelivery;
+use App\Platform\Notifications\Models\NotificationTemplate;
+use App\Platform\Notifications\Models\PartnerMailDomain;
+use App\Platform\Notifications\Models\PartnerSmsSender;
 use App\Platform\Packaging\Models\PartnerPlan;
 use App\Platform\Packaging\Models\PartnerPlanPrice;
 use App\Platform\Packaging\Models\Subscription;
@@ -99,6 +103,13 @@ const PLATFORM_MODELS = [
     InvoiceLine::class,
     Commission::class,
     Payout::class,
+    // Branded messages (5B-3b): partner settings (sending domain, SMS sender,
+    // wording) and the record of messages sent, written by queued jobs without
+    // a tenant context; the console reads them filtered by the context's partner.
+    PartnerMailDomain::class,
+    PartnerSmsSender::class,
+    NotificationTemplate::class,
+    NotificationDelivery::class,
 ];
 
 /**

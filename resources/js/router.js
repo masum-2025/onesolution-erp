@@ -77,6 +77,24 @@ const routes = [
                 meta: { context: 'partner', ns: ['partner', 'billing'] },
             },
             {
+                path: 'partner/messaging',
+                name: 'partner-messaging',
+                component: () => import('./pages/partner/PartnerMessagingPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'messaging'] },
+            },
+            {
+                path: 'partner/templates',
+                name: 'partner-templates',
+                component: () => import('./pages/partner/PartnerTemplatesPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'messaging'] },
+            },
+            {
+                path: 'partner/templates/:key',
+                name: 'partner-template',
+                component: () => import('./pages/partner/PartnerTemplateEditorPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'messaging'] },
+            },
+            {
                 path: 'partner/brand',
                 name: 'partner-brand',
                 component: () => import('./pages/partner/PartnerBrandPage.vue'),

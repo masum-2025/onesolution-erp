@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { Blocks, Boxes, Download, Globe, Handshake, Home, KeyRound, LifeBuoy, Network, Package, Palette, Receipt, ScrollText, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
+import { Blocks, Boxes, Download, Globe, Handshake, Home, KeyRound, LifeBuoy, Mail, MessageSquareText, Network, Package, Palette, Receipt, ScrollText, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
 import ContextSwitcher from './ContextSwitcher.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import UserMenu from './UserMenu.vue';
@@ -29,6 +29,8 @@ const workspace = computed(() => {
             ...(['owner', 'billing'].includes(session.me?.context?.role) ? [{ to: '/partner/billing', label: t('core.nav.partner_billing'), icon: Receipt }] : []),
             { to: '/partner/support', label: t('core.nav.partner_support'), icon: LifeBuoy },
             { to: '/partner/brand', label: t('core.nav.partner_brand'), icon: Palette },
+            { to: '/partner/messaging', label: t('core.nav.partner_messaging'), icon: Mail },
+            { to: '/partner/templates', label: t('core.nav.partner_templates'), icon: MessageSquareText },
             { to: '/partner/domains', label: t('core.nav.partner_domains'), icon: Globe },
             { to: '/partner/modules', label: t('core.nav.partner_modules'), icon: Blocks },
             { to: '/partner/rules', label: t('core.nav.partner_rules'), icon: SlidersHorizontal },

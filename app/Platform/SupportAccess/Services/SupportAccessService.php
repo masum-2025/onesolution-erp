@@ -2,6 +2,8 @@
 
 namespace App\Platform\SupportAccess\Services;
 
+use App\Platform\SupportAccess\Events\SupportAccessDecided;
+use App\Platform\SupportAccess\Events\SupportAccessRequested;
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Rules\RuleContextFactory;
@@ -80,6 +82,8 @@ class SupportAccessService
             if ($autoApprove) {
                 // Approved by the client's own rule (support.auto_approve_severities), not by the requester.
                 $this->record('support.auto_approved', $grant, null, null, ['by' => 'client_rule', 'severity' => $severity->value, 'expires_at' => $grant->expires_at->toIso8601String()]);
+            } else {
+                SupportAccessRequested::dispatch($grant);
             }
 
             return $grant;
@@ -104,6 +108,7 @@ class SupportAccessService
             ])->save();
 
             $this->record('support.approved', $locked, $approver, $reason, ['expires_at' => $locked->expires_at->toIso8601String()]);
+            SupportAccessDecided::dispatch($locked);
         });
     }
 
@@ -122,6 +127,7 @@ class SupportAccessService
             ])->save();
 
             $this->record('support.rejected', $locked, $reviewer, $reason);
+            SupportAccessDecided::dispatch($locked);
         });
     }
 

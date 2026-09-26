@@ -9,6 +9,8 @@ use App\Platform\Billing\Http\Controllers\PartnerPlansController;
 use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Modules\Http\Controllers\MenuController;
+use App\Platform\Notifications\Http\Controllers\PartnerMessagingController;
+use App\Platform\Notifications\Http\Controllers\PartnerTemplateController;
 use App\Platform\SupportAccess\Http\Controllers\ClientSupportController;
 use App\Platform\SupportAccess\Http\Controllers\PartnerSupportController;
 use App\Platform\Packaging\Http\Controllers\CatalogController;
@@ -175,6 +177,26 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
 
     Route::get('organizations/{organization}/plan-preview', [PartnerPlanController::class, 'preview']);
     Route::put('organizations/{organization}/plan', [PartnerPlanController::class, 'update'])->middleware('throttle:tenancy-sensitive');
+
+    // Branded email and SMS (Phase 5B-3b).
+    Route::get('messaging', [PartnerMessagingController::class, 'show']);
+    Route::get('templates', [PartnerTemplateController::class, 'index']);
+    Route::get('templates/{notification}', [PartnerTemplateController::class, 'show']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('messaging/domain', [PartnerMessagingController::class, 'storeDomain']);
+        Route::patch('messaging/domain', [PartnerMessagingController::class, 'updateSender']);
+        Route::delete('messaging/domain', [PartnerMessagingController::class, 'destroyDomain']);
+        Route::post('messaging/sms-sender', [PartnerMessagingController::class, 'storeSmsSender']);
+        Route::delete('messaging/sms-sender', [PartnerMessagingController::class, 'destroySmsSender']);
+        Route::put('templates/{notification}/{channel}/{locale}', [PartnerTemplateController::class, 'update']);
+        Route::delete('templates/{notification}/{channel}/{locale}', [PartnerTemplateController::class, 'destroy']);
+    });
+    Route::post('templates/{notification}/{channel}/{locale}/preview', [PartnerTemplateController::class, 'preview'])->middleware('throttle:partner-heavy');
+    Route::post('messaging/domain/verify', [PartnerMessagingController::class, 'verifyDomain'])->middleware('throttle:partner-heavy');
+    Route::middleware('throttle:notification-test')->group(function () {
+        Route::post('messaging/test-email', [PartnerMessagingController::class, 'testEmail']);
+        Route::post('messaging/test-sms', [PartnerMessagingController::class, 'testSms']);
+    });
 
     Route::get('rules', [PartnerRuleController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {

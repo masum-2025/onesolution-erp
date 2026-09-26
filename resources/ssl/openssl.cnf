@@ -1,0 +1,6 @@
+# Minimal OpenSSL configuration for key generation where the system has none
+# (e.g. some Windows PHP builds). Used only if generating a key without it fails.
+[ req ]
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]

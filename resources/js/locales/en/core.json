@@ -90,7 +90,9 @@
         "export": "Export data",
         "partner_plans": "Plans",
         "partner_billing": "Billing",
-        "billing": "Billing"
+        "billing": "Billing",
+        "partner_messaging": "Email & SMS",
+        "partner_templates": "Message wording"
     },
     "not_found": {
         "title": "This page does not exist",
