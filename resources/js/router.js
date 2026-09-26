@@ -13,6 +13,7 @@ const AppShell = () => import('./layouts/AppShell.vue');
 
 const routes = [
     { path: '/login', name: 'login', component: () => import('./pages/auth/LoginPage.vue'), meta: { guest: true, ns: ['auth'] } },
+    { path: '/invite/:token', name: 'invite', component: () => import('./pages/auth/InvitationPage.vue'), meta: { public: true, ns: ['auth', 'invite'] } },
     { path: '/choose', name: 'choose', component: () => import('./pages/auth/ChooseContextPage.vue'), meta: { ns: ['auth'] } },
     {
         path: '/',
@@ -33,6 +34,7 @@ const routes = [
             },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
+            { path: 'branding', name: 'brand', component: () => import('./pages/brand/ClientBrandPage.vue'), meta: { context: 'organization', ns: ['brand'] } },
             { path: 'provider', name: 'provider', component: () => import('./pages/provider/ProviderPage.vue'), meta: { context: 'organization', ns: ['provider'] } },
             { path: 'billing', name: 'billing', component: () => import('./pages/billing/BillingPage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             { path: 'billing/invoices/:id', name: 'invoice', component: () => import('./pages/billing/InvoicePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
@@ -76,6 +78,12 @@ const routes = [
                 name: 'partner-invoice',
                 component: () => import('./pages/billing/InvoicePage.vue'),
                 meta: { context: 'partner', ns: ['partner', 'billing'] },
+            },
+            {
+                path: 'partner/api-keys',
+                name: 'partner-api-keys',
+                component: () => import('./pages/partner/PartnerApiKeysPage.vue'),
+                meta: { context: 'partner', ns: ['partner'] },
             },
             {
                 path: 'partner/transfers',
@@ -158,6 +166,12 @@ router.beforeEach(async (to) => {
 
     const me = session.me;
     const namespaces = loadNamespaces(['core', ...(to.meta.ns ?? [])]);
+
+    // Open to anyone, signed in or not (an invitation link may be opened on a shared computer).
+    if (to.meta.public) {
+        await namespaces;
+        return true;
+    }
 
     if (to.meta.guest) {
         await namespaces;

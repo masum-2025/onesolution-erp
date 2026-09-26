@@ -4,6 +4,9 @@ use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
 use App\Platform\Audit\Http\AuditLogController;
 use App\Platform\Billing\Http\Controllers\OrganizationBillingController;
+use App\Platform\Branding\Http\ClientBrandController;
+use App\Platform\PartnerApi\Http\Controllers\PartnerApiKeyController;
+use App\Platform\PartnerApi\Http\Controllers\PartnerApiV1Controller;
 use App\Platform\Billing\Http\Controllers\PartnerBillingController;
 use App\Platform\Billing\Http\Controllers\PartnerPlansController;
 use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
@@ -99,6 +102,14 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::post('organizations/{organization}/support-grants/{grant}/revoke', [ClientSupportController::class, 'revoke']);
     });
 
+    // The client's own brand (Phase 5B-5).
+    Route::get('organizations/{organization}/brand', [ClientBrandController::class, 'show']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::patch('organizations/{organization}/brand', [ClientBrandController::class, 'update']);
+        Route::delete('organizations/{organization}/brand/logo', [ClientBrandController::class, 'destroyLogo']);
+    });
+    Route::post('organizations/{organization}/brand/logo', [ClientBrandController::class, 'storeLogo'])->middleware('throttle:partner-heavy');
+
     // The client's provider, legal documents and moving provider (Phase 5B-4).
     Route::get('organizations/{organization}/provider', [ClientProviderController::class, 'show']);
     Route::get('organizations/{organization}/legal/{kind}', [ClientLegalController::class, 'show']);
@@ -192,6 +203,13 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
     Route::get('organizations/{organization}/plan-preview', [PartnerPlanController::class, 'preview']);
     Route::put('organizations/{organization}/plan', [PartnerPlanController::class, 'update'])->middleware('throttle:tenancy-sensitive');
 
+    // API keys for the partner's own systems (Phase 5B-5).
+    Route::get('api-keys', [PartnerApiKeyController::class, 'index']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('api-keys', [PartnerApiKeyController::class, 'store']);
+        Route::delete('api-keys/{key}', [PartnerApiKeyController::class, 'revoke']);
+    });
+
     // Clients moving in and out, and the partner's legal documents (Phase 5B-4).
     Route::get('transfers', [PartnerTransferController::class, 'index']);
     Route::get('legal', [PartnerLegalController::class, 'index']);
@@ -231,4 +249,18 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
         Route::post('rule-approvals/{value}/approve', [PartnerRuleController::class, 'approve']);
         Route::post('rule-approvals/{value}/reject', [PartnerRuleController::class, 'reject']);
     });
+});
+
+/*
+| Partner API v1 (Phase 5B-5): a partner's own systems, with an API key
+| (Authorization: Bearer osk_...). Per-key rate limit; writes may carry an
+| Idempotency-Key header.
+*/
+Route::prefix('partner/v1')->middleware(['partner.key', 'throttle:partner-api', 'api.idempotent'])->group(function () {
+    Route::get('clients', [PartnerApiV1Controller::class, 'clients'])->middleware('api.scope:clients:read');
+    Route::get('clients/{client}', [PartnerApiV1Controller::class, 'client'])->middleware('api.scope:clients:read');
+    Route::post('clients', [PartnerApiV1Controller::class, 'storeClient'])->middleware('api.scope:clients:write');
+    Route::post('clients/{client}/members', [PartnerApiV1Controller::class, 'storeMember'])->middleware('api.scope:members:write');
+    Route::get('plans', [PartnerApiV1Controller::class, 'plans'])->middleware('api.scope:plans:read');
+    Route::put('clients/{client}/plan', [PartnerApiV1Controller::class, 'changePlan'])->middleware('api.scope:subscriptions:write');
 });

@@ -15,7 +15,7 @@ class AppShellController extends Controller
 {
     public function __invoke(BrandResolver $brands, HostContext $host): View
     {
-        $brand = $brands->for($host->partner());
+        $brand = $brands->for($host->partner(), $host->client());
 
         return view('app', [
             'brand' => $brand,

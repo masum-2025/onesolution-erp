@@ -22,8 +22,9 @@ class StoreClientRequest extends StrictFormRequest
             'name.bn' => ['nullable', 'string', 'max:150'],
             'sector_key' => ['required', 'string', Rule::in(app(SectorCatalog::class)->keys())],
             'plan' => ['required', 'string', Rule::in(app(PlanCatalog::class)->keys())],
-            // The client's first owner must already have an account (invitations: Phase 5C).
+            // The client's first owner. Without an account yet, give a name: they are invited by email.
             'owner_email' => ['required', 'string', 'email', 'max:255'],
+            'owner_name' => ['sometimes', 'nullable', 'string', 'min:2', 'max:120'],
             'country_code' => ['sometimes', 'nullable', 'string', 'regex:/^[A-Z]{2}$/'],
             'currency_code' => ['sometimes', 'nullable', 'string', 'regex:/^[A-Z]{3}$/'],
             'timezone' => ['sometimes', 'nullable', 'string', 'timezone:all'],

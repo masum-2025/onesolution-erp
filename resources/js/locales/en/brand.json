@@ -1,0 +1,21 @@
+{
+    "title": "Our brand",
+    "text": "Your own name, color and logo, shown to your people in the app, at your own address and in emails.",
+    "not_offered_title": "Not offered by your provider",
+    "not_offered_text": "{provider} does not offer an own brand for clients. Ask them if you need it.",
+    "read_only": "Only people allowed to change the brand can edit it.",
+    "name": "Name shown",
+    "name_hint": "Empty: {name}.",
+    "color": "Main color",
+    "color_hint": "Used for buttons and highlights. It must be dark enough to read white text on.",
+    "contrast_text": "Too light for white text on buttons.",
+    "contrast_surface": "Too light to see on a white page.",
+    "logo": "Logo",
+    "logo_hint": "PNG, WebP or JPEG, up to 512 KB. A wide logo on a transparent background looks best.",
+    "upload": "Upload logo",
+    "remove_logo": "Remove logo",
+    "save": "Save brand",
+    "preview": "What your people see",
+    "sample_button": "Sample button",
+    "preview_note": "Invoices keep your provider’s details."
+}

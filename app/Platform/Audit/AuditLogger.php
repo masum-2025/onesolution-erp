@@ -39,6 +39,8 @@ class AuditLogger
                 ? $this->context->organization()->getKey()
                 : null),
             'actor_user_id' => ($actor ?? $this->context->user())?->getKey(),
+            // A change made by a partner's system through an API key names the key.
+            'api_key_id' => $request->attributes->get('partner_api_key')?->getKey(),
             'action' => $action,
             'target_type' => $target ? class_basename($target) : null,
             'target_id' => $target?->getKey(),

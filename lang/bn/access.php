@@ -49,6 +49,7 @@ return [
         'audit_view' => 'অডিট লগ দেখা',
         'data_export' => 'সব তথ্য এক্সপোর্ট',
         'billing_view' => 'প্ল্যান ও ইনভয়েস দেখা',
+        'branding_manage' => 'প্রতিষ্ঠানের ব্র্যান্ড বদলানো',
     ],
 
     'templates' => [

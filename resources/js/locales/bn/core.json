@@ -95,7 +95,9 @@
         "partner_templates": "মেসেজের লেখা",
         "partner_transfers": "ট্রান্সফার",
         "partner_legal": "আইনি দলিল",
-        "provider": "সেবাদাতা ও শর্তাবলি"
+        "provider": "সেবাদাতা ও শর্তাবলি",
+        "partner_api": "API কী",
+        "brand": "আমাদের ব্র্যান্ড"
     },
     "not_found": {
         "title": "এই পেজটি নেই",

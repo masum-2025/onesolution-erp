@@ -20,6 +20,13 @@ php artisan test                # runs on onesolution_erp_test (see phpunit.xml)
 vendor/bin/pint                 # code style
 ```
 
+Demo data (local only, only adds, skips what exists): a school tree under the house partner,
+and a white-label partner **Acme Solutions** (`DemoPartnerSeeder`) at
+`http://erp.acme.localhost:8000` (owner `owner@acme.test`) with a client **Sunrise School**
+at `http://sunrise.acme.localhost:8000` (owner `head@sunrise.test`, own sub-brand). Add it
+to an existing database with `php artisan db:seed --class=DemoPartnerSeeder`. For sign-in on
+those addresses, list them in `SANCTUM_STATEFUL_DOMAINS` (see `.env.example`).
+
 CI (`.github/workflows/tests.yml`) runs the suite on MySQL 8 and PostgreSQL 16.
 
 ## Tenancy foundation (Phase 1)
@@ -802,8 +809,101 @@ email) but never blocks work. Rule `legal.acceptance_required` (default on).
 - New country: its legal text as a platform or partner version in that language. No code.
 - New document kind: add it to `LegalDocument::KINDS` (and `ACCEPTED_KINDS` if clients
   accept it) with default text in the data file.
-- Open: client sub-brands and partner API keys (5B-5); moving a single company out of a
-  group; e-signature providers for DPAs.
+- Open: moving a single company out of a group; e-signature providers for DPAs.
+
+## Client sub-brands, invitations and partner API (Phase 5B-5)
+
+Code: `app/Platform/Branding` (client brand), `app/Platform/Invitations`,
+`app/Platform/PartnerApi`.
+
+### Client sub-brands
+
+A client (e.g. a school group) can show its own **name, main color and logo** to its
+people, where its partner allows it: partner rule `branding.client_sub_brands_allowed`
+(default off; the partner turns it on in **Partner rules**).
+
+- Who edits: an **account owner** with `branding.manage`, on **Our brand** (`/branding`).
+  Colors are checked for contrast (white text on buttons, visible on a white page).
+  Logo: PNG/WebP/JPEG up to 512 KB, stored on the private disk, served at
+  `/client-brand-assets/{client}/logo` only on the platform host, the partner's domains
+  or the client's own domain.
+- Where it shows: the app for everyone in the client (every unit of the tree), the
+  client's own domain (its sign-in page, with the neutral title instead of the partner's),
+  and emails to the client's people.
+- Where it never shows: invoices and legal documents (they keep the partner's details),
+  the partner console, and other clients. Fonts, legal links and "Powered by" stay the
+  partner's.
+- `BrandResolver::for($partner, $client)` lays the client brand over the partner brand;
+  when the partner turns the rule off, every client falls back at once (data kept).
+- Audit: `organization.brand_updated`, `organization.brand_logo_changed`.
+
+### Invitations
+
+Adding someone who has no account (partner console, or the API) creates the account
+without a usable password and emails a one-time link `/invite/{token}` (only a sha256
+hash stored, valid 72 hours). The person sets a password (10+ characters, letters and
+numbers) and is signed in. People who already have an account just get access and a
+"you were added" email. Emails `members.invited` / `members.added` use the partner's
+(or client's) brand and are editable in **Message wording**. An unknown email without a
+name is refused: the form asks for the owner's name. Audit: `membership.invited`,
+`membership.invitation_accepted`.
+
+### Partner API keys
+
+A partner **owner** creates keys on **API keys** in the partner console:
+
+- Format `osk_{prefix}_{secret}`, **shown once**; only the prefix and a hash are stored.
+- Scopes: `clients:read`, `clients:write`, `members:write`, `plans:read`,
+  `subscriptions:write`.
+- Valid `partners.api_key_days` (default 365); revocable at once.
+- A key acts as the owner who made it. It stops working if that person stops being an
+  active owner, or the partner is suspended.
+- Every change made with a key is in the audit log with its `api_key_id`.
+- The API gives account data only (clients, people, plans), never a client's business data.
+
+### Partner API v1
+
+Base URL: `https://{partner domain or platform host}/api/partner/v1`, header
+`Authorization: Bearer osk_…`, JSON in and out.
+
+| method | path | scope | body |
+|---|---|---|---|
+| GET | /clients | clients:read | |
+| GET | /clients/{id} | clients:read | |
+| POST | /clients | clients:write | as the console: `name`, `sector_key`, `plan`, `owner_email`, `owner_name`, `country_code`, … |
+| POST | /clients/{id}/members | members:write | `email`, `name`, `membership_type` (owner, staff), `organization_id?`, `access_scope?` |
+| GET | /plans | plans:read | |
+| PUT | /clients/{id}/plan | subscriptions:write | `plan`, `reason?` |
+
+```
+curl -X POST https://erp.acme.example/api/partner/v1/clients \
+  -H "Authorization: Bearer osk_…" \
+  -H "Idempotency-Key: signup-4711" \
+  -H "Content-Type: application/json" \
+  -d '{"name":{"en":"Sunrise School"},"sector_key":"school","plan":"business",
+       "owner_email":"head@sunrise.test","owner_name":"Head Teacher","country_code":"BD"}'
+```
+
+- **Idempotency**: send `Idempotency-Key` on writes. A retry with the same key and body
+  gets the first answer again (header `Idempotent-Replayed: true`); the same key with
+  another body gets 422. Answers are kept for a day per API key.
+- **Rate limit**: `partners.api_rate_per_minute` per key (default 60), 429 beyond it.
+- Errors: 401 (missing, wrong, expired or revoked key), 403 (scope missing), 404 (unknown
+  client, or another partner's), 422 (validation, with `errors`), all with a readable
+  `message`.
+- The partner's governance rules (`partners.max_clients`, allowed countries, plans) apply
+  exactly as in the console.
+
+Console endpoints: `GET/POST /api/partner/api-keys`, `DELETE /api/partner/api-keys/{id}`
+(owner); `GET/PATCH /api/organizations/{id}/brand`, `POST/DELETE .../brand/logo`;
+`GET/POST /session/invitations/{token}` (rate limited).
+
+### Future expansion (Phase 5B-5)
+
+- New partner: turns sub-brands on with its rule; creates its own keys. No code.
+- New scope: add it to `PartnerApiKey::SCOPES` with a route and its label (bn, en).
+- Open: webhooks to partners (client created, plan changed), OAuth apps, client-set
+  email sending domains, API v2 once business modules expose public services.
 
 ## Browser app (frontend foundation)
 

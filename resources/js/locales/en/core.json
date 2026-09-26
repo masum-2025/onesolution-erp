@@ -95,7 +95,9 @@
         "partner_templates": "Message wording",
         "partner_transfers": "Transfers",
         "partner_legal": "Legal documents",
-        "provider": "Provider & terms"
+        "provider": "Provider & terms",
+        "partner_api": "API keys",
+        "brand": "Our brand"
     },
     "not_found": {
         "title": "This page does not exist",

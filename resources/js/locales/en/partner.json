@@ -25,7 +25,7 @@
         "sector": "Sector",
         "plan": "Plan",
         "owner_email": "Owner email",
-        "owner_hint": "The owner must already have an account.",
+        "owner_hint": "An existing account is added as owner; someone new is invited by email.",
         "email_invalid": "Enter a valid email address.",
         "country": "Country code",
         "country_hint": "Two letters, e.g. BD.",
@@ -37,7 +37,9 @@
         "suspend_text": "Nobody in this client account can sign in until you reactivate it. No data is deleted.",
         "reactivate_title": "Reactivate {name}?",
         "reactivate_text": "Its members can sign in again.",
-        "limits": "Limits"
+        "limits": "Limits",
+        "owner_name": "Owner name",
+        "owner_name_hint": "Needed only if the owner has no account yet."
     },
     "rules": {
         "title": "Partner rules",
@@ -152,5 +154,42 @@
         "saved": "{name} updated for all clients.",
         "also_on": "Also turned on: {list}.",
         "read_only": "Only partner owners can change modules for all clients."
+    },
+    "api": {
+        "title": "API keys",
+        "text": "Let your own systems (website, CRM) create clients, add people and change plans. Account data only; never a client’s business data.",
+        "new": "New API key",
+        "new_text": "Choose what the key may do. It works in your name, until it expires or you revoke it.",
+        "name": "Name",
+        "name_hint": "What the key is for, e.g. \"Website sign-up\".",
+        "scopes": "What it may do",
+        "scope": {
+            "clients_read": "see your clients",
+            "clients_write": "create clients (owners are invited by email)",
+            "members_write": "add people to clients",
+            "plans_read": "see your plans",
+            "subscriptions_write": "change a client’s plan"
+        },
+        "create": "Create key",
+        "once": "Copy this key now and keep it safe. It is shown only once.",
+        "copy": "Copy the key",
+        "copied": "Copied.",
+        "until": "Valid until {date}.",
+        "status": {
+            "active": "Active",
+            "revoked": "Revoked",
+            "expired": "Expired"
+        },
+        "meta": "made by {by} · valid until {until}",
+        "used": "last used {date}",
+        "never_used": "never used",
+        "revoke": "Revoke",
+        "revoke_title": "Revoke \"{name}\"?",
+        "revoke_text": "Systems using this key stop working at once.",
+        "empty_title": "No API keys yet",
+        "empty_text": "Create a key to connect your website or CRM.",
+        "how_title": "How to use it",
+        "how_text": "Send the key as a bearer token. Up to {rate} requests per minute per key.",
+        "idempotency": "Send an Idempotency-Key header with each create: if you retry, nothing is created twice."
     }
 }

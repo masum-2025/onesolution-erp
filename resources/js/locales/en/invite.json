@@ -1,0 +1,15 @@
+{
+    "title": "Welcome, {name}",
+    "text": "You were added to {organization}. Set a password to start.",
+    "password": "New password",
+    "password_rules": "At least 10 characters, with letters and numbers.",
+    "confirm": "Repeat the password",
+    "mismatch": "The two passwords are not the same.",
+    "show": "Show password",
+    "hide": "Hide password",
+    "submit": "Set password and start",
+    "expires": "This link works until {date}.",
+    "invalid_title": "This link does not work any more",
+    "invalid_text": "It may have expired or been used already. Ask the person who added you for a new one, or sign in if you already set a password.",
+    "to_login": "Go to sign in"
+}

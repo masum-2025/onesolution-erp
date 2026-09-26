@@ -51,7 +51,10 @@ class MeController extends Controller
             'can' => $this->abilities($context, $access),
             // A partner's own address always shows that partner's brand; on the platform
             // address the brand follows the account being worked in.
-            'brand' => $brands->for($host->isPlatform() ? ($active === null ? null : $context->partner()) : $host->partner()),
+            'brand' => $brands->for(
+                $host->isPlatform() ? ($active === null ? null : $context->partner()) : $host->partner(),
+                $context->hasOrganization() ? $context->organization() : $host->client(),
+            ),
             'locales' => config('tenancy.supported_locales'),
         ]]);
     }

@@ -65,6 +65,18 @@ final class NotificationCatalog
             'audience' => 'partner',
             'path' => '/partner/organizations',
         ],
+        'members.invited' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'inviter', 'link'],
+            'audience' => 'client',
+            'path' => '/login',
+        ],
+        'members.added' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'inviter', 'link'],
+            'audience' => 'client',
+            'path' => '/login',
+        ],
         'legal.updated' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'document', 'summary', 'link'],

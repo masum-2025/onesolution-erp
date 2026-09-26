@@ -30,7 +30,7 @@ watch(
     () => props.open,
     (open) => {
         if (!open) return;
-        Object.assign(form, { name_en: '', name_bn: '', sector_key: 'general', plan: 'starter', owner_email: '', country_code: '' });
+        Object.assign(form, { name_en: '', name_bn: '', sector_key: 'general', plan: 'starter', owner_email: '', owner_name: '', country_code: '' });
         errors.value = {};
     },
 );
@@ -50,6 +50,7 @@ async function submit() {
                 sector_key: form.sector_key,
                 plan: form.plan,
                 owner_email: form.owner_email.trim(),
+                ...(form.owner_name.trim() ? { owner_name: form.owner_name.trim() } : {}),
                 ...(form.country_code.trim() ? { country_code: form.country_code.trim().toUpperCase() } : {}),
             },
         });
@@ -99,6 +100,11 @@ async function submit() {
                 <AppField :label="t('partner.clients.owner_email')" :hint="t('partner.clients.owner_hint')" :error="errors.owner_email">
                     <template #default="{ id, invalid, describedby }">
                         <input :id="id" v-model="form.owner_email" type="email" class="field-input" autocomplete="off" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
+                    </template>
+                </AppField>
+                <AppField :label="t('partner.clients.owner_name')" :hint="t('partner.clients.owner_name_hint')" :error="errors.owner_name" optional>
+                    <template #default="{ id, invalid, describedby }">
+                        <input :id="id" v-model="form.owner_name" class="field-input" maxlength="120" autocomplete="off" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
                     </template>
                 </AppField>
                 <AppField :label="t('partner.clients.country')" :hint="t('partner.clients.country_hint')" :error="errors.country_code" optional>

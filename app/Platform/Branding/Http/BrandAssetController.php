@@ -41,7 +41,7 @@ class BrandAssetController extends Controller
 
     public function manifest(BrandResolver $brands, HostContext $host): JsonResponse
     {
-        $brand = $brands->for($host->partner());
+        $brand = $brands->for($host->partner(), $host->client());
         $icon = $brand['mark_url'] ?? $brand['favicon_url'];
 
         return response()->json([

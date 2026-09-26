@@ -9,6 +9,7 @@ use App\Platform\Partners\Http\Controllers\Concerns\PartnerConsole;
 use App\Platform\Partners\Http\Requests\ClientLimitsRequest;
 use App\Platform\Partners\Http\Requests\ClientStatusRequest;
 use App\Platform\Partners\Http\Requests\StoreClientRequest;
+use App\Platform\Partners\Services\ClientProvisioner;
 use App\Platform\Partners\Services\PartnerClientService;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
@@ -30,14 +31,12 @@ class PartnerClientController extends Controller
     {
         $this->requireRole(PartnerUserRole::Owner, PartnerUserRole::Sales);
 
-        $owner = User::query()->where('email', $request->validated('owner_email'))->first()
-            ?? throw ValidationException::withMessages(['owner_email' => __('tenancy.errors.user_not_found')]);
-
-        $created = $this->clients->create($this->partner(), $request->safe()->except('owner_email'), $owner, $request->user());
+        $created = app(ClientProvisioner::class)->create($this->partner(), $request->validated(), $request->user());
 
         return response()->json([
             'data' => new PartnerOrganizationResource($created['group']),
             'company' => new PartnerOrganizationResource($created['company']),
+            'owner_invited' => $created['owner_invited'],
             'message' => __('partners.messages.client_created', ['name' => $created['group']->displayName()]),
         ], 201);
     }

@@ -7,6 +7,7 @@ use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\NotificationCatalog;
 use App\Platform\Notifications\Services\MailSender;
 use App\Platform\Notifications\Services\TemplateRenderer;
+use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -55,6 +56,7 @@ class DeliverNotification implements ShouldQueue
             (string) $templates->fill($wording['body'], $values),
             ['label' => $action, 'url' => $values['link'] ?? ''],
             $delivery->locale,
+            $delivery->organization_id === null ? null : Organization::query()->find($delivery->organization_id),
         );
 
         $this->finish($delivery, NotificationDelivery::SENT, $sender);

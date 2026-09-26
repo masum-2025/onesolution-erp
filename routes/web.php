@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AppShellController;
 use App\Platform\Branding\Http\BrandAssetController;
+use App\Platform\Branding\Http\ClientBrandAssetController;
+use App\Platform\Invitations\Http\InvitationController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
@@ -15,6 +17,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('session')->group(function () {
     Route::post('login', [SessionController::class, 'login'])->middleware('throttle:tenancy-login');
+    // Invitation links: see who it is for, set the password (signs in).
+    Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:tenancy-login');
+    Route::post('invitations/{token}', [InvitationController::class, 'accept'])->middleware('throttle:tenancy-login');
 
     Route::middleware('auth:web')->group(function () {
         Route::post('context', [SessionController::class, 'enterContext'])->middleware('throttle:tenancy-sensitive');
@@ -26,6 +31,7 @@ Route::prefix('session')->group(function () {
 Route::get('brand-assets/{partner}/{kind}', [BrandAssetController::class, 'show'])
     ->where(['partner' => '[0-9A-Za-z]{26}', 'kind' => '[a-z_]+']);
 Route::get('manifest.webmanifest', [BrandAssetController::class, 'manifest']);
+Route::get('client-brand-assets/{organization}/logo', [ClientBrandAssetController::class, 'show'])->where('organization', '[0-9A-Za-z]{26}');
 
 // An email preview for the template editor (only its author, for a few minutes).
 Route::get('partner-preview/{preview}', [TemplatePreviewController::class, 'show'])

@@ -149,6 +149,18 @@ return [
             'label' => 'Clients accept terms and the DPA',
             'description' => 'Account owners are asked to accept the terms of service and the data processing agreement in force.',
         ],
+        'branding_client_sub_brands_allowed' => [
+            'label' => 'Clients may use their own brand',
+            'description' => 'Clients can show their own name, logo and color to their own people (app, their own address, emails).',
+        ],
+        'partners_api_rate_per_minute' => [
+            'label' => 'API requests per minute per key',
+            'description' => 'How many requests one API key may make each minute.',
+        ],
+        'partners_api_key_days' => [
+            'label' => 'API keys are valid for (days)',
+            'description' => 'A new API key stops working after this many days.',
+        ],
     ],
 
     'categories' => [

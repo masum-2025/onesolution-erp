@@ -52,6 +52,16 @@ return [
             'body' => "{{ product }} published a new version of the {{ document }} for {{ organization }}.\n\nWhat changed: {{ summary }}\n\nPlease read and accept it.",
             'action' => 'Read and accept',
         ],
+        'members_invited' => [
+            'subject' => 'You are invited to {{ organization }} on {{ product }}',
+            'body' => "{{ inviter }} added you to {{ organization }}.\n\nSet your password to start. The link works for 3 days.",
+            'action' => 'Set your password',
+        ],
+        'members_added' => [
+            'subject' => 'You now have access to {{ organization }}',
+            'body' => "{{ inviter }} gave you access to {{ organization }} on {{ product }}. Sign in with your usual email and password.",
+            'action' => 'Sign in',
+        ],
     ],
 
     'catalog' => [
@@ -64,6 +74,8 @@ return [
         'transfers_completed' => ['name' => 'Move completed', 'description' => 'To the client\'s account owners, from their new provider.'],
         'transfers_client_left' => ['name' => 'Client moved away', 'description' => 'To your owners, when a client moves to another provider.'],
         'legal_updated' => ['name' => 'New terms to accept', 'description' => 'To the client\'s account owners, when you publish new terms or a new DPA.'],
+        'members_invited' => ['name' => 'Invitation to a new account', 'description' => 'To someone added who has no account yet: a link to set a password.'],
+        'members_added' => ['name' => 'Access added', 'description' => 'To someone added who already has an account.'],
     ],
 
     'placeholders' => [
@@ -82,6 +94,7 @@ return [
         'link' => 'Link to the screen',
         'document' => 'The document\'s title',
         'summary' => 'What changed',
+        'inviter' => 'Who added them',
     ],
 
     // Example values for previews.
@@ -99,6 +112,7 @@ return [
         'due' => '10 October 2026',
         'document' => 'Terms of service',
         'summary' => 'Clearer payment terms.',
+        'inviter' => 'Head Teacher',
     ],
 
     'severity' => ['critical' => 'Critical', 'high' => 'High', 'normal' => 'Normal', 'low' => 'Low'],

@@ -2,7 +2,9 @@
 
 namespace App\Platform\Branding;
 
+use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\Partners\Models\PartnerBrand;
+use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Partner;
@@ -24,9 +26,61 @@ class BrandResolver
     public function __construct(private RuleResolver $rules, private RuleContextFactory $contexts) {}
 
     /**
+     * The brand for a partner, or for one of its clients: a client's own
+     * name, color and logo lie over its partner's brand where the partner
+     * allows sub-brands (branding.client_sub_brands_allowed). Everything else
+     * (fonts, legal links, "Powered by") stays the partner's.
+     *
      * @return array<string, mixed>
      */
-    public function for(?Partner $partner = null): array
+    public function for(?Partner $partner = null, ?Organization $client = null): array
+    {
+        $brand = $this->partnerBrand($partner);
+        $own = $client === null || $partner === null ? null : $this->clientBrand($partner, $client);
+
+        if ($own === null) {
+            return [...$brand, 'client' => false];
+        }
+
+        $logo = $own->logo_path === null ? null : "/client-brand-assets/{$own->organization_id}/logo?v={$own->version}";
+        $name = $this->text($own->display_name);
+
+        return [
+            ...$brand,
+            'name' => $name ?? $brand['name'],
+            // The partner's sign-in title and tagline speak for its own product;
+            // under the client's own name the neutral defaults show instead.
+            'login_title' => $name === null ? $brand['login_title'] : [],
+            'tagline' => $name === null ? $brand['tagline'] : [],
+            'primary_color' => $this->color($own->primary_color) === null ? $brand['primary_color'] : strtoupper($own->primary_color),
+            'logo_url' => $logo ?? $brand['logo_url'],
+            'logo_dark_url' => $logo === null ? $brand['logo_dark_url'] : null,
+            'mark_url' => $logo ?? $brand['mark_url'],
+            'version' => $brand['version'] * 1000 + $own->version,
+            'client' => true,
+        ];
+    }
+
+    public function subBrandsAllowed(Partner $partner): bool
+    {
+        return (bool) $this->rules->get('branding.client_sub_brands_allowed', $this->contexts->forPartner($partner));
+    }
+
+    private function clientBrand(Partner $partner, Organization $client): ?ClientBrand
+    {
+        if (! $this->subBrandsAllowed($partner)) {
+            return null;
+        }
+
+        $rootId = $client->isRoot() ? $client->getKey() : $client->root_id;
+
+        return ClientBrand::query()->where('organization_id', $rootId)->first();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function partnerBrand(?Partner $partner): array
     {
         $house = config('branding.house');
         $fonts = (array) config('branding.fonts');

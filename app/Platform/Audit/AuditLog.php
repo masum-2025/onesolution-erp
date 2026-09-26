@@ -12,7 +12,7 @@ use LogicException;
  * Phase 9 adds reporting, retention and external shipping on top.
  */
 #[Fillable([
-    'partner_id', 'organization_id', 'actor_user_id', 'action', 'target_type',
+    'partner_id', 'organization_id', 'actor_user_id', 'api_key_id', 'action', 'target_type',
     'target_id', 'old_values', 'new_values', 'reason', 'ip_address', 'user_agent',
 ])]
 class AuditLog extends Model

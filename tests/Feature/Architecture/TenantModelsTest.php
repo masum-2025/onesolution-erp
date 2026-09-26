@@ -19,7 +19,10 @@ use App\Platform\Billing\Models\Invoice;
 use App\Platform\Billing\Models\InvoiceLine;
 use App\Platform\Billing\Models\Payout;
 use App\Platform\Billing\Models\WholesalePrice;
+use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\DataExport\Models\DataExport;
+use App\Platform\Invitations\Models\Invitation;
+use App\Platform\PartnerApi\Models\PartnerApiKey;
 use App\Platform\Legal\Models\DocumentAcceptance;
 use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Transfers\Models\ClientTransfer;
@@ -121,6 +124,12 @@ const PLATFORM_MODELS = [
     ClientTransfer::class,
     LegalDocument::class,
     DocumentAcceptance::class,
+    // Sub-brands and the partner API (5B-5): a client's brand is read at
+    // sign-in (before any context) and by the partner's brand resolver;
+    // keys are partner data; invitations are opened by people not signed in.
+    ClientBrand::class,
+    PartnerApiKey::class,
+    Invitation::class,
 ];
 
 /**

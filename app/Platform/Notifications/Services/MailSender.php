@@ -6,6 +6,7 @@ use App\Platform\Branding\BrandResolver;
 use App\Platform\Notifications\Models\PartnerMailDomain;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
+use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Envelope;
@@ -32,9 +33,9 @@ class MailSender
      * @param  array{label: string, url: string}|null  $action
      * @return string The From address used.
      */
-    public function send(?Partner $partner, string $to, string $subject, string $body, ?array $action, string $locale): string
+    public function send(?Partner $partner, string $to, string $subject, string $body, ?array $action, string $locale, ?Organization $client = null): string
     {
-        $brand = $this->brands->for($partner);
+        $brand = $this->brands->for($partner, $client);
         $sender = $this->sender($partner, $brand);
         ['html' => $html, 'text' => $text] = $this->render($partner, $body, $action, $locale, $brand);
 

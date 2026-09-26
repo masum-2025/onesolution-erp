@@ -33,14 +33,15 @@ class Notifier
      * @param  array<string, string>|callable(string $locale): array<string, string>  $values  Placeholder values (per language when a callable).
      * @return list<NotificationDelivery>
      */
-    public function notify(string $key, iterable $users, array|callable $values, ?Partner $partner, ?Organization $organization = null): array
+    public function notify(string $key, iterable $users, array|callable $values, ?Partner $partner, ?Organization $organization = null, ?string $path = null): array
     {
         $definition = $this->catalog->get($key);
         $locale = $this->locale($organization);
         $filled = [
             ...(is_callable($values) ? $values($locale) : $values),
-            'product' => $this->brands->for($partner)['name'],
-            'link' => $this->links->to($definition['path'], $partner, $organization),
+            'product' => $this->brands->for($partner, $organization)['name'],
+            // A message may point somewhere of its own (e.g. a one-time invitation link).
+            'link' => $this->links->to($path ?? $definition['path'], $partner, $organization),
         ];
 
         $deliveries = [];

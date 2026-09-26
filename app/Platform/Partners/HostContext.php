@@ -40,6 +40,12 @@ final class HostContext
         return $this->partner;
     }
 
+    /** On a client's own domain: that client's top organization. */
+    public function client(): ?Organization
+    {
+        return $this->clientRootId === null ? null : Organization::query()->find($this->clientRootId);
+    }
+
     public function clientRootId(): ?string
     {
         return $this->clientRootId;

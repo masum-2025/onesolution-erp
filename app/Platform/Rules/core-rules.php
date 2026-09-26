@@ -391,4 +391,41 @@ return [
         'category' => 'partner',
         'sort_order' => 111,
     ],
+
+    // ── Client sub-brands and the partner API (Phase 5B-5) ───────────────
+    [
+        'key' => 'branding.client_sub_brands_allowed',
+        'type' => 'boolean',
+        // Whether the partner's clients may show their own name, logo and color to their people.
+        'default' => false,
+        'label' => 'rules.core.branding_client_sub_brands_allowed.label',
+        'description' => 'rules.core.branding_client_sub_brands_allowed.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'category' => 'partner',
+        'sort_order' => 120,
+    ],
+    [
+        'key' => 'partners.api_rate_per_minute',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1, 'maximum' => 1200],
+        'default' => 60,
+        'label' => 'rules.core.partners_api_rate_per_minute.label',
+        'description' => 'rules.core.partners_api_rate_per_minute.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 121,
+    ],
+    [
+        'key' => 'partners.api_key_days',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1, 'maximum' => 730],
+        // New keys stop working after this many days; make a new one before.
+        'default' => 365,
+        'label' => 'rules.core.partners_api_key_days.label',
+        'description' => 'rules.core.partners_api_key_days.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'category' => 'partner',
+        'sort_order' => 122,
+    ],
 ];
