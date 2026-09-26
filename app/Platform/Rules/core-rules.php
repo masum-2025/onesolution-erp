@@ -365,4 +365,30 @@ return [
         'category' => 'messages',
         'sort_order' => 102,
     ],
+
+    // ── Client transfer and legal documents (Phase 5B-4) ─────────────────
+    [
+        'key' => 'partners.transfer_code_days',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1, 'maximum' => 90],
+        // How long a code a partner hands a moving client stays valid.
+        'default' => 14,
+        'label' => 'rules.core.partners_transfer_code_days.label',
+        'description' => 'rules.core.partners_transfer_code_days.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'category' => 'partner',
+        'sort_order' => 110,
+    ],
+    [
+        'key' => 'legal.acceptance_required',
+        'type' => 'boolean',
+        // Account owners are asked to accept the terms and the DPA in force.
+        'default' => true,
+        'label' => 'rules.core.legal_acceptance_required.label',
+        'description' => 'rules.core.legal_acceptance_required.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 111,
+    ],
 ];

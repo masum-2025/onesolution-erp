@@ -37,6 +37,7 @@ abstract class TestCase extends BaseTestCase
         $this->artisan('access:sync');
         $this->artisan('packaging:sync');
         $this->artisan('billing:sync-prices');
+        $this->artisan('legal:sync');
     }
 
     /**

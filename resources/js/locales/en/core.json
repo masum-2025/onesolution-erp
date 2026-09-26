@@ -92,7 +92,10 @@
         "partner_billing": "Billing",
         "billing": "Billing",
         "partner_messaging": "Email & SMS",
-        "partner_templates": "Message wording"
+        "partner_templates": "Message wording",
+        "partner_transfers": "Transfers",
+        "partner_legal": "Legal documents",
+        "provider": "Provider & terms"
     },
     "not_found": {
         "title": "This page does not exist",
@@ -163,5 +166,10 @@
         "days_left_other": "{days} days left before only export remains.",
         "export": "Export data",
         "export_only": "Your service provider’s account is closed for now. You can still export all your data."
+    },
+    "legal": {
+        "pending_one": "{count} legal document from your provider waits for your acceptance.",
+        "pending_other": "{count} legal documents from your provider wait for your acceptance.",
+        "review": "Read and accept"
     }
 }

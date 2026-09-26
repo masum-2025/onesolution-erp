@@ -47,6 +47,30 @@ final class NotificationCatalog
             'audience' => 'partner',
             'path' => '/partner/billing',
         ],
+        'transfers.requested' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'reason', 'link'],
+            'audience' => 'partner',
+            'path' => '/partner/transfers',
+        ],
+        'transfers.completed' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'partner', 'link'],
+            'audience' => 'client',
+            'path' => '/provider',
+        ],
+        'transfers.client_left' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'link'],
+            'audience' => 'partner',
+            'path' => '/partner/organizations',
+        ],
+        'legal.updated' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'document', 'summary', 'link'],
+            'audience' => 'client',
+            'path' => '/provider',
+        ],
     ];
 
     /**

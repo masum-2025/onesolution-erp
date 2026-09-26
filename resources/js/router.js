@@ -33,6 +33,7 @@ const routes = [
             },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
+            { path: 'provider', name: 'provider', component: () => import('./pages/provider/ProviderPage.vue'), meta: { context: 'organization', ns: ['provider'] } },
             { path: 'billing', name: 'billing', component: () => import('./pages/billing/BillingPage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             { path: 'billing/invoices/:id', name: 'invoice', component: () => import('./pages/billing/InvoicePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             { path: 'export', name: 'export', component: () => import('./pages/trust/ExportPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
@@ -75,6 +76,18 @@ const routes = [
                 name: 'partner-invoice',
                 component: () => import('./pages/billing/InvoicePage.vue'),
                 meta: { context: 'partner', ns: ['partner', 'billing'] },
+            },
+            {
+                path: 'partner/transfers',
+                name: 'partner-transfers',
+                component: () => import('./pages/partner/PartnerTransfersPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'provider'] },
+            },
+            {
+                path: 'partner/legal',
+                name: 'partner-legal',
+                component: () => import('./pages/partner/PartnerLegalPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'provider'] },
             },
             {
                 path: 'partner/messaging',

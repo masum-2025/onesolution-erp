@@ -43,6 +43,23 @@ class Recipients
     }
 
     /**
+     * The owners of a client account (active owners at its top organization).
+     *
+     * @return Collection<int, User>
+     */
+    public function accountOwners(Organization $root): Collection
+    {
+        return User::query()
+            ->whereIn('id', DB::table('organization_user')
+                ->where('organization_id', $root->getKey())
+                ->where('status', MembershipStatus::Active->value)
+                ->where('membership_type', MembershipType::Owner->value)
+                ->select('user_id'))
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
      * @return Collection<int, User>
      */
     public function partnerStaff(Partner $partner, PartnerUserRole ...$roles): Collection

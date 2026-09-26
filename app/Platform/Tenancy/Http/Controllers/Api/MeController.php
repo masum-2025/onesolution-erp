@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Platform\Access\AccessResolver;
 use App\Platform\Access\Models\Role;
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Legal\Services\LegalService;
 use App\Platform\Partners\HostContext;
 use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use App\Platform\Tenancy\Context\ContextResolver;
@@ -141,6 +142,9 @@ class MeController extends Controller
                 'grant_id' => $context->supportGrant()->getKey(),
                 'expires_at' => $context->supportGrant()->expires_at?->toIso8601String(),
             ] : null,
+            // The owner of the whole account: accepts legal documents, may move provider.
+            'account_owner' => $accountOwner = ! $context->isSupport() && $membership->isOwner() && $organization->isRoot(),
+            'legal_pending' => $accountOwner ? count(app(LegalService::class)->pending($organization)) : 0,
         ];
     }
 

@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call([HousePartnerSeeder::class, RulesSeeder::class, AccessSeeder::class, PackagingSeeder::class, BillingSeeder::class]);
+        $this->call([HousePartnerSeeder::class, RulesSeeder::class, AccessSeeder::class, PackagingSeeder::class, BillingSeeder::class, LegalSeeder::class]);
 
         if (app()->environment('local')) {
             $this->call([DemoHierarchySeeder::class, DemoModulesSeeder::class, DemoAccessSeeder::class]);

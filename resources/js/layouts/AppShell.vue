@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { ChevronRight, Clock, Menu, Moon, Search, Sun } from 'lucide-vue-next';
 import SidebarNav from './SidebarNav.vue';
 import ModeBanner from './ModeBanner.vue';
+import LegalBanner from './LegalBanner.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppButton from '@/components/AppButton.vue';
 import BrandMark from '@/components/BrandMark.vue';
@@ -159,6 +160,7 @@ watch(() => route.path, () => (mobileNav.value = false));
             </header>
 
             <ModeBanner class="print:hidden" />
+            <LegalBanner class="print:hidden" />
 
             <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0 -translate-y-1">
                 <!-- Support time is set by the grant, not renewed here. -->

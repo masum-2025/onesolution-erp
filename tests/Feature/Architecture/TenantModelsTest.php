@@ -20,6 +20,10 @@ use App\Platform\Billing\Models\InvoiceLine;
 use App\Platform\Billing\Models\Payout;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\DataExport\Models\DataExport;
+use App\Platform\Legal\Models\DocumentAcceptance;
+use App\Platform\Legal\Models\LegalDocument;
+use App\Platform\Transfers\Models\ClientTransfer;
+use App\Platform\Transfers\Models\TransferCode;
 use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\Models\NotificationTemplate;
 use App\Platform\Notifications\Models\PartnerMailDomain;
@@ -110,6 +114,13 @@ const PLATFORM_MODELS = [
     PartnerSmsSender::class,
     NotificationTemplate::class,
     NotificationDelivery::class,
+    // Data ownership (5B-4): a transfer spans two partners and is read by both
+    // consoles and by the client; codes and legal documents are partner or
+    // platform data; acceptances are read only through the client account.
+    TransferCode::class,
+    ClientTransfer::class,
+    LegalDocument::class,
+    DocumentAcceptance::class,
 ];
 
 /**

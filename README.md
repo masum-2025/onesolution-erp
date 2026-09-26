@@ -734,6 +734,77 @@ Every change is audited (`partner.mail_*`, `partner.sms_sender_*`, `partner.temp
 - Open: SMS to people (verified phones, 5C), notification preferences for non-essential
   messages, bounce and complaint handling from the mail provider.
 
+## Client transfer and legal documents (Phase 5B-4)
+
+Code: `app/Platform/Transfers`, `app/Platform/Legal`. Clients own their data: they can
+move to another provider with all of it, and they accept the terms they work under.
+
+### Moving to another provider
+
+1. The new partner creates a one-time **transfer code** (`XXXX-XXXX-XXXX`, only a hash
+   stored, valid `partners.transfer_code_days`, default 14) and gives it to the client.
+2. The client's **account owner** (owner at the top organization, not support staff) enters
+   it on **Provider & terms**, sees what changes (preview) and consents with a reason.
+   Coming back to the house partner needs no code and happens at once.
+3. The new partner's owner accepts (or rejects with a reason). The old partner is told
+   (without naming the new one) but cannot block it.
+
+`TransferService` then, in one transaction: sets `partner_id` on every unit of the tree
+(the tree, members, roles, settings, rule values, audit log all stay), moves the
+subscription (the old partner's plan ends; the base plan stays), disables the client's
+domain at the old partner's address, ends open support access, flushes caches and fires
+module events for modules the new partner does not offer (their data is kept). Past
+invoices and commissions stay with the old partner. The new partner's governance
+(`partners.max_clients`, `partners.allowed_countries`) is checked in the preview and again
+on acceptance. Everything is audited in the client's log and both partners' logs.
+
+Platform decision (e.g. a partner closes), without consent, everyone told:
+
+```
+php artisan clients:transfer house --all-from=acme --reason="Acme closed on 1 Nov"
+php artisan clients:transfer beta --client=01J... --reason="..."
+```
+
+### Legal documents
+
+Terms of service, privacy notice and data processing agreement: the platform's defaults
+or a partner's own, in versions that never change once published (bn/en; plain text,
+`# ` headings), all stored in `legal_documents`.
+
+- **Platform defaults**: a new installation gets version 1 from
+  `database/seeders/data/legal-documents.php` (`legal:sync`, run by the seeder; **placeholder
+  text to be replaced by lawyer-reviewed text**). After that, One Solutions' owners (the house
+  partner's owners) publish new platform versions from **Legal documents → New platform
+  default** in their partner console. `legal:sync` never overwrites them; `legal:sync --force`
+  publishes the file's text as a new version on purpose.
+- **Partner documents**: any partner owner publishes its own from the same page; they
+  replace the platform's for that partner's clients. A client is bound by its partner's
+latest version, else the platform's. Account owners accept the terms and the DPA
+(`document_acceptances`: who, when, version, language); a new version asks again (banner and
+email) but never blocks work. Rule `legal.acceptance_required` (default on).
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET | /api/organizations/{id}/provider | anyone in the account |
+| GET | /api/organizations/{id}/legal/{kind} | anyone in the account |
+| POST | /api/organizations/{id}/legal/{kind}/accept | account owner |
+| POST | /api/organizations/{id}/transfer/preview, /transfer | account owner (10 per hour) |
+| POST | /api/organizations/{id}/transfer/{transfer}/cancel | account owner |
+| GET | /api/partner/transfers[?direction=outgoing] | partner staff |
+| POST / DELETE | /api/partner/transfer-codes[/{code}] | owner, sales |
+| POST | /api/partner/transfers/{id}/accept, /reject | owner |
+| GET / POST | /api/partner/legal[/{kind}], /legal/{kind}/{version} | all / owner |
+
+### Future expansion (Phase 5B-4)
+
+- New country: its legal text as a platform or partner version in that language. No code.
+- New document kind: add it to `LegalDocument::KINDS` (and `ACCEPTED_KINDS` if clients
+  accept it) with default text in the data file.
+- Open: client sub-brands and partner API keys (5B-5); moving a single company out of a
+  group; e-signature providers for DPAs.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

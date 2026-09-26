@@ -4,6 +4,9 @@ namespace App\Platform\Notifications;
 
 use App\Platform\Billing\Events\InvoiceIssued;
 use App\Platform\DataExport\Events\DataExportReady;
+use App\Platform\Legal\Events\LegalDocumentPublished;
+use App\Platform\Transfers\Events\ClientTransferred;
+use App\Platform\Transfers\Events\ClientTransferRequested;
 use App\Platform\Notifications\Console\DecideSmsSender;
 use App\Platform\Notifications\Contracts\SmsGateway;
 use App\Platform\Notifications\Listeners\SendPlatformNotifications;
@@ -42,6 +45,9 @@ class NotificationsServiceProvider extends ServiceProvider
         Event::listen(SupportAccessDecided::class, [SendPlatformNotifications::class, 'supportDecided']);
         Event::listen(DataExportReady::class, [SendPlatformNotifications::class, 'exportReady']);
         Event::listen(InvoiceIssued::class, [SendPlatformNotifications::class, 'invoiceIssued']);
+        Event::listen(ClientTransferRequested::class, [SendPlatformNotifications::class, 'transferRequested']);
+        Event::listen(ClientTransferred::class, [SendPlatformNotifications::class, 'transferred']);
+        Event::listen(LegalDocumentPublished::class, [SendPlatformNotifications::class, 'legalPublished']);
 
         // Test messages go to real inboxes and phones: a few per hour per person.
         RateLimiter::for('notification-test', fn (Request $request) => Limit::perHour(5)

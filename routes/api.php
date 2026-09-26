@@ -8,6 +8,10 @@ use App\Platform\Billing\Http\Controllers\PartnerBillingController;
 use App\Platform\Billing\Http\Controllers\PartnerPlansController;
 use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
 use App\Platform\DataExport\Http\DataExportController;
+use App\Platform\Legal\Http\Controllers\ClientLegalController;
+use App\Platform\Legal\Http\Controllers\PartnerLegalController;
+use App\Platform\Transfers\Http\Controllers\ClientProviderController;
+use App\Platform\Transfers\Http\Controllers\PartnerTransferController;
 use App\Platform\Modules\Http\Controllers\MenuController;
 use App\Platform\Notifications\Http\Controllers\PartnerMessagingController;
 use App\Platform\Notifications\Http\Controllers\PartnerTemplateController;
@@ -95,6 +99,16 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::post('organizations/{organization}/support-grants/{grant}/revoke', [ClientSupportController::class, 'revoke']);
     });
 
+    // The client's provider, legal documents and moving provider (Phase 5B-4).
+    Route::get('organizations/{organization}/provider', [ClientProviderController::class, 'show']);
+    Route::get('organizations/{organization}/legal/{kind}', [ClientLegalController::class, 'show']);
+    Route::post('organizations/{organization}/legal/{kind}/accept', [ClientLegalController::class, 'accept'])->middleware('throttle:tenancy-sensitive');
+    Route::middleware('throttle:client-transfer')->group(function () {
+        Route::post('organizations/{organization}/transfer/preview', [ClientProviderController::class, 'preview']);
+        Route::post('organizations/{organization}/transfer', [ClientProviderController::class, 'store']);
+    });
+    Route::post('organizations/{organization}/transfer/{transfer}/cancel', [ClientProviderController::class, 'cancel'])->middleware('throttle:tenancy-sensitive');
+
     // The client's own plan and invoices (Phase 5B-3).
     Route::get('organizations/{organization}/billing', [OrganizationBillingController::class, 'show']);
     Route::get('organizations/{organization}/billing/invoices/{invoice}', [OrganizationBillingController::class, 'invoice']);
@@ -177,6 +191,18 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
 
     Route::get('organizations/{organization}/plan-preview', [PartnerPlanController::class, 'preview']);
     Route::put('organizations/{organization}/plan', [PartnerPlanController::class, 'update'])->middleware('throttle:tenancy-sensitive');
+
+    // Clients moving in and out, and the partner's legal documents (Phase 5B-4).
+    Route::get('transfers', [PartnerTransferController::class, 'index']);
+    Route::get('legal', [PartnerLegalController::class, 'index']);
+    Route::get('legal/{kind}/{version}', [PartnerLegalController::class, 'show'])->whereNumber('version');
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('transfer-codes', [PartnerTransferController::class, 'storeCode']);
+        Route::delete('transfer-codes/{code}', [PartnerTransferController::class, 'revokeCode']);
+        Route::post('transfers/{transfer}/accept', [PartnerTransferController::class, 'accept']);
+        Route::post('transfers/{transfer}/reject', [PartnerTransferController::class, 'reject']);
+        Route::post('legal/{kind}', [PartnerLegalController::class, 'publish']);
+    });
 
     // Branded email and SMS (Phase 5B-3b).
     Route::get('messaging', [PartnerMessagingController::class, 'show']);

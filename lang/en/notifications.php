@@ -32,6 +32,26 @@ return [
             'body' => "This month's invoice for {{ partner }} is ready.\n\nAmount: {{ amount }}\nDue: {{ due }}",
             'action' => 'View the invoice',
         ],
+        'transfers_requested' => [
+            'subject' => '{{ organization }} wants to move to you',
+            'body' => "{{ organization }} asks to move its account to you.\n\nTheir reason: {{ reason }}\n\nAccept or reject the request in your console.",
+            'action' => 'Review the request',
+        ],
+        'transfers_completed' => [
+            'subject' => '{{ organization }} is now with {{ partner }}',
+            'body' => "Your account {{ organization }} has moved to {{ partner }}, with all its data.\n\nPlease review and accept your new provider's terms.",
+            'action' => 'See your provider',
+        ],
+        'transfers_client_left' => [
+            'subject' => '{{ organization }} has moved to another provider',
+            'body' => "{{ organization }} moved its account to another provider. Its past invoices stay with you.",
+            'action' => 'Open your clients',
+        ],
+        'legal_updated' => [
+            'subject' => 'New version: {{ document }}',
+            'body' => "{{ product }} published a new version of the {{ document }} for {{ organization }}.\n\nWhat changed: {{ summary }}\n\nPlease read and accept it.",
+            'action' => 'Read and accept',
+        ],
     ],
 
     'catalog' => [
@@ -40,6 +60,10 @@ return [
         'exports_ready' => ['name' => 'Data export ready', 'description' => 'To the client person who asked for the export.'],
         'billing_invoice_issued' => ['name' => 'New invoice (client)', 'description' => 'To the client people who can see billing.'],
         'billing_partner_invoice_issued' => ['name' => 'New invoice (you)', 'description' => 'To your owners and billing staff. Sent by us, in our brand.'],
+        'transfers_requested' => ['name' => 'Client wants to move to you', 'description' => 'To your owners, when a client uses your transfer code.'],
+        'transfers_completed' => ['name' => 'Move completed', 'description' => 'To the client\'s account owners, from their new provider.'],
+        'transfers_client_left' => ['name' => 'Client moved away', 'description' => 'To your owners, when a client moves to another provider.'],
+        'legal_updated' => ['name' => 'New terms to accept', 'description' => 'To the client\'s account owners, when you publish new terms or a new DPA.'],
     ],
 
     'placeholders' => [
@@ -56,6 +80,8 @@ return [
         'amount' => 'Invoice total',
         'due' => 'Due date',
         'link' => 'Link to the screen',
+        'document' => 'The document\'s title',
+        'summary' => 'What changed',
     ],
 
     // Example values for previews.
@@ -71,6 +97,8 @@ return [
         'number' => 'INV-2026-000123',
         'amount' => 'BDT 7,000.00',
         'due' => '10 October 2026',
+        'document' => 'Terms of service',
+        'summary' => 'Clearer payment terms.',
     ],
 
     'severity' => ['critical' => 'Critical', 'high' => 'High', 'normal' => 'Normal', 'low' => 'Low'],

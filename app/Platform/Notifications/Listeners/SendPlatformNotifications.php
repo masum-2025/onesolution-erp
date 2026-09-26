@@ -6,13 +6,18 @@ use App\Models\User;
 use App\Platform\Billing\Events\InvoiceIssued;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\DataExport\Events\DataExportReady;
+use App\Platform\Legal\Events\LegalDocumentPublished;
+use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Notifications\Services\Notifier;
 use App\Platform\Notifications\Services\Recipients;
 use App\Platform\Support\MoneyText;
 use App\Platform\SupportAccess\Enums\GrantStatus;
 use App\Platform\SupportAccess\Events\SupportAccessDecided;
 use App\Platform\SupportAccess\Events\SupportAccessRequested;
+use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
+use App\Platform\Transfers\Events\ClientTransferred;
+use App\Platform\Transfers\Events\ClientTransferRequested;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonInterface;
 use Illuminate\Events\Dispatcher;
@@ -111,6 +116,72 @@ class SendPlatformNotifications
             fn (string $locale) => ['partner' => $invoice->partner->name, ...$values($locale)],
             null,
         );
+    }
+
+    public function transferRequested(ClientTransferRequested $event): void
+    {
+        $transfer = $event->transfer->loadMissing(['organization', 'toPartner']);
+
+        $this->notifier->notify(
+            'transfers.requested',
+            $this->recipients->partnerStaff($transfer->toPartner, PartnerUserRole::Owner),
+            fn (string $locale) => ['organization' => $this->name($transfer->organization, $locale), 'reason' => $transfer->reason],
+            $transfer->toPartner,
+        );
+    }
+
+    public function transferred(ClientTransferred $event): void
+    {
+        $transfer = $event->transfer->loadMissing(['organization', 'fromPartner', 'toPartner']);
+        $root = $transfer->organization;
+
+        // The client hears it in its new provider's brand.
+        $this->notifier->notify(
+            'transfers.completed',
+            $this->recipients->accountOwners($root),
+            fn (string $locale) => ['organization' => $this->name($root, $locale), 'partner' => $transfer->toPartner->name],
+            $transfer->toPartner,
+            $root,
+        );
+
+        // The old partner is told, without naming where the client went.
+        $this->notifier->notify(
+            'transfers.client_left',
+            $this->recipients->partnerStaff($transfer->fromPartner, PartnerUserRole::Owner),
+            fn (string $locale) => ['organization' => $this->name($root, $locale)],
+            $transfer->fromPartner,
+        );
+    }
+
+    /**
+     * A new version of terms or the DPA: every client bound by it is asked to accept.
+     */
+    public function legalPublished(LegalDocumentPublished $event): void
+    {
+        $document = $event->document;
+        if (! in_array($document->kind, LegalDocument::ACCEPTED_KINDS, true)) {
+            return;
+        }
+
+        $clients = Organization::query()->whereNull('parent_id')->where('status', OrganizationStatus::Active)
+            ->when($document->partner_id !== null,
+                fn ($query) => $query->where('partner_id', $document->partner_id),
+                // The platform's own version binds clients of partners without their own.
+                fn ($query) => $query->whereNotIn('partner_id', LegalDocument::query()->whereNotNull('partner_id')->where('kind', $document->kind)->select('partner_id')));
+
+        foreach ($clients->with('partner')->lazyById() as $root) {
+            $this->notifier->notify(
+                'legal.updated',
+                $this->recipients->accountOwners($root),
+                fn (string $locale) => [
+                    'organization' => $this->name($root, $locale),
+                    'document' => $document->text('title', $locale),
+                    'summary' => (string) $document->summary,
+                ],
+                $root->partner,
+                $root,
+            );
+        }
     }
 
     private function name(Organization $organization, string $locale): string

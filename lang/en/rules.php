@@ -141,6 +141,14 @@ return [
             'label' => 'SMS sender ID needs approval',
             'description' => 'Where operators register sender IDs, the platform approves a partner\'s sender ID before it is used.',
         ],
+        'partners_transfer_code_days' => [
+            'label' => 'Transfer codes are valid for (days)',
+            'description' => 'How long a code you give a client that wants to move to you stays valid.',
+        ],
+        'legal_acceptance_required' => [
+            'label' => 'Clients accept terms and the DPA',
+            'description' => 'Account owners are asked to accept the terms of service and the data processing agreement in force.',
+        ],
     ],
 
     'categories' => [

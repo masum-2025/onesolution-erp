@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { Blocks, Boxes, Download, Globe, Handshake, Home, KeyRound, LifeBuoy, Mail, MessageSquareText, Network, Package, Palette, Receipt, ScrollText, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
+import { ArrowRightLeft, Blocks, Boxes, Building, Download, FileText, Globe, Handshake, Home, KeyRound, LifeBuoy, Mail, MessageSquareText, Network, Package, Palette, Receipt, ScrollText, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
 import ContextSwitcher from './ContextSwitcher.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import UserMenu from './UserMenu.vue';
@@ -28,6 +28,8 @@ const workspace = computed(() => {
             { to: '/partner/plans', label: t('core.nav.partner_plans'), icon: Package },
             ...(['owner', 'billing'].includes(session.me?.context?.role) ? [{ to: '/partner/billing', label: t('core.nav.partner_billing'), icon: Receipt }] : []),
             { to: '/partner/support', label: t('core.nav.partner_support'), icon: LifeBuoy },
+            { to: '/partner/transfers', label: t('core.nav.partner_transfers'), icon: ArrowRightLeft },
+            { to: '/partner/legal', label: t('core.nav.partner_legal'), icon: FileText },
             { to: '/partner/brand', label: t('core.nav.partner_brand'), icon: Palette },
             { to: '/partner/messaging', label: t('core.nav.partner_messaging'), icon: Mail },
             { to: '/partner/templates', label: t('core.nav.partner_templates'), icon: MessageSquareText },
@@ -50,6 +52,7 @@ const workspace = computed(() => {
         ...(can('support.approve') ? [{ to: '/support-access', label: t('core.nav.support_access'), icon: LifeBuoy }] : []),
         ...(can('billing.view') ? [{ to: '/billing', label: t('core.nav.billing'), icon: Receipt }] : []),
         ...(can('audit.view') ? [{ to: '/audit-log', label: t('core.nav.audit_log'), icon: ScrollText }] : []),
+        { to: '/provider', label: t('core.nav.provider'), icon: Building, count: session.me?.context?.legal_pending || 0 },
         ...(can('data.export') ? [exportItem()] : []),
     ];
 });

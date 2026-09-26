@@ -161,7 +161,8 @@ class PartnerClientService
         return array_map(fn (string $rule) => $own->get($rule)?->value, UsageLimiter::LIMITS);
     }
 
-    private function assertClientSlot(Partner $partner): void
+    /** The platform's cap on a partner's clients (also checked when a client moves in). */
+    public function assertClientSlot(Partner $partner): void
     {
         $max = $this->rules->get('partners.max_clients', $this->contexts->forPartner($partner));
 
@@ -180,7 +181,7 @@ class PartnerClientService
         }
     }
 
-    private function assertCountryAllowed(Partner $partner, ?string $country): void
+    public function assertCountryAllowed(Partner $partner, ?string $country): void
     {
         $allowed = $this->rules->get('partners.allowed_countries', $this->contexts->forPartner($partner));
 
