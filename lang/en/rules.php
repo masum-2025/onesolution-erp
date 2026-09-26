@@ -96,6 +96,23 @@ return [
             'label' => 'Show "Powered by"',
             'description' => 'Shows the platform\'s "Powered by" badge in the partner\'s app.',
         ],
+        'partners_suspension_grace_days' => [
+            'label' => 'Grace period after suspension (days)',
+            'description' => 'While a partner is suspended, its clients can still read and export their data for this many days; after that, export only.',
+        ],
+        'support_max_duration_minutes' => [
+            'label' => 'Longest support access (minutes)',
+            'description' => 'How long an approved support access may last before it ends by itself.',
+        ],
+        'support_auto_approve_severities' => [
+            'label' => 'Support requests approved without a person',
+            'description' => 'Support requests of these urgency levels are let in at once. Empty means someone always approves.',
+            'options' => ['critical' => 'Critical', 'high' => 'High', 'normal' => 'Normal', 'low' => 'Low'],
+        ],
+        'exports_retention_days' => [
+            'label' => 'Keep data exports for (days)',
+            'description' => 'How long a finished data export stays available to download.',
+        ],
     ],
 
     'categories' => [

@@ -16,8 +16,10 @@ class EnterContextRequest extends StrictFormRequest
     public function rules(): array
     {
         return [
-            'organization_id' => ['required_without:partner_id', 'prohibits:partner_id', 'string', 'ulid'],
-            'partner_id' => ['required_without:organization_id', 'string', 'ulid'],
+            'organization_id' => ['required_without_all:partner_id,support_grant_id', 'prohibits:partner_id,support_grant_id', 'string', 'ulid'],
+            'partner_id' => ['required_without_all:organization_id,support_grant_id', 'prohibits:support_grant_id', 'string', 'ulid'],
+            // Browser sessions only: partner staff entering a client with approved support access.
+            'support_grant_id' => ['sometimes', 'string', 'ulid'],
         ];
     }
 }

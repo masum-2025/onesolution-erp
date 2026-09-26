@@ -2,6 +2,7 @@
 
 namespace App\Platform\Partners;
 
+use App\Platform\Partners\Console\SetPartnerStatus;
 use App\Platform\Partners\Contracts\DnsTxtLookup;
 use App\Platform\Partners\Services\SystemDnsTxtLookup;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -24,5 +25,9 @@ class PartnersServiceProvider extends ServiceProvider
         // DNS checks and uploads are slow or large: fewer per minute than other changes.
         RateLimiter::for('partner-heavy', fn (Request $request) => Limit::perMinute(10)
             ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([SetPartnerStatus::class]);
+        }
     }
 }

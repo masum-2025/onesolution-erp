@@ -33,6 +33,22 @@ final class ContextSource
     }
 
     /**
+     * A support session (browser only; tokens never carry support access).
+     */
+    public function supportGrantId(Request $request): ?string
+    {
+        $token = $request->user()?->currentAccessToken();
+
+        if ($token instanceof PersonalAccessToken) {
+            return null;
+        }
+
+        $stored = $this->session($request);
+
+        return $stored !== null && $stored['type'] === 'support' ? $stored['id'] : null;
+    }
+
+    /**
      * When the active context stops being valid (token or session expiry).
      */
     public function expiresAt(Request $request): ?string
@@ -96,7 +112,7 @@ final class ContextSource
             return null;
         }
 
-        $valid = in_array($stored['type'] ?? null, ['organization', 'partner'], true)
+        $valid = in_array($stored['type'] ?? null, ['organization', 'partner', 'support'], true)
             && is_string($stored['id'] ?? null)
             && ($stored['user_id'] ?? null) === $request->user()->getAuthIdentifier()
             && is_int($stored['expires_at'] ?? null)

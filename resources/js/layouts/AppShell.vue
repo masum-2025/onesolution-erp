@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ChevronRight, Clock, Menu, Moon, Search, Sun } from 'lucide-vue-next';
 import SidebarNav from './SidebarNav.vue';
+import ModeBanner from './ModeBanner.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppButton from '@/components/AppButton.vue';
 import BrandMark from '@/components/BrandMark.vue';
@@ -157,8 +158,11 @@ watch(() => route.path, () => (mobileNav.value = false));
                 />
             </header>
 
+            <ModeBanner />
+
             <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0 -translate-y-1">
-                <div v-if="expiringSoon" class="border-b border-warn/25 bg-warn-soft px-4 py-2.5 sm:px-6 lg:px-8" role="status">
+                <!-- Support time is set by the grant, not renewed here. -->
+                <div v-if="expiringSoon && !session.me?.context?.support" class="border-b border-warn/25 bg-warn-soft px-4 py-2.5 sm:px-6 lg:px-8" role="status">
                     <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-fg-2">
                         <Clock class="size-4 shrink-0 text-warn" aria-hidden="true" />
                         <span class="flex-1">{{ t('core.session.expiring', { minutes: formatNumber(minutesLeft) }) }}</span>

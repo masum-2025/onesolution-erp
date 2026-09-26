@@ -32,6 +32,31 @@ class OrganizationAccessDenied extends TenancyException
         return new self('wrong_address', 403);
     }
 
+    public static function noSupportAccess(): self
+    {
+        return new self('no_support_access', 403);
+    }
+
+    public static function supportEnded(): self
+    {
+        return new self('support_ended', 403);
+    }
+
+    /**
+     * A change was tried in a context that may only read (support access,
+     * a suspended partner's client in its grace period).
+     */
+    public static function readOnly(string $reason): self
+    {
+        return new self("read_only_{$reason}", 403);
+    }
+
+    /** A suspended partner's client after the grace period: exporting only. */
+    public static function exportOnly(): self
+    {
+        return new self('export_only', 403);
+    }
+
     public static function writeOutsideScope(): self
     {
         return new self('write_forbidden', 403);

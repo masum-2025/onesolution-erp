@@ -46,7 +46,7 @@ class MeController extends Controller
             ],
             'context' => $active,
             'contexts' => $contexts->handle($user),
-            'permissions' => $access->effective(),
+            'permissions' => $this->usablePermissions($context, $access),
             'can' => $this->abilities($context, $access),
             // A partner's own address always shows that partner's brand; on the platform
             // address the brand follows the account being worked in.
@@ -62,10 +62,17 @@ class MeController extends Controller
     {
         $organizationId = $source->organizationId($request);
         $partnerId = $organizationId === null ? $source->partnerId($request) : null;
+        $grantId = $organizationId === null && $partnerId === null ? $source->supportGrantId($request) : null;
 
         try {
             if ($organizationId !== null) {
                 $resolver->enterOrganization($request->user(), $organizationId);
+
+                return $this->organizationContext($context, $access, $source->expiresAt($request));
+            }
+
+            if ($grantId !== null) {
+                $resolver->enterSupport($request->user(), $grantId);
 
                 return $this->organizationContext($context, $access, $source->expiresAt($request));
             }
@@ -126,7 +133,33 @@ class MeController extends Controller
                 'name' => $context->partner()->name,
             ],
             'expires_at' => $expiresAt,
+            // normal | read_only | export_only, and why (support, partner_suspended).
+            'mode' => $context->mode(),
+            'mode_reason' => $context->modeReason(),
+            'mode_until' => $context->modeUntil()?->toIso8601String(),
+            'support' => $context->isSupport() ? [
+                'grant_id' => $context->supportGrant()->getKey(),
+                'expires_at' => $context->supportGrant()->expires_at?->toIso8601String(),
+            ] : null,
         ];
+    }
+
+    /**
+     * What the UI may offer. In a read-only or export-only context only the
+     * reading and exporting permissions are listed; the server refuses any
+     * change there anyway.
+     *
+     * @return list<string>
+     */
+    private function usablePermissions(CurrentContext $context, AccessResolver $access): array
+    {
+        $permissions = $access->effective();
+
+        if (! $context->hasOrganization() || $context->mode() === CurrentContext::MODE_NORMAL) {
+            return $permissions;
+        }
+
+        return array_values(array_intersect($permissions, ['audit.view', 'data.export']));
     }
 
     /**
@@ -153,7 +186,7 @@ class MeController extends Controller
      */
     private function abilities(CurrentContext $context, AccessResolver $access): array
     {
-        $permissions = $access->effective();
+        $permissions = $this->usablePermissions($context, $access);
 
         return [
             ...array_fill_keys($permissions, true),

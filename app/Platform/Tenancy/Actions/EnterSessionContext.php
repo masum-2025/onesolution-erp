@@ -53,6 +53,30 @@ class EnterSessionContext
     }
 
     /**
+     * Partner staff enter a client with an approved support grant. The
+     * session never outlives the grant, and the grant is checked again on
+     * every request (ResolveOrganization).
+     */
+    public function forSupport(Request $request, User $user, string $grantId): void
+    {
+        $context = $this->resolver->enterSupport($user, $grantId);
+        $grant = $context->supportGrant();
+
+        $request->session()->regenerate();
+        $expires = $this->expiresAt();
+        $this->source->putInSession($request, 'support', $grantId, $user, $grant->expires_at->lt($expires) ? $grant->expires_at : $expires);
+
+        $this->audit->record(
+            action: 'support.session_started',
+            target: $grant,
+            new: ['grant' => $grant->getKey(), 'expires_at' => $grant->expires_at->toIso8601String()],
+            actor: $user,
+            organizationId: $grant->organization_id,
+            partnerId: $grant->partner_id,
+        );
+    }
+
+    /**
      * Same lifetime as a context token, resolved for the context just entered.
      */
     private function expiresAt(): CarbonInterface

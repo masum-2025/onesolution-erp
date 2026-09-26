@@ -18,4 +18,8 @@ return [
     ['key' => 'roles.manage', 'group' => 'people'],
     ['key' => 'modules.manage', 'group' => 'setup'],
     ['key' => 'rules.approve', 'group' => 'setup'],
+    // Phase 5B-2: trust and data ownership.
+    ['key' => 'support.approve', 'group' => 'security'],
+    ['key' => 'audit.view', 'group' => 'security'],
+    ['key' => 'data.export', 'group' => 'security'],
 ];

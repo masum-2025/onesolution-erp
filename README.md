@@ -498,8 +498,79 @@ Everything above is audited (`partner.*` actions).
 
 - New partner: a `partners` row, a brand, a verified domain. No code.
 - New font: an entry in `branding.fonts` (bundled, no external host).
-- Open: client sub-brands, support access, suspension grace, export and transfer (5B-2);
-  billing, partner plans, branded email/SMS, partner API keys (5B-3).
+- Open: support access, suspension grace and export (done in 5B-2); billing, partner
+  plans, branded email/SMS (5B-3); client transfer, DPA/terms, client sub-brands,
+  partner API keys (5B-4).
+
+## Support access, audit log and exit (Phase 5B-2)
+
+Code: `app/Platform/SupportAccess`, `app/Platform/DataExport`, `app/Platform/Audit/Http`.
+The client stays in control of its data: a partner looks inside only when the client
+allows it, the client sees everything that happened, and it can take all its data out
+at any time, even when the partner stops.
+
+### Support access (break-glass, read-only)
+
+1. A partner **owner or support** user asks (`POST /api/partner/support-grants`: client,
+   severity, minutes 15..480, reason >= 10 chars). One open request per person and client.
+2. The client decides on **Support access** (`support.approve`; owners hold it). The
+   time is capped by `support.max_duration_minutes` (default 120). Severities listed in
+   `support.auto_approve_severities` (sensitive rule, empty by default) are approved at once.
+3. The partner user enters from the console (`POST /session/context` with
+   `support_grant_id`, browser session only; tokens are refused). The context is
+   **read-only**: every unsafe request gets 403 `read_only_support`, exports included.
+   The session ends with the grant.
+4. The client can end it at any time (`revoke`); `support:expire` (every minute) closes
+   grants whose time is up, and an expired grant is refused at once anyway.
+
+Every step is in the client's audit log (`support.requested`, `approved`, `rejected`,
+`revoked`, `expired`, `session_started`), and so is **every request** support makes
+(`support.accessed`: method and path; refused changes are marked `blocked`).
+
+| method | path | who |
+|---|---|---|
+| GET | /api/organizations/{id}/support-grants | `support.approve` |
+| POST | /api/organizations/{id}/support-grants/{grant}/approve \| reject \| revoke | `support.approve` |
+| GET / POST | /api/partner/support-grants | owner sees all; support sees own / owner, support |
+| POST | /api/partner/support-grants/{grant}/cancel | the requester |
+| GET | /api/organizations/{id}/audit-log?filter=support\|changes | `audit.view` |
+
+The audit log API never returns IP addresses or user agents.
+
+### Partner suspension and grace
+
+`php artisan partners:status suspend {slug} --reason=...` (the house partner cannot be
+suspended; `reactivate` undoes it; both audited). The partner's clients then:
+
+- for `partners.suspension_grace_days` (platform rule, default 30): **read-only**
+  (403 `read_only_partner_suspended` on changes), with a banner showing the days left;
+- after that: **export only**. Every other API call gets 403 `export_only`; the app
+  shows only the Export screen.
+
+A closed partner blocks sign-in as before.
+
+### Data export
+
+`POST /api/organizations/{id}/exports` (`data.export`, rate-limited, one running at a
+time) queues `BuildDataExport`. The ZIP holds each dataset as JSON and CSV (UTF-8 BOM,
+cells starting with `= + - @` are escaped) plus `manifest.json`. Platform datasets:
+organizations, members (name, email), roles and assignments, module settings, rule
+values, sector packages, audit log (no IP). Modules add their own by implementing
+`ExportsModuleData` and tagging it `module.exporters`.
+
+Files live on the private disk for `exports.retention_days` (default 7; `exports:prune`
+daily). Downloading takes two steps: `GET .../exports/{export}/link` returns a signed
+URL valid for 5 minutes, then `GET /exports/{export}/download` streams the file.
+Exporting works in read-only and export-only contexts, never for support staff.
+
+### Future expansion (Phase 5B-2)
+
+- New module: implement `ExportsModuleData` to include its data in exports; support
+  access and the audit log cover it without changes.
+- Different country or partner: grace days, support duration and auto-approval are
+  rules. No code.
+- Open: support access with write rights (maker-checker per change), export to other
+  formats, scheduled exports.
 
 ## Browser app (frontend foundation)
 

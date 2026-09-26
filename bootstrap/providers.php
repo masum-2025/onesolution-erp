@@ -1,6 +1,8 @@
 <?php
 
 use App\Platform\Access\AccessServiceProvider;
+use App\Platform\DataExport\DataExportServiceProvider;
+use App\Platform\SupportAccess\SupportAccessServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
 use App\Platform\Packaging\PackagingServiceProvider;
 use App\Platform\Partners\PartnersServiceProvider;
@@ -16,4 +18,6 @@ return [
     ModulesServiceProvider::class,
     RulesServiceProvider::class,
     AccessServiceProvider::class,
+    SupportAccessServiceProvider::class,
+    DataExportServiceProvider::class,
 ];

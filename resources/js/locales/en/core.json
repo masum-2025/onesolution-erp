@@ -83,7 +83,11 @@
         "partner_rules": "Partner rules",
         "partner_brand": "Brand",
         "partner_domains": "Domains",
-        "partner_modules": "Modules"
+        "partner_modules": "Modules",
+        "partner_support": "Support access",
+        "support_access": "Support access",
+        "audit_log": "Audit log",
+        "export": "Export data"
     },
     "not_found": {
         "title": "This page does not exist",
@@ -143,5 +147,16 @@
         "light": "Light",
         "dark": "Dark",
         "system": "System"
+    },
+    "mode": {
+        "support": "You are viewing {org} as support. Read-only.",
+        "minutes_left_one": "{minutes} minute left",
+        "minutes_left_other": "{minutes} minutes left",
+        "leave": "Leave",
+        "suspended_read_only": "Your service provider’s account is paused, so this workspace is read-only for now. Export your data to keep a copy.",
+        "days_left_one": "{days} day left before only export remains.",
+        "days_left_other": "{days} days left before only export remains.",
+        "export": "Export data",
+        "export_only": "Your service provider’s account is closed for now. You can still export all your data."
     }
 }

@@ -14,6 +14,8 @@ use App\Platform\Packaging\Models\SectorPackage;
 use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Partners\Models\PartnerModule;
+use App\Platform\DataExport\Models\DataExport;
+use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
@@ -71,6 +73,11 @@ const PLATFORM_MODELS = [
     PartnerBrand::class,
     PartnerDomain::class,
     PartnerModule::class,
+    // Support grants are shared by a partner and a client; data exports are
+    // written by the export service and job (which run without a tenant
+    // context). Both are read only through visible-organization lookups.
+    SupportGrant::class,
+    DataExport::class,
 ];
 
 /**

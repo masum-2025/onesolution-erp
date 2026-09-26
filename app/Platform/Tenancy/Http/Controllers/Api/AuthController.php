@@ -10,6 +10,7 @@ use App\Platform\Tenancy\Http\Requests\EnterContextRequest;
 use App\Platform\Tenancy\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\NewAccessToken;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -40,6 +41,11 @@ class AuthController extends Controller
     public function enterContext(EnterContextRequest $request, IssueContextToken $tokens): JsonResponse
     {
         $user = $request->user();
+
+        // Support access lives in a browser session only; it is never put on a token.
+        if ($request->filled('support_grant_id')) {
+            throw ValidationException::withMessages(['support_grant_id' => __('support.errors.browser_only')]);
+        }
 
         $token = $request->filled('organization_id')
             ? $tokens->forOrganization($user, $request->validated('organization_id'))

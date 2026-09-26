@@ -99,9 +99,17 @@ it('blocks an existing token once the organization or an ancestor is suspended',
         ->assertJsonPath('code', 'organization_inactive');
 })->with(['c1', 'g1']);
 
-it('blocks an existing token once the partner is suspended', function () {
+it('makes an existing token read-only once the partner is suspended, and closes it once the partner is closed', function () {
     $token = orgToken($this->user, $this->w->c1);
-    $this->w->partnerA->update(['status' => PartnerStatus::Suspended]);
+    // Suspended: clients keep reading (and exporting) in the grace period (Phase 5B-2).
+    $this->w->partnerA->forceFill(['status' => PartnerStatus::Suspended, 'suspended_at' => now()])->save();
+
+    $this->asToken($token)->getJson('/api/organizations')->assertOk();
+    $this->asToken($token)->patchJson("/api/organizations/{$this->w->c1->id}", ['name' => ['en' => 'Renamed']])
+        ->assertForbidden()
+        ->assertJsonPath('code', 'read_only_partner_suspended');
+
+    $this->w->partnerA->forceFill(['status' => PartnerStatus::Closed])->save();
 
     $this->asToken($token)->getJson('/api/organizations')
         ->assertForbidden()

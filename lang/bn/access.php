@@ -33,6 +33,7 @@ return [
         'organization' => 'প্রতিষ্ঠান',
         'people' => 'সদস্য ও রোল',
         'setup' => 'সেটআপ',
+        'security' => 'নিরাপত্তা ও তথ্য',
     ],
 
     'permissions' => [
@@ -43,6 +44,9 @@ return [
         'modules_manage' => 'মডিউল চালু ও বন্ধ করা',
         'rules_approve' => 'সেটিং পরিবর্তন অনুমোদন',
         'rules_edit' => ':module-এর সেটিং সম্পাদনা',
+        'support_approve' => 'সাপোর্ট অ্যাক্সেস অনুমোদন',
+        'audit_view' => 'অডিট লগ দেখা',
+        'data_export' => 'সব তথ্য এক্সপোর্ট',
     ],
 
     'templates' => [

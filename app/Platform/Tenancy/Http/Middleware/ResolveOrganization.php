@@ -3,9 +3,12 @@
 namespace App\Platform\Tenancy\Http\Middleware;
 
 use App\Http\Middleware\ApplyRequestLocale;
+use App\Platform\Audit\AuditLogger;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\ContextSource;
+use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Exceptions\MissingTenantContext;
+use App\Platform\Tenancy\Exceptions\OrganizationAccessDenied;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,18 +23,41 @@ class ResolveOrganization
     public function __construct(
         private ContextResolver $resolver,
         private ContextSource $source,
+        private AuditLogger $audit,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
         $organizationId = $user === null ? null : $this->source->organizationId($request);
+        $grantId = $user === null || $organizationId !== null ? null : $this->source->supportGrantId($request);
 
-        if ($user === null || $organizationId === null) {
+        if ($user === null || ($organizationId === null && $grantId === null)) {
             throw new MissingTenantContext;
         }
 
-        $context = $this->resolver->enterOrganization($user, $organizationId);
+        $context = $grantId !== null
+            ? $this->resolver->enterSupport($user, $grantId)
+            : $this->resolver->enterOrganization($user, $organizationId);
+
+        // Break-glass access is fully audited: every page support opens shows in the
+        // client's log, and so does every change it tried (refused just below).
+        if ($context->isSupport()) {
+            $this->audit->record(
+                action: 'support.accessed',
+                new: array_filter([
+                    'method' => $request->method(),
+                    'path' => '/'.ltrim($request->path(), '/'),
+                    'grant' => $context->supportGrant()->getKey(),
+                    'blocked' => $request->isMethodSafe() ? null : true,
+                ], fn ($value) => $value !== null),
+                actor: $user,
+                organizationId: $context->organization()->getKey(),
+                partnerId: $context->partner()->getKey(),
+            );
+        }
+
+        $this->enforceMode($request, $context);
 
         // The organization's language, unless the user picked one for this request.
         $locale = $context->locale();
@@ -40,5 +66,23 @@ class ResolveOrganization
         }
 
         return $next($request);
+    }
+
+    /**
+     * Read-only contexts refuse every change; export-only contexts reach the
+     * export screens only. Exporting stays possible in both (it needs the
+     * data.export permission, which support staff never hold).
+     */
+    private function enforceMode(Request $request, CurrentContext $context): void
+    {
+        $exporting = $request->is('api/organizations/*/exports', 'api/organizations/*/exports/*');
+
+        if ($context->mode() === CurrentContext::MODE_EXPORT_ONLY && ! $exporting) {
+            throw OrganizationAccessDenied::exportOnly();
+        }
+
+        if ($context->mode() === CurrentContext::MODE_READ_ONLY && ! $request->isMethodSafe() && ! ($exporting && ! $context->isSupport())) {
+            throw OrganizationAccessDenied::readOnly((string) $context->modeReason());
+        }
     }
 }

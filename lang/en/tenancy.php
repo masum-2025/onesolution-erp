@@ -23,6 +23,11 @@ return [
         'user_not_found' => 'No account uses this email. Ask the person to sign up first, then add them.',
         'forbidden' => 'You do not have permission to do this. Ask an owner of the organization.',
         'wrong_address' => 'This account cannot be opened at this web address. Use the address your service provider gave you.',
+        'no_support_access' => 'You have no approved support access to this client. Request access from the partner console.',
+        'support_ended' => 'This support access has ended. Request new access if you still need it.',
+        'read_only_support' => 'Support access is read-only. Ask the client to make this change.',
+        'read_only_partner_suspended' => 'Your service provider\'s account is suspended, so this account is read-only for now. You can still view and export your data.',
+        'export_only' => 'Your service provider\'s account is suspended and the grace period has ended. You can still export all your data.',
     ],
 
     'validation' => [

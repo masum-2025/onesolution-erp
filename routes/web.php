@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppShellController;
 use App\Platform\Branding\Http\BrandAssetController;
+use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
 use App\Platform\Tenancy\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,11 @@ Route::prefix('session')->group(function () {
 Route::get('brand-assets/{partner}/{kind}', [BrandAssetController::class, 'show'])
     ->where(['partner' => '[0-9A-Za-z]{26}', 'kind' => '[a-z_]+']);
 Route::get('manifest.webmanifest', [BrandAssetController::class, 'manifest']);
+
+// A data export file: only through a short-lived signed link from the export screen.
+Route::get('exports/{export}/download', [DataExportController::class, 'download'])
+    ->middleware('signed:relative')
+    ->name('exports.download');
 
 // Caddy on-demand TLS asks here before issuing a certificate: verified hosts only.
 Route::get('internal/tls/ask', TlsAskController::class);

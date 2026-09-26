@@ -2,7 +2,11 @@
 
 use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
+use App\Platform\Audit\Http\AuditLogController;
+use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Modules\Http\Controllers\MenuController;
+use App\Platform\SupportAccess\Http\Controllers\ClientSupportController;
+use App\Platform\SupportAccess\Http\Controllers\PartnerSupportController;
 use App\Platform\Packaging\Http\Controllers\CatalogController;
 use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
 use App\Platform\Packaging\Http\Controllers\SectorPackageController;
@@ -73,6 +77,18 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::delete('organizations/{organization}/roles/{role}', [RoleController::class, 'destroy']);
     });
 
+    // Trust and data ownership (Phase 5B-2): audit log, support access, data export.
+    Route::get('organizations/{organization}/audit-log', AuditLogController::class);
+    Route::get('organizations/{organization}/support-grants', [ClientSupportController::class, 'index']);
+    Route::get('organizations/{organization}/exports', [DataExportController::class, 'index']);
+    Route::get('organizations/{organization}/exports/{export}/link', [DataExportController::class, 'link']);
+    Route::post('organizations/{organization}/exports', [DataExportController::class, 'store'])->middleware('throttle:data-export');
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('organizations/{organization}/support-grants/{grant}/approve', [ClientSupportController::class, 'approve']);
+        Route::post('organizations/{organization}/support-grants/{grant}/reject', [ClientSupportController::class, 'reject']);
+        Route::post('organizations/{organization}/support-grants/{grant}/revoke', [ClientSupportController::class, 'revoke']);
+    });
+
     // Plan usage and sector packages (Phase 5)
     Route::get('organizations/{organization}/usage', UsageController::class);
     Route::post('organizations/{organization}/sector-package', [SectorPackageController::class, 'store'])
@@ -109,6 +125,11 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(function () {
     Route::get('organizations', [PartnerOrganizationController::class, 'index']);
     Route::get('organizations/{organization}', [PartnerOrganizationController::class, 'show']);
+    // Break-glass support access (Phase 5B-2).
+    Route::get('support-grants', [PartnerSupportController::class, 'index']);
+    Route::post('support-grants', [PartnerSupportController::class, 'store'])->middleware('throttle:support-request');
+    Route::post('support-grants/{grant}/cancel', [PartnerSupportController::class, 'cancel'])->middleware('throttle:tenancy-sensitive');
+
     // Partner layer (Phase 5B-1): brand, domains, modules for all clients, client accounts.
     Route::get('brand', [PartnerBrandController::class, 'show']);
     Route::get('domains', [PartnerDomainController::class, 'index']);

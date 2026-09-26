@@ -34,6 +34,7 @@ return [
         'organization' => 'Organization',
         'people' => 'People and roles',
         'setup' => 'Setup',
+        'security' => 'Security and data',
     ],
 
     'permissions' => [
@@ -44,6 +45,9 @@ return [
         'modules_manage' => 'Turn modules on and off',
         'rules_approve' => 'Approve setting changes',
         'rules_edit' => 'Edit :module settings',
+        'support_approve' => 'Approve support access',
+        'audit_view' => 'View the audit log',
+        'data_export' => 'Export all data',
     ],
 
     'templates' => [

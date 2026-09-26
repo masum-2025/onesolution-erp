@@ -219,4 +219,56 @@ return [
         'category' => 'partner',
         'sort_order' => 75,
     ],
+    [
+        'key' => 'partners.suspension_grace_days',
+        'type' => 'integer',
+        'schema' => ['minimum' => 0, 'maximum' => 365],
+        // While a partner is suspended its clients may read and export; after this, export only.
+        'default' => 30,
+        'label' => 'rules.core.partners_suspension_grace_days.label',
+        'description' => 'rules.core.partners_suspension_grace_days.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 76,
+    ],
+
+    // ── Support access and data export (Phase 5B-2) ──────────────────────
+    [
+        'key' => 'support.max_duration_minutes',
+        'type' => 'integer',
+        'schema' => ['minimum' => 15, 'maximum' => 480],
+        'default' => 120,
+        'label' => 'rules.core.support_max_duration_minutes.label',
+        'description' => 'rules.core.support_max_duration_minutes.description',
+        // The partner sets a default; each client may choose its own.
+        'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+        'category' => 'security',
+        'sort_order' => 80,
+    ],
+    [
+        'key' => 'support.auto_approve_severities',
+        'type' => 'multi_enum',
+        'schema' => ['items' => ['enum' => ['critical', 'high', 'normal', 'low']]],
+        // Nothing is approved without a person unless the client chooses so.
+        'default' => [],
+        'label' => 'rules.core.support_auto_approve_severities.label',
+        'description' => 'rules.core.support_auto_approve_severities.description',
+        'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+        // Letting support in without a person needs a second person's approval.
+        'sensitive' => true,
+        'category' => 'security',
+        'sort_order' => 81,
+    ],
+    [
+        'key' => 'exports.retention_days',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1, 'maximum' => 30],
+        'default' => 7,
+        'label' => 'rules.core.exports_retention_days.label',
+        'description' => 'rules.core.exports_retention_days.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'category' => 'data',
+        'sort_order' => 82,
+    ],
 ];

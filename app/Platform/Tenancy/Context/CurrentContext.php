@@ -3,6 +3,8 @@
 namespace App\Platform\Tenancy\Context;
 
 use App\Models\User;
+use App\Platform\SupportAccess\Models\SupportGrant;
+use Carbon\CarbonInterface;
 use App\Platform\Tenancy\Exceptions\MissingTenantContext;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
@@ -51,6 +53,24 @@ final class CurrentContext
 
     /** @var array<string, bool> */
     private array $writableCache = [];
+
+    /**
+     * normal | read_only (support access, suspended partner in its grace
+     * period) | export_only (suspended partner after the grace period).
+     */
+    private string $mode = self::MODE_NORMAL;
+
+    private ?string $modeReason = null;
+
+    private ?CarbonInterface $modeUntil = null;
+
+    private ?SupportGrant $supportGrant = null;
+
+    public const MODE_NORMAL = 'normal';
+
+    public const MODE_READ_ONLY = 'read_only';
+
+    public const MODE_EXPORT_ONLY = 'export_only';
 
     public function __construct()
     {
@@ -114,6 +134,48 @@ final class CurrentContext
         $this->writeIncludesDescendants = true;
         $this->settings = [];
         $this->writableCache = [];
+        $this->mode = self::MODE_NORMAL;
+        $this->modeReason = null;
+        $this->modeUntil = null;
+        $this->supportGrant = null;
+    }
+
+    /**
+     * Limit what this context may do (set by ContextResolver only).
+     *
+     * @param  'support'|'partner_suspended'  $reason
+     */
+    public function restrict(string $mode, string $reason, ?CarbonInterface $until = null, ?SupportGrant $grant = null): void
+    {
+        $this->mode = $mode;
+        $this->modeReason = $reason;
+        $this->modeUntil = $until;
+        $this->supportGrant = $grant;
+    }
+
+    public function mode(): string
+    {
+        return $this->mode;
+    }
+
+    public function modeReason(): ?string
+    {
+        return $this->modeReason;
+    }
+
+    public function modeUntil(): ?CarbonInterface
+    {
+        return $this->modeUntil;
+    }
+
+    public function isSupport(): bool
+    {
+        return $this->supportGrant !== null;
+    }
+
+    public function supportGrant(): ?SupportGrant
+    {
+        return $this->supportGrant;
     }
 
     public function hasOrganization(): bool
@@ -211,6 +273,11 @@ final class CurrentContext
     public function canWriteTo(?string $organizationId): bool
     {
         if (! $this->hasOrganization() || $organizationId === null || $this->writablePath === null) {
+            return false;
+        }
+
+        // Support access and a suspended partner's clients never write, whatever the route.
+        if ($this->mode !== self::MODE_NORMAL) {
             return false;
         }
 

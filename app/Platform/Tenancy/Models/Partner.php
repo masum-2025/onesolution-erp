@@ -34,6 +34,8 @@ class Partner extends Model
             'billing_mode' => BillingMode::class,
             'is_house' => 'boolean',
             'settings' => 'array',
+            // Set by the platform (partners:suspend); starts the clients' grace period.
+            'suspended_at' => 'datetime',
         ];
     }
 
@@ -64,5 +66,10 @@ class Partner extends Model
     public function isActive(): bool
     {
         return $this->status === PartnerStatus::Active;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === PartnerStatus::Suspended;
     }
 }

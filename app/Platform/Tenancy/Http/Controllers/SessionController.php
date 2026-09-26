@@ -36,9 +36,11 @@ class SessionController extends Controller
      */
     public function enterContext(EnterContextRequest $request, EnterSessionContext $enter): JsonResponse
     {
-        $request->filled('organization_id')
-            ? $enter->forOrganization($request, $request->user(), $request->validated('organization_id'))
-            : $enter->forPartner($request, $request->user(), $request->validated('partner_id'));
+        match (true) {
+            $request->filled('organization_id') => $enter->forOrganization($request, $request->user(), $request->validated('organization_id')),
+            $request->filled('support_grant_id') => $enter->forSupport($request, $request->user(), $request->validated('support_grant_id')),
+            default => $enter->forPartner($request, $request->user(), $request->validated('partner_id')),
+        };
 
         return response()->json(['message' => __('tenancy.messages.context_entered')]);
     }

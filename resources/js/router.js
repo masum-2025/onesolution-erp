@@ -31,6 +31,15 @@ const routes = [
                 component: () => import('./pages/organizations/OrganizationPage.vue'),
                 meta: { context: 'organization', ns: ['orgs', 'access', 'packaging'] },
             },
+            { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
+            { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
+            { path: 'export', name: 'export', component: () => import('./pages/trust/ExportPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
+            {
+                path: 'partner/support',
+                name: 'partner-support',
+                component: () => import('./pages/partner/PartnerSupportPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'trust'] },
+            },
             { path: 'modules', name: 'modules', component: () => import('./pages/modules/ModulesPage.vue'), meta: { context: 'organization', ns: ['modules'] } },
             { path: 'roles', name: 'roles', component: () => import('./pages/access/RolesPage.vue'), meta: { context: 'organization', ns: ['access'] } },
             { path: 'rules', name: 'rules', component: () => import('./pages/rules/RulesPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
@@ -112,6 +121,12 @@ router.beforeEach(async (to) => {
     if (to.meta.context && me.context?.type !== to.meta.context) {
         await namespaces;
         return me.context ? homeFor(me.context) : { name: 'choose', query: { redirect: to.fullPath } };
+    }
+
+    // A suspended provider after the grace period: only the export screen works (the API agrees).
+    if (me.context?.mode === 'export_only' && to.meta.context === 'organization' && to.name !== 'export') {
+        await loadNamespaces(['core', 'trust']);
+        return { name: 'export' };
     }
 
     await namespaces;
