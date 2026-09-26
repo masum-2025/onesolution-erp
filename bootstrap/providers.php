@@ -3,6 +3,7 @@
 use App\Platform\Access\AccessServiceProvider;
 use App\Platform\Billing\BillingServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
+use App\Platform\Identity\IdentityServiceProvider;
 use App\Platform\SupportAccess\SupportAccessServiceProvider;
 use App\Platform\Transfers\TransfersServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
@@ -28,4 +29,5 @@ return [
     NotificationsServiceProvider::class,
     TransfersServiceProvider::class,
     PartnerApiServiceProvider::class,
+    IdentityServiceProvider::class,
 ];

@@ -154,7 +154,7 @@ const initials = (name) =>
                         {{ member.user?.name }}
                         <AppBadge v-if="isSelf(member)" tone="outline">{{ t('orgs.members.you') }}</AppBadge>
                     </p>
-                    <p class="truncate text-[12.5px] text-muted">{{ member.user?.email }}</p>
+                    <p class="truncate text-[12.5px] text-muted">{{ member.user?.email ?? member.user?.phone }}</p>
                 </div>
                 <div class="hidden items-center gap-2 md:flex">
                     <AppBadge :tone="member.membership_type === 'owner' ? 'brand' : 'neutral'">{{ t(`core.membership_types.${member.membership_type}`) }}</AppBadge>

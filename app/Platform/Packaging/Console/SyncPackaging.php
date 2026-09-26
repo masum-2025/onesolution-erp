@@ -28,6 +28,7 @@ class SyncPackaging extends Command
                 $plan = Plan::query()->updateOrCreate(['key' => $definition->key], [
                     'modules' => $definition->modules,
                     'is_public' => $definition->public,
+                    'audience' => $definition->audience,
                     'sort_order' => $definition->sortOrder,
                     'deprecated_at' => null,
                 ]);

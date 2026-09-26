@@ -44,6 +44,9 @@ class MeController extends Controller
                 'id' => $user->getKey(),
                 'name' => $user->name,
                 'email' => $user->email,
+                // Self-serve people may have only a phone (Phase 5C).
+                'phone' => $user->phone,
+                'onboarded' => $user->onboarded_at !== null,
             ],
             'context' => $active,
             'contexts' => $contexts->handle($user),

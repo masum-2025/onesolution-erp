@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { ChevronsUpDown, LogOut, Monitor, Moon, Sun } from 'lucide-vue-next';
+import { ChevronsUpDown, LogOut, Monitor, Moon, Sun, UserRound } from 'lucide-vue-next';
 import AppMenu from '@/components/AppMenu.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import { logout, session } from '@/lib/session';
@@ -29,7 +29,10 @@ const themeOptions = computed(() => [
 
 const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
 
-const items = computed(() => [{ label: t('core.auth.sign_out'), icon: LogOut, danger: true, onSelect: signOut }]);
+const items = computed(() => [
+    { label: t('core.nav.account'), icon: UserRound, onSelect: () => router.push({ name: 'account' }) },
+    { label: t('core.auth.sign_out'), icon: LogOut, danger: true, onSelect: signOut },
+]);
 
 async function signOut() {
     await logout();
@@ -47,7 +50,7 @@ async function signOut() {
                 </span>
                 <span class="min-w-0 flex-1">
                     <span class="block truncate text-[13px] leading-tight font-medium text-fg">{{ user?.name }}</span>
-                    <span class="mt-0.5 block truncate text-[12px] leading-tight text-muted">{{ user?.email }}</span>
+                    <span class="mt-0.5 block truncate text-[12px] leading-tight text-muted">{{ user?.email ?? user?.phone }}</span>
                 </span>
                 <ChevronsUpDown class="size-4 shrink-0 text-faint" aria-hidden="true" />
             </button>

@@ -53,7 +53,7 @@ class ClientProviderController extends Controller
                 'summary' => $document->summary,
                 'published_at' => $document->published_at->toIso8601String(),
                 'from_partner' => $document->partner_id !== null,
-                'needs_acceptance' => in_array($kind, LegalDocument::ACCEPTED_KINDS, true),
+                'needs_acceptance' => in_array($kind, LegalDocument::acceptedKindsFor($root), true),
                 'accepted_at' => $accepted?->accepted_at?->toIso8601String(),
             ];
         }

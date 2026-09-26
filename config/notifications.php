@@ -24,5 +24,8 @@ return [
         'driver' => env('SMS_DRIVER', 'log'),
         // Sender ID when a partner has no approved one of its own.
         'default_sender' => env('SMS_DEFAULT_SENDER', 'OneSolution'),
+        // Local development only: the log driver also writes the text (e.g. to read a
+        // sign-up code). Never honoured outside APP_ENV=local.
+        'log_text' => (bool) env('SMS_LOG_TEXT', false),
     ],
 ];

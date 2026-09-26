@@ -170,6 +170,9 @@ class SendPlatformNotifications
                 fn ($query) => $query->whereNotIn('partner_id', LegalDocument::query()->whereNotNull('partner_id')->where('kind', $document->kind)->select('partner_id')));
 
         foreach ($clients->with('partner')->lazyById() as $root) {
+            if (! in_array($document->kind, LegalDocument::acceptedKindsFor($root), true)) {
+                continue;
+            }
             $this->notifier->notify(
                 'legal.updated',
                 $this->recipients->accountOwners($root),

@@ -2,10 +2,12 @@
 
 use App\Http\Middleware\ApplyRequestLocale;
 use App\Http\Middleware\SecurityHeaders;
+use App\Platform\Identity\Http\Middleware\TrackUserSession;
 use App\Platform\Modules\Http\Middleware\EnsureModuleEnabled;
 use App\Platform\Partners\Http\Middleware\ResolveHost;
 use App\Platform\Tenancy\Http\Middleware\ResolveOrganization;
 use App\Platform\Tenancy\Http\Middleware\ResolvePartner;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,6 +27,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(ResolveHost::class);
         $middleware->append(ApplyRequestLocale::class);
         $middleware->appendToGroup('web', SecurityHeaders::class);
+        // Browser sessions a person ended elsewhere stop at once; live ones are listed on My account.
+        $middleware->appendToGroup('web', TrackUserSession::class);
+        $middleware->appendToGroup('api', TrackUserSession::class);
+        // Before authentication, so an ended session is signed out before it is trusted.
+        $middleware->prependToPriorityList(AuthenticatesRequests::class, TrackUserSession::class);
         $middleware->redirectGuestsTo('/login');
 
         $middleware->alias([

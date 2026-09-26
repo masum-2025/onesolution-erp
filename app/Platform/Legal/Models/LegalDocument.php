@@ -4,6 +4,8 @@ namespace App\Platform\Legal\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use App\Platform\Tenancy\Enums\OrganizationType;
+use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -20,6 +22,17 @@ class LegalDocument extends Model
 
     /** Clients accept these; the privacy notice is information. */
     public const ACCEPTED_KINDS = ['terms', 'dpa'];
+
+    /**
+     * What a client accepts: a personal workspace (one person, own data) only
+     * the terms; the DPA is for businesses that process other people's data.
+     *
+     * @return list<string>
+     */
+    public static function acceptedKindsFor(Organization $root): array
+    {
+        return $root->type === OrganizationType::Personal ? ['terms'] : self::ACCEPTED_KINDS;
+    }
 
     protected $guarded = ['*'];
 

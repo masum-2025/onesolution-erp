@@ -18,6 +18,8 @@ use Laravel\Sanctum\HasApiTokens;
 /**
  * One identity (one login). Access to data always goes through a membership:
  * an organization membership (client area) or a partner membership (console).
+ * People sign in with their email, or their verified phone (E.164); a
+ * self-serve person may have only one of the two (Phase 5C).
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -35,6 +37,11 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'marketing_consent_at' => 'datetime',
+            'password_changed_at' => 'datetime',
+            'recovered_at' => 'datetime',
+            'onboarded_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

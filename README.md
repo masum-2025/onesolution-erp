@@ -905,6 +905,96 @@ Console endpoints: `GET/POST /api/partner/api-keys`, `DELETE /api/partner/api-ke
 - Open: webhooks to partners (client created, plan changed), OAuth apps, client-set
   email sending domains, API v2 once business modules expose public services.
 
+## Self-serve sign-up and identity (Phase 5C-1)
+
+Code: `app/Platform/Identity`. Individuals create their own account (B2C), sign in with an
+email or a verified phone, recover a forgotten password, and manage their account. Phase
+5C continues with self-serve billing (5C-2), upgrading to a company and "my data" (5C-3), and
+client portals (5C-4).
+
+### Sign-up
+
+1. `/signup`: name, email **or** mobile number (with country), password, the terms (their
+   current version) and an optional marketing consent. A **bot check** runs first.
+2. A 6-digit **code** goes to that address (SMS or email); nothing is created yet.
+3. The right code creates, in one transaction: the user (address verified), a **personal
+   workspace** (organization type `personal`, top of the tree, the person as owner) on the
+   plan of rule `b2c.default_plan` (`personal_free`), and the terms acceptance. The person is
+   signed in and gets a three-step **first run** (`/welcome`: language, country, kind of work;
+   the sector sets the workspace up like a company's).
+
+Where: the partner of the address (the house partner on the platform's own address) when
+its rule `b2c.self_signup_allowed` is on (house: on in the seed data; others: off). A client's
+own address never takes sign-ups. Phone sign-up only where the partner sends SMS
+(`notifications.sms_enabled`) and for numbers of `identity.allowed_phone_countries`
+(default BD). Formats of numbers per country: `config/identity.php` (data).
+
+A **personal workspace** works like a company for rules, modules and sectors (its rule
+values are stored at the company level), so an upgrade later only changes its type. It
+never has branches, takes only **personal plans** (`plans.php` `audience: personal`; business
+clients only business plans; `GET /api/plans?audience=personal`), does not use a partner's
+`partners.max_clients` slots, and accepts the terms but not the DPA.
+
+### Codes and abuse protection
+
+- Codes: 6 digits, 10 minutes, 5 wrong tries, 4 sends per challenge, 60 s between sends
+  (`config/identity.php`). Only an HMAC of the code and of the address is stored; the send job
+  is encrypted in the queue; the wording is fixed ("never share it").
+- Limits: per address and per network per hour (rules `identity.otp_per_hour_per_destination`,
+  `identity.otp_per_hour_per_ip`), plus bursts per minute per network (`identity-start`,
+  `identity-code` limiters).
+- No account discovery: an address that already has an account gets exactly the same answer,
+  no code (a decoy that can never pass), and its owner is told someone tried.
+- Throwaway inboxes are refused (`identity.block_disposable_email`, list in
+  `resources/data/disposable-email-domains.txt`).
+- Bot check: `BOT_CHECK_DRIVER=turnstile` with `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET`
+  (Cloudflare Turnstile; the CSP allows it only then). Without it, production keeps sign-up
+  and recovery closed; local and tests use `none`.
+
+### Sign-in, recovery and my account
+
+- Sign in with an email, or a **verified** phone (`phone` + `country_code`, both on
+  `/session/login` and `/api/auth/login`).
+- `/forgot`: a code to the account's email or verified phone, then a new password. Every
+  other session and API token ends, **every address of the account is told**, and the email
+  and phone cannot be changed for `identity.recovery_cooldown_hours` (24), so a stolen inbox
+  cannot also move the account.
+- `/account` (any context): name, language, marketing consent; email and phone (the new one
+  proved by a code, the old one told; the phone can be removed while an email is left);
+  password (current one needed; other devices signed out); **signed-in devices** (own
+  `user_sessions` table, any session store: end one or all others; an ended session is signed
+  out on its next request).
+- People without an email get notifications by SMS on their verified phone. Security notices
+  (`identity.password_changed`, `identity.contact_changed`, `identity.signup_attempt`) go to
+  every address and cannot be reworded by partners.
+- Audit: `identity.signed_up`, `identity.recovered`, `identity.password_changed`,
+  `identity.email_changed`, `identity.phone_changed`, `identity.session_ended`, and more.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET | /session/signup/options, /session/legal/{terms\|privacy} | anyone |
+| POST | /session/signup, /session/recovery | anyone (bot check, 5/min) |
+| POST | /session/signup/verify, /session/recovery/verify, /session/otp/resend | anyone (10/min) |
+| GET / PATCH | /api/me/account | signed in |
+| POST | /api/me/contact, /api/me/contact/verify; DELETE /api/me/phone | signed in (password) |
+| PUT | /api/me/password | signed in (password) |
+| GET / DELETE | /api/me/sessions[/{id}] | signed in |
+| POST | /api/me/onboarding | signed in |
+
+Local development: set `SMS_LOG_TEXT=true` in `.env` to see SMS codes in
+`storage/logs/laravel.log` (email codes are there with `MAIL_MAILER=log`). The local demo seed
+turns SMS on for the house partner and adds `self.demo@demo.test` (`DemoIdentitySeeder`).
+
+### Future expansion (Phase 5C-1)
+
+- New country for phone sign-up: its number format in `config/identity.php` and the country
+  in `identity.allowed_phone_countries`. New SMS provider: an `SmsGateway` driver. No other code.
+- New partner offering B2C: turn on `b2c.self_signup_allowed`, pick `b2c.default_plan`. No code.
+- Open: Google/Apple sign-in and passkeys (Phase 8), a real SMS provider, trials and payment
+  (5C-2), device fingerprinting for trial abuse (5C-2).
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

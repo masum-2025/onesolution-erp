@@ -142,7 +142,7 @@ class ContextResolver
         }
 
         $chain = $ancestors->concat([$organization]);
-        $company = $chain->reverse()->first(fn (Organization $node) => $node->type === OrganizationType::Company);
+        $company = $chain->reverse()->first(fn (Organization $node) => $node->type->isCompanyLike());
         $group = $chain->first(fn (Organization $node) => $node->type === OrganizationType::Group);
 
         if ($supportView) {

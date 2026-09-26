@@ -22,4 +22,9 @@ return [
     ['plan' => 'business', 'currency' => 'BDT', 'unit' => 'per_client', 'amount_minor' => 290000],
     ['plan' => 'enterprise', 'currency' => 'USD', 'unit' => 'per_seat', 'amount_minor' => 300],
     ['plan' => 'enterprise', 'currency' => 'BDT', 'unit' => 'per_seat', 'amount_minor' => 30000],
+    // Personal plans (white-label B2C): free stays free; Plus per person.
+    ['plan' => 'personal_free', 'currency' => 'USD', 'unit' => 'per_client', 'amount_minor' => 0],
+    ['plan' => 'personal_free', 'currency' => 'BDT', 'unit' => 'per_client', 'amount_minor' => 0],
+    ['plan' => 'personal_plus', 'currency' => 'USD', 'unit' => 'per_client', 'amount_minor' => 200],
+    ['plan' => 'personal_plus', 'currency' => 'BDT', 'unit' => 'per_client', 'amount_minor' => 12000],
 ];

@@ -62,6 +62,24 @@ return [
             'body' => "{{ inviter }} gave you access to {{ organization }} on {{ product }}. Sign in with your usual email and password.",
             'action' => 'Sign in',
         ],
+        'identity_password_changed' => [
+            'subject' => 'Your {{ product }} password was changed',
+            'body' => "The password of your {{ product }} account was changed on {{ time }}, and every other device was signed out.\n\nIf this was you, there is nothing to do. If it was not you, reset your password now and check your email and phone in My account.",
+            'sms' => '{{ product }}: your password was changed ({{ time }}). Not you? Reset it now: {{ link }}',
+            'action' => 'Reset my password',
+        ],
+        'identity_contact_changed' => [
+            'subject' => 'The {{ kind }} of your {{ product }} account was changed',
+            'body' => "The {{ kind }} of your {{ product }} account was changed on {{ time }}. Messages now go to the new one.\n\nIf this was you, there is nothing to do. If it was not you, reset your password now.",
+            'sms' => '{{ product }}: the {{ kind }} of your account was changed ({{ time }}). Not you? {{ link }}',
+            'action' => 'Reset my password',
+        ],
+        'identity_signup_attempt' => [
+            'subject' => 'Someone tried to sign up with your address',
+            'body' => "Someone tried to create a new {{ product }} account with this address, which already has one. No new account was made.\n\nIf it was you, sign in instead (or reset your password if you forgot it). If not, you can ignore this message.",
+            'sms' => '{{ product }}: someone tried to sign up with your number, which already has an account. If it was you, sign in: {{ link }}',
+            'action' => 'Sign in',
+        ],
     ],
 
     'catalog' => [
@@ -76,10 +94,15 @@ return [
         'legal_updated' => ['name' => 'New terms to accept', 'description' => 'To the client\'s account owners, when you publish new terms or a new DPA.'],
         'members_invited' => ['name' => 'Invitation to a new account', 'description' => 'To someone added who has no account yet: a link to set a password.'],
         'members_added' => ['name' => 'Access added', 'description' => 'To someone added who already has an account.'],
+        'identity_password_changed' => ['name' => 'Password changed', 'description' => 'To the person, on every address. Fixed wording.'],
+        'identity_contact_changed' => ['name' => 'Email or phone changed', 'description' => 'To the person\'s old address. Fixed wording.'],
+        'identity_signup_attempt' => ['name' => 'Sign-up with a taken address', 'description' => 'To the owner of the address. Fixed wording.'],
     ],
 
     'placeholders' => [
         'product' => 'Your product name',
+        'time' => 'Date and time',
+        'kind' => 'email or phone',
         'organization' => 'The client organization',
         'partner' => 'Your company name',
         'staff' => 'Your staff member who asked',

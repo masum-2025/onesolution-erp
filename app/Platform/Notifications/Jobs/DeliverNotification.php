@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\NotificationCatalog;
 use App\Platform\Notifications\Services\MailSender;
+use App\Platform\Notifications\Services\SmsSender;
 use App\Platform\Notifications\Services\TemplateRenderer;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
@@ -30,7 +31,7 @@ class DeliverNotification implements ShouldQueue
 
     public function __construct(public string $deliveryId) {}
 
-    public function handle(TemplateRenderer $templates, MailSender $mail): void
+    public function handle(TemplateRenderer $templates, MailSender $mail, SmsSender $sms): void
     {
         $delivery = NotificationDelivery::query()->find($this->deliveryId);
         if ($delivery === null || $delivery->status !== NotificationDelivery::QUEUED) {
@@ -46,6 +47,21 @@ class DeliverNotification implements ShouldQueue
 
         $partner = $delivery->partner_id === null ? null : Partner::query()->find($delivery->partner_id);
         $values = (array) $delivery->data;
+
+        if ($delivery->channel === 'sms') {
+            if ($user->phone === null || $user->phone_verified_at === null) {
+                $this->finish($delivery, NotificationDelivery::FAILED, error: 'Recipient has no verified phone.');
+
+                return;
+            }
+
+            $wording = $templates->wording($partner, $delivery->notification_key, 'sms', $delivery->locale);
+            $sender = $sms->send($partner, $user->phone, (string) $templates->fill($wording['body'], $values));
+            $this->finish($delivery, NotificationDelivery::SENT, $sender);
+
+            return;
+        }
+
         $wording = $templates->wording($partner, $delivery->notification_key, 'mail', $delivery->locale);
         $action = __('notifications.templates.'.NotificationCatalog::slug($delivery->notification_key).'.action', [], $delivery->locale);
 

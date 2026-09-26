@@ -29,8 +29,10 @@ export async function loadMe() {
     return session.me;
 }
 
+/** Sign in with an email, or with { phone, country_code, password } (Phase 5C). */
 export async function login(email, password) {
-    await api('/session/login', { method: 'POST', body: { email, password }, silentAuth: true });
+    const body = typeof email === 'object' && email !== null ? email : { email, password };
+    await api('/session/login', { method: 'POST', body, silentAuth: true });
     resetCaches();
     return loadMe();
 }

@@ -83,6 +83,29 @@ final class NotificationCatalog
             'audience' => 'client',
             'path' => '/provider',
         ],
+        // Security notices to the person (Phase 5C-1). Fixed wording: a partner
+        // could otherwise remove the "if it was not you" warning.
+        'identity.password_changed' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'time', 'link'],
+            'audience' => 'person',
+            'path' => '/forgot',
+            'editable' => false,
+        ],
+        'identity.contact_changed' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'kind', 'time', 'link'],
+            'audience' => 'person',
+            'path' => '/forgot',
+            'editable' => false,
+        ],
+        'identity.signup_attempt' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'link'],
+            'audience' => 'person',
+            'path' => '/login',
+            'editable' => false,
+        ],
     ];
 
     /**
@@ -91,6 +114,16 @@ final class NotificationCatalog
     public function keys(): array
     {
         return array_keys(self::NOTIFICATIONS);
+    }
+
+    /**
+     * Notifications partners may reword.
+     *
+     * @return list<string>
+     */
+    public function editableKeys(): array
+    {
+        return array_values(array_filter($this->keys(), fn (string $key) => self::NOTIFICATIONS[$key]['editable'] ?? true));
     }
 
     public function has(string $key): bool

@@ -67,7 +67,7 @@ onMounted(() => {
         <div class="mx-auto mt-10 w-full max-w-[520px] animate-rise sm:mt-16">
             <h1 class="text-[24px] leading-tight font-semibold tracking-[-0.02em] text-fg">{{ t('auth.choose.title') }}</h1>
             <p class="mt-2 text-[14px] text-muted">
-                {{ t('auth.choose.signed_in_as', { email: session.me?.user?.email ?? '' }) }}
+                {{ t('auth.choose.signed_in_as', { email: session.me?.user?.email ?? session.me?.user?.phone ?? '' }) }}
             </p>
 
             <div class="card mt-7 overflow-hidden">

@@ -11,6 +11,8 @@ return [
         'upgrade_to' => 'The :plan plan includes :max.',
         'unknown_plan' => 'This plan does not exist. Choose one from the list.',
         'same_plan' => 'This client is already on that plan.',
+        'wrong_audience_personal' => 'A personal workspace takes a personal plan. Choose one of those, or upgrade the workspace to a company first.',
+        'wrong_audience_business' => 'Personal plans are for individuals. Choose a business plan for this organization.',
         'not_top_level' => 'A plan belongs to the whole subscription. Change it at the top organization.',
         'no_package' => 'This organization has no sector package. Set its sector first.',
         'no_price' => 'This plan has no price in :currency per :period. Add one to the plan, or choose another currency or period.',
@@ -42,6 +44,14 @@ return [
         'enterprise' => [
             'name' => 'Enterprise',
             'description' => 'Every module with no fixed limits, for groups of companies.',
+        ],
+        'personal_free' => [
+            'name' => 'Personal Free',
+            'description' => 'For one person: accounts, customers and stock, free.',
+        ],
+        'personal_plus' => [
+            'name' => 'Personal Plus',
+            'description' => 'For one person who needs more: attendance, other currencies and offline work.',
         ],
     ],
 

@@ -59,6 +59,11 @@ class PackagingException extends TenancyException
         return new self('module_needs', 422, ['module' => $module, 'required' => $required]);
     }
 
+    public static function wrongAudience(string $audience): self
+    {
+        return new self("wrong_audience_{$audience}", 422, [], ['field' => 'plan']);
+    }
+
     public static function notTopLevel(): self
     {
         return new self('not_top_level', 422);

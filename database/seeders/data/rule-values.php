@@ -2,7 +2,7 @@
 
 /*
 |--------------------------------------------------------------------------
-| Platform- and plan-level rule values (data, not code)
+| Platform-, plan- and partner-level rule values (data, not code)
 |--------------------------------------------------------------------------
 |
 | Country values are legal / financial facts and MUST be reviewed by a
@@ -70,5 +70,14 @@ return [
     ['key' => 'plans.max_branches', 'plan' => 'business', 'value' => 20, 'reason' => 'Business plan: up to 20 branches.'],
     ['key' => 'plans.max_storage_mb', 'plan' => 'starter', 'value' => 5120, 'reason' => 'Starter plan: 5 GB.'],
     ['key' => 'plans.max_storage_mb', 'plan' => 'business', 'value' => 51200, 'reason' => 'Business plan: 50 GB.'],
+    // The house partner (One Solutions itself) takes self-serve sign-ups (Phase 5C).
+    ['key' => 'b2c.self_signup_allowed', 'partner' => 'house', 'value' => true, 'reason' => 'One Solutions sells to individuals directly.'],
+
+    // Personal plans (Phase 5C): one person; a team upgrades to a company.
+    ['key' => 'plans.max_users', 'plan' => 'personal_free', 'value' => 1, 'reason' => 'Personal plan: one person.'],
+    ['key' => 'plans.max_users', 'plan' => 'personal_plus', 'value' => 1, 'reason' => 'Personal plan: one person.'],
+    ['key' => 'plans.max_storage_mb', 'plan' => 'personal_free', 'value' => 500, 'reason' => 'Personal Free: 500 MB.'],
+    ['key' => 'plans.max_storage_mb', 'plan' => 'personal_plus', 'value' => 5120, 'reason' => 'Personal Plus: 5 GB.'],
+    ['key' => 'offline_mode.max_cached_records', 'plan' => 'personal_plus', 'value' => 2000, 'reason' => 'Personal Plus storage limit.'],
 
 ];

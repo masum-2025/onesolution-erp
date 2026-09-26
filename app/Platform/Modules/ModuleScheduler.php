@@ -25,7 +25,7 @@ class ModuleScheduler
      * @param  list<OrganizationType>  $types
      * @return LazyCollection<int, Organization>
      */
-    public function organizationsWithModule(string $moduleKey, array $types = [OrganizationType::Company]): LazyCollection
+    public function organizationsWithModule(string $moduleKey, array $types = [OrganizationType::Company, OrganizationType::Personal]): LazyCollection
     {
         return Organization::query()
             ->whereIn('type', $types)

@@ -36,6 +36,7 @@ use App\Platform\Rules\Http\Controllers\PartnerRuleController;
 use App\Platform\Rules\Http\Controllers\RuleApprovalController;
 use App\Platform\Tenancy\Http\Controllers\Api\AuthController;
 use App\Platform\Tenancy\Http\Controllers\Api\MeController;
+use App\Platform\Identity\Http\Controllers\AccountController;
 use App\Platform\Tenancy\Http\Controllers\Api\MemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\OrganizationController;
 use App\Platform\Tenancy\Http\Controllers\Api\PartnerOrganizationController;
@@ -56,6 +57,23 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('me', MeController::class)->middleware('auth:sanctum');
+
+// My account (Phase 5C-1): the person's own identity, in any context.
+Route::middleware('auth:sanctum')->prefix('me')->group(function () {
+    Route::get('account', [AccountController::class, 'show']);
+    Route::patch('account', [AccountController::class, 'update']);
+    Route::post('onboarding', [AccountController::class, 'onboarding']);
+    Route::get('sessions', [AccountController::class, 'sessions']);
+    Route::delete('sessions/{session}', [AccountController::class, 'endSession'])->where('session', '[0-9A-Za-z]{26}');
+    Route::delete('sessions', [AccountController::class, 'endOtherSessions']);
+
+    Route::middleware('throttle:identity-code')->group(function () {
+        Route::put('password', [AccountController::class, 'password']);
+        Route::post('contact', [AccountController::class, 'contact']);
+        Route::post('contact/verify', [AccountController::class, 'verifyContact']);
+        Route::delete('phone', [AccountController::class, 'removePhone']);
+    });
+});
 
 // Plans and sector packages (Phase 5): catalog data for pickers, any signed-in user.
 Route::middleware('auth:sanctum')->group(function () {

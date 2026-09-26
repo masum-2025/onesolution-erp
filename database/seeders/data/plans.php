@@ -15,6 +15,8 @@
 | Limits (users, branches, storage) are rules `plans.max_*` with plan-level
 | values in database/seeders/data/rule-values.php, so they change without
 | code (per-client deals: partner layer, Phase 5B).
+| audience: business (organizations, default) or personal (self-serve
+|          individuals, Phase 5C). Each side only ever sees its own plans.
 | Names: lang/{locale}/packaging.php "plans.{key}".
 |
 */
@@ -55,6 +57,30 @@ return [
             ['currency' => 'BDT', 'period' => 'yearly', 'amount_minor' => 15000000],
             ['currency' => 'USD', 'period' => 'monthly', 'amount_minor' => 14900],
             ['currency' => 'USD', 'period' => 'yearly', 'amount_minor' => 149000],
+        ],
+    ],
+    [
+        'key' => 'personal_free',
+        'audience' => 'personal',
+        'public' => true,
+        'modules' => ['accounting', 'crm', 'inventory', 'multi_language'],
+        'prices' => [
+            ['currency' => 'BDT', 'period' => 'monthly', 'amount_minor' => 0],
+            ['currency' => 'BDT', 'period' => 'yearly', 'amount_minor' => 0],
+            ['currency' => 'USD', 'period' => 'monthly', 'amount_minor' => 0],
+            ['currency' => 'USD', 'period' => 'yearly', 'amount_minor' => 0],
+        ],
+    ],
+    [
+        'key' => 'personal_plus',
+        'audience' => 'personal',
+        'public' => true,
+        'modules' => ['accounting', 'attendance', 'crm', 'inventory', 'multi_currency', 'multi_language', 'offline_mode'],
+        'prices' => [
+            ['currency' => 'BDT', 'period' => 'monthly', 'amount_minor' => 29900],
+            ['currency' => 'BDT', 'period' => 'yearly', 'amount_minor' => 299000],
+            ['currency' => 'USD', 'period' => 'monthly', 'amount_minor' => 499],
+            ['currency' => 'USD', 'period' => 'yearly', 'amount_minor' => 4990],
         ],
     ],
 ];

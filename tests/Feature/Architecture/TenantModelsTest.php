@@ -21,6 +21,8 @@ use App\Platform\Billing\Models\Payout;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\DataExport\Models\DataExport;
+use App\Platform\Identity\Models\OtpChallenge;
+use App\Platform\Identity\Models\UserSession;
 use App\Platform\Invitations\Models\Invitation;
 use App\Platform\PartnerApi\Models\PartnerApiKey;
 use App\Platform\Legal\Models\DocumentAcceptance;
@@ -130,6 +132,9 @@ const PLATFORM_MODELS = [
     ClientBrand::class,
     PartnerApiKey::class,
     Invitation::class,
+    // Identity (Phase 5C): a person's own codes and devices, before and outside any organization.
+    OtpChallenge::class,
+    UserSession::class,
 ];
 
 /**

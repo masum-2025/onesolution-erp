@@ -97,7 +97,8 @@
         "partner_legal": "Legal documents",
         "provider": "Provider & terms",
         "partner_api": "API keys",
-        "brand": "Our brand"
+        "brand": "Our brand",
+        "account": "My account"
     },
     "not_found": {
         "title": "This page does not exist",

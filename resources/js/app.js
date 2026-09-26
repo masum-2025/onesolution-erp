@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import { router } from './router';
 import { applyBrand } from './lib/brand';
+import { applySignupOptions } from './lib/identity';
 import { initI18n } from './lib/i18n';
 import { initTheme } from './lib/theme';
 import { readPref } from './lib/storage';
@@ -15,6 +16,7 @@ async function boot() {
     const locales = JSON.parse(el.dataset.locales);
 
     applyBrand(JSON.parse(el.dataset.brand));
+    applySignupOptions(JSON.parse(el.dataset.signup ?? '{}'));
     initTheme();
     await initI18n(locales, readPref('locale') ?? el.dataset.defaultLocale);
 

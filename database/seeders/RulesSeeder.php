@@ -8,11 +8,12 @@ use App\Platform\Rules\Enums\RuleValueStatus;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\RuleTargets;
 use App\Platform\Rules\Services\RuleService;
+use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 /**
- * Syncs rule definitions and seeds platform- and plan-level values from
+ * Syncs rule definitions and seeds platform-, plan- and partner-level values from
  * database/seeders/data/rule-values.php. Safe to run again: values that
  * already exist at the same scope are left alone.
  */
@@ -23,8 +24,20 @@ class RulesSeeder extends Seeder
         $this->command?->call('rules:sync');
 
         foreach (require __DIR__.'/data/rule-values.php' as $entry) {
-            $scope = isset($entry['plan']) ? RuleScope::Plan : RuleScope::Platform;
-            $scopeId = $entry['plan'] ?? null;
+            // 'partner' => 'house' means the house partner (its slug comes from config).
+            $partner = isset($entry['partner'])
+                ? Partner::query()->where('slug', $entry['partner'] === 'house' ? config('tenancy.house_partner.slug') : $entry['partner'])->first()
+                : null;
+            if (isset($entry['partner']) && $partner === null) {
+                continue;
+            }
+
+            $scope = match (true) {
+                $partner !== null => RuleScope::Partner,
+                isset($entry['plan']) => RuleScope::Plan,
+                default => RuleScope::Platform,
+            };
+            $scopeId = $partner?->getKey() ?? $entry['plan'] ?? null;
 
             $exists = RuleValue::query()
                 ->where('rule_key', $entry['key'])
@@ -39,7 +52,11 @@ class RulesSeeder extends Seeder
             }
 
             $rules->set(
-                $scopeId === null ? $targets->platform() : $targets->plan($scopeId),
+                match ($scope) {
+                    RuleScope::Partner => $targets->partner($partner),
+                    RuleScope::Plan => $targets->plan($scopeId),
+                    default => $targets->platform(),
+                },
                 $entry['key'],
                 RuleMode::Set,
                 $entry['value'],

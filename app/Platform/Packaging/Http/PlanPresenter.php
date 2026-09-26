@@ -30,6 +30,7 @@ class PlanPresenter
 
         return [
             'key' => $plan->key,
+            'audience' => $plan->audience,
             'name' => $plan->label(),
             'description' => $plan->description(),
             'prices' => array_map(fn (array $price) => [

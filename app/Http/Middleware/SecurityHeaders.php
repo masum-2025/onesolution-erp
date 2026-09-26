@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Platform\Identity\Contracts\BotCheck;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -9,7 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Browser security headers for pages: a nonce-based Content Security Policy
- * (no inline script or style without the nonce, no third-party origins),
+ * (no inline script or style without the nonce, no third-party origins
+ * except the configured bot check on public forms),
  * no framing, no MIME sniffing. In local development the Vite dev server
  * origin is allowed as well.
  */
@@ -39,10 +41,13 @@ class SecurityHeaders
     {
         $dev = $this->devServer();
         $devWs = $dev === '' ? '' : ' '.preg_replace('#^http#', 'ws', $dev);
+        // The bot check on public forms (e.g. Cloudflare Turnstile) loads a script and a frame.
+        $bot = implode('', array_map(fn (string $origin) => " {$origin}", app(BotCheck::class)->origins()));
 
         return implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}'".($dev === '' ? '' : " {$dev}"),
+            "script-src 'self' 'nonce-{$nonce}'{$bot}".($dev === '' ? '' : " {$dev}"),
+            "frame-src 'self'{$bot}",
             "style-src 'self' 'nonce-{$nonce}'".($dev === '' ? '' : " {$dev}"),
             "img-src 'self' data: blob:".($dev === '' ? '' : " {$dev}"),
             "font-src 'self' data:".($dev === '' ? '' : " {$dev}"),

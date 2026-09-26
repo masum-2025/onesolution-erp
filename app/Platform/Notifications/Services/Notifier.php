@@ -16,8 +16,8 @@ use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
  * organization's language. Each message is recorded (address masked) and
  * sent by a queued job, so a slow mail server never slows the app.
  *
- * SMS goes only to people with a verified phone number; those arrive with
- * self-serve sign-up (Phase 5C), so today notifications go by email.
+ * Email first; people without an email (self-serve by phone, Phase 5C) get
+ * SMS on their verified phone, where the partner has SMS turned on.
  */
 class Notifier
 {
@@ -26,6 +26,7 @@ class Notifier
         private LinkBuilder $links,
         private BrandResolver $brands,
         private OrganizationSettingsResolver $settings,
+        private SmsSender $sms,
     ) {}
 
     /**
@@ -33,10 +34,19 @@ class Notifier
      * @param  array<string, string>|callable(string $locale): array<string, string>  $values  Placeholder values (per language when a callable).
      * @return list<NotificationDelivery>
      */
-    public function notify(string $key, iterable $users, array|callable $values, ?Partner $partner, ?Organization $organization = null, ?string $path = null): array
-    {
+    public function notify(
+        string $key,
+        iterable $users,
+        array|callable $values,
+        ?Partner $partner,
+        ?Organization $organization = null,
+        ?string $path = null,
+        ?string $locale = null,
+        bool $allChannels = false,
+    ): array {
         $definition = $this->catalog->get($key);
-        $locale = $this->locale($organization);
+        $supported = (array) config('tenancy.supported_locales');
+        $locale = in_array($locale, $supported, true) ? $locale : $this->locale($organization);
         $filled = [
             ...(is_callable($values) ? $values($locale) : $values),
             'product' => $this->brands->for($partner, $organization)['name'],
@@ -46,28 +56,47 @@ class Notifier
 
         $deliveries = [];
         foreach ($users as $user) {
-            if ($user->email === null || $user->email === '') {
-                continue;
+            foreach ($this->channelsFor($user, $definition['channels'], $partner, $allChannels) as $channel => $address) {
+                $delivery = new NotificationDelivery;
+                $delivery->forceFill([
+                    'partner_id' => $partner?->getKey(),
+                    'organization_id' => $organization?->getKey(),
+                    'user_id' => $user->getKey(),
+                    'notification_key' => $key,
+                    'channel' => $channel,
+                    'locale' => $locale,
+                    'recipient' => $channel === 'sms' ? Mask::phone($address) : Mask::email($address),
+                    'status' => NotificationDelivery::QUEUED,
+                    'data' => $filled,
+                ])->save();
+
+                DeliverNotification::dispatch($delivery->getKey())->afterCommit();
+                $deliveries[] = $delivery;
             }
-
-            $delivery = new NotificationDelivery;
-            $delivery->forceFill([
-                'partner_id' => $partner?->getKey(),
-                'organization_id' => $organization?->getKey(),
-                'user_id' => $user->getKey(),
-                'notification_key' => $key,
-                'channel' => 'mail',
-                'locale' => $locale,
-                'recipient' => Mask::email($user->email),
-                'status' => NotificationDelivery::QUEUED,
-                'data' => $filled,
-            ])->save();
-
-            DeliverNotification::dispatch($delivery->getKey())->afterCommit();
-            $deliveries[] = $delivery;
         }
 
         return $deliveries;
+    }
+
+    /**
+     * Email when the person has one; else SMS to a verified phone, where the
+     * notification and the partner allow SMS. Security notices go to both.
+     *
+     * @param  list<string>  $channels
+     * @return array<string, string> channel => address
+     */
+    private function channelsFor(User $user, array $channels, ?Partner $partner, bool $all): array
+    {
+        $mail = $user->email !== null && $user->email !== '' && in_array('mail', $channels, true) ? $user->email : null;
+        $sms = $user->phone !== null && $user->phone_verified_at !== null && in_array('sms', $channels, true) && $this->sms->enabled($partner)
+            ? $user->phone
+            : null;
+
+        if ($all) {
+            return array_filter(['mail' => $mail, 'sms' => $sms]);
+        }
+
+        return $mail !== null ? ['mail' => $mail] : array_filter(['sms' => $sms]);
     }
 
     public function locale(?Organization $organization): string

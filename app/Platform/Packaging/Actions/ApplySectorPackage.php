@@ -23,7 +23,6 @@ use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\RuleCatalog;
 use App\Platform\Rules\RuleTargets;
 use App\Platform\Rules\Services\RuleService;
-use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\DB;
 
@@ -53,7 +52,7 @@ class ApplySectorPackage
      */
     public function handle(Organization $company, ?User $actor = null): ?OrganizationPackage
     {
-        if ($company->type !== OrganizationType::Company || ! $this->sectors->has($company->sector_key)) {
+        if (! $company->type->isCompanyLike() || ! $this->sectors->has($company->sector_key)) {
             return null;
         }
 

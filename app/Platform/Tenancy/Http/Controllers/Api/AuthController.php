@@ -26,7 +26,7 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request, AttemptLogin $attempt, IssueContextToken $tokens, ListAvailableContexts $contexts): JsonResponse
     {
-        $user = $attempt->handle($request->validated('email'), $request->validated('password'));
+        $user = $attempt->handle($request->validated('email'), $request->validated('password'), $request->validated('phone'), $request->validated('country_code'));
 
         return response()->json([
             ...$this->tokenPayload($tokens->forLogin($user)),

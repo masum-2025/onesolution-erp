@@ -173,6 +173,8 @@ class PartnerClientService
         $clients = Organization::query()
             ->where('partner_id', $partner->getKey())
             ->whereNull('parent_id')
+            // Self-serve personal workspaces are not business clients: they do not use a slot.
+            ->where('type', '!=', OrganizationType::Personal)
             ->where('status', '!=', OrganizationStatus::Archived)
             ->count();
 

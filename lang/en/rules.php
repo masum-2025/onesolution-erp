@@ -161,6 +161,34 @@ return [
             'label' => 'API keys are valid for (days)',
             'description' => 'A new API key stops working after this many days.',
         ],
+        'b2c_self_signup_allowed' => [
+            'label' => 'Individuals can sign up by themselves',
+            'description' => 'Anyone can create their own account and personal workspace at your address, with an email or phone code.',
+        ],
+        'b2c_default_plan' => [
+            'label' => 'Plan for new individuals',
+            'description' => 'The personal plan a self-signed-up person starts on.',
+        ],
+        'identity_allowed_phone_countries' => [
+            'label' => 'Countries that get SMS codes',
+            'description' => 'Phone numbers from other countries cannot sign up by SMS. Keeps SMS costs and abuse down.',
+        ],
+        'identity_block_disposable_email' => [
+            'label' => 'Refuse throwaway email addresses',
+            'description' => 'Sign-up with a temporary inbox (e.g. mailinator) is refused.',
+        ],
+        'identity_recovery_cooldown_hours' => [
+            'label' => 'Wait after a password reset (hours)',
+            'description' => 'After someone resets their password, their email and phone cannot be changed for this long.',
+        ],
+        'identity_otp_per_hour_per_destination' => [
+            'label' => 'Codes per hour to one address',
+            'description' => 'How many one-time codes one email or phone number can get in an hour.',
+        ],
+        'identity_otp_per_hour_per_ip' => [
+            'label' => 'Codes per hour from one network',
+            'description' => 'How many one-time codes can be asked for from one IP address in an hour.',
+        ],
     ],
 
     'categories' => [
@@ -172,5 +200,6 @@ return [
         'partner' => 'Partner account',
         'billing' => 'Billing',
         'messages' => 'Email and SMS',
+        'identity' => 'Sign-up and sign-in',
     ],
 ];

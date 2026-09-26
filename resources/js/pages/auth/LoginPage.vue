@@ -1,11 +1,14 @@
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowRight, Blocks, Eye, EyeOff, Languages, Lock, ShieldCheck, TriangleAlert } from 'lucide-vue-next';
+import { ArrowRight, Blocks, Eye, EyeOff, Languages, Lock, Mail, ShieldCheck, Smartphone, TriangleAlert } from 'lucide-vue-next';
 import AuthTopBar from '@/layouts/AuthTopBar.vue';
 import BrandLockup from '@/components/BrandLockup.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
+import AppSegmented from '@/components/AppSegmented.vue';
+import PhoneInput from '@/components/PhoneInput.vue';
+import { signup } from '@/lib/identity';
 import { login } from '@/lib/session';
 import { brand, brandText, taglineFor } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
@@ -14,8 +17,14 @@ import { i18n, t } from '@/lib/i18n';
 const router = useRouter();
 const route = useRoute();
 
-const form = reactive({ email: '', password: '' });
-const errors = reactive({ email: null, password: null });
+const form = reactive({ channel: 'mail', email: '', phone: '', country: signup.default_country, password: '' });
+const errors = reactive({ email: null, phone: null, password: null });
+
+// Phone sign-in where this address sends SMS (verified phones only, Phase 5C).
+const channelOptions = computed(() => [
+    { value: 'mail', label: t('auth.login.use_email'), icon: Mail },
+    { value: 'sms', label: t('auth.login.use_phone'), icon: Smartphone },
+]);
 const showPassword = ref(false);
 const submitting = ref(false);
 const failure = ref(null);
@@ -25,9 +34,10 @@ let countdown;
 const locked = computed(() => waitSeconds.value > 0);
 
 function validate() {
-    errors.email = !form.email.trim() ? t('auth.login.email_required') : !/^\S+@\S+\.\S+$/.test(form.email.trim()) ? t('auth.login.email_invalid') : null;
+    errors.phone = form.channel === 'sms' && form.phone.replace(/\D/g, '').length < 6 ? t('auth.login.phone_required') : null;
+    errors.email = form.channel === 'sms' ? null : !form.email.trim() ? t('auth.login.email_required') : !/^\S+@\S+\.\S+$/.test(form.email.trim()) ? t('auth.login.email_invalid') : null;
     errors.password = !form.password ? t('auth.login.password_required') : null;
-    return !errors.email && !errors.password;
+    return !errors.email && !errors.phone && !errors.password;
 }
 
 function startCountdown(seconds) {
@@ -49,7 +59,11 @@ async function submit() {
 
     submitting.value = true;
     try {
-        const me = await login(form.email.trim(), form.password);
+        const me = await login(
+            form.channel === 'sms'
+                ? { phone: form.phone.trim(), country_code: form.country, password: form.password }
+                : { email: form.email.trim(), password: form.password },
+        );
         const redirect = safeRedirect(route.query.redirect);
         const single = (me?.contexts?.organizations?.length ?? 0) + (me?.contexts?.partners?.length ?? 0) === 1;
         await router.push(me?.context ? redirect ?? '/' : { name: 'choose', query: { ...(redirect ? { redirect } : {}), ...(single ? { auto: '1' } : {}) } });
@@ -58,8 +72,9 @@ async function submit() {
             startCountdown(error.retryAfter ?? 60);
         } else if (error.status === 422) {
             errors.email = error.field('email');
+            errors.phone = error.field('phone');
             errors.password = error.field('password');
-            if (!errors.email && !errors.password) failure.value = error.message;
+            if (!errors.email && !errors.phone && !errors.password) failure.value = error.message;
         } else {
             failure.value = error.message;
         }
@@ -102,7 +117,13 @@ onBeforeUnmount(() => clearInterval(countdown));
                     </div>
 
                     <form class="mt-7 space-y-4" novalidate @submit.prevent="submit">
-                        <AppField :label="t('auth.login.email')" :error="errors.email">
+                        <AppSegmented v-if="signup.phone" v-model="form.channel" :options="channelOptions" :label="t('auth.login.sign_in_with')" block />
+                        <AppField v-if="form.channel === 'sms'" :label="t('auth.login.phone')" :error="errors.phone">
+                            <template #default="{ id, invalid, describedby }">
+                                <PhoneInput :id="id" v-model="form.phone" v-model:country="form.country" :countries="signup.phone_countries" :invalid="invalid" :describedby="describedby" autocomplete="username" />
+                            </template>
+                        </AppField>
+                        <AppField v-else :label="t('auth.login.email')" :error="errors.email">
                             <template #default="{ id, invalid, describedby }">
                                 <input
                                     :id="id"
@@ -146,12 +167,20 @@ onBeforeUnmount(() => clearInterval(countdown));
                             </template>
                         </AppField>
 
+                        <p class="-mt-1 text-end text-[13px]">
+                            <RouterLink to="/forgot" class="font-medium text-brand-strong hover:underline">{{ t('auth.login.forgot') }}</RouterLink>
+                        </p>
+
                         <AppButton type="submit" variant="primary" size="lg" block :loading="submitting" :disabled="locked" :icon-end="submitting ? null : ArrowRight" class="!mt-6">
                             {{ t('auth.login.submit') }}
                         </AppButton>
                     </form>
 
-                    <p class="mt-6 text-center text-[13px] text-muted">{{ t('auth.login.no_access') }}</p>
+                    <p v-if="signup.allowed" class="mt-6 text-center text-[13px] text-muted">
+                        {{ t('auth.login.new_here') }}
+                        <RouterLink to="/signup" class="font-medium text-brand-strong hover:underline">{{ t('auth.login.create_account') }}</RouterLink>
+                    </p>
+                    <p v-else class="mt-6 text-center text-[13px] text-muted">{{ t('auth.login.no_access') }}</p>
                 </div>
             </div>
 

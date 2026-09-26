@@ -51,7 +51,7 @@ class LegalService
         }
 
         $pending = [];
-        foreach (LegalDocument::ACCEPTED_KINDS as $kind) {
+        foreach (LegalDocument::acceptedKindsFor($root) as $kind) {
             $document = $this->current($root->partner, $kind);
             if ($document !== null && ! $this->accepted($root, $document)) {
                 $pending[] = $document;

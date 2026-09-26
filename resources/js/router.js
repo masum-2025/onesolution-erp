@@ -12,8 +12,13 @@ import { loadMe, session } from './lib/session';
 const AppShell = () => import('./layouts/AppShell.vue');
 
 const routes = [
-    { path: '/login', name: 'login', component: () => import('./pages/auth/LoginPage.vue'), meta: { guest: true, ns: ['auth'] } },
+    { path: '/login', name: 'login', component: () => import('./pages/auth/LoginPage.vue'), meta: { guest: true, ns: ['auth', 'identity'] } },
     { path: '/invite/:token', name: 'invite', component: () => import('./pages/auth/InvitationPage.vue'), meta: { public: true, ns: ['auth', 'invite'] } },
+    // Self-serve sign-up and recovery (Phase 5C); the terms are public to read before signing up.
+    { path: '/signup', name: 'signup', component: () => import('./pages/auth/SignupPage.vue'), meta: { guest: true, ns: ['auth', 'identity'] } },
+    { path: '/forgot', name: 'forgot', component: () => import('./pages/auth/ForgotPage.vue'), meta: { public: true, ns: ['auth', 'identity'] } },
+    { path: '/legal/:kind(terms|privacy)', name: 'legal', component: () => import('./pages/auth/LegalPage.vue'), meta: { public: true, ns: ['identity'] } },
+    { path: '/welcome', name: 'welcome', component: () => import('./pages/auth/WelcomePage.vue'), meta: { ns: ['identity'] } },
     { path: '/choose', name: 'choose', component: () => import('./pages/auth/ChooseContextPage.vue'), meta: { ns: ['auth'] } },
     {
         path: '/',
@@ -32,6 +37,8 @@ const routes = [
                 component: () => import('./pages/organizations/OrganizationPage.vue'),
                 meta: { context: 'organization', ns: ['orgs', 'access', 'packaging'] },
             },
+            // The person's own account: the same in every context.
+            { path: 'account', name: 'account', component: () => import('./pages/account/AccountPage.vue'), meta: { ns: ['identity'] } },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'branding', name: 'brand', component: () => import('./pages/brand/ClientBrandPage.vue'), meta: { context: 'organization', ns: ['brand'] } },

@@ -16,6 +16,7 @@ use App\Platform\Packaging\Services\SubscriptionService;
 use App\Platform\Packaging\Services\UsageLimiter;
 use App\Platform\Rules\RuleCache;
 use App\Platform\Tenancy\Enums\BillingMode;
+use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -114,6 +115,12 @@ class ChangePlan
 
         if (! $this->plans->has($choice->planKey)) {
             throw PackagingException::unknownPlan();
+        }
+
+        // A personal workspace takes personal plans, an organization business plans.
+        $audience = $root->type === OrganizationType::Personal ? PlanCatalog::PERSONAL : PlanCatalog::BUSINESS;
+        if ($this->plans->get($choice->planKey)->audience !== $audience) {
+            throw PackagingException::wrongAudience($audience);
         }
 
         $partnerPlan = $choice->partnerPlan;

@@ -18,8 +18,8 @@ class StoreOrganizationRequest extends StrictFormRequest
     {
         return [
             'parent_id' => ['required', 'string', 'ulid'],
-            // Root groups are created by the partner / platform, not from a client context.
-            'type' => ['required', Rule::enum(OrganizationType::class)->except([OrganizationType::Group])],
+            // Root groups (partner / platform) and personal workspaces (sign-up) are never made from a client context.
+            'type' => ['required', Rule::enum(OrganizationType::class)->except([OrganizationType::Group, OrganizationType::Personal])],
             ...$this->organizationAttributeRules(partial: false),
             'sector_key' => ['required_if:type,company', 'nullable', 'string', Rule::in(app(SectorCatalog::class)->keys())],
         ];

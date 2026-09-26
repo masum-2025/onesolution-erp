@@ -20,6 +20,7 @@ return [
         'own_membership' => 'You cannot change your own membership. Ask another owner to do it.',
         'own_context_status' => 'You cannot suspend the organization you are working in. Switch to a higher level first.',
         'credentials' => 'The email or password is incorrect. Check them and try again.',
+        'credentials_phone' => 'The phone number or password is incorrect. Check them and try again.',
         'user_not_found' => 'No account uses this email. Ask the person to sign up first, then add them.',
         'user_not_found_invite' => 'No account uses this email yet. Add the owner\'s name and they will be invited by email to set a password.',
         'forbidden' => 'You do not have permission to do this. Ask an owner of the organization.',
@@ -42,6 +43,7 @@ return [
         'company' => 'company',
         'branch' => 'branch',
         'department' => 'department',
+        'personal' => 'personal workspace',
     ],
 
     'messages' => [

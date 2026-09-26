@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Platform\Identity;
+
+use App\Platform\Identity\BotChecks\NoBotCheck;
+use App\Platform\Identity\BotChecks\TurnstileBotCheck;
+use App\Platform\Identity\Contracts\BotCheck;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\ServiceProvider;
+
+/**
+ * Self-serve identity (Phase 5C-1): sign-up, one-time codes, recovery and
+ * the person's own account. Burst limits per network here; hourly limits
+ * per address and network are rules (see OtpService).
+ */
+class IdentityServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->singleton(BotCheck::class, function () {
+            $driver = (string) config('identity.bot_check.driver');
+
+            if ($driver === 'turnstile') {
+                return new TurnstileBotCheck(
+                    (string) config('identity.bot_check.turnstile.site_key'),
+                    (string) config('identity.bot_check.turnstile.secret'),
+                );
+            }
+
+            if ($this->app->isProduction()) {
+                Log::error('No bot check configured: self-serve sign-up and recovery are closed. Set BOT_CHECK_DRIVER=turnstile.');
+
+                return new NoBotCheck(open: false);
+            }
+
+            return new NoBotCheck;
+        });
+    }
+
+    public function boot(): void
+    {
+        // Starting a sign-up or recovery: a few per minute from one network.
+        RateLimiter::for('identity-start', fn (Request $request) => Limit::perMinute(5)->by('identity-start:'.$request->ip()));
+
+        // Entering or resending codes: enough for typos, too few to guess six digits.
+        RateLimiter::for('identity-code', fn (Request $request) => Limit::perMinute(10)->by('identity-code:'.($request->user()?->getKey() ?? $request->ip())));
+    }
+}

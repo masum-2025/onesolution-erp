@@ -17,6 +17,8 @@ final readonly class PlanDefinition
         public array $modules,
         public array $prices,
         public int $sortOrder,
+        // business: for organizations; personal: for self-serve individuals (Phase 5C).
+        public string $audience = PlanCatalog::BUSINESS,
     ) {}
 
     public function includes(string $moduleKey): bool

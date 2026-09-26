@@ -3,6 +3,8 @@
 use App\Http\Controllers\AppShellController;
 use App\Platform\Branding\Http\BrandAssetController;
 use App\Platform\Branding\Http\ClientBrandAssetController;
+use App\Platform\Identity\Http\Controllers\RecoveryController;
+use App\Platform\Identity\Http\Controllers\SignupController;
 use App\Platform\Invitations\Http\InvitationController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
@@ -20,6 +22,17 @@ Route::prefix('session')->group(function () {
     // Invitation links: see who it is for, set the password (signs in).
     Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:tenancy-login');
     Route::post('invitations/{token}', [InvitationController::class, 'accept'])->middleware('throttle:tenancy-login');
+
+    // Self-serve sign-up and "forgot password" (Phase 5C-1): bot check, codes, limits.
+    Route::get('signup/options', [SignupController::class, 'options']);
+    Route::get('legal/{kind}', [SignupController::class, 'legal'])->where('kind', 'terms|privacy');
+    Route::post('signup', [SignupController::class, 'start'])->middleware('throttle:identity-start');
+    Route::post('recovery', [RecoveryController::class, 'start'])->middleware('throttle:identity-start');
+    Route::middleware('throttle:identity-code')->group(function () {
+        Route::post('signup/verify', [SignupController::class, 'verify']);
+        Route::post('recovery/verify', [RecoveryController::class, 'complete']);
+        Route::post('otp/resend', [SignupController::class, 'resend']);
+    });
 
     Route::middleware('auth:web')->group(function () {
         Route::post('context', [SessionController::class, 'enterContext'])->middleware('throttle:tenancy-sensitive');

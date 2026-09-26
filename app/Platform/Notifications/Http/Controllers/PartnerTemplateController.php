@@ -52,7 +52,7 @@ class PartnerTemplateController extends Controller
                 'audience' => $this->catalog->get($key)['audience'],
                 'channels' => $this->catalog->get($key)['channels'],
                 'customized' => ($custom[$key] ?? collect())->map(fn ($row) => "{$row->channel}.{$row->locale}")->values(),
-            ], $this->catalog->keys()),
+            ], $this->catalog->editableKeys()),
             'locales' => config('tenancy.supported_locales'),
             'can_edit' => $this->hasRole(PartnerUserRole::Owner),
         ]);
@@ -144,7 +144,7 @@ class PartnerTemplateController extends Controller
 
     private function known(string $notification, ?string $channel = null, ?string $locale = null): void
     {
-        if (! $this->catalog->has($notification)
+        if (! in_array($notification, $this->catalog->editableKeys(), true)
             || ($channel !== null && ! $this->catalog->supports($notification, $channel))
             || ($locale !== null && ! in_array($locale, (array) config('tenancy.supported_locales'), true))) {
             throw NotificationException::unknownNotification();

@@ -26,7 +26,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <div id="app" data-brand="{{ json_encode($brand) }}" data-locales="{{ json_encode($locales) }}" data-default-locale="{{ $defaultLocale }}"></div>
+    <div id="app" data-brand="{{ json_encode($brand) }}" data-locales="{{ json_encode($locales) }}" data-default-locale="{{ $defaultLocale }}" data-signup="{{ json_encode($signup) }}"></div>
     <noscript>{{ __('tenancy.messages.javascript_required') }}</noscript>
 </body>
 </html>

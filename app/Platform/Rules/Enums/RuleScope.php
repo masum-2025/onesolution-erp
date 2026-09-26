@@ -22,7 +22,8 @@ enum RuleScope: string
 
     public static function forOrganizationType(OrganizationType $type): self
     {
-        return self::from($type->value);
+        // A personal workspace keeps its values at the company level: an upgrade keeps them.
+        return $type === OrganizationType::Personal ? self::Company : self::from($type->value);
     }
 
     public function isOrganizationLevel(): bool

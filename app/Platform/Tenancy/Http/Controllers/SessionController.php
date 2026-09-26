@@ -3,6 +3,7 @@
 namespace App\Platform\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Identity\Services\SessionTracker;
 use App\Platform\Tenancy\Actions\AttemptLogin;
 use App\Platform\Tenancy\Actions\EnterSessionContext;
 use App\Platform\Tenancy\Actions\ListAvailableContexts;
@@ -22,7 +23,7 @@ class SessionController extends Controller
 {
     public function login(LoginRequest $request, AttemptLogin $attempt, ListAvailableContexts $contexts, ContextSource $source): JsonResponse
     {
-        $user = $attempt->handle($request->validated('email'), $request->validated('password'));
+        $user = $attempt->handle($request->validated('email'), $request->validated('password'), $request->validated('phone'), $request->validated('country_code'));
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
@@ -45,8 +46,9 @@ class SessionController extends Controller
         return response()->json(['message' => __('tenancy.messages.context_entered')]);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request, SessionTracker $sessions): JsonResponse
     {
+        $sessions->endCurrent($request);
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

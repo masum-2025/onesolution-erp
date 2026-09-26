@@ -69,7 +69,10 @@ class HierarchyService
      */
     public function assertValidParent(OrganizationType $type, ?Organization $parent, Partner $partner): void
     {
-        $allowed = $this->rules->get('tenancy.allowed_parents', $this->contexts->forPartner($partner))[$type->value] ?? [];
+        // A personal workspace always stands alone at the top; the structure rule does not apply to it.
+        $allowed = $type === OrganizationType::Personal
+            ? ['root']
+            : $this->rules->get('tenancy.allowed_parents', $this->contexts->forPartner($partner))[$type->value] ?? [];
         $parentType = $parent?->type->value ?? 'root';
 
         if (! in_array($parentType, $allowed, true)) {

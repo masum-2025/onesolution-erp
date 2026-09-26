@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Database mirror of the PlanCatalog (packaging:sync). Platform data.
  */
 #[Table('plans')]
-#[Fillable(['key', 'modules', 'is_public', 'sort_order', 'deprecated_at'])]
+#[Fillable(['key', 'audience', 'modules', 'is_public', 'sort_order', 'deprecated_at'])]
 class Plan extends Model
 {
     use HasUlids;

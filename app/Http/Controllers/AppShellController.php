@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Identity\Services\SignupGate;
 use App\Platform\Partners\HostContext;
 use Illuminate\Contracts\View\View;
 
@@ -13,7 +14,7 @@ use Illuminate\Contracts\View\View;
  */
 class AppShellController extends Controller
 {
-    public function __invoke(BrandResolver $brands, HostContext $host): View
+    public function __invoke(BrandResolver $brands, HostContext $host, SignupGate $signup): View
     {
         $brand = $brands->for($host->partner(), $host->client());
 
@@ -22,6 +23,8 @@ class AppShellController extends Controller
             'favicon' => $this->favicon($brand),
             'locales' => config('tenancy.supported_locales'),
             'defaultLocale' => config('tenancy.defaults.default_locale'),
+            // Which sign-up, sign-in and recovery options this address offers (no secrets).
+            'signup' => $signup->options(),
         ]);
     }
 

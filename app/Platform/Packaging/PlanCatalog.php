@@ -13,6 +13,10 @@ final class PlanCatalog
 {
     public const PERIODS = ['monthly', 'yearly'];
 
+    public const BUSINESS = 'business';
+
+    public const PERSONAL = 'personal';
+
     /** @var array<string, PlanDefinition> */
     private array $plans = [];
 
@@ -36,12 +40,18 @@ final class PlanCatalog
                 }
             }
 
+            $audience = $entry['audience'] ?? self::BUSINESS;
+            if (! in_array($audience, [self::BUSINESS, self::PERSONAL], true)) {
+                throw new LogicException("Plan [{$key}] has an unknown audience (business|personal).");
+            }
+
             $this->plans[$key] = new PlanDefinition(
                 key: $key,
                 public: (bool) ($entry['public'] ?? true),
                 modules: array_values($entry['modules'] ?? []),
                 prices: array_values($entry['prices'] ?? []),
                 sortOrder: $order,
+                audience: $audience,
             );
         }
     }
@@ -62,9 +72,11 @@ final class PlanCatalog
     /**
      * @return list<string>
      */
-    public function keys(): array
+    public function keys(?string $audience = null): array
     {
-        return array_keys($this->plans);
+        return $audience === null
+            ? array_keys($this->plans)
+            : array_keys(array_filter($this->plans, fn (PlanDefinition $plan) => $plan->audience === $audience));
     }
 
     public function has(?string $key): bool
