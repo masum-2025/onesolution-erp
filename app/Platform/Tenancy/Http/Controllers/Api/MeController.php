@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Platform\Access\AccessResolver;
 use App\Platform\Access\Models\Role;
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Partners\HostContext;
 use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\ContextSource;
@@ -31,6 +32,7 @@ class MeController extends Controller
         CurrentContext $context,
         ListAvailableContexts $contexts,
         BrandResolver $brands,
+        HostContext $host,
         AccessResolver $access,
     ): JsonResponse {
         $user = $request->user();
@@ -46,7 +48,9 @@ class MeController extends Controller
             'contexts' => $contexts->handle($user),
             'permissions' => $access->effective(),
             'can' => $this->abilities($context, $access),
-            'brand' => $brands->for($active === null ? null : $context->partner()),
+            // A partner's own address always shows that partner's brand; on the platform
+            // address the brand follows the account being worked in.
+            'brand' => $brands->for($host->isPlatform() ? ($active === null ? null : $context->partner()) : $host->partner()),
             'locales' => config('tenancy.supported_locales'),
         ]]);
     }

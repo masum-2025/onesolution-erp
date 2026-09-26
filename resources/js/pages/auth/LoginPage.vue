@@ -7,7 +7,7 @@ import BrandLockup from '@/components/BrandLockup.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import { login } from '@/lib/session';
-import { brand, taglineFor } from '@/lib/brand';
+import { brand, brandText, taglineFor } from '@/lib/brand';
 import { formatNumber } from '@/lib/format';
 import { i18n, t } from '@/lib/i18n';
 
@@ -81,8 +81,8 @@ onBeforeUnmount(() => clearInterval(countdown));
             <div class="flex flex-1 items-center justify-center py-10">
                 <div class="w-full max-w-[380px] animate-rise">
                     <BrandLockup class="mb-9" />
-                    <h1 class="text-[26px] leading-tight font-semibold tracking-[-0.025em] text-fg">{{ t('auth.login.title') }}</h1>
-                    <p class="mt-2 text-[14px] text-muted">{{ t('auth.login.subtitle', { brand: brand.name }) }}</p>
+                    <h1 class="text-[26px] leading-tight font-semibold tracking-[-0.025em] text-fg">{{ brandText('login_title', i18n.locale) || t('auth.login.title') }}</h1>
+                    <p class="mt-2 text-[14px] text-muted">{{ brandText('login_text', i18n.locale) || t('auth.login.subtitle', { brand: brand.name }) }}</p>
 
                     <div
                         v-if="locked"
@@ -155,10 +155,18 @@ onBeforeUnmount(() => clearInterval(countdown));
                 </div>
             </div>
 
-            <p class="flex items-center justify-center gap-1.5 text-[12px] text-faint">
-                <Lock class="size-3.5" aria-hidden="true" />
-                {{ t('auth.login.secure_note') }}
-            </p>
+            <div class="space-y-2 text-center text-[12px] text-faint">
+                <p class="flex items-center justify-center gap-1.5">
+                    <Lock class="size-3.5" aria-hidden="true" />
+                    {{ t('auth.login.secure_note') }}
+                </p>
+                <p v-if="brandText('footer_text', i18n.locale)">{{ brandText('footer_text', i18n.locale) }}</p>
+                <p v-if="brand.terms_url || brand.privacy_url || brand.powered_by" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                    <a v-if="brand.terms_url" :href="brand.terms_url" target="_blank" rel="noopener noreferrer" class="hover:text-fg hover:underline">{{ t('auth.login.terms') }}</a>
+                    <a v-if="brand.privacy_url" :href="brand.privacy_url" target="_blank" rel="noopener noreferrer" class="hover:text-fg hover:underline">{{ t('auth.login.privacy') }}</a>
+                    <span v-if="brand.powered_by">{{ t('auth.login.powered_by', { name: brand.powered_by }) }}</span>
+                </p>
+            </div>
         </div>
 
         <!-- Showcase (decorative) -->

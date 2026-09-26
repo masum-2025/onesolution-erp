@@ -185,6 +185,12 @@ it('never lets a company set its own plan', function () {
     $this->asToken(orgToken($owner, $this->w->c1))->patchJson("/api/organizations/{$this->w->c1->id}", ['plan_key' => 'enterprise'])
         ->assertUnprocessable()->assertJsonValidationErrors('plan_key');
 
-    expect(fn () => ruleService()->set(app(RuleTargets::class)->organization($this->w->c1), 'plans.max_users', RuleMode::Set, 999, 'Try it', $owner))
-        ->toThrow(App\Platform\Rules\Exceptions\RuleException::class);
+    // Limits at client level are the partner's deal to write, never the client's.
+    $token = orgToken($owner, $this->w->c1);
+    $this->asToken($token)->putJson("/api/organizations/{$this->w->c1->id}/rules/plans.max_users", ['mode' => 'set', 'value' => 999, 'reason' => 'More seats please'])
+        ->assertForbidden();
+
+    $rule = collect($this->asToken($token)->getJson("/api/organizations/{$this->w->c1->id}/rules?module=core")->json('data.0.categories'))
+        ->flatMap(fn ($category) => $category['rules'])->firstWhere('key', 'plans.max_users');
+    expect($rule['edit_blocked_by'])->toBe('set_by_provider');
 });

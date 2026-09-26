@@ -43,12 +43,14 @@ async function send(path, { method = 'GET', body, query, signal } = {}) {
     };
     const token = csrfToken();
     if (token) headers['X-XSRF-TOKEN'] = token;
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    // Files go as multipart (the browser sets the boundary); everything else as JSON.
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+    if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
 
     return fetch(buildUrl(path, query), {
         method,
         headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
         credentials: 'same-origin',
         signal,
     });

@@ -45,7 +45,10 @@ class ModuleStatusResource extends JsonResource
             'state' => $resolved->state->value,
             'source' => $resolved->source,
             'source_organization' => $this->organization($resolved->sourceOrganizationId, $names),
-            'locked_by' => $this->organization($resolved->lockedByOrganizationId, $names),
+            // A partner lock names the provider, never another tenant's organization.
+            'locked_by' => $resolved->lockedByPartner
+                ? ['id' => null, 'name' => __('modules.your_provider')]
+                : $this->organization($resolved->lockedByOrganizationId, $names),
             'locked_here' => $resolved->lockedHere,
             'blocked_by' => $resolved->blockedBy,
         ];

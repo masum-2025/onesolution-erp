@@ -22,6 +22,7 @@ return [
         'credentials' => 'The email or password is incorrect. Check them and try again.',
         'user_not_found' => 'No account uses this email. Ask the person to sign up first, then add them.',
         'forbidden' => 'You do not have permission to do this. Ask an owner of the organization.',
+        'wrong_address' => 'This account cannot be opened at this web address. Use the address your service provider gave you.',
     ],
 
     'validation' => [

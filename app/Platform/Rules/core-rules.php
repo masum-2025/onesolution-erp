@@ -96,9 +96,9 @@ return [
 
     // Usage limits of a subscription (the whole tree under its top organization).
     // null = unlimited. Plan values are data (rule-values.php). A partner value is a
-    // default for plans that set none (plans sit below partners in the hierarchy);
-    // per-client deals come with the partner layer (Phase 5B). Organizations
-    // themselves can never change their limits.
+    // default for plans that set none (plans sit below partners in the hierarchy).
+    // A per-client deal is a value at the client's top organization, written by
+    // the partner console; organizations themselves can never change their limits.
     [
         'key' => 'plans.max_users',
         'type' => 'integer',
@@ -107,7 +107,9 @@ return [
         'default' => null,
         'label' => 'rules.core.plans_max_users.label',
         'description' => 'rules.core.plans_max_users.description',
-        'overridable_levels' => ['platform', 'plan', 'partner'],
+        // group / company: a per-client deal, written by the partner console only.
+        'overridable_levels' => ['platform', 'plan', 'partner', 'group', 'company'],
+        'organization_editable' => false,
         'category' => 'plan',
         'sort_order' => 60,
     ],
@@ -119,7 +121,9 @@ return [
         'default' => null,
         'label' => 'rules.core.plans_max_branches.label',
         'description' => 'rules.core.plans_max_branches.description',
-        'overridable_levels' => ['platform', 'plan', 'partner'],
+        // group / company: a per-client deal, written by the partner console only.
+        'overridable_levels' => ['platform', 'plan', 'partner', 'group', 'company'],
+        'organization_editable' => false,
         'category' => 'plan',
         'sort_order' => 61,
     ],
@@ -131,8 +135,88 @@ return [
         'default' => null,
         'label' => 'rules.core.plans_max_storage_mb.label',
         'description' => 'rules.core.plans_max_storage_mb.description',
-        'overridable_levels' => ['platform', 'plan', 'partner'],
+        // group / company: a per-client deal, written by the partner console only.
+        'overridable_levels' => ['platform', 'plan', 'partner', 'group', 'company'],
+        'organization_editable' => false,
         'category' => 'plan',
         'sort_order' => 62,
+    ],
+
+    // ── Partner governance: the platform sets these for a partner (rules:set
+    //    --partner=...); partners see them but cannot change them. ──────────
+    [
+        'key' => 'partners.max_clients',
+        'type' => 'integer',
+        'schema' => ['minimum' => 0],
+        'nullable' => true,
+        'default' => null,
+        'label' => 'rules.core.partners_max_clients.label',
+        'description' => 'rules.core.partners_max_clients.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 70,
+    ],
+    [
+        'key' => 'partners.allowed_modules',
+        'type' => 'json',
+        // null = every module; otherwise the module keys the partner may offer.
+        'schema' => ['type' => 'array', 'items' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]*$'], 'uniqueItems' => true],
+        'nullable' => true,
+        'default' => null,
+        'label' => 'rules.core.partners_allowed_modules.label',
+        'description' => 'rules.core.partners_allowed_modules.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 71,
+    ],
+    [
+        'key' => 'partners.allowed_countries',
+        'type' => 'json',
+        // null = every country; otherwise ISO codes of the countries clients may be in.
+        'schema' => ['type' => 'array', 'items' => ['type' => 'string', 'pattern' => '^[A-Z]{2}$'], 'uniqueItems' => true],
+        'nullable' => true,
+        'default' => null,
+        'label' => 'rules.core.partners_allowed_countries.label',
+        'description' => 'rules.core.partners_allowed_countries.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 72,
+    ],
+    [
+        'key' => 'partners.sub_resellers_allowed',
+        'type' => 'boolean',
+        'default' => false,
+        'label' => 'rules.core.partners_sub_resellers_allowed.label',
+        'description' => 'rules.core.partners_sub_resellers_allowed.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 73,
+    ],
+    [
+        'key' => 'branding.powered_by_removable',
+        'type' => 'boolean',
+        'default' => false,
+        'label' => 'rules.core.branding_powered_by_removable.label',
+        'description' => 'rules.core.branding_powered_by_removable.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 74,
+    ],
+    [
+        'key' => 'branding.show_powered_by',
+        'type' => 'boolean',
+        'default' => true,
+        'label' => 'rules.core.branding_show_powered_by.label',
+        'description' => 'rules.core.branding_show_powered_by.description',
+        // Changed from the partner's branding page, which checks powered_by_removable.
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'partner',
+        'sort_order' => 75,
     ],
 ];

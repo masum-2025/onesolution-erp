@@ -1,10 +1,30 @@
 import { reactive } from 'vue';
 
 /**
- * Partner brand at runtime: one primary color in, readable text color and
- * every shade out (the CSS derives the shades). No per-partner builds.
+ * Brand at runtime: colors, font, images and texts come from the server for
+ * the address being used; the CSS derives every shade. No per-partner builds.
  */
-export const brand = reactive({ name: '', primary_color: '#2B4C9B', support_email: null, logo_url: null, mark_url: null, tagline: {} });
+export const brand = reactive({
+    name: '',
+    primary_color: '#2B4C9B',
+    secondary_color: null,
+    font: null,
+    support_email: null,
+    support_phone: null,
+    logo_url: null,
+    logo_dark_url: null,
+    mark_url: null,
+    favicon_url: null,
+    tagline: {},
+    login_title: {},
+    login_text: {},
+    footer_text: {},
+    terms_url: null,
+    privacy_url: null,
+    powered_by: null,
+});
+
+const COLOR = /^#[0-9A-Fa-f]{6}$/;
 
 function channel(value) {
     const c = value / 255;
@@ -26,19 +46,38 @@ export function readableOn(hex) {
     return contrast(hex, '#FFFFFF') >= contrast(hex, '#111114') ? '#FFFFFF' : '#111114';
 }
 
-/** The brand's tagline in the given language, falling back to English, then any. */
+/**
+ * Same checks as the server (App\Platform\Branding\Contrast): text on the
+ * color must reach 4.5:1, and the color must show on a white page (3:1).
+ *
+ * @returns {'text'|'surface'|null}
+ */
+export function contrastProblem(hex, usedOnSurface = true) {
+    if (!COLOR.test(hex ?? '')) return null;
+    if (Math.max(contrast(hex, '#FFFFFF'), contrast(hex, '#111114')) < 4.5) return 'text';
+    if (usedOnSurface && contrast(hex, '#FFFFFF') < 3) return 'surface';
+    return null;
+}
+
+/** A translated brand text (e.g. "login_title") in the language, falling back to English, then any. */
+export function brandText(field, locale) {
+    const texts = brand[field] ?? {};
+    return texts[locale] ?? texts.en ?? Object.values(texts)[0] ?? '';
+}
+
 export function taglineFor(locale) {
-    const tagline = brand.tagline ?? {};
-    return tagline[locale] ?? tagline.en ?? Object.values(tagline)[0] ?? '';
+    return brandText('tagline', locale);
 }
 
 export function applyBrand(next) {
     if (!next) return;
-    const color = /^#[0-9A-Fa-f]{6}$/.test(next.primary_color ?? '') ? next.primary_color : '#2B4C9B';
+    const color = COLOR.test(next.primary_color ?? '') ? next.primary_color : '#2B4C9B';
 
     Object.assign(brand, next, { primary_color: color });
     const root = document.documentElement.style;
     root.setProperty('--brand', color);
     root.setProperty('--brand-fg', readableOn(color));
+    if (next.font) root.setProperty('--font-sans', next.font);
+    else root.removeProperty('--font-sans');
     if (next.name) document.title = next.name;
 }

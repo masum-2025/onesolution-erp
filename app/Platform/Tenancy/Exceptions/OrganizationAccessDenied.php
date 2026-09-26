@@ -24,6 +24,14 @@ class OrganizationAccessDenied extends TenancyException
         return new self('not_partner_member', 403);
     }
 
+    /**
+     * The account exists, but not at this address (another partner's domain).
+     */
+    public static function wrongAddress(): self
+    {
+        return new self('wrong_address', 403);
+    }
+
     public static function writeOutsideScope(): self
     {
         return new self('write_forbidden', 403);

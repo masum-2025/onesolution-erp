@@ -1,12 +1,13 @@
 <?php
 
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Tenancy\Models\Partner;
 
 /*
  * Brand assets are data: the house brand from config, white-label partners
- * from their own settings. Only images on this site are accepted (the page's
- * CSP allows no other origin), and a partner never shows the house logo.
+ * from partner_brands. Only images on this site are shown (the page's CSP
+ * allows no other origin), and a partner never shows the house logo.
  */
 
 it('gives the house brand its logo, mark and tagline in both languages', function () {
@@ -21,34 +22,40 @@ it('gives the house brand its logo, mark and tagline in both languages', functio
 });
 
 it('never shows the house logo or tagline for a white-label partner', function () {
-    $partner = Partner::factory()->create(['name' => 'Acme ERP', 'settings' => ['brand' => ['primary_color' => '#0F766E']]]);
+    $partner = Partner::factory()->create(['name' => 'Acme ERP']);
+    PartnerBrand::create(['partner_id' => $partner->id, 'primary_color' => '#0F766E']);
 
     $brand = app(BrandResolver::class)->for($partner);
 
     expect($brand['logo_url'])->toBeNull()
         ->and($brand['mark_url'])->toBeNull()
         ->and($brand['tagline'])->toBe([])
-        ->and($brand['name'])->toBe('Acme ERP');
+        ->and($brand['name'])->toBe('Acme ERP')
+        ->and($brand['powered_by'])->toBe('One Solutions');
 });
 
-it('uses a partner logo on this site', function () {
-    $partner = Partner::factory()->create(['settings' => ['brand' => [
-        'logo_url' => '/brand/acme/logo.svg',
-        'mark_url' => '/brand/acme/mark.png',
+it('serves a partner logo from this site, versioned', function () {
+    $partner = Partner::factory()->create();
+    PartnerBrand::create([
+        'partner_id' => $partner->id,
+        'logo_light_path' => 'brand/x/logo.png',
+        'mark_path' => 'brand/x/mark.png',
         'tagline' => ['en' => 'Built for schools', 'bn' => 'স্কুলের জন্য তৈরি', 'xx' => 'ignored'],
-    ]]]);
+        'version' => 3,
+    ]);
 
     $brand = app(BrandResolver::class)->for($partner);
 
-    expect($brand['logo_url'])->toBe('/brand/acme/logo.svg')
-        ->and($brand['mark_url'])->toBe('/brand/acme/mark.png')
+    expect($brand['logo_url'])->toBe("/brand-assets/{$partner->id}/logo_light?v=3")
+        ->and($brand['mark_url'])->toBe("/brand-assets/{$partner->id}/mark?v=3")
+        ->and($brand['logo_dark_url'])->toBeNull()
         ->and($brand['tagline'])->toBe(['en' => 'Built for schools', 'bn' => 'স্কুলের জন্য তৈরি']);
 });
 
-it('rejects logo addresses outside this site or not an image', function (string $url) {
-    $partner = Partner::factory()->create(['settings' => ['brand' => ['logo_url' => $url, 'mark_url' => $url]]]);
+it('rejects house logo addresses outside this site or not an image', function (string $url) {
+    config(['branding.house.logo_url' => $url, 'branding.house.mark_url' => $url]);
 
-    $brand = app(BrandResolver::class)->for($partner);
+    $brand = app(BrandResolver::class)->for();
 
     expect($brand['logo_url'])->toBeNull()->and($brand['mark_url'])->toBeNull();
 })->with([

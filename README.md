@@ -401,7 +401,8 @@ Code: `app/Platform/Packaging`. Data (the source of truth, read at boot):
 Rules `plans.max_users`, `plans.max_branches`, `plans.max_storage_mb` (null = unlimited),
 settable at platform, plan and partner level only; plan values are in `rule-values.php`.
 Plans sit below partners in the rule hierarchy, so a partner value is a default for plans
-without one. Per-client deals are open (Phase 5B).
+without one. A per-client deal is a value at the client's top organization, written only by
+the partner console (`organization_editable: false` keeps it out of the client's rule editor).
 
 `UsageLimiter` counts the whole subscription under a row lock: owners and staff (active or
 invited, one person counts once; portal users never), and branches that are not archived.
@@ -434,8 +435,71 @@ applied again after a sector change from the overview.
 - New sector: an entry in `sector-packages.php` + names. Optionally a module for the
   sector's own screens. No platform code.
 - New country: prices in its currency are data.
-- Open: per-client limits and partner price lists (5B), self-serve upgrade with payment (5C),
-  storage metering.
+- Open: partner price lists (5B-3), self-serve upgrade with payment (5C), storage metering.
+
+## Partner layer (Phase 5B-1)
+
+Code: `app/Platform/Partners`, `app/Platform/Branding`. Everything here is partner data;
+clients' business data stays out of reach (support access: 5B-2).
+
+### Addresses
+
+`ResolveHost` (first global middleware) decides whose address a request came to:
+
+- **Platform hosts** (`PLATFORM_HOSTS`, default `localhost,127.0.0.1`, plus the host of
+  `APP_URL`): every account works, the brand follows the account.
+- **An active partner domain** (`partner_domains`): only that partner's brand; only its
+  organizations and console open (`ContextResolver` refuses others with 403 `wrong_address`,
+  tokens included). A **client domain** (`organization_id` set) opens only that client.
+- **Anything else** (unknown, pending, removed): 404, never another tenant.
+
+A domain is added as `pending` with a random token and becomes `active` only when the TXT
+record `_onesolution-verify.{host}` contains `onesolution-verify={token}` (`DnsTxtLookup`,
+faked in tests). TLS: Caddy on-demand TLS asks `GET /internal/tls/ask?domain=&token=`
+(`TLS_ASK_TOKEN`), which answers 200 only for platform hosts and active domains.
+
+### Brand (`partner_brands`)
+
+Product name, colors (checked: text on the color >= 4.5:1, the color on white >= 3:1),
+font from `branding.fonts`, logos (light/dark), symbol, favicon, tagline, sign-in heading
+and text, footer (bn/en), support email/phone, https legal links. Images: PNG, WebP or
+JPEG up to 512 KB (SVG refused), stored on the private disk and served by
+`/brand-assets/{partner}/{kind}?v={version}` only at that partner's addresses. The PWA
+manifest (`/manifest.webmanifest`) follows the address. "Powered by" shows unless the
+platform allows hiding it (`branding.powered_by_removable`).
+
+### Partner console
+
+| method | path | who |
+|---|---|---|
+| GET / PATCH | /api/partner/brand | all / owner |
+| POST / DELETE | /api/partner/brand/assets/{kind} | owner |
+| PUT | /api/partner/brand/powered-by | owner (if allowed) |
+| GET / POST / DELETE | /api/partner/domains(/{id}) | all / owner |
+| POST | /api/partner/domains/{id}/verify | owner |
+| GET / PUT | /api/partner/modules(/{module}) | all / owner |
+| POST | /api/partner/clients | owner, sales |
+| PATCH | /api/partner/clients/{id}/status | owner |
+| GET / PUT | /api/partner/clients/{id}/limits | all / owner, billing |
+
+- **Clients:** a new client is a group with its first company (sector package applied)
+  and an owner who already has an account. Suspending blocks every sign-in, tokens too.
+- **Modules for all clients** (`partner_modules`): unlocked = a default each client may
+  change; locked = decides for everyone. Turning one on also turns on what it needs.
+- **Rules for all clients:** the partner rules page (set, constrain, lock; sensitive
+  rules need a second partner owner).
+- **Governance** (platform decides, partners only see): `partners.max_clients`,
+  `partners.allowed_modules` (others show as "not offered"), `partners.allowed_countries`,
+  `partners.sub_resellers_allowed`. Set with `php artisan rules:set KEY VALUE --partner=slug`.
+
+Everything above is audited (`partner.*` actions).
+
+### Future expansion (Phase 5B-1)
+
+- New partner: a `partners` row, a brand, a verified domain. No code.
+- New font: an entry in `branding.fonts` (bundled, no external host).
+- Open: client sub-brands, support access, suspension grace, export and transfer (5B-2);
+  billing, partner plans, branded email/SMS, partner API keys (5B-3).
 
 ## Browser app (frontend foundation)
 

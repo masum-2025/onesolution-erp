@@ -46,7 +46,7 @@ class PartnerRuleController extends Controller
         $own = $this->ownRows($target)->groupBy('rule_key');
 
         return response()->json(['data' => array_values(array_map(
-            fn ($rule) => $this->presenter->present($rule, $resolved[$rule->key], $target, $own->get($rule->key, new Collection), true),
+            fn ($rule) => $this->presenter->present($rule, $resolved[$rule->key], $target, $own->get($rule->key, new Collection), true, platformOnly: ! $rule->partnerEditable),
             array_filter($this->catalog->all(), fn ($rule) => $rule->allowsLevel(RuleScope::Partner)),
         ))]);
     }
@@ -54,6 +54,7 @@ class PartnerRuleController extends Controller
     public function update(SetRuleRequest $request, string $key): JsonResponse
     {
         $this->assertOwner();
+        $this->assertPartnerEditable($key);
 
         $row = $this->rules->set(
             $this->target(),
@@ -77,6 +78,7 @@ class PartnerRuleController extends Controller
     public function destroy(ResetRuleRequest $request, string $key): JsonResponse
     {
         $this->assertOwner();
+        $this->assertPartnerEditable($key);
 
         $slot = match ($request->validated('slot')) {
             'value' => RuleMode::Set,
@@ -115,6 +117,14 @@ class PartnerRuleController extends Controller
     private function assertOwner(): void
     {
         abort_unless($this->context->partnerUser()->role === PartnerUserRole::Owner, 403, __('tenancy.errors.forbidden'));
+    }
+
+    /**
+     * Governance rules (e.g. partners.max_clients) are set for a partner by the platform, never by the partner.
+     */
+    private function assertPartnerEditable(string $key): void
+    {
+        abort_unless($this->catalog->get($key)->partnerEditable, 403, __('rules.errors.platform_only'));
     }
 
     private function pendingRow(string $valueId): RuleValue

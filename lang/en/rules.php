@@ -12,7 +12,8 @@ return [
         'bounds_wider_than_parent' => 'The limits for ":rule" can only be narrower than those set by :by.',
         'not_country_specific' => '":rule" is the same in every country; remove the country.',
         'module_disabled' => 'Turn on the module of ":rule" before changing it.',
-        'self_approval' => 'You cannot approve your own change. Ask another owner to approve it.',
+        'self_approval' => 'You cannot approve your own change. Ask someone else with the approval permission.',
+        'platform_only' => 'This setting is decided for your account by the platform. Contact the platform team to change it.',
         'not_pending' => 'This change is not waiting for approval any more.',
         'value_not_found' => 'That rule change was not found.',
         'nothing_to_reset' => 'This level has no own value to reset; it already uses the inherited value.',
@@ -71,6 +72,30 @@ return [
             'label' => 'Storage included (MB)',
             'description' => 'File storage for the whole subscription. Empty means unlimited.',
         ],
+        'partners_max_clients' => [
+            'label' => 'Maximum clients',
+            'description' => 'How many client accounts the partner may have. Empty means unlimited.',
+        ],
+        'partners_allowed_modules' => [
+            'label' => 'Modules the partner may offer',
+            'description' => 'Module keys the partner may sell to its clients. Empty means every module.',
+        ],
+        'partners_allowed_countries' => [
+            'label' => 'Countries the partner may serve',
+            'description' => 'Country codes where the partner\'s clients may be. Empty means every country.',
+        ],
+        'partners_sub_resellers_allowed' => [
+            'label' => 'Sub-resellers allowed',
+            'description' => 'Whether the partner may have resellers of its own.',
+        ],
+        'branding_powered_by_removable' => [
+            'label' => '"Powered by" may be hidden',
+            'description' => 'Whether the partner may hide the "Powered by" badge.',
+        ],
+        'branding_show_powered_by' => [
+            'label' => 'Show "Powered by"',
+            'description' => 'Shows the platform\'s "Powered by" badge in the partner\'s app.',
+        ],
     ],
 
     'categories' => [
@@ -79,5 +104,6 @@ return [
         'data' => 'Data',
         'access' => 'Access',
         'plan' => 'Plan limits',
+        'partner' => 'Partner account',
     ],
 ];

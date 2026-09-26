@@ -232,7 +232,8 @@ class OrganizationRuleController extends Controller
 
     private function mayEdit(RuleDefinition $rule, Organization $organization): bool
     {
-        return $this->access->allows($rule->editPermission, $organization, checkModule: false);
+        // Some values are the partner's to set for a client (e.g. per-client limits), never the client's.
+        return $rule->organizationEditable && $this->access->allows($rule->editPermission, $organization, checkModule: false);
     }
 
     /**

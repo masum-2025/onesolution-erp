@@ -48,6 +48,25 @@ const routes = [
                 meta: { context: 'partner', ns: ['partner', 'orgs', 'packaging'] },
             },
             {
+                path: 'partner/brand',
+                name: 'partner-brand',
+                component: () => import('./pages/partner/PartnerBrandPage.vue'),
+                // The preview reuses the sign-in texts.
+                meta: { context: 'partner', ns: ['partner', 'auth'] },
+            },
+            {
+                path: 'partner/domains',
+                name: 'partner-domains',
+                component: () => import('./pages/partner/PartnerDomainsPage.vue'),
+                meta: { context: 'partner', ns: ['partner'] },
+            },
+            {
+                path: 'partner/modules',
+                name: 'partner-modules',
+                component: () => import('./pages/partner/PartnerModulesPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'modules'] },
+            },
+            {
                 path: 'partner/rules',
                 name: 'partner-rules',
                 component: () => import('./pages/partner/PartnerRulesPage.vue'),

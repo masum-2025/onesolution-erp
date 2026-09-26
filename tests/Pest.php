@@ -4,6 +4,9 @@ use App\Models\User;
 use App\Platform\Access\Models\MembershipRole;
 use App\Platform\Access\Models\Role;
 use App\Platform\Modules\ModuleResolver;
+use App\Platform\Partners\Contracts\DnsTxtLookup;
+use App\Platform\Partners\Enums\DomainStatus;
+use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Modules\ResolvedModule;
 use App\Platform\Modules\Services\ModuleToggleService;
 use App\Platform\Rules\Enums\RuleMode;
@@ -95,6 +98,8 @@ function createPartnerStaff(Partner $partner, PartnerUserRole $role = PartnerUse
  */
 function orgToken(User $user, Organization $organization): string
 {
+    // Tokens are issued at the platform address, whatever the last test request used.
+    app(App\Platform\Partners\HostContext::class)->forPlatform();
     $token = app(IssueContextToken::class)->forOrganization($user, $organization->getKey())->plainTextToken;
     app(CurrentContext::class)->clear();
 
@@ -103,6 +108,7 @@ function orgToken(User $user, Organization $organization): string
 
 function partnerToken(User $user, Partner $partner): string
 {
+    app(App\Platform\Partners\HostContext::class)->forPlatform();
     $token = app(IssueContextToken::class)->forPartner($user, $partner->getKey())->plainTextToken;
     app(CurrentContext::class)->clear();
 
@@ -266,4 +272,51 @@ function staffWithRoles(Organization $organization, Role ...$roles): User
     giveRoles($user, $organization, ...$roles);
 
     return $user;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Partner layer helpers (Phase 5B)
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * A verified custom domain (skips DNS; the DNS flow is tested separately).
+ */
+function activeDomain(Partner $partner, string $host, ?Organization $client = null): PartnerDomain
+{
+    return PartnerDomain::create([
+        'partner_id' => $partner->getKey(),
+        'organization_id' => $client?->getKey(),
+        'host' => $host,
+        'status' => DomainStatus::Active,
+        'verification_token' => Str::random(40),
+        'verified_at' => now(),
+    ]);
+}
+
+/**
+ * DNS answers for this test only: name => list of TXT values.
+ *
+ * @param  array<string, list<string>>  $records
+ */
+function fakeDns(array $records): void
+{
+    app()->instance(DnsTxtLookup::class, new class($records) implements DnsTxtLookup
+    {
+        public function __construct(private array $records) {}
+
+        public function txt(string $name): array
+        {
+            return $this->records[$name] ?? [];
+        }
+    });
+}
+
+/**
+ * Store a value for one partner the way platform operators do (rules:set --partner).
+ */
+function partnerRule(Partner $partner, string $key, mixed $value, RuleMode $mode = RuleMode::Set): RuleValue
+{
+    return ruleService()->set(app(RuleTargets::class)->partner($partner), $key, $mode, $value, 'Test setup', trusted: true);
 }

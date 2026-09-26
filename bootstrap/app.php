@@ -3,6 +3,7 @@
 use App\Http\Middleware\ApplyRequestLocale;
 use App\Http\Middleware\SecurityHeaders;
 use App\Platform\Modules\Http\Middleware\EnsureModuleEnabled;
+use App\Platform\Partners\Http\Middleware\ResolveHost;
 use App\Platform\Tenancy\Http\Middleware\ResolveOrganization;
 use App\Platform\Tenancy\Http\Middleware\ResolvePartner;
 use Illuminate\Foundation\Application;
@@ -20,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // The browser app calls /api with its session cookie (+ CSRF); tokens keep working.
         $middleware->statefulApi();
+        // First of all: which account this address belongs to; unknown hosts are refused.
+        $middleware->prepend(ResolveHost::class);
         $middleware->append(ApplyRequestLocale::class);
         $middleware->appendToGroup('web', SecurityHeaders::class);
         $middleware->redirectGuestsTo('/login');

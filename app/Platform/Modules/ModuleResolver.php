@@ -7,6 +7,9 @@ use App\Platform\Modules\Enums\ResolutionReason;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\OrganizationModule;
 use App\Platform\Packaging\PlanCatalog;
+use App\Platform\Partners\Models\PartnerModule;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Services\HierarchyService;
@@ -33,6 +36,8 @@ class ModuleResolver
         private OrganizationSettingsResolver $settings,
         private ModuleCache $cache,
         private PlanCatalog $plans,
+        private RuleResolver $rules,
+        private RuleContextFactory $ruleContexts,
     ) {}
 
     public function isEnabled(string $key, Organization $organization): bool
@@ -107,15 +112,27 @@ class ModuleResolver
             ->pluck('module_key')
             ->flip();
 
+        // The partner's settings for all its clients sit above the whole chain;
+        // the platform decides which modules a partner may offer at all.
+        $partnerRows = PartnerModule::query()
+            ->where('partner_id', $organization->partner_id)
+            ->where('state', '!=', ModuleState::Inherit)
+            ->get()
+            ->keyBy('module_key');
+        $offered = $organization->partner === null ? null
+            : $this->rules->get('partners.allowed_modules', $this->ruleContexts->forPartner($organization->partner));
+
         $resolved = [];
 
         foreach ($this->registry->all() as $key => $module) {
             /** @var Collection<string, OrganizationModule> $byOrganization */
             $byOrganization = ($rows[$key] ?? new Collection)->keyBy('organization_id');
+            $partnerRow = $partnerRows->get($key);
+            $partnerLock = $partnerRow !== null && $partnerRow->locked;
 
-            // Topmost lock in the chain decides for everything below it.
+            // Topmost lock in the chain decides for everything below it (a partner lock is above all).
             $lockRow = null;
-            foreach ($chainIds as $id) {
+            foreach ($partnerLock ? [] : $chainIds as $id) {
                 $row = $byOrganization->get($id);
                 if ($row !== null && $row->locked && $row->state !== ModuleState::Inherit) {
                     $lockRow = $row;
@@ -123,11 +140,14 @@ class ModuleResolver
                 }
             }
 
-            $decidingRow = $lockRow ?? $chain->reverse()
+            $decidingRow = $partnerLock ? null : ($lockRow ?? $chain->reverse()
                 ->map(fn (Organization $node) => $byOrganization->get($node->getKey()))
-                ->first(fn (?OrganizationModule $row) => $row !== null && $row->state !== ModuleState::Inherit);
+                ->first(fn (?OrganizationModule $row) => $row !== null && $row->state !== ModuleState::Inherit));
 
-            $state = $decidingRow?->state ?? ($module->isCore ? ModuleState::Enabled : ModuleState::Disabled);
+            // Without a setting in the chain, the partner's default applies.
+            $fromPartner = $partnerLock || ($decidingRow === null && $partnerRow !== null);
+
+            $state = $fromPartner ? $partnerRow->state : ($decidingRow?->state ?? ($module->isCore ? ModuleState::Enabled : ModuleState::Disabled));
             $lockedByAncestor = $lockRow !== null && $lockRow->organization_id !== $organization->getKey();
 
             $blockedBy = array_values(array_filter(
@@ -138,10 +158,11 @@ class ModuleResolver
             $reason = match (true) {
                 // The plan must include the module, and the module must allow the plan.
                 ! $module->allowsPlan($plan) || ! $this->plans->includes($plan, $key) => ResolutionReason::NotInPlan,
+                ! $module->isCore && is_array($offered) && ! in_array($key, $offered, true) => ResolutionReason::NotOffered,
                 ! $module->allowsSector($sector) => ResolutionReason::SectorNotAllowed,
                 $module->requiresConsent && ! $consented->has($key) => ResolutionReason::ConsentMissing,
-                $state === ModuleState::Disabled && $lockRow !== null => ResolutionReason::LockedDisabled,
-                $state === ModuleState::Disabled && $decidingRow === null => ResolutionReason::NotEnabled,
+                $state === ModuleState::Disabled && ($lockRow !== null || $partnerLock) => ResolutionReason::LockedDisabled,
+                $state === ModuleState::Disabled && $decidingRow === null && ! $fromPartner => ResolutionReason::NotEnabled,
                 $state === ModuleState::Disabled => ResolutionReason::Disabled,
                 $blockedBy !== [] => ResolutionReason::DependencyDisabled,
                 default => ResolutionReason::Enabled,
@@ -150,10 +171,11 @@ class ModuleResolver
             $resolved[$key] = new ResolvedModule(
                 key: $key,
                 enabled: $reason === ResolutionReason::Enabled,
-                available: ! in_array($reason, [ResolutionReason::NotInPlan, ResolutionReason::SectorNotAllowed, ResolutionReason::ConsentMissing], true),
+                available: ! in_array($reason, [ResolutionReason::NotInPlan, ResolutionReason::NotOffered, ResolutionReason::SectorNotAllowed, ResolutionReason::ConsentMissing], true),
                 reason: $reason,
                 state: $state,
                 source: match (true) {
+                    $fromPartner => 'partner',
                     $decidingRow === null => 'default',
                     $decidingRow->organization_id === $organization->getKey() => 'self',
                     default => 'inherited',
@@ -162,6 +184,7 @@ class ModuleResolver
                 lockedByOrganizationId: $lockedByAncestor ? $lockRow->organization_id : null,
                 lockedHere: (bool) $byOrganization->get($organization->getKey())?->locked,
                 blockedBy: $blockedBy,
+                lockedByPartner: $partnerLock,
             );
         }
 

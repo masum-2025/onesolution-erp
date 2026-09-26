@@ -6,6 +6,7 @@ use App\Platform\Rules\Enums\RuleMode;
 use App\Platform\Rules\Exceptions\RuleException;
 use App\Platform\Rules\RuleTargets;
 use App\Platform\Rules\Services\RuleService;
+use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -15,6 +16,7 @@ use Illuminate\Support\Carbon;
  *
  *   php artisan rules:set payroll.overtime_multiplier '"2.0"' --country=BD --reason="Labour Act s.108"
  *   php artisan rules:set offline_mode.max_cached_records 20000 --plan=business --reason="Plan default"
+ *   php artisan rules:set partners.max_clients 50 --partner=acme --reason="Reseller contract 2026"
  */
 class SetRuleValue extends Command
 {
@@ -22,6 +24,7 @@ class SetRuleValue extends Command
         {key : Rule key, e.g. payroll.overtime_multiplier}
         {value : JSON value, e.g. 15, "\"2.0\"", "[\"fri\"]"}
         {--plan= : Store at this plan instead of platform level}
+        {--partner= : Store at this partner (slug or id), e.g. governance such as partners.max_clients}
         {--country= : ISO country code for country-specific rules}
         {--mode=set : set, lock or constrain}
         {--effective-from= : Date/time the value takes effect (UTC)}
@@ -52,7 +55,27 @@ class SetRuleValue extends Command
             return self::INVALID;
         }
 
-        $target = $this->option('plan') ? $targets->plan((string) $this->option('plan')) : $targets->platform();
+        if ($this->option('plan') && $this->option('partner')) {
+            $this->error('Use either --plan or --partner, not both.');
+
+            return self::INVALID;
+        }
+
+        $partner = null;
+        if ($this->option('partner')) {
+            $partner = Partner::query()->where('slug', $this->option('partner'))->orWhere('id', $this->option('partner'))->first();
+            if ($partner === null) {
+                $this->error('No partner with that slug or id.');
+
+                return self::INVALID;
+            }
+        }
+
+        $target = match (true) {
+            $partner !== null => $targets->partner($partner),
+            (bool) $this->option('plan') => $targets->plan((string) $this->option('plan')),
+            default => $targets->platform(),
+        };
         $effectiveFrom = $this->option('effective-from') ? Carbon::parse((string) $this->option('effective-from'), 'UTC') : null;
 
         try {

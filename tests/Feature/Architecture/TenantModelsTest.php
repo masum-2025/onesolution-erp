@@ -11,6 +11,9 @@ use App\Platform\Packaging\Models\OrganizationPackage;
 use App\Platform\Packaging\Models\Plan;
 use App\Platform\Packaging\Models\PlanPrice;
 use App\Platform\Packaging\Models\SectorPackage;
+use App\Platform\Partners\Models\PartnerBrand;
+use App\Platform\Partners\Models\PartnerDomain;
+use App\Platform\Partners\Models\PartnerModule;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
@@ -63,6 +66,11 @@ const PLATFORM_MODELS = [
     PlanPrice::class,
     SectorPackage::class,
     OrganizationPackage::class,
+    // Partner layer: owned by a partner, not an organization. Written only by
+    // the partner console services and read through the partner context.
+    PartnerBrand::class,
+    PartnerDomain::class,
+    PartnerModule::class,
 ];
 
 /**

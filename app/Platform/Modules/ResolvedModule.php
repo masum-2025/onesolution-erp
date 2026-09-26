@@ -20,17 +20,19 @@ final readonly class ResolvedModule
         public bool $available,
         public ResolutionReason $reason,
         public ModuleState $state,
-        /** 'self' | 'inherited' | 'default' */
+        /** 'self' | 'inherited' | 'partner' | 'default' */
         public string $source,
         public ?string $sourceOrganizationId,
         public ?string $lockedByOrganizationId,
         public bool $lockedHere,
         public array $blockedBy,
+        /** The partner locked the module for all of its clients. */
+        public bool $lockedByPartner = false,
     ) {}
 
     public function isLockedByAncestor(): bool
     {
-        return $this->lockedByOrganizationId !== null;
+        return $this->lockedByOrganizationId !== null || $this->lockedByPartner;
     }
 
     /**
@@ -49,6 +51,7 @@ final readonly class ResolvedModule
             'locked_by_organization_id' => $this->lockedByOrganizationId,
             'locked_here' => $this->lockedHere,
             'blocked_by' => $this->blockedBy,
+            'locked_by_partner' => $this->lockedByPartner,
         ];
     }
 
@@ -68,6 +71,7 @@ final readonly class ResolvedModule
             lockedByOrganizationId: $data['locked_by_organization_id'],
             lockedHere: $data['locked_here'],
             blockedBy: $data['blocked_by'],
+            lockedByPartner: (bool) ($data['locked_by_partner'] ?? false),
         );
     }
 }

@@ -7,6 +7,10 @@ use App\Platform\Packaging\Http\Controllers\CatalogController;
 use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
 use App\Platform\Packaging\Http\Controllers\SectorPackageController;
 use App\Platform\Packaging\Http\Controllers\UsageController;
+use App\Platform\Partners\Http\Controllers\PartnerBrandController;
+use App\Platform\Partners\Http\Controllers\PartnerClientController;
+use App\Platform\Partners\Http\Controllers\PartnerDomainController;
+use App\Platform\Partners\Http\Controllers\PartnerModuleController;
 use App\Platform\Modules\Http\Controllers\ModuleConsentController;
 use App\Platform\Modules\Http\Controllers\ModuleController;
 use App\Platform\Modules\Http\Controllers\ModulePurgeController;
@@ -105,6 +109,27 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(function () {
     Route::get('organizations', [PartnerOrganizationController::class, 'index']);
     Route::get('organizations/{organization}', [PartnerOrganizationController::class, 'show']);
+    // Partner layer (Phase 5B-1): brand, domains, modules for all clients, client accounts.
+    Route::get('brand', [PartnerBrandController::class, 'show']);
+    Route::get('domains', [PartnerDomainController::class, 'index']);
+    Route::get('modules', [PartnerModuleController::class, 'index']);
+    Route::get('clients/{client}/limits', [PartnerClientController::class, 'limits']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::patch('brand', [PartnerBrandController::class, 'update']);
+        Route::put('brand/powered-by', [PartnerBrandController::class, 'poweredBy']);
+        Route::delete('brand/assets/{kind}', [PartnerBrandController::class, 'destroyAsset']);
+        Route::post('domains', [PartnerDomainController::class, 'store']);
+        Route::delete('domains/{domain}', [PartnerDomainController::class, 'destroy']);
+        Route::put('modules/{module}', [PartnerModuleController::class, 'update']);
+        Route::post('clients', [PartnerClientController::class, 'store']);
+        Route::patch('clients/{client}/status', [PartnerClientController::class, 'status']);
+        Route::put('clients/{client}/limits', [PartnerClientController::class, 'updateLimits']);
+    });
+    Route::middleware('throttle:partner-heavy')->group(function () {
+        Route::post('brand/assets/{kind}', [PartnerBrandController::class, 'storeAsset']);
+        Route::post('domains/{domain}/verify', [PartnerDomainController::class, 'verify']);
+    });
+
     Route::get('organizations/{organization}/plan-preview', [PartnerPlanController::class, 'preview']);
     Route::put('organizations/{organization}/plan', [PartnerPlanController::class, 'update'])->middleware('throttle:tenancy-sensitive');
 

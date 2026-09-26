@@ -161,6 +161,7 @@ class ModuleToggleService
 
         match ($resolved->reason) {
             ResolutionReason::NotInPlan => throw ModuleException::notInPlan($label),
+            ResolutionReason::NotOffered => throw ModuleException::notOffered($label),
             ResolutionReason::SectorNotAllowed => throw ModuleException::sectorNotAllowed($label),
             ResolutionReason::ConsentMissing => throw ModuleException::consentRequired($label),
             default => null,
@@ -170,12 +171,11 @@ class ModuleToggleService
     private function assertNotLockedByAncestor(ResolvedModule $resolved): void
     {
         if ($resolved->isLockedByAncestor()) {
-            $lockedBy = Organization::query()->find($resolved->lockedByOrganizationId);
+            $lockedBy = $resolved->lockedByPartner
+                ? __('modules.your_provider')
+                : Organization::query()->find($resolved->lockedByOrganizationId)?->displayName() ?? '';
 
-            throw ModuleException::lockedByParent(
-                $this->registry->get($resolved->key)->label(),
-                $lockedBy?->displayName() ?? '',
-            );
+            throw ModuleException::lockedByParent($this->registry->get($resolved->key)->label(), $lockedBy);
         }
     }
 

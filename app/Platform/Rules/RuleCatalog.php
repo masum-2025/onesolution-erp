@@ -142,6 +142,8 @@ final class RuleCatalog
             countrySpecific: (bool) ($definition['country_specific'] ?? false),
             category: $definition['category'] ?? 'general',
             sortOrder: (int) ($definition['sort_order'] ?? 0),
+            partnerEditable: (bool) ($definition['partner_editable'] ?? true),
+            organizationEditable: (bool) ($definition['organization_editable'] ?? true),
         );
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
@@ -92,10 +93,9 @@ it('describes a partner console context', function (PartnerUserRole $role, bool 
 ]);
 
 it('uses a white-label partner brand and rejects unsafe values', function () {
-    $partner = Partner::factory()->create([
-        'name' => 'Acme ERP',
-        'settings' => ['brand' => ['primary_color' => 'red;}</style><script>', 'support_email' => 'not-an-email']],
-    ]);
+    $partner = Partner::factory()->create(['name' => 'Acme ERP']);
+    // Stored values are checked again on the way out, even if bad data got in.
+    PartnerBrand::create(['partner_id' => $partner->id, 'primary_color' => 'red;}</', 'support_email' => 'not-an-email']);
     $group = createGroup($partner, 'Acme Group');
     $user = createMember($group);
     spaSession($this, $user, $group);
@@ -107,7 +107,8 @@ it('uses a white-label partner brand and rejects unsafe values', function () {
 });
 
 it('uses a valid partner brand color', function () {
-    $partner = Partner::factory()->create(['settings' => ['brand' => ['name' => 'Shikkha Pro', 'primary_color' => '#0f766e']]]);
+    $partner = Partner::factory()->create();
+    PartnerBrand::create(['partner_id' => $partner->id, 'product_name' => 'Shikkha Pro', 'primary_color' => '#0f766e']);
     $group = createGroup($partner);
     $user = createMember($group);
     spaSession($this, $user, $group);

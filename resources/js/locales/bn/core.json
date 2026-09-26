@@ -3,7 +3,10 @@
     "language": "ভাষা",
     "breadcrumb": "অবস্থান",
     "user_menu": "অ্যাকাউন্ট মেনু",
-    "languages": { "en": "English", "bn": "বাংলা" },
+    "languages": {
+        "en": "English",
+        "bn": "বাংলা"
+    },
     "actions": {
         "cancel": "বাতিল",
         "close": "বন্ধ করুন",
@@ -54,8 +57,17 @@
         "role": "ভূমিকা",
         "user": "ব্যবহারকারী"
     },
-    "membership_types": { "owner": "মালিক", "staff": "কর্মী", "portal": "পোর্টাল ব্যবহারকারী" },
-    "partner_roles": { "owner": "মালিক", "sales": "বিক্রয়", "support": "সহায়তা", "billing": "বিলিং" },
+    "membership_types": {
+        "owner": "মালিক",
+        "staff": "কর্মী",
+        "portal": "পোর্টাল ব্যবহারকারী"
+    },
+    "partner_roles": {
+        "owner": "মালিক",
+        "sales": "বিক্রয়",
+        "support": "সহায়তা",
+        "billing": "বিলিং"
+    },
     "nav": {
         "label": "প্রধান নেভিগেশন",
         "open": "নেভিগেশন খুলুন",
@@ -68,7 +80,10 @@
         "approvals": "অনুমোদন",
         "roles": "রোল",
         "clients": "ক্লায়েন্ট",
-        "partner_rules": "পার্টনার নিয়ম"
+        "partner_rules": "পার্টনার নিয়ম",
+        "partner_brand": "ব্র্যান্ড",
+        "partner_domains": "ডোমেইন",
+        "partner_modules": "মডিউল"
     },
     "not_found": {
         "title": "এই পেজটি নেই",

@@ -3,7 +3,10 @@
     "language": "Language",
     "breadcrumb": "Breadcrumb",
     "user_menu": "Account menu",
-    "languages": { "en": "English", "bn": "বাংলা" },
+    "languages": {
+        "en": "English",
+        "bn": "বাংলা"
+    },
     "actions": {
         "cancel": "Cancel",
         "close": "Close",
@@ -54,8 +57,17 @@
         "role": "Role",
         "user": "User"
     },
-    "membership_types": { "owner": "Owner", "staff": "Staff", "portal": "Portal user" },
-    "partner_roles": { "owner": "Owner", "sales": "Sales", "support": "Support", "billing": "Billing" },
+    "membership_types": {
+        "owner": "Owner",
+        "staff": "Staff",
+        "portal": "Portal user"
+    },
+    "partner_roles": {
+        "owner": "Owner",
+        "sales": "Sales",
+        "support": "Support",
+        "billing": "Billing"
+    },
     "nav": {
         "label": "Main navigation",
         "open": "Open navigation",
@@ -68,7 +80,10 @@
         "approvals": "Approvals",
         "roles": "Roles",
         "clients": "Clients",
-        "partner_rules": "Partner rules"
+        "partner_rules": "Partner rules",
+        "partner_brand": "Brand",
+        "partner_domains": "Domains",
+        "partner_modules": "Modules"
     },
     "not_found": {
         "title": "This page does not exist",

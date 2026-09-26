@@ -3,6 +3,7 @@
 namespace App\Platform\Tenancy\Context;
 
 use App\Models\User;
+use App\Platform\Partners\HostContext;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Exceptions\OrganizationAccessDenied;
@@ -29,6 +30,7 @@ class ContextResolver
         private CurrentContext $context,
         private HierarchyService $hierarchy,
         private OrganizationSettingsResolver $settings,
+        private HostContext $host,
     ) {}
 
     public function enterOrganization(User $user, string $organizationId): CurrentContext
@@ -44,6 +46,11 @@ class ContextResolver
         }
 
         $organization = $membership->organization;
+
+        // On a partner's (or client's) own domain, only that account's organizations open.
+        if (! $this->host->allowsOrganization($organization)) {
+            throw OrganizationAccessDenied::wrongAddress();
+        }
 
         if (! $organization->partner->isActive()) {
             throw OrganizationAccessDenied::partnerInactive();
@@ -97,6 +104,10 @@ class ContextResolver
 
         if ($partnerUser === null || ! $partnerUser->isActive()) {
             throw OrganizationAccessDenied::noPartnerAccess();
+        }
+
+        if (! $this->host->allowsPartner($partnerUser->partner_id)) {
+            throw OrganizationAccessDenied::wrongAddress();
         }
 
         if (! $partnerUser->partner->isActive()) {

@@ -10,6 +10,8 @@ enum ResolutionReason: string
 {
     case Enabled = 'enabled';
     case NotInPlan = 'not_in_plan';
+    /** The platform does not let the organization's partner offer this module. */
+    case NotOffered = 'not_offered';
     case SectorNotAllowed = 'sector_not_allowed';
     case ConsentMissing = 'consent_missing';
     case NotEnabled = 'not_enabled';

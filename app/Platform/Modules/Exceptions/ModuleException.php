@@ -26,6 +26,11 @@ class ModuleException extends TenancyException
         return new self('not_in_plan', 422, ['module' => $module]);
     }
 
+    public static function notOffered(string $module): self
+    {
+        return new self('not_offered', 422, ['module' => $module]);
+    }
+
     public static function sectorNotAllowed(string $module): self
     {
         return new self('sector_not_allowed', 422, ['module' => $module]);

@@ -30,6 +30,11 @@ final readonly class RuleDefinition
         public bool $countrySpecific,
         public string $category,
         public int $sortOrder,
+        // Who may write values: a partner in its console (false = platform decides
+        // the partner's value, e.g. governance), organizations in the rule editor
+        // (false = written for them by their partner, e.g. per-client limits).
+        public bool $partnerEditable = true,
+        public bool $organizationEditable = true,
     ) {}
 
     /**

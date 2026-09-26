@@ -3,18 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Partners\HostContext;
 use Illuminate\Contracts\View\View;
 
 /**
  * The single page that boots the browser app. It holds no user data: the
- * app asks /api/me after loading. The brand here is the house brand until
- * Phase 5B resolves the partner from the domain.
+ * app asks /api/me after loading. The brand is the one of the address: a
+ * partner's verified domain shows only that partner's brand.
  */
 class AppShellController extends Controller
 {
-    public function __invoke(BrandResolver $brands): View
+    public function __invoke(BrandResolver $brands, HostContext $host): View
     {
-        $brand = $brands->for();
+        $brand = $brands->for($host->partner());
 
         return view('app', [
             'brand' => $brand,
@@ -25,15 +26,15 @@ class AppShellController extends Controller
     }
 
     /**
-     * The brand's mark, or else a small SVG icon in the brand color with the
-     * brand's first letter, so every partner gets its own tab icon.
+     * The brand's favicon or mark, or else a small SVG icon in the brand color
+     * with the brand's first letter, so every partner gets its own tab icon.
      *
-     * @param  array{name: string, primary_color: string, mark_url: string|null}  $brand
+     * @param  array{name: string, primary_color: string, mark_url: string|null, favicon_url: string|null}  $brand
      */
     private function favicon(array $brand): string
     {
-        if ($brand['mark_url'] !== null) {
-            return $brand['mark_url'];
+        if (($brand['favicon_url'] ?? null) !== null || $brand['mark_url'] !== null) {
+            return $brand['favicon_url'] ?? $brand['mark_url'];
         }
 
         $hex = ltrim($brand['primary_color'], '#');

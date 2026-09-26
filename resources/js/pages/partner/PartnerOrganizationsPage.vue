@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { ArrowRightLeft, Building2, ChevronLeft, ChevronRight, Search } from 'lucide-vue-next';
+import { ArrowRightLeft, Building2, ChevronLeft, ChevronRight, Gauge, Pause, Play, Plus, Search } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -9,12 +9,16 @@ import ErrorState from '@/components/ErrorState.vue';
 import OrgTypeIcon from '@/components/OrgTypeIcon.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import PlanChangeDialog from './PlanChangeDialog.vue';
+import ClientCreateDialog from './ClientCreateDialog.vue';
+import ClientLimitsDialog from './ClientLimitsDialog.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { countryName } from '@/lib/display';
 import { formatDate, formatNumber } from '@/lib/format';
 import { loadPlans } from '@/lib/packaging';
 import { session } from '@/lib/session';
+import { confirmAction } from '@/lib/dialogs';
+import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 
 /**
@@ -48,11 +52,46 @@ function planChanged() {
     changing.value = null;
     clients.reload();
 }
+
+// Client accounts: sales and owners create them; owners suspend; everyone sees limits.
+const role = computed(() => session.me?.context?.role);
+const canCreate = computed(() => ['owner', 'sales'].includes(role.value));
+const canSuspend = computed(() => role.value === 'owner');
+const creating = ref(false);
+const limitsFor = ref(null);
+
+function created() {
+    creating.value = false;
+    clients.reload();
+}
+
+async function toggleStatus(org) {
+    const suspending = org.status === 'active';
+    const answer = await confirmAction({
+        title: t(suspending ? 'partner.clients.suspend_title' : 'partner.clients.reactivate_title', { name: org.display_name }),
+        message: t(suspending ? 'partner.clients.suspend_text' : 'partner.clients.reactivate_text'),
+        reason: 'required',
+        danger: suspending,
+        confirmLabel: t(suspending ? 'partner.clients.suspend' : 'partner.clients.reactivate'),
+    });
+    if (!answer) return;
+    try {
+        const response = await api(`/api/partner/clients/${org.id}/status`, { method: 'PATCH', body: { status: suspending ? 'suspended' : 'active', reason: answer.reason } });
+        toast.success(response.message);
+        clients.reload();
+    } catch (error) {
+        toast.error(error.message);
+    }
+}
 </script>
 
 <template>
     <div>
-        <PageHeader :title="t('partner.clients.title')" :description="t('partner.clients.text')" />
+        <PageHeader :title="t('partner.clients.title')" :description="t('partner.clients.text')">
+            <template #actions>
+                <AppButton v-if="canCreate" variant="primary" :icon="Plus" @click="creating = true">{{ t('partner.clients.new') }}</AppButton>
+            </template>
+        </PageHeader>
 
         <section class="card overflow-hidden">
             <header class="flex flex-col gap-3 border-b border-line px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
@@ -77,7 +116,7 @@ function planChanged() {
                             <th class="px-3 py-2.5 text-start font-medium">{{ t('partner.clients.columns.plan') }}</th>
                             <th class="px-3 py-2.5 text-start font-medium">{{ t('partner.clients.columns.status') }}</th>
                             <th class="px-5 py-2.5 text-end font-medium">{{ t('partner.clients.columns.since') }}</th>
-                            <th v-if="canChangePlans" class="px-5 py-2.5"><span class="sr-only">{{ t('core.actions.more') }}</span></th>
+                            <th class="px-5 py-2.5"><span class="sr-only">{{ t('core.actions.more') }}</span></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-line">
@@ -96,8 +135,19 @@ function planChanged() {
                             <td class="px-3 py-3 text-fg-2">{{ org.subscription_plan ? planName(org.subscription_plan) : '—' }}</td>
                             <td class="px-3 py-3"><AppBadge :tone="STATUS_TONES[org.status]" dot>{{ t(`orgs.status.${org.status}`) }}</AppBadge></td>
                             <td class="px-5 py-3 text-end text-muted">{{ formatDate(org.created_at) }}</td>
-                            <td v-if="canChangePlans" class="px-5 py-3 text-end">
-                                <AppButton v-if="org.subscription_plan" size="sm" :icon="ArrowRightLeft" @click="changing = org">{{ t('packaging.change.button') }}</AppButton>
+                            <td class="px-5 py-3 text-end">
+                                <span v-if="org.parent_id === null" class="inline-flex gap-1.5">
+                                    <AppButton size="sm" variant="ghost" :icon="Gauge" @click="limitsFor = org">{{ t('partner.clients.limits') }}</AppButton>
+                                    <AppButton v-if="canChangePlans" size="sm" :icon="ArrowRightLeft" @click="changing = org">{{ t('packaging.change.button') }}</AppButton>
+                                    <AppButton
+                                        v-if="canSuspend"
+                                        size="sm"
+                                        :variant="org.status === 'active' ? 'danger-soft' : 'secondary'"
+                                        :icon="org.status === 'active' ? Pause : Play"
+                                        :aria-label="t(org.status === 'active' ? 'partner.clients.suspend' : 'partner.clients.reactivate')"
+                                        @click="toggleStatus(org)"
+                                    />
+                                </span>
                             </td>
                         </tr>
                     </tbody>
@@ -114,5 +164,7 @@ function planChanged() {
         </section>
 
         <PlanChangeDialog :open="!!changing" :client="changing" @close="changing = null" @changed="planChanged" />
+        <ClientCreateDialog :open="creating" @close="creating = false" @created="created" />
+        <ClientLimitsDialog :open="!!limitsFor" :client="limitsFor" @close="limitsFor = null" />
     </div>
 </template>

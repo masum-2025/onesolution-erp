@@ -11,6 +11,7 @@
         <link rel="apple-touch-icon" href="{{ $brand['mark_url'] }}">
     @endif
     <meta name="theme-color" content="{{ $brand['primary_color'] }}">
+    <link rel="manifest" href="/manifest.webmanifest">
     <style nonce="{{ Vite::cspNonce() }}">:root{--brand:{{ $brand['primary_color'] }}}</style>
     <script nonce="{{ Vite::cspNonce() }}">
         // Before first paint: theme and language from this browser's saved preferences.
