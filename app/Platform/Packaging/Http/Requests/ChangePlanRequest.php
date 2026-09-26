@@ -14,7 +14,11 @@ class ChangePlanRequest extends StrictFormRequest
     public function rules(): array
     {
         return [
-            'plan' => ['required', 'string', Rule::in(app(PlanCatalog::class)->keys())],
+            // One of our plans, or one of the partner's own plans (its base plan follows).
+            'plan' => ['required_without:partner_plan_id', 'nullable', 'string', Rule::in(app(PlanCatalog::class)->keys())],
+            'partner_plan_id' => ['nullable', 'string', 'ulid'],
+            'currency' => ['nullable', 'string', 'regex:/^[A-Z]{3}$/'],
+            'period' => ['nullable', 'string', Rule::in(PlanCatalog::PERIODS)],
             'reason' => ['required', 'string', 'min:5', 'max:500'],
         ];
     }

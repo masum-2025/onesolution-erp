@@ -87,7 +87,10 @@
         "partner_support": "Support access",
         "support_access": "Support access",
         "audit_log": "Audit log",
-        "export": "Export data"
+        "export": "Export data",
+        "partner_plans": "Plans",
+        "partner_billing": "Billing",
+        "billing": "Billing"
     },
     "not_found": {
         "title": "This page does not exist",

@@ -6,6 +6,8 @@ use App\Platform\Modules\Enums\ModuleState;
 use App\Platform\Modules\Enums\ResolutionReason;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\OrganizationModule;
+use App\Platform\Packaging\Models\PartnerPlan;
+use App\Platform\Packaging\Models\Subscription;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Partners\Models\PartnerModule;
 use App\Platform\Rules\RuleContextFactory;
@@ -19,7 +21,8 @@ use Illuminate\Support\Collection;
 /**
  * Decides whether a module is enabled for an organization.
  *
- *  1. Available: the organization's plan and sector allow it, and consent
+ *  1. Available: the organization's plan (and the partner plan the client is
+ *     on, which may leave modules out) and sector allow it, and consent
  *     exists when the module requires it.
  *  2. State: the topmost ancestor lock wins; otherwise the nearest level that
  *     is not "inherit"; otherwise disabled (core modules: enabled).
@@ -100,6 +103,10 @@ class ModuleResolver
 
         $plan = $this->settings->values($organization, $ancestors)['plan_key'];
         $sector = $chain->reverse()->first(fn (Organization $node) => $node->sector_key !== null)?->sector_key;
+        // A partner plan narrows the base plan (null = everything the base plan has).
+        $partnerPlanModules = PartnerPlan::query()
+            ->whereIn('id', Subscription::query()->select('partner_plan_id')->where('organization_id', $chain->first()->getKey()))
+            ->value('modules');
 
         $rows = OrganizationModule::query()
             ->whereIn('organization_id', $chainIds)
@@ -158,6 +165,7 @@ class ModuleResolver
             $reason = match (true) {
                 // The plan must include the module, and the module must allow the plan.
                 ! $module->allowsPlan($plan) || ! $this->plans->includes($plan, $key) => ResolutionReason::NotInPlan,
+                ! $module->isCore && is_array($partnerPlanModules) && ! in_array($key, $partnerPlanModules, true) => ResolutionReason::NotInPlan,
                 ! $module->isCore && is_array($offered) && ! in_array($key, $offered, true) => ResolutionReason::NotOffered,
                 ! $module->allowsSector($sector) => ResolutionReason::SectorNotAllowed,
                 $module->requiresConsent && ! $consented->has($key) => ResolutionReason::ConsentMissing,

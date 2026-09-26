@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { Blocks, Boxes, Download, Globe, Handshake, Home, KeyRound, LifeBuoy, Network, Palette, ScrollText, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
+import { Blocks, Boxes, Download, Globe, Handshake, Home, KeyRound, LifeBuoy, Network, Package, Palette, Receipt, ScrollText, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
 import ContextSwitcher from './ContextSwitcher.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import UserMenu from './UserMenu.vue';
@@ -25,6 +25,8 @@ const workspace = computed(() => {
     if (isPartner.value) {
         return [
             { to: '/partner/organizations', label: t('core.nav.clients'), icon: Handshake },
+            { to: '/partner/plans', label: t('core.nav.partner_plans'), icon: Package },
+            ...(['owner', 'billing'].includes(session.me?.context?.role) ? [{ to: '/partner/billing', label: t('core.nav.partner_billing'), icon: Receipt }] : []),
             { to: '/partner/support', label: t('core.nav.partner_support'), icon: LifeBuoy },
             { to: '/partner/brand', label: t('core.nav.partner_brand'), icon: Palette },
             { to: '/partner/domains', label: t('core.nav.partner_domains'), icon: Globe },
@@ -44,6 +46,7 @@ const workspace = computed(() => {
         { to: '/rules', label: t('core.nav.rules'), icon: SlidersHorizontal },
         ...(can('rules.approve') ? [{ to: '/approvals', label: t('core.nav.approvals'), icon: ShieldCheck, count: props.pendingApprovals }] : []),
         ...(can('support.approve') ? [{ to: '/support-access', label: t('core.nav.support_access'), icon: LifeBuoy }] : []),
+        ...(can('billing.view') ? [{ to: '/billing', label: t('core.nav.billing'), icon: Receipt }] : []),
         ...(can('audit.view') ? [{ to: '/audit-log', label: t('core.nav.audit_log'), icon: ScrollText }] : []),
         ...(can('data.export') ? [exportItem()] : []),
     ];

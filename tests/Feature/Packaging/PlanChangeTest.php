@@ -40,7 +40,7 @@ it('turns off modules the new plan leaves out and keeps their data', function ()
     Event::assertDispatched(ModuleDisabled::class, fn ($event) => $event->moduleKey === 'custom_reports' && $event->organization->is($this->w->c1));
 
     $audit = AuditLog::where('action', 'organization.plan_changed')->sole();
-    expect($audit->old_values)->toBe(['plan' => 'business'])
+    expect($audit->old_values)->toMatchArray(['plan' => 'business', 'partner_plan' => null, 'currency' => 'BDT', 'period' => 'monthly'])
         ->and($audit->new_values['plan'])->toBe('starter')
         ->and($audit->partner_id)->toBe($this->w->partnerA->id)
         ->and($audit->reason)->toBe('Client asked to downgrade');

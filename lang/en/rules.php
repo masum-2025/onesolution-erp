@@ -113,6 +113,22 @@ return [
             'label' => 'Keep data exports for (days)',
             'description' => 'How long a finished data export stays available to download.',
         ],
+        'billing_partner_currency' => [
+            'label' => 'Partner billing currency',
+            'description' => 'The currency wholesale invoices and commission payouts to this partner are in (ISO code, e.g. USD).',
+        ],
+        'partners_revenue_share_bp' => [
+            'label' => 'Partner revenue share (basis points)',
+            'description' => 'The partner\'s share of each revenue-share invoice, before tax. 3000 = 30%.',
+        ],
+        'billing_tax_rate_bp' => [
+            'label' => 'Tax on invoices (basis points)',
+            'description' => 'VAT or sales tax added to invoices. 1500 = 15%. Set per country.',
+        ],
+        'billing_payment_terms_days' => [
+            'label' => 'Payment terms (days)',
+            'description' => 'How many days after issue an invoice is due.',
+        ],
     ],
 
     'categories' => [
@@ -122,5 +138,6 @@ return [
         'access' => 'Access',
         'plan' => 'Plan limits',
         'partner' => 'Partner account',
+        'billing' => 'Billing',
     ],
 ];

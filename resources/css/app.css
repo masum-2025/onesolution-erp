@@ -178,6 +178,14 @@
         line-height: 1.7;
     }
 
+    /* Printed documents (invoices) go on white paper. */
+    @media print {
+        html,
+        body {
+            background: #fff;
+        }
+    }
+
     ::selection {
         background: color-mix(in oklab, var(--brand) 24%, transparent);
     }

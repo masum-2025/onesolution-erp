@@ -14,5 +14,8 @@ Schedule::command('modules:purge-due')->dailyAt('02:00')->withoutOverlapping()->
 // Support access that ran out is closed and shown in the client's audit log.
 Schedule::command('support:expire')->everyMinute()->withoutOverlapping()->onOneServer();
 
+// The monthly billing run: invoices to wholesale partners and to clients (safe to repeat).
+Schedule::command('billing:run')->monthlyOn(1, '01:00')->withoutOverlapping()->onOneServer();
+
 // Data export files are deleted after their retention period.
 Schedule::command('exports:prune')->dailyAt('03:00')->withoutOverlapping()->onOneServer();

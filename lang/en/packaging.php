@@ -13,6 +13,15 @@ return [
         'same_plan' => 'This client is already on that plan.',
         'not_top_level' => 'A plan belongs to the whole subscription. Change it at the top organization.',
         'no_package' => 'This organization has no sector package. Set its sector first.',
+        'no_price' => 'This plan has no price in :currency per :period. Add one to the plan, or choose another currency or period.',
+        'plan_in_use' => 'Clients are on this plan, so its base plan and modules are fixed. Make a new plan instead.',
+        'module_not_in_base' => 'The module ":module" is not in the base plan, or you do not offer it.',
+        'module_needs' => '":module" needs ":required"; include both.',
+    ],
+
+    'periods' => [
+        'monthly' => 'month',
+        'yearly' => 'year',
     ],
 
     'messages' => [

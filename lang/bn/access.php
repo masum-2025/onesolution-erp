@@ -34,6 +34,7 @@ return [
         'people' => 'সদস্য ও রোল',
         'setup' => 'সেটআপ',
         'security' => 'নিরাপত্তা ও তথ্য',
+        'billing' => 'বিলিং',
     ],
 
     'permissions' => [
@@ -47,6 +48,7 @@ return [
         'support_approve' => 'সাপোর্ট অ্যাক্সেস অনুমোদন',
         'audit_view' => 'অডিট লগ দেখা',
         'data_export' => 'সব তথ্য এক্সপোর্ট',
+        'billing_view' => 'প্ল্যান ও ইনভয়েস দেখা',
     ],
 
     'templates' => [

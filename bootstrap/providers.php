@@ -1,6 +1,7 @@
 <?php
 
 use App\Platform\Access\AccessServiceProvider;
+use App\Platform\Billing\BillingServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
 use App\Platform\SupportAccess\SupportAccessServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
@@ -20,4 +21,5 @@ return [
     AccessServiceProvider::class,
     SupportAccessServiceProvider::class,
     DataExportServiceProvider::class,
+    BillingServiceProvider::class,
 ];

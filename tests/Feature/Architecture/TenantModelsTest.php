@@ -14,7 +14,15 @@ use App\Platform\Packaging\Models\SectorPackage;
 use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Partners\Models\PartnerModule;
+use App\Platform\Billing\Models\Commission;
+use App\Platform\Billing\Models\Invoice;
+use App\Platform\Billing\Models\InvoiceLine;
+use App\Platform\Billing\Models\Payout;
+use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\DataExport\Models\DataExport;
+use App\Platform\Packaging\Models\PartnerPlan;
+use App\Platform\Packaging\Models\PartnerPlanPrice;
+use App\Platform\Packaging\Models\Subscription;
 use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
@@ -78,6 +86,19 @@ const PLATFORM_MODELS = [
     // context). Both are read only through visible-organization lookups.
     SupportGrant::class,
     DataExport::class,
+    // Billing (5B-3): commercial records between the platform, partners and
+    // clients. Partner plans and wholesale prices are partner or platform data;
+    // subscriptions, invoices and commissions are read by the partner console
+    // and the billing run across clients, always filtered by the partner or
+    // organization taken from the context.
+    PartnerPlan::class,
+    PartnerPlanPrice::class,
+    Subscription::class,
+    WholesalePrice::class,
+    Invoice::class,
+    InvoiceLine::class,
+    Commission::class,
+    Payout::class,
 ];
 
 /**

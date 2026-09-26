@@ -572,6 +572,93 @@ Exporting works in read-only and export-only contexts, never for support staff.
 - Open: support access with write rights (maker-checker per change), export to other
   formats, scheduled exports.
 
+## Partner plans and billing (Phase 5B-3)
+
+Code: `app/Platform/Billing`; partner plans and subscriptions in `app/Platform/Packaging`.
+Money is always integer minor units plus an ISO currency code; tax and shares are basis
+points, rounded half up with integer math (`Billing\Money`). Amounts in different
+currencies are never added together or converted.
+
+### Partner plans
+
+A partner builds its own plan on one of ours (`partner_plans`, `partner_plan_prices`):
+its own name (bn/en), prices per currency and period, and optionally **fewer** modules
+(never more; only modules the platform lets it offer; a module's requirements must come
+with it). `ModuleResolver` treats a module the partner plan leaves out as "not in plan".
+While clients are on a plan its base plan and modules are fixed (make a new plan); name
+and prices can change (they apply from the next invoice). Archived plans take no new
+clients; existing clients keep them.
+
+### Subscriptions
+
+One per client (top organization), created on first need: plan (still
+`organizations.plan_key`), partner plan, currency, period (monthly/yearly) and
+`billed_through`. The partner console's plan dialog (`PUT /api/partner/organizations/{id}/plan`)
+now takes `partner_plan_id`, `currency` and `period` too. Clients we invoice ourselves
+(direct, revenue share) can only be put on a plan that has a price in their currency
+and period.
+
+### Billing models (partner `billing_mode`)
+
+| mode | who is invoiced | price | partner earns |
+|---|---|---|---|
+| wholesale | the partner, one invoice a month in `billing.partner_currency` | `wholesale_prices` per client or per staff seat | its own margin (billed outside the system) |
+| revenue_share | each client, under the partner's brand | the partner plan's price (or our list price) | `partners.revenue_share_bp` of the subtotal |
+| direct (house) | each client | our list price | — |
+
+`billing:run` (scheduled on the 1st, 01:00 UTC; safe to repeat) bills the month in
+advance. No proration: a client is billed from the first month that starts on or after
+the day it joined. Every document has a billing key, so a month is never billed twice;
+numbers are gap-free per type and year (`INV-2026-000001`, `CN-2026-000001`). Issued
+documents never change: seller and buyer are frozen, line texts are frozen in bn and en,
+corrections are credit notes. Paying a revenue-share invoice makes the commission
+payable; a credit note takes back the same share; payouts are per currency.
+
+Rules: `billing.partner_currency` (default USD), `partners.revenue_share_bp` (3000,
+sensitive), `billing.tax_rate_bp` (0, sensitive, set per country), `billing.payment_terms_days`
+(14). Default wholesale prices: `database/seeders/data/wholesale-prices.php`, recorded by
+`billing:sync-prices`. **Prices, share and tax are placeholders** until the business and
+a tax adviser confirm them. Seller details: `BILLING_ISSUER_NAME`, `_ADDRESS`, `_TAX_ID`,
+`_EMAIL`.
+
+### Platform commands (no payment gateway yet)
+
+```
+php artisan billing:run [--month=2026-10] [--partner=acme]
+php artisan billing:mark-paid INV-2026-000012 --reference="Bank ref 88213"
+php artisan billing:credit INV-2026-000012 --amount=150000 --reason="Two weeks of downtime"   (or --full)
+php artisan billing:payout acme BDT --reference="Transfer 2026-10-05"
+php artisan billing:wholesale-price business USD 2500 --unit=per_client [--partner=acme] [--from=2027-01-01] --reason="2027 contract"
+php artisan billing:sync-prices
+```
+
+All of them are audited (`billing.*`, `partner_plan.*`); client documents show in the
+client's own audit log.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET / POST | /api/partner/plans | all / owner, billing |
+| PATCH | /api/partner/plans/{id} | owner, billing |
+| POST | /api/partner/plans/{id}/archive | owner, billing |
+| GET | /api/partner/clients/{id}/subscription | all partner staff |
+| GET | /api/partner/billing, /billing/invoices[?billed_to=organization], /billing/invoices/{id}, /billing/commissions, /billing/payouts | owner, billing |
+| GET | /api/organizations/{id}/billing, /billing/invoices/{invoice} | `billing.view` at the top organization |
+
+Wholesale clients see their plan but no price or invoices (their provider bills them).
+Invoices open as a printable page ("Print or save as PDF").
+
+### Future expansion (Phase 5B-3)
+
+- New country: its tax rate as a country value of `billing.tax_rate_bp`, prices in its
+  currency in the data files or partner plans. No code.
+- New partner deal: `billing:wholesale-price --partner=...` or a partner value of
+  `partners.revenue_share_bp`. No code.
+- Open: payment gateways, checkout, trials, proration and dunning (5C); PDF files;
+  currency conversion for payouts (with the multi_currency module); branded invoice
+  emails (5B-3b).
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

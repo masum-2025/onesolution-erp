@@ -10,9 +10,12 @@ use App\Platform\Modules\ModuleCache;
 use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Packaging\Exceptions\PackagingException;
+use App\Platform\Packaging\Models\Subscription;
 use App\Platform\Packaging\PlanCatalog;
+use App\Platform\Packaging\Services\SubscriptionService;
 use App\Platform\Packaging\Services\UsageLimiter;
 use App\Platform\Rules\RuleCache;
+use App\Platform\Tenancy\Enums\BillingMode;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -20,8 +23,9 @@ use RuntimeException;
 
 /**
  * Moves a subscription (a top organization and everything under it) to
- * another plan. Modules the new plan leaves out stop working everywhere in
- * the tree; their settings and data are kept and come back with the plan.
+ * another plan, or a partner plan, and optionally new billing terms
+ * (currency, period). Modules the new plan leaves out stop working everywhere
+ * in the tree; their settings and data are kept and come back with the plan.
  * Limits already exceeded are allowed: nothing is removed, only new users or
  * branches are refused until usage is below the limit again.
  */
@@ -35,6 +39,7 @@ class ChangePlan
         private RuleCache $ruleCache,
         private UsageLimiter $limits,
         private AuditLogger $audit,
+        private SubscriptionService $subscriptions,
     ) {}
 
     /**
@@ -42,13 +47,14 @@ class ChangePlan
      *
      * @return array<string, mixed>
      */
-    public function preview(Organization $root, string $plan): array
+    public function preview(Organization $root, string|PlanChoice $choice): array
     {
-        $this->assertChangeable($root, $plan);
+        $choice = PlanChoice::of($choice);
+        $this->assertChangeable($root, $choice);
 
         try {
-            DB::transaction(function () use ($root, $plan) {
-                throw new PreviewResult($this->apply($root, $plan));
+            DB::transaction(function () use ($root, $choice) {
+                throw new PreviewResult($this->apply($root, $choice));
             });
         } catch (PreviewResult $result) {
             return $result->summary;
@@ -65,21 +71,31 @@ class ChangePlan
     /**
      * @return array<string, mixed>
      */
-    public function handle(Organization $root, string $plan, string $reason, User $actor): array
+    public function handle(Organization $root, string|PlanChoice $choice, string $reason, User $actor): array
     {
-        $this->assertChangeable($root, $plan);
+        $choice = PlanChoice::of($choice);
+        $this->assertChangeable($root, $choice);
 
-        return DB::transaction(function () use ($root, $plan, $reason, $actor) {
+        return DB::transaction(function () use ($root, $choice, $reason, $actor) {
             Organization::query()->whereKey($root->getKey())->lockForUpdate()->first();
             $from = $this->planOf($root);
+            $subscription = $this->subscriptions->for($root);
+            $was = ['partner_plan' => $subscription->partner_plan_id, 'currency' => $subscription->currency_code, 'period' => $subscription->period];
 
-            $summary = $this->apply($root, $plan, dispatch: ['actor' => $actor, 'reason' => $reason]);
+            $summary = $this->apply($root, $choice, dispatch: ['actor' => $actor, 'reason' => $reason]);
 
             $this->audit->record(
                 action: 'organization.plan_changed',
                 target: $root,
-                old: ['plan' => $from],
-                new: ['plan' => $plan, 'modules_off' => $summary['modules_off'], 'modules_on' => $summary['modules_on']],
+                old: ['plan' => $from, ...$was],
+                new: [
+                    'plan' => $choice->planKey,
+                    'partner_plan' => $choice->partnerPlan?->getKey(),
+                    'currency' => $summary['currency'],
+                    'period' => $summary['period'],
+                    'modules_off' => $summary['modules_off'],
+                    'modules_on' => $summary['modules_on'],
+                ],
                 reason: $reason,
                 actor: $actor,
                 organizationId: $root->getKey(),
@@ -90,18 +106,42 @@ class ChangePlan
         });
     }
 
-    private function assertChangeable(Organization $root, string $plan): void
+    private function assertChangeable(Organization $root, PlanChoice $choice): void
     {
         if (! $root->isRoot()) {
             throw PackagingException::notTopLevel();
         }
 
-        if (! $this->plans->has($plan)) {
+        if (! $this->plans->has($choice->planKey)) {
             throw PackagingException::unknownPlan();
         }
 
-        if ($this->planOf($root) === $plan) {
+        $partnerPlan = $choice->partnerPlan;
+        // Only the client's own partner's plans, and only while they are offered.
+        if ($partnerPlan !== null && ($partnerPlan->partner_id !== $root->partner_id || ! $partnerPlan->isActive())) {
+            throw PackagingException::unknownPlan();
+        }
+
+        $subscription = $this->subscriptions->for($root);
+        $currency = $choice->currency ?? $subscription->currency_code;
+        $period = $choice->period ?? $subscription->period;
+
+        if ($this->planOf($root) === $choice->planKey
+            && $subscription->partner_plan_id === $partnerPlan?->getKey()
+            && $subscription->currency_code === $currency
+            && $subscription->period === $period) {
             throw PackagingException::samePlan();
+        }
+
+        // We invoice the client ourselves (direct, revenue share): it needs a price to bill.
+        if ($root->partner?->billing_mode !== BillingMode::Wholesale) {
+            $price = $partnerPlan !== null
+                ? $partnerPlan->loadMissing('prices')->price($currency, $period)
+                : $this->subscriptions->listPrice($choice->planKey, $currency, $period);
+
+            if ($price === null) {
+                throw PackagingException::noPrice($currency, $period);
+            }
         }
     }
 
@@ -109,8 +149,9 @@ class ChangePlan
      * @param  array{actor: User, reason: string}|null  $dispatch  Fire module events (real change only).
      * @return array<string, mixed>
      */
-    private function apply(Organization $root, string $plan, ?array $dispatch = null): array
+    private function apply(Organization $root, PlanChoice $choice, ?array $dispatch = null): array
     {
+        $plan = $choice->planKey;
         /** @var Collection<int, Organization> $tree Top first. */
         $tree = Organization::query()->where('root_id', $root->getKey())->orderBy('depth')->get();
         $before = $tree->mapWithKeys(fn (Organization $node) => [$node->getKey() => $this->modules->fresh($node)]);
@@ -120,6 +161,14 @@ class ChangePlan
             $node->forceFill(['plan_key' => $node->is($root) ? $plan : null])->save();
         }
         $root->setRawAttributes($tree->first()->getAttributes(), true);
+
+        /** @var Subscription $subscription */
+        $subscription = $this->subscriptions->for($root);
+        $subscription->forceFill([
+            'partner_plan_id' => $choice->partnerPlan?->getKey(),
+            'currency_code' => $choice->currency ?? $subscription->currency_code,
+            'period' => $choice->period ?? $subscription->period,
+        ])->save();
 
         $after = $tree->mapWithKeys(fn (Organization $node) => [$node->getKey() => $this->modules->fresh($node)]);
 
@@ -157,7 +206,11 @@ class ChangePlan
         }
 
         return [
-            'plan' => ['key' => $plan, 'name' => $this->plans->get($plan)->label()],
+            'plan' => ['key' => $plan, 'name' => $choice->partnerPlan?->label() ?? $this->plans->get($plan)->label()],
+            'partner_plan' => $choice->partnerPlan === null ? null : ['id' => $choice->partnerPlan->getKey(), 'name' => $choice->partnerPlan->label()],
+            'currency' => $subscription->currency_code,
+            'period' => $subscription->period,
+            'price_minor' => $this->subscriptions->price($subscription, $root),
             'modules_off' => $this->named(array_keys($off)),
             'modules_on' => $this->named(array_keys($on)),
             'limits' => array_map(fn ($max, $limit) => ['limit' => $limit, 'max' => $max, 'used' => $usage[$limit]], $limits, array_keys($limits)),

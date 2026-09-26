@@ -1,0 +1,154 @@
+{
+    "per": {
+        "monthly": "/ month",
+        "yearly": "/ year"
+    },
+    "periods": {
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+    },
+    "status": {
+        "issued": "Unpaid",
+        "overdue": "Overdue",
+        "paid": "Paid",
+        "credited": "Credited"
+    },
+    "commission_status": {
+        "pending": "Waiting for payment",
+        "payable": "Ready to pay out",
+        "paid": "Paid out"
+    },
+    "change": {
+        "your_plan": "Your plan",
+        "currency": "Billing currency",
+        "period": "Billing period",
+        "no_price": "This plan has no {period} price in {currency}. Add one on the Plans page, or choose another currency or period."
+    },
+    "plans": {
+        "title": "Plans",
+        "text": "Your own plans for your clients, built on ours: your name, your prices, and the modules you choose to include.",
+        "new": "New plan",
+        "mode_wholesale": "You pay us a wholesale price for each client and bill your clients yourself, at the prices you set here.",
+        "mode_revenue_share": "We bill your clients at these prices under your brand, and you earn {share}% of each invoice before tax.",
+        "mode_direct": "We bill your clients directly at these prices.",
+        "empty_title": "No plans of your own yet",
+        "empty_text": "Make a plan with your own name and prices, then put clients on it from the Clients page.",
+        "based_on": "Based on {plan}",
+        "archived": "Archived",
+        "margin": "You keep {amount} per client each month (our price: {cost}).",
+        "loss": "You lose {amount} per client each month: our price is {cost}.",
+        "cost_per_client": "Our price: {amount} per client per month.",
+        "cost_per_seat": "Our price: {amount} per staff user per month.",
+        "some_modules": "{count} modules",
+        "all_modules": "Every module of the base plan",
+        "archive": "Archive",
+        "archive_title": "Archive \"{name}\"?",
+        "archive_text_one": "New clients can no longer be put on it. The {count} client on it keeps it.",
+        "archive_text_other": "New clients can no longer be put on it. The {count} clients on it keep it.",
+        "dialog": {
+            "new_title": "New plan",
+            "edit_title": "Edit \"{name}\"",
+            "text": "Clients see this name and these prices. They can never get more modules than the plan underneath.",
+            "name_en": "Name (English)",
+            "name_bn": "Name (Bangla)",
+            "name_placeholder": "e.g. School Plus",
+            "name_required": "Give the plan an English name.",
+            "desc_en": "Short description (English)",
+            "desc_bn": "Short description (Bangla)",
+            "locked_one": "{count} client is on this plan, so its base plan and modules are fixed. Make a new plan to change them.",
+            "locked_other": "{count} clients are on this plan, so its base plan and modules are fixed. Make a new plan to change them.",
+            "base": "Built on",
+            "base_hint": "Our plan underneath: it decides the most modules and the limits.",
+            "modules": "Modules",
+            "all_modules": "Include every module",
+            "all_modules_hint": "Everything {plan} has, including modules added later.",
+            "prices": "Prices",
+            "prices_hint": "At least one. Clients are billed in the currency and period you choose for them.",
+            "currency": "Currency",
+            "currency_invalid": "Use a 3-letter code like BDT.",
+            "period": "Period",
+            "amount": "Amount",
+            "amount_invalid": "Enter an amount like 7000 or 7000.50.",
+            "price_required": "Add at least one price.",
+            "remove_price": "Remove this price",
+            "add_price": "Add a price",
+            "create": "Create plan"
+        }
+    },
+    "document": {
+        "invoice": "Invoice",
+        "credit_note": "Credit note",
+        "from": "From",
+        "to": "Billed to",
+        "tax_id": "Tax ID {id}",
+        "on_behalf": "Issued for {brand}",
+        "issued": "Issued",
+        "due": "Due",
+        "period": "Period",
+        "credits": "Credits invoice",
+        "description": "Description",
+        "quantity": "Qty",
+        "unit": "Unit price",
+        "amount": "Amount",
+        "subtotal": "Subtotal",
+        "tax": "Tax ({rate}%)",
+        "total": "Total due",
+        "credit_total": "Total credited",
+        "reason": "Reason: {reason}",
+        "paid": "Paid on {date} (reference {reference}).",
+        "credited_by": "Credit note {number}: {amount} on {date}.",
+        "back": "Back to billing",
+        "print": "Print or save as PDF"
+    },
+    "list": {
+        "credits": "for {number}",
+        "due": "due {date}",
+        "paid": "paid {date}"
+    },
+    "partner": {
+        "title": "Billing",
+        "text_wholesale": "What we invoice you each month for your clients. You bill your clients yourself.",
+        "text_revenue_share": "What your clients were invoiced under your brand, and your share of it.",
+        "text_direct": "What your clients were invoiced.",
+        "tabs": {
+            "ours": "Invoices to you",
+            "clients": "Client invoices",
+            "commissions": "Your share",
+            "payouts": "Payouts"
+        },
+        "cards": {
+            "we_bill_you": "Unpaid invoices",
+            "we_bill_you_hint": "Invoiced in {currency} on the 1st of each month.",
+            "clients_owe": "Clients still owe",
+            "clients_owe_hint": "Unpaid client invoices.",
+            "payable": "Ready to pay out",
+            "payable_hint": "Your {share}% of invoices clients have paid.",
+            "pending": "Waiting for clients",
+            "pending_hint": "Your share of invoices not paid yet.",
+            "nothing": "Nothing"
+        },
+        "empty": {
+            "ours": "No invoices yet",
+            "clients": "No client invoices yet",
+            "commissions": "No commissions yet",
+            "payouts": "No payouts yet"
+        },
+        "empty_text": "Invoices are issued on the 1st of each month.",
+        "share_of": "{share}% of {amount}",
+        "payout_line_one": "{count} commission · reference {reference}",
+        "payout_line_other": "{count} commissions · reference {reference}"
+    },
+    "client": {
+        "title": "Billing",
+        "text": "Your plan and the invoices for it.",
+        "plan": "Your plan",
+        "by_provider": "Billed to you by {provider}.",
+        "no_price": "No price set yet.",
+        "next": "Next invoice",
+        "next_first": "At the start of next month",
+        "issued_by": "Issued for {provider}.",
+        "invoices": "Invoices",
+        "empty_title": "No invoices yet",
+        "empty_text": "Your first invoice arrives at the start of the month after you joined."
+    }
+}

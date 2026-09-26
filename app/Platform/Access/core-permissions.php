@@ -22,4 +22,6 @@ return [
     ['key' => 'support.approve', 'group' => 'security'],
     ['key' => 'audit.view', 'group' => 'security'],
     ['key' => 'data.export', 'group' => 'security'],
+    // Phase 5B-3: the client's own plan and invoices.
+    ['key' => 'billing.view', 'group' => 'billing'],
 ];

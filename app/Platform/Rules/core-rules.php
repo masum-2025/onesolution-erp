@@ -271,4 +271,61 @@ return [
         'category' => 'data',
         'sort_order' => 82,
     ],
+
+    // ── Billing (Phase 5B-3) ─────────────────────────────────────────────
+    [
+        'key' => 'billing.partner_currency',
+        'type' => 'string',
+        // The currency wholesale invoices and payouts to a partner are in.
+        'schema' => ['pattern' => '^[A-Z]{3}$'],
+        'default' => 'USD',
+        'label' => 'rules.core.billing_partner_currency.label',
+        'description' => 'rules.core.billing_partner_currency.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'billing',
+        'sort_order' => 90,
+    ],
+    [
+        'key' => 'partners.revenue_share_bp',
+        'type' => 'integer',
+        // Basis points of a revenue-share invoice's subtotal (3000 = 30%). PLACEHOLDER.
+        'schema' => ['minimum' => 0, 'maximum' => 10000],
+        'default' => 3000,
+        'label' => 'rules.core.partners_revenue_share_bp.label',
+        'description' => 'rules.core.partners_revenue_share_bp.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        // What we pay out: a second person approves a change.
+        'sensitive' => true,
+        'category' => 'billing',
+        'sort_order' => 91,
+    ],
+    [
+        'key' => 'billing.tax_rate_bp',
+        'type' => 'integer',
+        // VAT/sales tax on our invoices, in basis points (1500 = 15%). Country values
+        // are data; PLACEHOLDER 0 until a tax adviser confirms them.
+        'schema' => ['minimum' => 0, 'maximum' => 10000],
+        'default' => 0,
+        'label' => 'rules.core.billing_tax_rate_bp.label',
+        'description' => 'rules.core.billing_tax_rate_bp.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'sensitive' => true,
+        'category' => 'billing',
+        'sort_order' => 92,
+    ],
+    [
+        'key' => 'billing.payment_terms_days',
+        'type' => 'integer',
+        'schema' => ['minimum' => 0, 'maximum' => 90],
+        'default' => 14,
+        'label' => 'rules.core.billing_payment_terms_days.label',
+        'description' => 'rules.core.billing_payment_terms_days.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'billing',
+        'sort_order' => 93,
+    ],
 ];

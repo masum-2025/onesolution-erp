@@ -39,6 +39,26 @@ class PackagingException extends TenancyException
         return new self('same_plan', 422);
     }
 
+    public static function noPrice(string $currency, string $period): self
+    {
+        return new self('no_price', 422, ['currency' => $currency, 'period' => __("packaging.periods.{$period}")]);
+    }
+
+    public static function planInUse(): self
+    {
+        return new self('plan_in_use', 422);
+    }
+
+    public static function moduleNotInBase(string $module): self
+    {
+        return new self('module_not_in_base', 422, ['module' => $module]);
+    }
+
+    public static function moduleNeeds(string $module, string $required): self
+    {
+        return new self('module_needs', 422, ['module' => $module, 'required' => $required]);
+    }
+
     public static function notTopLevel(): self
     {
         return new self('not_top_level', 422);

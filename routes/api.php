@@ -3,6 +3,10 @@
 use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
 use App\Platform\Audit\Http\AuditLogController;
+use App\Platform\Billing\Http\Controllers\OrganizationBillingController;
+use App\Platform\Billing\Http\Controllers\PartnerBillingController;
+use App\Platform\Billing\Http\Controllers\PartnerPlansController;
+use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Modules\Http\Controllers\MenuController;
 use App\Platform\SupportAccess\Http\Controllers\ClientSupportController;
@@ -89,6 +93,10 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::post('organizations/{organization}/support-grants/{grant}/revoke', [ClientSupportController::class, 'revoke']);
     });
 
+    // The client's own plan and invoices (Phase 5B-3).
+    Route::get('organizations/{organization}/billing', [OrganizationBillingController::class, 'show']);
+    Route::get('organizations/{organization}/billing/invoices/{invoice}', [OrganizationBillingController::class, 'invoice']);
+
     // Plan usage and sector packages (Phase 5)
     Route::get('organizations/{organization}/usage', UsageController::class);
     Route::post('organizations/{organization}/sector-package', [SectorPackageController::class, 'store'])
@@ -149,6 +157,20 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
     Route::middleware('throttle:partner-heavy')->group(function () {
         Route::post('brand/assets/{kind}', [PartnerBrandController::class, 'storeAsset']);
         Route::post('domains/{domain}/verify', [PartnerDomainController::class, 'verify']);
+    });
+
+    // Partner plans and billing (Phase 5B-3).
+    Route::get('plans', [PartnerPlansController::class, 'index']);
+    Route::get('clients/{client}/subscription', [PartnerSubscriptionController::class, 'show']);
+    Route::get('billing', [PartnerBillingController::class, 'summary']);
+    Route::get('billing/invoices', [PartnerBillingController::class, 'invoices']);
+    Route::get('billing/invoices/{invoice}', [PartnerBillingController::class, 'invoice']);
+    Route::get('billing/commissions', [PartnerBillingController::class, 'commissions']);
+    Route::get('billing/payouts', [PartnerBillingController::class, 'payouts']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('plans', [PartnerPlansController::class, 'store']);
+        Route::patch('plans/{plan}', [PartnerPlansController::class, 'update']);
+        Route::post('plans/{plan}/archive', [PartnerPlansController::class, 'archive']);
     });
 
     Route::get('organizations/{organization}/plan-preview', [PartnerPlanController::class, 'preview']);

@@ -14,7 +14,10 @@ class PreviewPlanRequest extends StrictFormRequest
     public function rules(): array
     {
         return [
-            'plan' => ['required', 'string', Rule::in(app(PlanCatalog::class)->keys())],
+            'plan' => ['required_without:partner_plan_id', 'nullable', 'string', Rule::in(app(PlanCatalog::class)->keys())],
+            'partner_plan_id' => ['nullable', 'string', 'ulid'],
+            'currency' => ['nullable', 'string', 'regex:/^[A-Z]{3}$/'],
+            'period' => ['nullable', 'string', Rule::in(PlanCatalog::PERIODS)],
         ];
     }
 }

@@ -33,6 +33,8 @@ const routes = [
             },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
+            { path: 'billing', name: 'billing', component: () => import('./pages/billing/BillingPage.vue'), meta: { context: 'organization', ns: ['billing'] } },
+            { path: 'billing/invoices/:id', name: 'invoice', component: () => import('./pages/billing/InvoicePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             { path: 'export', name: 'export', component: () => import('./pages/trust/ExportPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             {
                 path: 'partner/support',
@@ -54,7 +56,25 @@ const routes = [
                 path: 'partner/organizations',
                 name: 'partner-organizations',
                 component: () => import('./pages/partner/PartnerOrganizationsPage.vue'),
-                meta: { context: 'partner', ns: ['partner', 'orgs', 'packaging'] },
+                meta: { context: 'partner', ns: ['partner', 'orgs', 'packaging', 'billing'] },
+            },
+            {
+                path: 'partner/plans',
+                name: 'partner-plans',
+                component: () => import('./pages/partner/PartnerPlansPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'billing'] },
+            },
+            {
+                path: 'partner/billing',
+                name: 'partner-billing',
+                component: () => import('./pages/partner/PartnerBillingPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'billing'] },
+            },
+            {
+                path: 'partner/billing/invoices/:id',
+                name: 'partner-invoice',
+                component: () => import('./pages/billing/InvoicePage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'billing'] },
             },
             {
                 path: 'partner/brand',

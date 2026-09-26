@@ -39,10 +39,16 @@ abstract class TenancyException extends RuntimeException
         return 'tenancy.errors.'.$this->errorCode;
     }
 
+    /** The translated message people see (API responses, console commands). */
+    public function userMessage(): string
+    {
+        return __($this->translationKey(), $this->replace);
+    }
+
     public function render(): JsonResponse
     {
         return response()->json([
-            'message' => __($this->translationKey(), $this->replace),
+            'message' => $this->userMessage(),
             'code' => $this->errorCode,
             ...$this->extra,
         ], $this->status);
