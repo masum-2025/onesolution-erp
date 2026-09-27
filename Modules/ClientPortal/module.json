@@ -1,0 +1,11 @@
+{
+    "name": "ClientPortal",
+    "alias": "client_portal",
+    "description": "Branded self-service portals for a client's own people: parents, employees, customers.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ClientPortal\\Providers\\ClientPortalServiceProvider"
+    ],
+    "files": []
+}

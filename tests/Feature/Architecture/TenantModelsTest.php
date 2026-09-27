@@ -21,6 +21,8 @@ use App\Platform\Billing\Models\Payout;
 use App\Platform\Billing\Models\TrialGrant;
 use App\Platform\Payments\Models\GatewayEvent;
 use App\Platform\Payments\Models\Payment;
+use App\Platform\Portal\Models\PortalInvitation;
+use App\Platform\Portal\Models\PortalLink;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\DataExport\Models\DataExport;
@@ -144,6 +146,11 @@ const PLATFORM_MODELS = [
     Payment::class,
     GatewayEvent::class,
     TrialGrant::class,
+    // Portals (5C-4): invitations are opened and links made while joining, before
+    // any context; staff and members read them filtered by the context's
+    // organization and membership.
+    PortalInvitation::class,
+    PortalLink::class,
 ];
 
 /**

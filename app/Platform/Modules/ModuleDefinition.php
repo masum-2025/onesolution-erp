@@ -16,6 +16,7 @@ final readonly class ModuleDefinition
      * @param  list<array{key: string, label: string, route: string, icon?: string, order: int}>  $menu
      * @param  list<string>  $events
      * @param  list<array{0: string, 1: string}>  $separationOfDuties  Permission pairs one person may not hold together.
+     * @param  list<class-string>  $portalSubjects  PortalSubjectProvider classes.
      */
     public function __construct(
         public string $key,
@@ -33,6 +34,8 @@ final readonly class ModuleDefinition
         public bool $isCore,
         public bool $requiresConsent,
         public array $separationOfDuties = [],
+        // Kinds of records a portal may show (Phase 5C-4): PortalSubjectProvider classes.
+        public array $portalSubjects = [],
     ) {}
 
     /**
@@ -56,6 +59,7 @@ final readonly class ModuleDefinition
             isCore: (bool) ($manifest['is_core'] ?? false),
             requiresConsent: (bool) ($manifest['requires_consent'] ?? false),
             separationOfDuties: array_values(array_map('array_values', $manifest['separation_of_duties'] ?? [])),
+            portalSubjects: array_values($manifest['portal_subjects'] ?? []),
         );
     }
 

@@ -1167,6 +1167,76 @@ Audited (`identity.data_downloaded`). A workspace's business data has its own ex
 - Open: invoice retention per country, handing over ownership from the members screen in one
   step, a reminder shortly before erasure.
 
+## B2B2C portals (Phase 5C-4)
+
+Code: `app/Platform/Portal` (the framework every module uses) and `Modules/ClientPortal` (the
+switch, rules, permissions and texts: module `client_portal`, in starter/business/enterprise,
+off until turned on like any module). A client gives its own people (parents, employees,
+customers) a portal, in its brand, where each sees **only the records linked to them**.
+
+### Record kinds come from modules
+
+A module declares in its manifest which of its records a portal may show:
+
+```php
+'portal_subjects' => [Modules\School\Portal\StudentProvider::class],
+```
+
+The provider (`PortalSubjectProvider`) answers for kind `school.student`: label, relations
+(`guardian`, `self`), find/search within an organization, and the fields it may show. The portal
+never reads the module's tables. In its own queries a module restricts portal members with
+`app(PortalAccess::class)->restrict($query, 'school.student')` (staff are not affected). A kind
+works only while its module and `client_portal` are on. No module has records yet: the tests use
+a fixture student (`tests/Fixtures/FixtureStudentProvider`).
+
+### Inviting and joining
+
+1. Staff with `client_portal.manage` open **Portal** (`/portal-admin`), pick a record, the
+   relation, the person's name and their **email or phone**. The invitation (a link and a code
+   like `K7QDP-9MXPA`, valid `client_portal.invitation_valid_days`, 14) is sent there, or handed
+   over (printed); the code is shown only once, only hashes are stored.
+2. The person opens `/portal/join/{token}` or types the code. The invitation is **bound to that
+   address**: an existing account must have it verified; someone new gets a one-time code there
+   and an account is created (verified, no personal workspace).
+3. The link waits for the client's approval (`client_portal.link_approval`: `manual`, or
+   `auto_verified`). Staff approve, reject, or later remove access (at once). All audited:
+   `portal.invited`, `portal.joined`, `portal.link_approved|rejected|revoked`,
+   `portal.invitation_revoked`.
+
+Limits: `client_portal.max_links_per_person` (10), code lookups 10 per minute per network.
+Fields a client hides: `client_portal.hidden_fields` (`["school.student.date_of_birth"]`).
+`client_portal.allow_online_payment` is a flag for modules that will offer payments.
+
+### What a portal member can reach
+
+A portal membership holds no permissions and takes no seat. **Every organization endpoint
+except `/api/portal*` answers 403 `portal_only`** (middleware, so a new endpoint is closed by
+default). `GET /api/portal` lists their links (a waiting one shows no record name);
+`GET /api/portal/records/{link}` shows one active record; anything else (another member's link,
+another child's id, a revoked link, the module off) is 404 or 403. The app shows portal members
+only "My records" and My account.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET | /api/organizations/{id}/portal | client_portal.view |
+| GET | /api/organizations/{id}/portal/kinds/{kind}/records?q= | client_portal.manage |
+| POST / DELETE | /api/organizations/{id}/portal/invitations[/{invitation}] | client_portal.manage |
+| POST | /api/organizations/{id}/portal/links/{link}/approve\|reject\|revoke | client_portal.manage |
+| GET | /api/portal, /api/portal/records/{link} | the portal member |
+| GET | /session/portal/invitations/{code or token} | anyone (10/min) |
+| POST | /session/portal/join (signed in), /session/portal/signup, /session/portal/signup/verify | anyone (10/min) |
+
+### Future expansion (Phase 5C-4)
+
+- A new kind of record (students, payslips, patient visits, orders): the owning module adds a
+  provider and one manifest line. No portal code changes.
+- A new sector or partner: turn on `client_portal`, choose the approval rule and hidden fields.
+- Open: telling staff when a link waits (notification), bulk invitations (e.g. a whole class),
+  portal payments once a fees or invoicing module exists, and a portal-only address
+  (e.g. `parents.school.com`) through client domains.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

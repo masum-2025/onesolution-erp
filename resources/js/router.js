@@ -20,6 +20,8 @@ const routes = [
     { path: '/legal/:kind(terms|privacy)', name: 'legal', component: () => import('./pages/auth/LegalPage.vue'), meta: { public: true, ns: ['identity'] } },
     { path: '/welcome', name: 'welcome', component: () => import('./pages/auth/WelcomePage.vue'), meta: { ns: ['identity'] } },
     { path: '/choose', name: 'choose', component: () => import('./pages/auth/ChooseContextPage.vue'), meta: { ns: ['auth'] } },
+    // Joining a client's portal with an invitation link or code (Phase 5C-4), signed in or not.
+    { path: '/portal/join/:key?', name: 'portal-join', component: () => import('./pages/portal/JoinPage.vue'), meta: { public: true, ns: ['auth', 'identity', 'portal'] } },
     {
         path: '/',
         component: AppShell,
@@ -45,6 +47,10 @@ const routes = [
             { path: 'provider', name: 'provider', component: () => import('./pages/provider/ProviderPage.vue'), meta: { context: 'organization', ns: ['provider'] } },
             { path: 'billing', name: 'billing', component: () => import('./pages/billing/BillingPage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             { path: 'billing/invoices/:id', name: 'invoice', component: () => import('./pages/billing/InvoicePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
+            // B2B2C portal (Phase 5C-4): a member's own records, and the client's side.
+            { path: 'portal', name: 'portal-home', component: () => import('./pages/portal/PortalHomePage.vue'), meta: { context: 'organization', portal: true, ns: ['portal'] } },
+            { path: 'portal/records/:id', name: 'portal-record', component: () => import('./pages/portal/PortalRecordPage.vue'), meta: { context: 'organization', portal: true, ns: ['portal'] } },
+            { path: 'portal-admin', name: 'portal-admin', component: () => import('./pages/portal/PortalAdminPage.vue'), meta: { context: 'organization', ns: ['portal'] } },
             // A personal workspace becomes a company (Phase 5C-3).
             { path: 'upgrade', name: 'upgrade', component: () => import('./pages/billing/UpgradePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             // Where the payment page sends the person back (Phase 5C-2).
@@ -167,7 +173,8 @@ export const router = createRouter({
 
 function homeFor(context) {
     if (!context) return { name: 'choose' };
-    return context.type === 'partner' ? { name: 'partner-organizations' } : { name: 'home' };
+    if (context.type === 'partner') return { name: 'partner-organizations' };
+    return context.membership_type === 'portal' ? { name: 'portal-home' } : { name: 'home' };
 }
 
 router.beforeEach(async (to) => {
@@ -197,6 +204,12 @@ router.beforeEach(async (to) => {
     if (to.meta.context && me.context?.type !== to.meta.context) {
         await namespaces;
         return me.context ? homeFor(me.context) : { name: 'choose', query: { redirect: to.fullPath } };
+    }
+
+    // A portal member sees the portal and their own account only (the API agrees: portal_only).
+    if (me.context?.membership_type === 'portal' && to.meta.context === 'organization' && !to.meta.portal) {
+        await loadNamespaces(['core', 'portal']);
+        return { name: 'portal-home' };
     }
 
     // A suspended provider after the grace period: only the export screen works (the API agrees).

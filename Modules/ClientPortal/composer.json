@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/client-portal",
+    "description": "Branded self-service portals for a client's own people: parents, employees, customers.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\ClientPortal\\": "app/"
+        }
+    }
+}

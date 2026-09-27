@@ -22,7 +22,7 @@ it('loads every installed module from its manifest', function () {
     expect(app(ModuleRegistry::class)->keys())->toEqualCanonicalizing([
         'hrm', 'attendance', 'payroll', 'accounting', 'inventory', 'crm', 'factory_erp',
         'offline_mode', 'multi_currency', 'multi_language', 'api_integration', 'external_integrations',
-        'document_ai', 'ai_assistant', 'energy_monitoring', 'carbon_management', 'advanced_audit', 'custom_reports',
+        'document_ai', 'ai_assistant', 'energy_monitoring', 'carbon_management', 'advanced_audit', 'custom_reports', 'client_portal',
     ]);
 });
 

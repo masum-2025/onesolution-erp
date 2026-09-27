@@ -40,6 +40,8 @@ use App\Platform\Tenancy\Http\Controllers\Api\MeController;
 use App\Platform\Identity\Http\Controllers\AccountController;
 use App\Platform\Identity\Http\Controllers\MyDataController;
 use App\Platform\Identity\Http\Controllers\UpgradeController;
+use App\Platform\Portal\Http\Controllers\PortalAdminController;
+use App\Platform\Portal\Http\Controllers\PortalMemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\MemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\OrganizationController;
 use App\Platform\Tenancy\Http\Controllers\Api\PartnerOrganizationController;
@@ -149,6 +151,22 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     // The client's own plan and invoices (Phase 5B-3).
     Route::get('organizations/{organization}/billing', [OrganizationBillingController::class, 'show']);
     Route::get('organizations/{organization}/billing/invoices/{invoice}', [OrganizationBillingController::class, 'invoice']);
+
+    // B2B2C portal (Phase 5C-4): the client's side, and a portal member's own records.
+    Route::middleware('module:client_portal')->group(function () {
+        Route::get('organizations/{organization}/portal', [PortalAdminController::class, 'show']);
+        Route::get('organizations/{organization}/portal/kinds/{kind}/records', [PortalAdminController::class, 'search'])->where('kind', '[a-z0-9_.]+');
+        Route::middleware('throttle:tenancy-sensitive')->group(function () {
+            Route::post('organizations/{organization}/portal/invitations', [PortalAdminController::class, 'invite']);
+            Route::delete('organizations/{organization}/portal/invitations/{invitation}', [PortalAdminController::class, 'revokeInvitation']);
+            Route::post('organizations/{organization}/portal/links/{link}/approve', [PortalAdminController::class, 'approve']);
+            Route::post('organizations/{organization}/portal/links/{link}/reject', [PortalAdminController::class, 'reject']);
+            Route::post('organizations/{organization}/portal/links/{link}/revoke', [PortalAdminController::class, 'revoke']);
+        });
+
+        Route::get('portal', [PortalMemberController::class, 'index']);
+        Route::get('portal/records/{link}', [PortalMemberController::class, 'show'])->where('link', '[0-9A-Za-z]{26}');
+    });
 
     // A personal workspace becomes a company (Phase 5C-3): owner only.
     Route::get('organizations/{organization}/upgrade', [UpgradeController::class, 'preview']);

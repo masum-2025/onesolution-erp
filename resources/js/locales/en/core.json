@@ -98,7 +98,8 @@
         "provider": "Provider & terms",
         "partner_api": "API keys",
         "brand": "Our brand",
-        "account": "My account"
+        "account": "My account",
+        "portal_home": "My records"
     },
     "not_found": {
         "title": "This page does not exist",

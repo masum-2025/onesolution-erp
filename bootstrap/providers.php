@@ -11,6 +11,7 @@ use App\Platform\Notifications\NotificationsServiceProvider;
 use App\Platform\Packaging\PackagingServiceProvider;
 use App\Platform\PartnerApi\PartnerApiServiceProvider;
 use App\Platform\Payments\PaymentsServiceProvider;
+use App\Platform\Portal\PortalServiceProvider;
 use App\Platform\Partners\PartnersServiceProvider;
 use App\Platform\Rules\RulesServiceProvider;
 use App\Platform\Tenancy\TenancyServiceProvider;
@@ -32,4 +33,5 @@ return [
     TransfersServiceProvider::class,
     PartnerApiServiceProvider::class,
     IdentityServiceProvider::class,
+    PortalServiceProvider::class,
 ];

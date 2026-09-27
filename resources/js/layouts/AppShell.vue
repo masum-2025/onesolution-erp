@@ -13,7 +13,7 @@ import CommandPalette from '@/components/CommandPalette.vue';
 import { api } from '@/lib/http';
 import { cached } from '@/lib/cache';
 import { on } from '@/lib/events';
-import { can, currentOrganization, enterContext, session } from '@/lib/session';
+import { can, currentOrganization, enterContext, isPortalMember, session } from '@/lib/session';
 import { setTheme, theme } from '@/lib/theme';
 import { formatNumber } from '@/lib/format';
 import { toast } from '@/lib/toast';
@@ -37,7 +37,8 @@ const breadcrumb = computed(() => {
 
 async function loadShellData() {
     const org = currentOrganization();
-    if (!org) {
+    // Portal members have no module menu: their portal is their whole app.
+    if (!org || isPortalMember()) {
         menu.value = [];
         pendingApprovals.value = 0;
         return;

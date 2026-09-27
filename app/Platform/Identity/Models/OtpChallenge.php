@@ -27,6 +27,9 @@ class OtpChallenge extends Model
 
     public const VERIFY_CONTACT = 'verify_contact';
 
+    // Creating an account to join a client's portal (Phase 5C-4).
+    public const PORTAL_JOIN = 'portal_join';
+
     protected $guarded = ['*'];
 
     protected function casts(): array

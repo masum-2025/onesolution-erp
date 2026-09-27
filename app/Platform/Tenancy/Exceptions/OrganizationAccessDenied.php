@@ -57,6 +57,12 @@ class OrganizationAccessDenied extends TenancyException
         return new self('export_only', 403);
     }
 
+    /** A portal member (Phase 5C-4) outside the portal's own endpoints. */
+    public static function portalOnly(): self
+    {
+        return new self('portal_only', 403);
+    }
+
     public static function writeOutsideScope(): self
     {
         return new self('write_forbidden', 403);

@@ -11,6 +11,7 @@ use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
 use App\Platform\Identity\Http\Middleware\TrackUserSession;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
 use App\Platform\Payments\Http\GatewayCallbackController;
+use App\Platform\Portal\Http\Controllers\PortalJoinController;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Session\Middleware\StartSession;
@@ -38,6 +39,14 @@ Route::prefix('session')->group(function () {
         Route::post('signup/verify', [SignupController::class, 'verify']);
         Route::post('recovery/verify', [RecoveryController::class, 'complete']);
         Route::post('otp/resend', [SignupController::class, 'resend']);
+    });
+
+    // Joining a client's portal with an invitation (Phase 5C-4).
+    Route::middleware('throttle:portal-join')->group(function () {
+        Route::get('portal/invitations/{key}', [PortalJoinController::class, 'show'])->where('key', '[A-Za-z0-9-]{10,64}');
+        Route::post('portal/signup', [PortalJoinController::class, 'signup']);
+        Route::post('portal/signup/verify', [PortalJoinController::class, 'verify']);
+        Route::post('portal/join', [PortalJoinController::class, 'join'])->middleware('auth:web');
     });
 
     Route::middleware('auth:web')->group(function () {

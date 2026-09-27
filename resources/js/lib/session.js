@@ -56,6 +56,11 @@ export function can(ability) {
     return session.me?.can?.[ability] === true;
 }
 
+/** A client's own person (parent, employee, customer) in its portal (Phase 5C-4). */
+export function isPortalMember() {
+    return session.me?.context?.type === 'organization' && session.me.context.membership_type === 'portal';
+}
+
 export function currentOrganization() {
     return session.me?.context?.type === 'organization' ? session.me.context : null;
 }

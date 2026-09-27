@@ -249,7 +249,8 @@ it('keeps portal users out of the structure and staff roles', function () {
     $this->asToken($token)->getJson("/api/organizations/{$this->w->c1->id}")->assertForbidden();
     $this->asToken($token)->getJson("/api/organizations/{$this->w->c1->id}/modules")->assertForbidden();
     $this->asToken($token)->getJson("/api/organizations/{$this->w->c1->id}/rules")->assertForbidden();
-    $this->asToken($token)->getJson('/api/menu')->assertOk()->assertJsonPath('data', []);
+    // Phase 5C-4: the portal's own endpoints only.
+    $this->asToken($token)->getJson('/api/menu')->assertForbidden()->assertJsonPath('code', 'portal_only');
 
     $membership = giveRoles($parent, $this->w->c1);
     $this->asToken(companyOwnerToken($this->w))->putJson("/api/organizations/{$this->w->c1->id}/members/{$membership->id}/roles", [

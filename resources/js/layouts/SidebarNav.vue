@@ -43,6 +43,9 @@ const workspace = computed(() => {
     // A suspended provider after the grace period: exporting is all that is left.
     if (session.me?.context?.mode === 'export_only') return [exportItem()];
 
+    // A client's own person in its portal (Phase 5C-4): their records, nothing else.
+    if (session.me?.context?.membership_type === 'portal') return [{ to: '/portal', label: t('core.nav.portal_home'), icon: Home }];
+
     return [
         { to: '/', label: t('core.nav.overview'), icon: Home, exact: true },
         { to: '/organizations', label: t('core.nav.organizations'), icon: Network },

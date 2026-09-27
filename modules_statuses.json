@@ -16,5 +16,6 @@
     "EnergyMonitoring": true,
     "CarbonManagement": true,
     "AdvancedAudit": true,
-    "CustomReports": true
+    "CustomReports": true,
+    "ClientPortal": true
 }

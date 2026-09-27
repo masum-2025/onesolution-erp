@@ -3,6 +3,7 @@
 namespace App\Platform\Tenancy\Http\Middleware;
 
 use App\Http\Middleware\ApplyRequestLocale;
+use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\ContextSource;
@@ -58,6 +59,12 @@ class ResolveOrganization
         }
 
         $this->enforceMode($request, $context);
+
+        // A portal member (parent, employee, customer) reaches only the portal's own
+        // endpoints, never the organization's structure, members, rules or billing.
+        if ($context->membership()->membership_type === MembershipType::Portal && ! $request->is('api/portal', 'api/portal/*')) {
+            throw OrganizationAccessDenied::portalOnly();
+        }
 
         // The organization's language, unless the user picked one for this request.
         $locale = $context->locale();

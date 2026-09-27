@@ -13,6 +13,7 @@ return [
             'signup' => 'to create your account',
             'recovery' => 'to reset your password',
             'verify_contact' => 'to confirm this address',
+            'portal_join' => 'to join the portal',
         ],
         'sms' => ':code is your :product code :purpose. It expires in :minutes minutes. Never share it with anyone.',
         'mail_subject' => ':code is your :product code',

@@ -29,6 +29,7 @@ return [
         'support_ended' => 'This support access has ended. Request new access if you still need it.',
         'read_only_support' => 'Support access is read-only. Ask the client to make this change.',
         'read_only_partner_suspended' => 'Your service provider\'s account is suspended, so this account is read-only for now. You can still view and export your data.',
+        'portal_only' => 'This part is for the organization\'s staff. Your portal shows everything you can see here.',
         'read_only_payment_overdue' => 'This workspace is read-only because a bill is overdue. Pay it on the Billing page, or move to the free plan, and everything works again at once. Your data is safe.',
         'export_only' => 'Your service provider\'s account is suspended and the grace period has ended. You can still export all your data.',
     ],

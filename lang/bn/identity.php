@@ -13,6 +13,7 @@ return [
             'signup' => 'অ্যাকাউন্ট খোলার জন্য',
             'recovery' => 'পাসওয়ার্ড রিসেটের জন্য',
             'verify_contact' => 'এই ঠিকানা নিশ্চিত করার জন্য',
+            'portal_join' => 'পোর্টালে যোগ দেওয়ার জন্য',
         ],
         'sms' => ':purpose আপনার :product কোড :code। :minutes মিনিট চলবে। কাউকে এই কোড দেবেন না।',
         'mail_subject' => 'আপনার :product কোড :code',
