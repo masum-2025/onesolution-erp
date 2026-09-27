@@ -1,0 +1,69 @@
+{
+    "merchant": {
+        "title": "Online payments",
+        "text": "Connect your own payment gateway account, so your customers (parents, patients, shop customers) pay you directly. The money goes to your account, not ours.",
+        "inherited": "These are {company}'s accounts. Branches and departments collect into them; change them at the company.",
+        "none_offered_title": "Online payment is not available here yet",
+        "none_offered_text": "No payment gateway is open for your country or group yet. Your provider can tell you when it is.",
+        "no_accounts": "No account connected yet.",
+        "connect": "Connect {gateway}",
+        "only_approver": "You are the only person here who can approve payment account changes, so your changes take effect {hours} hours after you make them. Everyone who manages the company is told at once.",
+        "status": {
+            "active": "Taking payments",
+            "pending": "Waiting for approval",
+            "disabled": "Off"
+        },
+        "mode": {
+            "sandbox": "Sandbox: test money only",
+            "live": "Live: real money"
+        },
+        "store": "Store {hint}",
+        "currency": "Currency {currency}",
+        "approved": "Approved {date}",
+        "pending_title": "Change waiting",
+        "pending_text": "{person} asked on {date}: {mode}, store {hint}.",
+        "pending_after_approval": "Takes effect once another person approves it.",
+        "pending_on": "Takes effect by itself on {date}, unless someone rejects it.",
+        "pending_yours": "This is your change: someone else must approve it.",
+        "check_ok": "The gateway accepted the store details {date}.",
+        "check_failed": "Last check {date}: the gateway did not accept the details.",
+        "approve": "Approve",
+        "reject": "Reject",
+        "reject_title": "Reject this change?",
+        "reject_text": "The current details stay as they are. The person who asked can try again.",
+        "test": "Check with gateway",
+        "change": "Change",
+        "disable": "Turn off",
+        "disable_title": "Turn off this account?",
+        "disable_text": "Customers can no longer pay online into it. Payments already made are kept. You can turn it on again later.",
+        "enable": "Turn on",
+        "reason": "Reason (optional)"
+    },
+    "dialog": {
+        "connect_title": "Connect a payment account",
+        "change_title": "Change {gateway} account",
+        "text": "Copy the details from your account at the gateway. We check them with the gateway before saving. The password is stored encrypted and never shown again.",
+        "gateway": "Gateway",
+        "label": "Name on screen",
+        "label_placeholder": "Main account",
+        "mode": "Mode",
+        "live_closed": "Live accounts are not open yet: connect a sandbox account for now.",
+        "new_details": "Change store details",
+        "new_details_hint": "Leave off to change the name only.",
+        "fields": {
+            "store_id": "Store ID",
+            "store_password": "Store password"
+        },
+        "current_password": "Your password",
+        "current_password_hint": "This decides where your customers' money goes, so we ask for your password.",
+        "save": "Check and save",
+        "save_name": "Save name"
+    },
+    "password": {
+        "approve_title": "Approve this change?",
+        "approve_text": "From now on, customers' online payments go to store {hint}.",
+        "enable_title": "Turn this account on again?",
+        "enable_text": "Customers' online payments go to store {hint} again.",
+        "confirm": "Confirm"
+    }
+}

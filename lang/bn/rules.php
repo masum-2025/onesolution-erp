@@ -237,6 +237,7 @@ return [
 
     'categories' => [
         'identity' => 'সাইন আপ ও সাইন ইন',
+        'payments' => 'অনলাইন পেমেন্ট',
         'organization' => 'প্রতিষ্ঠান',
         'security' => 'নিরাপত্তা',
         'data' => 'ডেটা',

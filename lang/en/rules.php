@@ -245,5 +245,6 @@ return [
         'billing' => 'Billing',
         'messages' => 'Email and SMS',
         'identity' => 'Sign-up and sign-in',
+        'payments' => 'Online payments',
     ],
 ];

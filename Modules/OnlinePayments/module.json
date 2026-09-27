@@ -1,0 +1,11 @@
+{
+    "name": "OnlinePayments",
+    "alias": "online_payments",
+    "description": "A client's own payment gateway accounts, so its customers pay it directly.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\OnlinePayments\\Providers\\OnlinePaymentsServiceProvider"
+    ],
+    "files": []
+}

@@ -8,18 +8,20 @@ use App\Platform\Billing\SelfServe\Events\TrialEnded;
 use App\Platform\Billing\SelfServe\Events\TrialEnding;
 use App\Platform\Billing\SelfServe\Events\WorkspaceRestored;
 use App\Platform\Billing\SelfServe\Events\WorkspaceRestricted;
-use App\Platform\Payments\Events\PaymentFailed;
-use App\Platform\Payments\Events\PaymentSucceeded;
 use App\Platform\DataExport\Events\DataExportReady;
 use App\Platform\Legal\Events\LegalDocumentPublished;
-use App\Platform\Transfers\Events\ClientTransferred;
-use App\Platform\Transfers\Events\ClientTransferRequested;
 use App\Platform\Notifications\Console\DecideSmsSender;
 use App\Platform\Notifications\Contracts\SmsGateway;
 use App\Platform\Notifications\Listeners\SendPlatformNotifications;
 use App\Platform\Notifications\Services\LogSmsGateway;
+use App\Platform\Payments\Events\MerchantAccountChangeApplied;
+use App\Platform\Payments\Events\MerchantAccountChangeRequested;
+use App\Platform\Payments\Events\PaymentFailed;
+use App\Platform\Payments\Events\PaymentSucceeded;
 use App\Platform\SupportAccess\Events\SupportAccessDecided;
 use App\Platform\SupportAccess\Events\SupportAccessRequested;
+use App\Platform\Transfers\Events\ClientTransferred;
+use App\Platform\Transfers\Events\ClientTransferRequested;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -63,6 +65,9 @@ class NotificationsServiceProvider extends ServiceProvider
         Event::listen(PaymentOverdue::class, [SendPlatformNotifications::class, 'paymentOverdue']);
         Event::listen(WorkspaceRestricted::class, [SendPlatformNotifications::class, 'workspaceRestricted']);
         Event::listen(WorkspaceRestored::class, [SendPlatformNotifications::class, 'workspaceRestored']);
+        // A client's own payment gateway account (Phase 6).
+        Event::listen(MerchantAccountChangeRequested::class, [SendPlatformNotifications::class, 'merchantChangeRequested']);
+        Event::listen(MerchantAccountChangeApplied::class, [SendPlatformNotifications::class, 'merchantChangeApplied']);
 
         // Test messages go to real inboxes and phones: a few per hour per person.
         RateLimiter::for('notification-test', fn (Request $request) => Limit::perHour(5)

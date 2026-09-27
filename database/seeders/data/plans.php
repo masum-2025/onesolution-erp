@@ -28,7 +28,7 @@ return [
         'modules' => [
             'accounting', 'api_integration', 'attendance', 'client_portal', 'crm', 'external_integrations',
             'factory_erp', 'hrm', 'inventory', 'multi_currency', 'multi_language',
-            'offline_mode', 'payroll',
+            'offline_mode', 'online_payments', 'payroll',
         ],
         'prices' => [
             ['currency' => 'BDT', 'period' => 'monthly', 'amount_minor' => 150000],

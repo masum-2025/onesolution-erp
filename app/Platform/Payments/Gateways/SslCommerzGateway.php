@@ -18,7 +18,8 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * SSLCommerz (Bangladesh: cards, bKash, Nagad and banks on one hosted page),
- * SANDBOX ONLY in this build.
+ * for one store's credentials: the platform's own (sandbox only) or a
+ * client's merchant account (sandbox, or live where the rule allows it).
  *
  * A payment counts only after SSLCommerz's validation API confirms it by
  * val_id; the notification's verify_sign is checked too, and is the only
@@ -38,6 +39,7 @@ class SslCommerzGateway implements PaymentGateway
         private string $baseUrl,
         private int $timeout,
         private bool $production,
+        private bool $sandbox = true,
     ) {}
 
     public function key(): string
@@ -46,12 +48,12 @@ class SslCommerzGateway implements PaymentGateway
     }
 
     /**
-     * Needs credentials, and never runs in production: the sandbox takes no
-     * real money, so it must never unlock a plan there.
+     * Needs credentials. A sandbox store never runs in production: it takes
+     * no real money, so it must never mark anything paid there.
      */
     public function isAvailable(): bool
     {
-        return ! $this->production && filled($this->storeId) && filled($this->storePassword);
+        return ! ($this->sandbox && $this->production) && filled($this->storeId) && filled($this->storePassword);
     }
 
     public function supportsCurrency(string $currency): bool
@@ -61,7 +63,39 @@ class SslCommerzGateway implements PaymentGateway
 
     public function isTestMode(): bool
     {
-        return true;
+        return $this->sandbox;
+    }
+
+    public function paymentReference(Request $request): ?string
+    {
+        $tranId = $request->input('tran_id');
+
+        return is_string($tranId) && $tranId !== '' ? $tranId : null;
+    }
+
+    /**
+     * Whether SSLCommerz accepts this store id and password: a transaction
+     * query for an id that cannot exist. "DONE" means the store answered.
+     */
+    public function check(): string
+    {
+        try {
+            $response = $this->http()->get('/validator/api/merchantTransIDvalidationAPI.php', [
+                'tran_id' => 'CHECK-'.bin2hex(random_bytes(6)),
+                'store_id' => $this->storeId,
+                'store_passwd' => $this->storePassword,
+                'format' => 'json',
+            ]);
+        } catch (ConnectionException) {
+            return 'unreachable';
+        }
+
+        return match ($response->successful() ? $response->json('APIConnect') : null) {
+            'DONE' => 'ok',
+            'INACTIVE' => 'store_inactive',
+            'INVALID_REQUEST', 'FAILED' => 'rejected_credentials',
+            default => 'unexpected',
+        };
     }
 
     public function start(Payment $payment, PaymentCustomer $customer, CallbackUrls $urls): GatewaySession
@@ -86,8 +120,8 @@ class SslCommerzGateway implements PaymentGateway
                 'cus_country' => $customer->countryCode,
                 'shipping_method' => 'NO',
                 'num_of_item' => 1,
-                'product_name' => $payment->plan_key ?? 'invoice',
-                'product_category' => 'subscription',
+                'product_name' => $payment->plan_key ?? $payment->subject_type ?? 'invoice',
+                'product_category' => $payment->subject_type === null ? 'subscription' : 'service',
                 'product_profile' => 'non-physical-goods',
             ]);
         } catch (ConnectionException) {

@@ -10,26 +10,27 @@ use App\Platform\Billing\SelfServe\Events\TrialEnded;
 use App\Platform\Billing\SelfServe\Events\TrialEnding;
 use App\Platform\Billing\SelfServe\Events\WorkspaceRestored;
 use App\Platform\Billing\SelfServe\Events\WorkspaceRestricted;
-use App\Platform\Packaging\PlanCatalog;
-use App\Platform\Payments\Events\PaymentFailed;
-use App\Platform\Payments\Events\PaymentSucceeded;
-use App\Platform\Payments\Models\Payment;
 use App\Platform\DataExport\Events\DataExportReady;
 use App\Platform\Legal\Events\LegalDocumentPublished;
 use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Notifications\Services\Notifier;
 use App\Platform\Notifications\Services\Recipients;
+use App\Platform\Packaging\PlanCatalog;
+use App\Platform\Payments\Events\MerchantAccountChangeApplied;
+use App\Platform\Payments\Events\MerchantAccountChangeRequested;
+use App\Platform\Payments\Events\PaymentFailed;
+use App\Platform\Payments\Events\PaymentSucceeded;
+use App\Platform\Payments\Models\Payment;
 use App\Platform\Support\MoneyText;
 use App\Platform\SupportAccess\Enums\GrantStatus;
 use App\Platform\SupportAccess\Events\SupportAccessDecided;
 use App\Platform\SupportAccess\Events\SupportAccessRequested;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
+use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Transfers\Events\ClientTransferred;
 use App\Platform\Transfers\Events\ClientTransferRequested;
-use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonInterface;
-use Illuminate\Events\Dispatcher;
 
 /**
  * Turns platform events into notifications for the people who can act on
@@ -134,6 +135,11 @@ class SendPlatformNotifications
 
     public function paymentSucceeded(PaymentSucceeded $event): void
     {
+        // A customer paying a client (Phase 6): the module that owns the record tells them.
+        if ($event->payment->purpose === Payment::COLLECTION) {
+            return;
+        }
+
         $payment = $event->payment->loadMissing(['organization.partner', 'invoice']);
         $organization = $payment->organization;
 
@@ -156,7 +162,8 @@ class SendPlatformNotifications
         $payment = $event->payment->loadMissing('organization.partner');
 
         // A cancel is the person's own choice, made on screen: no message for it.
-        if ($payment->status !== Payment::FAILED) {
+        // A customer's payment to a client (Phase 6) is the owning module's to tell.
+        if ($payment->status !== Payment::FAILED || $payment->purpose === Payment::COLLECTION) {
             return;
         }
 
@@ -169,6 +176,52 @@ class SendPlatformNotifications
             ],
             $payment->organization->partner,
             $payment->organization,
+        );
+    }
+
+    /**
+     * Where a client's customers' money goes is changing: everyone who could
+     * approve (or reject) it hears at once, on every channel.
+     */
+    public function merchantChangeRequested(MerchantAccountChangeRequested $event): void
+    {
+        $account = $event->account;
+        $company = Organization::query()->with('partner')->findOrFail($account->organization_id);
+
+        $this->notifier->notify(
+            'payments.merchant_change_requested',
+            $this->recipients->holding('online_payments.manage', $company),
+            fn (string $locale) => [
+                'organization' => $this->name($company, $locale),
+                'gateway' => __('payments.gateways.'.$account->gateway, [], $locale),
+                'person' => $event->actor->name,
+                'takes_effect' => $account->activates_at === null
+                    ? __('payments.merchant.takes_effect_after_approval', [], $locale)
+                    : __('payments.merchant.takes_effect_on', ['date' => $account->activates_at->locale($locale)->isoFormat('D MMMM YYYY, HH:mm').' UTC'], $locale),
+            ],
+            $company->partner,
+            $company,
+            allChannels: true,
+        );
+    }
+
+    public function merchantChangeApplied(MerchantAccountChangeApplied $event): void
+    {
+        $account = $event->account;
+        $company = Organization::query()->with('partner')->findOrFail($account->organization_id);
+
+        $this->notifier->notify(
+            'payments.merchant_change_applied',
+            $this->recipients->holding('online_payments.manage', $company),
+            fn (string $locale) => [
+                'organization' => $this->name($company, $locale),
+                'gateway' => __('payments.gateways.'.$account->gateway, [], $locale),
+                'person' => $event->approver === null
+                    ? __('payments.merchant.applied_after_wait', [], $locale)
+                    : __('payments.merchant.approved_by', ['name' => $event->approver->name], $locale),
+            ],
+            $company->partner,
+            $company,
         );
     }
 

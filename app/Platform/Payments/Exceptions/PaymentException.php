@@ -114,4 +114,84 @@ class PaymentException extends TenancyException
     {
         return new self('nothing_to_keep', 422);
     }
+
+    // ── A client's own merchant accounts (Phase 6) ─────────────────────
+
+    public static function notCompany(): self
+    {
+        return new self('not_company', 422);
+    }
+
+    public static function gatewayNotOffered(): self
+    {
+        return new self('gateway_not_offered', 422, [], ['field' => 'gateway']);
+    }
+
+    public static function liveNotAllowed(): self
+    {
+        return new self('live_not_allowed', 422, [], ['field' => 'mode']);
+    }
+
+    public static function currencyNotSupported(string $currency): self
+    {
+        return new self('currency_not_supported', 422, ['currency' => $currency]);
+    }
+
+    public static function accountExists(): self
+    {
+        return new self('account_exists', 409, [], ['field' => 'gateway']);
+    }
+
+    public static function accountNotFound(): self
+    {
+        return new self('account_not_found', 404);
+    }
+
+    /** The gateway did not accept the credentials: rejected_credentials, store_inactive, unreachable, unexpected. */
+    public static function checkFailed(string $result): self
+    {
+        return new self('check_'.$result, 422, [], ['check' => $result]);
+    }
+
+    public static function stale(): self
+    {
+        return new self('stale', 409);
+    }
+
+    public static function nothingPending(): self
+    {
+        return new self('nothing_pending', 422);
+    }
+
+    public static function ownChange(): self
+    {
+        return new self('own_change', 403);
+    }
+
+    public static function notDisabled(): self
+    {
+        return new self('not_disabled', 422);
+    }
+
+    public static function neverApproved(): self
+    {
+        return new self('never_approved', 422);
+    }
+
+    // ── Customers paying a client (collections) ─────────────────────────
+
+    public static function kindNotAvailable(): self
+    {
+        return new self('kind_not_available', 422);
+    }
+
+    public static function nothingDue(): self
+    {
+        return new self('nothing_due', 422);
+    }
+
+    public static function noMerchantAccount(): self
+    {
+        return new self('no_merchant_account', 422);
+    }
 }

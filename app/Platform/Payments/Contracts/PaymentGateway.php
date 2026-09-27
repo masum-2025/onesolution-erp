@@ -3,6 +3,7 @@
 namespace App\Platform\Payments\Contracts;
 
 use App\Platform\Payments\CallbackUrls;
+use App\Platform\Payments\Exceptions\PaymentException;
 use App\Platform\Payments\GatewayResult;
 use App\Platform\Payments\GatewaySession;
 use App\Platform\Payments\Models\Payment;
@@ -31,7 +32,7 @@ interface PaymentGateway
     /**
      * Opens a hosted payment page for the payment.
      *
-     * @throws \App\Platform\Payments\Exceptions\PaymentException when the gateway refuses or cannot be reached
+     * @throws PaymentException when the gateway refuses or cannot be reached
      */
     public function start(Payment $payment, PaymentCustomer $customer, CallbackUrls $urls): GatewaySession;
 
@@ -41,6 +42,13 @@ interface PaymentGateway
      * the message is not genuine or names no transaction.
      */
     public function resolve(Request $request): ?GatewayResult;
+
+    /**
+     * Our payment id as a gateway message names it, unchecked. Only used to
+     * pick whose credentials check the message (the platform's or a
+     * client's merchant account); resolve() then verifies it.
+     */
+    public function paymentReference(Request $request): ?string;
 
     /** The payment's current state, asked from the gateway by our own id. */
     public function lookup(Payment $payment): ?GatewayResult;

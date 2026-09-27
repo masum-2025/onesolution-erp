@@ -1,12 +1,13 @@
 <script setup>
 import { computed } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ArrowRightLeft, Blocks, Boxes, Building, Code, Download, FileText, Globe, Handshake, Home, KeyRound, LifeBuoy, Mail, MessageSquareText, Network, Package, Palette, Receipt, ScrollText, ShieldCheck, SlidersHorizontal } from 'lucide-vue-next';
 import ContextSwitcher from './ContextSwitcher.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import UserMenu from './UserMenu.vue';
 import { can, session } from '@/lib/session';
 import { formatNumber } from '@/lib/format';
+import { menuLink } from '@/lib/menu';
 import { t } from '@/lib/i18n';
 
 const props = defineProps({
@@ -17,6 +18,8 @@ const props = defineProps({
 defineEmits(['navigate']);
 
 const route = useRoute();
+const router = useRouter();
+const linkTo = (item) => menuLink(item, router);
 const isPartner = computed(() => session.me?.context?.type === 'partner');
 
 const exportItem = () => ({ to: '/export', label: t('core.nav.export'), icon: Download });
@@ -106,9 +109,9 @@ function isActive(item) {
                 <ul class="space-y-0.5">
                     <li v-for="item in menu" :key="`${item.module}-${item.key}`">
                         <RouterLink
-                            :to="`/apps/${item.module}/${item.key}`"
+                            :to="linkTo(item)"
                             class="group flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] font-medium transition-colors"
-                            :class="route.path === `/apps/${item.module}/${item.key}` ? 'bg-surface text-fg shadow-[0_1px_2px_rgb(0_0_0/0.06),0_0_0_1px_var(--c-line)]' : 'text-fg-2 hover:bg-subtle hover:text-fg'"
+                            :class="route.path === linkTo(item) ? 'bg-surface text-fg shadow-[0_1px_2px_rgb(0_0_0/0.06),0_0_0_1px_var(--c-line)]' : 'text-fg-2 hover:bg-subtle hover:text-fg'"
                             @click="$emit('navigate')"
                         >
                             <Boxes class="size-[17px] shrink-0 text-muted group-hover:text-fg-2" aria-hidden="true" />

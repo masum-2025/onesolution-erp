@@ -23,20 +23,27 @@ use Illuminate\Support\Facades\DB;
  *   else (or a gateway risk flag) holds the payment for review and unlocks
  *   nothing;
  * - failures and cancellations only close a pending payment;
- * - the purchase is fulfilled in the same transaction as the status change.
+ * - the purchase is fulfilled in the same transaction as the status change;
+ * - a message checked with one account's credentials (the platform's, or a
+ *   client's merchant account) only ever applies to that account's payments.
  */
 class PaymentConfirmer
 {
     public function __construct(private PaymentFulfiller $fulfiller, private AuditLogger $audit) {}
 
-    public function apply(PaymentGateway $gateway, string $kind, GatewayResult $result): ?Payment
+    /**
+     * @param  string|null  $merchantAccountId  Whose credentials checked the message (null: the platform's).
+     */
+    public function apply(PaymentGateway $gateway, string $kind, GatewayResult $result, ?string $merchantAccountId = null): ?Payment
     {
         $event = $this->event($gateway, $kind, $result);
         if ($event->processed_at !== null) {
             return $event->payment_id === null ? null : Payment::query()->find($event->payment_id);
         }
 
-        $payment = Payment::query()->whereKey($result->paymentId)->where('gateway', $gateway->key())->first();
+        $payment = Payment::query()->whereKey($result->paymentId)->where('gateway', $gateway->key())
+            ->where('merchant_account_id', $merchantAccountId)
+            ->first();
         if ($payment === null) {
             $event->forceFill(['result' => 'unknown_payment', 'processed_at' => CarbonImmutable::now()])->save();
 

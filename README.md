@@ -1237,6 +1237,96 @@ only "My records" and My account.
   portal payments once a fees or invoicing module exists, and a portal-only address
   (e.g. `parents.school.com`) through client domains.
 
+## A client's own payment gateway accounts (Phase 6, first part)
+
+Code: `app/Platform/Payments` (merchant accounts, collections, gateway drivers) and
+`Modules/OnlinePayments` (the switch, rules, permissions and texts: module `online_payments`, in
+starter/business/enterprise, off until turned on). A company connects **its own** gateway store,
+so its customers (parents, patients, shop customers) pay it directly. Paying *us* for a plan
+(Phase 5C-2) still uses the platform's own store from `.env` and is unchanged.
+
+The rest of Phase 6 (countries table, locales and RTL, timezones, exchange rates, bKash and
+Stripe drivers) comes later.
+
+### Connecting a store
+
+Staff with `online_payments.manage` at the **company** open **Online payments**
+(`/online-payments`); branches and departments collect into their company's account and see it
+read-only. They pick a gateway offered for the country (`online_payments.gateways`, BD:
+`sslcommerz`; a partner or group may narrow it), a name, the mode, the store id and password,
+and **their own password**.
+
+- The store details are **checked with the gateway before anything is saved** (a transaction
+  query that must answer `DONE`).
+- Credentials are encrypted with the app key (`encrypted:array`), hidden from every answer, log
+  and audit entry. People see a hint only (`sunr***01`).
+- Mode: `sandbox` (test money; never takes payments in production) or `live`, only where the
+  platform rule `online_payments.live_mode_allowed` is on (off by default).
+
+### Every change waits for a second person
+
+Connecting, new store details or another mode go into a **waiting change**; the approved details
+keep working until then.
+
+- Another person holding `online_payments.manage` there (or an owner above) approves it with
+  their password. The person who made it cannot.
+- Nobody else can approve: it takes effect by itself after
+  `online_payments.single_approver_wait_hours` (24), after checking with the gateway once more
+  (`php artisan payments:apply-merchant-changes`, every 10 minutes).
+- Everyone who could approve is told at once, by email and SMS, in fixed wording
+  (`payments.merchant_change_requested`), and again when it takes effect.
+- Anyone who may manage can reject a waiting change, or **turn the account off at once**.
+  Turning it on again needs a password. A name change applies at once. Nothing is ever deleted.
+- Audited: `payments.merchant_account.connected|change_requested|approved|applied_after_wait|
+  change_rejected|disabled|enabled|renamed` (gateway, mode, hint; never a secret).
+- Every write carries `base_version`: a stale screen gets 409 `stale`.
+
+### Customers paying the client (collections)
+
+A module declares what its customers can pay for, in its manifest:
+
+```php
+'payment_collectables' => [Modules\School\Payments\FeeCollectable::class],
+```
+
+The provider (`CollectableProvider`, kind `school.fee`) says what a person owes for a record
+(`due()`, integer minor units; null when they may not pay it), marks it paid (`paid()`, inside
+the confirmation's transaction) and where the browser goes back to. The module's own screen calls
+`app(CollectPayment::class)->start($organization, $payer, 'school.fee', $id, $opId)`:
+
+- the amount comes from the module, never the request; the same `op_id` gives the same payment;
+- the money goes to the company's **active** merchant account (right gateway, currency, mode);
+  with none, the answer is `no_merchant_account`. The platform's store is never used for a
+  client's customers;
+- gateway messages are checked with **the credentials of the account the payment belongs to**,
+  and a message checked with one account's credentials only applies to that account's payments;
+- after confirmation `payments.collected` (`PaymentCollected`) goes out; platform billing
+  messages are not sent for collections (the module tells its payer).
+
+Turning `online_payments` off stops new collections; money already taken is still applied.
+No module has fees yet: the tests use a fixture (`tests/Fixtures/FixtureFeeCollectable`).
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET | /api/organizations/{id}/merchant-accounts | online_payments.view (at the company) |
+| POST | /api/organizations/{id}/merchant-accounts | online_payments.manage + password (6/min) |
+| PATCH | /api/organizations/{id}/merchant-accounts/{account} | online_payments.manage + password (6/min) |
+| POST | …/{account}/test, …/{account}/approve, …/{account}/enable | online_payments.manage (approve, enable: + password; 6/min) |
+| POST | …/{account}/reject, …/{account}/disable | online_payments.manage |
+
+### Future expansion (Phase 6, merchant accounts)
+
+- A new gateway (bKash, Stripe, …): a `GatewayDriver` + `PaymentGateway` pair registered in
+  `PaymentsServiceProvider`, its name in `lang/*/payments.php`, and its key in the rule's enum.
+  Screens and approvals need no change (fields come from the driver).
+- A new country or partner: data only (rule `online_payments.gateways` for the country, and
+  `online_payments.live_mode_allowed` when live money is approved).
+- A new sector: its module adds a `CollectableProvider`. No payment code changes.
+- Open: branch-level accounts, refunds, settlement reports, and the portal's "Pay" button once a
+  fees or invoicing module exists.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

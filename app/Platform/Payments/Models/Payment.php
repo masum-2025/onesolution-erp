@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * One attempt to pay online: a plan at checkout, or an open invoice. The
+ * One attempt to pay online: a plan at checkout or an open invoice (paying
+ * us), or a customer's collection (paying a client into its own merchant
+ * account, Phase 6). The
  * amount is fixed by the server when it starts; the status only moves
  * forward (pending → succeeded | failed | cancelled | expired | review, and
  * a late confirmation may still turn failed/expired into succeeded because
@@ -27,6 +29,9 @@ class Payment extends Model
     public const CHECKOUT = 'checkout';
 
     public const INVOICE = 'invoice';
+
+    // A client's customer paying it for a module's record (Phase 6).
+    public const COLLECTION = 'collection';
 
     public const PENDING = 'pending';
 
@@ -70,6 +75,14 @@ class Payment extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    /**
+     * @return BelongsTo<MerchantAccount, $this>
+     */
+    public function merchantAccount(): BelongsTo
+    {
+        return $this->belongsTo(MerchantAccount::class);
     }
 
     public function isPending(): bool

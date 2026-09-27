@@ -63,13 +63,13 @@ class PaymentReconciler
 
     private function lookup(Payment $payment): ?Payment
     {
-        $gateway = $this->gateways->get($payment->gateway);
+        $gateway = $this->gateways->forPayment($payment);
         if ($gateway === null || ! $gateway->isAvailable()) {
             return null;
         }
 
         $result = $gateway->lookup($payment);
 
-        return $result === null ? null : $this->confirmer->apply($gateway, GatewayEvent::LOOKUP, $result);
+        return $result === null ? null : $this->confirmer->apply($gateway, GatewayEvent::LOOKUP, $result, $payment->merchant_account_id);
     }
 }

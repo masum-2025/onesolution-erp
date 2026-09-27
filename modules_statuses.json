@@ -17,5 +17,6 @@
     "CarbonManagement": true,
     "AdvancedAudit": true,
     "CustomReports": true,
-    "ClientPortal": true
+    "ClientPortal": true,
+    "OnlinePayments": true
 }

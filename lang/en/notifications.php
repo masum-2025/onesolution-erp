@@ -83,7 +83,7 @@ return [
         ],
         'transfers_client_left' => [
             'subject' => '{{ organization }} has moved to another provider',
-            'body' => "{{ organization }} moved its account to another provider. Its past invoices stay with you.",
+            'body' => '{{ organization }} moved its account to another provider. Its past invoices stay with you.',
             'action' => 'Open your clients',
         ],
         'legal_updated' => [
@@ -98,7 +98,7 @@ return [
         ],
         'members_added' => [
             'subject' => 'You now have access to {{ organization }}',
-            'body' => "{{ inviter }} gave you access to {{ organization }} on {{ product }}. Sign in with your usual email and password.",
+            'body' => '{{ inviter }} gave you access to {{ organization }} on {{ product }}. Sign in with your usual email and password.',
             'action' => 'Sign in',
         ],
         'identity_deletion_requested' => [
@@ -124,6 +124,21 @@ return [
             'body' => "The {{ kind }} of your {{ product }} account was changed on {{ time }}. Messages now go to the new one.\n\nIf this was you, there is nothing to do. If it was not you, reset your password now.",
             'sms' => '{{ product }}: the {{ kind }} of your account was changed ({{ time }}). Not you? {{ link }}',
             'action' => 'Reset my password',
+        ],
+        'payments_merchant_change_requested' => [
+            'subject' => 'Payment account change for {{ organization }}: please check',
+            'body' => "{{ person }} asked to connect or change the {{ gateway }} account where {{ organization }}'s customers pay. It takes effect {{ takes_effect }}.
+
+If you expected this, approve it (or let it wait). If not, reject it now and change that person's password: this decides where your customers' money goes.",
+            'sms' => '{{ product }}: {{ person }} asked to change where {{ organization }} receives payments ({{ gateway }}). Not expected? Reject it now: {{ link }}',
+            'action' => 'Review the change',
+        ],
+        'payments_merchant_change_applied' => [
+            'subject' => 'Payment account for {{ organization }} changed',
+            'body' => "The {{ gateway }} account change for {{ organization }} is now in effect ({{ person }}). Customers' online payments now go to it.
+
+If this is not right, turn the account off at once and contact your gateway.",
+            'action' => 'Open online payments',
         ],
         'identity_signup_attempt' => [
             'subject' => 'Someone tried to sign up with your address',
@@ -154,6 +169,8 @@ return [
         'members_added' => ['name' => 'Access added', 'description' => 'To someone added who already has an account.'],
         'identity_password_changed' => ['name' => 'Password changed', 'description' => 'To the person, on every address. Fixed wording.'],
         'identity_contact_changed' => ['name' => 'Email or phone changed', 'description' => 'To the person\'s old address. Fixed wording.'],
+        'payments_merchant_change_requested' => ['name' => 'Payment account change asked', 'description' => 'To everyone who may approve it, at once. Fixed wording.'],
+        'payments_merchant_change_applied' => ['name' => 'Payment account changed', 'description' => 'To everyone who may manage payment accounts. Fixed wording.'],
         'identity_signup_attempt' => ['name' => 'Sign-up with a taken address', 'description' => 'To the owner of the address. Fixed wording.'],
         'identity_deletion_requested' => ['name' => 'Account deletion asked', 'description' => 'To the person, on every address, with the date. Fixed wording.'],
         'identity_deletion_cancelled' => ['name' => 'Account deletion cancelled', 'description' => 'To the person, on every address. Fixed wording.'],
@@ -183,6 +200,9 @@ return [
         'ends' => 'Date the trial ends',
         'read_only_on' => 'Date it becomes read-only',
         'date' => 'Date of the deletion',
+        'gateway' => 'Payment gateway',
+        'person' => 'Who made the change',
+        'takes_effect' => 'When it takes effect',
     ],
 
     // Example values for previews.

@@ -4,47 +4,48 @@ use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
 use App\Platform\Audit\Http\AuditLogController;
 use App\Platform\Billing\Http\Controllers\OrganizationBillingController;
-use App\Platform\Billing\Http\Controllers\SelfServeBillingController;
-use App\Platform\Branding\Http\ClientBrandController;
-use App\Platform\PartnerApi\Http\Controllers\PartnerApiKeyController;
-use App\Platform\PartnerApi\Http\Controllers\PartnerApiV1Controller;
 use App\Platform\Billing\Http\Controllers\PartnerBillingController;
 use App\Platform\Billing\Http\Controllers\PartnerPlansController;
 use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
+use App\Platform\Billing\Http\Controllers\SelfServeBillingController;
+use App\Platform\Branding\Http\ClientBrandController;
 use App\Platform\DataExport\Http\DataExportController;
+use App\Platform\Identity\Http\Controllers\AccountController;
+use App\Platform\Identity\Http\Controllers\MyDataController;
+use App\Platform\Identity\Http\Controllers\UpgradeController;
 use App\Platform\Legal\Http\Controllers\ClientLegalController;
 use App\Platform\Legal\Http\Controllers\PartnerLegalController;
-use App\Platform\Transfers\Http\Controllers\ClientProviderController;
-use App\Platform\Transfers\Http\Controllers\PartnerTransferController;
 use App\Platform\Modules\Http\Controllers\MenuController;
+use App\Platform\Modules\Http\Controllers\ModuleConsentController;
+use App\Platform\Modules\Http\Controllers\ModuleController;
+use App\Platform\Modules\Http\Controllers\ModulePurgeController;
 use App\Platform\Notifications\Http\Controllers\PartnerMessagingController;
 use App\Platform\Notifications\Http\Controllers\PartnerTemplateController;
-use App\Platform\SupportAccess\Http\Controllers\ClientSupportController;
-use App\Platform\SupportAccess\Http\Controllers\PartnerSupportController;
 use App\Platform\Packaging\Http\Controllers\CatalogController;
 use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
 use App\Platform\Packaging\Http\Controllers\SectorPackageController;
 use App\Platform\Packaging\Http\Controllers\UsageController;
+use App\Platform\PartnerApi\Http\Controllers\PartnerApiKeyController;
+use App\Platform\PartnerApi\Http\Controllers\PartnerApiV1Controller;
 use App\Platform\Partners\Http\Controllers\PartnerBrandController;
 use App\Platform\Partners\Http\Controllers\PartnerClientController;
 use App\Platform\Partners\Http\Controllers\PartnerDomainController;
 use App\Platform\Partners\Http\Controllers\PartnerModuleController;
-use App\Platform\Modules\Http\Controllers\ModuleConsentController;
-use App\Platform\Modules\Http\Controllers\ModuleController;
-use App\Platform\Modules\Http\Controllers\ModulePurgeController;
+use App\Platform\Payments\Http\Controllers\MerchantAccountController;
+use App\Platform\Portal\Http\Controllers\PortalAdminController;
+use App\Platform\Portal\Http\Controllers\PortalMemberController;
 use App\Platform\Rules\Http\Controllers\OrganizationRuleController;
 use App\Platform\Rules\Http\Controllers\PartnerRuleController;
 use App\Platform\Rules\Http\Controllers\RuleApprovalController;
+use App\Platform\SupportAccess\Http\Controllers\ClientSupportController;
+use App\Platform\SupportAccess\Http\Controllers\PartnerSupportController;
 use App\Platform\Tenancy\Http\Controllers\Api\AuthController;
 use App\Platform\Tenancy\Http\Controllers\Api\MeController;
-use App\Platform\Identity\Http\Controllers\AccountController;
-use App\Platform\Identity\Http\Controllers\MyDataController;
-use App\Platform\Identity\Http\Controllers\UpgradeController;
-use App\Platform\Portal\Http\Controllers\PortalAdminController;
-use App\Platform\Portal\Http\Controllers\PortalMemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\MemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\OrganizationController;
 use App\Platform\Tenancy\Http\Controllers\Api\PartnerOrganizationController;
+use App\Platform\Transfers\Http\Controllers\ClientProviderController;
+use App\Platform\Transfers\Http\Controllers\PartnerTransferController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -166,6 +167,24 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 
         Route::get('portal', [PortalMemberController::class, 'index']);
         Route::get('portal/records/{link}', [PortalMemberController::class, 'show'])->where('link', '[0-9A-Za-z]{26}');
+    });
+
+    // A client's own payment gateway accounts (Phase 6), at its company.
+    Route::middleware('module:online_payments')->group(function () {
+        Route::get('organizations/{organization}/merchant-accounts', [MerchantAccountController::class, 'index']);
+        $account = '[0-9A-Za-z]{26}';
+        // Each of these asks the gateway or checks a password: a few per minute per person.
+        Route::middleware('throttle:merchant-accounts')->group(function () use ($account) {
+            Route::post('organizations/{organization}/merchant-accounts', [MerchantAccountController::class, 'store']);
+            Route::patch('organizations/{organization}/merchant-accounts/{account}', [MerchantAccountController::class, 'update'])->where('account', $account);
+            Route::post('organizations/{organization}/merchant-accounts/{account}/test', [MerchantAccountController::class, 'test'])->where('account', $account);
+            Route::post('organizations/{organization}/merchant-accounts/{account}/approve', [MerchantAccountController::class, 'approve'])->where('account', $account);
+            Route::post('organizations/{organization}/merchant-accounts/{account}/enable', [MerchantAccountController::class, 'enable'])->where('account', $account);
+        });
+        Route::middleware('throttle:tenancy-sensitive')->group(function () use ($account) {
+            Route::post('organizations/{organization}/merchant-accounts/{account}/reject', [MerchantAccountController::class, 'reject'])->where('account', $account);
+            Route::post('organizations/{organization}/merchant-accounts/{account}/disable', [MerchantAccountController::class, 'disable'])->where('account', $account);
+        });
     });
 
     // A personal workspace becomes a company (Phase 5C-3): owner only.

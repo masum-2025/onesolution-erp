@@ -51,6 +51,8 @@ const routes = [
             { path: 'portal', name: 'portal-home', component: () => import('./pages/portal/PortalHomePage.vue'), meta: { context: 'organization', portal: true, ns: ['portal'] } },
             { path: 'portal/records/:id', name: 'portal-record', component: () => import('./pages/portal/PortalRecordPage.vue'), meta: { context: 'organization', portal: true, ns: ['portal'] } },
             { path: 'portal-admin', name: 'portal-admin', component: () => import('./pages/portal/PortalAdminPage.vue'), meta: { context: 'organization', ns: ['portal'] } },
+            // A client's own payment gateway accounts (Phase 6).
+            { path: 'online-payments', name: 'online-payments', component: () => import('./pages/payments/MerchantAccountsPage.vue'), meta: { context: 'organization', ns: ['payments'] } },
             // A personal workspace becomes a company (Phase 5C-3).
             { path: 'upgrade', name: 'upgrade', component: () => import('./pages/billing/UpgradePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             // Where the payment page sends the person back (Phase 5C-2).

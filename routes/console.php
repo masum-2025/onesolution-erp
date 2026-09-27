@@ -24,6 +24,9 @@ Schedule::command('billing:self-serve')->hourlyAt(15)->withoutOverlapping()->onO
 // Online payments whose gateway notice is late or lost are checked; abandoned ones expire.
 Schedule::command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
+// A client's payment gateway account change takes effect once its single-approver wait is over (Phase 6).
+Schedule::command('payments:apply-merchant-changes')->everyTenMinutes()->withoutOverlapping()->onOneServer();
+
 // Accounts whose "delete my account" grace period ended are erased (Phase 5C-3).
 Schedule::command('privacy:erase-due')->dailyAt('03:30')->withoutOverlapping()->onOneServer();
 

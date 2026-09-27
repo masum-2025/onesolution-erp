@@ -157,6 +157,22 @@ final class NotificationCatalog
             'path' => '/account',
             'editable' => false,
         ],
+        // A client's own payment gateway account (Phase 6): where its customers'
+        // money goes. Fixed wording: a partner could otherwise soften the warning.
+        'payments.merchant_change_requested' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'organization', 'gateway', 'person', 'takes_effect', 'link'],
+            'audience' => 'client',
+            'path' => '/online-payments',
+            'editable' => false,
+        ],
+        'payments.merchant_change_applied' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'gateway', 'person', 'link'],
+            'audience' => 'client',
+            'path' => '/online-payments',
+            'editable' => false,
+        ],
         'identity.signup_attempt' => [
             'channels' => ['mail', 'sms'],
             'placeholders' => ['product', 'link'],

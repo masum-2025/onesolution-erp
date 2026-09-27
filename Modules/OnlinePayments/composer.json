@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/online-payments",
+    "description": "A client's own payment gateway accounts (merchant accounts): its customers pay it directly.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\OnlinePayments\\": "app/"
+        }
+    }
+}
