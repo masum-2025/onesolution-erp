@@ -8,7 +8,13 @@ use App\Platform\Identity\Http\Controllers\SignupController;
 use App\Platform\Invitations\Http\InvitationController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
+use App\Platform\Identity\Http\Middleware\TrackUserSession;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
+use App\Platform\Payments\Http\GatewayCallbackController;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Platform\Tenancy\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +61,18 @@ Route::get('partner-preview/{preview}', [TemplatePreviewController::class, 'show
 Route::get('exports/{export}/download', [DataExportController::class, 'download'])
     ->middleware('signed:relative')
     ->name('exports.download');
+
+// Payment gateways (Phase 5C-2): their server's notice, and the browser coming back.
+// No session and no CSRF: the gateway posts from its own site, and a new session
+// here would replace the person's. Every message is checked with the gateway itself.
+Route::withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class, TrackUserSession::class])
+    ->middleware('throttle:payments-callback')
+    ->where(['gateway' => '[a-z0-9_]+'])
+    ->group(function () {
+        Route::post('payments/{gateway}/notify', [GatewayCallbackController::class, 'notify']);
+        Route::match(['get', 'post'], 'payments/{gateway}/return/{outcome}', [GatewayCallbackController::class, 'return'])
+            ->where('outcome', 'success|fail|cancel');
+    });
 
 // Caddy on-demand TLS asks here before issuing a certificate: verified hosts only.
 Route::get('internal/tls/ask', TlsAskController::class);

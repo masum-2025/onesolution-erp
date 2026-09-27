@@ -91,6 +91,7 @@ class SubscriptionService
         $subscription->forceFill([
             'organization_id' => $root->getKey(),
             'partner_id' => $root->partner_id,
+            'self_serve' => $root->type->isSelfServe(),
             'started_on' => ($root->created_at ?? now())->toDateString(),
         ])->save();
 

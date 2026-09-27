@@ -5,6 +5,15 @@ namespace App\Platform\Notifications\Listeners;
 use App\Models\User;
 use App\Platform\Billing\Events\InvoiceIssued;
 use App\Platform\Billing\Models\Invoice;
+use App\Platform\Billing\SelfServe\Events\PaymentOverdue;
+use App\Platform\Billing\SelfServe\Events\TrialEnded;
+use App\Platform\Billing\SelfServe\Events\TrialEnding;
+use App\Platform\Billing\SelfServe\Events\WorkspaceRestored;
+use App\Platform\Billing\SelfServe\Events\WorkspaceRestricted;
+use App\Platform\Packaging\PlanCatalog;
+use App\Platform\Payments\Events\PaymentFailed;
+use App\Platform\Payments\Events\PaymentSucceeded;
+use App\Platform\Payments\Models\Payment;
 use App\Platform\DataExport\Events\DataExportReady;
 use App\Platform\Legal\Events\LegalDocumentPublished;
 use App\Platform\Legal\Models\LegalDocument;
@@ -28,7 +37,7 @@ use Illuminate\Events\Dispatcher;
  */
 class SendPlatformNotifications
 {
-    public function __construct(private Notifier $notifier, private Recipients $recipients) {}
+    public function __construct(private Notifier $notifier, private Recipients $recipients, private PlanCatalog $plans) {}
 
     public function supportRequested(SupportAccessRequested $event): void
     {
@@ -91,6 +100,11 @@ class SendPlatformNotifications
     public function invoiceIssued(InvoiceIssued $event): void
     {
         $invoice = $event->invoice->loadMissing(['organization', 'partner']);
+
+        // Issued and paid in one step at an online checkout: the receipt says it all.
+        if (str_starts_with((string) $invoice->billing_key, 'payment:')) {
+            return;
+        }
         $values = fn (string $locale) => [
             'number' => $invoice->number,
             'amount' => MoneyText::format($invoice->total_minor, $invoice->currency_code, $locale),
@@ -115,6 +129,122 @@ class SendPlatformNotifications
             $this->recipients->partnerStaff($invoice->partner, PartnerUserRole::Owner, PartnerUserRole::Billing),
             fn (string $locale) => ['partner' => $invoice->partner->name, ...$values($locale)],
             null,
+        );
+    }
+
+    public function paymentSucceeded(PaymentSucceeded $event): void
+    {
+        $payment = $event->payment->loadMissing(['organization.partner', 'invoice']);
+        $organization = $payment->organization;
+
+        $this->notifier->notify(
+            'billing.payment_received',
+            $this->recipients->holding('billing.view', $organization),
+            fn (string $locale) => [
+                'organization' => $this->name($organization, $locale),
+                'amount' => MoneyText::format($payment->amount_minor, $payment->currency_code, $locale),
+                'number' => $payment->invoice?->number ?? '—',
+                'method' => $payment->method ?? '—',
+            ],
+            $organization->partner,
+            $organization,
+        );
+    }
+
+    public function paymentFailed(PaymentFailed $event): void
+    {
+        $payment = $event->payment->loadMissing('organization.partner');
+
+        // A cancel is the person's own choice, made on screen: no message for it.
+        if ($payment->status !== Payment::FAILED) {
+            return;
+        }
+
+        $this->notifier->notify(
+            'billing.payment_failed',
+            User::query()->whereKey($payment->user_id)->get(),
+            fn (string $locale) => [
+                'organization' => $this->name($payment->organization, $locale),
+                'amount' => MoneyText::format($payment->amount_minor, $payment->currency_code, $locale),
+            ],
+            $payment->organization->partner,
+            $payment->organization,
+        );
+    }
+
+    public function trialEnding(TrialEnding $event): void
+    {
+        $organization = $event->organization->loadMissing('partner');
+
+        $this->notifier->notify(
+            'billing.trial_ending',
+            $this->recipients->holding('billing.manage', $organization),
+            fn (string $locale) => [
+                'organization' => $this->name($organization, $locale),
+                'plan' => $this->plans->has($event->planKey) ? $this->plans->get($event->planKey)->label($locale) : $event->planKey,
+                'ends' => $this->day($event->endsAt, $locale),
+            ],
+            $organization->partner,
+            $organization,
+        );
+    }
+
+    public function trialEnded(TrialEnded $event): void
+    {
+        $organization = $event->organization->loadMissing('partner');
+
+        $this->notifier->notify(
+            'billing.trial_ended',
+            $this->recipients->holding('billing.manage', $organization),
+            fn (string $locale) => [
+                'organization' => $this->name($organization, $locale),
+                'plan' => $this->plans->has($event->planKey) ? $this->plans->get($event->planKey)->label($locale) : $event->planKey,
+            ],
+            $organization->partner,
+            $organization,
+        );
+    }
+
+    public function paymentOverdue(PaymentOverdue $event): void
+    {
+        $organization = $event->organization->loadMissing('partner');
+        $invoice = $event->invoice;
+
+        $this->notifier->notify(
+            'billing.payment_overdue',
+            $this->recipients->holding('billing.manage', $organization),
+            fn (string $locale) => [
+                'organization' => $this->name($organization, $locale),
+                'number' => $invoice->number,
+                'amount' => MoneyText::format($invoice->total_minor, $invoice->currency_code, $locale),
+                'due' => $this->day($invoice->due_at, $locale),
+                'read_only_on' => $this->day($event->restrictsOn, $locale),
+            ],
+            $organization->partner,
+            $organization,
+        );
+    }
+
+    public function workspaceRestricted(WorkspaceRestricted $event): void
+    {
+        $this->accountNotice('billing.workspace_restricted', $event->organization);
+    }
+
+    public function workspaceRestored(WorkspaceRestored $event): void
+    {
+        $this->accountNotice('billing.workspace_restored', $event->organization);
+    }
+
+    private function accountNotice(string $key, Organization $organization): void
+    {
+        $organization->loadMissing('partner');
+
+        $this->notifier->notify(
+            $key,
+            $this->recipients->holding('billing.manage', $organization),
+            fn (string $locale) => ['organization' => $this->name($organization, $locale)],
+            $organization->partner,
+            $organization,
         );
     }
 

@@ -10,6 +10,7 @@ use App\Platform\Modules\ModulesServiceProvider;
 use App\Platform\Notifications\NotificationsServiceProvider;
 use App\Platform\Packaging\PackagingServiceProvider;
 use App\Platform\PartnerApi\PartnerApiServiceProvider;
+use App\Platform\Payments\PaymentsServiceProvider;
 use App\Platform\Partners\PartnersServiceProvider;
 use App\Platform\Rules\RulesServiceProvider;
 use App\Platform\Tenancy\TenancyServiceProvider;
@@ -26,6 +27,7 @@ return [
     SupportAccessServiceProvider::class,
     DataExportServiceProvider::class,
     BillingServiceProvider::class,
+    PaymentsServiceProvider::class,
     NotificationsServiceProvider::class,
     TransfersServiceProvider::class,
     PartnerApiServiceProvider::class,

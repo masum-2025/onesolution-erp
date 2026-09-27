@@ -6,6 +6,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import InvoiceList from './InvoiceList.vue';
+import SelfServePanel from './SelfServePanel.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatMoney } from '@/lib/format';
@@ -14,11 +15,14 @@ import { t } from '@/lib/i18n';
 
 /**
  * The client's own billing: the plan it is on, what it costs, and the
- * invoices and credit notes it received. Read-only.
+ * invoices and credit notes it received. A personal workspace also buys,
+ * pays for and changes its plan here (SelfServePanel).
  */
 const org = currentOrganization();
 const billing = useResource(() => api(`/api/organizations/${org.id}/billing`).then((response) => response.data));
 const data = computed(() => billing.data.value);
+// A personal workspace buys its own plan here (Phase 5C-2).
+const selfServe = org.organization_type === 'personal';
 
 // The next invoice covers the day after the last one ends.
 const nextInvoice = computed(() => {
@@ -31,13 +35,15 @@ const nextInvoice = computed(() => {
 
 <template>
     <div>
-        <PageHeader :title="t('billing.client.title')" :description="t('billing.client.text')" />
+        <PageHeader :title="t('billing.client.title')" :description="selfServe ? t('billing.self.text') : t('billing.client.text')" />
+
+        <SelfServePanel v-if="selfServe" @changed="billing.reload()" />
 
         <SkeletonRows v-if="billing.loading.value && !data" :rows="4" />
         <ErrorState v-else-if="billing.error.value" :error="billing.error.value" @retry="billing.reload()" />
 
         <template v-else-if="data">
-            <div class="mb-6 grid gap-4 sm:grid-cols-2">
+            <div v-if="!selfServe" class="mb-6 grid gap-4 sm:grid-cols-2">
                 <div class="card p-5">
                     <div class="flex items-center justify-between gap-3">
                         <p class="text-[13px] font-medium text-fg-2">{{ t('billing.client.plan') }}</p>
@@ -62,7 +68,7 @@ const nextInvoice = computed(() => {
 
             <section v-if="!data.billed_by_provider" class="card">
                 <h2 class="border-b border-line px-5 py-3.5 text-[14px] font-semibold text-fg">{{ t('billing.client.invoices') }}</h2>
-                <EmptyState v-if="!data.invoices.length" :icon="Receipt" :title="t('billing.client.empty_title')" :text="t('billing.client.empty_text')" compact />
+                <EmptyState v-if="!data.invoices.length" :icon="Receipt" :title="t('billing.client.empty_title')" :text="selfServe ? t('billing.self.empty_text') : t('billing.client.empty_text')" compact />
                 <InvoiceList v-else :invoices="data.invoices" base="/billing/invoices" />
             </section>
         </template>

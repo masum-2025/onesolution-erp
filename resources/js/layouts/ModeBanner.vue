@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Download, Eye, LifeBuoy, LogOut } from 'lucide-vue-next';
+import { CreditCard, Download, Eye, LifeBuoy, LogOut } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
 import { enterContext, session } from '@/lib/session';
 import { formatNumber } from '@/lib/format';
@@ -10,7 +10,8 @@ import { t } from '@/lib/i18n';
 
 /**
  * Says clearly when this workspace is limited: support access (read-only,
- * with the time left), or a suspended provider (read-only grace period, then
+ * with the time left), a bill overdue past its grace period (read-only until
+ * paid), or a suspended provider (read-only grace period, then
  * export only). The server enforces all of it; this only explains.
  */
 const router = useRouter();
@@ -57,6 +58,11 @@ async function leave() {
                     <strong v-if="minutesLeft !== null" class="font-semibold">{{ t('core.mode.minutes_left', { count: minutesLeft, minutes: formatNumber(minutesLeft) }) }}</strong>
                 </span>
                 <AppButton size="sm" :icon="LogOut" :loading="leaving" @click="leave">{{ t('core.mode.leave') }}</AppButton>
+            </template>
+            <template v-else-if="reason === 'payment_overdue'">
+                <CreditCard class="size-4 shrink-0 text-warn" aria-hidden="true" />
+                <span class="flex-1">{{ t('core.mode.payment_overdue') }}</span>
+                <AppButton size="sm" variant="primary" to="/billing">{{ t('core.mode.pay_now') }}</AppButton>
             </template>
             <template v-else-if="mode === 'read_only'">
                 <Eye class="size-4 shrink-0 text-warn" aria-hidden="true" />

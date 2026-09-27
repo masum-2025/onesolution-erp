@@ -129,6 +129,26 @@ return [
             'label' => 'Payment terms (days)',
             'description' => 'How many days after issue an invoice is due.',
         ],
+        'billing_payment_gateways' => [
+            'label' => 'Online payment gateways',
+            'description' => 'Which gateways people can pay through, per country.',
+        ],
+        'billing_checkout_expiry_minutes' => [
+            'label' => 'Unfinished payment expires after (minutes)',
+            'description' => 'A payment not completed at the gateway within this time is given up.',
+        ],
+        'billing_renewal_notice_days' => [
+            'label' => 'Renewal invoice before period end (days)',
+            'description' => 'How many days before a self-serve period ends its renewal invoice is issued.',
+        ],
+        'billing_overdue_reminder_days' => [
+            'label' => 'Overdue reminders (days after due date)',
+            'description' => 'On which days after the due date a payment reminder is sent.',
+        ],
+        'billing_overdue_grace_days' => [
+            'label' => 'Grace period before read-only (days)',
+            'description' => 'How many days after the due date an unpaid self-serve workspace keeps working before it becomes read-only. Data is never deleted.',
+        ],
         'mail_custom_domain_allowed' => [
             'label' => 'Own sending domain allowed',
             'description' => 'Whether the partner may send email from its own domain once its DNS records check out.',
@@ -188,6 +208,18 @@ return [
         'identity_otp_per_hour_per_ip' => [
             'label' => 'Codes per hour from one network',
             'description' => 'How many one-time codes can be asked for from one IP address in an hour.',
+        ],
+        'b2c_trial_days' => [
+            'label' => 'Free trial (days)',
+            'description' => 'How long a free trial of a paid personal plan lasts. 0 turns trials off.',
+        ],
+        'b2c_trial_plan' => [
+            'label' => 'Trial plan',
+            'description' => 'The personal plan a free trial gives.',
+        ],
+        'b2c_trial_reminder_days' => [
+            'label' => 'Trial ending reminder (days before)',
+            'description' => 'How many days before a trial ends the person is reminded.',
         ],
     ],
 

@@ -17,5 +17,12 @@ Schedule::command('support:expire')->everyMinute()->withoutOverlapping()->onOneS
 // The monthly billing run: invoices to wholesale partners and to clients (safe to repeat).
 Schedule::command('billing:run')->monthlyOn(1, '01:00')->withoutOverlapping()->onOneServer();
 
+// Self-serve accounts: trial reminders and ends, renewal invoices, overdue reminders
+// and read-only (Phase 5C-2). Hourly so a trial ends close to its hour; safe to repeat.
+Schedule::command('billing:self-serve')->hourlyAt(15)->withoutOverlapping()->onOneServer();
+
+// Online payments whose gateway notice is late or lost are checked; abandoned ones expire.
+Schedule::command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+
 // Data export files are deleted after their retention period.
 Schedule::command('exports:prune')->dailyAt('03:00')->withoutOverlapping()->onOneServer();

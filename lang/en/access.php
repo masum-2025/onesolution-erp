@@ -50,6 +50,7 @@ return [
         'audit_view' => 'View the audit log',
         'data_export' => 'Export all data',
         'billing_view' => 'See plan and invoices',
+        'billing_manage' => 'Buy and pay for the plan',
         'branding_manage' => 'Change the organization\'s brand',
     ],
 

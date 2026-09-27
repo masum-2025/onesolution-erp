@@ -168,7 +168,9 @@
         "days_left_one": "{days} day left before only export remains.",
         "days_left_other": "{days} days left before only export remains.",
         "export": "Export data",
-        "export_only": "Your service provider’s account is closed for now. You can still export all your data."
+        "export_only": "Your service provider’s account is closed for now. You can still export all your data.",
+        "payment_overdue": "This workspace is read-only because a bill is overdue. Pay it (or move to the free plan) and everything works again at once. Nothing is deleted.",
+        "pay_now": "Pay now"
     },
     "legal": {
         "pending_one": "{count} legal document from your provider waits for your acceptance.",

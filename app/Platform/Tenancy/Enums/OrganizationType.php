@@ -22,6 +22,14 @@ enum OrganizationType: string
     }
 
     /**
+     * Buys and pays for its own plan online (Phase 5C-2).
+     */
+    public function isSelfServe(): bool
+    {
+        return $this === self::Personal;
+    }
+
+    /**
      * @return list<self>
      */
     public static function companyLike(): array

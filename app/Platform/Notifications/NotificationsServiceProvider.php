@@ -3,6 +3,13 @@
 namespace App\Platform\Notifications;
 
 use App\Platform\Billing\Events\InvoiceIssued;
+use App\Platform\Billing\SelfServe\Events\PaymentOverdue;
+use App\Platform\Billing\SelfServe\Events\TrialEnded;
+use App\Platform\Billing\SelfServe\Events\TrialEnding;
+use App\Platform\Billing\SelfServe\Events\WorkspaceRestored;
+use App\Platform\Billing\SelfServe\Events\WorkspaceRestricted;
+use App\Platform\Payments\Events\PaymentFailed;
+use App\Platform\Payments\Events\PaymentSucceeded;
 use App\Platform\DataExport\Events\DataExportReady;
 use App\Platform\Legal\Events\LegalDocumentPublished;
 use App\Platform\Transfers\Events\ClientTransferred;
@@ -48,6 +55,14 @@ class NotificationsServiceProvider extends ServiceProvider
         Event::listen(ClientTransferRequested::class, [SendPlatformNotifications::class, 'transferRequested']);
         Event::listen(ClientTransferred::class, [SendPlatformNotifications::class, 'transferred']);
         Event::listen(LegalDocumentPublished::class, [SendPlatformNotifications::class, 'legalPublished']);
+        // Self-serve billing (Phase 5C-2).
+        Event::listen(PaymentSucceeded::class, [SendPlatformNotifications::class, 'paymentSucceeded']);
+        Event::listen(PaymentFailed::class, [SendPlatformNotifications::class, 'paymentFailed']);
+        Event::listen(TrialEnding::class, [SendPlatformNotifications::class, 'trialEnding']);
+        Event::listen(TrialEnded::class, [SendPlatformNotifications::class, 'trialEnded']);
+        Event::listen(PaymentOverdue::class, [SendPlatformNotifications::class, 'paymentOverdue']);
+        Event::listen(WorkspaceRestricted::class, [SendPlatformNotifications::class, 'workspaceRestricted']);
+        Event::listen(WorkspaceRestored::class, [SendPlatformNotifications::class, 'workspaceRestored']);
 
         // Test messages go to real inboxes and phones: a few per hour per person.
         RateLimiter::for('notification-test', fn (Request $request) => Limit::perHour(5)

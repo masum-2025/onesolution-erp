@@ -29,7 +29,7 @@ final class MoneyText
         return ($minor < 0 ? '-' : '')."{$currency} {$text}";
     }
 
-    private static function fractionDigits(string $currency): int
+    public static function fractionDigits(string $currency): int
     {
         $formatter = new NumberFormatter("en@currency={$currency}", NumberFormatter::CURRENCY);
 

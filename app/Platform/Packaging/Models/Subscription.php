@@ -16,6 +16,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * partner plan, the currency and period it is billed in, and how far it has
  * been invoiced. Created on first need (SubscriptionService::for).
  *
+ * Self-serve subscriptions (personal workspaces, Phase 5C-2) are bought and
+ * renewed by the client on its own dates instead of the monthly run, and
+ * carry their trial, overdue and read-only state here.
+ *
  * Not tenant-scoped on purpose: the partner console and the billing run read
  * subscriptions across clients; every read filters by partner or organization.
  */
@@ -34,7 +38,20 @@ class Subscription extends Model
         return [
             'started_on' => 'immutable_date',
             'billed_through' => 'immutable_date',
+            // Self-serve lifecycle (Phase 5C-2).
+            'self_serve' => 'boolean',
+            'trial_ends_at' => 'immutable_datetime',
+            'trial_reminded' => 'boolean',
+            'cancel_at_period_end' => 'boolean',
+            'past_due_since' => 'immutable_datetime',
+            'restricted_at' => 'immutable_datetime',
+            'reminders_sent' => 'integer',
         ];
+    }
+
+    public function onTrial(): bool
+    {
+        return $this->trial_ends_at !== null;
     }
 
     /**

@@ -71,17 +71,21 @@ class ResolveOrganization
     /**
      * Read-only contexts refuse every change; export-only contexts reach the
      * export screens only. Exporting stays possible in both (it needs the
-     * data.export permission, which support staff never hold).
+     * data.export permission, which support staff never hold). A workspace
+     * read-only for an overdue bill can still pay it or move to a free plan.
      */
     private function enforceMode(Request $request, CurrentContext $context): void
     {
         $exporting = $request->is('api/organizations/*/exports', 'api/organizations/*/exports/*');
+        $settling = $context->modeReason() === 'payment_overdue'
+            && $request->is('api/organizations/*/billing/*');
 
         if ($context->mode() === CurrentContext::MODE_EXPORT_ONLY && ! $exporting) {
             throw OrganizationAccessDenied::exportOnly();
         }
 
-        if ($context->mode() === CurrentContext::MODE_READ_ONLY && ! $request->isMethodSafe() && ! ($exporting && ! $context->isSupport())) {
+        if ($context->mode() === CurrentContext::MODE_READ_ONLY && ! $request->isMethodSafe()
+            && ! (($exporting || $settling) && ! $context->isSupport())) {
             throw OrganizationAccessDenied::readOnly((string) $context->modeReason());
         }
     }

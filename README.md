@@ -995,6 +995,105 @@ turns SMS on for the house partner and adds `self.demo@demo.test` (`DemoIdentity
 - Open: Google/Apple sign-in and passkeys (Phase 8), a real SMS provider, trials and payment
   (5C-2), device fingerprinting for trial abuse (5C-2).
 
+## Self-serve billing (Phase 5C-2)
+
+Code: `app/Platform/Payments` (gateways, payments, callbacks) and `app/Platform/Billing/SelfServe`
+(checkout, trials, renewals, overdue). A personal workspace buys, pays for and changes its own
+plan on `/billing`. Coupons, mid-period plan changes with proration and trial-abuse checks by
+device or card are Phase 5C-2b.
+
+### Payment gateway
+
+- `PaymentGateway` interface; one driver: **SSLCommerz, sandbox only** (cards, bKash, Nagad on
+  one hosted page). There is no live address in the code, and the sandbox refuses to take
+  payments in production (no plan can be unlocked with test money). Going live is a separate,
+  reviewed change. The page shows "Test mode".
+- Credentials: `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD` (sandbox store from
+  developer.sslcommerz.com). Empty = no online payment offered ("contact support").
+- Which gateway a country offers: rule `billing.payment_gateways` (country-specific; BD =
+  `sslcommerz` in the seed data). A new gateway is a driver + a value of that rule.
+- **A payment counts only when SSLCommerz's validation API confirms it** (by `val_id`), for the
+  exact amount and currency the server fixed when it started. A different amount, or the
+  gateway's risk flag, holds the payment for review (`payments.held` in the audit log) and
+  unlocks nothing. Failures and cancellations need a valid `verify_sign`. Card data never
+  reaches us; card numbers in gateway messages are not stored.
+- Idempotent everywhere: one `op_id` per click (a repeated click returns the same payment and
+  page); every gateway message is stored once per reference (`gateway_events`), so a repeated
+  notice changes nothing; a second payment of an already paid invoice is flagged
+  `refund_due`, never applied twice.
+- Callbacks: `POST /payments/{gateway}/notify` (server to server) and
+  `/payments/{gateway}/return/{success|fail|cancel}` (the browser coming back). Both run without
+  session or CSRF (a new session there would replace the person's) and confirm with the
+  gateway before changing anything. The status page and `payments:reconcile` (every 5 minutes)
+  also ask the gateway, so a lost notice (or a laptop the gateway cannot reach) still confirms;
+  unfinished payments expire after `billing.checkout_expiry_minutes` (30).
+
+### Plans, trials and renewals
+
+- Checkout: quote (price, tax at `billing.tax_rate_bp`, the period from today), then the
+  gateway. On success, in one transaction: an invoice for the exact amounts, marked paid (the
+  receipt), the plan switched (`ChangePlan`, modules follow), the period recorded, any trial
+  ended. Revenue-share partners get their commission as usual. Wholesale partners' clients are
+  billed by their partner, not here.
+- During a paid period the plan changes only when it ends ("change at period end"); an unpaid
+  invoice must be paid (or the account moved to the free plan) before buying.
+- **Trial** of `b2c.trial_plan` (`personal_plus`) for `b2c.trial_days` (14; 0 = off), from the
+  free plan, verified people only, **once per person and partner**: the account and each
+  verified email and phone (hashed, `trial_grants`), so a new account with the same phone gets
+  none. Reminder `b2c.trial_reminder_days` (3) before; at the end, back to the free plan with
+  all data.
+- **Renewal**: `billing:self-serve` (hourly) issues the next period's invoice
+  `billing.renewal_notice_days` (5) before the paid one ends, due on its first day. No stored
+  card: the person pays it online. Self-serve subscriptions are left out of the monthly
+  `billing:run`.
+- **Move to the free plan**: during a paid period it happens when the period ends (and can be
+  undone until then, "Keep my plan"); with unpaid invoices they are cancelled by credit notes
+  and it happens at once.
+
+### Unpaid bills (dunning)
+
+1. Reminders on the days of `billing.overdue_reminder_days` ([0, 3, 6]) after the due date.
+2. After `billing.overdue_grace_days` (7) the workspace becomes **read-only** (context mode
+   `read_only`, reason `payment_overdue`, set through the Tenancy `WorkspaceRestrictions`
+   contract): it can view, export, pay and move to the free plan; every other change gets 403
+   `read_only_payment_overdue`. **Nothing is deleted.**
+3. Paying the invoice, or moving to the free plan, restores it at once.
+
+Notifications (partner-rewordable, bn/en): `billing.payment_received` (receipt),
+`billing.payment_failed`, `billing.trial_ending`, `billing.trial_ended`,
+`billing.payment_overdue`, `billing.workspace_restricted`, `billing.workspace_restored`.
+Audit: `payments.succeeded`, `payments.held`, `payments.refund_due`, `billing.trial_started`,
+`billing.cancel_scheduled`, `billing.cancel_undone`, `billing.workspace_restricted`,
+`billing.workspace_restored`, plus invoices and plan changes. All numbers above are rules
+(PLACEHOLDER values until the business confirms them).
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET | /api/organizations/{id}/billing/self-serve | billing.view |
+| GET | /api/organizations/{id}/billing/payments/{payment} | billing.view |
+| POST | /api/organizations/{id}/billing/quote, /checkout, /invoices/{invoice}/pay | billing.manage (10/min) |
+| POST | /api/organizations/{id}/billing/trial, /free (confirm), /keep-plan | billing.manage |
+| POST | /payments/{gateway}/notify, /payments/{gateway}/return/{outcome} | the gateway |
+
+`billing.manage` is a new core permission (owners hold it). Screens: `/billing` (plan, trial,
+plans, open invoices, pay), `/billing/payments/{id}` (status after the payment page), and a
+"Pay now" banner while read-only.
+
+Local check: put sandbox credentials in `.env`, sign up (or use `self.demo@demo.test`), open
+Billing, choose Personal Plus and pay with a sandbox test card or wallet. The gateway cannot
+reach `localhost` with its notice; the return page and the status page confirm it instead.
+Run `php artisan billing:self-serve` to see renewals and reminders.
+
+### Future expansion (Phase 5C-2)
+
+- New country or gateway: a `PaymentGateway` driver and the country in
+  `billing.payment_gateways`. New partner selling B2C: its own trial and grace rules; no code.
+- Open: live SSLCommerz (reviewed change), coupons and proration (5C-2b), partner-owned
+  merchant accounts, auto-charge with stored tokens, BD VAT invoice format (Mushak 6.3) and
+  real tax rates with an adviser, refunds through the gateway, trial abuse by device or card.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

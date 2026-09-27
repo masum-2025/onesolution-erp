@@ -140,7 +140,7 @@ class MeController extends Controller
                 'name' => $context->partner()->name,
             ],
             'expires_at' => $expiresAt,
-            // normal | read_only | export_only, and why (support, partner_suspended).
+            // normal | read_only | export_only, and why (support, partner_suspended, payment_overdue).
             'mode' => $context->mode(),
             'mode_reason' => $context->modeReason(),
             'mode_until' => $context->modeUntil()?->toIso8601String(),
@@ -169,7 +169,13 @@ class MeController extends Controller
             return $permissions;
         }
 
-        return array_values(array_intersect($permissions, ['audit.view', 'data.export']));
+        $usable = ['audit.view', 'data.export'];
+        // Read-only for an overdue bill: settling it stays possible (Phase 5C-2).
+        if ($context->modeReason() === 'payment_overdue') {
+            $usable = [...$usable, 'billing.view', 'billing.manage'];
+        }
+
+        return array_values(array_intersect($permissions, $usable));
     }
 
     /**

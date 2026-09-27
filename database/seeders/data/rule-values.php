@@ -56,6 +56,12 @@ return [
         ],
         'reason' => 'Bangladesh individual income tax slabs FY 2024-25 (Finance Act 2024). Verify with a tax adviser before use.',
     ],
+    [
+        'key' => 'billing.payment_gateways',
+        'country' => 'BD',
+        'value' => ['sslcommerz'],
+        'reason' => 'Bangladesh: SSLCommerz (cards, bKash, Nagad). Sandbox only until live payments are approved.',
+    ],
 
     // ── Plan defaults (plans: database/seeders/data/plans.php) ──────────
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'starter', 'value' => 2000, 'reason' => 'Starter plan storage limit.'],

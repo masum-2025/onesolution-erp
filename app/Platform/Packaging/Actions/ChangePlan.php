@@ -70,9 +70,10 @@ class ChangePlan
     }
 
     /**
+     * @param  User|null  $actor  null: the platform itself (e.g. a free trial ending).
      * @return array<string, mixed>
      */
-    public function handle(Organization $root, string|PlanChoice $choice, string $reason, User $actor): array
+    public function handle(Organization $root, string|PlanChoice $choice, string $reason, ?User $actor): array
     {
         $choice = PlanChoice::of($choice);
         $this->assertChangeable($root, $choice);
@@ -153,7 +154,7 @@ class ChangePlan
     }
 
     /**
-     * @param  array{actor: User, reason: string}|null  $dispatch  Fire module events (real change only).
+     * @param  array{actor: ?User, reason: string}|null  $dispatch  Fire module events (real change only).
      * @return array<string, mixed>
      */
     private function apply(Organization $root, PlanChoice $choice, ?array $dispatch = null): array

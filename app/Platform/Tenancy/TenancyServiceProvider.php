@@ -3,6 +3,7 @@
 namespace App\Platform\Tenancy;
 
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Contracts\WorkspaceRestrictions;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Policies\OrganizationPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -17,6 +18,15 @@ class TenancyServiceProvider extends ServiceProvider
     {
         // One context per request / job; reset automatically between them.
         $this->app->scoped(CurrentContext::class);
+
+        // Nothing limits an account until another part says so (Billing binds its own).
+        $this->app->bindIf(WorkspaceRestrictions::class, fn () => new class implements WorkspaceRestrictions
+        {
+            public function readOnlyReason(Organization $root): ?string
+            {
+                return null;
+            }
+        });
     }
 
     public function boot(): void

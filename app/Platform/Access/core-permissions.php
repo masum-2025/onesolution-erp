@@ -24,6 +24,8 @@ return [
     ['key' => 'data.export', 'group' => 'security'],
     // Phase 5B-3: the client's own plan and invoices.
     ['key' => 'billing.view', 'group' => 'billing'],
+    // Phase 5C-2: buy, pay for and change a self-serve plan.
+    ['key' => 'billing.manage', 'group' => 'billing'],
     // Phase 5B-5: the client's own brand (where its partner allows it).
     ['key' => 'branding.manage', 'group' => 'organization'],
 ];

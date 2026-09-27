@@ -55,6 +55,15 @@ describe('ModeBanner', () => {
         expect(text).not.toContain('Leave');
     });
 
+    it('explains a workspace read-only for an overdue bill and leads to paying it', () => {
+        session.me = { context: context({ mode: 'read_only', mode_reason: 'payment_overdue' }) };
+
+        const text = mountBanner().text();
+        expect(text).toContain('read-only because a bill is overdue');
+        expect(text).toContain('Pay now');
+        expect(text).not.toContain('Export data');
+    });
+
     it('says only export remains after the grace period', () => {
         session.me = { context: context({ mode: 'export_only', mode_reason: 'partner_suspended' }) };
         expect(mountBanner().text()).toContain('You can still export all your data');

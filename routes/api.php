@@ -4,6 +4,7 @@ use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
 use App\Platform\Audit\Http\AuditLogController;
 use App\Platform\Billing\Http\Controllers\OrganizationBillingController;
+use App\Platform\Billing\Http\Controllers\SelfServeBillingController;
 use App\Platform\Branding\Http\ClientBrandController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiKeyController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiV1Controller;
@@ -141,6 +142,21 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     // The client's own plan and invoices (Phase 5B-3).
     Route::get('organizations/{organization}/billing', [OrganizationBillingController::class, 'show']);
     Route::get('organizations/{organization}/billing/invoices/{invoice}', [OrganizationBillingController::class, 'invoice']);
+
+    // Self-serve billing (Phase 5C-2): buy, pay and change a personal plan.
+    // Open while read-only for an overdue bill, so it can always be settled.
+    Route::get('organizations/{organization}/billing/self-serve', [SelfServeBillingController::class, 'show']);
+    Route::get('organizations/{organization}/billing/payments/{payment}', [SelfServeBillingController::class, 'payment'])->where('payment', '[0-9A-Za-z]{26}');
+    Route::middleware('throttle:payments-start')->group(function () {
+        Route::post('organizations/{organization}/billing/quote', [SelfServeBillingController::class, 'quote']);
+        Route::post('organizations/{organization}/billing/checkout', [SelfServeBillingController::class, 'checkout']);
+        Route::post('organizations/{organization}/billing/invoices/{invoice}/pay', [SelfServeBillingController::class, 'payInvoice'])->where('invoice', '[0-9A-Za-z]{26}');
+    });
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::post('organizations/{organization}/billing/trial', [SelfServeBillingController::class, 'trial']);
+        Route::post('organizations/{organization}/billing/free', [SelfServeBillingController::class, 'toFree']);
+        Route::post('organizations/{organization}/billing/keep-plan', [SelfServeBillingController::class, 'keepPlan']);
+    });
 
     // Plan usage and sector packages (Phase 5)
     Route::get('organizations/{organization}/usage', UsageController::class);

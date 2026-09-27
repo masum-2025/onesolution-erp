@@ -31,3 +31,39 @@ export function monthlyMargin(prices, cost) {
 export function statusTone(status) {
     return { issued: 'brand', overdue: 'bad', paid: 'ok', credited: 'neutral', pending: 'warn', payable: 'brand' }[status] ?? 'neutral';
 }
+
+/* ── Self-serve billing (Phase 5C-2) ─────────────────────────────────── */
+
+/**
+ * A fresh idempotency key for one click: sent with the checkout, so a
+ * double click or a retry after a lost answer never starts a second payment.
+ */
+export function newOpId() {
+    if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID().replace(/-/g, '');
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/** What paying yearly saves against twelve monthly payments; null when it saves nothing. */
+export function yearlySaving(prices) {
+    if (!Number.isInteger(prices?.monthly) || !Number.isInteger(prices?.yearly)) return null;
+    const saving = prices.monthly * 12 - prices.yearly;
+    return saving > 0 ? saving : null;
+}
+
+/** Badge tone for where a self-serve account stands. */
+export function standingTone(status) {
+    return { free: 'neutral', trial: 'brand', active: 'ok', past_due: 'warn', read_only: 'bad' }[status] ?? 'neutral';
+}
+
+/** A payment the gateway has settled one way or another (the status page stops asking). */
+export function paymentSettled(status) {
+    return status !== 'pending';
+}
+
+/** Whole days from now until an ISO time, never negative. */
+export function daysUntil(iso, now = Date.now()) {
+    if (!iso) return null;
+    return Math.max(0, Math.ceil((new Date(iso).getTime() - now) / 86400000));
+}

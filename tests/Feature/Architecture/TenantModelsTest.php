@@ -18,6 +18,9 @@ use App\Platform\Billing\Models\Commission;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Billing\Models\InvoiceLine;
 use App\Platform\Billing\Models\Payout;
+use App\Platform\Billing\Models\TrialGrant;
+use App\Platform\Payments\Models\GatewayEvent;
+use App\Platform\Payments\Models\Payment;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\DataExport\Models\DataExport;
@@ -135,6 +138,12 @@ const PLATFORM_MODELS = [
     // Identity (Phase 5C): a person's own codes and devices, before and outside any organization.
     OtpChallenge::class,
     UserSession::class,
+    // Self-serve billing (5C-2): payments and gateway messages arrive from the
+    // gateway without a signed-in person; trial grants are checked across
+    // accounts. People read payments only through their context's organization.
+    Payment::class,
+    GatewayEvent::class,
+    TrialGrant::class,
 ];
 
 /**

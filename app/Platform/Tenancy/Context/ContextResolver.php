@@ -8,6 +8,7 @@ use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\SupportAccess\Enums\GrantStatus;
 use App\Platform\SupportAccess\Models\SupportGrant;
+use App\Platform\Tenancy\Contracts\WorkspaceRestrictions;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
@@ -39,6 +40,7 @@ class ContextResolver
         private HostContext $host,
         private RuleResolver $rules,
         private RuleContextFactory $ruleContexts,
+        private WorkspaceRestrictions $restrictions,
     ) {}
 
     public function enterOrganization(User $user, string $organizationId): CurrentContext
@@ -74,6 +76,15 @@ class ContextResolver
                 'partner_suspended',
                 $graceEnds->isFuture() ? $graceEnds : null,
             );
+
+            return $this->context;
+        }
+
+        // The account itself may be limited, e.g. read-only while a bill is overdue (Phase 5C-2).
+        $root = $this->context->ancestors()->first() ?? $organization;
+        $reason = $this->restrictions->readOnlyReason($root);
+        if ($reason !== null) {
+            $this->context->restrict(CurrentContext::MODE_READ_ONLY, $reason);
         }
 
         return $this->context;

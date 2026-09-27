@@ -29,6 +29,9 @@ use Illuminate\Support\Facades\DB;
  *   anniversary month), at its partner plan's or our list price, carrying the
  *   partner's brand. Revenue share adds the partner's commission.
  *
+ * Self-serve subscriptions (personal workspaces) are left out: the client
+ * buys them at checkout and they renew on their own dates (Phase 5C-2).
+ *
  * No proration: a subscription is billed from the first month that starts on
  * or after the day it began. Safe to repeat: every document has a billing
  * key, so a month is never billed twice.
@@ -137,6 +140,11 @@ class BillingRun
     {
         foreach ($this->activeClients($partner) as $root) {
             $subscription = $this->subscriptions->for($root);
+
+            // Self-serve plans renew on their own dates (SelfServe\Renewals).
+            if ($subscription->self_serve) {
+                continue;
+            }
 
             $key = "client:{$root->getKey()}:{$month->toDateString()}";
 

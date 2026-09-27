@@ -47,6 +47,49 @@ final class NotificationCatalog
             'audience' => 'partner',
             'path' => '/partner/billing',
         ],
+        // Self-serve billing (Phase 5C-2).
+        'billing.payment_received' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'organization', 'amount', 'number', 'method', 'link'],
+            'audience' => 'client',
+            'path' => '/billing',
+        ],
+        'billing.payment_failed' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'amount', 'link'],
+            'audience' => 'client',
+            'path' => '/billing',
+        ],
+        'billing.trial_ending' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'organization', 'plan', 'ends', 'link'],
+            'audience' => 'client',
+            'path' => '/billing',
+        ],
+        'billing.trial_ended' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'plan', 'link'],
+            'audience' => 'client',
+            'path' => '/billing',
+        ],
+        'billing.payment_overdue' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'organization', 'number', 'amount', 'due', 'read_only_on', 'link'],
+            'audience' => 'client',
+            'path' => '/billing',
+        ],
+        'billing.workspace_restricted' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'organization', 'link'],
+            'audience' => 'client',
+            'path' => '/billing',
+        ],
+        'billing.workspace_restored' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'link'],
+            'audience' => 'client',
+            'path' => '/billing',
+        ],
         'transfers.requested' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'reason', 'link'],
