@@ -42,6 +42,10 @@ class User extends Authenticatable
             'password_changed_at' => 'datetime',
             'recovered_at' => 'datetime',
             'onboarded_at' => 'datetime',
+            // "Delete my account" (Phase 5C-3).
+            'deletion_requested_at' => 'immutable_datetime',
+            'deletion_due_at' => 'immutable_datetime',
+            'erased_at' => 'immutable_datetime',
             'password' => 'hashed',
         ];
     }

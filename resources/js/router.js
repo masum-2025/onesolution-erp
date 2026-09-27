@@ -45,6 +45,8 @@ const routes = [
             { path: 'provider', name: 'provider', component: () => import('./pages/provider/ProviderPage.vue'), meta: { context: 'organization', ns: ['provider'] } },
             { path: 'billing', name: 'billing', component: () => import('./pages/billing/BillingPage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             { path: 'billing/invoices/:id', name: 'invoice', component: () => import('./pages/billing/InvoicePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
+            // A personal workspace becomes a company (Phase 5C-3).
+            { path: 'upgrade', name: 'upgrade', component: () => import('./pages/billing/UpgradePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             // Where the payment page sends the person back (Phase 5C-2).
             { path: 'billing/payments/:id', name: 'payment', component: () => import('./pages/billing/PaymentStatusPage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             { path: 'export', name: 'export', component: () => import('./pages/trust/ExportPage.vue'), meta: { context: 'organization', ns: ['trust'] } },

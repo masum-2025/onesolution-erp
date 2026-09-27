@@ -107,5 +107,22 @@
         "end_others": "Sign out all other devices",
         "end_others_title": "Sign out everywhere else?",
         "end_others_text": "Every other browser and app using your account is signed out at once."
+    },
+    "privacy": {
+        "data_title": "Your data",
+        "data_text": "Download everything we keep about you: your account, where you work, your devices, what you agreed to, your payments and your own actions. Your workspace's business data has its own export.",
+        "download": "Download my data",
+        "download_limit": "You downloaded your data several times just now. Please try again in an hour.",
+        "workspace_export": "Export workspace data",
+        "delete_title": "Delete my account",
+        "delete_text": "Your personal data is erased after a waiting period, and your own workspace is closed. Records that belong to organizations you work for stay with them. Invoices are kept as the law requires.",
+        "blocked": "Before you can delete your account:",
+        "delete": "Delete my account…",
+        "pending": "Your account will be deleted on {date}. Until then you can use it as usual and change your mind.",
+        "cancel": "Keep my account",
+        "dialog_title": "Delete your account?",
+        "dialog_text": "We send a notice to your email and phone. You can cancel until the date shown there.",
+        "type_delete": "Type DELETE to confirm",
+        "confirm": "Delete my account"
     }
 }

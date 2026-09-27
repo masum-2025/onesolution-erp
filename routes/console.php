@@ -24,5 +24,8 @@ Schedule::command('billing:self-serve')->hourlyAt(15)->withoutOverlapping()->onO
 // Online payments whose gateway notice is late or lost are checked; abandoned ones expire.
 Schedule::command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 
+// Accounts whose "delete my account" grace period ended are erased (Phase 5C-3).
+Schedule::command('privacy:erase-due')->dailyAt('03:30')->withoutOverlapping()->onOneServer();
+
 // Data export files are deleted after their retention period.
 Schedule::command('exports:prune')->dailyAt('03:00')->withoutOverlapping()->onOneServer();

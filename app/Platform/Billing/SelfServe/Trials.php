@@ -39,7 +39,7 @@ class Trials
         $days = (int) $this->account->rule('b2c.trial_days', $root);
         $plan = (string) $this->account->rule('b2c.trial_plan', $root);
 
-        if ($days < 1 || ! $this->account->isOffered($plan) || ($this->account->price($plan, $subscription) ?? 0) < 1) {
+        if ($days < 1 || ! $this->account->isOffered($plan, $root) || ($this->account->price($plan, $subscription) ?? 0) < 1) {
             return null;
         }
 
@@ -151,7 +151,7 @@ class Trials
             }
 
             $free = $this->account->freePlan($root);
-            if ($this->account->planKey($root) !== $free) {
+            if ($free !== null && $this->account->planKey($root) !== $free) {
                 $this->changePlan->handle($root, $free, 'Free trial ended.', $actor);
             }
 

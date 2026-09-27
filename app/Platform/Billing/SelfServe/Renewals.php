@@ -86,9 +86,30 @@ class Renewals
         return $result;
     }
 
-    private function renew(Organization $root, Subscription $subscription, CarbonImmutable $today): ?string
+    /**
+     * Starts paid billing now for an account with no paid period running
+     * (e.g. a free personal workspace that just became a company): the first
+     * period starts today, due after the account's payment terms.
+     *
+     * @return string|null The invoice number; null when nothing is billed.
+     */
+    public function startNow(Organization $root): ?string
     {
-        return DB::transaction(function () use ($root, $subscription, $today) {
+        $subscription = Subscription::query()->where('organization_id', $root->getKey())->firstOrFail();
+        $today = $this->account->today();
+
+        if ($subscription->billed_through !== null && ! $subscription->billed_through->lessThan($today)) {
+            return null;
+        }
+
+        $subscription->forceFill(['billed_through' => $today->subDay()->toDateString()])->save();
+
+        return $this->renew($root, $subscription, $today, (int) $this->account->rule('billing.payment_terms_days', $root));
+    }
+
+    private function renew(Organization $root, Subscription $subscription, CarbonImmutable $today, ?int $termsDays = null): ?string
+    {
+        return DB::transaction(function () use ($root, $subscription, $today, $termsDays) {
             $subscription = Subscription::query()->whereKey($subscription->getKey())->lockForUpdate()->firstOrFail();
             $start = $subscription->billed_through->addDay();
             $end = $this->account->periodEnd($start, $subscription->period);
@@ -109,8 +130,8 @@ class Renewals
                     billingMode: $root->partner->billing_mode->value,
                     currency: $subscription->currency_code,
                     taxRateBp: (int) $this->account->rule('billing.tax_rate_bp', $root),
-                    // Due on the first day of the new period.
-                    paymentTermsDays: max(0, (int) $today->diffInDays($start)),
+                    // Due on the first day of the new period (or after the given terms, e.g. at an upgrade).
+                    paymentTermsDays: $termsDays ?? max(0, (int) $today->diffInDays($start)),
                     lines: [[
                         'organization_id' => $root->getKey(),
                         'plan_key' => $planKey,
@@ -141,7 +162,7 @@ class Renewals
     {
         DB::transaction(function () use ($root, $subscription) {
             $free = $this->account->freePlan($root);
-            if ($this->account->planKey($root) !== $free) {
+            if ($free !== null && $this->account->planKey($root) !== $free) {
                 $this->changePlan->handle($root, $free, 'Moved to the free plan at the end of the paid period, as the client chose.', null);
             }
 

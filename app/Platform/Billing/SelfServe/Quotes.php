@@ -26,7 +26,7 @@ class Quotes
     {
         $subscription = $this->account->subscription($root);
 
-        if (! $this->account->isOffered($planKey) || ! in_array($period, PlanCatalog::PERIODS, true)) {
+        if (! $this->account->isOffered($planKey, $root) || ! in_array($period, PlanCatalog::PERIODS, true)) {
             throw PaymentException::planNotOffered();
         }
 

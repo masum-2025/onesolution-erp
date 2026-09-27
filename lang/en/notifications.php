@@ -101,6 +101,18 @@ return [
             'body' => "{{ inviter }} gave you access to {{ organization }} on {{ product }}. Sign in with your usual email and password.",
             'action' => 'Sign in',
         ],
+        'identity_deletion_requested' => [
+            'subject' => 'Your {{ product }} account will be deleted on {{ date }}',
+            'body' => "You asked us to delete your {{ product }} account. On {{ date }} your personal data will be erased and your own workspace closed.\n\nChanged your mind? Sign in and cancel it on My account before then. If you did not ask for this, sign in now, cancel it and change your password.",
+            'sms' => '{{ product }}: your account will be deleted on {{ date }}. Not you, or changed your mind? Cancel: {{ link }}',
+            'action' => 'Open My account',
+        ],
+        'identity_deletion_cancelled' => [
+            'subject' => 'Your {{ product }} account will not be deleted',
+            'body' => 'The deletion of your {{ product }} account was cancelled. Everything stays as it was. If this was not you, change your password.',
+            'sms' => '{{ product }}: the deletion of your account was cancelled. Not you? {{ link }}',
+            'action' => 'Open My account',
+        ],
         'identity_password_changed' => [
             'subject' => 'Your {{ product }} password was changed',
             'body' => "The password of your {{ product }} account was changed on {{ time }}, and every other device was signed out.\n\nIf this was you, there is nothing to do. If it was not you, reset your password now and check your email and phone in My account.",
@@ -143,6 +155,8 @@ return [
         'identity_password_changed' => ['name' => 'Password changed', 'description' => 'To the person, on every address. Fixed wording.'],
         'identity_contact_changed' => ['name' => 'Email or phone changed', 'description' => 'To the person\'s old address. Fixed wording.'],
         'identity_signup_attempt' => ['name' => 'Sign-up with a taken address', 'description' => 'To the owner of the address. Fixed wording.'],
+        'identity_deletion_requested' => ['name' => 'Account deletion asked', 'description' => 'To the person, on every address, with the date. Fixed wording.'],
+        'identity_deletion_cancelled' => ['name' => 'Account deletion cancelled', 'description' => 'To the person, on every address. Fixed wording.'],
     ],
 
     'placeholders' => [
@@ -168,6 +182,7 @@ return [
         'plan' => 'Plan name',
         'ends' => 'Date the trial ends',
         'read_only_on' => 'Date it becomes read-only',
+        'date' => 'Date of the deletion',
     ],
 
     // Example values for previews.
@@ -190,6 +205,7 @@ return [
         'plan' => 'Personal Plus',
         'ends' => '11 October 2026',
         'read_only_on' => '17 October 2026',
+        'date' => '27 October 2026',
     ],
 
     'severity' => ['critical' => 'Critical', 'high' => 'High', 'normal' => 'Normal', 'low' => 'Low'],

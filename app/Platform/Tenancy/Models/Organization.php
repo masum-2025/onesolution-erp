@@ -55,7 +55,8 @@ class Organization extends Model
     }
 
     /**
-     * Run a callback that is allowed to rewrite tree columns (move only).
+     * Run a callback that is allowed to rewrite tree columns (a move, or a
+     * personal workspace becoming a company).
      *
      * @template T
      *

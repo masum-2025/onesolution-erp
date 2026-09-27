@@ -12,6 +12,7 @@ import AppSwitch from '@/components/AppSwitch.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import ContactDialog from './ContactDialog.vue';
+import PrivacySection from './PrivacySection.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { passwordProblem } from '@/lib/identity';
@@ -236,6 +237,9 @@ function deviceName(item) {
                     </li>
                 </ul>
             </section>
+
+            <!-- My data and deleting the account (Phase 5C-3) -->
+            <PrivacySection :account="me" @changed="account.reload()" />
         </div>
 
         <AppDialog :open="removal.open" :title="t('identity.account.remove_phone_title')" :description="t('identity.account.remove_phone_text')" :icon="Smartphone" tone="bad" size="sm" @close="removal.open = false">

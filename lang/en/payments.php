@@ -22,6 +22,7 @@ return [
         'trial_not_from_free' => 'A free trial can only start from the free plan.',
         'already_free' => 'You are already on the free plan.',
         'nothing_to_keep' => 'There is no scheduled change to undo.',
+        'no_free_plan' => 'A company has no free plan. Pay the open invoice to keep working; your data stays safe either way.',
     ],
 
     'messages' => [

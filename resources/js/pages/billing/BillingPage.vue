@@ -21,8 +21,8 @@ import { t } from '@/lib/i18n';
 const org = currentOrganization();
 const billing = useResource(() => api(`/api/organizations/${org.id}/billing`).then((response) => response.data));
 const data = computed(() => billing.data.value);
-// A personal workspace buys its own plan here (Phase 5C-2).
-const selfServe = org.organization_type === 'personal';
+// Bought and paid online here: personal workspaces (Phase 5C-2) and the companies they became (5C-3).
+const selfServe = computed(() => data.value?.self_serve === true);
 
 // The next invoice covers the day after the last one ends.
 const nextInvoice = computed(() => {

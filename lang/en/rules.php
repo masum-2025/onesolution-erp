@@ -221,6 +221,18 @@ return [
             'label' => 'Trial ending reminder (days before)',
             'description' => 'How many days before a trial ends the person is reminded.',
         ],
+        'b2c_upgrade_allowed' => [
+            'label' => 'Personal workspaces may become companies',
+            'description' => 'Whether a person can turn their personal workspace into a company themselves, keeping all data.',
+        ],
+        'b2c_upgrade_plan' => [
+            'label' => 'Plan offered on upgrade',
+            'description' => 'The business plan suggested first when a personal workspace becomes a company.',
+        ],
+        'privacy_account_deletion_grace_days' => [
+            'label' => 'Account deletion waiting period (days)',
+            'description' => 'Days between a person asking to delete their account and the erasure. They can cancel until then.',
+        ],
     ],
 
     'categories' => [

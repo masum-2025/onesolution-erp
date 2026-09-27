@@ -142,6 +142,21 @@ final class NotificationCatalog
             'path' => '/forgot',
             'editable' => false,
         ],
+        // "Delete my account" (Phase 5C-3): to every address, fixed wording.
+        'identity.deletion_requested' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'date', 'link'],
+            'audience' => 'person',
+            'path' => '/account',
+            'editable' => false,
+        ],
+        'identity.deletion_cancelled' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'link'],
+            'audience' => 'person',
+            'path' => '/account',
+            'editable' => false,
+        ],
         'identity.signup_attempt' => [
             'channels' => ['mail', 'sms'],
             'placeholders' => ['product', 'link'],

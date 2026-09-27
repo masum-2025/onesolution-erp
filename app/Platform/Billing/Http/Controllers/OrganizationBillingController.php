@@ -55,6 +55,8 @@ class OrganizationBillingController extends Controller
             'price_minor' => $billedByProvider ? null : $this->subscriptions->price($subscription, $root),
             'billed_through' => $subscription->billed_through?->toDateString(),
             'billed_by_provider' => $billedByProvider,
+            // Bought and paid online here (personal workspaces and companies grown from one).
+            'self_serve' => $subscription->self_serve && ! $billedByProvider,
             'provider' => $this->brands->for($partner)['name'],
             'invoices' => $invoices->map(fn (Invoice $invoice) => $this->presenter->summary($invoice))->values(),
         ]]);

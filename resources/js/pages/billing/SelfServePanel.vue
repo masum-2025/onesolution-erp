@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { RouterLink } from 'vue-router';
-import { AlertTriangle, BadgeCheck, CircleDashed, FlaskConical, Info, Package, Sparkles } from 'lucide-vue-next';
+import { AlertTriangle, BadgeCheck, Building2, CircleDashed, FlaskConical, Info, Package, Sparkles } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -13,7 +13,7 @@ import { useResource } from '@/lib/useResource';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { daysUntil, newOpId, standingTone, yearlySaving } from '@/lib/billing';
 import { confirmAction } from '@/lib/dialogs';
-import { currentOrganization, loadMe } from '@/lib/session';
+import { currentOrganization, loadMe, session } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 
@@ -39,6 +39,8 @@ const canBuy = computed(() => data.value?.can_manage && data.value.verified && d
 // During a paid period (not a trial) the plan changes only when it ends.
 const locked = computed(() => data.value?.status === 'active' && !!data.value.paid_through);
 const owes = computed(() => (data.value?.open_invoices ?? []).length > 0);
+// Only the account owner of a personal workspace, with nothing owed.
+const canUpgrade = computed(() => org.organization_type === 'personal' && session.me?.context?.account_owner === true && !owes.value);
 const hasYearly = computed(() => (data.value?.plans ?? []).some((plan) => plan.prices.yearly !== undefined));
 
 function isCurrent(plan) {
@@ -146,7 +148,7 @@ function payInvoice(invoice) {
                         {{ t('billing.self.keep_plan') }}
                     </AppButton>
                     <AppButton
-                        v-else-if="data.plan.key !== data.free_plan_key || owes"
+                        v-else-if="data.free_plan_key && (data.plan.key !== data.free_plan_key || owes)"
                         variant="ghost"
                         size="sm"
                         :loading="busy === 'free'"
@@ -211,6 +213,18 @@ function payInvoice(invoice) {
                     <p class="mt-1 text-[13px] leading-relaxed text-muted">{{ t('billing.self.trial_text') }}</p>
                 </div>
                 <AppButton variant="primary" :loading="busy === 'trial'" @click="startTrial">{{ t('billing.self.trial_start') }}</AppButton>
+            </section>
+
+            <!-- Growing into a company (Phase 5C-3): the account owner only -->
+            <section v-if="canUpgrade" class="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+                <div class="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-text">
+                    <Building2 class="size-5" aria-hidden="true" />
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[14.5px] font-semibold text-fg">{{ t('billing.upgrade.card_title') }}</p>
+                    <p class="mt-1 text-[13px] leading-relaxed text-muted">{{ t('billing.upgrade.card_text') }}</p>
+                </div>
+                <AppButton to="/upgrade">{{ t('billing.upgrade.card_action') }}</AppButton>
             </section>
 
             <!-- Plans -->

@@ -105,6 +105,11 @@ class PaymentException extends TenancyException
         return new self('already_free', 422);
     }
 
+    public static function noFreePlan(): self
+    {
+        return new self('no_free_plan', 422);
+    }
+
     public static function nothingToKeep(): self
     {
         return new self('nothing_to_keep', 422);

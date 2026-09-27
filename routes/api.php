@@ -38,6 +38,8 @@ use App\Platform\Rules\Http\Controllers\RuleApprovalController;
 use App\Platform\Tenancy\Http\Controllers\Api\AuthController;
 use App\Platform\Tenancy\Http\Controllers\Api\MeController;
 use App\Platform\Identity\Http\Controllers\AccountController;
+use App\Platform\Identity\Http\Controllers\MyDataController;
+use App\Platform\Identity\Http\Controllers\UpgradeController;
 use App\Platform\Tenancy\Http\Controllers\Api\MemberController;
 use App\Platform\Tenancy\Http\Controllers\Api\OrganizationController;
 use App\Platform\Tenancy\Http\Controllers\Api\PartnerOrganizationController;
@@ -68,7 +70,12 @@ Route::middleware('auth:sanctum')->prefix('me')->group(function () {
     Route::delete('sessions/{session}', [AccountController::class, 'endSession'])->where('session', '[0-9A-Za-z]{26}');
     Route::delete('sessions', [AccountController::class, 'endOtherSessions']);
 
+    // My data and "delete my account" (Phase 5C-3).
+    Route::get('data', [MyDataController::class, 'download'])->middleware('throttle:my-data');
+    Route::delete('deletion', [MyDataController::class, 'cancelDeletion']);
+
     Route::middleware('throttle:identity-code')->group(function () {
+        Route::post('deletion', [MyDataController::class, 'requestDeletion']);
         Route::put('password', [AccountController::class, 'password']);
         Route::post('contact', [AccountController::class, 'contact']);
         Route::post('contact/verify', [AccountController::class, 'verifyContact']);
@@ -142,6 +149,10 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     // The client's own plan and invoices (Phase 5B-3).
     Route::get('organizations/{organization}/billing', [OrganizationBillingController::class, 'show']);
     Route::get('organizations/{organization}/billing/invoices/{invoice}', [OrganizationBillingController::class, 'invoice']);
+
+    // A personal workspace becomes a company (Phase 5C-3): owner only.
+    Route::get('organizations/{organization}/upgrade', [UpgradeController::class, 'preview']);
+    Route::post('organizations/{organization}/upgrade', [UpgradeController::class, 'store'])->middleware('throttle:tenancy-sensitive');
 
     // Self-serve billing (Phase 5C-2): buy, pay and change a personal plan.
     // Open while read-only for an overdue bill, so it can always be settled.

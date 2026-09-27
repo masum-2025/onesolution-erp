@@ -36,6 +36,12 @@ return [
         'last_sign_in_method' => 'Add an email before removing your phone: you need one way to sign in.',
         'session_not_found' => 'That device is already signed out.',
         'no_personal_workspace' => 'You have no personal workspace.',
+        'not_personal' => 'Only a personal workspace can be upgraded to a company.',
+        'owner_only' => 'Only the owner of this workspace can do this.',
+        'upgrade_closed' => 'Your provider does not offer upgrading to a company here. Please contact them.',
+        'deletion_blocked' => 'Your account cannot be deleted yet. Hand over what only you own first (see the list), then try again.',
+        'deletion_confirm' => 'Type DELETE to confirm.',
+        'no_deletion_pending' => 'There is no account deletion to cancel.',
     ],
 
     'messages' => [
@@ -49,9 +55,20 @@ return [
         'session_ended' => 'That device was signed out.',
         'sessions_ended' => 'Every other device was signed out.',
         'onboarded' => 'All set.',
+        'upgraded' => 'Done: your workspace is now a company. Invite your team from Members.',
+        'deletion_requested' => 'Your account will be deleted on :date. You can cancel until then.',
+        'deletion_cancelled' => 'Deletion cancelled. Your account stays as it is.',
     ],
 
     'validation' => [
         'accept_terms' => 'Please accept the terms to create your account.',
+    ],
+
+    // Account deletion (Phase 5C-3).
+    'erased_name' => 'Deleted person',
+    'erased_workspace' => 'Deleted workspace',
+    'blockers' => [
+        'only_owner' => 'You are the only owner of :name, which has other members. Make one of them an owner first.',
+        'partner_owner' => 'You own the partner account :name. Hand it over first.',
     ],
 ];

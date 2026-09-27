@@ -999,7 +999,8 @@ turns SMS on for the house partner and adds `self.demo@demo.test` (`DemoIdentity
 
 Code: `app/Platform/Payments` (gateways, payments, callbacks) and `app/Platform/Billing/SelfServe`
 (checkout, trials, renewals, overdue). A personal workspace buys, pays for and changes its own
-plan on `/billing`. Coupons, mid-period plan changes with proration and trial-abuse checks by
+plan on `/billing` (and keeps doing so after it becomes a company, 5C-3: self-serve is the
+subscription's `self_serve` flag, not the organization type). Coupons, mid-period plan changes with proration and trial-abuse checks by
 device or card are Phase 5C-2b.
 
 ### Payment gateway
@@ -1093,6 +1094,78 @@ Run `php artisan billing:self-serve` to see renewals and reminders.
 - Open: live SSLCommerz (reviewed change), coupons and proration (5C-2b), partner-owned
   merchant accounts, auto-charge with stored tokens, BD VAT invoice format (Mushak 6.3) and
   real tax rates with an adviser, refunds through the gateway, trial abuse by device or card.
+
+## Upgrade to a company, my data, deleting an account (Phase 5C-3)
+
+Code: `app/Platform/Identity` (`Actions/UpgradeWorkspace`, `Services/AccountDeletion`,
+`Services/PersonalDataExport`).
+
+### Personal workspace → company
+
+- `/upgrade` (the workspace's owner only; rule `b2c.upgrade_allowed`, default on): company name
+  (en required, bn optional), kind of work (sector package applied), business plan (suggested:
+  rule `b2c.upgrade_plan`, `starter`) and period.
+- **Same organization and id**: every record, setting, invoice and audit entry stays. Only the
+  type (`personal` → `company`), name and sector change; the plan becomes a business plan
+  (`ChangePlan`, modules follow). A company takes one of the partner's `partners.max_clients`
+  places, must accept the DPA, and can add members up to its plan's `plans.max_users`.
+- **Billing without proration**: a paid personal period runs to its end with the company's
+  features and the business plan is billed from the next day by the usual renewal; with nothing
+  paid running (free or trial), the first business invoice is issued at once, due after
+  `billing.payment_terms_days`. The company stays **self-serve** (`subscriptions.self_serve`):
+  it pays online, renews and goes read-only when overdue like a personal workspace. A company
+  has no free plan to fall back to.
+- Refused with a clear reason: not the owner (403), an unpaid invoice first, no client place
+  left, a personal plan picked. It cannot be turned back. Audit: `organization.upgraded`.
+  "Team" is a small company: there is no separate type.
+
+### My data
+
+`GET /api/me/data` (My account → "Download my data", 5 per hour): one JSON file with what we
+keep about the person: account, memberships, partner memberships, devices, legal acceptances,
+payments, free trials, messages sent to them and their own actions (last 5000 audit entries).
+Audited (`identity.data_downloaded`). A workspace's business data has its own export (5B-2).
+
+### Delete my account
+
+1. `POST /api/me/deletion` with the password and the word `DELETE`. The deletion is scheduled
+   after `privacy.account_deletion_grace_days` (30, country-specific, PLACEHOLDER); every
+   address is told (`identity.deletion_requested`, fixed wording). A banner shows it everywhere;
+   `DELETE /api/me/deletion` cancels (`identity.deletion_cancelled`).
+2. **Blocked** (and listed on My account beforehand) while the person is the only owner of an
+   organization that has other members, or the only owner of a partner account: nothing is left
+   without an owner.
+3. `privacy:erase-due` (daily) erases due accounts (an account that became blocked meanwhile
+   waits):
+   - self-serve workspaces that are theirs alone: open invoices cancelled by credit notes,
+     subscription cancelled, export files deleted, archived with the name removed;
+     `WorkspaceErased` lets modules delete their business data;
+   - memberships elsewhere are suspended; **the records a B2B client owns stay with it**;
+   - the user row is anonymized ("Deleted person", no email, phone or password) and its
+     sessions, tokens and codes are deleted. The row stays so the audit log and client records
+     keep pointing at an anonymous person.
+   - Kept on purpose: issued invoices (tax law), the audit log (security), trial-grant hashes
+     (trial abuse). How long invoices are kept per country is a later rule.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET / POST | /api/organizations/{id}/upgrade | owner of the personal workspace |
+| GET | /api/me/data | signed in (5/hour) |
+| POST / DELETE | /api/me/deletion | signed in (password to ask) |
+
+`GET /api/me` and `/api/me/account` show `deletion_due_at`; `/api/me/account` also lists
+`deletion_blockers`. Console: `php artisan privacy:erase-due`.
+
+### Future expansion (Phase 5C-3)
+
+- Another country's waiting period: a country value of `privacy.account_deletion_grace_days`.
+  A partner without upgrades: `b2c.upgrade_allowed` off. No code.
+- Modules with business data listen to `WorkspaceErased` (delete) and appear in "my data" when
+  they hold data about the person (e.g. an employee record) through their own export.
+- Open: invoice retention per country, handing over ownership from the members screen in one
+  step, a reminder shortly before erasure.
 
 ## Browser app (frontend foundation)
 

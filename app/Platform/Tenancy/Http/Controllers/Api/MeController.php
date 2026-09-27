@@ -47,6 +47,8 @@ class MeController extends Controller
                 // Self-serve people may have only a phone (Phase 5C).
                 'phone' => $user->phone,
                 'onboarded' => $user->onboarded_at !== null,
+                // An account deletion is waiting (Phase 5C-3): the app shows it everywhere.
+                'deletion_due_at' => $user->deletion_due_at?->toIso8601String(),
             ],
             'context' => $active,
             'contexts' => $contexts->handle($user),

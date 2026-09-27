@@ -213,7 +213,7 @@ class AccountService
         }
     }
 
-    private function assertPassword(User $user, string $current): void
+    public function assertPassword(User $user, string $current): void
     {
         if (! Hash::check($current, $user->getAuthPassword())) {
             $this->audit->record(action: 'identity.password_check_failed', target: $user, actor: $user);

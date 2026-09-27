@@ -4,6 +4,7 @@ namespace App\Platform\Identity;
 
 use App\Platform\Identity\BotChecks\NoBotCheck;
 use App\Platform\Identity\BotChecks\TurnstileBotCheck;
+use App\Platform\Identity\Console\EraseDueAccounts;
 use App\Platform\Identity\Contracts\BotCheck;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -47,5 +48,12 @@ class IdentityServiceProvider extends ServiceProvider
 
         // Entering or resending codes: enough for typos, too few to guess six digits.
         RateLimiter::for('identity-code', fn (Request $request) => Limit::perMinute(10)->by('identity-code:'.($request->user()?->getKey() ?? $request->ip())));
+
+        // "Download my data" (Phase 5C-3): a whole file each time, a few per hour.
+        RateLimiter::for('my-data', fn (Request $request) => Limit::perHour(5)->by('my-data:'.($request->user()?->getKey() ?? $request->ip())));
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([EraseDueAccounts::class]);
+        }
     }
 }

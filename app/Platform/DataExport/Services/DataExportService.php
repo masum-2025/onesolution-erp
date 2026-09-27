@@ -103,6 +103,22 @@ class DataExportService
     }
 
     /**
+     * Deletes every export file of an organization now (e.g. its owner
+     * deleted their account, Phase 5C-3). The records stay, marked expired.
+     */
+    public function discardFor(Organization $organization): int
+    {
+        $exports = DataExport::query()->where('organization_id', $organization->getKey())->whereNotNull('file_path')->get();
+
+        foreach ($exports as $export) {
+            Storage::disk('local')->delete($export->file_path);
+            $export->forceFill(['status' => DataExport::EXPIRED, 'file_path' => null])->save();
+        }
+
+        return $exports->count();
+    }
+
+    /**
      * Delete files past their retention (scheduled daily).
      */
     public function pruneExpired(): int

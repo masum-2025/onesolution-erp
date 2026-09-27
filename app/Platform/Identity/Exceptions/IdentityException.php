@@ -97,4 +97,39 @@ class IdentityException extends TenancyException
     {
         return new self('no_personal_workspace', 404);
     }
+
+    // ── Upgrade and account deletion (Phase 5C-3) ────────────────────────
+
+    public static function notPersonal(): self
+    {
+        return new self('not_personal', 422);
+    }
+
+    public static function ownerOnly(): self
+    {
+        return new self('owner_only', 403);
+    }
+
+    public static function upgradeClosed(): self
+    {
+        return new self('upgrade_closed', 403);
+    }
+
+    /**
+     * @param  list<array{code: string, name: string}>  $blockers
+     */
+    public static function deletionBlocked(array $blockers): self
+    {
+        return new self('deletion_blocked', 409, [], ['blockers' => $blockers]);
+    }
+
+    public static function deletionConfirmMissing(): self
+    {
+        return new self('deletion_confirm', 422, [], ['field' => 'confirm']);
+    }
+
+    public static function noDeletionPending(): self
+    {
+        return new self('no_deletion_pending', 422);
+    }
 }

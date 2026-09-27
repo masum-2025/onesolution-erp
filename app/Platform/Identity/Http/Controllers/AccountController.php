@@ -13,6 +13,7 @@ use App\Platform\Identity\Http\Requests\CurrentPasswordRequest;
 use App\Platform\Identity\Http\Requests\OnboardingRequest;
 use App\Platform\Identity\Http\Requests\PasswordRequest;
 use App\Platform\Identity\Models\UserSession;
+use App\Platform\Identity\Services\AccountDeletion;
 use App\Platform\Identity\Services\AccountService;
 use App\Platform\Identity\Services\OtpService;
 use App\Platform\Identity\Services\SessionTracker;
@@ -33,6 +34,7 @@ class AccountController extends Controller
         private SessionTracker $sessions,
         private SignupGate $gate,
         private AuditLogger $audit,
+        private AccountDeletion $deletion,
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -136,6 +138,9 @@ class AccountController extends Controller
             'password_changed_at' => $user->password_changed_at?->toIso8601String(),
             'locked_until' => $cooldown?->toIso8601String(),
             'onboarded' => $user->onboarded_at !== null,
+            // "Delete my account" (Phase 5C-3): when it happens, and what stops it now.
+            'deletion_due_at' => $user->deletion_due_at?->toIso8601String(),
+            'deletion_blockers' => $this->deletion->describe($this->deletion->blockers($user)),
             'options' => [
                 'phone' => $this->gate->smsAvailable($this->gate->addressPartner()),
                 'phone_countries' => $this->gate->options()['phone_countries'],

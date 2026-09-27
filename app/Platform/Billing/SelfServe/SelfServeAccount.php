@@ -12,6 +12,7 @@ use App\Platform\Rules\RuleContext;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Enums\BillingMode;
+use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -36,7 +37,7 @@ class SelfServeAccount
      */
     public function subscription(Organization $root): Subscription
     {
-        if (! $root->isRoot() || ! $root->type->isSelfServe()) {
+        if (! $root->isRoot()) {
             throw PaymentException::notSelfServe();
         }
 
@@ -45,7 +46,19 @@ class SelfServeAccount
             throw PaymentException::billedByProvider($root->partner->name);
         }
 
-        return $this->subscriptions->for($root);
+        // Personal workspaces, and companies that grew out of one (Phase 5C-3).
+        $subscription = $this->subscriptions->for($root);
+        if (! $subscription->self_serve) {
+            throw PaymentException::notSelfServe();
+        }
+
+        return $subscription;
+    }
+
+    /** Personal plans for a personal workspace, business plans for a company. */
+    public function audience(Organization $root): string
+    {
+        return $root->type === OrganizationType::Personal ? PlanCatalog::PERSONAL : PlanCatalog::BUSINESS;
     }
 
     /** Paying or starting a trial needs a confirmed email or phone. */
@@ -61,10 +74,13 @@ class SelfServeAccount
         return $this->subscriptions->planKey($root);
     }
 
-    /** The plan a self-serve account falls back to (rule b2c.default_plan). */
-    public function freePlan(Organization $root): string
+    /**
+     * The plan a personal workspace falls back to (rule b2c.default_plan).
+     * null for a company: there is no free business plan.
+     */
+    public function freePlan(Organization $root): ?string
     {
-        return (string) $this->rule('b2c.default_plan', $root);
+        return $root->type === OrganizationType::Personal ? (string) $this->rule('b2c.default_plan', $root) : null;
     }
 
     /** List price of a plan in the subscription's currency; null = not sold that way. */
@@ -79,15 +95,23 @@ class SelfServeAccount
     }
 
     /**
-     * Public personal plans with their prices in the account's currency.
+     * Public plans of the account's audience with their prices in its currency.
      *
      * @return list<array{key: string, name: string, description: string, prices: array<string, int>}>
      */
-    public function offeredPlans(Subscription $subscription): array
+    public function offeredPlans(Organization $root, Subscription $subscription): array
+    {
+        return $this->plansFor($this->audience($root), $subscription);
+    }
+
+    /**
+     * @return list<array{key: string, name: string, description: string, prices: array<string, int>}>
+     */
+    public function plansFor(string $audience, Subscription $subscription): array
     {
         $offered = [];
         foreach ($this->plans->all() as $plan) {
-            if ($plan->audience !== PlanCatalog::PERSONAL || ! $plan->public) {
+            if ($plan->audience !== $audience || ! $plan->public) {
                 continue;
             }
 
@@ -107,10 +131,10 @@ class SelfServeAccount
         return $offered;
     }
 
-    public function isOffered(string $planKey): bool
+    public function isOffered(string $planKey, Organization $root): bool
     {
         return $this->plans->has($planKey)
-            && $this->plans->get($planKey)->audience === PlanCatalog::PERSONAL
+            && $this->plans->get($planKey)->audience === $this->audience($root)
             && $this->plans->get($planKey)->public;
     }
 

@@ -615,4 +615,43 @@ return [
         'category' => 'identity',
         'sort_order' => 139,
     ],
+
+    // ── Upgrade and privacy (Phase 5C-3) ─────────────────────────────────
+    [
+        'key' => 'b2c.upgrade_allowed',
+        'type' => 'boolean',
+        // Whether a personal workspace may become a company by itself.
+        'default' => true,
+        'label' => 'rules.core.b2c_upgrade_allowed.label',
+        'description' => 'rules.core.b2c_upgrade_allowed.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'category' => 'identity',
+        'sort_order' => 140,
+    ],
+    [
+        'key' => 'b2c.upgrade_plan',
+        'type' => 'string',
+        // The business plan (plans.php) offered first when a personal workspace becomes a company.
+        'schema' => ['pattern' => '^[a-z][a-z0-9_]{1,49}$'],
+        'default' => 'starter',
+        'label' => 'rules.core.b2c_upgrade_plan.label',
+        'description' => 'rules.core.b2c_upgrade_plan.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'category' => 'identity',
+        'sort_order' => 141,
+    ],
+    [
+        'key' => 'privacy.account_deletion_grace_days',
+        'type' => 'integer',
+        // Days between "delete my account" and the erasure; the person can cancel until then. PLACEHOLDER.
+        'schema' => ['minimum' => 1, 'maximum' => 90],
+        'default' => 30,
+        'label' => 'rules.core.privacy_account_deletion_grace_days.label',
+        'description' => 'rules.core.privacy_account_deletion_grace_days.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'country_specific' => true,
+        'category' => 'data',
+        'sort_order' => 83,
+    ],
 ];

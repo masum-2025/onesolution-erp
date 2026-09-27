@@ -76,7 +76,7 @@ class SelfServePresenter
                 ? $subscription->past_due_since->addDays($grace)->toIso8601String()
                 : null,
             'open_invoices' => $this->account->openInvoices($root)->map(fn ($invoice) => $this->invoices->summary($invoice))->values(),
-            'plans' => $this->account->offeredPlans($subscription),
+            'plans' => $this->account->offeredPlans($root, $subscription),
             'can_pay_online' => ($gateway = $this->gateways->available($this->account->context($root), $subscription->currency_code)[0] ?? null) !== null,
             'test_payments' => $gateway?->isTestMode() ?? false,
             'verified' => $user->email_verified_at !== null || $user->phone_verified_at !== null,

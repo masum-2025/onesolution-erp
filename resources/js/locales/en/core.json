@@ -176,5 +176,9 @@
         "pending_one": "{count} legal document from your provider waits for your acceptance.",
         "pending_other": "{count} legal documents from your provider wait for your acceptance.",
         "review": "Read and accept"
+    },
+    "deletion": {
+        "pending": "Your account will be deleted on {date}. Changed your mind? You can keep it until then.",
+        "review": "Keep my account"
     }
 }

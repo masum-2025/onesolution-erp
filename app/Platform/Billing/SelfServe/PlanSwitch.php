@@ -38,7 +38,8 @@ class PlanSwitch
     public function toFree(Organization $root, User $user): array
     {
         $subscription = $this->account->subscription($root);
-        $free = $this->account->freePlan($root);
+        // A company has no free plan to move to (it can pay, or its owner can close it).
+        $free = $this->account->freePlan($root) ?? throw PaymentException::noFreePlan();
         $open = $this->account->openInvoices($root);
 
         if ($subscription->onTrial() && $open->isEmpty()) {

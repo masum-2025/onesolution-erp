@@ -229,5 +229,31 @@
         "refund_text": "This invoice was already paid, so this payment will be refunded.",
         "try_again": "Try again",
         "to_billing": "Back to billing"
+    },
+    "upgrade": {
+        "title": "Upgrade to a company",
+        "text": "Turn this workspace into a company to work as a team. It stays the same workspace, with all your data.",
+        "what_changes": "What changes",
+        "keeps": "Everything you have stays: records, settings, invoices and history.",
+        "team": "You can invite your team and give them roles.",
+        "plan": "You move to a business plan with the modules a business needs.",
+        "dpa": "As a company, you will be asked to accept the data processing agreement.",
+        "company": "Your company",
+        "name_en": "Company name (English)",
+        "name_bn": "Company name (Bangla)",
+        "name_required": "Enter the company name in English (at least 2 letters).",
+        "sector": "Kind of work",
+        "sector_hint": "Sets up modules, settings and roles for it. You can change everything later.",
+        "no_sector": "Not now",
+        "choose_plan": "Business plan",
+        "plan_required": "Choose a plan.",
+        "bill_now": "Billing for {plan} starts today: the first invoice is due in {days} days, paid online like before.",
+        "bill_later": "Your paid period continues with the company features. {plan} is billed from {date}.",
+        "confirm_title": "Make \"{name}\" a company?",
+        "confirm_text": "This cannot be turned back into a personal workspace. All data stays.",
+        "submit": "Upgrade to a company",
+        "card_title": "Growing? Work as a team",
+        "card_text": "Turn this workspace into a company: invite people, keep all your data.",
+        "card_action": "Upgrade to a company"
     }
 }
