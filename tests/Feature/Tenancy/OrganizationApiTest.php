@@ -34,7 +34,7 @@ it('returns 404 for organizations outside the context (IDOR)', function (string 
         ->assertNotFound();
     $this->asToken($this->c1Token)->getJson("/api/organizations/{$id}/settings")->assertNotFound();
 
-    expect(Organization::find($id)->name['en'])->not->toBe('Hacked');
+    expect(Organization::find($id)->texts('name')['en'])->not->toBe('Hacked');
 })->with(['g1', 'c2', 'b2', 'c3', 'c4']);
 
 it('returns 404 for a guessed id', function () {
@@ -151,7 +151,9 @@ it('explains where each setting comes from', function () {
         ->assertJsonPath('data.currency_code.value', 'BDT')
         ->assertJsonPath('data.currency_code.source', 'inherited')
         ->assertJsonPath('data.currency_code.source_organization_id', $this->w->g1->id)
-        ->assertJsonPath('data.default_locale.source', 'platform_default');
+        // Nobody sets a language: the country's (Bangladesh: Bangla).
+        ->assertJsonPath('data.default_locale.value', 'bn')
+        ->assertJsonPath('data.default_locale.source', 'country');
 });
 
 it('lets a group owner move a branch between its companies', function () {
@@ -185,7 +187,7 @@ it('requires a reason to move', function () {
 
 it('answers in Bangla when the organization uses Bangla', function () {
     $this->w->g1->update(['default_locale' => 'bn']);
-    $token = orgToken($this->c1Owner, $this->w->c1);
+    $token = orgToken(withoutOwnLanguage($this->c1Owner), $this->w->c1);
 
     $this->asToken($token)->getJson('/api/organizations/'.Str::ulid())
         ->assertNotFound()

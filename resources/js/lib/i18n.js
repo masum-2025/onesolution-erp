@@ -37,16 +37,36 @@ export async function setLocale(locale, { remember = true } = {}) {
 
     await loadNamespaces([], locale);
     i18n.locale = locale;
-    document.documentElement.lang = locale;
+    applyDocumentLocale(locale);
     // Data from the server (module and organization names, rule labels) was
     // translated in the old language: listeners drop caches and fetch it again.
     emit('locale-changed', locale);
 }
 
+/**
+ * Writing direction of a language: Arabic, Persian, Hebrew, Urdu… are right to
+ * left. Layouts use logical CSS (start/end), so flipping `dir` is enough.
+ */
+export function direction(locale) {
+    try {
+        const info = new Intl.Locale(locale);
+        const textInfo = info.textInfo ?? info.getTextInfo?.();
+        if (textInfo?.direction) return textInfo.direction;
+    } catch {
+        // Unknown tag: fall through to the list.
+    }
+    return ['ar', 'fa', 'he', 'ur', 'ps', 'ckb', 'dv', 'yi'].includes(String(locale).split(/[-_]/)[0]) ? 'rtl' : 'ltr';
+}
+
+function applyDocumentLocale(locale) {
+    document.documentElement.lang = locale;
+    document.documentElement.dir = direction(locale);
+}
+
 export function initI18n(locales, locale) {
     i18n.locales = locales;
     i18n.locale = locales.includes(locale) ? locale : locales[0];
-    document.documentElement.lang = i18n.locale;
+    applyDocumentLocale(i18n.locale);
     return loadNamespaces(['core']);
 }
 

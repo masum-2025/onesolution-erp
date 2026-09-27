@@ -106,7 +106,7 @@ class PartnerApiV1Controller extends Controller
             'data' => PartnerPlan::query()->where('partner_id', $partner->getKey())->where('status', PartnerPlan::ACTIVE)->with('prices')->get()
                 ->map(fn (PartnerPlan $plan) => [
                     'id' => $plan->getKey(),
-                    'name' => $plan->name,
+                    'name' => $plan->texts('name'),
                     'base_plan' => $plan->base_plan_key,
                     'modules' => $plan->modules,
                     'prices' => $plan->prices->map(fn (PartnerPlanPrice $price) => ['currency' => $price->currency_code, 'period' => $price->period, 'amount_minor' => $price->amount_minor])->values(),

@@ -9,6 +9,7 @@ use App\Platform\Billing\Http\Controllers\PartnerPlansController;
 use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
 use App\Platform\Billing\Http\Controllers\SelfServeBillingController;
 use App\Platform\Branding\Http\ClientBrandController;
+use App\Platform\Countries\Http\CountryController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Identity\Http\Controllers\AccountController;
 use App\Platform\Identity\Http\Controllers\MyDataController;
@@ -213,6 +214,8 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 
     // Module system (Phase 2)
     Route::get('menu', MenuController::class);
+    // Countries the platform knows (Phase 6), for pickers and "comes from the country" hints.
+    Route::get('countries', CountryController::class);
     Route::get('organizations/{organization}/modules', [ModuleController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
         Route::post('organizations/{organization}/modules/{module}/enable', [ModuleController::class, 'enable']);

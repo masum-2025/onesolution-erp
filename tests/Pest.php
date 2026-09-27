@@ -3,12 +3,17 @@
 use App\Models\User;
 use App\Platform\Access\Models\MembershipRole;
 use App\Platform\Access\Models\Role;
+use App\Platform\Identity\Services\PersonalWorkspaces;
 use App\Platform\Modules\ModuleResolver;
-use App\Platform\Partners\Contracts\DnsTxtLookup;
-use App\Platform\Partners\Enums\DomainStatus;
-use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Modules\ResolvedModule;
 use App\Platform\Modules\Services\ModuleToggleService;
+use App\Platform\Partners\Contracts\DnsTxtLookup;
+use App\Platform\Partners\Enums\DomainStatus;
+use App\Platform\Partners\HostContext;
+use App\Platform\Partners\Models\PartnerDomain;
+use App\Platform\Payments\DecimalAmount;
+use App\Platform\Payments\GatewayRegistry;
+use App\Platform\Payments\Models\Payment;
 use App\Platform\Rules\Enums\RuleMode;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\RuleContextFactory;
@@ -29,8 +34,12 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use App\Platform\Tenancy\Models\Partner;
 use App\Platform\Tenancy\Models\PartnerUser;
+use Illuminate\Http\Client\Factory;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /*
@@ -78,6 +87,17 @@ function createMember(
     return $user;
 }
 
+/**
+ * A person who never picked a language in their profile: they read the
+ * organization's (or its country's) language (Phase 6). Factory users read English.
+ */
+function withoutOwnLanguage(User $user): User
+{
+    $user->forceFill(['locale' => null])->save();
+
+    return $user;
+}
+
 function createPartnerStaff(Partner $partner, PartnerUserRole $role = PartnerUserRole::Support): User
 {
     $user = User::factory()->create();
@@ -99,7 +119,7 @@ function createPartnerStaff(Partner $partner, PartnerUserRole $role = PartnerUse
 function orgToken(User $user, Organization $organization): string
 {
     // Tokens are issued at the platform address, whatever the last test request used.
-    app(App\Platform\Partners\HostContext::class)->forPlatform();
+    app(HostContext::class)->forPlatform();
     $token = app(IssueContextToken::class)->forOrganization($user, $organization->getKey())->plainTextToken;
     app(CurrentContext::class)->clear();
 
@@ -108,7 +128,7 @@ function orgToken(User $user, Organization $organization): string
 
 function partnerToken(User $user, Partner $partner): string
 {
-    app(App\Platform\Partners\HostContext::class)->forPlatform();
+    app(HostContext::class)->forPlatform();
     $token = app(IssueContextToken::class)->forPartner($user, $partner->getKey())->plainTextToken;
     app(CurrentContext::class)->clear();
 
@@ -339,13 +359,13 @@ function selfServeWorld(?Partner $partner = null, string $country = 'BD'): objec
         'payments.sslcommerz.store_id' => 'teststore',
         'payments.sslcommerz.store_password' => SSL_STORE_PASSWORD,
     ]);
-    app()->forgetInstance(App\Platform\Payments\GatewayRegistry::class);
+    app()->forgetInstance(GatewayRegistry::class);
 
     $partner ??= Partner::query()->where('is_house', true)->first() ?? Partner::factory()->house()->create(['name' => 'One Solutions']);
     platformRule('billing.payment_gateways', ['sslcommerz'], 'BD');
 
     $user = User::factory()->create();
-    $workspace = app(App\Platform\Identity\Services\PersonalWorkspaces::class)->create($user, $partner, $country, 'en');
+    $workspace = app(PersonalWorkspaces::class)->create($user, $partner, $country, 'en');
 
     return (object) ['partner' => $partner, 'user' => $user, 'workspace' => $workspace];
 }
@@ -361,15 +381,15 @@ function selfServeWorld(?Partner $partner = null, string $country = 'BD'): objec
 function fakeSslCommerz(array $validation = [], ?array $lookup = null, bool $initFails = false): void
 {
     // Replaces any earlier fake of this test (the first matching fake would win otherwise).
-    Illuminate\Support\Facades\Http::swap(new Illuminate\Http\Client\Factory(app('events')));
+    Http::swap(new Factory(app('events')));
 
-    Illuminate\Support\Facades\Http::fake(function (Illuminate\Http\Client\Request $request) use ($validation, $lookup, $initFails) {
+    Http::fake(function (Request $request) use ($validation, $lookup, $initFails) {
         $url = $request->url();
 
         if (str_contains($url, '/gwprocess/v4/api.php')) {
             return $initFails
-                ? Illuminate\Support\Facades\Http::response(['status' => 'FAILED', 'failedreason' => 'Store is not active'])
-                : Illuminate\Support\Facades\Http::response([
+                ? Http::response(['status' => 'FAILED', 'failedreason' => 'Store is not active'])
+                : Http::response([
                     'status' => 'SUCCESS',
                     'GatewayPageURL' => 'https://sandbox.sslcommerz.com/EasyCheckOut/test'.$request['tran_id'],
                     'sessionkey' => 'SK'.$request['tran_id'],
@@ -380,10 +400,10 @@ function fakeSslCommerz(array $validation = [], ?array $lookup = null, bool $ini
 
         if (str_contains($url, 'validationserverAPI.php')) {
             $tranId = substr((string) ($query['val_id'] ?? ''), 4);
-            $payment = App\Platform\Payments\Models\Payment::query()->find($tranId);
-            $amount = $payment === null ? '0.00' : App\Platform\Payments\DecimalAmount::fromMinor($payment->amount_minor, $payment->currency_code);
+            $payment = Payment::query()->find($tranId);
+            $amount = $payment === null ? '0.00' : DecimalAmount::fromMinor($payment->amount_minor, $payment->currency_code);
 
-            return Illuminate\Support\Facades\Http::response([
+            return Http::response([
                 'status' => 'VALID',
                 'tran_id' => $tranId,
                 'val_id' => $query['val_id'],
@@ -399,10 +419,10 @@ function fakeSslCommerz(array $validation = [], ?array $lookup = null, bool $ini
         }
 
         if (str_contains($url, 'merchantTransIDvalidationAPI.php')) {
-            return Illuminate\Support\Facades\Http::response(['APIConnect' => 'DONE', 'no_of_trans_found' => count($lookup ?? []), 'element' => $lookup ?? []]);
+            return Http::response(['APIConnect' => 'DONE', 'no_of_trans_found' => count($lookup ?? []), 'element' => $lookup ?? []]);
         }
 
-        return Illuminate\Support\Facades\Http::response('Unexpected', 500);
+        return Http::response('Unexpected', 500);
     });
 }
 
@@ -413,13 +433,13 @@ function fakeSslCommerz(array $validation = [], ?array $lookup = null, bool $ini
  * @param  array<string, mixed>  $extra
  * @return array<string, mixed>
  */
-function sslNotice(App\Platform\Payments\Models\Payment $payment, string $status = 'VALID', array $extra = [], string $password = SSL_STORE_PASSWORD): array
+function sslNotice(Payment $payment, string $status = 'VALID', array $extra = [], string $password = SSL_STORE_PASSWORD): array
 {
     $fields = [
         'status' => $status,
         'tran_id' => $payment->getKey(),
         'val_id' => $status === 'VALID' ? 'VAL-'.$payment->getKey() : '',
-        'amount' => App\Platform\Payments\DecimalAmount::fromMinor($payment->amount_minor, $payment->currency_code),
+        'amount' => DecimalAmount::fromMinor($payment->amount_minor, $payment->currency_code),
         'currency' => $payment->currency_code,
         ...$extra,
     ];
@@ -439,7 +459,7 @@ function sslNotice(App\Platform\Payments\Models\Payment $payment, string $status
 /**
  * Start a checkout through the API as the workspace owner.
  */
-function startCheckout(TestCase $test, object $world, string $plan = 'personal_plus', string $period = 'monthly', ?string $opId = null): Illuminate\Testing\TestResponse
+function startCheckout(TestCase $test, object $world, string $plan = 'personal_plus', string $period = 'monthly', ?string $opId = null): TestResponse
 {
     return $test->asToken(orgToken($world->user, $world->workspace))
         ->postJson("/api/organizations/{$world->workspace->id}/billing/checkout", [

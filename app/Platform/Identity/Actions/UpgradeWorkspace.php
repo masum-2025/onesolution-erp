@@ -90,7 +90,7 @@ class UpgradeWorkspace
 
         return DB::transaction(function () use ($root, $user, $data, $plan, $subscription) {
             $root = Organization::query()->whereKey($root->getKey())->lockForUpdate()->firstOrFail();
-            $before = ['type' => $root->type->value, 'name' => $root->name, 'plan' => $this->account->planKey($root)];
+            $before = ['type' => $root->type->value, 'name' => $root->texts('name'), 'plan' => $this->account->planKey($root)];
             $paidUntil = $this->paidUntil($root, $subscription);
 
             // The type is a tree column: only a move or this upgrade may change it.

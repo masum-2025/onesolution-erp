@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Platform\Branding\BrandResolver;
 use App\Platform\Identity\Services\SignupGate;
 use App\Platform\Partners\HostContext;
+use App\Platform\Support\LocaleResolver;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -14,15 +15,20 @@ use Illuminate\Contracts\View\View;
  */
 class AppShellController extends Controller
 {
-    public function __invoke(BrandResolver $brands, HostContext $host, SignupGate $signup): View
+    public function __invoke(BrandResolver $brands, HostContext $host, SignupGate $signup, LocaleResolver $locales): View
     {
         $brand = $brands->for($host->partner(), $host->client());
+        // A client's own address speaks its language (or its country's) until the person picks one.
+        $locale = $locales->resolve(organization: $host->client());
+        $supported = (array) config('tenancy.supported_locales');
 
         return view('app', [
             'brand' => $brand,
             'favicon' => $this->favicon($brand),
-            'locales' => config('tenancy.supported_locales'),
-            'defaultLocale' => config('tenancy.defaults.default_locale'),
+            'locales' => $supported,
+            'defaultLocale' => $locale,
+            'direction' => LocaleResolver::direction($locale),
+            'rtlLocales' => array_values(array_filter($supported, fn (string $code) => LocaleResolver::direction($code) === 'rtl')),
             // Which sign-up, sign-in and recovery options this address offers (no secrets).
             'signup' => $signup->options(),
         ]);

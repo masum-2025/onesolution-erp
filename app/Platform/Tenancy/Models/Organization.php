@@ -2,6 +2,7 @@
 
 namespace App\Platform\Tenancy\Models;
 
+use App\Platform\Support\HasTranslatedTexts;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\OrganizationType;
@@ -32,7 +33,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Organization extends Model
 {
     /** @use HasFactory<OrganizationFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasTranslatedTexts, HasUlids;
+
+    /** @var list<string> Data labels in several languages. */
+    public array $translatable = ['name'];
 
     /** Columns that describe the organization's place in the tree. */
     public const TREE_COLUMNS = ['parent_id', 'root_id', 'path', 'depth', 'type'];
@@ -79,7 +83,6 @@ class Organization extends Model
         return [
             'type' => OrganizationType::class,
             'status' => OrganizationStatus::class,
-            'name' => 'array',
             'settings' => 'array',
             'depth' => 'integer',
             'version' => 'integer',
@@ -177,12 +180,6 @@ class Organization extends Model
      */
     public function displayName(?string $locale = null): string
     {
-        $names = (array) $this->name;
-        $locale ??= app()->getLocale();
-
-        return (string) ($names[$locale]
-            ?? $names[config('app.fallback_locale')]
-            ?? reset($names)
-            ?: '');
+        return $this->textIn('name', $locale);
     }
 }

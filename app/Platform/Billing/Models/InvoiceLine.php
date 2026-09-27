@@ -2,6 +2,7 @@
 
 namespace App\Platform\Billing\Models;
 
+use App\Platform\Support\HasTranslatedTexts;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -13,14 +14,16 @@ use Illuminate\Database\Eloquent\Model;
 #[Table('invoice_lines')]
 class InvoiceLine extends Model
 {
-    use HasUlids;
+    use HasTranslatedTexts, HasUlids;
+
+    /** @var list<string> Data labels in several languages. */
+    public array $translatable = ['description'];
 
     protected $guarded = ['*'];
 
     protected function casts(): array
     {
         return [
-            'description' => 'array',
             'quantity' => 'integer',
             'unit_amount_minor' => 'integer',
             'amount_minor' => 'integer',
@@ -29,8 +32,6 @@ class InvoiceLine extends Model
 
     public function text(?string $locale = null): string
     {
-        $locale ??= app()->getLocale();
-
-        return (string) ($this->description[$locale] ?? $this->description['en'] ?? '');
+        return $this->textIn('description', $locale);
     }
 }

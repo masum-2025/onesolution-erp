@@ -2,6 +2,7 @@
 
 namespace App\Platform\Packaging\Models;
 
+use App\Platform\Support\HasTranslatedTexts;
 use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -19,7 +20,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['base_plan_key', 'name', 'description', 'modules', 'status'])]
 class PartnerPlan extends Model
 {
-    use HasUlids;
+    use HasTranslatedTexts, HasUlids;
+
+    /** @var list<string> Data labels in several languages. */
+    public array $translatable = ['name', 'description'];
 
     public const ACTIVE = 'active';
 
@@ -28,8 +32,6 @@ class PartnerPlan extends Model
     protected function casts(): array
     {
         return [
-            'name' => 'array',
-            'description' => 'array',
             'modules' => 'array',
         ];
     }
@@ -63,9 +65,7 @@ class PartnerPlan extends Model
 
     public function label(?string $locale = null): string
     {
-        $locale ??= app()->getLocale();
-
-        return (string) ($this->name[$locale] ?? $this->name['en'] ?? reset($this->name));
+        return $this->textIn('name', $locale);
     }
 
     public function price(string $currency, string $period): ?int

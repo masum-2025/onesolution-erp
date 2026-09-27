@@ -46,6 +46,9 @@ class MeController extends Controller
                 'email' => $user->email,
                 // Self-serve people may have only a phone (Phase 5C).
                 'phone' => $user->phone,
+                // The person's own language and timezone (Phase 6); null = the organization's.
+                'locale' => $user->locale,
+                'timezone' => $user->timezone,
                 'onboarded' => $user->onboarded_at !== null,
                 // An account deletion is waiting (Phase 5C-3): the app shows it everywhere.
                 'deletion_due_at' => $user->deletion_due_at?->toIso8601String(),

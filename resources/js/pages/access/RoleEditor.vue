@@ -3,13 +3,14 @@ import { computed, reactive, ref, watch } from 'vue';
 import { Info, RotateCw, TriangleAlert } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
-import AppField from '@/components/AppField.vue';
+import TranslatedFields from '@/components/TranslatedFields.vue';
 import PermissionMatrix from './PermissionMatrix.vue';
 import { api } from '@/lib/http';
 import { confirmAction } from '@/lib/dialogs';
 import { conflictsIn, diffPermissions, permissionLabels } from '@/lib/permissions';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
+import { textIn, textsFor } from '@/lib/texts';
 
 /**
  * Create or edit one role. `role` null = new role, prefilled from `seed`
@@ -52,8 +53,8 @@ watch(
     () => {
         if (!props.open) return;
         const source = props.role ?? props.seed ?? {};
-        form.names = { en: source.names?.en ?? '', bn: source.names?.bn ?? '' };
-        form.descriptions = { en: source.descriptions?.en ?? '', bn: source.descriptions?.bn ?? '' };
+        form.names = textsFor(source.names);
+        form.descriptions = textsFor(source.descriptions);
         form.permissions = [...(source.permissions ?? [])].sort();
         initial.value = snapshot();
         errors.value = {};
@@ -75,12 +76,13 @@ function clean(texts) {
 }
 
 function displayName() {
-    return form.names.en.trim() || form.names.bn.trim();
+    return textIn(clean(form.names));
 }
 
 async function save() {
     errors.value = {};
-    if (!form.names.en.trim() && !form.names.bn.trim()) {
+    // A name in any language is enough.
+    if (!Object.values(form.names).some((text) => text.trim())) {
         errors.value.name = t('access.editor.name_required');
         return;
     }
@@ -138,27 +140,9 @@ async function save() {
                 {{ role.organization ? t('access.list.read_only_hint', { name: role.organization.name }) : t('access.editor.read_only_note') }}
             </div>
 
-            <div v-if="!readonly" class="grid gap-4 sm:grid-cols-2">
-                <AppField :label="t('access.editor.name_en')" :error="errors.name">
-                    <template #default="{ id, invalid, describedby }">
-                        <input :id="id" v-model="form.names.en" data-autofocus class="field-input" maxlength="80" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
-                    </template>
-                </AppField>
-                <AppField :label="t('access.editor.name_bn')" optional>
-                    <template #default="{ id }">
-                        <input :id="id" v-model="form.names.bn" class="field-input" maxlength="80" lang="bn" />
-                    </template>
-                </AppField>
-                <AppField :label="t('access.editor.description_en')" optional>
-                    <template #default="{ id }">
-                        <textarea :id="id" v-model="form.descriptions.en" rows="2" class="field-input" maxlength="300" />
-                    </template>
-                </AppField>
-                <AppField :label="t('access.editor.description_bn')" optional>
-                    <template #default="{ id }">
-                        <textarea :id="id" v-model="form.descriptions.bn" rows="2" class="field-input" maxlength="300" lang="bn" />
-                    </template>
-                </AppField>
+            <div v-if="!readonly" class="space-y-4">
+                <TranslatedFields v-model="form.names" :label="t('access.editor.name')" :maxlength="80" autofocus :errors="{ en: errors.name }" />
+                <TranslatedFields v-model="form.descriptions" :label="t('access.editor.description')" :maxlength="300" multiline />
             </div>
 
             <section>

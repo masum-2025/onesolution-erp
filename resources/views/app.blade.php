@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $defaultLocale }}" dir="ltr">
+<html lang="{{ $defaultLocale }}" dir="{{ $direction }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -20,7 +20,7 @@
             try { theme = localStorage.getItem('os.theme') || 'system'; locale = localStorage.getItem('os.locale'); } catch (e) {}
             var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             d.classList.toggle('dark', dark);
-            if (locale && @json($locales).indexOf(locale) !== -1) { d.lang = locale; }
+            if (locale && @json($locales).indexOf(locale) !== -1) { d.lang = locale; d.dir = @json($rtlLocales).indexOf(locale) !== -1 ? 'rtl' : 'ltr'; }
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])

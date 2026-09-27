@@ -4,6 +4,7 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\RuleCatalog;
+use Database\Seeders\CountriesSeeder;
 use Database\Seeders\RulesSeeder;
 
 beforeEach(function () {
@@ -12,6 +13,8 @@ beforeEach(function () {
 
 it('seeds country values that apply to organizations of that country', function () {
     $this->seed(RulesSeeder::class);
+    // Weekend and fiscal year come from the country data file (Phase 6).
+    $this->seed(CountriesSeeder::class);
 
     expect(ruleFor('payroll.overtime_multiplier', $this->w->c1))->toBe('2.0')
         ->and(ruleFor('attendance.weekend_days', $this->w->c1))->toBe(['fri'])

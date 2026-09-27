@@ -1327,6 +1327,76 @@ No module has fees yet: the tests use a fixture (`tests/Fixtures/FixtureFeeColle
 - Open: branch-level accounts, refunds, settlement reports, and the portal's "Pay" button once a
   fees or invoicing module exists.
 
+## Countries, languages and timezones (Phase 6-1)
+
+Code: `app/Platform/Countries` (catalog, sync, `GET /api/countries`), `database/data/countries`
+(one file per country), `app/Platform/Support/LocaleResolver.php`, `HasTranslatedTexts`.
+
+### A country is a data file
+
+`database/data/countries/BD.php` holds the country's facts: name (per language), currency and
+its decimals, date format, week start, weekend days, fiscal year start, phone format (dial,
+trunk, national pattern), address lines, tax profile key, data residency region, languages
+(default first), timezone, and payment gateways (platform billing and clients' merchant
+accounts). BD, SA, IN, PK, NP, LK, AE, MY, GB and US are included; **everything except BD is a
+PLACEHOLDER to be reviewed by an adviser**.
+
+- `CountryCatalog` reads the files (checked when loaded: ISO codes, IANA timezone, day names…),
+  so phone numbers and defaults work before anything is synced.
+- `php artisan countries:sync` (also run by `CountriesSeeder`) mirrors them into the `countries`
+  table and writes the country's **rule defaults** as platform-level country values, through the
+  rule service (versioned and audited, reason "Country data file XX.php"): `attendance.weekend_days`,
+  `accounting.fiscal_year_start`, `regional.week_start`, `regional.date_format`,
+  `billing.payment_gateways`, `online_payments.gateways`. Only changed values are written, so it
+  can run on every deploy. Clients override them like any rule.
+- Organization country codes must be known countries (API validation).
+
+**Adding a country** = add `XX.php`, run `php artisan countries:sync`. No code change.
+
+### What comes from the country
+
+An organization's language, timezone, currency and data region: its own value, else an
+ancestor's, else **its country's**, else the platform default (`config/tenancy.php`). The
+settings screen shows "From the country" for those.
+
+### Languages
+
+- Which language someone reads (`LocaleResolver`): what they picked on this screen (X-Locale)
+  → their profile language → the organization's (own, inherited, or its country's) → platform
+  default. Notifications go to each person in their own language.
+- Only languages with texts are used (`tenancy.supported_locales`, now `en`, `bn`). Arabic:
+  right-to-left support is ready (the page `dir` follows the language; layouts use logical CSS);
+  the Arabic texts are not written yet. Turning it on = add `lang/ar`, `resources/js/locales/ar`,
+  module `lang/ar`, and `ar` to `supported_locales`. A few draft files exist in `lang/ar`.
+- Data labels in several languages use `spatie/laravel-translatable` (`HasTranslatedTexts`):
+  organization, role and partner plan names, invoice line descriptions, country names.
+  `$model->name` is the current language (falling back to English, then any);
+  `texts('name')` gives all; `putTexts()` replaces the set. Forms show one field per supported
+  language (`TranslatedFields`), so a new language needs no form change.
+
+### Timezones
+
+UTC in the database. Times on screen use the person's own timezone (`users.timezone`, set in My
+account), else the organization's (own, inherited or its country's).
+
+### Money
+
+Integer minor units plus a currency code, never floats. `tests/Feature/Architecture/NoFloatMoneyTest`
+fails the build on a float/double/decimal money column, a float cast or type in PHP, or
+`parseFloat`/`toFixed` in the browser app.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET | /api/countries | signed-in people (names in the reader's language) |
+| PATCH | /api/me/account (`timezone`, `locale`) | the person |
+
+### Future expansion (Phase 6-1)
+
+- New country: a data file. New language: its translation files plus one config entry.
+- Later in Phase 6: Arabic texts, exchange rates, bKash and Stripe drivers (6-2).
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

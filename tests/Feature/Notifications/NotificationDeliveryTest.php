@@ -81,7 +81,7 @@ it('writes in the partner\'s brand, from our address under the partner\'s name, 
 
 it('writes in the client\'s language', function () {
     $this->w->g1->forceFill(['default_locale' => 'bn'])->save();
-    $owner = createMember($this->w->c1);
+    $owner = withoutOwnLanguage(createMember($this->w->c1));
 
     askSupportFor($this, $this->w->c1);
 

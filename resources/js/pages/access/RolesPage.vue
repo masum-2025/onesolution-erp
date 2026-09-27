@@ -94,7 +94,8 @@ function duplicate(role) {
         open: true,
         role: null,
         seed: {
-            names: { en: role.names.en ? `${role.names.en} (2)` : '', bn: role.names.bn ? `${role.names.bn} (২)` : '' },
+            // "Name (2)" in every language, with that language's digits.
+            names: Object.fromEntries(Object.entries(role.names).filter(([, text]) => text).map(([locale, text]) => [locale, `${text} (${new Intl.NumberFormat(locale).format(2)})`])),
             descriptions: role.descriptions,
             permissions: role.permissions.filter((key) => !role.not_assignable_permissions.includes(key)),
         },

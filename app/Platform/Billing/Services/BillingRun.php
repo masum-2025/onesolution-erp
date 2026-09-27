@@ -106,7 +106,7 @@ class BillingRun
                 'organization_id' => $root->getKey(),
                 'plan_key' => $planKey,
                 'description' => $this->texts->make($perSeat ? 'wholesale_seats' : 'wholesale_client', fn (string $locale) => [
-                    'client' => $this->texts->name($root->name, $locale),
+                    'client' => $this->texts->name($root->texts('name'), $locale),
                     'plan' => $this->texts->planName($planKey, null, $locale),
                     'month' => $this->texts->month($month, $locale),
                 ]),

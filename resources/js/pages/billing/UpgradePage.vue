@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router';
 import { Building2, Check, FileSignature, Package, Users } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
+import TranslatedFields from '@/components/TranslatedFields.vue';
+import { cleanTexts, textsFor } from '@/lib/texts';
 import AppSegmented from '@/components/AppSegmented.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import PageHeader from '@/components/PageHeader.vue';
@@ -27,7 +29,7 @@ const preview = useResource(() => api(`/api/organizations/${org.id}/upgrade`).th
 const sectors = useResource(() => loadSectors());
 const data = computed(() => preview.data.value);
 
-const form = reactive({ name_en: '', name_bn: '', sector: null, plan: null, period: 'monthly' });
+const form = reactive({ names: textsFor(), sector: null, plan: null, period: 'monthly' });
 const errors = reactive({});
 const saving = ref(false);
 
@@ -43,12 +45,12 @@ const startsNow = computed(() => data.value && data.value.billing_starts_on <= n
 
 async function submit() {
     for (const key of Object.keys(errors)) delete errors[key];
-    if (form.name_en.trim().length < 2) errors.name_en = t('billing.upgrade.name_required');
+    if ((form.names.en ?? '').trim().length < 2) errors['name.en'] = t('billing.upgrade.name_required');
     if (!form.plan) errors.plan = t('billing.upgrade.plan_required');
     if (Object.keys(errors).length) return;
 
     const confirmed = await confirmAction({
-        title: t('billing.upgrade.confirm_title', { name: form.name_en.trim() }),
+        title: t('billing.upgrade.confirm_title', { name: form.names.en.trim() }),
         message: t('billing.upgrade.confirm_text'),
         confirmLabel: t('billing.upgrade.submit'),
     });
@@ -59,7 +61,7 @@ async function submit() {
         const response = await api(`/api/organizations/${org.id}/upgrade`, {
             method: 'POST',
             body: {
-                name: { en: form.name_en.trim(), ...(form.name_bn.trim() ? { bn: form.name_bn.trim() } : {}) },
+                name: cleanTexts(form.names),
                 sector_key: form.sector,
                 plan_key: form.plan,
                 period: form.period,
@@ -69,7 +71,7 @@ async function submit() {
         await loadMe();
         await router.push('/billing');
     } catch (error) {
-        if (error.field?.('name.en')) errors.name_en = error.field('name.en');
+        if (error.field?.('name.en')) errors['name.en'] = error.field('name.en');
         else toast.error(error.message);
     } finally {
         saving.value = false;
@@ -99,16 +101,7 @@ async function submit() {
             <!-- The company -->
             <section class="card space-y-4 p-5">
                 <h2 class="flex items-center gap-2 text-[15px] font-semibold text-fg"><Building2 class="size-4 text-muted" aria-hidden="true" />{{ t('billing.upgrade.company') }}</h2>
-                <AppField :label="t('billing.upgrade.name_en')" :error="errors.name_en">
-                    <template #default="{ id, invalid }">
-                        <input :id="id" v-model="form.name_en" maxlength="150" autocomplete="organization" class="field-input" :aria-invalid="invalid || undefined" />
-                    </template>
-                </AppField>
-                <AppField :label="t('billing.upgrade.name_bn')" optional>
-                    <template #default="{ id }">
-                        <input :id="id" v-model="form.name_bn" maxlength="150" lang="bn" class="field-input" />
-                    </template>
-                </AppField>
+                <TranslatedFields v-model="form.names" :label="t('billing.upgrade.name')" required :errors="errors" />
                 <AppField :label="t('billing.upgrade.sector')" :hint="t('billing.upgrade.sector_hint')">
                     <template #default="{ id }">
                         <select :id="id" v-model="form.sector" class="field-input">

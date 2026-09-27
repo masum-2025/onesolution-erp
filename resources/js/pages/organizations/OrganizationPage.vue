@@ -21,7 +21,8 @@ import { can, currentOrganization } from '@/lib/session';
 import { loadSectors } from '@/lib/packaging';
 import { formatDate } from '@/lib/format';
 import { settingSource, settingValue } from '@/lib/display';
-import { t } from '@/lib/i18n';
+import { direction, t } from '@/lib/i18n';
+import { textLocales } from '@/lib/texts';
 
 const route = useRoute();
 const router = useRouter();
@@ -141,8 +142,10 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
                     <section class="card lg:col-span-3">
                         <h2 class="border-b border-line px-5 py-4 text-[14.5px] font-semibold text-fg">{{ t('orgs.show.details') }}</h2>
                         <dl class="divide-y divide-line text-[13.5px]">
-                            <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.name_en') }}</dt><dd class="min-w-0 font-medium text-fg" lang="en">{{ org.name?.en ?? '—' }}</dd></div>
-                            <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.name_bn') }}</dt><dd class="min-w-0 font-medium text-fg" lang="bn">{{ org.name?.bn ?? '—' }}</dd></div>
+                            <div v-for="locale in textLocales()" :key="locale" class="flex gap-4 px-5 py-3">
+                                <dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.name') }} ({{ t(`core.languages.${locale}`) }})</dt>
+                                <dd class="min-w-0 font-medium text-fg" :lang="locale" :dir="direction(locale)">{{ org.name?.[locale] || '—' }}</dd>
+                            </div>
                             <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.type') }}</dt><dd class="text-fg">{{ t(`core.org_types.${org.type}`) }}</dd></div>
                             <div v-if="org.sector_key" class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.sector') }}</dt><dd class="text-fg">{{ sectorName(org.sector_key) }}</dd></div>
                             <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.show.created') }}</dt><dd class="text-fg">{{ formatDate(org.created_at) }}</dd></div>

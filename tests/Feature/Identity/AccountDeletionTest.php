@@ -5,15 +5,21 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Identity\Events\WorkspaceErased;
 use App\Platform\Identity\Models\UserSession;
+use App\Platform\Identity\Services\PersonalWorkspaces;
 use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Payments\Models\Payment;
+use App\Platform\Tenancy\Actions\AddMember;
+use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Testing\TestResponse;
+use Tests\TestCase;
 
 /*
  * "Download my data" and "delete my account" (Phase 5C-3): a grace period
@@ -28,12 +34,12 @@ beforeEach(function () {
     $this->withHeader('Origin', config('app.url'));
 });
 
-function me(object $world): Tests\TestCase
+function me(object $world): TestCase
 {
     return test()->asToken(orgToken($world->user, $world->workspace));
 }
 
-function askDeletion(object $world, array $overrides = []): Illuminate\Testing\TestResponse
+function askDeletion(object $world, array $overrides = []): TestResponse
 {
     return me($world)->postJson('/api/me/deletion', ['current_password' => 'password', 'confirm' => 'DELETE', ...$overrides]);
 }
@@ -106,7 +112,7 @@ it('never leaves something without an owner: the only owner of a team must hand 
 
 it('blocks the only owner of a partner account', function () {
     $staff = createPartnerStaff($this->world->partner, PartnerUserRole::Owner);
-    $workspace = app(App\Platform\Identity\Services\PersonalWorkspaces::class)->create($staff, $this->world->partner, 'BD', 'en');
+    $workspace = app(PersonalWorkspaces::class)->create($staff, $this->world->partner, 'BD', 'en');
 
     askDeletion((object) ['user' => $staff, 'workspace' => $workspace])
         ->assertStatus(409)
@@ -120,7 +126,7 @@ it('erases the person after the grace period, closing only what was theirs alone
 
     // Also an employee of a B2B client, whose records stay with the client.
     $w = tenancyWorld();
-    app(App\Platform\Tenancy\Actions\AddMember::class)->handle($w->c1, $user, MembershipType::Staff, App\Platform\Tenancy\Enums\AccessScope::Own);
+    app(AddMember::class)->handle($w->c1, $user, MembershipType::Staff, AccessScope::Own);
     $colleague = createMember($w->c1, MembershipType::Owner);
 
     // A paid personal plan with an unpaid renewal.
@@ -149,7 +155,7 @@ it('erases the person after the grace period, closing only what was theirs alone
     // Their own workspace: closed, name removed, unpaid invoice cancelled, invoices kept.
     $workspace = $this->world->workspace->fresh();
     expect($workspace->status)->toBe(OrganizationStatus::Archived)
-        ->and($workspace->name['en'])->toBe('Deleted workspace')
+        ->and($workspace->texts('name')['en'])->toBe('Deleted workspace')
         ->and(Invoice::query()->where('billing_key', 'like', 'renewal:%')->sole()->status)->toBe(Invoice::CREDITED)
         ->and(Invoice::query()->where('organization_id', $workspace->id)->where('type', Invoice::INVOICE)->count())->toBe(2);
     Event::assertDispatched(WorkspaceErased::class, fn (WorkspaceErased $event) => $event->organization->is($workspace));
@@ -171,7 +177,7 @@ it('waits when something became theirs alone during the grace period', function 
 
     // The workspace was upgraded meanwhile and took a member: it would be left without owner.
     $this->world->workspace->forceFill(['plan_key' => 'starter']);
-    Illuminate\Support\Facades\DB::table('organizations')->where('id', $this->world->workspace->id)->update(['type' => 'company']);
+    DB::table('organizations')->where('id', $this->world->workspace->id)->update(['type' => 'company']);
     createMember($this->world->workspace->fresh(), MembershipType::Staff);
 
     $this->travel(31)->days();

@@ -125,7 +125,7 @@ it('translates the menu for Bangla organizations', function () {
     $this->w->g1->update(['default_locale' => 'bn']);
     toggles()->enable($this->w->c1, 'hrm', 'Start HR');
 
-    $this->asToken(orgToken($this->owner, $this->w->c1))->getJson('/api/menu')
+    $this->asToken(orgToken(withoutOwnLanguage($this->owner), $this->w->c1))->getJson('/api/menu')
         ->assertOk()
         ->assertJsonPath('data.0.label', 'মানবসম্পদ');
 });

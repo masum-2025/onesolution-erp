@@ -12,7 +12,6 @@ use App\Platform\Rules\Enums\RuleScope;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
-use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use ZipArchive;
 
@@ -57,7 +56,7 @@ class ExportBuilder
         $zip->addFromString('manifest.json', json_encode([
             'format_version' => self::FORMAT_VERSION,
             'generated_at' => now()->toIso8601String(),
-            'organization' => ['id' => $organization->getKey(), 'name' => $organization->name],
+            'organization' => ['id' => $organization->getKey(), 'name' => $organization->texts('name')],
             'datasets' => $counts,
             'notes' => 'Every dataset is included twice: .json (exact values) and .csv (for spreadsheets). Money is in integer minor units with its currency code. Times are UTC.',
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
@@ -78,7 +77,7 @@ class ExportBuilder
 
         return [
             'organizations' => Organization::query()->whereIn('id', $ids)->orderBy('depth')->get()->map(fn (Organization $o) => [
-                'id' => $o->id, 'parent_id' => $o->parent_id, 'type' => $o->type->value, 'name' => $o->name,
+                'id' => $o->id, 'parent_id' => $o->parent_id, 'type' => $o->type->value, 'name' => $o->texts('name'),
                 'sector_key' => $o->sector_key, 'country_code' => $o->country_code, 'currency_code' => $o->currency_code,
                 'timezone' => $o->timezone, 'default_locale' => $o->default_locale, 'status' => $o->status->value,
                 'plan_key' => $o->plan_key, 'created_at' => $o->created_at?->toIso8601String(),
@@ -90,7 +89,7 @@ class ExportBuilder
                 'access_scope' => $m->access_scope->value, 'status' => $m->status->value, 'created_at' => $m->created_at?->toIso8601String(),
             ]),
             'roles' => Role::query()->whereIn('organization_id', $ids)->get()->map(fn (Role $r) => [
-                'id' => $r->id, 'organization_id' => $r->organization_id, 'key' => $r->key, 'name' => $r->name,
+                'id' => $r->id, 'organization_id' => $r->organization_id, 'key' => $r->key, 'name' => $r->texts('name'),
                 'template_key' => $r->template_key, 'permissions' => $r->permissionKeys(),
             ]),
             'role_assignments' => MembershipRole::query()->whereIn('membership_id', $membershipIds)->get(['id', 'organization_id', 'membership_id', 'role_id', 'created_at'])
@@ -104,10 +103,10 @@ class ExportBuilder
                 ->orderBy('rule_key')
                 ->get()
                 ->map(fn (RuleValue $v) => [
-                'id' => $v->id, 'rule_key' => $v->rule_key, 'level' => $v->scope_type->value, 'organization_id' => $v->scope_id,
-                'country_code' => $v->country_code, 'mode' => $v->mode->value, 'value' => $v->value, 'status' => $v->status->value,
-                'version' => $v->version, 'effective_from' => $v->effective_from?->toIso8601String(), 'effective_to' => $v->effective_to?->toIso8601String(),
-            ]),
+                    'id' => $v->id, 'rule_key' => $v->rule_key, 'level' => $v->scope_type->value, 'organization_id' => $v->scope_id,
+                    'country_code' => $v->country_code, 'mode' => $v->mode->value, 'value' => $v->value, 'status' => $v->status->value,
+                    'version' => $v->version, 'effective_from' => $v->effective_from?->toIso8601String(), 'effective_to' => $v->effective_to?->toIso8601String(),
+                ]),
             'sector_packages' => OrganizationPackage::query()->whereIn('organization_id', $ids)->get()->map(fn (OrganizationPackage $p) => [
                 'organization_id' => $p->organization_id, 'package_key' => $p->package_key, 'version' => $p->package_version,
                 'summary' => $p->summary, 'applied_at' => $p->created_at?->toIso8601String(),

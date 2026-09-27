@@ -5,6 +5,8 @@ import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
+import TranslatedFields from '@/components/TranslatedFields.vue';
+import { cleanTexts, textsFor } from '@/lib/texts';
 import { api } from '@/lib/http';
 import { amountToMinor, minorToAmount } from '@/lib/billing';
 import { formatMoney } from '@/lib/format';
@@ -24,7 +26,7 @@ const props = defineProps({
 });
 const emit = defineEmits(['close', 'saved']);
 
-const form = reactive({ base: '', nameEn: '', nameBn: '', descEn: '', descBn: '', allModules: true, modules: [], prices: [] });
+const form = reactive({ base: '', names: textsFor(), descriptions: textsFor(), allModules: true, modules: [], prices: [] });
 const errors = ref({});
 const saving = ref(false);
 
@@ -39,10 +41,8 @@ watch(
         errors.value = {};
         Object.assign(form, {
             base: plan?.base_plan.key ?? props.basePlans[0]?.key ?? '',
-            nameEn: plan?.name_texts?.en ?? '',
-            nameBn: plan?.name_texts?.bn ?? '',
-            descEn: plan?.description_texts?.en ?? '',
-            descBn: plan?.description_texts?.bn ?? '',
+            names: textsFor(plan?.name_texts),
+            descriptions: textsFor(plan?.description_texts),
             allModules: !plan?.modules,
             modules: [...(plan?.modules ?? [])],
             prices: (plan?.prices ?? [{ currency: props.defaultCurrency, period: 'monthly', amount_minor: null }]).map((price) => ({
@@ -78,10 +78,10 @@ function toggleModule(key, on) {
 }
 
 function payload() {
-    const texts = (en, bn) => Object.fromEntries(Object.entries({ en: en.trim(), bn: bn.trim() }).filter(([, text]) => text));
+    const description = cleanTexts(form.descriptions);
     const body = {
-        name: texts(form.nameEn, form.nameBn),
-        description: form.descEn.trim() || form.descBn.trim() ? texts(form.descEn, form.descBn) : null,
+        name: cleanTexts(form.names),
+        description: Object.keys(description).length ? description : null,
         prices: form.prices.map((price) => ({ currency: price.currency.trim().toUpperCase(), period: price.period, amount_minor: amountToMinor(price.amount, price.currency.trim().toUpperCase()) })),
     };
     if (!locked.value) {
@@ -130,28 +130,8 @@ async function save() {
     >
         <form id="partner-plan-form" class="space-y-5" novalidate @submit.prevent="save">
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <AppField :label="t('billing.plans.dialog.name_en')" :error="errors['name.en']">
-                    <template #default="{ id, invalid }">
-                        <input :id="id" v-model="form.nameEn" class="field-input" maxlength="60" :placeholder="t('billing.plans.dialog.name_placeholder')" :aria-invalid="invalid || undefined" />
-                    </template>
-                </AppField>
-                <AppField :label="t('billing.plans.dialog.name_bn')" :error="errors['name.bn']" optional>
-                    <template #default="{ id }">
-                        <input :id="id" v-model="form.nameBn" class="field-input" maxlength="60" lang="bn" />
-                    </template>
-                </AppField>
-                <AppField :label="t('billing.plans.dialog.desc_en')" optional>
-                    <template #default="{ id }">
-                        <input :id="id" v-model="form.descEn" class="field-input" maxlength="300" />
-                    </template>
-                </AppField>
-                <AppField :label="t('billing.plans.dialog.desc_bn')" optional>
-                    <template #default="{ id }">
-                        <input :id="id" v-model="form.descBn" class="field-input" maxlength="300" lang="bn" />
-                    </template>
-                </AppField>
-            </div>
+            <TranslatedFields v-model="form.names" :label="t('billing.plans.dialog.name')" :maxlength="60" required :errors="errors" />
+            <TranslatedFields v-model="form.descriptions" :label="t('billing.plans.dialog.desc')" :maxlength="300" error-prefix="description" :errors="errors" />
 
             <p v-if="locked" class="flex items-center gap-2 rounded-xl bg-subtle p-3 text-[12.5px] text-fg-2">
                 <Lock class="size-4 shrink-0 text-muted" aria-hidden="true" />{{ t('billing.plans.dialog.locked', { count: plan.clients }) }}

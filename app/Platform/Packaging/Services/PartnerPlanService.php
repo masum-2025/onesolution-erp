@@ -52,7 +52,7 @@ class PartnerPlanService
             $this->audit->record(
                 action: 'partner_plan.created',
                 target: $plan,
-                new: ['base_plan' => $plan->base_plan_key, 'name' => $plan->name, 'modules' => $modules, 'prices' => $data['prices']],
+                new: ['base_plan' => $plan->base_plan_key, 'name' => $plan->texts('name'), 'modules' => $modules, 'prices' => $data['prices']],
                 actor: $actor,
                 partnerId: $partner->getKey(),
             );
@@ -68,7 +68,7 @@ class PartnerPlanService
     {
         return DB::transaction(function () use ($plan, $changes, $actor) {
             $plan = PartnerPlan::query()->whereKey($plan->getKey())->lockForUpdate()->firstOrFail();
-            $old = ['name' => $plan->name, 'base_plan' => $plan->base_plan_key, 'modules' => $plan->modules, 'prices' => $this->pricesOf($plan)];
+            $old = ['name' => $plan->texts('name'), 'base_plan' => $plan->base_plan_key, 'modules' => $plan->modules, 'prices' => $this->pricesOf($plan)];
 
             $packagingChanges = array_key_exists('base_plan_key', $changes) || array_key_exists('modules', $changes);
             if ($packagingChanges && $this->clientCount($plan) > 0) {
@@ -82,11 +82,11 @@ class PartnerPlanService
             }
 
             if (array_key_exists('name', $changes)) {
-                $plan->name = $this->texts($changes['name']);
+                $plan->putTexts('name', $this->texts($changes['name']));
             }
 
             if (array_key_exists('description', $changes)) {
-                $plan->description = $changes['description'] === null ? null : $this->texts($changes['description']);
+                $plan->putTexts('description', $changes['description'] === null ? null : $this->texts($changes['description']));
             }
 
             $plan->save();
@@ -99,7 +99,7 @@ class PartnerPlanService
                 action: 'partner_plan.updated',
                 target: $plan,
                 old: $old,
-                new: ['name' => $plan->name, 'base_plan' => $plan->base_plan_key, 'modules' => $plan->modules, 'prices' => $this->pricesOf($plan)],
+                new: ['name' => $plan->texts('name'), 'base_plan' => $plan->base_plan_key, 'modules' => $plan->modules, 'prices' => $this->pricesOf($plan)],
                 actor: $actor,
                 partnerId: $plan->partner_id,
             );

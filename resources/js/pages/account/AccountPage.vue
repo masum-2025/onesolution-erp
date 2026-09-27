@@ -31,7 +31,9 @@ const account = useResource(() => api('/api/me/account').then((response) => resp
 const sessions = useResource(() => api('/api/me/sessions').then((response) => response.data));
 const me = computed(() => account.data.value);
 
-const profile = reactive({ name: '', locale: 'en', marketing: false });
+const profile = reactive({ name: '', locale: 'en', timezone: '', marketing: false });
+// The person's own timezone (Phase 6); empty = the organization's.
+const timezones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
 const savingProfile = ref(false);
 const password = reactive({ current: '', next: '' });
 const passwordErrors = reactive({});
@@ -40,7 +42,7 @@ const contact = reactive({ open: false, channel: 'mail' });
 
 watch(me, (value) => {
     if (!value) return;
-    Object.assign(profile, { name: value.name, locale: value.locale ?? i18n.locale, marketing: value.marketing });
+    Object.assign(profile, { name: value.name, locale: value.locale ?? i18n.locale, timezone: value.timezone ?? '', marketing: value.marketing });
 });
 
 const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
@@ -48,13 +50,13 @@ const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: lo
 async function saveProfile() {
     savingProfile.value = true;
     try {
-        const response = await api('/api/me/account', { method: 'PATCH', body: { name: profile.name.trim(), locale: profile.locale, marketing: profile.marketing } });
+        const response = await api('/api/me/account', { method: 'PATCH', body: { name: profile.name.trim(), locale: profile.locale, timezone: profile.timezone || null, marketing: profile.marketing } });
         account.data.value = response.data;
         if (profile.locale !== i18n.locale) await setLocale(profile.locale);
         await loadMe();
         toast.success(response.message);
     } catch (error) {
-        toast.error(error.field?.('name') ?? error.message);
+        toast.error(error.field?.('name') ?? error.field?.('timezone') ?? error.message);
     } finally {
         savingProfile.value = false;
     }
@@ -162,6 +164,14 @@ function deviceName(item) {
                     <p class="mb-1.5 text-[13px] font-medium text-fg">{{ t('identity.fields.language') }}</p>
                     <AppSegmented v-model="profile.locale" :options="languageOptions" :label="t('identity.fields.language')" />
                 </div>
+                <AppField :label="t('identity.fields.timezone')" :hint="t('identity.fields.timezone_hint')" optional>
+                    <template #default="{ id, describedby }">
+                        <select :id="id" v-model="profile.timezone" class="field-input" :aria-describedby="describedby">
+                            <option value="">{{ t('identity.fields.timezone_organization') }}</option>
+                            <option v-for="zone in timezones" :key="zone" :value="zone" dir="ltr">{{ zone.replace(/_/g, ' ') }}</option>
+                        </select>
+                    </template>
+                </AppField>
                 <div><AppSwitch v-model="profile.marketing" :label="t('identity.signup.marketing')" show-label /></div>
                 <AppButton type="submit" variant="primary" :loading="savingProfile">{{ t('core.actions.save') }}</AppButton>
             </form>

@@ -220,7 +220,7 @@ it('explains errors in Bangla for Bangla organizations', function () {
     $this->w->g1->update(['default_locale' => 'bn']);
     orgRule($this->w->g1, 'attendance.late_grace_minutes', ['max' => 15], RuleMode::Constrain);
 
-    $this->asToken(orgToken($this->owner, $this->w->c1))->putJson("{$this->rules}/attendance.late_grace_minutes", [
+    $this->asToken(orgToken(withoutOwnLanguage($this->owner), $this->w->c1))->putJson("{$this->rules}/attendance.late_grace_minutes", [
         'mode' => 'set', 'value' => 30, 'reason' => 'Longer grace please',
     ])->assertUnprocessable()
         ->assertJsonPath('message', '"দেরির ছাড় (মিনিট)"-এর মান G1-এর বেঁধে দেওয়া সীমার বাইরে। সীমার ভেতরের একটি মান বেছে নিন।');

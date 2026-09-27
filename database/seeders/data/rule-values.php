@@ -5,7 +5,9 @@
 | Platform-, plan- and partner-level rule values (data, not code)
 |--------------------------------------------------------------------------
 |
-| Country values are legal / financial facts and MUST be reviewed by a
+| Country defaults that every country has (weekend, fiscal year, week start,
+| date format, payment gateways) come from database/data/countries
+| (countries:sync). Country values here are legal / financial facts and MUST be reviewed by a
 | qualified accountant or lawyer before production use. Each entry records
 | its source in `reason`, which goes into the audit log.
 |
@@ -21,18 +23,6 @@ return [
         'country' => 'BD',
         'value' => '2.0',
         'reason' => 'Bangladesh Labour Act 2006, s.108: overtime at twice the ordinary rate.',
-    ],
-    [
-        'key' => 'attendance.weekend_days',
-        'country' => 'BD',
-        'value' => ['fri'],
-        'reason' => 'Bangladesh: Friday weekly holiday (Labour Act 2006, s.103: one day per week).',
-    ],
-    [
-        'key' => 'accounting.fiscal_year_start',
-        'country' => 'BD',
-        'value' => '07-01',
-        'reason' => 'Bangladesh fiscal year runs July to June.',
     ],
     [
         'key' => 'hrm.notice_period_days',
@@ -55,18 +45,6 @@ return [
             ['upto_minor' => null, 'rate_percent' => '30'],
         ],
         'reason' => 'Bangladesh individual income tax slabs FY 2024-25 (Finance Act 2024). Verify with a tax adviser before use.',
-    ],
-    [
-        'key' => 'billing.payment_gateways',
-        'country' => 'BD',
-        'value' => ['sslcommerz'],
-        'reason' => 'Bangladesh: SSLCommerz (cards, bKash, Nagad). Sandbox only until live payments are approved.',
-    ],
-    [
-        'key' => 'online_payments.gateways',
-        'country' => 'BD',
-        'value' => ['sslcommerz'],
-        'reason' => 'Bangladesh: clients may connect their own SSLCommerz store (Phase 6).',
     ],
 
     // ── Plan defaults (plans: database/seeders/data/plans.php) ──────────

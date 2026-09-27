@@ -48,7 +48,7 @@ export function settingValue(key, value) {
     }
 }
 
-/** Setting source from the API ("self" | "inherited" | "platform_default") to SourceBadge kind. */
+/** Setting source from the API ("self" | "inherited" | "country" | "platform_default") to SourceBadge kind. */
 export function settingSource(entry) {
-    return entry?.source === 'self' ? 'self' : entry?.source === 'inherited' ? 'inherited' : 'default';
+    return ['self', 'inherited', 'country'].includes(entry?.source) ? entry.source : 'default';
 }

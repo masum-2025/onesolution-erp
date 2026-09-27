@@ -42,18 +42,22 @@ class AccountService
      */
     public function update(User $user, array $data): User
     {
-        $old = ['name' => $user->name, 'locale' => $user->locale, 'marketing' => $user->marketing_consent_at !== null];
+        $old = ['name' => $user->name, 'locale' => $user->locale, 'timezone' => $user->timezone, 'marketing' => $user->marketing_consent_at !== null];
         $user->forceFill(array_filter([
             'name' => isset($data['name']) ? trim($data['name']) : null,
             'locale' => $data['locale'] ?? null,
         ], fn ($value) => $value !== null));
+
+        if (array_key_exists('timezone', $data)) {
+            $user->timezone = $data['timezone'];
+        }
 
         if (array_key_exists('marketing', $data)) {
             $user->marketing_consent_at = $data['marketing'] ? ($user->marketing_consent_at ?? now()) : null;
         }
         $user->save();
 
-        $new = ['name' => $user->name, 'locale' => $user->locale, 'marketing' => $user->marketing_consent_at !== null];
+        $new = ['name' => $user->name, 'locale' => $user->locale, 'timezone' => $user->timezone, 'marketing' => $user->marketing_consent_at !== null];
         if ($old !== $new) {
             $this->audit->record(action: 'identity.profile_updated', target: $user, old: $old, new: $new, actor: $user);
         }

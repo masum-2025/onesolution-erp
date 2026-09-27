@@ -233,6 +233,14 @@ return [
             'label' => 'Account deletion waiting period (days)',
             'description' => 'Days between a person asking to delete their account and the erasure. They can cancel until then.',
         ],
+        'regional_week_start' => [
+            'label' => 'First day of the week',
+            'description' => 'The day calendars and weekly reports start on. Comes from the country; you can change it.',
+        ],
+        'regional_date_format' => [
+            'label' => 'Date format in documents',
+            'description' => 'How dates are written on invoices, reports and exports. Comes from the country; you can change it.',
+        ],
     ],
 
     'categories' => [
@@ -246,5 +254,6 @@ return [
         'messages' => 'Email and SMS',
         'identity' => 'Sign-up and sign-in',
         'payments' => 'Online payments',
+        'regional' => 'Country and region',
     ],
 ];

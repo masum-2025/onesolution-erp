@@ -372,7 +372,7 @@ class SendPlatformNotifications
 
     private function name(Organization $organization, string $locale): string
     {
-        $name = (array) $organization->name;
+        $name = $organization->texts('name');
 
         return (string) ($name[$locale] ?? $name['en'] ?? reset($name));
     }

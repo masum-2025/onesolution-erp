@@ -1,14 +1,18 @@
 <?php
 
+use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Packaging\Services\SubscriptionService;
 use App\Platform\Payments\Models\Payment;
+use App\Platform\Rules\Enums\RuleMode;
+use App\Platform\Rules\RuleTargets;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use Carbon\CarbonImmutable;
+use Tests\TestCase;
 
 /*
  * A personal workspace becomes a company (Phase 5C-3): same organization,
@@ -27,7 +31,7 @@ function upgradeForm(array $overrides = []): array
     return ['name' => ['en' => 'Rahima Traders', 'bn' => 'রহিমা ট্রেডার্স'], 'sector_key' => null, 'plan_key' => 'starter', 'period' => 'monthly', ...$overrides];
 }
 
-function asOwner(object $world): Tests\TestCase
+function asOwner(object $world): TestCase
 {
     return test()->asToken(orgToken($world->user, $world->workspace));
 }
@@ -51,7 +55,7 @@ it('upgrades a free workspace: same organization, company type, business plan, f
 
     $company = $this->world->workspace->fresh();
     expect($company->type)->toBe(OrganizationType::Company)
-        ->and($company->name)->toEqualCanonicalizing(['en' => 'Rahima Traders', 'bn' => 'রহিমা ট্রেডার্স'])
+        ->and($company->texts('name'))->toEqualCanonicalizing(['en' => 'Rahima Traders', 'bn' => 'রহিমা ট্রেডার্স'])
         ->and($company->plan_key)->toBe('starter');
 
     // Nothing paid was running: the first business invoice now, due after the payment terms.
@@ -92,10 +96,10 @@ it('keeps a paid personal period and bills the business plan from the day after 
 
 it('lets the company add members after the upgrade (a personal plan allows one person)', function () {
     $members = "/api/organizations/{$this->world->workspace->id}/members";
-    App\Models\User::factory()->create(['email' => 'karim@example.com']);
+    User::factory()->create(['email' => 'karim@example.com']);
     // As in the seed data: a personal plan is for one person, a business plan for a team.
-    ruleService()->set(app(App\Platform\Rules\RuleTargets::class)->plan('personal_free'), 'plans.max_users', App\Platform\Rules\Enums\RuleMode::Set, 1, 'Test limit', trusted: true);
-    ruleService()->set(app(App\Platform\Rules\RuleTargets::class)->plan('starter'), 'plans.max_users', App\Platform\Rules\Enums\RuleMode::Set, 10, 'Test limit', trusted: true);
+    ruleService()->set(app(RuleTargets::class)->plan('personal_free'), 'plans.max_users', RuleMode::Set, 1, 'Test limit', trusted: true);
+    ruleService()->set(app(RuleTargets::class)->plan('starter'), 'plans.max_users', RuleMode::Set, 10, 'Test limit', trusted: true);
 
     asOwner($this->world)->postJson($members, ['email' => 'karim@example.com', 'membership_type' => 'staff'])->assertStatus(422);
 

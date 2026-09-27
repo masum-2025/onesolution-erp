@@ -134,6 +134,7 @@ class AccountController extends Controller
             'phone' => $user->phone,
             'phone_verified' => $user->phone_verified_at !== null,
             'locale' => $user->locale,
+            'timezone' => $user->timezone,
             'marketing' => $user->marketing_consent_at !== null,
             'password_changed_at' => $user->password_changed_at?->toIso8601String(),
             'locked_until' => $cooldown?->toIso8601String(),

@@ -16,6 +16,9 @@
         "show_password": "Show password",
         "hide_password": "Hide password",
         "language": "Language",
+        "timezone": "Timezone",
+        "timezone_hint": "Times on screen are shown in this timezone.",
+        "timezone_organization": "Same as my organization",
         "new_email": "New email",
         "new_phone": "New mobile number"
     },

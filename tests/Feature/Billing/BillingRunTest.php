@@ -13,6 +13,7 @@ use App\Platform\Billing\Services\WholesalePriceBook;
 use App\Platform\Packaging\Actions\ChangePlan;
 use App\Platform\Packaging\Actions\PlanChoice;
 use App\Platform\Packaging\Models\Subscription;
+use App\Platform\Packaging\Services\PartnerPlanService;
 use App\Platform\Packaging\Services\SubscriptionService;
 use App\Platform\Tenancy\Enums\BillingMode;
 use App\Platform\Tenancy\Enums\MembershipType;
@@ -60,8 +61,8 @@ it('bills a wholesale partner per client at our wholesale price, in its currency
         ->and($invoice->period_end->toDateString())->toBe('2026-10-31')
         ->and($invoice->due_at->toDateString())->toBe('2026-09-29')
         ->and($invoice->lines->pluck('amount_minor')->all())->toBe([2900, 900])
-        ->and($invoice->lines[0]->description['en'])->toBe('G1: Business plan, October 2026')
-        ->and($invoice->lines[0]->description['bn'])->toContain('অক্টোবর');
+        ->and($invoice->lines[0]->texts('description')['en'])->toBe('G1: Business plan, October 2026')
+        ->and($invoice->lines[0]->texts('description')['bn'])->toContain('অক্টোবর');
 });
 
 it('bills per staff seat where the wholesale price is per seat', function () {
@@ -144,7 +145,7 @@ it('bills revenue-share clients under the partner brand and records the partner\
         ->and($invoice->billing_mode)->toBe('revenue_share')
         ->and($invoice->currency_code)->toBe('BDT')
         ->and($invoice->total_minor)->toBe(500000)
-        ->and($invoice->lines[0]->description['en'])->toBe('Business plan, monthly, 1 Oct 2026 to 31 Oct 2026')
+        ->and($invoice->lines[0]->texts('description')['en'])->toBe('Business plan, monthly, 1 Oct 2026 to 31 Oct 2026')
         ->and(Subscription::where('organization_id', $this->w->g3->id)->sole()->billed_through->toDateString())->toBe('2026-10-31')
         // It shows in the client's own audit log.
         ->and(AuditLog::where('action', 'billing.invoice_issued')->where('organization_id', $this->w->g3->id)->exists())->toBeTrue();
@@ -186,7 +187,7 @@ it('bills each client in its own currency and pays commissions per currency', fu
 it('bills a client on a partner plan at the partner\'s price, yearly on its anniversary', function () {
     $partner = $this->w->partnerB;
     $partner->forceFill(['billing_mode' => BillingMode::RevenueShare])->save();
-    $plan = app(App\Platform\Packaging\Services\PartnerPlanService::class)->create($partner, [
+    $plan = app(PartnerPlanService::class)->create($partner, [
         'base_plan_key' => 'business',
         'name' => ['en' => 'Campus', 'bn' => 'ক্যাম্পাস'],
         'prices' => [['currency' => 'BDT', 'period' => 'yearly', 'amount_minor' => 6000000]],
@@ -199,8 +200,8 @@ it('bills a client on a partner plan at the partner\'s price, yearly on its anni
     $invoice = Invoice::where('organization_id', $this->w->g3->id)->sole();
     expect($invoice->total_minor)->toBe(6000000)
         ->and($invoice->period_end->toDateString())->toBe('2027-09-30')
-        ->and($invoice->lines[0]->description['en'])->toBe('Campus plan, yearly, 1 Oct 2026 to 30 Sep 2027')
-        ->and($invoice->lines[0]->description['bn'])->toStartWith('ক্যাম্পাস');
+        ->and($invoice->lines[0]->texts('description')['en'])->toBe('Campus plan, yearly, 1 Oct 2026 to 30 Sep 2027')
+        ->and($invoice->lines[0]->texts('description')['bn'])->toStartWith('ক্যাম্পাস');
 });
 
 it('bills the house partner\'s direct clients without any commission', function () {

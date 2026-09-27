@@ -12,8 +12,8 @@ use App\Platform\Tenancy\Models\Partner;
 use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
 
 /**
- * Sends a catalog notification to people, in the partner's brand and the
- * organization's language. Each message is recorded (address masked) and
+ * Sends a catalog notification to people, in the partner's brand and each
+ * person's language (their own, else the organization's). Each message is recorded (address masked) and
  * sent by a queued job, so a slow mail server never slows the app.
  *
  * Email first; people without an email (self-serve by phone, Phase 5C) get
@@ -46,16 +46,20 @@ class Notifier
     ): array {
         $definition = $this->catalog->get($key);
         $supported = (array) config('tenancy.supported_locales');
-        $locale = in_array($locale, $supported, true) ? $locale : $this->locale($organization);
-        $filled = [
-            ...(is_callable($values) ? $values($locale) : $values),
+        $fixed = in_array($locale, $supported, true) ? $locale : null;
+        $organizationLocale = $this->locale($organization);
+        $common = [
             'product' => $this->brands->for($partner, $organization)['name'],
             // A message may point somewhere of its own (e.g. a one-time invitation link).
             'link' => $this->links->to($path ?? $definition['path'], $partner, $organization),
         ];
+        $byLocale = [];
 
         $deliveries = [];
         foreach ($users as $user) {
+            // Each person in their own language (Phase 6): the message's, else theirs, else the organization's.
+            $locale = $fixed ?? (in_array($user->locale, $supported, true) ? $user->locale : $organizationLocale);
+            $filled = $byLocale[$locale] ??= [...(is_callable($values) ? $values($locale) : $values), ...$common];
             foreach ($this->channelsFor($user, $definition['channels'], $partner, $allChannels) as $channel => $address) {
                 $delivery = new NotificationDelivery;
                 $delivery->forceFill([

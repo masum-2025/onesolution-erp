@@ -2,6 +2,7 @@
 
 namespace App\Platform\Access\Models;
 
+use App\Platform\Support\HasTranslatedTexts;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -21,11 +22,14 @@ use Illuminate\Support\Facades\DB;
 #[Fillable(['organization_id', 'key', 'name', 'description', 'template_key', 'version', 'created_by'])]
 class Role extends Model
 {
-    use HasUlids;
+    use HasTranslatedTexts, HasUlids;
+
+    /** @var list<string> Data labels in several languages. */
+    public array $translatable = ['name', 'description'];
 
     protected function casts(): array
     {
-        return ['name' => 'array', 'description' => 'array', 'version' => 'integer'];
+        return ['version' => 'integer'];
     }
 
     /**
@@ -58,17 +62,11 @@ class Role extends Model
 
     public function displayName(?string $locale = null): string
     {
-        $names = (array) $this->name;
-        $locale ??= app()->getLocale();
-
-        return (string) ($names[$locale] ?? $names[config('app.fallback_locale')] ?? reset($names) ?: $this->key);
+        return $this->textIn('name', $locale) ?: $this->key;
     }
 
     public function displayDescription(?string $locale = null): ?string
     {
-        $texts = (array) ($this->description ?? []);
-        $locale ??= app()->getLocale();
-
-        return $texts[$locale] ?? $texts[config('app.fallback_locale')] ?? (reset($texts) ?: null);
+        return $this->textIn('description', $locale) ?: null;
     }
 }

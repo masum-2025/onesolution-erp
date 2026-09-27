@@ -1,11 +1,17 @@
 <?php
 
 use App\Platform\Access\Models\Role;
+use App\Platform\Access\Models\RoleTemplate;
 use App\Platform\Audit\AuditLog;
+use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Packaging\Models\OrganizationPackage;
+use App\Platform\Packaging\Models\Plan;
+use App\Platform\Packaging\Models\SectorPackage;
+use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Packaging\SectorCatalog;
 use App\Platform\Rules\Enums\RuleMode;
-use App\Platform\Rules\RuleTargets;
+use App\Platform\Rules\Enums\RuleScope;
+use App\Platform\Rules\RuleCatalog;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\Organization;
@@ -45,7 +51,7 @@ it('gives a new school company its modules, roles and rules automatically', func
 
     expect(Role::where('organization_id', $company->id)->pluck('template_key')->sort()->values()->all())
         ->toBe(['accountant', 'finance_approver', 'office_staff', 'principal', 'teacher'])
-        ->and(Role::where('organization_id', $company->id)->where('template_key', 'principal')->first()->name)
+        ->and(Role::where('organization_id', $company->id)->where('template_key', 'principal')->first()->texts('name'))
         ->toEqual(['en' => 'Principal', 'bn' => 'প্রধান শিক্ষক'])
         ->and(ruleFor('attendance.late_grace_minutes', $company))->toBe(10)
         ->and(collect($response->json('package.rules_set'))->pluck('key')->all())->toContain('attendance.late_grace_minutes');
@@ -146,9 +152,9 @@ it('lists sectors and plans in both languages', function () {
 });
 
 it('keeps sector data files consistent with modules, rules and templates', function () {
-    $registry = app(App\Platform\Modules\ModuleRegistry::class);
-    $rules = app(App\Platform\Rules\RuleCatalog::class);
-    $templates = App\Platform\Access\Models\RoleTemplate::pluck('key')->all();
+    $registry = app(ModuleRegistry::class);
+    $rules = app(RuleCatalog::class);
+    $templates = RoleTemplate::pluck('key')->all();
 
     foreach (app(SectorCatalog::class)->all() as $package) {
         foreach ($package->modules as $module) {
@@ -156,7 +162,7 @@ it('keeps sector data files consistent with modules, rules and templates', funct
         }
         foreach ($package->rules as $rule) {
             expect($rules->has($rule['key']))->toBeTrue("{$package->key}: unknown rule {$rule['key']}")
-                ->and($rules->get($rule['key'])->allowsLevel(App\Platform\Rules\Enums\RuleScope::Company))->toBeTrue("{$package->key}: {$rule['key']} not settable per company");
+                ->and($rules->get($rule['key'])->allowsLevel(RuleScope::Company))->toBeTrue("{$package->key}: {$rule['key']} not settable per company");
         }
         foreach ($package->roleTemplates as $template) {
             expect($templates)->toContain($template);
@@ -164,7 +170,7 @@ it('keeps sector data files consistent with modules, rules and templates', funct
         expect(__("packaging.sectors.{$package->key}.name", [], 'bn'))->not->toStartWith('packaging.');
     }
 
-    foreach (app(App\Platform\Packaging\PlanCatalog::class)->all() as $plan) {
+    foreach (app(PlanCatalog::class)->all() as $plan) {
         foreach ($plan->modules as $module) {
             expect($module === '*' || $registry->has($module))->toBeTrue("{$plan->key}: unknown module {$module}");
         }
@@ -174,8 +180,8 @@ it('keeps sector data files consistent with modules, rules and templates', funct
 it('syncs plans and packages into the database', function () {
     $this->artisan('packaging:sync')->assertSuccessful();
 
-    expect(App\Platform\Packaging\Models\Plan::where('key', 'business')->first()->prices()->count())->toBe(4)
-        ->and(App\Platform\Packaging\Models\SectorPackage::where('key', 'school')->value('version'))
+    expect(Plan::where('key', 'business')->first()->prices()->count())->toBe(4)
+        ->and(SectorPackage::where('key', 'school')->value('version'))
         ->toBe(app(SectorCatalog::class)->get('school')->version());
 });
 

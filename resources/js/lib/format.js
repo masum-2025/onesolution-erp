@@ -3,7 +3,7 @@ import { session } from './session';
 
 /**
  * Locale-aware display of numbers, dates and money for the active
- * organization (language + country, organization timezone). Money arrives
+ * organization (language + country; the person's timezone, else the organization's). Money arrives
  * as integer minor units and is converted with string/BigInt math, never floats.
  */
 export function localeTag() {
@@ -11,8 +11,9 @@ export function localeTag() {
     return country ? `${i18n.locale}-${country}` : i18n.locale;
 }
 
+/** The person's own timezone, else the organization's (own, inherited or its country's). */
 function timeZone() {
-    return session.me?.context?.settings?.timezone || undefined;
+    return session.me?.user?.timezone || session.me?.context?.settings?.timezone || undefined;
 }
 
 export function formatNumber(value, options = {}) {

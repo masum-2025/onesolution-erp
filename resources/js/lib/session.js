@@ -17,9 +17,10 @@ export async function loadMe() {
         session.me = data;
         applyBrand(data.brand);
 
-        // Language: the user's own choice, otherwise the organization's default.
-        const orgLocale = data.context?.settings?.default_locale;
-        if (!readPref('locale') && orgLocale) await setLocale(orgLocale, { remember: false });
+        // Language: picked on this device, else the person's profile, else the
+        // organization's (own, inherited or its country's).
+        const locale = data.user?.locale ?? data.context?.settings?.default_locale;
+        if (!readPref('locale') && locale) await setLocale(locale, { remember: false });
     } catch (error) {
         if (error.status !== 401) throw error;
         session.me = null;

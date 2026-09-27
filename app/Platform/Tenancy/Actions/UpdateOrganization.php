@@ -21,6 +21,12 @@ class UpdateOrganization
      */
     public function handle(Organization $organization, array $attributes, ?User $actor = null): Organization
     {
+        // A new name replaces every language (a language left out is removed).
+        if (array_key_exists('name', $attributes)) {
+            $organization->putTexts('name', (array) $attributes['name']);
+            unset($attributes['name']);
+        }
+
         $organization->fill($attributes);
 
         if (! $organization->isDirty()) {

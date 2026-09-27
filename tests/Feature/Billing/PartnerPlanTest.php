@@ -175,5 +175,5 @@ it('keeps partner plans apart', function () {
     // Nor look at Partner A's client.
     $this->asToken($otherOwner)->getJson("http://localhost/api/partner/clients/{$this->w->g1->id}/subscription")->assertNotFound();
 
-    expect(PartnerPlan::find($planId)->name['en'])->toBe('School Plus');
+    expect(PartnerPlan::find($planId)->texts('name')['en'])->toBe('School Plus');
 });

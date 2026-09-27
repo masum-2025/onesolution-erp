@@ -6,52 +6,53 @@ use App\Platform\Access\Models\Permission;
 use App\Platform\Access\Models\Role;
 use App\Platform\Access\Models\RoleTemplate;
 use App\Platform\Audit\AuditLog;
-use App\Platform\Modules\Models\ModuleConsent;
-use App\Platform\Packaging\Models\OrganizationPackage;
-use App\Platform\Packaging\Models\Plan;
-use App\Platform\Packaging\Models\PlanPrice;
-use App\Platform\Packaging\Models\SectorPackage;
-use App\Platform\Partners\Models\PartnerBrand;
-use App\Platform\Partners\Models\PartnerDomain;
-use App\Platform\Partners\Models\PartnerModule;
 use App\Platform\Billing\Models\Commission;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Billing\Models\InvoiceLine;
 use App\Platform\Billing\Models\Payout;
 use App\Platform\Billing\Models\TrialGrant;
-use App\Platform\Payments\Models\GatewayEvent;
-use App\Platform\Payments\Models\Payment;
-use App\Platform\Portal\Models\PortalInvitation;
-use App\Platform\Portal\Models\PortalLink;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\Branding\Models\ClientBrand;
+use App\Platform\Countries\Models\Country;
 use App\Platform\DataExport\Models\DataExport;
 use App\Platform\Identity\Models\OtpChallenge;
 use App\Platform\Identity\Models\UserSession;
 use App\Platform\Invitations\Models\Invitation;
-use App\Platform\PartnerApi\Models\PartnerApiKey;
 use App\Platform\Legal\Models\DocumentAcceptance;
 use App\Platform\Legal\Models\LegalDocument;
-use App\Platform\Transfers\Models\ClientTransfer;
-use App\Platform\Transfers\Models\TransferCode;
+use App\Platform\Modules\Models\ModuleConsent;
+use App\Platform\Modules\Models\ModulePurgeRequest;
+use App\Platform\Modules\Models\OrganizationModule;
 use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\Models\NotificationTemplate;
 use App\Platform\Notifications\Models\PartnerMailDomain;
 use App\Platform\Notifications\Models\PartnerSmsSender;
+use App\Platform\Packaging\Models\OrganizationPackage;
 use App\Platform\Packaging\Models\PartnerPlan;
 use App\Platform\Packaging\Models\PartnerPlanPrice;
+use App\Platform\Packaging\Models\Plan;
+use App\Platform\Packaging\Models\PlanPrice;
+use App\Platform\Packaging\Models\SectorPackage;
 use App\Platform\Packaging\Models\Subscription;
-use App\Platform\SupportAccess\Models\SupportGrant;
-use App\Platform\Modules\Models\ModulePurgeRequest;
-use App\Platform\Modules\Models\OrganizationModule;
+use App\Platform\PartnerApi\Models\PartnerApiKey;
+use App\Platform\Partners\Models\PartnerBrand;
+use App\Platform\Partners\Models\PartnerDomain;
+use App\Platform\Partners\Models\PartnerModule;
+use App\Platform\Payments\Models\GatewayEvent;
+use App\Platform\Payments\Models\Payment;
+use App\Platform\Portal\Models\PortalInvitation;
+use App\Platform\Portal\Models\PortalLink;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\Models\RuleValueHistory;
+use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Tenancy\Concerns\BelongsToOrganization;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use App\Platform\Tenancy\Models\Partner;
 use App\Platform\Tenancy\Models\PartnerUser;
+use App\Platform\Transfers\Models\ClientTransfer;
+use App\Platform\Transfers\Models\TransferCode;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\Finder\Finder;
@@ -151,6 +152,8 @@ const PLATFORM_MODELS = [
     // organization and membership.
     PortalInvitation::class,
     PortalLink::class,
+    // Country facts (Phase 6): platform reference data.
+    Country::class,
 ];
 
 /**

@@ -2,6 +2,7 @@
 
 namespace App\Platform\Partners\Http\Requests;
 
+use App\Platform\Countries\CountryCatalog;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Packaging\SectorCatalog;
 use App\Platform\Support\Http\StrictFormRequest;
@@ -25,7 +26,8 @@ class StoreClientRequest extends StrictFormRequest
             // The client's first owner. Without an account yet, give a name: they are invited by email.
             'owner_email' => ['required', 'string', 'email', 'max:255'],
             'owner_name' => ['sometimes', 'nullable', 'string', 'min:2', 'max:120'],
-            'country_code' => ['sometimes', 'nullable', 'string', 'regex:/^[A-Z]{2}$/'],
+            // Countries are data files (database/data/countries).
+            'country_code' => ['sometimes', 'nullable', 'string', Rule::in(app(CountryCatalog::class)->codes())],
             'currency_code' => ['sometimes', 'nullable', 'string', 'regex:/^[A-Z]{3}$/'],
             'timezone' => ['sometimes', 'nullable', 'string', 'timezone:all'],
             'default_locale' => ['sometimes', 'nullable', 'string', Rule::in($locales)],

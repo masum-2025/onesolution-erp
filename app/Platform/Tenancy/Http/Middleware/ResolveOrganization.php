@@ -3,11 +3,11 @@
 namespace App\Platform\Tenancy\Http\Middleware;
 
 use App\Http\Middleware\ApplyRequestLocale;
-use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\ContextSource;
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Exceptions\MissingTenantContext;
 use App\Platform\Tenancy\Exceptions\OrganizationAccessDenied;
 use Closure;
@@ -66,10 +66,15 @@ class ResolveOrganization
             throw OrganizationAccessDenied::portalOnly();
         }
 
-        // The organization's language, unless the user picked one for this request.
-        $locale = $context->locale();
-        if (! ApplyRequestLocale::wasChosen($request) && $locale !== null && in_array($locale, config('tenancy.supported_locales'), true)) {
-            app()->setLocale($locale);
+        // Unless the user picked a language for this request: their profile's, else the
+        // organization's (own, inherited or its country's). See LocaleResolver.
+        if (! ApplyRequestLocale::wasChosen($request)) {
+            foreach ([$request->user()?->locale, $context->locale()] as $locale) {
+                if (is_string($locale) && in_array($locale, config('tenancy.supported_locales'), true)) {
+                    app()->setLocale($locale);
+                    break;
+                }
+            }
         }
 
         return $next($request);

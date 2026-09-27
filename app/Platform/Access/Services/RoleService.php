@@ -143,7 +143,7 @@ class RoleService
             $this->audit->record(
                 action: 'role.created',
                 target: $role,
-                new: ['name' => $role->name, 'template' => $role->template_key, 'permissions' => $permissions],
+                new: ['name' => $role->texts('name'), 'template' => $role->template_key, 'permissions' => $permissions],
                 reason: $reason,
                 actor: $actor,
                 organizationId: $organization->getKey(),
@@ -192,17 +192,18 @@ class RoleService
 
             if (array_key_exists('name', $changes)) {
                 $name = $this->cleanTexts((array) $changes['name']);
-                if ($name !== (array) $locked->name) {
-                    [$old['name'], $new['name']] = [$locked->name, $name];
-                    $locked->name = $name;
+                if ($name !== $locked->texts('name')) {
+                    [$old['name'], $new['name']] = [$locked->texts('name'), $name];
+                    $locked->putTexts('name', $name);
                 }
             }
 
             if (array_key_exists('description', $changes)) {
                 $description = $changes['description'] === null ? null : ($this->cleanTexts($changes['description']) ?: null);
-                if ($description !== $locked->description) {
-                    [$old['description'], $new['description']] = [$locked->description, $description];
-                    $locked->description = $description;
+                $current = $locked->texts('description') ?: null;
+                if ($description !== $current) {
+                    [$old['description'], $new['description']] = [$current, $description];
+                    $locked->putTexts('description', $description);
                 }
             }
 
@@ -250,7 +251,7 @@ class RoleService
             $this->audit->record(
                 action: 'role.deleted',
                 target: $role,
-                old: ['name' => $role->name, 'permissions' => $permissions],
+                old: ['name' => $role->texts('name'), 'permissions' => $permissions],
                 reason: $reason,
                 actor: $actor,
                 organizationId: $organization->getKey(),

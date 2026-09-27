@@ -16,6 +16,7 @@ import { confirmAction } from '@/lib/dialogs';
 import { formatDate } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
+import { textLocales } from '@/lib/texts';
 
 /**
  * Partner console: the terms, privacy notice and data processing agreement
@@ -39,7 +40,8 @@ const form = reactive({ title: { en: '', bn: '' }, body: { en: '', bn: '' }, sum
 const errors = ref({});
 const saving = ref(false);
 const preview = ref(false);
-const langs = computed(() => [{ value: 'en', label: 'English' }, { value: 'bn', label: 'বাংলা' }]);
+// Every language the app speaks, each in its own name.
+const langs = computed(() => textLocales().map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
 
 async function startNew(row, target = 'partner') {
     errors.value = {};

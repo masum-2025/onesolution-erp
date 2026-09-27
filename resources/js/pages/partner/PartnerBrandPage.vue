@@ -10,7 +10,8 @@ import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { applyBrand, contrastProblem, readableOn } from '@/lib/brand';
 import { toast } from '@/lib/toast';
-import { t } from '@/lib/i18n';
+import { direction, t } from '@/lib/i18n';
+import { textLocales, textsFor } from '@/lib/texts';
 
 /**
  * Partner console: the brand clients see. Colors are checked for contrast
@@ -42,7 +43,7 @@ watch(data, (value) => {
         support_phone: v.support_phone ?? '',
         terms_url: v.terms_url ?? '',
         privacy_url: v.privacy_url ?? '',
-        ...Object.fromEntries(TEXTS.map((field) => [field, { en: v[field]?.en ?? '', bn: v[field]?.bn ?? '' }])),
+        ...Object.fromEntries(TEXTS.map((field) => [field, textsFor(v[field])])),
     });
     initial = JSON.stringify(form);
 });
@@ -238,16 +239,16 @@ async function togglePoweredBy(show) {
                     <h2 class="text-[14.5px] font-semibold text-fg">{{ t('partner.brand.texts') }}</h2>
                     <div v-for="field in TEXTS" :key="field" class="grid gap-3 sm:grid-cols-2">
                         <AppField
-                            v-for="locale in ['en', 'bn']"
+                            v-for="locale in textLocales()"
                             :key="locale"
-                            :label="`${t(`partner.brand.${field}`)} · ${t(locale === 'en' ? 'partner.brand.english' : 'partner.brand.bangla')}`"
+                            :label="`${t(`partner.brand.${field}`)} · ${t(`core.languages.${locale}`)}`"
                             :error="locale === 'en' ? errors[field] : null"
                             optional
                         >
                             <template #default="{ id }">
                                 <!-- Plain elements: v-model on a dynamic <component> would not bind like an input. -->
-                                <textarea v-if="field === 'login_text' || field === 'footer_text'" :id="id" v-model="form[field][locale]" rows="2" class="field-input" :lang="locale" />
-                                <input v-else :id="id" v-model="form[field][locale]" class="field-input" :lang="locale" />
+                                <textarea v-if="field === 'login_text' || field === 'footer_text'" :id="id" v-model="form[field][locale]" rows="2" class="field-input" :lang="locale" :dir="direction(locale)" />
+                                <input v-else :id="id" v-model="form[field][locale]" class="field-input" :lang="locale" :dir="direction(locale)" />
                             </template>
                         </AppField>
                     </div>

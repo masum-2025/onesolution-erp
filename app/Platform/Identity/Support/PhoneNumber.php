@@ -2,10 +2,13 @@
 
 namespace App\Platform\Identity\Support;
 
+use App\Platform\Countries\CountryCatalog;
+use App\Platform\Countries\CountryDefinition;
+
 /**
  * Phone numbers in one form (E.164, e.g. +8801712345678), from what people
  * type: with or without the country code, the trunk 0, spaces or dashes.
- * Country formats are data (config/identity.php phone_countries).
+ * Country formats are data (database/data/countries, "phone").
  */
 final class PhoneNumber
 {
@@ -15,7 +18,7 @@ final class PhoneNumber
     public static function normalize(string $input, ?string $country): ?string
     {
         $digits = preg_replace('/[^\d+]/', '', $input) ?? '';
-        $countries = (array) config('identity.phone_countries');
+        $countries = self::formats();
 
         if (str_starts_with($digits, '+') || str_starts_with($digits, '00')) {
             $international = ltrim(preg_replace('/^00/', '', $digits) ?? '', '+');
@@ -49,7 +52,7 @@ final class PhoneNumber
      */
     public static function country(string $e164): ?string
     {
-        foreach ((array) config('identity.phone_countries') as $code => $format) {
+        foreach (self::formats() as $code => $format) {
             $prefix = '+'.$format['dial'];
             if (str_starts_with($e164, $prefix) && self::matches(substr($e164, strlen($prefix)), $format)) {
                 return $code;
@@ -57,6 +60,14 @@ final class PhoneNumber
         }
 
         return null;
+    }
+
+    /**
+     * @return array<string, array{dial: string, trunk: string, national: string}>
+     */
+    private static function formats(): array
+    {
+        return array_map(fn (CountryDefinition $country) => $country->phone, app(CountryCatalog::class)->all());
     }
 
     /**

@@ -104,7 +104,7 @@ class InvoiceIssuer
     {
         if ($draft->organization !== null) {
             return [
-                'name' => (array) $draft->organization->name,
+                'name' => $draft->organization->texts('name'),
                 'country_code' => $draft->organization->country_code,
             ];
         }

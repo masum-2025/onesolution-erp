@@ -43,9 +43,9 @@ class PartnerPlanPresenter
         return [
             'id' => $plan->getKey(),
             'name' => $plan->label(),
-            'name_texts' => $plan->name,
-            'description' => $plan->description === null ? null : ($plan->description[$locale] ?? $plan->description['en'] ?? null),
-            'description_texts' => $plan->description,
+            'name_texts' => $plan->texts('name'),
+            'description' => $plan->textIn('description', $locale) ?: null,
+            'description_texts' => $plan->texts('description') ?: null,
             'base_plan' => ['key' => $plan->base_plan_key, 'name' => $this->plans->get($plan->base_plan_key)->label()],
             // null = everything the base plan has.
             'modules' => $plan->modules,

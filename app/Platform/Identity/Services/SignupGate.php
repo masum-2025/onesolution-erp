@@ -2,6 +2,7 @@
 
 namespace App\Platform\Identity\Services;
 
+use App\Platform\Countries\CountryCatalog;
 use App\Platform\Identity\Contracts\BotCheck;
 use App\Platform\Identity\Exceptions\IdentityException;
 use App\Platform\Legal\Services\LegalService;
@@ -26,6 +27,7 @@ class SignupGate
         private SmsSender $sms,
         private BotCheck $bot,
         private LegalService $legal,
+        private CountryCatalog $countries,
     ) {}
 
     /**
@@ -70,7 +72,7 @@ class SignupGate
 
         return array_values(array_intersect(
             (array) $this->rules->get('identity.allowed_phone_countries', $context),
-            array_keys((array) config('identity.phone_countries')),
+            $this->countries->codes(),
         ));
     }
 
@@ -93,7 +95,7 @@ class SignupGate
             'phone' => $sms,
             'phone_countries' => array_map(fn (string $code) => [
                 'code' => $code,
-                'dial' => config("identity.phone_countries.{$code}.dial"),
+                'dial' => $this->countries->get($code)->phone['dial'],
             ], $this->phoneCountries($partner)),
             'default_country' => config('tenancy.defaults.country_code'),
             'bot' => $this->bot->publicConfig(),

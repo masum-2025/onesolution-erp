@@ -16,6 +16,9 @@
         "show_password": "পাসওয়ার্ড দেখান",
         "hide_password": "পাসওয়ার্ড লুকান",
         "language": "ভাষা",
+        "timezone": "সময় অঞ্চল",
+        "timezone_hint": "স্ক্রিনে সময় এই সময় অঞ্চলে দেখানো হয়।",
+        "timezone_organization": "আমার প্রতিষ্ঠানের মতো",
         "new_email": "নতুন ইমেইল",
         "new_phone": "নতুন মোবাইল নম্বর"
     },

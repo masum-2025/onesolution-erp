@@ -5,7 +5,8 @@
     "user_menu": "Account menu",
     "languages": {
         "en": "English",
-        "bn": "বাংলা"
+        "bn": "বাংলা",
+        "ar": "العربية"
     },
     "actions": {
         "cancel": "Cancel",
@@ -147,7 +148,8 @@
         "self": "Set here",
         "default": "Default",
         "inherited": "Inherited",
-        "inherited_from": "From {name}"
+        "inherited_from": "From {name}",
+        "country": "From the country"
     },
     "states": {
         "loading": "Loading…",

@@ -5,7 +5,8 @@
     "user_menu": "অ্যাকাউন্ট মেনু",
     "languages": {
         "en": "English",
-        "bn": "বাংলা"
+        "bn": "বাংলা",
+        "ar": "العربية"
     },
     "actions": {
         "cancel": "বাতিল",
@@ -147,7 +148,8 @@
         "self": "এখানে সেট করা",
         "default": "ডিফল্ট",
         "inherited": "উপর থেকে আসা",
-        "inherited_from": "{name} থেকে"
+        "inherited_from": "{name} থেকে",
+        "country": "দেশ থেকে"
     },
     "states": {
         "loading": "লোড হচ্ছে…",

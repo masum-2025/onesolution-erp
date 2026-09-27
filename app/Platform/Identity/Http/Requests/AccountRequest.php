@@ -16,6 +16,8 @@ class AccountRequest extends StrictFormRequest
         return [
             'name' => ['sometimes', 'string', 'min:2', 'max:120'],
             'locale' => ['sometimes', ...array_slice($this->localeRule(true), 1)],
+            // The person's own timezone for times on screen (Phase 6); null = the organization's.
+            'timezone' => ['sometimes', 'nullable', 'string', 'timezone:all'],
             'marketing' => ['sometimes', 'boolean'],
         ];
     }

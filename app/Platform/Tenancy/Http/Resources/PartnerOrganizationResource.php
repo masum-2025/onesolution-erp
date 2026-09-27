@@ -22,7 +22,7 @@ class PartnerOrganizationResource extends JsonResource
         return [
             'id' => $this->id,
             'type' => $this->type->value,
-            'name' => $this->name,
+            'name' => $this->resource->texts('name'),
             'display_name' => $this->displayName(),
             'parent_id' => $this->parent_id,
             'depth' => $this->depth,

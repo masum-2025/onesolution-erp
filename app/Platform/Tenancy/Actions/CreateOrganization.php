@@ -72,7 +72,7 @@ class CreateOrganization
                 new: [
                     'type' => $type->value,
                     'parent_id' => $organization->parent_id,
-                    'name' => $organization->name,
+                    'name' => $organization->texts('name'),
                 ],
                 actor: $actor,
                 partnerId: $organization->partner_id,

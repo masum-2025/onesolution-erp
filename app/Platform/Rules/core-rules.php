@@ -654,4 +654,32 @@ return [
         'category' => 'data',
         'sort_order' => 83,
     ],
+
+    // ── Regional formats (Phase 6): country values from database/data/countries ──
+    [
+        'key' => 'regional.week_start',
+        'type' => 'enum',
+        // First day of the week in calendars and weekly reports.
+        'schema' => ['enum' => ['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri']],
+        'default' => 'mon',
+        'label' => 'rules.core.regional_week_start.label',
+        'description' => 'rules.core.regional_week_start.description',
+        'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+        'country_specific' => true,
+        'category' => 'regional',
+        'sort_order' => 150,
+    ],
+    [
+        'key' => 'regional.date_format',
+        'type' => 'enum',
+        // How dates are written in documents (screens follow the reader's language).
+        'schema' => ['enum' => ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'DD.MM.YYYY', 'DD-MM-YYYY']],
+        'default' => 'DD/MM/YYYY',
+        'label' => 'rules.core.regional_date_format.label',
+        'description' => 'rules.core.regional_date_format.description',
+        'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+        'country_specific' => true,
+        'category' => 'regional',
+        'sort_order' => 151,
+    ],
 ];
