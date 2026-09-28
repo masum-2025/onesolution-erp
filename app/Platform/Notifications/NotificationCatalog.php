@@ -90,6 +90,13 @@ final class NotificationCatalog
             'audience' => 'client',
             'path' => '/billing',
         ],
+        // A partner added a company to a client's group (billed with the group).
+        'partners.company_added' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'company', 'partner', 'link'],
+            'audience' => 'client',
+            'path' => '/organizations',
+        ],
         'transfers.requested' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'reason', 'link'],

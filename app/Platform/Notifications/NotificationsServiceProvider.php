@@ -14,6 +14,7 @@ use App\Platform\Notifications\Console\DecideSmsSender;
 use App\Platform\Notifications\Contracts\SmsGateway;
 use App\Platform\Notifications\Listeners\SendPlatformNotifications;
 use App\Platform\Notifications\Services\LogSmsGateway;
+use App\Platform\Partners\Events\CompanyAddedToGroup;
 use App\Platform\Payments\Events\MerchantAccountChangeApplied;
 use App\Platform\Payments\Events\MerchantAccountChangeRequested;
 use App\Platform\Payments\Events\PaymentFailed;
@@ -55,6 +56,7 @@ class NotificationsServiceProvider extends ServiceProvider
         Event::listen(DataExportReady::class, [SendPlatformNotifications::class, 'exportReady']);
         Event::listen(InvoiceIssued::class, [SendPlatformNotifications::class, 'invoiceIssued']);
         Event::listen(ClientTransferRequested::class, [SendPlatformNotifications::class, 'transferRequested']);
+        Event::listen(CompanyAddedToGroup::class, [SendPlatformNotifications::class, 'companyAddedToGroup']);
         Event::listen(ClientTransferred::class, [SendPlatformNotifications::class, 'transferred']);
         Event::listen(LegalDocumentPublished::class, [SendPlatformNotifications::class, 'legalPublished']);
         // Self-serve billing (Phase 5C-2).

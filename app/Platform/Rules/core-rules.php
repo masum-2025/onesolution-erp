@@ -32,7 +32,8 @@ return [
         ],
         'default' => [
             'group' => ['root'],
-            'company' => ['group'],
+            // A single company stands alone at the top; several can share a group.
+            'company' => ['root', 'group'],
             'branch' => ['company'],
             'department' => ['branch', 'company'],
         ],

@@ -54,11 +54,21 @@ it('rejects invalid parent types', function (OrganizationType $type, ?string $pa
         partner: $group->partner,
     );
 })->with([
-    'company at root' => [OrganizationType::Company, null],
+    'branch at root' => [OrganizationType::Branch, null],
     'branch under group' => [OrganizationType::Branch, 'group'],
     'group under company' => [OrganizationType::Group, 'company'],
     'company under company' => [OrganizationType::Company, 'company'],
 ])->throws(HierarchyViolation::class);
+
+it('lets a single company stand at the top, without a group', function () {
+    $partner = App\Platform\Tenancy\Models\Partner::factory()->create();
+
+    $company = app(CreateOrganization::class)->handle(OrganizationType::Company, ['name' => ['en' => 'Solo Traders'], 'sector_key' => 'school'], partner: $partner);
+
+    expect($company->isRoot())->toBeTrue()
+        ->and($company->root_id)->toBe($company->id)
+        ->and($company->path)->toBe("/{$company->id}/");
+});
 
 it('finds ancestors and descendants', function () {
     $w = tenancyWorld();

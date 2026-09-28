@@ -54,6 +54,11 @@ class PartnerException extends TenancyException
         return new self('client_not_found', 404);
     }
 
+    public static function groupNotActive(): self
+    {
+        return new self('group_not_active', 422, [], ['field' => 'group_id']);
+    }
+
     public static function notTopLevel(): self
     {
         return new self('not_top_level', 422);

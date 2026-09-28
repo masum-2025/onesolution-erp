@@ -35,8 +35,8 @@ function newClient(object $test, ?string $token = null, array $overrides = [])
 
 // ── Client accounts ──
 
-it('creates a client with its company, owner and sector package', function () {
-    $response = newClient($this)->assertCreated()->assertJsonPath('data.subscription_plan', 'business');
+it('creates a client group with its first company, owner and sector package', function () {
+    $response = newClient($this, overrides: ['structure' => 'group'])->assertCreated()->assertJsonPath('data.subscription_plan', 'business');
 
     $group = Organization::findOrFail($response->json('data.id'));
     $company = Organization::findOrFail($response->json('company.id'));

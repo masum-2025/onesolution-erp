@@ -113,6 +113,11 @@ return [
             'sms' => '{{ product }}: the deletion of your account was cancelled. Not you? {{ link }}',
             'action' => 'Open My account',
         ],
+        'partners_company_added' => [
+            'subject' => '{{ company }} was added to {{ organization }}',
+            'body' => "{{ partner }} added the company {{ company }} to {{ organization }}. It is part of your account and is billed with it.\n\nYou can add its people, branches and settings now.",
+            'action' => 'Open organizations',
+        ],
         'identity_password_changed' => [
             'subject' => 'Your {{ product }} password was changed',
             'body' => "The password of your {{ product }} account was changed on {{ time }}, and every other device was signed out.\n\nIf this was you, there is nothing to do. If it was not you, reset your password now and check your email and phone in My account.",
@@ -167,6 +172,7 @@ If this is not right, turn the account off at once and contact your gateway.",
         'legal_updated' => ['name' => 'New terms to accept', 'description' => 'To the client\'s account owners, when you publish new terms or a new DPA.'],
         'members_invited' => ['name' => 'Invitation to a new account', 'description' => 'To someone added who has no account yet: a link to set a password.'],
         'members_added' => ['name' => 'Access added', 'description' => 'To someone added who already has an account.'],
+        'partners_company_added' => ['name' => 'Company added to a group', 'description' => 'To the group\'s owners, when you add a company to their group.'],
         'identity_password_changed' => ['name' => 'Password changed', 'description' => 'To the person, on every address. Fixed wording.'],
         'identity_contact_changed' => ['name' => 'Email or phone changed', 'description' => 'To the person\'s old address. Fixed wording.'],
         'payments_merchant_change_requested' => ['name' => 'Payment account change asked', 'description' => 'To everyone who may approve it, at once. Fixed wording.'],
@@ -203,6 +209,7 @@ If this is not right, turn the account off at once and contact your gateway.",
         'gateway' => 'Payment gateway',
         'person' => 'Who made the change',
         'takes_effect' => 'When it takes effect',
+        'company' => 'The new company',
     ],
 
     // Example values for previews.

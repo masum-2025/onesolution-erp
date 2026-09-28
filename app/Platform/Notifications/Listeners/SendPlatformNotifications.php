@@ -16,6 +16,7 @@ use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Notifications\Services\Notifier;
 use App\Platform\Notifications\Services\Recipients;
 use App\Platform\Packaging\PlanCatalog;
+use App\Platform\Partners\Events\CompanyAddedToGroup;
 use App\Platform\Payments\Events\MerchantAccountChangeApplied;
 use App\Platform\Payments\Events\MerchantAccountChangeRequested;
 use App\Platform\Payments\Events\PaymentFailed;
@@ -298,6 +299,23 @@ class SendPlatformNotifications
             fn (string $locale) => ['organization' => $this->name($organization, $locale)],
             $organization->partner,
             $organization,
+        );
+    }
+
+    public function companyAddedToGroup(CompanyAddedToGroup $event): void
+    {
+        $group = $event->group->loadMissing('partner');
+
+        $this->notifier->notify(
+            'partners.company_added',
+            $this->recipients->accountOwners($group),
+            fn (string $locale) => [
+                'organization' => $this->name($group, $locale),
+                'company' => $this->name($event->company, $locale),
+                'partner' => $event->partner->name,
+            ],
+            $group->partner,
+            $group,
         );
     }
 

@@ -68,8 +68,9 @@ class PartnerApiV1Controller extends Controller
         $created = $provisioner->create($this->context->partner(), $request->validated(), $request->user());
 
         return response()->json([
-            'data' => new PartnerOrganizationResource($created['group']),
+            'data' => new PartnerOrganizationResource($created['client']),
             'company' => new PartnerOrganizationResource($created['company']),
+            'branches' => PartnerOrganizationResource::collection($created['branches']),
             'owner_invited' => $created['owner_invited'],
         ], 201);
     }

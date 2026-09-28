@@ -53,7 +53,7 @@ class DemoPartnerSeeder extends Seeder
 
         $head = $this->demoUser('Sunrise Head Teacher', 'head@sunrise.test');
         $contexts->enterPartner($owner, $acme->id);
-        $sunrise = $clients->create($acme, ['name' => ['en' => 'Sunrise School', 'bn' => 'সানরাইজ স্কুল'], 'sector_key' => 'school', 'plan' => 'business', 'country_code' => 'BD'], $head, $owner)['group'];
+        $sunrise = $clients->create($acme, ['structure' => 'group', 'name' => ['en' => 'Sunrise School', 'bn' => 'সানরাইজ স্কুল'], 'sector_key' => 'school', 'plan' => 'business', 'country_code' => 'BD'], $head, $owner)['client'];
 
         PartnerDomain::query()->create(['partner_id' => $acme->id, 'organization_id' => $sunrise->id, 'host' => 'sunrise.acme.localhost', 'status' => DomainStatus::Active, 'verification_token' => Str::random(40), 'verified_at' => now()]);
         (new ClientBrand)->forceFill(['organization_id' => $sunrise->id, 'display_name' => 'Sunrise Smart School', 'primary_color' => '#B45309', 'version' => 1, 'updated_by' => $head->id])->save();

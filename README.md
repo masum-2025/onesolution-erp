@@ -489,8 +489,13 @@ platform allows hiding it (`branding.powered_by_removable`).
 | PATCH | /api/partner/clients/{id}/status | owner |
 | GET / PUT | /api/partner/clients/{id}/limits | all / owner, billing |
 
-- **Clients:** a new client is a group with its first company (sector package applied)
-  and an owner who already has an account. Suspending blocks every sign-in, tokens too.
+- **Clients:** the partner picks the shape (`structure`): a **single company** at the top,
+  no group (default); a **new group** with its first company (`group_name` optional); or
+  **another company in a group it already serves** (`group_id`: same account, plan and
+  billing, no new client slot, owner optional; the group's owners are told). Optional first
+  `branches`; the sector package is applied to the company; the owner is found by email or
+  invited. Rule `tenancy.allowed_parents` now lets a company stand at the root.
+  Suspending blocks every sign-in, tokens too.
 - **Modules for all clients** (`partner_modules`): unlocked = a default each client may
   change; locked = decides for everyone. Turning one on also turns on what it needs.
 - **Rules for all clients:** the partner rules page (set, constrain, lock; sensitive

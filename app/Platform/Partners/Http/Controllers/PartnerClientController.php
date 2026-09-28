@@ -33,11 +33,16 @@ class PartnerClientController extends Controller
 
         $created = app(ClientProvisioner::class)->create($this->partner(), $request->validated(), $request->user());
 
+        $added = ($request->validated('structure') ?? null) === PartnerClientService::EXISTING_GROUP;
+
         return response()->json([
-            'data' => new PartnerOrganizationResource($created['group']),
+            'data' => new PartnerOrganizationResource($created['client']),
             'company' => new PartnerOrganizationResource($created['company']),
+            'branches' => PartnerOrganizationResource::collection($created['branches']),
             'owner_invited' => $created['owner_invited'],
-            'message' => __('partners.messages.client_created', ['name' => $created['group']->displayName()]),
+            'message' => $added
+                ? __('partners.messages.company_added', ['name' => $created['company']->displayName(), 'group' => $created['client']->displayName()])
+                : __('partners.messages.client_created', ['name' => $created['company']->displayName()]),
         ], 201);
     }
 

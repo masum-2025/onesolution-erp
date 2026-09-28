@@ -25,6 +25,8 @@ class PartnerOrganizationController extends Controller
         return PartnerOrganizationResource::collection(
             Organization::query()
                 ->where('partner_id', $this->context->partner()->getKey())
+                // ?groups=1: client groups at the top (to add a company to one).
+                ->when($request->boolean('groups'), fn ($query) => $query->whereNull('parent_id')->where('type', 'group'))
                 ->orderBy('root_id')
                 ->orderBy('path')
                 ->paginate($perPage)

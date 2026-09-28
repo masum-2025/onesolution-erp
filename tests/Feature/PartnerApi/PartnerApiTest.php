@@ -82,6 +82,21 @@ it('provisions a client with its owner invited, audited with the key', function 
     api($this, $key)->getJson('http://localhost/api/partner/v1/clients')->assertOk()->assertJsonPath('meta.total', 3);
 });
 
+it('provisions a single company with branches, or a company in a served group', function () {
+    $key = apiKey($this);
+
+    $single = newApiClient($this, $key, overrides: ['branches' => [['en' => 'Main Campus']]])->assertCreated();
+    expect(Organization::find($single->json('data.id'))->type->value)->toBe('company')
+        ->and($single->json('branches'))->toHaveCount(1);
+
+    newApiClient($this, $key, overrides: ['structure' => 'existing_group', 'group_id' => $this->w->g1->id, 'plan' => null, 'owner_email' => null, 'owner_name' => null])
+        ->assertCreated()->assertJsonPath('data.id', $this->w->g1->id);
+
+    // Another partner's group is out of reach.
+    newApiClient($this, $key, overrides: ['structure' => 'existing_group', 'group_id' => $this->w->g3->id, 'plan' => null, 'owner_email' => null, 'owner_name' => null])
+        ->assertNotFound();
+});
+
 it('adds members and changes plans through the API', function () {
     $key = apiKey($this);
 
