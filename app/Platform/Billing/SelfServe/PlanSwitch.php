@@ -33,7 +33,7 @@ class PlanSwitch
     ) {}
 
     /**
-     * @return array{when: string, on: string|null}  when: now | period_end
+     * @return array{when: string, on: string|null} when: now | period_end
      */
     public function toFree(Organization $root, User $user): array
     {

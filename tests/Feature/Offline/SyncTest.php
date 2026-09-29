@@ -4,12 +4,14 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Offline\Models\Device;
 use App\Platform\Offline\Models\QuarantinedOperation;
 use App\Platform\Offline\Models\SyncOperationRecord;
+use App\Platform\Offline\Services\DeviceService;
 use App\Platform\Offline\SyncRecords;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\Fixtures\FixtureCashReceipt;
 use Tests\Fixtures\FixtureNoteSync;
 use Tests\Fixtures\FixtureReceiptSync;
@@ -59,7 +61,7 @@ function op(array $device, string $kind, string $action, array $data = [], ?stri
     ], fn ($value) => $value !== null);
 }
 
-function syncNow(object $test, array $device, array $operations, $user = null, ?string $cursor = null, ?string $lease = null, ?string $token = null): Illuminate\Testing\TestResponse
+function syncNow(object $test, array $device, array $operations, $user = null, ?string $cursor = null, ?string $lease = null, ?string $token = null): TestResponse
 {
     return $test->asToken($token ?? orgToken($user ?? $test->clerk, $test->w->c1))->postJson('/api/sync', array_filter([
         'device_id' => $device['device']['id'],
@@ -305,7 +307,7 @@ it('lets a person see and remove their own devices only', function () {
 
 it('discards held changes nobody decided on in time', function () {
     $device = offlineDevice($this);
-    app(App\Platform\Offline\Services\DeviceService::class)->revoke(Device::query()->find($device['device']['id']), $this->admin);
+    app(DeviceService::class)->revoke(Device::query()->find($device['device']['id']), $this->admin);
     syncNow($this, $device, [op($device, 'crm.note', 'create', ['title' => 'x y'])])->assertStatus(410);
 
     $this->travel(31)->days();

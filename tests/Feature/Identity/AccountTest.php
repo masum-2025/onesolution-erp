@@ -4,6 +4,7 @@ use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Identity\Jobs\SendOtp;
 use App\Platform\Identity\Models\UserSession;
+use App\Platform\Identity\Services\OtpService;
 use App\Platform\Identity\Services\PersonalWorkspaces;
 use App\Platform\Notifications\Contracts\SmsGateway;
 use App\Platform\Notifications\Models\NotificationDelivery;
@@ -94,7 +95,7 @@ it('never lets a person take someone else\'s number or use another person\'s cod
     $this->postJson('/api/me/contact/verify', ['challenge_id' => $start->json('data.challenge_id'), 'code' => '123456'])->assertUnprocessable();
 
     // A code made for another person's account change does not work here.
-    $theirs = app(\App\Platform\Identity\Services\OtpService::class)->issue('verify_contact', 'mail', 'z@example.com', $this->house, $other);
+    $theirs = app(OtpService::class)->issue('verify_contact', 'mail', 'z@example.com', $this->house, $other);
     $this->postJson('/api/me/contact/verify', ['challenge_id' => $theirs->id, 'code' => accountCode()])->assertJsonPath('code', 'code_expired');
     expect($this->user->fresh()->email)->toBe('rahim@example.com');
 });

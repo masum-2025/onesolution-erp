@@ -2,9 +2,9 @@
 
 namespace App\Platform\DataExport\Services;
 
-use App\Platform\DataExport\Events\DataExportReady;
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\DataExport\Events\DataExportReady;
 use App\Platform\DataExport\Exceptions\ExportException;
 use App\Platform\DataExport\Jobs\BuildDataExport;
 use App\Platform\DataExport\Models\DataExport;

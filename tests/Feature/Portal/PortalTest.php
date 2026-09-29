@@ -7,11 +7,11 @@ use App\Platform\Portal\Jobs\SendPortalInvitation;
 use App\Platform\Portal\Models\PortalLink;
 use App\Platform\Portal\PortalAccess;
 use App\Platform\Portal\PortalSubjects;
-use App\Platform\Rules\Enums\RuleMode;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Testing\TestResponse;
 use Tests\Fixtures\FixtureStudent;
 use Tests\Fixtures\FixtureStudentProvider;
 
@@ -56,7 +56,7 @@ function parentAccount(string $email = 'mother@example.com'): User
     return User::factory()->create(['email' => $email, 'email_verified_at' => now()]);
 }
 
-function joinAs(object $test, User $user, string $key): Illuminate\Testing\TestResponse
+function joinAs(object $test, User $user, string $key): TestResponse
 {
     $test->actingAs($user, 'web');
 

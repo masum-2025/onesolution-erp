@@ -5,10 +5,12 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Billing\SelfServe\Events\TrialEnded;
 use App\Platform\Billing\SelfServe\Events\TrialEnding;
 use App\Platform\Identity\Services\PersonalWorkspaces;
+use App\Platform\Packaging\Models\Subscription;
 use App\Platform\Packaging\Services\SubscriptionService;
 use App\Platform\Payments\Models\Payment;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Testing\TestResponse;
 
 /*
  * Free trials of a paid personal plan (Phase 5C-2): from the free plan,
@@ -21,13 +23,13 @@ beforeEach(function () {
     fakeSslCommerz();
 });
 
-function startTrial(object $world): Illuminate\Testing\TestResponse
+function startTrial(object $world): TestResponse
 {
     return test()->asToken(orgToken($world->user, $world->workspace))
         ->postJson("/api/organizations/{$world->workspace->id}/billing/trial");
 }
 
-function subscriptionOf(object $world): App\Platform\Packaging\Models\Subscription
+function subscriptionOf(object $world): Subscription
 {
     return app(SubscriptionService::class)->for($world->workspace->fresh());
 }

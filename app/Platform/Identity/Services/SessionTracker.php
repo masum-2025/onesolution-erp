@@ -25,7 +25,7 @@ class SessionTracker
 
     /**
      * @param  string|null  $previousId  The session id at the start of the request: when it was
-     *                                  renewed (e.g. entering a context), the same device row moves along.
+     *                                   renewed (e.g. entering a context), the same device row moves along.
      */
     public function touch(User $user, Request $request, ?string $previousId = null): void
     {

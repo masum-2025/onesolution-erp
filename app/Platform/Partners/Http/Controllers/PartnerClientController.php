@@ -3,7 +3,6 @@
 namespace App\Platform\Partners\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Platform\Packaging\Services\UsageLimiter;
 use App\Platform\Partners\Http\Controllers\Concerns\PartnerConsole;
 use App\Platform\Partners\Http\Requests\ClientLimitsRequest;
@@ -15,7 +14,6 @@ use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Http\Resources\PartnerOrganizationResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Partner console: client accounts. Metadata, plan, status and limits only;

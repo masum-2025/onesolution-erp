@@ -29,8 +29,7 @@ class UsageController extends Controller
         ModuleRegistry $registry,
         PlanPresenter $presenter,
         PackageSummary $summary,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $organization = $this->findVisible($organization);
         Gate::authorize('view', $organization);
 

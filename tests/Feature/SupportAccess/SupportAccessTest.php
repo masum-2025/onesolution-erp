@@ -4,6 +4,7 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Rules\Enums\RuleMode;
 use App\Platform\Rules\RuleTargets;
 use App\Platform\SupportAccess\Models\SupportGrant;
+use App\Platform\SupportAccess\Services\SupportAccessService;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 
@@ -39,7 +40,7 @@ function enterAsSupport(object $test, string $grantId)
 {
     // A browser: no API token header or cached token user left over from earlier calls in the test.
     $test->withoutToken();
-    app("auth")->forgetGuards();
+    app('auth')->forgetGuards();
     spaSession($test, $test->staff, partner: $test->w->partnerA);
 
     return $test->postJson('/session/context', ['support_grant_id' => $grantId]);
@@ -124,7 +125,7 @@ it('lets the client end access early, and the staff member is out at once', func
     $this->getJson('/api/organizations')->assertOk();
 
     // The client ends it while the staff member is inside (API flow covered below).
-    app(App\Platform\SupportAccess\Services\SupportAccessService::class)->revoke(SupportGrant::find($grantId), $this->owner, 'Problem solved, thanks');
+    app(SupportAccessService::class)->revoke(SupportGrant::find($grantId), $this->owner, 'Problem solved, thanks');
 
     $this->getJson('/api/organizations')->assertForbidden()->assertJsonPath('code', 'support_ended');
 });

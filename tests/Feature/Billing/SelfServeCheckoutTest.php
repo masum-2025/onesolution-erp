@@ -1,17 +1,20 @@
 <?php
 
-use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Billing\Models\Commission;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Billing\Services\BillingRun;
+use App\Platform\Notifications\Jobs\DeliverNotification;
+use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Packaging\Services\SubscriptionService;
+use App\Platform\Payments\GatewayRegistry;
 use App\Platform\Payments\Models\GatewayEvent;
 use App\Platform\Payments\Models\Payment;
 use App\Platform\Tenancy\Enums\BillingMode;
 use App\Platform\Tenancy\Models\Partner;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -304,12 +307,12 @@ it('is left out of the monthly billing run', function () {
 });
 
 it('sends a receipt, not an invoice notice, for a checkout', function () {
-    Illuminate\Support\Facades\Bus::fake([App\Platform\Notifications\Jobs\DeliverNotification::class]);
+    Bus::fake([DeliverNotification::class]);
     $payment = Payment::query()->findOrFail(startCheckout($this, $this->world)->json('data.id'));
 
     $this->post('/payments/sslcommerz/notify', sslNotice($payment))->assertOk();
 
-    $keys = App\Platform\Notifications\Models\NotificationDelivery::query()->pluck('notification_key')->unique()->values()->all();
+    $keys = NotificationDelivery::query()->pluck('notification_key')->unique()->values()->all();
 
     expect($keys)->toContain('billing.payment_received')->not->toContain('billing.invoice_issued');
 });
@@ -329,7 +332,7 @@ it('shows where the account stands', function () {
 
 it('never takes sandbox payments in production', function () {
     app()->detectEnvironment(fn () => 'production');
-    app()->forgetInstance(App\Platform\Payments\GatewayRegistry::class);
+    app()->forgetInstance(GatewayRegistry::class);
 
     startCheckout($this, $this->world)->assertStatus(422)->assertJsonPath('code', 'no_gateway');
     $this->post('/payments/sslcommerz/notify', [])->assertNotFound();

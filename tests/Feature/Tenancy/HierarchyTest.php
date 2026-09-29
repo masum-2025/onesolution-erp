@@ -61,7 +61,7 @@ it('rejects invalid parent types', function (OrganizationType $type, ?string $pa
 ])->throws(HierarchyViolation::class);
 
 it('lets a single company stand at the top, without a group', function () {
-    $partner = App\Platform\Tenancy\Models\Partner::factory()->create();
+    $partner = Partner::factory()->create();
 
     $company = app(CreateOrganization::class)->handle(OrganizationType::Company, ['name' => ['en' => 'Solo Traders'], 'sector_key' => 'school'], partner: $partner);
 

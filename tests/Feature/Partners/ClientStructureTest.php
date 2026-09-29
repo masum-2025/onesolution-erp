@@ -3,7 +3,6 @@
 use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Notifications\Models\NotificationDelivery;
-use App\Platform\Rules\Enums\RuleMode;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\OrganizationType;

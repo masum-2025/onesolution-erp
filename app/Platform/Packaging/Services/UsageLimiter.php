@@ -13,7 +13,6 @@ use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Usage limits of a subscription: the whole tree under its top organization.

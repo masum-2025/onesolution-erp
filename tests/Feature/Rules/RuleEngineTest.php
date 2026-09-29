@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Modules\ModuleRegistry;
+use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Rules\Enums\RuleMode;
 use App\Platform\Rules\Enums\RuleScope;
 use App\Platform\Rules\Enums\RuleValueStatus;
@@ -181,7 +182,7 @@ it('lets a new module add rules through its manifest alone', function () {
             'description' => 'fleet::rules.max_trip_hours.description',
             'overridable_levels' => ['platform', 'company'],
         ]],
-    ]], app(App\Platform\Packaging\PlanCatalog::class)->keys());
+    ]], app(PlanCatalog::class)->keys());
 
     app()->instance(RuleCatalog::class, RuleCatalog::fromModules($registry, app(RuleValueValidator::class)));
     app()->forgetScopedInstances();

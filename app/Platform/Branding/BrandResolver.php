@@ -4,9 +4,9 @@ namespace App\Platform\Branding;
 
 use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\Partners\Models\PartnerBrand;
-use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
+use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
 
 /**

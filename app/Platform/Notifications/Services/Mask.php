@@ -4,6 +4,7 @@ namespace App\Platform\Notifications\Services;
 
 /**
  * Addresses as they may appear in logs and delivery records: enough to
+ *
  * recognise, not enough to use. jane.doe@example.com -> j*******@example.com;
  * +8801712345645 -> +88017*******45.
  */

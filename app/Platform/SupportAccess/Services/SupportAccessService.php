@@ -2,14 +2,14 @@
 
 namespace App\Platform\SupportAccess\Services;
 
-use App\Platform\SupportAccess\Events\SupportAccessDecided;
-use App\Platform\SupportAccess\Events\SupportAccessRequested;
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\SupportAccess\Enums\GrantStatus;
 use App\Platform\SupportAccess\Enums\Severity;
+use App\Platform\SupportAccess\Events\SupportAccessDecided;
+use App\Platform\SupportAccess\Events\SupportAccessRequested;
 use App\Platform\SupportAccess\Exceptions\SupportException;
 use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Tenancy\Models\Organization;

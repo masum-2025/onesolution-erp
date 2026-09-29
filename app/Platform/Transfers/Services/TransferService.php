@@ -23,10 +23,11 @@ use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Tenancy\Exceptions\TenancyException;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
-use App\Platform\Transfers\Events\ClientTransferRequested;
 use App\Platform\Transfers\Events\ClientTransferred;
+use App\Platform\Transfers\Events\ClientTransferRequested;
 use App\Platform\Transfers\Exceptions\TransferException;
 use App\Platform\Transfers\Models\ClientTransfer;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -382,7 +383,7 @@ class TransferService
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<SupportGrant>
+     * @return Builder<SupportGrant>
      */
     private function openGrants(Organization $root)
     {

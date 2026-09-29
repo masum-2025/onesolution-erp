@@ -32,7 +32,7 @@ class Trials
     ) {}
 
     /**
-     * @return array{plan_key: string, ends_at: CarbonImmutable}|null  What a trial would give now; null = none offered.
+     * @return array{plan_key: string, ends_at: CarbonImmutable}|null What a trial would give now; null = none offered.
      */
     public function offer(Organization $root, Subscription $subscription, User $user): ?array
     {

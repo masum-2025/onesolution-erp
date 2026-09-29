@@ -2,9 +2,12 @@
 
 use App\Models\User;
 use App\Platform\Access\Models\Role;
+use App\Platform\Modules\Events\ModuleEnabled;
 use App\Platform\Packaging\Services\UsageLimiter;
 use App\Platform\Rules\Enums\RuleMode;
-use App\Platform\Tenancy\Enums\MembershipType;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
+use App\Platform\Rules\RuleTargets;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Event;
@@ -91,7 +94,7 @@ it('suspends a client so nobody in it can sign in', function () {
 });
 
 it('gives one client a limit deal that the client cannot change', function () {
-    ruleService()->set(app(App\Platform\Rules\RuleTargets::class)->plan('starter'), 'plans.max_users', RuleMode::Set, 3, 'Test', trusted: true);
+    ruleService()->set(app(RuleTargets::class)->plan('starter'), 'plans.max_users', RuleMode::Set, 3, 'Test', trusted: true);
     $billing = partnerToken(createPartnerStaff($this->w->partnerA, PartnerUserRole::Billing), $this->w->partnerA);
 
     $this->asToken($billing)->putJson("/api/partner/clients/{$this->w->g1->id}/limits", ['limits' => ['users' => 30], 'reason' => 'Signed a 30-seat deal'])
@@ -124,7 +127,7 @@ it('never reaches another partner\'s clients', function () {
 // ── Modules and rules for all clients ──
 
 it('locks a module on for all clients so none can turn it off', function () {
-    Event::fake([App\Platform\Modules\Events\ModuleEnabled::class]);
+    Event::fake([ModuleEnabled::class]);
 
     $this->asToken($this->ownerToken)->putJson('/api/partner/modules/crm', ['state' => 'enabled', 'lock' => true, 'reason' => 'Every client gets CRM'])
         ->assertOk();
@@ -140,8 +143,8 @@ it('locks a module on for all clients so none can turn it off', function () {
         ->assertJsonPath('message', 'Customer Relations is locked by your service provider. Ask them to change it.');
 
     // One event per client tree, at its top.
-    Event::assertDispatched(App\Platform\Modules\Events\ModuleEnabled::class, fn ($event) => $event->organization->is($this->w->g1));
-    Event::assertNotDispatched(App\Platform\Modules\Events\ModuleEnabled::class, fn ($event) => $event->organization->is($this->w->c1));
+    Event::assertDispatched(ModuleEnabled::class, fn ($event) => $event->organization->is($this->w->g1));
+    Event::assertNotDispatched(ModuleEnabled::class, fn ($event) => $event->organization->is($this->w->c1));
 });
 
 it('sets an unlocked default that each client may change, and turns on what it needs', function () {
@@ -199,7 +202,7 @@ it('lets platform operators set a partner\'s governance from the command line', 
     $this->artisan('rules:set', ['key' => 'partners.max_clients', 'value' => '7', '--partner' => $this->w->partnerA->slug, '--reason' => 'Reseller contract 2026'])
         ->assertSuccessful();
 
-    expect(app(App\Platform\Rules\RuleResolver::class)->get('partners.max_clients', app(App\Platform\Rules\RuleContextFactory::class)->forPartner($this->w->partnerA)))->toBe(7);
+    expect(app(RuleResolver::class)->get('partners.max_clients', app(RuleContextFactory::class)->forPartner($this->w->partnerA)))->toBe(7);
 });
 
 it('keeps partner modules away from other partners and the client area', function () {

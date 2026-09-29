@@ -13,8 +13,10 @@ use App\Platform\Notifications\Services\LogSmsGateway;
 use App\Platform\Packaging\Actions\ChangePlan;
 use App\Platform\Packaging\Exceptions\PackagingException;
 use App\Platform\Partners\Services\PartnerClientService;
+use App\Platform\Tenancy\Actions\AddMember;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\OrganizationType;
+use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Support\Facades\Auth;
@@ -297,7 +299,7 @@ it('gives personal workspaces personal plans only, and business clients business
     expect(fn () => app(ChangePlan::class)->handle($w->g1, 'personal_plus', 'Test', $person))->toThrow(PackagingException::class, 'wrong_audience_business');
 
     // Personal plans are not on offer to business clients, and the catalog keeps them apart.
-    $partnerOwner = createPartnerStaff($this->house, \App\Platform\Tenancy\Enums\PartnerUserRole::Owner);
+    $partnerOwner = createPartnerStaff($this->house, PartnerUserRole::Owner);
     $this->asToken(partnerToken($partnerOwner, $this->house))
         ->postJson('/api/partner/clients', ['name' => ['en' => 'Shop'], 'sector_key' => 'general', 'plan' => 'personal_free', 'owner_email' => $partnerOwner->email])
         ->assertJsonValidationErrors('plan');
@@ -311,5 +313,5 @@ it('gives personal workspaces personal plans only, and business clients business
 
 function addMemberTo(Organization $organization, User $user): void
 {
-    app(\App\Platform\Tenancy\Actions\AddMember::class)->handle($organization, $user, MembershipType::Staff);
+    app(AddMember::class)->handle($organization, $user, MembershipType::Staff);
 }

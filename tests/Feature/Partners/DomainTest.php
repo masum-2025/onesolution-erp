@@ -3,9 +3,12 @@
 use App\Platform\Audit\AuditLog;
 use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Partners\Models\PartnerDomain;
+use App\Platform\Tenancy\Actions\AddMember;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 /*
  * Phase 5B acceptance: a partner's domain shows only that partner, an
@@ -108,7 +111,7 @@ it('does not open another partner\'s organizations on Partner A domain', functio
 it('lists and enters only this address\'s accounts in the browser', function () {
     activeDomain($this->w->partnerA, 'erp.partner-a.test');
     $person = createMember($this->w->c1);
-    app(App\Platform\Tenancy\Actions\AddMember::class)->handle($this->w->c4, $person, MembershipType::Owner);
+    app(AddMember::class)->handle($this->w->c4, $person, MembershipType::Owner);
 
     $this->withHeader('Origin', 'http://erp.partner-a.test');
     $contexts = $this->postJson('http://erp.partner-a.test/session/login', ['email' => $person->email, 'password' => 'password'])
@@ -132,10 +135,10 @@ it('keeps a client domain to that client only', function () {
 });
 
 it('serves brand images only at their own partner\'s addresses', function () {
-    Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
     activeDomain($this->w->partnerB, 'suite.partner-b.test');
     $this->asToken($this->ownerToken)->postJson('/api/partner/brand/assets/mark', [
-        'file' => Illuminate\Http\UploadedFile::fake()->image('mark.png', 256, 256),
+        'file' => UploadedFile::fake()->image('mark.png', 256, 256),
     ])->assertOk();
 
     $url = "/brand-assets/{$this->w->partnerA->id}/mark";

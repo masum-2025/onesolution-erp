@@ -2,6 +2,7 @@
 
 use App\Platform\Audit\AuditLog;
 use App\Platform\PartnerApi\Models\PartnerApiKey;
+use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\PartnerUser;
@@ -27,7 +28,7 @@ function apiKey(object $test, array $scopes = PartnerApiKey::SCOPES, ?string $to
 function api(object $test, string $key): object
 {
     app('auth')->forgetGuards();
-    app(App\Platform\Tenancy\Context\CurrentContext::class)->clear();
+    app(CurrentContext::class)->clear();
 
     return $test->withToken($key);
 }

@@ -7,10 +7,10 @@ use App\Platform\Billing\Console\MarkInvoicePaid;
 use App\Platform\Billing\Console\RecordPayout;
 use App\Platform\Billing\Console\RunBilling;
 use App\Platform\Billing\Console\RunSelfServeBilling;
-use App\Platform\Billing\SelfServe\OverdueRestrictions;
-use App\Platform\Tenancy\Contracts\WorkspaceRestrictions;
 use App\Platform\Billing\Console\SetWholesalePrice;
 use App\Platform\Billing\Console\SyncWholesalePrices;
+use App\Platform\Billing\SelfServe\OverdueRestrictions;
+use App\Platform\Tenancy\Contracts\WorkspaceRestrictions;
 use Illuminate\Support\ServiceProvider;
 
 /**

@@ -12,8 +12,8 @@ use App\Platform\Access\Models\Role;
 use App\Platform\Access\Services\RoleService;
 use App\Platform\Tenancy\Http\Controllers\Api\Concerns\FindsVisibleOrganizations;
 use App\Platform\Tenancy\Models\Organization;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
 /**

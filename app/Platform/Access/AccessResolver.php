@@ -137,7 +137,7 @@ class AccessResolver
      * hold; an owner may grant everything within their unit, including both
      * sides of a separation-of-duties pair (to different people).
      *
-     * @return 'unknown'|'module_disabled'|'not_held'|null  Null when grantable.
+     * @return 'unknown'|'module_disabled'|'not_held'|null Null when grantable.
      */
     public function grantBlockedBy(string $permission, Organization $at): ?string
     {

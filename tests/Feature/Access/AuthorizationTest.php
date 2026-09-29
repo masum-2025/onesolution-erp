@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\User;
 use App\Platform\Access\AccessResolver;
 use App\Platform\Rules\Enums\RuleMode;
+use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\OrganizationType;
@@ -185,7 +187,7 @@ it('uses company-added pairs and fails closed for people who already hold both',
         ['first' => 'hrm.manage', 'second' => 'payroll.run'],
     ]);
     // Sensitive rule: a second person approves it.
-    $value = App\Platform\Rules\Models\RuleValue::where('rule_key', 'access.separation_of_duties')->latest('created_at')->first();
+    $value = RuleValue::where('rule_key', 'access.separation_of_duties')->latest('created_at')->first();
     ruleService()->approve($value, createMember($this->w->g1));
 
     actInOrganization($user, $this->w->c1);
@@ -215,7 +217,7 @@ it('does not give owners both sides of a pair without a role', function () {
 it('lets only owners make someone an owner', function () {
     $hr = makeRole($this->w->c1, ['members.manage'], 'HR');
     $token = orgToken(staffWithRoles($this->w->c1, $hr), $this->w->c1);
-    $newcomer = App\Models\User::factory()->create();
+    $newcomer = User::factory()->create();
     $owner = createMember($this->w->c1);
     $ownerMembership = giveRoles($owner, $this->w->c1);
 
@@ -227,7 +229,7 @@ it('lets only owners make someone an owner', function () {
         ->assertCreated();
 
     $this->asToken(orgToken($owner, $this->w->c1))->postJson("/api/organizations/{$this->w->c1->id}/members", [
-        'email' => App\Models\User::factory()->create()->email, 'membership_type' => 'owner',
+        'email' => User::factory()->create()->email, 'membership_type' => 'owner',
     ])->assertCreated();
 });
 

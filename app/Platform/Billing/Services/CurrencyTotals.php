@@ -3,6 +3,7 @@
 namespace App\Platform\Billing\Services;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Money totals kept apart per currency (never added across currencies),
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 final class CurrencyTotals
 {
     /**
-     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  Builder<Model>  $query
      * @return array<string, array{total: int, count: int}>
      */
     public static function of(Builder $query, string $column): array

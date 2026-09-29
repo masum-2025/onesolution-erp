@@ -5,6 +5,7 @@ use App\Platform\Access\Models\RoleTemplate;
 use App\Platform\Access\PermissionCatalog;
 use App\Platform\Modules\Exceptions\InvalidModuleManifest;
 use App\Platform\Modules\ModuleRegistry;
+use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Rules\RuleCatalog;
 
 it('collects core, module and rule-editing permissions', function () {
@@ -69,7 +70,7 @@ it('rejects malformed separation-of-duties pairs in a manifest', function (array
         'rules' => [], 'menu' => [], 'events' => [],
     ];
 
-    ModuleRegistry::fromManifests([$manifest], app(App\Platform\Packaging\PlanCatalog::class)->keys());
+    ModuleRegistry::fromManifests([$manifest], app(PlanCatalog::class)->keys());
 })->with([
     'same permission twice' => [[['demo.run', 'demo.run']]],
     'three entries' => [[['demo.run', 'demo.approve', 'demo.view']]],
@@ -87,4 +88,3 @@ it('syncs permissions and templates and deprecates removed ones', function () {
         ->and(RoleTemplate::where('key', 'legacy_template')->value('deprecated_at'))->not->toBeNull()
         ->and(RoleTemplate::where('key', 'principal')->value('sector_key'))->toBe('school');
 });
-

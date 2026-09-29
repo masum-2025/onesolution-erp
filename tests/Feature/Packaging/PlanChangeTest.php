@@ -3,7 +3,10 @@
 use App\Platform\Audit\AuditLog;
 use App\Platform\Modules\Events\ModuleDisabled;
 use App\Platform\Modules\Models\OrganizationModule;
+use App\Platform\Rules\Enums\RuleMode;
+use App\Platform\Rules\RuleTargets;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
+use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Event;
 
 /*
@@ -60,7 +63,7 @@ it('makes every unit follow the subscription plan', function () {
 });
 
 it('previews a change without making it', function () {
-    ruleService()->set(app(App\Platform\Rules\RuleTargets::class)->plan('starter'), 'plans.max_branches', App\Platform\Rules\Enums\RuleMode::Set, 1, 'Test', trusted: true);
+    ruleService()->set(app(RuleTargets::class)->plan('starter'), 'plans.max_branches', RuleMode::Set, 1, 'Test', trusted: true);
 
     $preview = $this->asToken($this->partnerToken)->getJson("/api/partner/organizations/{$this->w->g1->id}/plan-preview?plan=starter")
         ->assertOk()->json('data');
@@ -73,14 +76,14 @@ it('previews a change without making it', function () {
 });
 
 it('allows a downgrade over a limit but refuses new branches until there is room', function () {
-    ruleService()->set(app(App\Platform\Rules\RuleTargets::class)->plan('starter'), 'plans.max_branches', App\Platform\Rules\Enums\RuleMode::Set, 1, 'Test', trusted: true);
+    ruleService()->set(app(RuleTargets::class)->plan('starter'), 'plans.max_branches', RuleMode::Set, 1, 'Test', trusted: true);
 
     $this->asToken($this->partnerToken)->putJson($this->planUrl, ['plan' => 'starter', 'reason' => 'Budget cut'])
         ->assertOk()
         ->assertJsonPath('data.over_limits.0.limit', 'branches');
 
     // Nothing was removed.
-    expect(App\Platform\Tenancy\Models\Organization::where('root_id', $this->w->g1->id)->where('type', 'branch')->count())->toBe(2);
+    expect(Organization::where('root_id', $this->w->g1->id)->where('type', 'branch')->count())->toBe(2);
 
     $owner = createMember($this->w->c1);
     $this->asToken(orgToken($owner, $this->w->c1))->postJson('/api/organizations', [

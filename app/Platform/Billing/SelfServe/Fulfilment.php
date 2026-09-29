@@ -16,7 +16,6 @@ use App\Platform\Packaging\Models\Subscription;
 use App\Platform\Payments\Contracts\PaymentFulfiller;
 use App\Platform\Payments\Models\Payment;
 use App\Platform\Tenancy\Models\Organization;
-use Carbon\CarbonImmutable;
 
 /**
  * What a confirmed payment gives, inside the confirmation's transaction:
