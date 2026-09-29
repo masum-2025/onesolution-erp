@@ -3,5 +3,6 @@
 // Permission labels (manifest "permissions"), key = part after "offline_mode.".
 
 return [
-    'manage' => 'অফলাইন মোড পরিচালনা',
+    'use' => 'ডিভাইসে অফলাইনে কাজ করা',
+    'manage' => 'অফলাইন মোড পরিচালনা (ডিভাইস ও আটকে থাকা পরিবর্তন)',
 ];

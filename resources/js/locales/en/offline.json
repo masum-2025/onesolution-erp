@@ -1,0 +1,36 @@
+{
+    "admin": {
+        "title": "Offline mode",
+        "text": "Devices that work offline here, and changes held for your decision.",
+        "devices": "Devices",
+        "no_devices": "No device works offline here yet.",
+        "device_line": "{person} · {unit}",
+        "last_sync": "last synced {when}",
+        "never_synced": "not synced yet",
+        "remove": "Remove",
+        "remove_title": "Remove {name} from offline work?",
+        "remove_text": "It stops working offline at once and clears its offline data the next time it connects. Changes it still sends are held for you to decide.",
+        "reason": "Reason (optional)",
+        "held": "Held changes",
+        "no_held": "Nothing waiting for a decision.",
+        "held_line": "{person} · {device} · {kind}",
+        "money": "Money",
+        "until": "decide by {date}",
+        "release": "Apply",
+        "release_title": "Apply this change now?",
+        "release_text": "It is applied as your own change, with every check run again.",
+        "discard": "Discard",
+        "discard_title": "Discard this change?",
+        "discard_text": "It is never applied. This cannot be undone."
+    },
+    "mine": {
+        "title": "Offline devices",
+        "text": "Browsers and apps you set up to work offline. Remove one you lost or no longer use: it clears its offline data when it next connects.",
+        "empty": "You have not set up any device to work offline.",
+        "line": "{organization} · last synced {when}",
+        "never": "{organization} · not synced yet",
+        "remove": "Remove",
+        "remove_title": "Remove {name}?",
+        "remove_text": "It stops working offline at once and clears its offline data the next time it connects."
+    }
+}

@@ -14,7 +14,8 @@ return [
     'requires' => [],
     'sectors' => ['*'],
     'plans' => ['*'],
-    'permissions' => ['offline_mode.manage'],
+    // use: work offline on a device; manage: see and revoke devices, decide on held operations.
+    'permissions' => ['offline_mode.use', 'offline_mode.manage'],
     'rules' => [
         [
             'key' => 'offline_mode.offline_lease_hours',
@@ -50,9 +51,42 @@ return [
             'category' => 'payments',
             'sort_order' => 30,
         ],
+        // Phase 7: secure sync.
+        [
+            'key' => 'offline_mode.sync_batch_max',
+            'type' => 'integer',
+            // Operations one sync request may carry; a device sends the rest in the next one.
+            'schema' => ['minimum' => 1, 'maximum' => 1000],
+            'default' => 200,
+            'label' => 'offline_mode::rules.sync_batch_max.label',
+            'description' => 'offline_mode::rules.sync_batch_max.description',
+            'overridable_levels' => ['platform', 'partner'],
+            'category' => 'sync',
+            'sort_order' => 40,
+        ],
+        [
+            'key' => 'offline_mode.quarantine_days',
+            'type' => 'integer',
+            // How long held operations wait for a decision before they are discarded. PLACEHOLDER.
+            'schema' => ['minimum' => 1, 'maximum' => 365],
+            'default' => 30,
+            'label' => 'offline_mode::rules.quarantine_days.label',
+            'description' => 'offline_mode::rules.quarantine_days.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'sync',
+            'sort_order' => 50,
+        ],
     ],
-    'menu' => [],
-    'events' => [],
+    'menu' => [
+        [
+            'key' => 'offline_mode',
+            'label' => 'offline_mode::module.menu',
+            'route' => '/offline',
+            'icon' => 'wifi-off',
+            'order' => 95,
+        ],
+    ],
+    'events' => ['offline.device_revoked', 'offline.operation_quarantined'],
     'is_core' => false,
     'requires_consent' => false,
 ];

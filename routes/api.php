@@ -35,6 +35,10 @@ use App\Platform\Partners\Http\Controllers\PartnerModuleController;
 use App\Platform\Payments\Http\Controllers\MerchantAccountController;
 use App\Platform\Portal\Http\Controllers\PortalAdminController;
 use App\Platform\Portal\Http\Controllers\PortalMemberController;
+use App\Platform\Offline\Http\Controllers\MyDevicesController;
+use App\Platform\Offline\Http\Controllers\OfflineAdminController;
+use App\Platform\Offline\Http\Controllers\OfflineDeviceController;
+use App\Platform\Offline\Http\Controllers\SyncController;
 use App\Platform\Rules\Http\Controllers\OrganizationRuleController;
 use App\Platform\Rules\Http\Controllers\PartnerRuleController;
 use App\Platform\Rules\Http\Controllers\RuleApprovalController;
@@ -65,6 +69,13 @@ Route::prefix('auth')->group(function () {
 
 Route::get('me', MeController::class)->middleware('auth:sanctum');
 
+// Offline sync (Phase 7): signed in, outside the organization middleware on purpose
+// (a removed device or ended membership must still hand over its changes and be told to wipe).
+Route::middleware(['auth:sanctum', 'throttle:offline-sync'])->group(function () {
+    Route::post('sync', [SyncController::class, 'sync']);
+    Route::post('offline/devices/{device}/wiped', [SyncController::class, 'wiped'])->where('device', '[0-9A-Za-z]{26}');
+});
+
 // My account (Phase 5C-1): the person's own identity, in any context.
 Route::middleware('auth:sanctum')->prefix('me')->group(function () {
     Route::get('account', [AccountController::class, 'show']);
@@ -76,6 +87,9 @@ Route::middleware('auth:sanctum')->prefix('me')->group(function () {
 
     // My data and "delete my account" (Phase 5C-3).
     Route::get('data', [MyDataController::class, 'download'])->middleware('throttle:my-data');
+    // The person's own offline devices (Phase 7).
+    Route::get('devices', [MyDevicesController::class, 'index']);
+    Route::delete('devices/{device}', [MyDevicesController::class, 'destroy'])->where('device', '[0-9A-Za-z]{26}');
     Route::delete('deletion', [MyDataController::class, 'cancelDeletion']);
 
     Route::middleware('throttle:identity-code')->group(function () {
@@ -153,6 +167,18 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     // The client's own plan and invoices (Phase 5B-3).
     Route::get('organizations/{organization}/billing', [OrganizationBillingController::class, 'show']);
     Route::get('organizations/{organization}/billing/invoices/{invoice}', [OrganizationBillingController::class, 'invoice']);
+
+    // Offline mode (Phase 7): setting up a device and its lease; an organization's devices and held changes.
+    Route::middleware('module:offline_mode')->group(function () {
+        Route::middleware('throttle:tenancy-sensitive')->group(function () {
+            Route::post('offline/devices', [OfflineDeviceController::class, 'store']);
+            Route::post('offline/devices/{device}/lease', [OfflineDeviceController::class, 'lease'])->where('device', '[0-9A-Za-z]{26}');
+            Route::post('organizations/{organization}/offline/devices/{device}/revoke', [OfflineAdminController::class, 'revoke']);
+            Route::post('organizations/{organization}/offline/held/{held}/release', [OfflineAdminController::class, 'release']);
+            Route::post('organizations/{organization}/offline/held/{held}/discard', [OfflineAdminController::class, 'discard']);
+        });
+        Route::get('organizations/{organization}/offline', [OfflineAdminController::class, 'show']);
+    });
 
     // B2B2C portal (Phase 5C-4): the client's side, and a portal member's own records.
     Route::middleware('module:client_portal')->group(function () {

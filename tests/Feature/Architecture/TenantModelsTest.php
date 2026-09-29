@@ -42,6 +42,10 @@ use App\Platform\Payments\Models\GatewayEvent;
 use App\Platform\Payments\Models\Payment;
 use App\Platform\Portal\Models\PortalInvitation;
 use App\Platform\Portal\Models\PortalLink;
+use App\Platform\Offline\Models\Device;
+use App\Platform\Offline\Models\OfflineLease;
+use App\Platform\Offline\Models\QuarantinedOperation;
+use App\Platform\Offline\Models\SyncOperationRecord;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\Models\RuleValueHistory;
@@ -154,6 +158,13 @@ const PLATFORM_MODELS = [
     PortalLink::class,
     // Country facts (Phase 6): platform reference data.
     Country::class,
+    // Offline sync (Phase 7): checked by the sync endpoint before any tenant
+    // context exists (a removed device or ended membership has none); people
+    // read them only through their own account or their context's organization.
+    Device::class,
+    OfflineLease::class,
+    SyncOperationRecord::class,
+    QuarantinedOperation::class,
 ];
 
 /**

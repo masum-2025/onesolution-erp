@@ -30,5 +30,8 @@ Schedule::command('payments:apply-merchant-changes')->everyTenMinutes()->without
 // Accounts whose "delete my account" grace period ended are erased (Phase 5C-3).
 Schedule::command('privacy:erase-due')->dailyAt('03:30')->withoutOverlapping()->onOneServer();
 
+// Held offline changes nobody decided on in time are discarded (Phase 7).
+Schedule::command('offline:discard-expired')->dailyAt('03:45')->withoutOverlapping()->onOneServer();
+
 // Data export files are deleted after their retention period.
 Schedule::command('exports:prune')->dailyAt('03:00')->withoutOverlapping()->onOneServer();

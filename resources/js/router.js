@@ -40,7 +40,7 @@ const routes = [
                 meta: { context: 'organization', ns: ['orgs', 'access', 'packaging'] },
             },
             // The person's own account: the same in every context.
-            { path: 'account', name: 'account', component: () => import('./pages/account/AccountPage.vue'), meta: { ns: ['identity'] } },
+            { path: 'account', name: 'account', component: () => import('./pages/account/AccountPage.vue'), meta: { ns: ['identity', 'offline'] } },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'branding', name: 'brand', component: () => import('./pages/brand/ClientBrandPage.vue'), meta: { context: 'organization', ns: ['brand'] } },
@@ -50,6 +50,8 @@ const routes = [
             // B2B2C portal (Phase 5C-4): a member's own records, and the client's side.
             { path: 'portal', name: 'portal-home', component: () => import('./pages/portal/PortalHomePage.vue'), meta: { context: 'organization', portal: true, ns: ['portal'] } },
             { path: 'portal/records/:id', name: 'portal-record', component: () => import('./pages/portal/PortalRecordPage.vue'), meta: { context: 'organization', portal: true, ns: ['portal'] } },
+            // Offline mode (Phase 7): devices and held changes.
+            { path: 'offline', name: 'offline', component: () => import('./pages/offline/OfflineAdminPage.vue'), meta: { context: 'organization', ns: ['offline'] } },
             { path: 'portal-admin', name: 'portal-admin', component: () => import('./pages/portal/PortalAdminPage.vue'), meta: { context: 'organization', ns: ['portal'] } },
             // A client's own payment gateway accounts (Phase 6).
             { path: 'online-payments', name: 'online-payments', component: () => import('./pages/payments/MerchantAccountsPage.vue'), meta: { context: 'organization', ns: ['payments'] } },

@@ -1402,6 +1402,77 @@ fails the build on a float/double/decimal money column, a float cast or type in 
 - New country: a data file. New language: its translation files plus one config entry.
 - Later in Phase 6: Arabic texts, exchange rates, bKash and Stripe drivers (6-2).
 
+## Offline mode and secure sync (Phase 7-1: server)
+
+Code: `app/Platform/Offline`, module `offline_mode` (permissions `offline_mode.use` to work
+offline, `offline_mode.manage` for devices and held changes; screen `/offline`). The browser
+side (encrypted IndexedDB, operation queue, wipe on logout) is Phase 7-2.
+
+### What can be changed offline
+
+A module declares its kinds in its manifest (`'sync_records' => [Provider::class]`); the
+provider (`SyncableRecords`) says whether the kind is money, which permission each action
+needs, which rules the device needs, applies one change as a fresh request (validation, policy,
+tenant scope, **version check: a stale version is a conflict, never an overwrite**) and lists
+what changed since a moment (deletions too). The pipeline never touches module tables. No
+module has records yet: the tests use fixture notes and cash receipts.
+
+### Devices and leases
+
+- `POST /api/offline/devices` (inside the organization, `offline_mode.use`): registers this
+  browser/app and returns a **signed lease**: person, organization, device, kinds, permissions,
+  the rules offline work needs with a `rule_version`, and its end
+  (`offline_mode.offline_lease_hours`, may differ per role or person). HMAC-SHA256 with
+  versioned keys (`config/offline.php`, `OFFLINE_LEASE_KEY_V1`, derived from `APP_KEY` when
+  unset) so keys rotate without breaking leases on devices.
+- `POST /api/offline/devices/{id}/lease` renews it (online). My account lists the person's
+  devices; they or an admin can remove one.
+
+### POST /api/sync (in this order)
+
+1. The person, their device (not removed), the organization (active) and `offline_mode` (on).
+2. The lease: genuine, this device/person/organization, not withdrawn; expired = 401
+   `lease_expired` (renew online, the changes stay on the device).
+3. A known `op_id` returns its stored result: **applied once, however often sent**.
+4. Each change must come from a lease this device got, made before that lease ended; it is
+   applied as a fresh request (scope, permission, validation, version).
+5. **Money is append-only** (no update/delete) and needs `offline_mode.allow_offline_payments`.
+   A change made under a lease whose **sensitive rules** changed since is rejected
+   (`rules_changed`).
+6. From a **removed device, an ended membership, a lost permission, or with offline mode off**:
+   every change is **held** (`sync_quarantine`, encrypted) and the answer is **410 with
+   `wipe: true`**. Someone with `offline_mode.manage` applies (as their own fresh request) or
+   discards each; undecided ones are discarded after `offline_mode.quarantine_days` (30,
+   `offline:discard-expired` daily).
+7. The answer: a result per change (applied / conflict with the server's record / rejected with
+   a reason), what changed since the device's `cursor` per kind, a new cursor and a new lease.
+   At most `offline_mode.sync_batch_max` (200) changes per sync.
+
+The endpoint sits outside the organization middleware on purpose (a removed person must still
+hand over their changes and be told to wipe); the device and its lease decide the organization.
+Turning `offline_mode` off asks every device there to wipe and stops their leases at once.
+Audit: `offline.device_registered`, `offline.device_revoked`, `offline.device_wiped`,
+`offline.devices_wiped`, `offline.operation_quarantined`, `offline.quarantine_released`,
+`offline.quarantine_discarded`, `offline.quarantine_expired`.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| POST | /api/offline/devices, /api/offline/devices/{id}/lease | offline_mode.use (in the organization) |
+| POST | /api/sync, /api/offline/devices/{id}/wiped | the device's person (30/min) |
+| GET / DELETE | /api/me/devices[/{id}] | the person |
+| GET | /api/organizations/{id}/offline | offline_mode.manage |
+| POST | /api/organizations/{id}/offline/devices/{device}/revoke | offline_mode.manage |
+| POST | /api/organizations/{id}/offline/held/{held}/release\|discard | offline_mode.manage |
+
+### Future expansion (Phase 7-1)
+
+- A new kind of offline work (attendance marking, stock counts, cash receipts): the owning
+  module adds a provider and one manifest line. No sync code changes.
+- Open: the browser side (7-2), notifying admins about held changes (Phase 9 alerts),
+  maker-checker for releasing held money if a client wants it (a rule).
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

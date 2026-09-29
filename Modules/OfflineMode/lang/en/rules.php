@@ -14,7 +14,17 @@ return [
         'description' => 'Allow recording payments while offline.',
     ],
 
+    'sync_batch_max' => [
+        'label' => 'Changes per sync',
+        'description' => 'How many offline changes a device sends in one sync; the rest follow in the next.',
+    ],
+    'quarantine_days' => [
+        'label' => 'Days to decide on held changes',
+        'description' => 'Changes from a revoked device or person wait this long for a decision, then are discarded.',
+    ],
+
     'categories' => [
+        'sync' => 'Sync',
         'lease' => 'Offline access',
         'payments' => 'Payments',
         'storage' => 'Storage',

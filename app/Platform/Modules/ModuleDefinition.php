@@ -18,6 +18,7 @@ final readonly class ModuleDefinition
      * @param  list<array{0: string, 1: string}>  $separationOfDuties  Permission pairs one person may not hold together.
      * @param  list<class-string>  $portalSubjects  PortalSubjectProvider classes.
      * @param  list<class-string>  $paymentCollectables  CollectableProvider classes.
+     * @param  list<class-string>  $syncRecords  SyncableRecords classes.
      */
     public function __construct(
         public string $key,
@@ -39,6 +40,8 @@ final readonly class ModuleDefinition
         public array $portalSubjects = [],
         // What customers may pay the client for online (Phase 6): CollectableProvider classes.
         public array $paymentCollectables = [],
+        // Records that can be changed offline and synced (Phase 7): SyncableRecords classes.
+        public array $syncRecords = [],
     ) {}
 
     /**
@@ -64,6 +67,7 @@ final readonly class ModuleDefinition
             separationOfDuties: array_values(array_map('array_values', $manifest['separation_of_duties'] ?? [])),
             portalSubjects: array_values($manifest['portal_subjects'] ?? []),
             paymentCollectables: array_values($manifest['payment_collectables'] ?? []),
+            syncRecords: array_values($manifest['sync_records'] ?? []),
         );
     }
 

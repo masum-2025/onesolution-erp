@@ -13,6 +13,7 @@ import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import ContactDialog from './ContactDialog.vue';
 import PrivacySection from './PrivacySection.vue';
+import OfflineDevicesSection from './OfflineDevicesSection.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { passwordProblem } from '@/lib/identity';
@@ -249,6 +250,7 @@ function deviceName(item) {
             </section>
 
             <!-- My data and deleting the account (Phase 5C-3) -->
+            <OfflineDevicesSection />
             <PrivacySection :account="me" @changed="account.reload()" />
         </div>
 
