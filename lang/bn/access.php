@@ -46,6 +46,7 @@ return [
         'rules_approve' => 'সেটিং পরিবর্তন অনুমোদন',
         'rules_edit' => ':module-এর সেটিং সম্পাদনা',
         'support_approve' => 'সাপোর্ট অ্যাক্সেস অনুমোদন',
+        'security_mfa_reset' => 'সদস্যদের দুই ধাপে সাইন ইন রিসেট',
         'audit_view' => 'অডিট লগ দেখা',
         'data_export' => 'সব তথ্য এক্সপোর্ট',
         'billing_view' => 'প্ল্যান ও ইনভয়েস দেখা',

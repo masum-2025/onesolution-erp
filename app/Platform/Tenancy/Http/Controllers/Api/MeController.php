@@ -12,6 +12,7 @@ use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\ContextSource;
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Contracts\SignInRequirements;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Exceptions\TenancyException;
 use App\Platform\Tenancy\Models\Organization;
@@ -35,6 +36,7 @@ class MeController extends Controller
         BrandResolver $brands,
         HostContext $host,
         AccessResolver $access,
+        SignInRequirements $requirements,
     ): JsonResponse {
         $user = $request->user();
         $active = $this->activeContext($request, $source, $resolver, $context, $access);
@@ -52,6 +54,11 @@ class MeController extends Controller
                 'onboarded' => $user->onboarded_at !== null,
                 // An account deletion is waiting (Phase 5C-3): the app shows it everywhere.
                 'deletion_due_at' => $user->deletion_due_at?->toIso8601String(),
+                // Two-step sign-in (Phase 8-1): whether they have it, and until when the context allows them without it.
+                'two_factor' => [
+                    'enabled' => $user->hasTwoFactor(),
+                    'setup_due_at' => $requirements->setupDueAt()?->toIso8601String(),
+                ],
             ],
             'context' => $active,
             'contexts' => $contexts->handle($user),

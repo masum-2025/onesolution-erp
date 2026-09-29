@@ -8,6 +8,7 @@ use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\SupportAccess\Enums\GrantStatus;
 use App\Platform\SupportAccess\Models\SupportGrant;
+use App\Platform\Tenancy\Contracts\SignInRequirements;
 use App\Platform\Tenancy\Contracts\WorkspaceRestrictions;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipStatus;
@@ -41,9 +42,15 @@ class ContextResolver
         private RuleResolver $rules,
         private RuleContextFactory $ruleContexts,
         private WorkspaceRestrictions $restrictions,
+        private SignInRequirements $signIn,
     ) {}
 
-    public function enterOrganization(User $user, string $organizationId): CurrentContext
+    /**
+     * What the person must have set up to work there (two-step sign-in, Phase
+     * 8-1) is checked on entry. Offline sync and machine keys pass
+     * checkSignIn: false (a device hands over its changes whatever happens).
+     */
+    public function enterOrganization(User $user, string $organizationId, bool $checkSignIn = true): CurrentContext
     {
         $membership = OrganizationMembership::query()
             ->with('organization.partner')
@@ -65,6 +72,9 @@ class ContextResolver
         }
 
         $this->enter($user, $membership, $organization);
+        if ($checkSignIn) {
+            $this->signIn->check($user, $this->context);
+        }
 
         if ($partner->isSuspended()) {
             $graceEnds = ($partner->suspended_at ?? now())->copy()->addDays(
@@ -133,6 +143,7 @@ class ContextResolver
         $membership->setRelation('user', $user);
 
         $this->enter($user, $membership, $grant->organization, supportView: true);
+        $this->signIn->check($user, $this->context);
         $this->context->restrict(CurrentContext::MODE_READ_ONLY, 'support', $grant->expires_at, $grant);
 
         return $this->context;
@@ -185,7 +196,7 @@ class ContextResolver
         );
     }
 
-    public function enterPartner(User $user, string $partnerId): CurrentContext
+    public function enterPartner(User $user, string $partnerId, bool $checkSignIn = true): CurrentContext
     {
         $partnerUser = PartnerUser::query()
             ->with('partner')
@@ -206,6 +217,9 @@ class ContextResolver
         }
 
         $this->context->enterPartner($user, $partnerUser);
+        if ($checkSignIn) {
+            $this->signIn->check($user, $this->context);
+        }
 
         return $this->context;
     }

@@ -1,5 +1,6 @@
 import { emit } from './events';
 import { i18n, t } from './i18n';
+import { askStepUp } from './stepUp';
 
 /**
  * JSON client for the app's own API. Uses the session cookie (HttpOnly) and
@@ -109,6 +110,11 @@ export async function api(path, options = {}) {
 
     if (error.status === 401 && !options.silentAuth) emit('unauthenticated');
     if (error.status === 403 && error.code === 'no_context') emit('context-lost');
+
+    // A sensitive action wants the second step again (Phase 8-1): ask, then send it once more.
+    if (error.status === 403 && error.code === 'step_up_required' && !options.noStepUp) {
+        if (await askStepUp(error.data?.methods ?? [])) return api(path, { ...options, noStepUp: true });
+    }
 
     throw error;
 }

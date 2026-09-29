@@ -70,6 +70,9 @@ return [
         'partner_domain_added' => 'Web address added',
         'partner_domain_verified' => 'Web address verified',
         'partner_domain_removed' => 'Web address removed',
+        'identity_mfa_reset_requested' => 'Two-step sign-in reset requested',
+        'identity_mfa_reset_approved' => 'Two-step sign-in reset',
+        'identity_mfa_reset_rejected' => 'Two-step sign-in reset rejected',
     ],
 
 ];

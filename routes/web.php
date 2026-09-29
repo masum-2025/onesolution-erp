@@ -3,21 +3,22 @@
 use App\Http\Controllers\AppShellController;
 use App\Platform\Branding\Http\BrandAssetController;
 use App\Platform\Branding\Http\ClientBrandAssetController;
+use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Identity\Http\Controllers\RecoveryController;
 use App\Platform\Identity\Http\Controllers\SignupController;
-use App\Platform\Invitations\Http\InvitationController;
-use App\Platform\DataExport\Http\DataExportController;
-use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
+use App\Platform\Identity\Http\Controllers\TwoFactorSessionController;
 use App\Platform\Identity\Http\Middleware\TrackUserSession;
+use App\Platform\Invitations\Http\InvitationController;
+use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
 use App\Platform\Payments\Http\GatewayCallbackController;
 use App\Platform\Portal\Http\Controllers\PortalJoinController;
+use App\Platform\Tenancy\Http\Controllers\SessionController;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Platform\Tenancy\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /*
 | Browser app: cookie-session login (CSRF protected by the web group) and the
@@ -26,6 +27,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('session')->group(function () {
     Route::post('login', [SessionController::class, 'login'])->middleware('throttle:tenancy-login');
+
+    // Two-step sign-in (Phase 8-1): the second step, and passkeys with or without a password.
+    Route::middleware('throttle:two-factor')->group(function () {
+        Route::post('two-factor', [TwoFactorSessionController::class, 'code']);
+        Route::post('passkey/options', [TwoFactorSessionController::class, 'passkeyOptions']);
+        Route::post('passkey', [TwoFactorSessionController::class, 'passkey']);
+    });
     // Invitation links: see who it is for, set the password (signs in).
     Route::get('invitations/{token}', [InvitationController::class, 'show'])->middleware('throttle:tenancy-login');
     Route::post('invitations/{token}', [InvitationController::class, 'accept'])->middleware('throttle:tenancy-login');

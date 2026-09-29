@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import { KeyRound, MoreHorizontal, Search, ShieldCheck, UserCheck, UserPlus, UserRound, UserX, UsersRound } from 'lucide-vue-next';
+import { KeyRound, MoreHorizontal, Search, ShieldCheck, ShieldOff, UserCheck, UserPlus, UserRound, UserX, UsersRound } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -12,9 +12,9 @@ import SkeletonRows from '@/components/SkeletonRows.vue';
 import MemberRolesDialog from './MemberRolesDialog.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
-import { formatDate, formatNumber } from '@/lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@/lib/format';
 import { confirmAction } from '@/lib/dialogs';
-import { session } from '@/lib/session';
+import { can, session } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 
@@ -40,6 +40,53 @@ const memberTypes = computed(() => (actingOwner.value ? ['staff', 'owner', 'port
 
 // Roles
 const rolesFor = ref(null);
+
+// Two-step sign-in resets (Phase 8-1): one admin asks, another approves.
+const canReset = computed(() => can('security.mfa_reset'));
+const resets = useResource(() => (canReset.value ? api(`/api/organizations/${props.organization.id}/mfa-resets`).then((response) => response.data) : Promise.resolve([])));
+const deciding = ref(null);
+
+async function requestReset(member) {
+    const result = await confirmAction({
+        title: t('orgs.members.two_factor.reset_title', { name: member.user?.name ?? '' }),
+        message: t('orgs.members.two_factor.reset_text'),
+        reason: 'required',
+        reasonLabel: t('orgs.members.two_factor.reason'),
+        danger: true,
+        confirmLabel: t('orgs.members.two_factor.request'),
+    });
+    if (!result) return;
+    try {
+        const response = await api(`/api/organizations/${props.organization.id}/members/${member.id}/mfa-reset`, { method: 'POST', body: { reason: result.reason } });
+        toast.success(response.message);
+        resets.reload();
+    } catch (error) {
+        toast.error(error.message);
+    }
+}
+
+async function decide(reset, decision) {
+    if (decision === 'approve') {
+        const ok = await confirmAction({
+            title: t('orgs.members.two_factor.approve_title', { name: reset.user.name }),
+            message: t('orgs.members.two_factor.approve_text'),
+            danger: true,
+            confirmLabel: t('orgs.members.two_factor.approve'),
+        });
+        if (!ok) return;
+    }
+    deciding.value = reset.id;
+    try {
+        const response = await api(`/api/organizations/${props.organization.id}/mfa-resets/${reset.id}/${decision}`, { method: 'POST' });
+        toast.success(response.message);
+        resets.reload();
+        members.reload();
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        deciding.value = null;
+    }
+}
 
 // Add member
 const adding = ref(false);
@@ -104,6 +151,7 @@ function actionsFor(member) {
             (!isOwner
                 ? { label: t('orgs.members.make_owner'), icon: ShieldCheck, onSelect: () => change(member, { membership_type: 'owner' }, t('orgs.members.updated')) }
                 : { label: t('orgs.members.make_staff'), icon: UserRound, onSelect: () => change(member, { membership_type: 'staff' }, t('orgs.members.updated')) }),
+        canReset.value && member.user?.two_factor && { label: t('orgs.members.two_factor.reset'), icon: ShieldOff, onSelect: () => requestReset(member) },
         ownership && { divider: true },
         ownership &&
             (member.status === 'suspended'
@@ -137,6 +185,25 @@ const initials = (name) =>
             <AppButton variant="primary" :icon="UserPlus" @click="openAdd">{{ t('orgs.members.add') }}</AppButton>
         </header>
 
+        <!-- Resets waiting for a second admin -->
+        <div v-if="resets.data.value?.length" class="border-b border-warn/25 bg-warn-soft/60 px-4 py-3 sm:px-5" role="status">
+            <p class="flex items-center gap-2 text-[13px] font-semibold text-fg"><ShieldOff class="size-4 text-warn" aria-hidden="true" />{{ t('orgs.members.two_factor.waiting') }}</p>
+            <ul class="mt-2 space-y-2">
+                <li v-for="reset in resets.data.value" :key="reset.id" class="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2.5">
+                    <div class="min-w-0 flex-1 text-[12.5px]">
+                        <p class="text-[13px] font-medium text-fg">{{ reset.user.name }}</p>
+                        <p class="text-muted">{{ t('orgs.members.two_factor.asked_by', { name: reset.requested_by.name, until: formatDateTime(reset.expires_at) }) }}</p>
+                        <p class="mt-0.5 text-fg-2">“{{ reset.reason }}”</p>
+                    </div>
+                    <template v-if="reset.requested_by.id !== session.me?.user?.id">
+                        <AppButton size="sm" variant="ghost" :disabled="deciding === reset.id" @click="decide(reset, 'reject')">{{ t('orgs.members.two_factor.reject') }}</AppButton>
+                        <AppButton size="sm" variant="danger" :loading="deciding === reset.id" @click="decide(reset, 'approve')">{{ t('orgs.members.two_factor.approve') }}</AppButton>
+                    </template>
+                    <span v-else class="text-[12px] text-muted">{{ t('orgs.members.two_factor.needs_other') }}</span>
+                </li>
+            </ul>
+        </div>
+
         <SkeletonRows v-if="members.loading.value && !members.data.value" :rows="4" avatar />
         <ErrorState v-else-if="members.error.value" compact :error="members.error.value" @retry="members.reload()" />
         <EmptyState v-else-if="!shown.length && !query" :icon="UsersRound" :title="t('orgs.members.empty_title')" :text="t('orgs.members.empty_text')" compact>
@@ -153,6 +220,7 @@ const initials = (name) =>
                     <p class="flex items-center gap-2 truncate text-[13.5px] font-medium text-fg">
                         {{ member.user?.name }}
                         <AppBadge v-if="isSelf(member)" tone="outline">{{ t('orgs.members.you') }}</AppBadge>
+                        <AppBadge v-if="member.user?.two_factor" tone="ok" :icon="ShieldCheck" :title="t('orgs.members.two_factor.on_hint')">{{ t('orgs.members.two_factor.on') }}</AppBadge>
                     </p>
                     <p class="truncate text-[12.5px] text-muted">{{ member.user?.email ?? member.user?.phone }}</p>
                 </div>

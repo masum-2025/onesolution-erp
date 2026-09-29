@@ -28,4 +28,6 @@ return [
     ['key' => 'billing.manage', 'group' => 'billing'],
     // Phase 5B-5: the client's own brand (where its partner allows it).
     ['key' => 'branding.manage', 'group' => 'organization'],
+    // Phase 8-1: reset a member's two-step sign-in (lost phone); a second admin approves.
+    ['key' => 'security.mfa_reset', 'group' => 'security'],
 ];

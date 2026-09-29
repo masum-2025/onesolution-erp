@@ -3,6 +3,9 @@
 namespace App\Platform\Tenancy\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Audit\AuditLogger;
+use App\Platform\Identity\Http\Requests\TwoFactorTokenRequest;
+use App\Platform\Identity\Services\TwoFactorLogin;
 use App\Platform\Tenancy\Actions\AttemptLogin;
 use App\Platform\Tenancy\Actions\IssueContextToken;
 use App\Platform\Tenancy\Actions\ListAvailableContexts;
@@ -24,9 +27,28 @@ class AuthController extends Controller
      * Log in. Returns a token that can only pick a context, plus the
      * organizations and partner consoles the user may enter.
      */
-    public function login(LoginRequest $request, AttemptLogin $attempt, IssueContextToken $tokens, ListAvailableContexts $contexts): JsonResponse
+    public function login(LoginRequest $request, AttemptLogin $attempt, IssueContextToken $tokens, ListAvailableContexts $contexts, TwoFactorLogin $twoFactor): JsonResponse
     {
         $user = $attempt->handle($request->validated('email'), $request->validated('password'), $request->validated('phone'), $request->validated('country_code'));
+
+        // Two-step sign-in (Phase 8-1): no token until the second step (POST /api/auth/two-factor).
+        if ($user->hasTwoFactor()) {
+            return response()->json(['two_factor' => $twoFactor->beginToken($user)]);
+        }
+
+        return response()->json([
+            ...$this->tokenPayload($tokens->forLogin($user)),
+            'contexts' => $contexts->handle($user),
+        ]);
+    }
+
+    /**
+     * The second step for API clients: an app code or a recovery code.
+     */
+    public function twoFactor(TwoFactorTokenRequest $request, TwoFactorLogin $twoFactor, IssueContextToken $tokens, ListAvailableContexts $contexts, AuditLogger $audit): JsonResponse
+    {
+        [$user, $method] = $twoFactor->completeToken($request->validated('token'), $request->validated('code'), $request->validated('recovery_code'));
+        $audit->record(action: 'auth.login', actor: $user, new: ['second_step' => $method]);
 
         return response()->json([
             ...$this->tokenPayload($tokens->forLogin($user)),

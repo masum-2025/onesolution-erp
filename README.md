@@ -1511,6 +1511,91 @@ renewal.
   change to the offline library. A native app would reuse the same API and lease.
 - Open: resolving a conflict side by side (the server record is already in the outcome).
 
+## Two-step sign-in and passkeys (Phase 8-1)
+
+Code: `app/Platform/Identity` (services `TwoFactorService`, `PasskeyService`, `TwoFactorLogin`,
+`SessionSignIn`, `StepUp`, `TwoFactorRequirement`, `MfaResets`), screens My account → **Security**,
+the second step on the sign-in page, "Confirm it is you" dialog, members list (resets).
+Libraries: `pragmarx/google2fa` (TOTP), `bacon/bacon-qr-code` (QR as SVG),
+`web-auth/webauthn-lib` (passkeys), `@simplewebauthn/browser` (loaded only when a passkey is used).
+
+### Second steps
+
+- **Authenticator app (TOTP, RFC 6238).** Secret encrypted at rest, never logged or returned
+  after set-up; a code is valid for its 30-second step ± one, and **never twice** (last step
+  kept, claimed with a conditional update). The app shows the brand of the address.
+- **Passkeys (WebAuthn).** User verification required (fingerprint, face, PIN), discoverable
+  (sign in with no email and no password), "none" attestation. Bound to the **exact address**:
+  origin and rp_id are the request's own, so a partner's domain keeps its own passkeys. Each
+  ceremony has a single-use challenge in the session (2 minutes). Only the public key is kept.
+- **Recovery codes.** Ten, shown once (copy / download), stored as SHA-256; each works once;
+  made with the first second step or on request.
+
+### Signing in
+
+Every way in goes through `SessionSignIn`: password, API token login, sign-up, invitation,
+**password reset** (a reset never skips the second step) and portal join. With a second step the
+answer is `{ two_factor: { methods, expires_at } }` and nobody is signed in yet: the waiting
+sign-in lives 5 minutes and 5 wrong tries (then the password again). API clients get a
+64-character second-step token (hash in cache) and send `POST /api/auth/two-factor`. Audit:
+`auth.password_accepted`, `auth.login` (with the method), `auth.second_step_failed`.
+
+### Required by the organization (rules)
+
+| rule | default | levels | |
+|---|---|---|---|
+| `identity.mfa_required` | false | platform … department, **role** | staff; sensitive |
+| `identity.mfa_required_portal` | false | platform … company | portal people; sensitive |
+| `identity.mfa_required_partner_staff` | **true** | platform only | partner console and support access |
+| `identity.mfa_grace_days` | 7 | platform … company | from the first time it was required |
+| `identity.step_up_minutes` | 15 | platform … company | see step-up |
+
+Checked in `ContextResolver` (contract `SignInRequirements`) on **every request** that enters a
+context. Inside the grace period `/api/me` gives `user.two_factor.setup_due_at` (banner); after
+it the context answers 403 `two_factor_required` while My account → Security stays open. The
+security page shows where the requirement comes from (level, name, locked by). Offline sync and
+partner API keys are not blocked (a device must still hand over its changes). The last second
+step cannot be removed while the current organization requires one.
+
+### Step-up (`two_factor.recent`)
+
+For people with a second step, sensitive actions need one newer than `identity.step_up_minutes`:
+member roles, roles, support approval, provider transfer, releasing held offline changes, payment
+accounts (create/update/approve/enable), rule approvals (client and partner), partner API keys,
+accepting a transfer, resets, and adding or removing second steps. The answer is 403
+`step_up_required` with the methods; the app asks and resends. API clients send the code in
+`X-Two-Factor-Code`.
+
+### Admin reset (maker-checker)
+
+`security.mfa_reset` (administrator template). One admin asks with a reason, **a different admin**
+approves within 24 hours; the person never takes part. Approving removes the app, passkeys and
+recovery codes and ends every session and token; the password stays. Only for people who work
+nowhere else (no other account, no partner staff role): anyone else uses a recovery code or asks
+the platform. Audit: `identity.mfa_reset_requested|approved|rejected`.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| POST | /session/two-factor, /session/passkey/options, /session/passkey | signing in (throttle `two-factor`) |
+| POST | /api/auth/two-factor | API clients, second step |
+| GET | /api/me/security | the person |
+| POST / DELETE | /api/me/security/totp, …/totp/confirm, …/recovery-codes | the person (+ step-up) |
+| POST / PATCH / DELETE | /api/me/security/passkeys[/options][/{id}] | the person (+ step-up) |
+| POST | /api/me/security/confirm[/options] | step-up |
+| GET / POST | /api/organizations/{id}/mfa-resets, …/members/{m}/mfa-reset, …/mfa-resets/{r}/approve\|reject | security.mfa_reset |
+
+Local development: passkeys need HTTPS except on `PASSKEY_INSECURE_HOSTS` (default `localhost`).
+
+### Future expansion (Phase 8-1)
+
+- A new country, sector or partner needs no code: requiring it is a rule at any level (per role
+  too), partners get their own passkeys on their own domains automatically.
+- Open: role-level rule values have no screen yet (Phase 4 tooling); resets for partner staff and
+  people in several accounts (platform support); SMS as a second step (weaker, not planned);
+  e-mailing the person when a reset is approved (Phase 9 alerts).
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

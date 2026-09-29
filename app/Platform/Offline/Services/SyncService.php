@@ -93,7 +93,7 @@ class SyncService
         $lease = $this->verifiedLease($token, $device, $user, $organization);
 
         try {
-            $this->resolver->enterOrganization($user, $organization->getKey());
+            $this->resolver->enterOrganization($user, $organization->getKey(), checkSignIn: false);
         } catch (OrganizationAccessDenied) {
             throw OfflineException::organizationInactive();
         }
@@ -153,8 +153,7 @@ class SyncService
 
         $result = match (true) {
             $madeUnder === null => SyncResult::rejected('lease_unknown'),
-            $madeAt === null || $madeAt->greaterThan($madeUnder->expires_at) || $madeUnder->revoked_at !== null && $madeAt->greaterThan($madeUnder->revoked_at)
-                => SyncResult::rejected('made_after_lease'),
+            $madeAt === null || $madeAt->greaterThan($madeUnder->expires_at) || $madeUnder->revoked_at !== null && $madeAt->greaterThan($madeUnder->revoked_at) => SyncResult::rejected('made_after_lease'),
             default => $this->applier->apply($operation, $user, $organization, $madeUnder),
         };
 

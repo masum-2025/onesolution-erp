@@ -39,7 +39,12 @@ async function submit() {
 
     saving.value = true;
     try {
-        await api(`/session/invitations/${route.params.token}`, { method: 'POST', body: { password: form.password, password_confirmation: form.confirm } });
+        const result = await api(`/session/invitations/${route.params.token}`, { method: 'POST', body: { password: form.password, password_confirmation: form.confirm } });
+        // Someone who already has two-step sign-in still gives the second step (Phase 8-1).
+        if (result?.two_factor) {
+            await router.push({ name: 'login', query: { step: 'two-factor', methods: result.two_factor.methods.join(',') } });
+            return;
+        }
         const me = await loadMe();
         await router.push(me?.context ? '/' : { name: 'choose', query: { auto: '1' } });
     } catch (error) {

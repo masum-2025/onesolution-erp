@@ -40,4 +40,18 @@ return [
     // Throwaway inbox domains, one per line (identity.block_disposable_email).
     'disposable_domains_file' => resource_path('data/disposable-email-domains.txt'),
 
+    // Two-step sign-in (Phase 8-1). Whether it is required, the grace period
+    // and step-up time are rules (identity.mfa_*, identity.step_up_minutes).
+    'two_factor' => [
+        // A sign-in waiting for its second step, and how many wrong tries it gets.
+        'challenge_minutes' => 5,
+        'max_attempts' => 5,
+        // A passkey ceremony (options -> answer) must finish within this.
+        'passkey_timeout_seconds' => 120,
+        // Passkeys need HTTPS; these hosts may use plain HTTP (local development only).
+        'passkey_insecure_hosts' => array_values(array_filter(explode(',', (string) env('PASSKEY_INSECURE_HOSTS', 'localhost')))),
+        // A reset request an admin made waits this long for a second admin.
+        'reset_request_hours' => 24,
+    ],
+
 ];

@@ -79,10 +79,15 @@ async function reset() {
 
     busy.value = true;
     try {
-        await api('/session/recovery/verify', {
+        const result = await api('/session/recovery/verify', {
             method: 'POST',
             body: { challenge_id: challenge.value.challenge_id, code: form.code, password: form.password, password_confirmation: form.password },
         });
+        // A new password does not skip two-step sign-in (Phase 8-1).
+        if (result?.two_factor) {
+            await router.push({ name: 'login', query: { step: 'two-factor', methods: result.two_factor.methods.join(',') } });
+            return;
+        }
         resetCaches();
         const me = await loadMe();
         await router.push(me?.context ? '/' : { name: 'choose', query: { auto: '1' } });

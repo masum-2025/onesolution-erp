@@ -7,8 +7,6 @@ use App\Platform\Identity\Http\Requests\RecoveryCompleteRequest;
 use App\Platform\Identity\Http\Requests\RecoveryRequest;
 use App\Platform\Identity\Services\OtpService;
 use App\Platform\Identity\Services\RecoveryService;
-use App\Platform\Tenancy\Actions\ListAvailableContexts;
-use App\Platform\Tenancy\Context\ContextSource;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -26,10 +24,10 @@ class RecoveryController extends Controller
         return response()->json(['data' => $data, 'message' => __('identity.messages.code_sent', ['to' => $data['to']])], 202);
     }
 
-    public function complete(RecoveryCompleteRequest $request, ListAvailableContexts $contexts, ContextSource $source): JsonResponse
+    public function complete(RecoveryCompleteRequest $request): JsonResponse
     {
         $user = $this->recovery->complete($request->validated('challenge_id'), $request->validated('code'), $request->validated('password'));
 
-        return SignupController::signIn($request, $user, $contexts, $source, __('identity.messages.password_reset'));
+        return SignupController::signIn($request, $user, __('identity.messages.password_reset'));
     }
 }

@@ -3,13 +3,11 @@
 namespace App\Platform\Invitations\Http;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Identity\Services\SessionSignIn;
 use App\Platform\Invitations\Services\InvitationService;
 use App\Platform\Notifications\Services\Mask;
-use App\Platform\Tenancy\Context\ContextSource;
-use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
@@ -37,7 +35,7 @@ class InvitationController extends Controller
         ]]);
     }
 
-    public function accept(Request $request, string $token, ListAvailableContexts $contexts, ContextSource $source): JsonResponse
+    public function accept(Request $request, string $token, SessionSignIn $signIn): JsonResponse
     {
         $validated = $request->validate([
             'password' => ['required', 'string', 'confirmed', Password::min(10)->letters()->numbers()],
@@ -50,10 +48,7 @@ class InvitationController extends Controller
 
         $user = $this->invitations->accept($invitation, $validated['password']);
 
-        Auth::guard('web')->login($user);
-        $request->session()->regenerate();
-        $source->forgetSession($request);
-
-        return response()->json(['contexts' => $contexts->handle($user), 'message' => __('invitations.messages.accepted')]);
+        // An existing person with two-step sign-in still gives their second step (Phase 8-1).
+        return $signIn->start($request, $user, ['message' => __('invitations.messages.accepted')]);
     }
 }

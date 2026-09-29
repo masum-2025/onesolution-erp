@@ -241,6 +241,26 @@ return [
             'label' => 'Date format in documents',
             'description' => 'How dates are written on invoices, reports and exports. Comes from the country; you can change it.',
         ],
+        'identity_mfa_required' => [
+            'label' => 'Two-step sign-in required',
+            'description' => 'Staff must confirm each sign-in with an authenticator app or a passkey. Can be set per role.',
+        ],
+        'identity_mfa_required_portal' => [
+            'label' => 'Two-step sign-in for portal users',
+            'description' => 'Parents, customers and other portal users must also use a second step.',
+        ],
+        'identity_mfa_required_partner_staff' => [
+            'label' => 'Two-step sign-in for partner staff',
+            'description' => 'Partner staff reach many clients, so they must use a second step.',
+        ],
+        'identity_mfa_grace_days' => [
+            'label' => 'Days to set up two-step sign-in',
+            'description' => 'How long people can keep working after it is first required. 0 means at once.',
+        ],
+        'identity_step_up_minutes' => [
+            'label' => 'Confirm again after (minutes)',
+            'description' => 'Sensitive actions ask for the second step again if the last one is older than this.',
+        ],
     ],
 
     'categories' => [

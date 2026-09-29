@@ -40,7 +40,7 @@ const routes = [
                 meta: { context: 'organization', ns: ['orgs', 'access', 'packaging'] },
             },
             // The person's own account: the same in every context.
-            { path: 'account', name: 'account', component: () => import('./pages/account/AccountPage.vue'), meta: { ns: ['identity', 'offline'] } },
+            { path: 'account', name: 'account', component: () => import('./pages/account/AccountPage.vue'), meta: { ns: ['identity', 'offline', 'security'] } },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'branding', name: 'brand', component: () => import('./pages/brand/ClientBrandPage.vue'), meta: { context: 'organization', ns: ['brand'] } },
@@ -172,7 +172,12 @@ export const navigation = reactive({ pending: false });
 export const router = createRouter({
     history: createWebHistory(),
     routes,
-    scrollBehavior: (to, from, saved) => saved ?? (to.path !== from.path ? { top: 0 } : undefined),
+    scrollBehavior: (to, from, saved) => {
+        if (saved) return saved;
+        // A section of a screen (e.g. /account#security): once the screen has drawn it.
+        if (to.hash) return new Promise((resolve) => setTimeout(() => resolve({ el: to.hash, top: 72, behavior: 'smooth' }), 350));
+        return to.path !== from.path ? { top: 0 } : undefined;
+    },
 });
 
 function homeFor(context) {

@@ -203,5 +203,27 @@
             "wiped": "This browser was removed from offline work, so its offline data was cleared.",
             "not_enabled": "Offline work is not set up on this browser."
         }
+    },
+    "passkey": {
+        "cancelled": "The passkey prompt was closed. Try again when you are ready.",
+        "already_added": "This device already has a passkey for this account.",
+        "failed": "The passkey did not work. Try again, or use another way."
+    },
+    "second_step": {
+        "app_code": "Code from your authenticator app",
+        "app_hint": "Open the app and type the 6-digit code shown for this account.",
+        "recovery_code": "Recovery code",
+        "recovery_hint": "One of the codes you saved when you set this up. Each works once.",
+        "use_passkey": "Use a passkey",
+        "use_app": "Use the app instead",
+        "use_recovery": "Use a recovery code",
+        "or": "or",
+        "confirm_title": "Confirm it is you",
+        "confirm_text": "This is a sensitive action. Confirm with your second step to go on.",
+        "confirm": "Confirm"
+    },
+    "two_factor": {
+        "required_by": "This account requires two-step sign-in. Set it up by {date} to keep working here.",
+        "set_up": "Set up"
     }
 }

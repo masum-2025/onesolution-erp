@@ -28,7 +28,7 @@ class AuthenticatePartnerKey
 
         ['key' => $key, 'creator' => $creator] = $found;
 
-        $this->resolver->enterPartner($creator, $key->partner_id);
+        $this->resolver->enterPartner($creator, $key->partner_id, checkSignIn: false);
         $request->setUserResolver(fn () => $creator);
         // Read by scope checks, rate limits, idempotency and the audit log.
         $request->attributes->set('partner_api_key', $key);

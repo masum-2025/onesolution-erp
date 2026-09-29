@@ -61,6 +61,22 @@ it('resets the password with an email code, ends other sessions and tells every 
         ->and(NotificationDelivery::where('notification_key', 'identity.password_changed')->pluck('channel')->sort()->values()->all())->toBe(['mail', 'sms']);
 });
 
+it('still asks for the second step after a password reset (Phase 8-1)', function () {
+    $this->user->forceFill(['mfa_enabled_at' => now()])->save();
+
+    $start = $this->postJson('/session/recovery', ['channel' => 'mail', 'email' => 'rahim@example.com'])->assertStatus(202);
+    $this->postJson('/session/recovery/verify', [
+        'challenge_id' => $start->json('data.challenge_id'),
+        'code' => recoveryCode(),
+        'password' => 'New-secret-2026',
+        'password_confirmation' => 'New-secret-2026',
+    ])->assertOk()->assertJsonStructure(['two_factor' => ['methods', 'expires_at']])->assertJsonMissingPath('contexts');
+
+    // The password changed, but a reset alone does not sign in.
+    expect(Hash::check('New-secret-2026', $this->user->fresh()->password))->toBeTrue()
+        ->and(Auth::guard('web')->id())->toBeNull();
+});
+
 it('works by phone for a verified phone only', function () {
     $start = $this->postJson('/session/recovery', ['channel' => 'sms', 'phone' => '01712345678', 'country_code' => 'BD'])->assertStatus(202);
     expect(Bus::dispatched(SendOtp::class)->last()->to)->toBe('+8801712345678');

@@ -42,6 +42,8 @@ async function choose(key, target, fallback) {
     } catch (error) {
         toast.error(error.message);
         entering.value = null;
+        // Required there and the grace period is over (Phase 8-1): straight to setting it up.
+        if (error.code === 'two_factor_required') await router.push({ name: 'account', hash: '#security' });
     }
 }
 

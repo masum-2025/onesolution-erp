@@ -67,6 +67,9 @@ return [
         'partner_domain_added' => 'ওয়েব ঠিকানা যোগ',
         'partner_domain_verified' => 'ওয়েব ঠিকানা যাচাই',
         'partner_domain_removed' => 'ওয়েব ঠিকানা সরানো',
+        'identity_mfa_reset_requested' => 'দুই ধাপে সাইন ইন রিসেটের অনুরোধ',
+        'identity_mfa_reset_approved' => 'দুই ধাপে সাইন ইন রিসেট হয়েছে',
+        'identity_mfa_reset_rejected' => 'দুই ধাপে সাইন ইন রিসেট বাতিল',
     ],
 
 ];

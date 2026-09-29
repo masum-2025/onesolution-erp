@@ -46,8 +46,17 @@ class User extends Authenticatable
             'deletion_requested_at' => 'immutable_datetime',
             'deletion_due_at' => 'immutable_datetime',
             'erased_at' => 'immutable_datetime',
+            // Two-step sign-in (Phase 8-1).
+            'mfa_enabled_at' => 'immutable_datetime',
+            'mfa_required_since' => 'immutable_datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /** Has a second step (authenticator app or passkey), so signing in needs it. */
+    public function hasTwoFactor(): bool
+    {
+        return $this->mfa_enabled_at !== null;
     }
 
     /**

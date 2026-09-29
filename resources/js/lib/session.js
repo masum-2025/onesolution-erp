@@ -30,12 +30,26 @@ export async function loadMe() {
     return session.me;
 }
 
-/** Sign in with an email, or with { phone, country_code, password } (Phase 5C). */
+/**
+ * Sign in with an email, or with { phone, country_code, password } (Phase 5C).
+ * With two-step sign-in (Phase 8-1) the answer is { twoFactor: { methods } }:
+ * not signed in yet, see completeTwoFactor().
+ */
 export async function login(email, password) {
     const body = typeof email === 'object' && email !== null ? email : { email, password };
-    await api('/session/login', { method: 'POST', body, silentAuth: true });
+    return afterSignIn(await api('/session/login', { method: 'POST', body, silentAuth: true }));
+}
+
+/** Any sign-in answer: signed in (loads /api/me), or waiting for the second step. */
+export async function afterSignIn(result) {
+    if (result?.two_factor) return { twoFactor: result.two_factor };
     resetCaches();
     return loadMe();
+}
+
+/** The second step with { code } or { recovery_code }. */
+export async function completeTwoFactor(body) {
+    return afterSignIn(await api('/session/two-factor', { method: 'POST', body, silentAuth: true }));
 }
 
 export async function enterContext(target) {

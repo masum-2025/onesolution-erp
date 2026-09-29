@@ -1,10 +1,14 @@
 <script setup>
-import { onBeforeUnmount } from 'vue';
+import { defineAsyncComponent, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import AppToaster from './components/AppToaster.vue';
 import ConfirmHost from './components/ConfirmHost.vue';
 import { navigation } from './router';
 import { on } from './lib/events';
+import { stepUp } from './lib/stepUp';
+
+// Loaded the first time a sensitive action asks for the second step again (Phase 8-1).
+const StepUpDialog = defineAsyncComponent(() => import('./components/StepUpDialog.vue'));
 import { loadMe, session } from './lib/session';
 import { resetCaches } from './lib/cache';
 import { toast } from './lib/toast';
@@ -55,4 +59,5 @@ onBeforeUnmount(() => {
     <RouterView />
     <AppToaster />
     <ConfirmHost />
+    <StepUpDialog v-if="stepUp.open || stepUp.resolve" />
 </template>

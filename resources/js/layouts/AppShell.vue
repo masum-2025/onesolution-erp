@@ -6,6 +6,7 @@ import SidebarNav from './SidebarNav.vue';
 import ModeBanner from './ModeBanner.vue';
 import LegalBanner from './LegalBanner.vue';
 import DeletionBanner from './DeletionBanner.vue';
+import TwoFactorBanner from './TwoFactorBanner.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppButton from '@/components/AppButton.vue';
 import BrandMark from '@/components/BrandMark.vue';
@@ -187,6 +188,7 @@ watch(() => route.path, () => (mobileNav.value = false));
             <ModeBanner class="print:hidden" />
             <LegalBanner class="print:hidden" />
             <DeletionBanner class="print:hidden" />
+            <TwoFactorBanner class="print:hidden" />
 
             <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0 -translate-y-1">
                 <!-- Support time is set by the grant, not renewed here. -->

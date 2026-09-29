@@ -27,6 +27,7 @@ return [
         'wrong_address' => 'This account cannot be opened at this web address. Use the address your service provider gave you.',
         'no_support_access' => 'You have no approved support access to this client. Request access from the partner console.',
         'support_ended' => 'This support access has ended. Request new access if you still need it.',
+        'two_factor_required' => 'This account requires two-step sign-in. Set it up in My account → Security, then open it again.',
         'read_only_support' => 'Support access is read-only. Ask the client to make this change.',
         'read_only_partner_suspended' => 'Your service provider\'s account is suspended, so this account is read-only for now. You can still view and export your data.',
         'portal_only' => 'This part is for the organization\'s staff. Your portal shows everything you can see here.',

@@ -11,10 +11,7 @@ use App\Platform\Portal\Http\Requests\PortalSignupRequest;
 use App\Platform\Portal\Models\PortalLink;
 use App\Platform\Portal\Services\PortalInvitations;
 use App\Platform\Portal\Services\PortalJoin;
-use App\Platform\Tenancy\Actions\ListAvailableContexts;
-use App\Platform\Tenancy\Context\ContextSource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * Joining a client's portal with an invitation (Phase 5C-4): see what it is
@@ -51,11 +48,11 @@ class PortalJoinController extends Controller
         return response()->json(['data' => $data, 'message' => __('identity.messages.code_sent', ['to' => $data['to']])], 202);
     }
 
-    public function verify(CodeRequest $request, ListAvailableContexts $contexts, ContextSource $source): JsonResponse
+    public function verify(CodeRequest $request): JsonResponse
     {
         ['user' => $user, 'link' => $link] = $this->join->completeSignup($request->validated('challenge_id'), $request->validated('code'));
 
-        $response = SignupController::signIn($request, $user, $contexts, $source, $this->message($link));
+        $response = SignupController::signIn($request, $user, $this->message($link));
         $response->setData([...$response->getData(true), 'data' => $this->joined($link)]);
 
         return $response;

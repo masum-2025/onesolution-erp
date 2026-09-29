@@ -8,15 +8,13 @@ use App\Platform\Identity\Http\Requests\CodeRequest;
 use App\Platform\Identity\Http\Requests\ResendRequest;
 use App\Platform\Identity\Http\Requests\SignupRequest;
 use App\Platform\Identity\Services\OtpService;
+use App\Platform\Identity\Services\SessionSignIn;
 use App\Platform\Identity\Services\SignupGate;
 use App\Platform\Identity\Services\SignupService;
 use App\Platform\Legal\Exceptions\LegalException;
 use App\Platform\Legal\Services\LegalService;
-use App\Platform\Tenancy\Actions\ListAvailableContexts;
-use App\Platform\Tenancy\Context\ContextSource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Self-serve sign-up for the browser app (cookie session): the form, the
@@ -39,11 +37,11 @@ class SignupController extends Controller
         return response()->json(['data' => $data, 'message' => __('identity.messages.code_sent', ['to' => $data['to']])], 202);
     }
 
-    public function verify(CodeRequest $request, ListAvailableContexts $contexts, ContextSource $source): JsonResponse
+    public function verify(CodeRequest $request): JsonResponse
     {
         ['user' => $user] = $this->signup->complete($request->validated('challenge_id'), $request->validated('code'));
 
-        return $this->signIn($request, $user, $contexts, $source, __('identity.messages.signed_up'));
+        return self::signIn($request, $user, __('identity.messages.signed_up'));
     }
 
     /**
@@ -76,12 +74,9 @@ class SignupController extends Controller
         ]]);
     }
 
-    public static function signIn(Request $request, User $user, ListAvailableContexts $contexts, ContextSource $source, string $message): JsonResponse
+    /** Signs the person in, or asks for their second step first (Phase 8-1). */
+    public static function signIn(Request $request, User $user, string $message): JsonResponse
     {
-        Auth::guard('web')->login($user);
-        $request->session()->regenerate();
-        $source->forgetSession($request);
-
-        return response()->json(['contexts' => $contexts->handle($user), 'message' => $message]);
+        return app(SessionSignIn::class)->start($request, $user, ['message' => $message]);
     }
 }

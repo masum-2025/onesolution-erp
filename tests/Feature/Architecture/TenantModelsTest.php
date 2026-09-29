@@ -16,6 +16,9 @@ use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\Countries\Models\Country;
 use App\Platform\DataExport\Models\DataExport;
 use App\Platform\Identity\Models\OtpChallenge;
+use App\Platform\Identity\Models\Passkey;
+use App\Platform\Identity\Models\RecoveryCode;
+use App\Platform\Identity\Models\TotpSecret;
 use App\Platform\Identity\Models\UserSession;
 use App\Platform\Invitations\Models\Invitation;
 use App\Platform\Legal\Models\DocumentAcceptance;
@@ -27,6 +30,10 @@ use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\Models\NotificationTemplate;
 use App\Platform\Notifications\Models\PartnerMailDomain;
 use App\Platform\Notifications\Models\PartnerSmsSender;
+use App\Platform\Offline\Models\Device;
+use App\Platform\Offline\Models\OfflineLease;
+use App\Platform\Offline\Models\QuarantinedOperation;
+use App\Platform\Offline\Models\SyncOperationRecord;
 use App\Platform\Packaging\Models\OrganizationPackage;
 use App\Platform\Packaging\Models\PartnerPlan;
 use App\Platform\Packaging\Models\PartnerPlanPrice;
@@ -42,10 +49,6 @@ use App\Platform\Payments\Models\GatewayEvent;
 use App\Platform\Payments\Models\Payment;
 use App\Platform\Portal\Models\PortalInvitation;
 use App\Platform\Portal\Models\PortalLink;
-use App\Platform\Offline\Models\Device;
-use App\Platform\Offline\Models\OfflineLease;
-use App\Platform\Offline\Models\QuarantinedOperation;
-use App\Platform\Offline\Models\SyncOperationRecord;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\Models\RuleValueHistory;
@@ -145,6 +148,10 @@ const PLATFORM_MODELS = [
     // Identity (Phase 5C): a person's own codes and devices, before and outside any organization.
     OtpChallenge::class,
     UserSession::class,
+    // Two-step sign-in (Phase 8-1): one identity's second steps, used before any context.
+    TotpSecret::class,
+    RecoveryCode::class,
+    Passkey::class,
     // Self-serve billing (5C-2): payments and gateway messages arrive from the
     // gateway without a signed-in person; trial grants are checked across
     // accounts. People read payments only through their context's organization.

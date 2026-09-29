@@ -47,6 +47,7 @@ return [
         'rules_approve' => 'Approve setting changes',
         'rules_edit' => 'Edit :module settings',
         'support_approve' => 'Approve support access',
+        'security_mfa_reset' => 'Reset members\' two-step sign-in',
         'audit_view' => 'View the audit log',
         'data_export' => 'Export all data',
         'billing_view' => 'See plan and invoices',

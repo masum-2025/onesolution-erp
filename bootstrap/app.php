@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\ApplyRequestLocale;
 use App\Http\Middleware\SecurityHeaders;
+use App\Platform\Identity\Http\Middleware\RequireRecentTwoFactor;
 use App\Platform\Identity\Http\Middleware\TrackUserSession;
 use App\Platform\Modules\Http\Middleware\EnsureModuleEnabled;
 use App\Platform\Partners\Http\Middleware\ResolveHost;
@@ -38,6 +39,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'org' => ResolveOrganization::class,
             'partner' => ResolvePartner::class,
             'module' => EnsureModuleEnabled::class,
+            // Sensitive actions: a recent second step for people who have one (Phase 8-1).
+            'two_factor.recent' => RequireRecentTwoFactor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

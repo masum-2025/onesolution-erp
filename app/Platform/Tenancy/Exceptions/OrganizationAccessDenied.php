@@ -42,6 +42,12 @@ class OrganizationAccessDenied extends TenancyException
         return new self('support_ended', 403);
     }
 
+    /** Two-step sign-in is required here and its grace period is over (Phase 8-1). */
+    public static function twoFactorRequired(): self
+    {
+        return new self('two_factor_required', 403);
+    }
+
     /**
      * A change was tried in a context that may only read (support access,
      * a suspended partner's client in its grace period).

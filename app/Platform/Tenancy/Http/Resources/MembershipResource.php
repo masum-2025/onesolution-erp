@@ -23,6 +23,8 @@ class MembershipResource extends JsonResource
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
+                // Whether they sign in with a second step (Phase 8-1); never which one.
+                'two_factor' => $this->user->hasTwoFactor(),
             ]),
             'membership_type' => $this->membership_type->value,
             'access_scope' => $this->access_scope->value,

@@ -24,6 +24,8 @@ return [
         'permissions' => [
             'organizations.*', 'members.manage', 'roles.manage', 'modules.manage', 'rules.edit.*',
             '*.view', '*.manage', '*.use', '*.export',
+            // Phase 8-1: ask for / approve a member's two-step sign-in reset (two different admins).
+            'security.mfa_reset',
         ],
     ],
     [

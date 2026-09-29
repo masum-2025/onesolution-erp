@@ -38,7 +38,8 @@ class AttemptLogin
             ]);
         }
 
-        $this->audit->record(action: 'auth.login', actor: $user);
+        // With two-step sign-in the login is recorded once the second step is done (Phase 8-1).
+        $this->audit->record(action: $user->hasTwoFactor() ? 'auth.password_accepted' : 'auth.login', actor: $user);
 
         return $user;
     }

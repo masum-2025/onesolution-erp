@@ -3,11 +3,10 @@
 namespace App\Platform\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Identity\Services\SessionSignIn;
 use App\Platform\Identity\Services\SessionTracker;
 use App\Platform\Tenancy\Actions\AttemptLogin;
 use App\Platform\Tenancy\Actions\EnterSessionContext;
-use App\Platform\Tenancy\Actions\ListAvailableContexts;
-use App\Platform\Tenancy\Context\ContextSource;
 use App\Platform\Tenancy\Http\Requests\EnterContextRequest;
 use App\Platform\Tenancy\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
@@ -21,15 +20,15 @@ use Illuminate\Support\Facades\Auth;
  */
 class SessionController extends Controller
 {
-    public function login(LoginRequest $request, AttemptLogin $attempt, ListAvailableContexts $contexts, ContextSource $source): JsonResponse
+    /**
+     * The password. With two-step sign-in the answer is { two_factor: { methods } }
+     * and the person is not signed in until TwoFactorSessionController finishes it.
+     */
+    public function login(LoginRequest $request, AttemptLogin $attempt, SessionSignIn $signIn): JsonResponse
     {
         $user = $attempt->handle($request->validated('email'), $request->validated('password'), $request->validated('phone'), $request->validated('country_code'));
 
-        Auth::guard('web')->login($user);
-        $request->session()->regenerate();
-        $source->forgetSession($request);
-
-        return response()->json(['contexts' => $contexts->handle($user)]);
+        return $signIn->start($request, $user);
     }
 
     /**

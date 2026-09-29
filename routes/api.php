@@ -12,7 +12,9 @@ use App\Platform\Branding\Http\ClientBrandController;
 use App\Platform\Countries\Http\CountryController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Identity\Http\Controllers\AccountController;
+use App\Platform\Identity\Http\Controllers\MfaResetController;
 use App\Platform\Identity\Http\Controllers\MyDataController;
+use App\Platform\Identity\Http\Controllers\SecurityController;
 use App\Platform\Identity\Http\Controllers\UpgradeController;
 use App\Platform\Legal\Http\Controllers\ClientLegalController;
 use App\Platform\Legal\Http\Controllers\PartnerLegalController;
@@ -22,6 +24,10 @@ use App\Platform\Modules\Http\Controllers\ModuleController;
 use App\Platform\Modules\Http\Controllers\ModulePurgeController;
 use App\Platform\Notifications\Http\Controllers\PartnerMessagingController;
 use App\Platform\Notifications\Http\Controllers\PartnerTemplateController;
+use App\Platform\Offline\Http\Controllers\MyDevicesController;
+use App\Platform\Offline\Http\Controllers\OfflineAdminController;
+use App\Platform\Offline\Http\Controllers\OfflineDeviceController;
+use App\Platform\Offline\Http\Controllers\SyncController;
 use App\Platform\Packaging\Http\Controllers\CatalogController;
 use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
 use App\Platform\Packaging\Http\Controllers\SectorPackageController;
@@ -35,10 +41,6 @@ use App\Platform\Partners\Http\Controllers\PartnerModuleController;
 use App\Platform\Payments\Http\Controllers\MerchantAccountController;
 use App\Platform\Portal\Http\Controllers\PortalAdminController;
 use App\Platform\Portal\Http\Controllers\PortalMemberController;
-use App\Platform\Offline\Http\Controllers\MyDevicesController;
-use App\Platform\Offline\Http\Controllers\OfflineAdminController;
-use App\Platform\Offline\Http\Controllers\OfflineDeviceController;
-use App\Platform\Offline\Http\Controllers\SyncController;
 use App\Platform\Rules\Http\Controllers\OrganizationRuleController;
 use App\Platform\Rules\Http\Controllers\PartnerRuleController;
 use App\Platform\Rules\Http\Controllers\RuleApprovalController;
@@ -60,6 +62,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:tenancy-login');
+    // The second step for API clients (Phase 8-1).
+    Route::post('two-factor', [AuthController::class, 'twoFactor'])->middleware('throttle:two-factor');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('context', [AuthController::class, 'enterContext'])->middleware('throttle:tenancy-sensitive');
@@ -92,6 +96,23 @@ Route::middleware('auth:sanctum')->prefix('me')->group(function () {
     Route::delete('devices/{device}', [MyDevicesController::class, 'destroy'])->where('device', '[0-9A-Za-z]{26}');
     Route::delete('deletion', [MyDataController::class, 'cancelDeletion']);
 
+    // Security: two-step sign-in (Phase 8-1). Adding or removing a second step needs a recent one.
+    Route::get('security', [SecurityController::class, 'show']);
+    Route::middleware('throttle:two-factor')->group(function () {
+        Route::post('security/confirm/options', [SecurityController::class, 'confirmOptions']);
+        Route::post('security/confirm', [SecurityController::class, 'confirm']);
+        Route::post('security/totp/confirm', [SecurityController::class, 'confirmTotp']);
+    });
+    Route::middleware(['throttle:tenancy-sensitive', 'two_factor.recent'])->group(function () {
+        Route::post('security/totp', [SecurityController::class, 'startTotp']);
+        Route::delete('security/totp', [SecurityController::class, 'disableTotp']);
+        Route::post('security/recovery-codes', [SecurityController::class, 'recoveryCodes']);
+        Route::post('security/passkeys/options', [SecurityController::class, 'passkeyOptions']);
+        Route::post('security/passkeys', [SecurityController::class, 'storePasskey']);
+        Route::delete('security/passkeys/{passkey}', [SecurityController::class, 'destroyPasskey'])->where('passkey', '[0-9A-Za-z]{26}');
+    });
+    Route::patch('security/passkeys/{passkey}', [SecurityController::class, 'renamePasskey'])->where('passkey', '[0-9A-Za-z]{26}');
+
     Route::middleware('throttle:identity-code')->group(function () {
         Route::post('deletion', [MyDataController::class, 'requestDeletion']);
         Route::put('password', [AccountController::class, 'password']);
@@ -121,14 +142,22 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         ->middleware('throttle:tenancy-sensitive');
     Route::patch('organizations/{organization}/members/{membership}', [MemberController::class, 'update']);
     Route::put('organizations/{organization}/members/{membership}/roles', [MemberController::class, 'updateRoles'])
-        ->middleware('throttle:tenancy-sensitive');
+        ->middleware(['throttle:tenancy-sensitive', 'two_factor.recent']);
+
+    // Two-step sign-in resets (Phase 8-1): one admin asks, another approves.
+    Route::get('organizations/{organization}/mfa-resets', [MfaResetController::class, 'index']);
+    Route::middleware(['throttle:tenancy-sensitive', 'two_factor.recent'])->group(function () {
+        Route::post('organizations/{organization}/members/{membership}/mfa-reset', [MfaResetController::class, 'store']);
+        Route::post('organizations/{organization}/mfa-resets/{reset}/approve', [MfaResetController::class, 'approve']);
+        Route::post('organizations/{organization}/mfa-resets/{reset}/reject', [MfaResetController::class, 'reject']);
+    });
 
     // Roles and permissions (Phase 4)
     Route::get('organizations/{organization}/permissions', [PermissionController::class, 'index']);
     Route::get('organizations/{organization}/role-templates', [PermissionController::class, 'templates']);
     Route::get('organizations/{organization}/roles', [RoleController::class, 'index']);
     Route::get('organizations/{organization}/roles/{role}', [RoleController::class, 'show']);
-    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+    Route::middleware(['throttle:tenancy-sensitive', 'two_factor.recent'])->group(function () {
         Route::post('organizations/{organization}/roles', [RoleController::class, 'store']);
         Route::patch('organizations/{organization}/roles/{role}', [RoleController::class, 'update']);
         Route::delete('organizations/{organization}/roles/{role}', [RoleController::class, 'destroy']);
@@ -141,7 +170,7 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::get('organizations/{organization}/exports/{export}/link', [DataExportController::class, 'link']);
     Route::post('organizations/{organization}/exports', [DataExportController::class, 'store'])->middleware('throttle:data-export');
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
-        Route::post('organizations/{organization}/support-grants/{grant}/approve', [ClientSupportController::class, 'approve']);
+        Route::post('organizations/{organization}/support-grants/{grant}/approve', [ClientSupportController::class, 'approve'])->middleware('two_factor.recent');
         Route::post('organizations/{organization}/support-grants/{grant}/reject', [ClientSupportController::class, 'reject']);
         Route::post('organizations/{organization}/support-grants/{grant}/revoke', [ClientSupportController::class, 'revoke']);
     });
@@ -160,7 +189,7 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::post('organizations/{organization}/legal/{kind}/accept', [ClientLegalController::class, 'accept'])->middleware('throttle:tenancy-sensitive');
     Route::middleware('throttle:client-transfer')->group(function () {
         Route::post('organizations/{organization}/transfer/preview', [ClientProviderController::class, 'preview']);
-        Route::post('organizations/{organization}/transfer', [ClientProviderController::class, 'store']);
+        Route::post('organizations/{organization}/transfer', [ClientProviderController::class, 'store'])->middleware('two_factor.recent');
     });
     Route::post('organizations/{organization}/transfer/{transfer}/cancel', [ClientProviderController::class, 'cancel'])->middleware('throttle:tenancy-sensitive');
 
@@ -174,7 +203,7 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
             Route::post('offline/devices', [OfflineDeviceController::class, 'store']);
             Route::post('offline/devices/{device}/lease', [OfflineDeviceController::class, 'lease'])->where('device', '[0-9A-Za-z]{26}');
             Route::post('organizations/{organization}/offline/devices/{device}/revoke', [OfflineAdminController::class, 'revoke']);
-            Route::post('organizations/{organization}/offline/held/{held}/release', [OfflineAdminController::class, 'release']);
+            Route::post('organizations/{organization}/offline/held/{held}/release', [OfflineAdminController::class, 'release'])->middleware('two_factor.recent');
             Route::post('organizations/{organization}/offline/held/{held}/discard', [OfflineAdminController::class, 'discard']);
         });
         Route::get('organizations/{organization}/offline', [OfflineAdminController::class, 'show']);
@@ -202,11 +231,11 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         $account = '[0-9A-Za-z]{26}';
         // Each of these asks the gateway or checks a password: a few per minute per person.
         Route::middleware('throttle:merchant-accounts')->group(function () use ($account) {
-            Route::post('organizations/{organization}/merchant-accounts', [MerchantAccountController::class, 'store']);
-            Route::patch('organizations/{organization}/merchant-accounts/{account}', [MerchantAccountController::class, 'update'])->where('account', $account);
+            Route::post('organizations/{organization}/merchant-accounts', [MerchantAccountController::class, 'store'])->middleware('two_factor.recent');
+            Route::patch('organizations/{organization}/merchant-accounts/{account}', [MerchantAccountController::class, 'update'])->where('account', $account)->middleware('two_factor.recent');
             Route::post('organizations/{organization}/merchant-accounts/{account}/test', [MerchantAccountController::class, 'test'])->where('account', $account);
-            Route::post('organizations/{organization}/merchant-accounts/{account}/approve', [MerchantAccountController::class, 'approve'])->where('account', $account);
-            Route::post('organizations/{organization}/merchant-accounts/{account}/enable', [MerchantAccountController::class, 'enable'])->where('account', $account);
+            Route::post('organizations/{organization}/merchant-accounts/{account}/approve', [MerchantAccountController::class, 'approve'])->where('account', $account)->middleware('two_factor.recent');
+            Route::post('organizations/{organization}/merchant-accounts/{account}/enable', [MerchantAccountController::class, 'enable'])->where('account', $account)->middleware('two_factor.recent');
         });
         Route::middleware('throttle:tenancy-sensitive')->group(function () use ($account) {
             Route::post('organizations/{organization}/merchant-accounts/{account}/reject', [MerchantAccountController::class, 'reject'])->where('account', $account);
@@ -263,7 +292,7 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::delete('organizations/{organization}/rules/{key}', [OrganizationRuleController::class, 'destroy']);
         Route::post('organizations/{organization}/rules/{key}/preview', [OrganizationRuleController::class, 'preview']);
         Route::post('organizations/{organization}/rules/{key}/rollback', [OrganizationRuleController::class, 'rollback']);
-        Route::post('organizations/{organization}/rule-approvals/{value}/approve', [RuleApprovalController::class, 'approve']);
+        Route::post('organizations/{organization}/rule-approvals/{value}/approve', [RuleApprovalController::class, 'approve'])->middleware('two_factor.recent');
         Route::post('organizations/{organization}/rule-approvals/{value}/reject', [RuleApprovalController::class, 'reject']);
     });
 });
@@ -317,7 +346,7 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
     // API keys for the partner's own systems (Phase 5B-5).
     Route::get('api-keys', [PartnerApiKeyController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
-        Route::post('api-keys', [PartnerApiKeyController::class, 'store']);
+        Route::post('api-keys', [PartnerApiKeyController::class, 'store'])->middleware('two_factor.recent');
         Route::delete('api-keys/{key}', [PartnerApiKeyController::class, 'revoke']);
     });
 
@@ -328,7 +357,7 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
         Route::post('transfer-codes', [PartnerTransferController::class, 'storeCode']);
         Route::delete('transfer-codes/{code}', [PartnerTransferController::class, 'revokeCode']);
-        Route::post('transfers/{transfer}/accept', [PartnerTransferController::class, 'accept']);
+        Route::post('transfers/{transfer}/accept', [PartnerTransferController::class, 'accept'])->middleware('two_factor.recent');
         Route::post('transfers/{transfer}/reject', [PartnerTransferController::class, 'reject']);
         Route::post('legal/{kind}', [PartnerLegalController::class, 'publish']);
     });
@@ -357,7 +386,7 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
         Route::put('rules/{key}', [PartnerRuleController::class, 'update']);
         Route::delete('rules/{key}', [PartnerRuleController::class, 'destroy']);
-        Route::post('rule-approvals/{value}/approve', [PartnerRuleController::class, 'approve']);
+        Route::post('rule-approvals/{value}/approve', [PartnerRuleController::class, 'approve'])->middleware('two_factor.recent');
         Route::post('rule-approvals/{value}/reject', [PartnerRuleController::class, 'reject']);
     });
 });

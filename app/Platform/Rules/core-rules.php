@@ -683,4 +683,65 @@ return [
         'category' => 'regional',
         'sort_order' => 151,
     ],
+    // Two-step sign-in (Phase 8-1). Turning a requirement off weakens security: sensitive.
+    [
+        'key' => 'identity.mfa_required',
+        'type' => 'boolean',
+        // Staff must use an authenticator app or a passkey to work here (may differ per role).
+        'default' => false,
+        'label' => 'rules.core.identity_mfa_required.label',
+        'description' => 'rules.core.identity_mfa_required.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch', 'department', 'role'],
+        'sensitive' => true,
+        'category' => 'security',
+        'sort_order' => 160,
+    ],
+    [
+        'key' => 'identity.mfa_required_portal',
+        'type' => 'boolean',
+        // Portal people (parents, customers, employees) are asked separately.
+        'default' => false,
+        'label' => 'rules.core.identity_mfa_required_portal.label',
+        'description' => 'rules.core.identity_mfa_required_portal.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+        'sensitive' => true,
+        'category' => 'security',
+        'sort_order' => 161,
+    ],
+    [
+        'key' => 'identity.mfa_required_partner_staff',
+        'type' => 'boolean',
+        // Partner staff reach many clients: always on unless the platform decides otherwise.
+        'default' => true,
+        'label' => 'rules.core.identity_mfa_required_partner_staff.label',
+        'description' => 'rules.core.identity_mfa_required_partner_staff.description',
+        'overridable_levels' => ['platform'],
+        'sensitive' => true,
+        'category' => 'security',
+        'sort_order' => 162,
+    ],
+    [
+        'key' => 'identity.mfa_grace_days',
+        'type' => 'integer',
+        'schema' => ['minimum' => 0, 'maximum' => 90],
+        // Time to set it up after it is first required; 0 = at once.
+        'default' => 7,
+        'label' => 'rules.core.identity_mfa_grace_days.label',
+        'description' => 'rules.core.identity_mfa_grace_days.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+        'category' => 'security',
+        'sort_order' => 163,
+    ],
+    [
+        'key' => 'identity.step_up_minutes',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1, 'maximum' => 720],
+        // Sensitive actions need the second step again if the last one is older than this.
+        'default' => 15,
+        'label' => 'rules.core.identity_step_up_minutes.label',
+        'description' => 'rules.core.identity_step_up_minutes.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+        'category' => 'security',
+        'sort_order' => 164,
+    ],
 ];

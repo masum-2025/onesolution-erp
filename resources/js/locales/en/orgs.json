@@ -124,6 +124,22 @@
         "updated": "Access updated.",
         "empty_title": "No members yet",
         "empty_text": "Add people so they can work in this organization.",
-        "no_match": "No member matches your search."
+        "no_match": "No member matches your search.",
+        "two_factor": {
+            "on": "Two-step",
+            "on_hint": "Signs in with a second step",
+            "reset": "Reset two-step sign-in",
+            "reset_title": "Reset two-step sign-in for {name}?",
+            "reset_text": "For a lost or stolen phone. Another admin must approve. Their authenticator app, passkeys and recovery codes stop working, and they are signed out everywhere. Their password stays.",
+            "reason": "How did you confirm it is really them?",
+            "request": "Ask for reset",
+            "waiting": "Two-step sign-in resets waiting for approval",
+            "asked_by": "Asked by {name} · until {until}",
+            "approve": "Approve reset",
+            "approve_title": "Reset two-step sign-in for {name}?",
+            "approve_text": "Only approve if you are sure the request is genuine. Their second steps are removed and they are signed out everywhere.",
+            "reject": "Reject",
+            "needs_other": "Another admin must decide"
+        }
     }
 }
