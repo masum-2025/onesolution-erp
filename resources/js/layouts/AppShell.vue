@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ChevronRight, Clock, Menu, Moon, Search, Sun } from 'lucide-vue-next';
 import SidebarNav from './SidebarNav.vue';
@@ -13,11 +13,13 @@ import CommandPalette from '@/components/CommandPalette.vue';
 import { api } from '@/lib/http';
 import { cached } from '@/lib/cache';
 import { on } from '@/lib/events';
-import { can, currentOrganization, enterContext, isPortalMember, session } from '@/lib/session';
+import { can, currentOrganization, enterContext, hasOfflineData, isPortalMember, session } from '@/lib/session';
 import { setTheme, theme } from '@/lib/theme';
 import { formatNumber } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { i18n, t } from '@/lib/i18n';
+
+const OfflineIndicator = defineAsyncComponent(() => import('./OfflineIndicator.vue'));
 
 const route = useRoute();
 const mobileNav = ref(false);
@@ -25,6 +27,7 @@ const palette = ref(false);
 const menu = ref([]);
 const pendingApprovals = ref(0);
 const now = ref(Date.now());
+const offlineOn = ref(false);
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
@@ -65,6 +68,18 @@ async function refreshApprovals() {
     }
 }
 
+// Offline work (Phase 7-2): its code loads only on a browser set up for it.
+async function startOffline() {
+    if (!hasOfflineData()) return;
+    try {
+        const { initOffline } = await import('@/lib/offline/index');
+        await initOffline();
+        offlineOn.value = true;
+    } catch {
+        offlineOn.value = false;
+    }
+}
+
 // Session expiry: warn in the last 10 minutes, offer to continue.
 const minutesLeft = computed(() => {
     const expires = session.me?.context?.expires_at;
@@ -97,21 +112,28 @@ function onKeydown(event) {
 
 let timer;
 let offApprovals;
+let offOffline;
 
 onMounted(() => {
     window.addEventListener('keydown', onKeydown);
     timer = setInterval(() => (now.value = Date.now()), 30000);
     offApprovals = on('approvals-changed', refreshApprovals);
+    offOffline = on('offline-changed', startOffline);
     loadShellData();
+    startOffline();
 });
 
 onBeforeUnmount(() => {
     window.removeEventListener('keydown', onKeydown);
     clearInterval(timer);
     offApprovals?.();
+    offOffline?.();
 });
 
-watch(() => session.me?.context?.id, loadShellData);
+watch(() => session.me?.context?.id, () => {
+    loadShellData();
+    startOffline();
+});
 watch(() => i18n.locale, loadShellData);
 watch(() => route.path, () => (mobileNav.value = false));
 </script>
@@ -152,6 +174,7 @@ watch(() => route.path, () => (mobileNav.value = false));
                         <span class="kbd">{{ isMac ? '⌘' : 'Ctrl' }}</span><span class="kbd">K</span>
                     </span>
                 </button>
+                <OfflineIndicator v-if="offlineOn" />
                 <AppButton
                     variant="ghost"
                     size="icon"

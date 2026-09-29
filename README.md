@@ -1406,7 +1406,7 @@ fails the build on a float/double/decimal money column, a float cast or type in 
 
 Code: `app/Platform/Offline`, module `offline_mode` (permissions `offline_mode.use` to work
 offline, `offline_mode.manage` for devices and held changes; screen `/offline`). The browser
-side (encrypted IndexedDB, operation queue, wipe on logout) is Phase 7-2.
+side is below (Phase 7-2).
 
 ### What can be changed offline
 
@@ -1470,8 +1470,46 @@ Audit: `offline.device_registered`, `offline.device_revoked`, `offline.device_wi
 
 - A new kind of offline work (attendance marking, stock counts, cash receipts): the owning
   module adds a provider and one manifest line. No sync code changes.
-- Open: the browser side (7-2), notifying admins about held changes (Phase 9 alerts),
+- Open: notifying admins about held changes (Phase 9 alerts),
   maker-checker for releasing held money if a client wants it (a rule).
+
+## Offline mode in the browser (Phase 7-2)
+
+Code: `resources/js/lib/offline` (loaded only on a browser set up for it or where the person
+may work offline), `public/sw.js`, header `layouts/OfflineIndicator.vue`, My account → Offline
+devices → **This browser**.
+
+- **Encrypted at rest.** One IndexedDB database per person and organization
+  (`os-offline:{user}:{org}`). Every value (records, queue, lease, cursor, outcomes) is sealed
+  with AES-GCM 256, a fresh IV each time, under a **non-extractable** Web Crypto key kept in the
+  same database: script can use it but never read it out. Only ids and kinds stay readable.
+- **Queue.** `enqueueOffline(kind, action, data, recordId, baseVersion)` stores the change with
+  its `op_id` and `lease_id`, in order. The device refuses early what the server would refuse
+  (lease ended, kind not in the lease, money update/delete, offline payments off, missing
+  permission) using `kind_info` in the lease; the server still decides everything again.
+- **Sync** when the connection returns, every 5 minutes, or from the header button: batches of
+  `offline_mode.sync_batch_max`; applied changes leave the queue; conflicts and rejections are
+  kept for the person ("Changes that were not applied") until dismissed; server changes and
+  deletions are applied; the lease is renewed (once on a 401 `renew_lease`). A dropped
+  connection keeps every change and its `op_id`, so resending is safe.
+- **Wipe.** A 410 wipe order deletes the database and tells the server (`/wiped`). **Signing out
+  wipes every offline database of this browser**; with unsynced changes the person is warned
+  first but never blocked (shared computers must be cleared).
+- **Service worker** keeps only the app itself (page shell network-first, hashed `/build` files,
+  fonts, brand images cache-first) so the app opens offline. It never caches `/api`, session,
+  payment or export routes: data offline lives only in the encrypted store. Registered in
+  production builds only.
+
+Tests: `tests/js/offline.test.js` (fake-indexeddb): nothing readable at rest, a key that cannot
+be exported, separate stores, wipe on sign-out and on a wipe order, queue order and op ids kept
+across a dropped connection, early refusals, outcomes, deltas with deletions, batches, lease
+renewal.
+
+### Future expansion (Phase 7-2)
+
+- A module screen that works offline calls `offlineRecords(kind)` / `enqueueOffline(...)`; no
+  change to the offline library. A native app would reuse the same API and lease.
+- Open: resolving a conflict side by side (the server record is already in the outcome).
 
 ## Browser app (frontend foundation)
 

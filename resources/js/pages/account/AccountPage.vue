@@ -20,6 +20,7 @@ import { passwordProblem } from '@/lib/identity';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDateTime, formatRelative } from '@/lib/format';
 import { loadMe, logout } from '@/lib/session';
+import { confirmSignOut } from '@/lib/signout';
 import { i18n, setLocale, t } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
 
@@ -131,6 +132,7 @@ async function endOthers() {
 }
 
 async function signOutHere() {
+    if (!(await confirmSignOut())) return;
     await logout();
     await router.push({ name: 'login' });
 }

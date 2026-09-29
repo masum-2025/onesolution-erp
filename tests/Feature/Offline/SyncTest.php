@@ -77,6 +77,16 @@ it('sets up a device with a signed lease: permissions, rules, until when', funct
         ->and($device['rules']['offline_mode.offline_lease_hours'])->toBe(24)
         ->and($device['expires_at'])->toBe('2026-10-06T09:00:00+00:00')
         ->and(AuditLog::query()->where('action', 'offline.device_registered')->exists())->toBeTrue();
+
+    // What the browser needs to refuse early (Phase 7-2): money or not, the permission per action.
+    expect($device['kind_info']['crm.receipt']['money'])->toBeTrue()
+        ->and($device['kind_info']['crm.note']['money'])->toBeFalse()
+        ->and($device['kind_info']['crm.note']['permissions'])->toHaveKeys(['create', 'update', 'delete']);
+
+    // A sync hands back the renewed lease in the same shape.
+    $answer = syncNow($this, $device, [])->assertOk()->json();
+    expect($answer)->toHaveKeys(['lease', 'lease_id', 'expires_at', 'kinds', 'kind_info', 'permissions', 'rules', 'cursor'])
+        ->and($answer['kinds'])->toBe($device['kinds']);
 });
 
 it('applies an offline change once, however often it is sent', function () {

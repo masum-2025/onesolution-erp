@@ -88,6 +88,8 @@ class LeaseService
             'usr' => $user->getKey(),
             'org' => $organization->getKey(),
             'kinds' => $kinds,
+            // So the device can refuse what the server would refuse anyway (Phase 7-2).
+            'kind_info' => $this->kindInfo($kinds),
             'perms' => $this->access->effective(),
             'rules' => $snapshot['rules'],
             'rule_version' => $snapshot['rule_version'],
@@ -96,6 +98,47 @@ class LeaseService
         ];
 
         return ['token' => $this->signer->sign($payload), 'lease' => $payload];
+    }
+
+    /**
+     * What the device keeps about a lease: the token (only the server trusts
+     * it) and, readable, what it allows and until when.
+     *
+     * @param  array{token: string, lease: array<string, mixed>}  $issued
+     * @return array<string, mixed>
+     */
+    public function describe(array $issued): array
+    {
+        return [
+            'lease' => $issued['token'],
+            'lease_id' => $issued['lease']['lid'],
+            'expires_at' => CarbonImmutable::createFromTimestamp($issued['lease']['exp'])->toIso8601String(),
+            'kinds' => $issued['lease']['kinds'],
+            'kind_info' => $issued['lease']['kind_info'],
+            'permissions' => $issued['lease']['perms'],
+            'rules' => $issued['lease']['rules'],
+            'rule_version' => $issued['lease']['rule_version'],
+        ];
+    }
+
+    /**
+     * Per kind: whether it is money, and the permission each action needs.
+     *
+     * @param  list<string>  $kinds
+     * @return array<string, array{money: bool, permissions: array<string, string>}>
+     */
+    private function kindInfo(array $kinds): array
+    {
+        $info = [];
+        foreach ($kinds as $kind) {
+            $provider = $this->records->provider($kind);
+            $info[$kind] = [
+                'money' => $provider->isMoney(),
+                'permissions' => array_combine(['create', 'update', 'delete'], array_map(fn (string $action) => $provider->permission($action), ['create', 'update', 'delete'])),
+            ];
+        }
+
+        return $info;
     }
 
     /**

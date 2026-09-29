@@ -50,6 +50,17 @@ export async function logout() {
     } finally {
         session.me = null;
         resetCaches();
+        // Offline data never outlives the sign-in (Phase 7-2); loaded only when there is some.
+        if (hasOfflineData()) await import('./offline/index').then((module) => module.wipeAllOffline()).catch(() => null);
+    }
+}
+
+/** Whether this browser keeps any offline store (a cheap check, no IndexedDB). */
+export function hasOfflineData() {
+    try {
+        return JSON.parse(readPref('offline.stores') ?? '[]').length > 0;
+    } catch {
+        return false;
     }
 }
 

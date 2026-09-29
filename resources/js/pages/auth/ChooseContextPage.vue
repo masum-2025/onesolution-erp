@@ -8,6 +8,7 @@ import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import OrgTypeIcon from '@/components/OrgTypeIcon.vue';
 import { enterContext, logout, session } from '@/lib/session';
+import { confirmSignOut } from '@/lib/signout';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 
@@ -45,6 +46,7 @@ async function choose(key, target, fallback) {
 }
 
 async function signOut() {
+    if (!(await confirmSignOut())) return;
     await logout();
     router.push({ name: 'login' });
 }

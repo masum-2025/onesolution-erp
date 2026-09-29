@@ -20,11 +20,17 @@ it('never renders raw HTML', function () {
 });
 
 it('only touches browser storage through the preferences helper', function () {
+    // The offline store (Phase 7-2) is the one other place: everything it writes to
+    // IndexedDB is sealed with AES-GCM first (tests/js/offline.test.js checks at rest).
+    $offlineStore = ['lib/offline/db.js', 'lib/offline/store.js'];
+
     foreach (frontendFiles() as $file) {
-        if ($file->getRelativePathname() === 'lib'.DIRECTORY_SEPARATOR.'storage.js') {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $file->getRelativePathname());
+        if ($path === 'lib/storage.js') {
             continue;
         }
-        expect($file->getContents())->not->toMatch('/localStorage|sessionStorage|indexedDB/', $file->getRelativePathname());
+        $pattern = in_array($path, $offlineStore, true) ? '/localStorage|sessionStorage/' : '/localStorage|sessionStorage|indexedDB/';
+        expect($file->getContents())->not->toMatch($pattern, $path);
     }
 });
 

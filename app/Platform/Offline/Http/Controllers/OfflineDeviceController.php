@@ -9,7 +9,6 @@ use App\Platform\Offline\Models\Device;
 use App\Platform\Offline\Services\DeviceService;
 use App\Platform\Offline\Services\LeaseService;
 use App\Platform\Tenancy\Context\CurrentContext;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -52,16 +51,6 @@ class OfflineDeviceController extends Controller
      */
     private function present(Device $device, array $lease): array
     {
-        return [
-            'device' => ['id' => $device->getKey(), 'name' => $device->name],
-            'lease' => $lease['token'],
-            // Readable by the device without checking the signature (only the server trusts it).
-            'lease_id' => $lease['lease']['lid'],
-            'expires_at' => CarbonImmutable::createFromTimestamp($lease['lease']['exp'])->toIso8601String(),
-            'kinds' => $lease['lease']['kinds'],
-            'permissions' => $lease['lease']['perms'],
-            'rules' => $lease['lease']['rules'],
-            'rule_version' => $lease['lease']['rule_version'],
-        ];
+        return ['device' => ['id' => $device->getKey(), 'name' => $device->name], ...$this->leases->describe($lease)];
     }
 }

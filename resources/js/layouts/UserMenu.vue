@@ -5,6 +5,7 @@ import { ChevronsUpDown, LogOut, Monitor, Moon, Sun, UserRound } from 'lucide-vu
 import AppMenu from '@/components/AppMenu.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import { logout, session } from '@/lib/session';
+import { confirmSignOut } from '@/lib/signout';
 import { i18n, setLocale, t } from '@/lib/i18n';
 import { setTheme, theme } from '@/lib/theme';
 import { toast } from '@/lib/toast';
@@ -35,6 +36,7 @@ const items = computed(() => [
 ]);
 
 async function signOut() {
+    if (!(await confirmSignOut())) return;
     await logout();
     await router.push({ name: 'login' });
     toast.success(t('core.auth.signed_out'));

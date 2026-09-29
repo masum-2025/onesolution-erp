@@ -131,8 +131,8 @@ class SyncService
             'results' => $results,
             'changes' => $changes,
             'cursor' => $now->toIso8601String(),
-            'lease' => $renewed['token'],
-            'lease_expires_at' => CarbonImmutable::createFromTimestamp($renewed['lease']['exp'])->toIso8601String(),
+            // The new lease, as the device keeps it (token, id, rules, kinds, until when).
+            ...$this->leases->describe($renewed),
         ]];
     }
 

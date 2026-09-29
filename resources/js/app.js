@@ -21,6 +21,11 @@ async function boot() {
     await initI18n(locales, readPref('locale') ?? el.dataset.defaultLocale);
 
     createApp(App).use(router).mount(el);
+
+    // The app itself opens without a connection (Phase 7-2); data offline is the encrypted store's.
+    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => null);
+    }
 }
 
 boot();

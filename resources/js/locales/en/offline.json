@@ -32,5 +32,30 @@
         "remove": "Remove",
         "remove_title": "Remove {name}?",
         "remove_text": "It stops working offline at once and clears its offline data the next time it connects."
+    },
+    "browser": {
+        "title": "This browser",
+        "text": "Keep working here when the connection drops. Data kept for offline work is encrypted on this browser and cleared when you sign out.",
+        "name": "Name for this browser",
+        "name_default": "My browser",
+        "enable": "Set up offline work",
+        "enabled": "This browser can now work offline.",
+        "until": "Offline access until {date}",
+        "last_sync": "Last synced {when}",
+        "never": "Not synced yet",
+        "sync_now": "Sync now",
+        "problems": "Changes that were not applied",
+        "problem_line": "{kind} · {action} · {when}",
+        "dismiss": "Dismiss",
+        "results": {
+            "conflict": "Someone changed this record first. Open it and make your change again.",
+            "rejected": "The server refused this change.",
+            "quarantined": "Held for a manager to decide."
+        },
+        "actions": {
+            "create": "New",
+            "update": "Edit",
+            "delete": "Delete"
+        }
     }
 }
