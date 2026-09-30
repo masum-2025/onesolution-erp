@@ -47,6 +47,16 @@ return [
             'report' => false,
         ],
 
+        // Encrypted backup sets (Phase 8-2), outside the app's own files. Use an
+        // off-site disk with object lock in production (BACKUP_DISK).
+        'backups' => [
+            'driver' => 'local',
+            'root' => storage_path('backups'),
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

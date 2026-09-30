@@ -1,0 +1,57 @@
+name: supply-chain
+
+# Phase 8-2: known-vulnerable dependencies fail the build, and every build
+# records what it is made of (SBOM, CycloneDX). Runs weekly as well, because
+# new advisories appear for code that has not changed.
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: audit and SBOM
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, sodium
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts
+          npm ci
+
+      - name: PHP packages with known vulnerabilities
+        run: composer audit --locked
+
+      - name: JavaScript packages with known vulnerabilities
+        run: npm audit --audit-level=high
+
+      - name: Software bill of materials
+        run: |
+          composer global config --no-plugins allow-plugins.cyclonedx/cyclonedx-php-composer true
+          composer global require --no-interaction --no-progress cyclonedx/cyclonedx-php-composer
+          composer CycloneDX:make-sbom --output-format=JSON --output-file=sbom-php.cdx.json
+          npx --yes @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom-js.cdx.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom-*.cdx.json
+          retention-days: 90

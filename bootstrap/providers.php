@@ -14,6 +14,7 @@ use App\Platform\Partners\PartnersServiceProvider;
 use App\Platform\Payments\PaymentsServiceProvider;
 use App\Platform\Portal\PortalServiceProvider;
 use App\Platform\Rules\RulesServiceProvider;
+use App\Platform\Security\SecurityServiceProvider;
 use App\Platform\SupportAccess\SupportAccessServiceProvider;
 use App\Platform\Tenancy\TenancyServiceProvider;
 use App\Platform\Transfers\TransfersServiceProvider;
@@ -38,4 +39,5 @@ return [
     PortalServiceProvider::class,
     CountriesServiceProvider::class,
     OfflineServiceProvider::class,
+    SecurityServiceProvider::class,
 ];

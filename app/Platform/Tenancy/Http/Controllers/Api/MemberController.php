@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Platform\Access\Http\Requests\UpdateMemberRolesRequest;
 use App\Platform\Access\Services\RoleService;
+use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Actions\AddMember;
 use App\Platform\Tenancy\Actions\ChangeMembership;
 use App\Platform\Tenancy\Enums\AccessScope;
@@ -32,7 +33,7 @@ class MemberController extends Controller
         $organization = $this->findVisible($organization);
         Gate::authorize('manageMembers', $organization);
 
-        $perPage = max(1, min($request->integer('per_page', 50), 100));
+        $perPage = PerPage::from($request, 50);
 
         return MembershipResource::collection(
             $organization->memberships()->with(['user', 'roles'])->orderBy('created_at')->paginate($perPage)

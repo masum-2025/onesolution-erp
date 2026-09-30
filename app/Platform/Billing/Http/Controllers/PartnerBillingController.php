@@ -13,6 +13,7 @@ use App\Platform\Billing\Services\Payouts;
 use App\Platform\Partners\Http\Controllers\Concerns\PartnerConsole;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
+use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
@@ -79,7 +80,7 @@ class PartnerBillingController extends Controller
             ->with('credits')
             ->orderByDesc('issued_at')
             ->orderByDesc('number')
-            ->paginate(max(1, min($request->integer('per_page', 25), 100)));
+            ->paginate(PerPage::from($request, 25));
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Invoice $invoice) => $this->presenter->summary($invoice))->values(),
@@ -105,7 +106,7 @@ class PartnerBillingController extends Controller
             ->where('partner_id', $this->partner()->getKey())
             ->with('invoice')
             ->orderByDesc('created_at')
-            ->paginate(max(1, min($request->integer('per_page', 25), 100)));
+            ->paginate(PerPage::from($request, 25));
 
         $clients = Organization::query()->whereKey(collect($page->items())->pluck('organization_id')->unique()->values())->get()
             ->mapWithKeys(fn (Organization $organization) => [$organization->getKey() => $organization->displayName()]);

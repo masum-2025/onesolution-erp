@@ -53,7 +53,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_mysql, pdo_pgsql, intl
+          extensions: mbstring, pdo_mysql, pdo_pgsql, intl, sodium
           coverage: none
 
       - name: Install dependencies
@@ -69,6 +69,22 @@ jobs:
 
       - name: Tests
         run: php artisan test
+
+      # Phase 8-2: a real backup with the database's own dump tool, restored into a
+      # separate database and checked (the same commands the servers schedule).
+      - name: Backup and restore drill
+        env:
+          BACKUP_DRILL_DATABASE: onesolution_erp_restore_drill
+        run: |
+          if [ "${{ matrix.database }}" = "mysql" ]; then
+            mysql -h 127.0.0.1 -u root -psecret -e "CREATE DATABASE IF NOT EXISTS onesolution_erp_restore_drill"
+          else
+            PGPASSWORD=secret createdb -h 127.0.0.1 -U postgres onesolution_erp_restore_drill
+          fi
+          php artisan migrate --force
+          export BACKUP_KEY_V1="$(php artisan backup:run --generate-key | head -n 1)"
+          php artisan backup:run
+          php artisan backup:restore-drill
 
   frontend:
     name: frontend

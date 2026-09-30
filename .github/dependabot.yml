@@ -1,0 +1,24 @@
+# Phase 8-2: weekly update pull requests for PHP, JavaScript and CI actions.
+# Security updates are opened as soon as an advisory appears (enable
+# "Dependabot security updates" in the repository settings).
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      laravel:
+        patterns: ['laravel/*']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -27,11 +27,10 @@ class SecurityHeaders
         if (! $response->headers->has('Content-Security-Policy')) {
             $response->headers->set('Content-Security-Policy', $this->policy($nonce));
         }
-        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        // nosniff, referrer policy and HSTS: BaselineSecurityHeaders, on every response.
         if (! $response->headers->has('X-Frame-Options')) {
             $response->headers->set('X-Frame-Options', 'DENY');
         }
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
 
         return $response;

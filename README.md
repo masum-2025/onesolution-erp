@@ -1596,6 +1596,60 @@ Local development: passkeys need HTTPS except on `PASSKEY_INSECURE_HOSTS` (defau
   people in several accounts (platform support); SMS as a second step (weaker, not planned);
   e-mailing the person when a reset is approved (Phase 9 alerts).
 
+## Platform hardening (Phase 8-2)
+
+Every Phase 8 layer with its evidence: [docs/security-checklist.md](docs/security-checklist.md).
+Server-side guides: [least-privilege DB users](docs/ops/db-least-privilege.md),
+[server hardening](docs/ops/server-hardening.md), [backups](docs/ops/backups.md).
+Code: `app/Platform/Security`, settings: `config/security.php`.
+
+### What the app enforces
+
+- **Tenant id in the address, checked centrally.** `ResolveOrganization` (and `ResolvePartner`,
+  `AuthenticatePartnerKey` for `{client}`) refuses an `{organization}` the context may not see
+  with the same 404 as a missing one, before validation or the controller runs. A real
+  organization of someone else is logged as `tenant.cross_access_attempt`.
+- **General API limits** (per minute): 120 per person, 600 per organization, 300 per address
+  (`SECURITY_API_*`, placeholders). The address limit (`ThrottleByAddress`) runs before sign-in,
+  so requests with bad tokens are counted too. Each endpoint keeps its own stricter limit.
+  Behind a load balancer set `TRUSTED_PROXIES`.
+- **Headers on every response:** `nosniff`, `Referrer-Policy`, and HSTS on HTTPS
+  (`SECURITY_HSTS_*`); pages also get the nonce CSP and `X-Frame-Options`.
+- **Lists** are capped at 100 per page (`PerPage::from`).
+- **Security log** (`storage/logs/security.log`, JSON lines): failed sign-ins, refused (403) and
+  rate-limited (429) answers, cross-tenant attempts, and sensitive audit actions
+  (`security.logged_actions`). Ids and codes only, never emails, passwords, codes or tokens.
+- **Static checks** (`tests/Feature/Architecture/ApplicationSafetyTest`): strict form requests,
+  no whole-request mass assignment, no raw SQL, no unescaped HTML, every model declares its
+  fields, no uploads on the public disk, no debug output.
+- **Public endpoints** are a reviewed list (`tests/Feature/Security/PublicRoutesTest`); a new one
+  fails the tests until it is added there with its protection.
+
+### Commands
+
+| Command | Purpose |
+|---------|---------|
+| `php artisan security:check [--strict]` | run on every deploy; exit 1 in production while a setting is unsafe, with what to change |
+| `php artisan backup:run [--no-prune] [--generate-key]` | encrypted, signed backup set (database + private files); nightly |
+| `php artisan backup:restore-drill [--set=]` | restore into `BACKUP_DRILL_DATABASE` and check; monthly |
+
+Backups need PHP's `sodium` extension (`ext-sodium` in composer.json) and the database's own dump
+tools; on Laragon set `BACKUP_MYSQLDUMP` / `BACKUP_MYSQL` (see `.env.example`).
+
+### CI
+
+- `tests.yml`: Pint, Pest, and a real backup + restore drill on MySQL and PostgreSQL.
+- `supply-chain.yml`: `composer audit`, `npm audit --audit-level=high`, CycloneDX SBOM (artifact),
+  also weekly. `dependabot.yml`: weekly update pull requests.
+
+### Future expansion (Phase 8-2)
+
+- A new country, sector or partner needs no code: limits and headers are platform settings,
+  partner domains get HSTS automatically, new endpoints are swept by the tests on their own.
+- Open: alerts on security-log spikes and the incident playbook (Phase 9); an S3 disk with object
+  lock for off-site backups (needs the bucket); AI prompt-injection tests with the first AI feature;
+  measuring real traffic to replace the placeholder limits.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

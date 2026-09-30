@@ -4,14 +4,18 @@ namespace App\Platform\Tenancy\Http\Middleware;
 
 use App\Http\Middleware\ApplyRequestLocale;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Security\SecurityLog;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\ContextSource;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Exceptions\MissingTenantContext;
 use App\Platform\Tenancy\Exceptions\OrganizationAccessDenied;
+use App\Platform\Tenancy\Exceptions\OrganizationNotFound;
+use App\Platform\Tenancy\Models\Organization;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -25,6 +29,7 @@ class ResolveOrganization
         private ContextResolver $resolver,
         private ContextSource $source,
         private AuditLogger $audit,
+        private SecurityLog $securityLog,
     ) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -77,7 +82,36 @@ class ResolveOrganization
             }
         }
 
+        // After the language is set, so the 404 reads in the organization's language.
+        $this->guardRouteOrganization($request, $context);
+
         return $next($request);
+    }
+
+    /**
+     * An {organization} in the address must be one this context may see, checked
+     * before any validation or controller runs (Phase 8-2). Controllers still load
+     * it through Organization::visibleTo; this is the second, central check. An
+     * organization that exists elsewhere is a cross-tenant attempt and is logged;
+     * the answer is the same 404 as for an id that does not exist.
+     */
+    private function guardRouteOrganization(Request $request, CurrentContext $context): void
+    {
+        $id = $request->route('organization');
+
+        if (! is_string($id) || Organization::query()->visibleTo($context)->whereKey($id)->exists()) {
+            return;
+        }
+
+        if (Str::isUlid($id) && Organization::query()->whereKey($id)->exists()) {
+            $this->securityLog->record('tenant.cross_access_attempt', [
+                'user_id' => $context->user()?->getKey(),
+                'organization_id' => $context->organization()->getKey(),
+                'requested_organization_id' => $id,
+            ], 'warning');
+        }
+
+        throw new OrganizationNotFound;
     }
 
     /**

@@ -16,6 +16,7 @@ use App\Platform\PartnerApi\Http\Requests\ApiMemberRequest;
 use App\Platform\PartnerApi\Http\Requests\ApiPlanRequest;
 use App\Platform\Partners\Http\Requests\StoreClientRequest;
 use App\Platform\Partners\Services\ClientProvisioner;
+use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipType;
@@ -39,7 +40,7 @@ class PartnerApiV1Controller extends Controller
             ->where('partner_id', $this->context->partner()->getKey())
             ->whereNull('parent_id')
             ->orderBy('created_at')
-            ->paginate(max(1, min($request->integer('per_page', 50), 100)));
+            ->paginate(PerPage::from($request, 50));
 
         return response()->json([
             'data' => PartnerOrganizationResource::collection($page->items()),

@@ -5,6 +5,7 @@ namespace App\Platform\Audit\Http;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Platform\Audit\AuditLog;
+use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Http\Controllers\Api\Concerns\FindsVisibleOrganizations;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +26,7 @@ class AuditLogController extends Controller
         $organization = $this->findVisible($organization);
         Gate::authorize('audit.view', $organization);
 
-        $perPage = max(1, min($request->integer('per_page', 50), 100));
+        $perPage = PerPage::from($request, 50);
         $filter = $request->query('filter');
 
         $page = AuditLog::query()

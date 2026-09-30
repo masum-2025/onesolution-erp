@@ -35,3 +35,9 @@ Schedule::command('offline:discard-expired')->dailyAt('03:45')->withoutOverlappi
 
 // Data export files are deleted after their retention period.
 Schedule::command('exports:prune')->dailyAt('03:00')->withoutOverlapping()->onOneServer();
+
+// Encrypted backup set every night, old sets removed (Phase 8-2).
+Schedule::command('backup:run')->dailyAt('01:30')->withoutOverlapping()->onOneServer();
+
+// The restore drill: the newest set restored into the staging database and checked.
+Schedule::command('backup:restore-drill')->monthlyOn(2, '04:00')->withoutOverlapping()->onOneServer();

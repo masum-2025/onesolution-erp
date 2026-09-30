@@ -3,6 +3,7 @@
 namespace App\Platform\Tenancy\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Exceptions\OrganizationNotFound;
 use App\Platform\Tenancy\Http\Resources\PartnerOrganizationResource;
@@ -20,7 +21,7 @@ class PartnerOrganizationController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $perPage = max(1, min($request->integer('per_page', 50), 100));
+        $perPage = PerPage::from($request, 50);
 
         return PartnerOrganizationResource::collection(
             Organization::query()

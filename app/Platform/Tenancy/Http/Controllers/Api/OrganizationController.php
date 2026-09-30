@@ -5,6 +5,7 @@ namespace App\Platform\Tenancy\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Platform\Packaging\Actions\ApplySectorPackage;
 use App\Platform\Packaging\Http\PackageSummary;
+use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Actions\CreateOrganization;
 use App\Platform\Tenancy\Actions\UpdateOrganization;
 use App\Platform\Tenancy\Context\CurrentContext;
@@ -36,7 +37,7 @@ class OrganizationController extends Controller
     {
         Gate::authorize('viewAny', Organization::class);
 
-        $perPage = max(1, min($request->integer('per_page', 50), 100));
+        $perPage = PerPage::from($request, 50);
 
         $organizations = Organization::query()
             ->visibleTo($this->context)
