@@ -125,11 +125,13 @@ class LegalService
         $this->assertKind($kind);
 
         return DB::transaction(function () use ($partner, $kind, $title, $body, $summary, $actor) {
+            // Lock the rows, then take the highest (PostgreSQL refuses FOR UPDATE with MAX()).
             $last = LegalDocument::query()
                 ->where('partner_id', $partner?->getKey())
                 ->where('kind', $kind)
                 ->lockForUpdate()
-                ->max('version');
+                ->pluck('version')
+                ->max();
 
             $document = new LegalDocument;
             $document->forceFill([

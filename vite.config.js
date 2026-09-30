@@ -4,12 +4,17 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'node:url';
 
+// Unit tests need neither Laravel's asset plugin nor its CI check (which
+// refuses to start under CI, taking the test run for a dev server).
+const unitTests = Boolean(process.env.VITEST);
+
 export default defineConfig({
     plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-        }),
+        !unitTests &&
+            laravel({
+                input: ['resources/css/app.css', 'resources/js/app.js'],
+                refresh: true,
+            }),
         vue({
             template: {
                 transformAssetUrls: { base: null, includeAbsolute: false },

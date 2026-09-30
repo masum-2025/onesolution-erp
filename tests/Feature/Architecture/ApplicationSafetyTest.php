@@ -84,6 +84,19 @@ it('uses no raw SQL (bindings through the query builder only)', function () {
     expect(array_values(array_filter($raw, fn (string $line) => ! in_array(strstr($line, ':', true), $allowed, true))))->toBe([]);
 });
 
+it('never locks rows inside an aggregate query (PostgreSQL refuses FOR UPDATE with MAX/COUNT)', function () {
+    $locked = [];
+
+    foreach (safetySources([...APP_CODE, 'database']) as $path => $contents) {
+        // A builder chain (no statement end in between) that locks, then aggregates in SQL.
+        if (preg_match('/->lockForUpdate\(\)[^;]*?->(max|min|sum|count|avg)\(\s*[\'"]/', $contents) === 1) {
+            $locked[] = $path;
+        }
+    }
+
+    expect($locked)->toBe([]);
+});
+
 it('never prints unescaped HTML', function () {
     // The scan must actually see the frontend (a wrong pattern would pass silently).
     expect(count(safetySources(['resources/js'], '/\.(vue|js|ts)$/')))->toBeGreaterThan(20);

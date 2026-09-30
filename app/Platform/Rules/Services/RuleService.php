@@ -63,12 +63,14 @@ class RuleService
         $this->assertAllowed($target, $rule, $mode, $value, $countryCode, $effectiveFrom);
 
         return DB::transaction(function () use ($target, $rule, $mode, $value, $reason, $actor, $countryCode, $effectiveFrom, $trusted, $auditContext) {
+            // Lock the rows, then take the highest (PostgreSQL refuses FOR UPDATE with MAX()).
             $version = (int) RuleValue::query()
                 ->where('rule_key', $rule->key)
                 ->where('scope_type', $target->scope)
                 ->where('scope_id', $target->scopeId)
                 ->lockForUpdate()
-                ->max('version') + 1;
+                ->pluck('version')
+                ->max() + 1;
 
             $pending = $rule->needsApproval() && ! $trusted;
 
