@@ -17,6 +17,17 @@ abstract class TestCase extends BaseTestCase
     /** Test-only business tables that follow their client (Phase 10). */
     public const FIXTURE_TENANT_MIGRATIONS = 'tests/Fixtures/migrations/tenant';
 
+    /**
+     * Pages render without built frontend assets (CI does not build them
+     * before the PHP tests; the frontend job builds and checks them).
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutVite();
+    }
+
     public function createApplication()
     {
         $app = parent::createApplication();

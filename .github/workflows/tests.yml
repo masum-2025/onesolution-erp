@@ -108,7 +108,13 @@ jobs:
         run: npm ci
 
       - name: Unit tests
-        run: npx vitest run --reporter=default --reporter=github-actions
+        run: |
+          set -o pipefail
+          npx vitest run --reporter=default --reporter=github-actions 2>&1 | tee vitest.log
+
+      - name: Report the end of the test output
+        if: failure()
+        run: php scripts/ci-annotate.php --log vitest.log
 
       - name: Build and check the bundle budget
         run: npm run build

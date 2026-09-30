@@ -17,10 +17,15 @@ return new class extends Migration
             $table->string('slug', 100)->unique();
             $table->string('status', 20)->default('active')->index();
             $table->boolean('is_house')->default(false);
-            $table->foreignUlid('parent_partner_id')->nullable()->constrained('partners')->restrictOnDelete();
+            $table->ulid('parent_partner_id')->nullable();
             $table->string('billing_mode', 30)->default('direct');
             $table->json('settings')->nullable();
             $table->timestamps();
+        });
+
+        // A key to the same table is added once its primary key exists (PostgreSQL).
+        Schema::table('partners', function (Blueprint $table) {
+            $table->foreign('parent_partner_id')->references('id')->on('partners')->restrictOnDelete();
         });
 
         Schema::create('partner_users', function (Blueprint $table) {

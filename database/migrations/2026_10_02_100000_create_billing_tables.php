@@ -89,7 +89,7 @@ return new class extends Migration
             $table->string('number', 30)->unique();
             // invoice | credit_note
             $table->string('type', 20);
-            $table->foreignUlid('credits_invoice_id')->nullable()->constrained('invoices')->restrictOnDelete();
+            $table->ulid('credits_invoice_id')->nullable();
             // partner (wholesale) | organization (direct, revenue share)
             $table->string('billed_to', 20);
             $table->foreignUlid('partner_id')->constrained()->restrictOnDelete();
@@ -119,6 +119,11 @@ return new class extends Migration
 
             $table->index(['partner_id', 'billed_to', 'issued_at']);
             $table->index(['organization_id', 'issued_at']);
+        });
+
+        // A key to the same table is added once its primary key exists (PostgreSQL).
+        Schema::table('invoices', function (Blueprint $table) {
+            $table->foreign('credits_invoice_id')->references('id')->on('invoices')->restrictOnDelete();
         });
 
         Schema::create('invoice_lines', function (Blueprint $table) {

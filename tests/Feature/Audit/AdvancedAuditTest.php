@@ -92,6 +92,8 @@ it('refuses a report period longer than allowed, in the reader\'s language', fun
 });
 
 it('exports the log as CSV: own entries only, safe for spreadsheets, downloadable for a while', function () {
+    // Midday in Dhaka: "today" is the same date in UTC and in the organization's time zone.
+    $this->travelTo(now('UTC')->setTime(6, 0));
     oldEntry($this->w->c1->id, 'rule.changed', 2, ['actor_user_id' => $this->owner->id, 'reason' => '=HYPERLINK("http://evil.test")']);
     oldEntry($this->w->b1->id, 'module.enabled', 1);
     oldEntry($this->w->c2->id, 'rule.changed', 1, ['reason' => 'sister company']);

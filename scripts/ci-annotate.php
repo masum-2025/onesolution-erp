@@ -7,7 +7,17 @@
  * test databases hold no real data.
  *
  *   php scripts/ci-annotate.php junit.xml
+ *   php scripts/ci-annotate.php --log vitest.log   (the last lines of a log)
  */
+
+$escape = fn (string $value) => str_replace(['%', "\r", "\n"], ['%25', '%0D', '%0A'], $value);
+
+if (($argv[1] ?? '') === '--log') {
+    $log = (string) @file_get_contents($argv[2] ?? '');
+    $lines = array_slice(preg_split('/\R/', preg_replace('/\e\[[0-9;]*m/', '', $log)), -80);
+    echo '::error title=Last lines of '.basename($argv[2] ?? 'log').'::'.$escape(mb_substr(implode("\n", $lines), -6000))."\n";
+    exit(0);
+}
 
 $file = $argv[1] ?? 'junit.xml';
 
@@ -33,7 +43,6 @@ if ($failures === []) {
 }
 
 // GitHub shows at most 10 error annotations per step: five failures each.
-$escape = fn (string $value) => str_replace(['%', "\r", "\n"], ['%25', '%0D', '%0A'], $value);
 foreach (array_slice(array_chunk($failures, 5), 0, 10) as $index => $chunk) {
     echo '::error title=Failed tests '.($index * 5 + 1).'-'.($index * 5 + count($chunk)).' of '.count($failures).'::'
         .$escape(implode("\n\n", $chunk))."\n";

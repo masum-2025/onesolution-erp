@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('organizations', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->foreignUlid('partner_id')->constrained('partners')->restrictOnDelete();
-            $table->foreignUlid('parent_id')->nullable()->constrained('organizations')->restrictOnDelete();
+            $table->ulid('parent_id')->nullable();
             // The top group of this tree (equals id for the root). No FK so the root can point at itself.
             $table->ulid('root_id')->index();
             // Materialized path of ids from the root down to this row: "/{root}/{child}/{id}/".
@@ -37,6 +37,11 @@ return new class extends Migration
 
             // Every subtree query filters by partner first, then by path prefix.
             $table->index(['partner_id', 'path']);
+        });
+
+        // A key to the same table is added once its primary key exists (PostgreSQL).
+        Schema::table('organizations', function (Blueprint $table) {
+            $table->foreign('parent_id')->references('id')->on('organizations')->restrictOnDelete();
         });
 
         Schema::create('organization_user', function (Blueprint $table) {
