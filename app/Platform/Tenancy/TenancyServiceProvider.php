@@ -8,7 +8,9 @@ use App\Platform\Tenancy\Contracts\SignInRequirements;
 use App\Platform\Tenancy\Contracts\WorkspaceRestrictions;
 use App\Platform\Tenancy\Databases\Console\TenantsList;
 use App\Platform\Tenancy\Databases\Console\TenantsMigrate;
+use App\Platform\Tenancy\Databases\Console\TenantsMove;
 use App\Platform\Tenancy\Databases\Console\TenantsPlace;
+use App\Platform\Tenancy\Databases\Console\TenantsPurgeSource;
 use App\Platform\Tenancy\Databases\TenantDatabases;
 use App\Platform\Tenancy\Databases\TenantTables;
 use App\Platform\Tenancy\Models\Organization;
@@ -61,7 +63,7 @@ class TenancyServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(app(TenantTables::class)->migrationPaths());
 
         if ($this->app->runningInConsole()) {
-            $this->commands([TenantsMigrate::class, TenantsPlace::class, TenantsList::class]);
+            $this->commands([TenantsMigrate::class, TenantsPlace::class, TenantsList::class, TenantsMove::class, TenantsPurgeSource::class]);
         }
 
         RateLimiter::for('tenancy-login', fn (Request $request) => Limit::perMinute((int) config('tenancy.throttle.login'))

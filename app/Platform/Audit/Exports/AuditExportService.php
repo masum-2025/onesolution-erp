@@ -136,7 +136,7 @@ class AuditExportService
     private function write(AuditExport $export, string $file): int
     {
         $filters = $export->filters;
-        $query = $this->audit->forOrganization($export->organization, [
+        $query = $this->audit->forReporting($export->organization, [
             'from' => CarbonImmutable::parse($filters['from']),
             'to' => CarbonImmutable::parse($filters['to']),
             'action' => $filters['action'] ?? null,

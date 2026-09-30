@@ -3,6 +3,15 @@
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 
+// Phase 10-3: read replicas. With DB_READ_HOST (comma-separated) set, reads go
+// to a replica and writes to DB_HOST; "sticky" reads a request's own writes
+// back from the primary, so nobody misses a change they just made.
+$readReplicas = env('DB_READ_HOST') ? [
+    'read' => ['host' => array_map('trim', explode(',', (string) env('DB_READ_HOST')))],
+    'write' => ['host' => [env('DB_HOST', '127.0.0.1')]],
+    'sticky' => true,
+] : [];
+
 return [
 
     /*
@@ -62,6 +71,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            ...$readReplicas,
         ],
 
         'mariadb' => [
@@ -97,6 +107,7 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            ...$readReplicas,
         ],
 
         'sqlsrv' => [
@@ -131,6 +142,26 @@ return [
         'table' => 'migrations',
         'update_date_on_publish' => true,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reporting database (Phase 10-3)
+    |--------------------------------------------------------------------------
+    |
+    | Heavy reads (audit reports and exports, analytics export) go to this
+    | replica when DB_REPORTING_HOST is set; anything not given is copied from
+    | the main connection. Without it they use the main database. A replica
+    | may lag a few seconds behind, which reports accept.
+    |
+    */
+
+    'reporting' => array_filter([
+        'host' => env('DB_REPORTING_HOST'),
+        'port' => env('DB_REPORTING_PORT'),
+        'database' => env('DB_REPORTING_DATABASE'),
+        'username' => env('DB_REPORTING_USERNAME'),
+        'password' => env('DB_REPORTING_PASSWORD'),
+    ], fn ($value) => $value !== null && $value !== ''),
 
     /*
     |--------------------------------------------------------------------------

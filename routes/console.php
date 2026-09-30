@@ -48,5 +48,8 @@ Schedule::command('audit:prune')->dailyAt('03:15')->withoutOverlapping()->onOneS
 // New audit entries to the external audit store, when one is configured.
 Schedule::command('audit:ship')->everyMinute()->withoutOverlapping()->onOneServer();
 
+// New platform rows to the analytics store, when one is configured (Phase 10-3).
+Schedule::command('analytics:export')->everyFifteenMinutes()->withoutOverlapping()->onOneServer();
+
 // The scheduler says it is alive; health:report warns when it goes quiet (Phase 9-2).
 Schedule::command('monitor:heartbeat')->everyMinute()->onOneServer();

@@ -34,7 +34,7 @@ class AuditReport
         $money = 0;
         $total = 0;
 
-        $rows = $this->audit->forOrganization($organization, ['from' => $from, 'to' => $to])
+        $rows = $this->audit->forReporting($organization, ['from' => $from, 'to' => $to])
             ->toBase()
             ->select(['id', 'created_at', 'action', 'actor_user_id'])
             ->lazyById(1000, 'id');

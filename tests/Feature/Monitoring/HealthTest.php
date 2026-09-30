@@ -50,7 +50,7 @@ it('reports every check, with counts and times only', function () {
     $response = $this->withToken('health-secret-token')->getJson(healthUrl())->assertOk()->assertHeader('Cache-Control', 'no-store, private');
 
     expect(array_keys($response->json('checks')))->toBe([
-        'database', 'tenant_databases', 'cache', 'queue_depth', 'failed_jobs', 'sync_errors', 'rule_cache_hit_rate', 'backup', 'restore_drill', 'scheduler', 'open_alerts',
+        'database', 'tenant_databases', 'reporting_database', 'cache', 'queue_depth', 'failed_jobs', 'sync_errors', 'rule_cache_hit_rate', 'backup', 'restore_drill', 'scheduler', 'open_alerts',
     ])
         ->and($response->json('status'))->toBe('ok')
         ->and($response->json('checks.backup.status'))->toBe('ok')

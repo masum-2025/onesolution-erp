@@ -1812,6 +1812,64 @@ php artisan tenants:list
 - Open: per-region platform data (people and audit of a region's clients stay in the main
   database for now).
 
+## Moving clients, replicas and analytics (Phase 10-3)
+
+### Moving a client to another database
+
+```bash
+php artisan tenants:migrate --database=acme            # the target has the tenant tables
+php artisan tenants:move <root-org-id> acme --reason="Large client"   # or --shared to go back
+php artisan tenants:purge-source <root-org-id> --confirm=<root-org-id> --reason="…"   # after retention
+```
+
+1. The client is marked `moving`: reading works, changes answer 503 `data_moving` (bn/en), offline
+   changes wait on the device (`retry_later`).
+2. After `TENANT_MOVE_SETTLE_SECONDS` (5), every tenant table's rows of the tree are copied in id
+   order, then both sides are compared per table: row count and a SHA-256 checksum computed in PHP
+   over every column (the same on MySQL and PostgreSQL).
+3. Only when every table matches does the placement switch. Otherwise the copy is deleted, the
+   client stays where it was and `tenant_database.move_failed` names the tables that differed.
+4. The old rows stay in the old database for `TENANT_MOVE_RETAIN_DAYS` (30, placeholder), then
+   `tenants:purge-source` removes them (typed confirmation). Moving back to that database replaces
+   the stale copy with the current data.
+
+Every move is a `tenant_moves` row with its report, and `tenant_database.*` audit entries the
+client sees in its own log. Both databases must be the same server kind (MySQL or PostgreSQL).
+`tests/Feature/Tenancy/TenantIsolationTest` runs the whole isolation suite on a group moved this way.
+
+### Read replicas and the reporting database
+
+- `DB_READ_HOST=10.0.0.8,10.0.0.9`: reads go to replicas, writes to `DB_HOST`; `sticky` reads a
+  request's own writes back from the primary.
+- `DB_REPORTING_HOST` (+ optional `_PORT`, `_DATABASE`, `_USERNAME`, `_PASSWORD`): audit reports,
+  audit exports and the analytics export read there (`ReportingDatabase`); without it, the main
+  database. The audit screen itself always reads the primary. Health: `reporting_database`.
+
+### Analytics store
+
+`ANALYTICS_DRIVER=none|jsonl|clickhouse`. `analytics:export` runs every 15 minutes and queues
+`ExportAnalytics`, which sends new rows in order with a cursor (`analytics_cursors`), so nothing is
+skipped or sent twice; a refused batch keeps the cursor where it was. Dataset `audit_events`:
+`id, created_at, partner_id, organization_id, action, area, target_type`, nothing about people,
+addresses, values or reasons.
+
+ClickHouse: `ANALYTICS_CLICKHOUSE_URL`, `_DATABASE` (onesolution), `_USERNAME`, `_PASSWORD`; create
+the table once, e.g.
+
+```sql
+CREATE TABLE onesolution.audit_events (
+  id String, created_at DateTime, partner_id Nullable(String), organization_id Nullable(String),
+  action LowCardinality(String), area LowCardinality(String), target_type Nullable(String)
+) ENGINE = ReplacingMergeTree ORDER BY (created_at, id);
+```
+
+### Future expansion (Phase 10-3)
+
+- A new analytics dataset is one method in `AnalyticsExport` and one table in the store; a new
+  store is one `AnalyticsSink` class. Partners, countries and sectors need no code.
+- Open: business-module datasets (none have tables yet); replicas for tenant databases
+  (`TENANT_DB_<NAME>_…` has no read split yet); an operator screen for moves.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

@@ -50,9 +50,10 @@ it('finds the tenant tables (the checks below are not empty)', function () {
     expect(app(TenantTables::class)->all())->toContain('tenant_notes');
 });
 
-it('gives every tenant table an organization_id', function () {
+it('gives every tenant table an organization_id and an id (the move tool copies by them)', function () {
     foreach (app(TenantTables::class)->all() as $table) {
-        expect(Schema::hasColumn($table, 'organization_id'))->toBeTrue("{$table} has no organization_id");
+        expect(Schema::hasColumn($table, 'organization_id'))->toBeTrue("{$table} has no organization_id")
+            ->and(Schema::hasColumn($table, 'id'))->toBeTrue("{$table} has no id");
     }
 });
 

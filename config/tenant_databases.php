@@ -62,4 +62,14 @@ return [
         database_path('migrations/tenant'),
     ],
 
+    // Moving a client to another database (tenants:move).
+    'move' => [
+        // Pause after marking the client "moving", so changes already under
+        // way finish before the copy starts (verification catches any that do not).
+        'settle_seconds' => (int) env('TENANT_MOVE_SETTLE_SECONDS', 5),
+        'chunk' => 500,
+        // The old copy stays this long before tenants:purge-source may remove it. PLACEHOLDER.
+        'retain_days' => (int) env('TENANT_MOVE_RETAIN_DAYS', 30),
+    ],
+
 ];

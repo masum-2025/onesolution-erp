@@ -1,6 +1,8 @@
 <?php
 
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Databases\TenantMove;
+use App\Platform\Tenancy\Databases\TenantMover;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Exceptions\MissingTenantContext;
@@ -8,6 +10,7 @@ use App\Platform\Tenancy\Exceptions\OrganizationAccessDenied;
 use App\Platform\Tenancy\Exceptions\OrganizationChangeForbidden;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Tests\Fixtures\TenantNote;
@@ -32,11 +35,17 @@ beforeEach(function () {
     $this->w = tenancyWorld();
 });
 
-foreach (['all clients in the main database' => false, 'group G1 in its own database' => true] as $placement => $dedicated) {
-    describe($placement, function () use ($dedicated) {
-        beforeEach(function () use ($dedicated) {
-            if ($dedicated) {
+foreach ([
+    'all clients in the main database' => 'main',
+    'group G1 in its own database' => 'placed',
+    'group G1 moved to its own database with tenants:move' => 'moved',
+] as $placement => $mode) {
+    describe($placement, function () use ($mode) {
+        beforeEach(function () use ($mode) {
+            if ($mode !== 'main') {
                 dedicatedTenantDatabase();
+            }
+            if ($mode === 'placed') {
                 placeClient($this->w->g1);
             }
 
@@ -47,6 +56,14 @@ foreach (['all clients in the main database' => false, 'group G1 in its own data
             $this->noteC3 = TenantNote::create(['title' => 'c3-note', 'organization_id' => $this->w->c3->id]);
             $this->noteC4 = TenantNote::create(['title' => 'c4-note', 'organization_id' => $this->w->c4->id]);
             $this->noteG1 = TenantNote::create(['title' => 'g1-note', 'organization_id' => $this->w->g1->id]);
+
+            // Written in the main database, then moved with the real tool (copy, verify, switch).
+            if ($mode === 'moved') {
+                config(['tenant_databases.move.settle_seconds' => 0]);
+                expect(app(TenantMover::class)->move($this->w->g1->fresh(), 'dedicated', 'Test move')->status)->toBe(TenantMove::COMPLETED);
+                // The old copy in the main database must not be readable through the app.
+                DB::table('tenant_notes')->where('organization_id', $this->w->c1->id)->update(['title' => 'stale']);
+            }
 
             $this->c1User = createMember($this->w->c1, MembershipType::Staff);
             $this->c1Token = orgToken($this->c1User, $this->w->c1);

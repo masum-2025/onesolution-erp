@@ -2,6 +2,7 @@
 
 namespace App\Platform\Audit;
 
+use App\Platform\Analytics\ReportingDatabase;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,13 +15,37 @@ use Illuminate\Support\Str;
  */
 class AuditQuery
 {
+    public function __construct(private ReportingDatabase $reporting) {}
+
     /**
      * @param  array{from?: ?CarbonImmutable, to?: ?CarbonImmutable, action?: ?string, actor?: ?string, filter?: ?string}  $filters
      * @return Builder<AuditLog>
      */
     public function forOrganization(Organization $organization, array $filters = []): Builder
     {
-        return AuditLog::query()
+        return $this->scoped(AuditLog::query(), $organization, $filters);
+    }
+
+    /**
+     * The same, read from the reporting replica when there is one (Phase 10-3):
+     * for reports and exports, which may lag a few seconds behind.
+     *
+     * @param  array{from?: ?CarbonImmutable, to?: ?CarbonImmutable, action?: ?string, actor?: ?string, filter?: ?string}  $filters
+     * @return Builder<AuditLog>
+     */
+    public function forReporting(Organization $organization, array $filters = []): Builder
+    {
+        return $this->scoped(AuditLog::on($this->reporting->connection()), $organization, $filters);
+    }
+
+    /**
+     * @param  Builder<AuditLog>  $query
+     * @param  array{from?: ?CarbonImmutable, to?: ?CarbonImmutable, action?: ?string, actor?: ?string, filter?: ?string}  $filters
+     * @return Builder<AuditLog>
+     */
+    private function scoped(Builder $query, Organization $organization, array $filters): Builder
+    {
+        return $query
             ->whereIn('organization_id', Organization::query()->subtreeOf($organization)->select('id'))
             ->when($filters['from'] ?? null, fn (Builder $query, CarbonImmutable $from) => $query->where('created_at', '>=', $from->utc()))
             ->when($filters['to'] ?? null, fn (Builder $query, CarbonImmutable $to) => $query->where('created_at', '<', $to->utc()))

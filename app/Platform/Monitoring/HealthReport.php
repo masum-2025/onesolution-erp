@@ -2,6 +2,7 @@
 
 namespace App\Platform\Monitoring;
 
+use App\Platform\Analytics\ReportingDatabase;
 use App\Platform\Monitoring\Models\SecurityAlert;
 use App\Platform\Tenancy\Databases\PlacementStatus;
 use App\Platform\Tenancy\Databases\TenantDatabases;
@@ -28,6 +29,7 @@ class HealthReport
         private Metrics $metrics,
         private TenantDatabases $databases,
         private TenantPlacements $placements,
+        private ReportingDatabase $reporting,
     ) {}
 
     /**
@@ -38,6 +40,7 @@ class HealthReport
         $checks = [
             'database' => $this->safely(fn () => $this->database()),
             'tenant_databases' => $this->safely(fn () => $this->tenantDatabases()),
+            'reporting_database' => $this->safely(fn () => $this->reportingDatabase()),
             'cache' => $this->safely(fn () => $this->cache()),
             'queue_depth' => $this->safely(fn () => $this->queueDepth()),
             'failed_jobs' => $this->safely(fn () => $this->failedJobs()),
@@ -112,6 +115,20 @@ class HealthReport
             'status' => $broken !== [] ? 'fail' : ($stuck > 0 ? 'warn' : 'ok'),
             'value' => ['configured' => count($names), 'unavailable' => $broken, 'stuck_moves' => $stuck],
         ];
+    }
+
+    /**
+     * The reporting replica answers (Phase 10-3); without one, reports use the main database.
+     */
+    private function reportingDatabase(): array
+    {
+        if (! $this->reporting->isConfigured()) {
+            return ['status' => 'ok', 'value' => 'main', 'detail' => 'reports read the main database'];
+        }
+
+        DB::connection($this->reporting->connection())->table('migrations')->limit(1)->count();
+
+        return ['status' => 'ok', 'value' => 'replica'];
     }
 
     private function cache(): array
