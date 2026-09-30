@@ -1745,6 +1745,73 @@ once; audited as `security.access_revoked`.
 - Open: an operator console (UI) for alerts and health; per-partner alert recipients; tuning the
   placeholder thresholds with real traffic.
 
+## Tenant databases (Phase 10-2)
+
+Code: `app/Platform/Tenancy/Databases`, settings: `config/tenant_databases.php`.
+
+A client tree (a group, or a stand-alone company, with everything below it) keeps its **business
+data** in one database: the main one (default, shared with every other client), a **dedicated**
+one, or its region's (**regional**). **Platform data** (organizations, people, memberships, roles,
+modules, rules, plans, billing, audit, identity) always stays in the main database. We did not use
+stancl/tenancy: it assumes one tenant per request picked by domain, while here group admins,
+partner consoles and platform jobs work across a whole tree against shared platform tables.
+
+- A business table's migration goes in `database/migrations/tenant` or
+  `Modules/<Module>/database/migrations/tenant`: it must have `organization_id` and no foreign key
+  to a platform table (no cross-database keys). Its model uses `BelongsToOrganization` **and**
+  `UsesTenantDatabase`. `tests/Feature/Architecture/TenantDatabaseTablesTest` enforces all of this;
+  module models with `BelongsToOrganization` must use `UsesTenantDatabase`.
+- `tenant_placements` (main database) names the database of a tree; no row = main database. Only
+  a name is stored; how to reach it comes from the environment:
+
+  ```dotenv
+  TENANT_DATABASES=eu1,acme
+  TENANT_DB_EU1_URL=pgsql://user:secret@10.0.0.5:5432/erp_eu1
+  TENANT_DB_ACME_DATABASE=erp_acme        # anything not given is copied from DB_*
+  TENANT_REGION_DATABASES=eu=eu1          # new clients in region "eu" start in eu1
+  ```
+
+- The database is chosen per query: code forced by system code (`TenantDatabases::within()`,
+  `Model::inTenantOf($org)`), else the signed-in context's tree, else the record's own
+  organization. Placements are read fresh per request and job, never from a shared cache; a name
+  that is not configured stops with an error instead of falling back to another database.
+- Across databases the organization scope filters by the context's visible organization ids
+  (it cannot join `organizations` there). Moving a unit into a tree kept in another database is
+  refused (`move_cross_database`).
+- While a tree's data moves (`status = moving`), reading works and every change answers 503
+  `data_moving` with a bn/en message.
+- Offline sync (Phase 7) applies each change in a transaction on the client's database and stores
+  a marker (`offline_applied_operations`, a tenant table) next to the business records. The
+  platform's `sync_operations` answer is written afterwards in the main database; if it is lost,
+  a resent change finds the marker and is not applied twice. While the data moves, a change's
+  result is `retry_later` (`data_moving`): nothing is stored, the device keeps it, and the rest of
+  the sync (changes, new lease) goes on. Releasing a held change then answers 503 and keeps it held.
+- Backups dump every tenant database into its own encrypted file in the same set
+  (`tenant-<name>.sql.gz.enc`); the restore drill restores each into `<drill database>_<name>` and
+  never into a live one. The health report checks each tenant database (`tenant_databases`) and
+  warns about a move unfinished after 120 minutes.
+
+Commands (operators; every change audited as `tenant_database.*`, visible in the client's audit
+log):
+
+```bash
+php artisan tenants:migrate [--database=eu1]      # tenant tables in dedicated / regional databases
+php artisan tenants:place <root-org-id> acme --reason="Large client"   # only while it has no business data
+php artisan tenants:place <root-org-id> --shared --reason="…"
+php artisan tenants:list
+```
+
+### Future expansion (Phase 10-2)
+
+- A new sector, country or partner needs no code: a region database is two environment lines.
+- A new module adds its business tables under `database/migrations/tenant` and they follow their
+  clients automatically (move tool, backups, health).
+- Today no real module has business tables yet; the test fixture `TenantNote` proves the
+  mechanism. `merchant_accounts` and `mfa_resets` stay in the main database (they are referenced
+  by, or reference, platform tables).
+- Open: per-region platform data (people and audit of a region's clients stay in the main
+  database for now).
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

@@ -54,6 +54,9 @@ final class CurrentContext
     /** @var array<string, bool> */
     private array $writableCache = [];
 
+    /** @var list<string>|null */
+    private ?array $visibleIds = null;
+
     /**
      * normal | read_only (support access, suspended partner in its grace
      * period) | export_only (suspended partner after the grace period).
@@ -134,6 +137,7 @@ final class CurrentContext
         $this->writeIncludesDescendants = true;
         $this->settings = [];
         $this->writableCache = [];
+        $this->visibleIds = null;
         $this->mode = self::MODE_NORMAL;
         $this->modeReason = null;
         $this->modeUntil = null;
@@ -239,6 +243,17 @@ final class CurrentContext
     public function includesDescendants(): bool
     {
         return $this->includeDescendants;
+    }
+
+    /**
+     * Ids of every organization this context may read (for business data in
+     * another database, which cannot join the organizations table).
+     *
+     * @return list<string>
+     */
+    public function visibleOrganizationIds(): array
+    {
+        return $this->visibleIds ??= Organization::query()->visibleTo($this)->pluck('id')->map(fn ($id) => (string) $id)->all();
     }
 
     public function locale(): ?string

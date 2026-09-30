@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
+use App\Platform\Tenancy\Databases\TenantDatabases;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Exceptions\HierarchyViolation;
 use App\Platform\Tenancy\Models\Organization;
@@ -23,6 +24,7 @@ class HierarchyService
         private AuditLogger $audit,
         private RuleResolver $rules,
         private RuleContextFactory $contexts,
+        private TenantDatabases $databases,
     ) {}
 
     /**
@@ -116,6 +118,11 @@ class HierarchyService
 
             if ($organization->parent_id === $newParent->getKey()) {
                 throw HierarchyViolation::alreadyThere();
+            }
+
+            // Its business data would stay behind in the old tree's database.
+            if ($this->databases->forRoot((string) $organization->root_id) !== $this->databases->forRoot((string) $newParent->root_id)) {
+                throw HierarchyViolation::crossDatabase();
             }
 
             $this->assertValidParent($organization->type, $newParent, $organization->partner);

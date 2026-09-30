@@ -75,6 +75,11 @@ return [
         'audit_pruned' => 'পুরোনো অডিট তথ্য মুছে ফেলা হয়েছে (সংরক্ষণ নীতি)',
         'audit_export_requested' => 'অডিট লগ এক্সপোর্টের অনুরোধ',
         'audit_export_downloaded' => 'অডিট লগ এক্সপোর্ট ডাউনলোড করা হয়েছে',
+        'tenant_database_placed' => 'তথ্য রাখার জায়গা ঠিক করা হয়েছে',
+        'tenant_database_move_started' => 'তথ্য নতুন জায়গায় সরানো শুরু হয়েছে',
+        'tenant_database_moved' => 'তথ্য নতুন জায়গায় সরানো হয়েছে',
+        'tenant_database_move_failed' => 'তথ্য সরানো থামানো হয়েছে; কিছুই বদলায়নি',
+        'tenant_database_source_purged' => 'সরানোর পর তথ্যের পুরোনো কপি মুছে ফেলা হয়েছে',
     ],
 
     'errors' => [

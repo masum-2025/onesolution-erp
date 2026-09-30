@@ -160,6 +160,11 @@ class SyncService
             default => $this->applier->apply($operation, $user, $organization, $madeUnder),
         };
 
+        // Not decided yet (the client's data is moving): nothing is stored, the device sends it again.
+        if ($result->status === SyncResult::RETRY_LATER) {
+            return $result;
+        }
+
         (new SyncOperationRecord)->forceFill([
             'device_id' => $device->getKey(),
             'organization_id' => $organization->getKey(),

@@ -126,6 +126,8 @@ return [
         'backup_max_age_hours' => 26,
         'drill_max_age_days' => 35,
         'scheduler_max_silence_minutes' => 5,
+        // A client's data move (Phase 10) still unfinished after this long needs a look.
+        'tenant_move_max_minutes' => 120,
     ],
 
 ];

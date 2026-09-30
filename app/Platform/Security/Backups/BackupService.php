@@ -4,6 +4,7 @@ namespace App\Platform\Security\Backups;
 
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Security\Backups\Contracts\DatabaseDumper;
+use App\Platform\Tenancy\Databases\TenantDatabases;
 use FilesystemIterator;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ use Throwable;
  * Encrypted backup sets (Phase 8-2). One set = one folder on the backup disk:
  *
  *   {id}/database.sql.gz.enc   the database (the driver's own dump tool)
+ *   {id}/tenant-{name}.sql.gz.enc  each dedicated / regional client database (Phase 10)
  *   {id}/files.tar.gz.enc      the app's private files (brand images, …)
  *   {id}/manifest.json         checksums, table row counts, key version, signed
  *
@@ -38,7 +40,14 @@ class BackupService
         private DatabaseDumper $dumper,
         private BackupCipher $cipher,
         private AuditLogger $audit,
+        private TenantDatabases $tenantDatabases,
     ) {}
+
+    /** The file of one tenant database in a set. */
+    public static function tenantFile(string $name): string
+    {
+        return 'tenant-'.$name.'.sql.gz.enc';
+    }
 
     /**
      * @return array<string, mixed> The manifest of the new set.
@@ -63,6 +72,18 @@ class BackupService
             $this->dumper->dump($connection, "{$work}/database.sql");
             $database = $this->seal("{$work}/database.sql", $disk, "{$id}/".self::DATABASE_FILE, $work);
 
+            // Every dedicated / regional client database (Phase 10), each on its own.
+            $tenantDatabases = [];
+            foreach ($this->tenantDatabases->names() as $name) {
+                $tenantConnection = $this->tenantDatabases->connectionFor($name);
+                $tenantTables = $this->rowCounts($tenantConnection);
+                $this->dumper->dump($tenantConnection, "{$work}/tenant.sql");
+                $tenantDatabases[$name] = [
+                    'database' => $this->seal("{$work}/tenant.sql", $disk, "{$id}/".self::tenantFile($name), $work),
+                    'tables' => $tenantTables,
+                ];
+            }
+
             $files = $this->archiveFiles("{$work}/files.tar");
             $filesEntry = $files === null ? null : [
                 ...$this->seal("{$work}/files.tar", $disk, "{$id}/".self::FILES_FILE, $work),
@@ -79,6 +100,7 @@ class BackupService
                 'database' => $database,
                 'files' => $filesEntry,
                 'tables' => $tables,
+                'tenant_databases' => $tenantDatabases,
             ];
             $manifest['signature'] = $this->cipher->sign($this->canonical($manifest), $manifest['key_version']);
 
@@ -96,6 +118,7 @@ class BackupService
             'set' => $id,
             'key_version' => $manifest['key_version'],
             'tables' => count($tables),
+            'tenant_databases' => array_keys($tenantDatabases),
             'database_bytes' => $database['bytes'],
             'files' => $files ?? 0,
         ]);

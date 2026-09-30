@@ -3,6 +3,7 @@
 namespace Tests\Fixtures;
 
 use App\Platform\Tenancy\Concerns\BelongsToOrganization;
+use App\Platform\Tenancy\Databases\UsesTenantDatabase;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -13,5 +14,5 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['organization_id', 'amount_minor', 'currency_code', 'version'])]
 class FixtureCashReceipt extends Model
 {
-    use BelongsToOrganization, HasUlids;
+    use BelongsToOrganization, HasUlids, UsesTenantDatabase;
 }

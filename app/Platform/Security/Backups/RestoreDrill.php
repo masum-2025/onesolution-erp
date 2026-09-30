@@ -4,6 +4,7 @@ namespace App\Platform\Security\Backups;
 
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Security\Backups\Contracts\DatabaseDumper;
+use App\Platform\Tenancy\Databases\TenantDatabases;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -50,8 +51,20 @@ class RestoreDrill
             Schema::connection(self::CONNECTION)->dropAllTables();
             $this->dumper->restore(self::CONNECTION, "{$work}/database.sql");
 
-            $tables = $this->compareTables($manifest['tables']);
+            $tables = $this->compareTables($manifest['tables'], self::CONNECTION);
             $files = $this->checkFiles($manifest, $work);
+
+            // Each dedicated / regional client database into its own staging database (Phase 10).
+            $tenantDatabases = [];
+            foreach ($manifest['tenant_databases'] ?? [] as $name => $entry) {
+                $connection = $this->configureConnection((string) $name);
+                $this->backups->open($manifest['id'], BackupService::tenantFile((string) $name), $entry['database'], "{$work}/tenant.sql");
+                Schema::connection($connection)->dropAllTables();
+                $this->dumper->restore($connection, "{$work}/tenant.sql");
+                @unlink("{$work}/tenant.sql");
+                $tenantDatabases[$name] = $this->compareTables($entry['tables'], $connection);
+                DB::purge($connection);
+            }
         } catch (Throwable $exception) {
             // Only our own messages are safe to keep; others could quote data or SQL.
             $this->record($manifest['id'], false, [
@@ -64,7 +77,8 @@ class RestoreDrill
             DB::purge(self::CONNECTION);
         }
 
-        $passed = $tables['missing'] === [] && $tables['emptied'] === [] && $files['passed'];
+        $intact = fn (array $compared) => $compared['missing'] === [] && $compared['emptied'] === [];
+        $passed = $intact($tables) && $files['passed'] && array_filter($tenantDatabases, fn (array $compared) => ! $intact($compared)) === [];
 
         $report = [
             'set' => $manifest['id'],
@@ -76,6 +90,7 @@ class RestoreDrill
             'passed' => $passed,
             'tables' => $tables,
             'files' => $files,
+            'tenant_databases' => $tenantDatabases,
         ];
 
         $this->backups->disk()->put("{$manifest['id']}/drill-".now('UTC')->format('Ymd\THis\Z').'.json', json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
@@ -84,6 +99,7 @@ class RestoreDrill
             'missing' => count($tables['missing']),
             'emptied' => count($tables['emptied']),
             'differences' => count($tables['differences']),
+            'tenant_databases' => array_keys($tenantDatabases),
         ]);
 
         return $report;
@@ -91,9 +107,11 @@ class RestoreDrill
 
     /**
      * The drill connection: the app's own settings with the drill database's name
-     * (and optionally host and user). Refuses to point at the app's database.
+     * (and optionally host and user); "<drill database>_<name>" for a tenant
+     * database. Refuses to point at the app's own or any tenant database.
+     * Returns the connection name.
      */
-    public function configureConnection(): void
+    public function configureConnection(?string $tenantDatabase = null): string
     {
         $default = (string) config('database.default');
         $app = config("database.connections.{$default}");
@@ -103,31 +121,39 @@ class RestoreDrill
             throw BackupException::drillNotConfigured();
         }
 
+        $name = $tenantDatabase === null ? self::CONNECTION : self::CONNECTION.'_'.$tenantDatabase;
         $connection = array_merge($app, array_filter([
             'url' => null,
-            'database' => $drill['database'],
+            'database' => $drill['database'].($tenantDatabase === null ? '' : '_'.$tenantDatabase),
             'host' => $drill['host'] ?? null,
             'username' => $drill['username'] ?? null,
             'password' => $drill['password'] ?? null,
         ], fn ($value) => $value !== null));
         $connection['url'] = null;
 
-        $sameHost = ($connection['host'] ?? null) === ($app['host'] ?? null) && ($connection['port'] ?? null) === ($app['port'] ?? null);
-        if ($sameHost && strcasecmp((string) $connection['database'], (string) $app['database']) === 0) {
-            throw BackupException::drillTargetsApp();
+        $live = [$default, ...array_map(fn (string $tenant) => TenantDatabases::CONNECTION_PREFIX.$tenant, array_keys((array) config('tenant_databases.databases', [])))];
+        foreach ($live as $liveConnection) {
+            $target = (array) config("database.connections.{$liveConnection}");
+            $sameHost = ($connection['host'] ?? null) === ($target['host'] ?? null) && ($connection['port'] ?? null) === ($target['port'] ?? null);
+
+            if ($sameHost && strcasecmp((string) $connection['database'], (string) ($target['database'] ?? '')) === 0) {
+                throw BackupException::drillTargetsApp();
+            }
         }
 
-        config(['database.connections.'.self::CONNECTION => $connection]);
-        DB::purge(self::CONNECTION);
+        config(['database.connections.'.$name => $connection]);
+        DB::purge($name);
+
+        return $name;
     }
 
     /**
      * @param  array<string, int>  $expected
      * @return array<string, mixed>
      */
-    private function compareTables(array $expected): array
+    private function compareTables(array $expected, string $connection): array
     {
-        $restored = array_flip(BackupService::tables(self::CONNECTION));
+        $restored = array_flip(BackupService::tables($connection));
         $missing = [];
         $emptied = [];
         $differences = [];
@@ -139,7 +165,7 @@ class RestoreDrill
                 continue;
             }
 
-            $count = DB::connection(self::CONNECTION)->table($table)->count();
+            $count = DB::connection($connection)->table($table)->count();
 
             if ($rows > 0 && $count === 0) {
                 $emptied[] = $table;

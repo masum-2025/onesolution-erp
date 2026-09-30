@@ -20,6 +20,7 @@ return [
         'kind_unavailable' => 'This kind of record cannot be changed offline here.',
         'lease_unknown' => 'This change was not made under an offline pass this server gave the device.',
         'made_after_lease' => 'This change was made after the device\'s offline pass ended, so it was not accepted.',
+        'data_moving' => 'Your organization\'s data is being moved to a new storage location. This change is kept on your device and will be sent again in a few minutes.',
         'append_only' => 'Payments recorded offline can only be added, never changed or removed. Record a correction instead.',
         'offline_payments_off' => 'Recording payments offline is not allowed here.',
         'rules_changed' => 'An important setting changed since this change was made. Check it and make the change again.',

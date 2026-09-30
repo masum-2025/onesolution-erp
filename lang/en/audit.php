@@ -78,6 +78,11 @@ return [
         'audit_pruned' => 'Old audit entries removed (retention)',
         'audit_export_requested' => 'Audit log export requested',
         'audit_export_downloaded' => 'Audit log export downloaded',
+        'tenant_database_placed' => 'Data storage location set',
+        'tenant_database_move_started' => 'Data move to a new storage location started',
+        'tenant_database_moved' => 'Data moved to a new storage location',
+        'tenant_database_move_failed' => 'Data move stopped; nothing changed',
+        'tenant_database_source_purged' => 'Old copy of the data removed after a move',
     ],
 
     'errors' => [

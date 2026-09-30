@@ -196,6 +196,25 @@ describe('sync', () => {
         expect(await engine.pending()).toBe(0);
     });
 
+    it('keeps a change the server asks to send later, and stops for this round', async () => {
+        const api = vi.fn();
+        const engine = await makeEngine(api, { lease: leaseData({ rules: { 'offline_mode.sync_batch_max': 1 } }) });
+        const first = await engine.enqueue('crm.note', 'create', { body: 'a' });
+        await engine.enqueue('crm.note', 'create', { body: 'b' });
+
+        api.mockResolvedValueOnce(syncAnswer({ [first.op_id]: { status: 'retry_later', code: 'data_moving' } }, { rules: { 'offline_mode.sync_batch_max': 1 } }));
+
+        expect(await engine.sync()).toMatchObject({ status: 'ok', applied: 0, waiting: 1 });
+        expect(api).toHaveBeenCalledTimes(1);
+        expect(await engine.pending()).toBe(2);
+        expect(await engine.outcomes()).toEqual([]);
+
+        // Next time the same change goes again, with the same op id.
+        api.mockResolvedValueOnce(syncAnswer({ [first.op_id]: { status: 'applied', record_id: 'N1', version: 1 } }, { rules: { 'offline_mode.sync_batch_max': 1 } }));
+        await engine.sync().catch(() => null);
+        expect(api.mock.calls[1][1].body.operations[0].op_id).toBe(first.op_id);
+    });
+
     it('sends in batches of the rule size', async () => {
         const api = vi.fn();
         const engine = await makeEngine(api, { lease: leaseData({ rules: { 'offline_mode.sync_batch_max': 1 } }) });

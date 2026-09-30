@@ -14,6 +14,7 @@ use App\Platform\Offline\SyncResult;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Databases\TenantDataMoving;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -100,7 +101,12 @@ class QuarantineService
                 throw OfflineException::alreadyDecided();
             }
 
-            $result = $this->applier->apply($held->payload, $actor, $this->context->organization(), lease: null);
+            $result = $this->applier->apply($held->payload, $actor, $this->context->organization(), lease: null, deviceId: $held->device_id);
+
+            // The client's data is moving (Phase 10): stays held; the admin tries again shortly.
+            if ($result->status === SyncResult::RETRY_LATER) {
+                throw new TenantDataMoving;
+            }
 
             $held->forceFill([
                 'status' => QuarantinedOperation::RELEASED,

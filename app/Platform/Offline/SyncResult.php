@@ -6,7 +6,8 @@ namespace App\Platform\Offline;
  * What happened to one offline change: applied (with the record's new id and
  * version), a conflict (the server's current record, for the device to show
  * and resolve), or rejected (why, per field). Quarantined changes are held
- * for an admin (not applied yet).
+ * for an admin (not applied yet); retry_later ones wait on the device (the
+ * client's data is being moved, Phase 10).
  */
 final readonly class SyncResult
 {
@@ -17,6 +18,9 @@ final readonly class SyncResult
     public const REJECTED = 'rejected';
 
     public const QUARANTINED = 'quarantined';
+
+    /** Not applied yet and not decided: the device keeps it and sends it again later. */
+    public const RETRY_LATER = 'retry_later';
 
     /**
      * @param  array<string, mixed>|null  $server  The current record, on a conflict.
@@ -55,6 +59,11 @@ final readonly class SyncResult
     public static function quarantined(string $code): self
     {
         return new self(self::QUARANTINED, code: $code);
+    }
+
+    public static function retryLater(string $code): self
+    {
+        return new self(self::RETRY_LATER, code: $code);
     }
 
     /**

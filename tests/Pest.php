@@ -25,6 +25,9 @@ use App\Platform\Tenancy\Actions\CreateOrganization;
 use App\Platform\Tenancy\Actions\IssueContextToken;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Databases\TenantDatabases;
+use App\Platform\Tenancy\Databases\TenantPlacements;
+use App\Platform\Tenancy\Databases\TenantTables;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
@@ -34,12 +37,15 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use App\Platform\Tenancy\Models\Partner;
 use App\Platform\Tenancy\Models\PartnerUser;
+use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Tests\Fixtures\TenantNote;
 use Tests\TestCase;
 
 /*
@@ -234,6 +240,85 @@ function tenancyWorld(): object
     $c4 = createChild($g3, OrganizationType::Company, 'C4');
 
     return (object) compact('partnerA', 'partnerB', 'g1', 'c1', 'b1', 'd1', 'c2', 'b2', 'g2', 'c3', 'g3', 'c4');
+}
+
+/*
+|--------------------------------------------------------------------------
+| Tenant databases (Phase 10)
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * Create a database next to the test database if it is missing (outside any
+ * transaction; the name already carries the parallel-process suffix).
+ */
+function ensureTestDatabase(string $name): void
+{
+    $config = config('database.connections.'.config('database.default'));
+
+    if ($config['driver'] === 'pgsql') {
+        $pdo = new PDO("pgsql:host={$config['host']};port={$config['port']};dbname=postgres", $config['username'], $config['password']);
+        $exists = $pdo->prepare('SELECT 1 FROM pg_database WHERE datname = ?');
+        $exists->execute([$name]);
+        if ($exists->fetchColumn() === false) {
+            $pdo->exec('CREATE DATABASE "'.$name.'"');
+        }
+    } else {
+        $pdo = new PDO("mysql:host={$config['host']};port={$config['port']}", $config['username'], $config['password']);
+        $pdo->exec('CREATE DATABASE IF NOT EXISTS `'.$name.'`');
+    }
+}
+
+/**
+ * A dedicated tenant database for this test: "<test database>_<name>", with
+ * the tenant tables (migrated fresh once per process). Everything the test
+ * writes there is rolled back afterwards. Returns the connection name.
+ */
+function dedicatedTenantDatabase(string $name = 'dedicated'): string
+{
+    static $migrated = [];
+
+    $database = config('database.connections.'.config('database.default').'.database').'_'.$name;
+    ensureTestDatabase($database);
+    $connection = TenantDatabases::register($name, ['database' => $database]);
+
+    if (! isset($migrated[$database])) {
+        Artisan::call('migrate:fresh', [
+            '--database' => $connection,
+            '--path' => app(TenantTables::class)->migrationPaths(),
+            '--realpath' => true,
+            '--force' => true,
+        ]);
+        $migrated[$database] = true;
+    }
+
+    DB::connection($connection)->beginTransaction();
+    test()->beforeApplicationDestroyed(function () use ($connection) {
+        $db = DB::connection($connection);
+        while ($db->transactionLevel() > 0) {
+            $db->rollBack();
+        }
+        $db->disconnect();
+    });
+
+    return $connection;
+}
+
+/**
+ * A stored fixture row, read by system code from its client's database.
+ */
+function storedNote(TenantNote $note): ?TenantNote
+{
+    return TenantNote::inTenantOf($note->organization_id)->withoutGlobalScope(OrganizationScope::class)->find($note->id);
+}
+
+/**
+ * Put a client (with no business data yet) into a tenant database, as
+ * tenants:place does.
+ */
+function placeClient(Organization $root, ?string $database = 'dedicated'): void
+{
+    app(TenantPlacements::class)->place($root->fresh(), $database, 'Test setup');
 }
 
 /*

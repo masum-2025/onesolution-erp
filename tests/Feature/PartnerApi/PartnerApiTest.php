@@ -135,7 +135,8 @@ it('stops working when revoked, expired, or when its creator is no longer an own
     api($this, $key)->getJson('http://localhost/api/partner/v1/clients')->assertOk();
 
     api($this, 'osk_wrongkey_'.str_repeat('a', 40))->getJson('http://localhost/api/partner/v1/clients')->assertUnauthorized()->assertJsonPath('code', 'invalid_key');
-    api($this, substr($key, 0, -1).'X')->getJson('http://localhost/api/partner/v1/clients')->assertUnauthorized();
+    // Always a different last character (the random key may already end in "X").
+    api($this, substr($key, 0, -1).(str_ends_with($key, 'X') ? 'Y' : 'X'))->getJson('http://localhost/api/partner/v1/clients')->assertUnauthorized();
 
     PartnerUser::where('user_id', $this->owner->id)->update(['role' => PartnerUserRole::Sales]);
     api($this, $key)->getJson('http://localhost/api/partner/v1/clients')->assertUnauthorized();

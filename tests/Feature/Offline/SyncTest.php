@@ -6,10 +6,14 @@ use App\Platform\Offline\Models\QuarantinedOperation;
 use App\Platform\Offline\Models\SyncOperationRecord;
 use App\Platform\Offline\Services\DeviceService;
 use App\Platform\Offline\SyncRecords;
+use App\Platform\Tenancy\Databases\PlacementStatus;
+use App\Platform\Tenancy\Databases\TenantDatabases;
+use App\Platform\Tenancy\Databases\TenantPlacement;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\Fixtures\FixtureCashReceipt;
@@ -303,6 +307,89 @@ it('lets a person see and remove their own devices only', function () {
     $this->asToken(orgToken($this->clerk, $this->w->c1))->deleteJson("/api/me/devices/{$device['device']['id']}")->assertOk();
 
     expect(Device::query()->find($device['device']['id'])->mustWipe())->toBeTrue();
+});
+
+it('never applies a change twice, even when the platform\'s record of it was lost (Phase 10)', function () {
+    $device = offlineDevice($this);
+    $create = op($device, 'crm.note', 'create', ['title' => 'Counted stock']);
+
+    $first = syncNow($this, $device, [$create])->assertOk()->json("results.{$create['op_id']}");
+    // The main database's answer is gone (e.g. a crash right after the business write).
+    SyncOperationRecord::query()->delete();
+    $again = syncNow($this, $device, [$create])->assertOk()->json("results.{$create['op_id']}");
+
+    expect($again)->toBe($first)
+        ->and(FixtureSyncNote::query()->withoutGlobalScopes()->count())->toBe(1);
+});
+
+describe('with group G1 in its own database (Phase 10)', function () {
+    beforeEach(function () {
+        $this->dedicated = dedicatedTenantDatabase();
+        placeClient($this->w->g1);
+    });
+
+    it('applies changes in the client\'s database and sends back its changes', function () {
+        $device = offlineDevice($this);
+        $response = syncNow($this, $device, [$create = op($device, 'crm.note', 'create', ['title' => 'Counted stock'])])->assertOk();
+        $id = $response->json("results.{$create['op_id']}.record_id");
+
+        syncNow($this, $device, [$update = op($device, 'crm.note', 'update', ['title' => 'Recounted'], $id, 1)])
+            ->assertOk()->assertJsonPath("results.{$update['op_id']}.version", 2);
+        $stale = op($device, 'crm.note', 'update', ['title' => 'Old'], $id, 1);
+        syncNow($this, $device, [$stale])->assertJsonPath("results.{$stale['op_id']}.status", 'conflict');
+
+        expect(DB::connection($this->dedicated)->table('fixture_sync_notes')->pluck('title')->all())->toBe(['Recounted'])
+            ->and(DB::table('fixture_sync_notes')->count())->toBe(0)
+            ->and(DB::connection($this->dedicated)->table('offline_applied_operations')->count())->toBe(2)
+            ->and(syncNow($this, $device, [])->json('changes')['crm.note']['records'])->toBe([['id' => $id, 'title' => 'Recounted', 'version' => 2]]);
+    });
+
+    it('never applies a change twice across the two databases', function () {
+        $device = offlineDevice($this);
+        $create = op($device, 'crm.note', 'create', ['title' => 'Once']);
+
+        $first = syncNow($this, $device, [$create])->json("results.{$create['op_id']}");
+        SyncOperationRecord::query()->delete();
+
+        expect(syncNow($this, $device, [$create])->json("results.{$create['op_id']}"))->toBe($first)
+            ->and(DB::connection($this->dedicated)->table('fixture_sync_notes')->count())->toBe(1);
+    });
+
+    it('keeps changes on the device while the data moves, and still syncs the rest', function () {
+        $device = offlineDevice($this);
+        TenantPlacement::query()->update(['status' => PlacementStatus::Moving->value]);
+        app(TenantDatabases::class)->forget();
+
+        $create = op($device, 'crm.note', 'create', ['title' => 'Wait for me']);
+        $response = syncNow($this, $device, [$create])->assertOk()
+            ->assertJsonPath("results.{$create['op_id']}.status", 'retry_later')
+            ->assertJsonPath("results.{$create['op_id']}.code", 'data_moving');
+
+        expect($response->json())->toHaveKeys(['changes', 'lease', 'cursor'])
+            ->and(SyncOperationRecord::query()->count())->toBe(0)
+            ->and(DB::connection($this->dedicated)->table('fixture_sync_notes')->count())->toBe(0);
+
+        // The move is over: the same change goes through.
+        TenantPlacement::query()->update(['status' => PlacementStatus::Active->value]);
+        app(TenantDatabases::class)->forget();
+        syncNow($this, $device, [$create])->assertJsonPath("results.{$create['op_id']}.status", 'applied');
+        expect(DB::connection($this->dedicated)->table('fixture_sync_notes')->count())->toBe(1);
+    });
+
+    it('keeps a held change held while the data moves', function () {
+        $device = offlineDevice($this);
+        app(DeviceService::class)->revoke(Device::query()->find($device['device']['id']), $this->admin);
+        syncNow($this, $device, [op($device, 'crm.note', 'create', ['title' => 'Held'])])->assertStatus(410);
+        $held = QuarantinedOperation::query()->sole();
+
+        TenantPlacement::query()->update(['status' => PlacementStatus::Moving->value]);
+        app(TenantDatabases::class)->forget();
+
+        $this->asToken(orgToken($this->admin, $this->w->c1))->postJson("/api/organizations/{$this->w->c1->id}/offline/held/{$held->id}/release")
+            ->assertStatus(503)->assertJsonPath('code', 'data_moving');
+
+        expect($held->fresh()->status)->toBe(QuarantinedOperation::PENDING);
+    });
 });
 
 it('discards held changes nobody decided on in time', function () {

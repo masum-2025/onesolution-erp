@@ -5,6 +5,7 @@ namespace App\Platform\Tenancy\Actions;
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Packaging\Services\UsageLimiter;
+use App\Platform\Tenancy\Databases\TenantPlacements;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
@@ -23,6 +24,7 @@ class CreateOrganization
         private HierarchyService $hierarchy,
         private AuditLogger $audit,
         private UsageLimiter $limits,
+        private TenantPlacements $placements,
     ) {}
 
     /**
@@ -77,6 +79,11 @@ class CreateOrganization
                 actor: $actor,
                 partnerId: $organization->partner_id,
             );
+
+            // A new client of a region with its own database starts there (Phase 10).
+            if ($parent === null) {
+                $this->placements->placeNewRoot($organization);
+            }
 
             return $organization;
         });

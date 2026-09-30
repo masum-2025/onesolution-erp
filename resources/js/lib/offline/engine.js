@@ -113,11 +113,12 @@ export class OfflineEngine {
     }
 
     /**
-     * Sends waiting changes and catches up. Returns { status, sent, applied, held }
-     * where status is ok | offline | wiped | lease_expired.
+     * Sends waiting changes and catches up. Returns { status, sent, applied, held, waiting }
+     * where status is ok | offline | wiped | lease_expired, and waiting counts changes
+     * the server asked to send again later (they stay in the queue).
      */
     async sync() {
-        const summary = { status: 'ok', sent: 0, applied: 0, held: 0 };
+        const summary = { status: 'ok', sent: 0, applied: 0, held: 0, waiting: 0 };
         const device = await this.device();
         if (!device) return { ...summary, status: 'not_enabled' };
 
@@ -159,9 +160,15 @@ export class OfflineEngine {
             }
 
             summary.sent += waiting.length;
+            let deferred = 0;
             for (const row of waiting) {
                 const result = response.results[row.operation.op_id];
                 if (!result) continue;
+                // The organization's data is being moved: keep the change and send it next time.
+                if (result.status === 'retry_later') {
+                    deferred++;
+                    continue;
+                }
                 if (result.status === 'applied') summary.applied++;
                 else await this.store.setOutcome(row.operation.op_id, { ...result, operation: row.operation });
                 await this.store.dequeue(row.seq);
@@ -171,7 +178,8 @@ export class OfflineEngine {
             await this.store.setMeta('cursor', response.cursor);
             await this.saveLease(response);
 
-            if ((await this.store.pending()) === 0) break;
+            summary.waiting = deferred;
+            if (deferred > 0 || (await this.store.pending()) === 0) break;
         }
 
         return summary;

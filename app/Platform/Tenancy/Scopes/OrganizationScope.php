@@ -26,9 +26,15 @@ class OrganizationScope implements Scope
             throw new MissingTenantContext;
         }
 
+        // Business data in another database (Phase 10) cannot join the
+        // organizations table, so it filters by the visible ids themselves.
+        $sameDatabase = ($model->getConnectionName() ?? config('database.default')) === config('database.default');
+
         $builder->whereIn(
             $model->qualifyColumn('organization_id'),
-            Organization::query()->select('id')->visibleTo($context),
+            $sameDatabase
+                ? Organization::query()->select('id')->visibleTo($context)
+                : $context->visibleOrganizationIds(),
         );
     }
 }

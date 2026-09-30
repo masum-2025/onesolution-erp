@@ -56,6 +56,7 @@ use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\Models\RuleValueHistory;
 use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Tenancy\Concerns\BelongsToOrganization;
+use App\Platform\Tenancy\Databases\TenantPlacement;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use App\Platform\Tenancy\Models\Partner;
@@ -178,6 +179,9 @@ const PLATFORM_MODELS = [
     OfflineLease::class,
     SyncOperationRecord::class,
     QuarantinedOperation::class,
+    // Tenant databases (Phase 10): read before any tenant query to pick the
+    // database; written only by TenantPlacements and the move tool.
+    TenantPlacement::class,
 ];
 
 /**

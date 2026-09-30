@@ -16,6 +16,9 @@ use Tests\Fixtures\TenantNote;
 | A minimal CRUD API over the TenantNote fixture, wired exactly like a real
 | module route: auth:sanctum + org middleware, plain Eloquent, no manual
 | organization filtering. Isolation must come from BelongsToOrganization alone.
+|
+| Phase 10: every test runs twice, with all clients in the main database and
+| with group G1 in a dedicated database of its own.
 */
 beforeEach(function () {
     Route::middleware(['api', 'auth:sanctum', 'org'])->prefix('api/test-notes')->group(function () {
@@ -27,113 +30,124 @@ beforeEach(function () {
     });
 
     $this->w = tenancyWorld();
-
-    // Seed notes as trusted system code (no context, explicit organization).
-    $this->noteC1 = TenantNote::create(['title' => 'c1-note', 'organization_id' => $this->w->c1->id]);
-    $this->noteB1 = TenantNote::create(['title' => 'b1-note', 'organization_id' => $this->w->b1->id]);
-    $this->noteC2 = TenantNote::create(['title' => 'c2-note', 'organization_id' => $this->w->c2->id]);
-    $this->noteC3 = TenantNote::create(['title' => 'c3-note', 'organization_id' => $this->w->c3->id]);
-    $this->noteC4 = TenantNote::create(['title' => 'c4-note', 'organization_id' => $this->w->c4->id]);
-    $this->noteG1 = TenantNote::create(['title' => 'g1-note', 'organization_id' => $this->w->g1->id]);
-
-    $this->c1User = createMember($this->w->c1, MembershipType::Staff);
-    $this->c1Token = orgToken($this->c1User, $this->w->c1);
 });
 
-it('lists only records of the current company subtree', function () {
-    $this->asToken($this->c1Token)->getJson('/api/test-notes')
-        ->assertOk()
-        ->assertExactJson(['b1-note', 'c1-note']);
-});
+foreach (['all clients in the main database' => false, 'group G1 in its own database' => true] as $placement => $dedicated) {
+    describe($placement, function () use ($dedicated) {
+        beforeEach(function () use ($dedicated) {
+            if ($dedicated) {
+                dedicatedTenantDatabase();
+                placeClient($this->w->g1);
+            }
 
-it('blocks reading, updating and deleting another company\'s records (IDOR)', function (string $note) {
-    $id = $this->{$note}->id;
+            // Seed notes as trusted system code (no context, explicit organization).
+            $this->noteC1 = TenantNote::create(['title' => 'c1-note', 'organization_id' => $this->w->c1->id]);
+            $this->noteB1 = TenantNote::create(['title' => 'b1-note', 'organization_id' => $this->w->b1->id]);
+            $this->noteC2 = TenantNote::create(['title' => 'c2-note', 'organization_id' => $this->w->c2->id]);
+            $this->noteC3 = TenantNote::create(['title' => 'c3-note', 'organization_id' => $this->w->c3->id]);
+            $this->noteC4 = TenantNote::create(['title' => 'c4-note', 'organization_id' => $this->w->c4->id]);
+            $this->noteG1 = TenantNote::create(['title' => 'g1-note', 'organization_id' => $this->w->g1->id]);
 
-    $this->asToken($this->c1Token)->getJson("/api/test-notes/{$id}")->assertNotFound();
-    $this->asToken($this->c1Token)->patchJson("/api/test-notes/{$id}", ['title' => 'hacked'])->assertNotFound();
-    $this->asToken($this->c1Token)->deleteJson("/api/test-notes/{$id}")->assertNotFound();
+            $this->c1User = createMember($this->w->c1, MembershipType::Staff);
+            $this->c1Token = orgToken($this->c1User, $this->w->c1);
+        });
 
-    expect(TenantNote::withoutGlobalScope(OrganizationScope::class)->find($id)->title)->not->toBe('hacked');
-})->with([
-    'sister company, same group' => 'noteC2',
-    'company in another group' => 'noteC3',
-    'company of another partner' => 'noteC4',
-    'parent group' => 'noteG1',
-]);
+        it('lists only records of the current company subtree', function () {
+            $this->asToken($this->c1Token)->getJson('/api/test-notes')
+                ->assertOk()
+                ->assertExactJson(['b1-note', 'c1-note']);
+        });
 
-it('returns 404 for guessed ids', function () {
-    $this->asToken($this->c1Token)->getJson('/api/test-notes/'.Str::ulid())->assertNotFound();
-});
+        it('blocks reading, updating and deleting another company\'s records (IDOR)', function (string $note) {
+            $id = $this->{$note}->id;
 
-it('ignores an organization id sent in the body or headers', function () {
-    $this->asToken($this->c1Token)
-        ->withHeader('X-Organization-Id', $this->w->c2->id)
-        ->postJson('/api/test-notes', ['title' => 'new', 'organization_id' => $this->w->c2->id])
-        ->assertSuccessful();
+            $this->asToken($this->c1Token)->getJson("/api/test-notes/{$id}")->assertNotFound();
+            $this->asToken($this->c1Token)->patchJson("/api/test-notes/{$id}", ['title' => 'hacked'])->assertNotFound();
+            $this->asToken($this->c1Token)->deleteJson("/api/test-notes/{$id}")->assertNotFound();
 
-    expect(TenantNote::withoutGlobalScope(OrganizationScope::class)->where('title', 'new')->sole()->organization_id)
-        ->toBe($this->w->c1->id);
-});
+            expect(storedNote($this->{$note})->title)->not->toBe('hacked');
+        })->with([
+            'sister company, same group' => 'noteC2',
+            'company in another group' => 'noteC3',
+            'company of another partner' => 'noteC4',
+            'parent group' => 'noteG1',
+        ]);
 
-it('sets organization_id automatically on create', function () {
-    actInOrganization($this->c1User, $this->w->c1);
+        it('returns 404 for guessed ids', function () {
+            $this->asToken($this->c1Token)->getJson('/api/test-notes/'.Str::ulid())->assertNotFound();
+        });
 
-    expect(TenantNote::create(['title' => 'auto'])->organization_id)->toBe($this->w->c1->id);
-});
+        it('ignores an organization id sent in the body or headers', function () {
+            $this->asToken($this->c1Token)
+                ->withHeader('X-Organization-Id', $this->w->c2->id)
+                ->postJson('/api/test-notes', ['title' => 'new', 'organization_id' => $this->w->c2->id])
+                ->assertSuccessful();
 
-it('allows creating for a branch inside the current company', function () {
-    actInOrganization($this->c1User, $this->w->c1);
+            expect(TenantNote::inTenantOf($this->w->c1)->withoutGlobalScope(OrganizationScope::class)->where('title', 'new')->sole()->organization_id)
+                ->toBe($this->w->c1->id);
+        });
 
-    expect(TenantNote::create(['title' => 'branch', 'organization_id' => $this->w->b1->id])->organization_id)
-        ->toBe($this->w->b1->id);
-});
+        it('sets organization_id automatically on create', function () {
+            actInOrganization($this->c1User, $this->w->c1);
 
-it('refuses creating a record for another company', function () {
-    actInOrganization($this->c1User, $this->w->c1);
+            expect(TenantNote::create(['title' => 'auto'])->organization_id)->toBe($this->w->c1->id);
+        });
 
-    TenantNote::create(['title' => 'x', 'organization_id' => $this->w->c2->id]);
-})->throws(OrganizationAccessDenied::class);
+        it('allows creating for a branch inside the current company', function () {
+            actInOrganization($this->c1User, $this->w->c1);
 
-it('refuses changing organization_id of a record', function () {
-    actInOrganization($this->c1User, $this->w->c1);
+            expect(TenantNote::create(['title' => 'branch', 'organization_id' => $this->w->b1->id])->organization_id)
+                ->toBe($this->w->b1->id);
+        });
 
-    $this->noteC1->fresh()->update(['organization_id' => $this->w->b1->id]);
-})->throws(OrganizationChangeForbidden::class);
+        it('refuses creating a record for another company', function () {
+            actInOrganization($this->c1User, $this->w->c1);
 
-it('fails closed when there is no tenant context', function () {
-    app(CurrentContext::class)->clear();
+            TenantNote::create(['title' => 'x', 'organization_id' => $this->w->c2->id]);
+        })->throws(OrganizationAccessDenied::class);
 
-    TenantNote::query()->get();
-})->throws(MissingTenantContext::class);
+        it('refuses changing organization_id of a record', function () {
+            actInOrganization($this->c1User, $this->w->c1);
 
-it('refuses to create without context unless an organization is named', function () {
-    app(CurrentContext::class)->clear();
+            TenantNote::query()->findOrFail($this->noteC1->id)->update(['organization_id' => $this->w->b1->id]);
+        })->throws(OrganizationChangeForbidden::class);
 
-    TenantNote::create(['title' => 'orphan']);
-})->throws(MissingTenantContext::class);
+        it('fails closed when there is no tenant context', function () {
+            app(CurrentContext::class)->clear();
 
-it('lets a group admin read all companies of the group only', function () {
-    $admin = createMember($this->w->g1, MembershipType::Owner, AccessScope::Descendants);
+            TenantNote::query()->get();
+        })->throws(MissingTenantContext::class);
 
-    $this->asToken(orgToken($admin, $this->w->g1))->getJson('/api/test-notes')
-        ->assertOk()
-        ->assertExactJson(['b1-note', 'c1-note', 'c2-note', 'g1-note']);
-});
+        it('refuses to create without context unless an organization is named', function () {
+            app(CurrentContext::class)->clear();
 
-it('keeps group admin access read-only for company data', function () {
-    $admin = createMember($this->w->g1, MembershipType::Owner, AccessScope::Descendants);
-    $token = orgToken($admin, $this->w->g1);
+            TenantNote::create(['title' => 'orphan']);
+        })->throws(MissingTenantContext::class);
 
-    $this->asToken($token)->patchJson("/api/test-notes/{$this->noteC1->id}", ['title' => 'x'])->assertForbidden();
-    $this->asToken($token)->deleteJson("/api/test-notes/{$this->noteC1->id}")->assertForbidden();
+        it('lets a group admin read all companies of the group only', function () {
+            $admin = createMember($this->w->g1, MembershipType::Owner, AccessScope::Descendants);
 
-    expect(TenantNote::withoutGlobalScope(OrganizationScope::class)->find($this->noteC1->id)->title)->toBe('c1-note');
-});
+            $this->asToken(orgToken($admin, $this->w->g1))->getJson('/api/test-notes')
+                ->assertOk()
+                ->assertExactJson(['b1-note', 'c1-note', 'c2-note', 'g1-note']);
+        });
 
-it('limits a group member without descendant access to the group itself', function () {
-    $member = createMember($this->w->g1, MembershipType::Staff, AccessScope::Own);
+        it('keeps group admin access read-only for company data', function () {
+            $admin = createMember($this->w->g1, MembershipType::Owner, AccessScope::Descendants);
+            $token = orgToken($admin, $this->w->g1);
 
-    $this->asToken(orgToken($member, $this->w->g1))->getJson('/api/test-notes')
-        ->assertOk()
-        ->assertExactJson(['g1-note']);
-});
+            $this->asToken($token)->patchJson("/api/test-notes/{$this->noteC1->id}", ['title' => 'x'])->assertForbidden();
+            $this->asToken($token)->deleteJson("/api/test-notes/{$this->noteC1->id}")->assertForbidden();
+
+            expect(storedNote($this->noteC1)->title)->toBe('c1-note');
+        });
+
+        it('limits a group member without descendant access to the group itself', function () {
+            $member = createMember($this->w->g1, MembershipType::Staff, AccessScope::Own);
+
+            $this->asToken(orgToken($member, $this->w->g1))->getJson('/api/test-notes')
+                ->assertOk()
+                ->assertExactJson(['g1-note']);
+        });
+    });
+}

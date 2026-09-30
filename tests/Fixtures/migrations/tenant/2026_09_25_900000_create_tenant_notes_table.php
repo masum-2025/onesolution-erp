@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Test-only table for Tests\Fixtures\TenantNote, a stand-in business model
  * used to prove BelongsToOrganization isolation before real modules exist.
+ * A tenant table (Phase 10): it follows its client into a dedicated
+ * database, so no foreign key to the organizations table.
  */
 return new class extends Migration
 {
@@ -14,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('tenant_notes', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('organization_id')->constrained('organizations')->restrictOnDelete();
+            $table->ulid('organization_id')->index();
             $table->string('title');
             $table->timestamps();
         });

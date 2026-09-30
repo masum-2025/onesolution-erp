@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Databases\TenantTables;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -13,15 +14,31 @@ abstract class TestCase extends BaseTestCase
         migrateDatabases as baseMigrateDatabases;
     }
 
+    /** Test-only business tables that follow their client (Phase 10). */
+    public const FIXTURE_TENANT_MIGRATIONS = 'tests/Fixtures/migrations/tenant';
+
+    public function createApplication()
+    {
+        $app = parent::createApplication();
+        $app['config']->push('tenant_databases.migration_paths', base_path(self::FIXTURE_TENANT_MIGRATIONS));
+
+        return $app;
+    }
+
     /**
-     * Also run test-only fixture migrations (tests/Fixtures/migrations).
+     * Also run test-only fixture migrations (tests/Fixtures/migrations) and
+     * the tenant tables (core, modules, fixtures).
      *
      * @return array<string, mixed>
      */
     protected function migrateFreshUsing(): array
     {
         return array_merge($this->baseMigrateFreshUsing(), [
-            '--path' => [database_path('migrations'), base_path('tests/Fixtures/migrations')],
+            '--path' => [
+                database_path('migrations'),
+                base_path('tests/Fixtures/migrations'),
+                ...app(TenantTables::class)->migrationPaths(),
+            ],
             '--realpath' => true,
         ]);
     }

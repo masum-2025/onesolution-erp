@@ -10,10 +10,13 @@ use App\Platform\Offline\SyncResult;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Context\CurrentContext;
+use App\Platform\Tenancy\Databases\TenantDatabases;
+use App\Platform\Tenancy\Databases\TenantDataMoving;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -38,12 +41,13 @@ class OperationApplier
         private RuleContextFactory $contexts,
         private CurrentContext $context,
         private LeaseService $leases,
+        private TenantDatabases $databases,
     ) {}
 
     /**
      * @param  array<string, mixed>  $operation  As the device sent it (already shape-checked).
      */
-    public function apply(array $operation, User $user, Organization $organization, ?OfflineLease $lease): SyncResult
+    public function apply(array $operation, User $user, Organization $organization, ?OfflineLease $lease, ?string $deviceId = null): SyncResult
     {
         $kind = (string) $operation['kind'];
         $action = (string) $operation['action'];
@@ -81,6 +85,11 @@ class OperationApplier
             return SyncResult::rejected('forbidden');
         }
 
+        // Phase 10: while the client's data moves to another database, the change waits on the device.
+        if ($this->databases->isMoving($organization)) {
+            return SyncResult::retryLater('data_moving');
+        }
+
         $sync = new SyncOperation(
             opId: (string) $operation['op_id'],
             kind: $kind,
@@ -94,10 +103,56 @@ class OperationApplier
         );
 
         try {
-            return DB::transaction(fn () => $provider->apply($sync));
+            return $this->inClientTransaction($organization, $deviceId ?? $lease?->device_id, $sync->opId, fn () => $provider->apply($sync));
         } catch (ValidationException $exception) {
             return SyncResult::rejected('invalid', $exception->errors());
+        } catch (TenantDataMoving) {
+            return SyncResult::retryLater('data_moving');
         }
+    }
+
+    /**
+     * Apply in one transaction on the client's database (and the main one,
+     * when they differ), with a marker of the applied change stored next to
+     * the business records: a change sent again after the main database's
+     * record was lost finds the marker and is not applied twice.
+     *
+     * @param  callable(): SyncResult  $apply
+     */
+    private function inClientTransaction(Organization $organization, ?string $deviceId, string $opId, callable $apply): SyncResult
+    {
+        $connection = $this->databases->forOrganization($organization);
+        $central = $this->databases->central();
+
+        $run = function () use ($connection, $organization, $deviceId, $opId, $apply): SyncResult {
+            $markers = DB::connection($connection)->table('offline_applied_operations');
+
+            if ($deviceId !== null) {
+                $stored = (clone $markers)->where('device_id', $deviceId)->where('op_id', $opId)->lockForUpdate()->value('result');
+                if ($stored !== null) {
+                    return SyncResult::fromArray(json_decode((string) $stored, true));
+                }
+            }
+
+            $result = $apply();
+
+            if ($deviceId !== null && $result->status === SyncResult::APPLIED) {
+                (clone $markers)->insert([
+                    'id' => (string) Str::ulid(),
+                    'organization_id' => $organization->getKey(),
+                    'device_id' => $deviceId,
+                    'op_id' => $opId,
+                    'result' => json_encode($result->toArray()),
+                    'applied_at' => CarbonImmutable::now(),
+                ]);
+            }
+
+            return $result;
+        };
+
+        return $connection === $central
+            ? DB::transaction($run)
+            : DB::connection($connection)->transaction(fn () => DB::transaction($run));
     }
 
     private function time(mixed $value): ?CarbonImmutable

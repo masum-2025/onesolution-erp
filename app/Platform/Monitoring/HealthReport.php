@@ -3,6 +3,10 @@
 namespace App\Platform\Monitoring;
 
 use App\Platform\Monitoring\Models\SecurityAlert;
+use App\Platform\Tenancy\Databases\PlacementStatus;
+use App\Platform\Tenancy\Databases\TenantDatabases;
+use App\Platform\Tenancy\Databases\TenantPlacement;
+use App\Platform\Tenancy\Databases\TenantPlacements;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +24,11 @@ class HealthReport
 
     private const RANK = ['ok' => 0, 'warn' => 1, 'fail' => 2];
 
-    public function __construct(private Metrics $metrics) {}
+    public function __construct(
+        private Metrics $metrics,
+        private TenantDatabases $databases,
+        private TenantPlacements $placements,
+    ) {}
 
     /**
      * @return array{status: string, checked_at: string, checks: array<string, array{status: string, value: mixed, detail?: string}>}
@@ -29,6 +37,7 @@ class HealthReport
     {
         $checks = [
             'database' => $this->safely(fn () => $this->database()),
+            'tenant_databases' => $this->safely(fn () => $this->tenantDatabases()),
             'cache' => $this->safely(fn () => $this->cache()),
             'queue_depth' => $this->safely(fn () => $this->queueDepth()),
             'failed_jobs' => $this->safely(fn () => $this->failedJobs()),
@@ -75,6 +84,34 @@ class HealthReport
         DB::table('migrations')->limit(1)->count();
 
         return ['status' => 'ok', 'value' => DB::connection()->getDriverName()];
+    }
+
+    /**
+     * Every dedicated / regional client database answers and has its tables
+     * (Phase 10); a move that stays unfinished too long is a warning.
+     */
+    private function tenantDatabases(): array
+    {
+        $names = $this->databases->names();
+        $broken = [];
+
+        foreach ($names as $name) {
+            try {
+                $this->placements->assertMigrated($this->databases->connectionFor($name));
+            } catch (Throwable $exception) {
+                $broken[$name] = class_basename($exception);
+            }
+        }
+
+        $stuck = TenantPlacement::query()
+            ->where('status', PlacementStatus::Moving->value)
+            ->where('status_changed_at', '<', now()->subMinutes((int) config('monitoring.health.tenant_move_max_minutes', 120)))
+            ->count();
+
+        return [
+            'status' => $broken !== [] ? 'fail' : ($stuck > 0 ? 'warn' : 'ok'),
+            'value' => ['configured' => count($names), 'unavailable' => $broken, 'stuck_moves' => $stuck],
+        ];
     }
 
     private function cache(): array

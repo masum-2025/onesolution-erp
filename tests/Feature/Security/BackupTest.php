@@ -6,10 +6,12 @@ use App\Platform\Security\Backups\BackupException;
 use App\Platform\Security\Backups\BackupService;
 use App\Platform\Security\Backups\Contracts\DatabaseDumper;
 use App\Platform\Security\Backups\RestoreDrill;
+use App\Platform\Tenancy\Databases\TenantDatabases;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Storage;
+use Tests\Fixtures\TenantNote;
 use Tests\Support\JsonDumper;
 
 /*
@@ -177,6 +179,33 @@ it('never restores into the app\'s own database, and needs a staging database', 
 
     config(['security.backups.drill.database' => null]);
     expect(fn () => app(RestoreDrill::class)->run())->toThrow(BackupException::class, 'BACKUP_DRILL_DATABASE');
+});
+
+it('backs up and restores every dedicated client database on its own (Phase 10)', function () {
+    dedicatedTenantDatabase();
+    placeClient($this->w->g1);
+    TenantNote::create(['title' => 'kept safe', 'organization_id' => $this->w->c1->id]);
+    ensureTestDatabase(config('security.backups.drill.database').'_dedicated');
+
+    $manifest = backups()->run();
+
+    expect($manifest['tenant_databases']['dedicated']['tables']['tenant_notes'])->toBe(1)
+        ->and(Storage::disk('backups')->get("{$manifest['id']}/".BackupService::tenantFile('dedicated')))->not->toContain('kept safe');
+
+    $report = app(RestoreDrill::class)->run();
+
+    expect($report['passed'])->toBeTrue()
+        ->and($report['tenant_databases']['dedicated']['missing'])->toBe([])
+        ->and($report['tenant_databases']['dedicated']['emptied'])->toBe([])
+        ->and(DB::connection(RestoreDrill::CONNECTION.'_dedicated')->table('tenant_notes')->where('title', 'kept safe')->exists())->toBeTrue()
+        // The main database's copy has no business rows of the dedicated client.
+        ->and(DB::connection(RestoreDrill::CONNECTION)->table('tenant_notes')->count())->toBe(0);
+});
+
+it('never restores into a client database', function () {
+    TenantDatabases::register('dedicated', ['database' => config('security.backups.drill.database').'_dedicated']);
+
+    expect(fn () => app(RestoreDrill::class)->configureConnection('dedicated'))->toThrow(BackupException::class, 'separate staging database');
 });
 
 it('stops with a clear message without a key', function () {

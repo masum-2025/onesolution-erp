@@ -16,6 +16,8 @@ return [
         'move_cross_partner' => 'Organizations cannot be moved to another partner here. Ask the platform team to transfer the client.',
         'max_depth' => 'The organization tree cannot be deeper than :max levels. Choose a higher-level parent.',
         'move_same_parent' => 'The organization is already under this parent.',
+        'move_cross_database' => 'This unit\'s data is stored in a different place from the new parent\'s. Ask the platform team to move it.',
+        'data_moving' => 'Your organization\'s data is being moved to a new storage location. You can view everything, but changes are paused for a few minutes. Try again shortly.',
         'already_member' => 'This person is already a member of the organization.',
         'own_membership' => 'You cannot change your own membership. Ask another owner to do it.',
         'own_context_status' => 'You cannot suspend the organization you are working in. Switch to a higher level first.',

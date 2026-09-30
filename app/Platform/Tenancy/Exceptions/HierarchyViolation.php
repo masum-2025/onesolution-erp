@@ -22,6 +22,12 @@ class HierarchyViolation extends TenancyException
         return new self('move_cross_partner', 422);
     }
 
+    /** The new parent's client tree keeps its business data in another database (Phase 10). */
+    public static function crossDatabase(): self
+    {
+        return new self('move_cross_database', 422);
+    }
+
     public static function tooDeep(int $maxDepth): self
     {
         return new self('max_depth', 422, ['max' => (string) $maxDepth]);

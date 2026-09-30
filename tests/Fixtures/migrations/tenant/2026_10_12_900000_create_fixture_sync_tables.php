@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('fixture_sync_notes', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('organization_id')->constrained('organizations')->restrictOnDelete();
+            $table->ulid('organization_id')->index();
             $table->string('title');
             $table->unsignedInteger('version')->default(1);
             $table->softDeletes();
@@ -24,7 +24,7 @@ return new class extends Migration
 
         Schema::create('fixture_cash_receipts', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->foreignUlid('organization_id')->constrained('organizations')->restrictOnDelete();
+            $table->ulid('organization_id')->index();
             $table->bigInteger('amount_minor');
             $table->char('currency_code', 3);
             $table->unsignedInteger('version')->default(1);

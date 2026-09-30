@@ -4,6 +4,9 @@ use App\Platform\Audit\AuditLogger;
 use App\Platform\Monitoring\HealthReport;
 use App\Platform\Monitoring\Metrics;
 use App\Platform\Monitoring\Models\SecurityAlert;
+use App\Platform\Tenancy\Databases\PlacementStatus;
+use App\Platform\Tenancy\Databases\TenantDatabases;
+use App\Platform\Tenancy\Databases\TenantPlacement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -47,7 +50,7 @@ it('reports every check, with counts and times only', function () {
     $response = $this->withToken('health-secret-token')->getJson(healthUrl())->assertOk()->assertHeader('Cache-Control', 'no-store, private');
 
     expect(array_keys($response->json('checks')))->toBe([
-        'database', 'cache', 'queue_depth', 'failed_jobs', 'sync_errors', 'rule_cache_hit_rate', 'backup', 'restore_drill', 'scheduler', 'open_alerts',
+        'database', 'tenant_databases', 'cache', 'queue_depth', 'failed_jobs', 'sync_errors', 'rule_cache_hit_rate', 'backup', 'restore_drill', 'scheduler', 'open_alerts',
     ])
         ->and($response->json('status'))->toBe('ok')
         ->and($response->json('checks.backup.status'))->toBe('ok')
@@ -79,6 +82,26 @@ it('notices a silent scheduler, failed jobs and open high alerts', function () {
     expect($report['scheduler']['status'])->toBe('fail')
         ->and($report['failed_jobs'])->toMatchArray(['status' => 'warn', 'value' => 1])
         ->and($report['open_alerts'])->toMatchArray(['status' => 'warn', 'value' => ['low' => 0, 'medium' => 0, 'high' => 1]]);
+});
+
+it('checks every client database and notices a move that does not finish (Phase 10)', function () {
+    $w = tenancyWorld();
+    dedicatedTenantDatabase();
+    placeClient($w->g1);
+
+    expect(app(HealthReport::class)->run()['checks']['tenant_databases'])
+        ->toMatchArray(['status' => 'ok', 'value' => ['configured' => 1, 'unavailable' => [], 'stuck_moves' => 0]]);
+
+    TenantPlacement::query()->update(['status' => PlacementStatus::Moving->value, 'status_changed_at' => now()->subHours(3)]);
+    expect(app(HealthReport::class)->run()['checks']['tenant_databases']['status'])->toBe('warn');
+
+    // A database without its tables (never migrated) is a failure, named but without details.
+    TenantDatabases::register('empty', ['database' => config('database.connections.'.config('database.default').'.database').'_empty']);
+    ensureTestDatabase(config('database.connections.tenant_empty.database'));
+
+    $check = app(HealthReport::class)->run()['checks']['tenant_databases'];
+    expect($check['status'])->toBe('fail')
+        ->and($check['value']['unavailable'])->toBe(['empty' => 'RuntimeException']);
 });
 
 it('measures the rule cache hit rate once there are enough lookups', function () {
