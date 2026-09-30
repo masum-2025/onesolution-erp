@@ -52,7 +52,8 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          # The lock file needs PHP 8.4 (Symfony 8), like the servers and local dev.
+          php-version: '8.4'
           extensions: mbstring, pdo_mysql, pdo_pgsql, intl, sodium
           coverage: none
 
@@ -68,7 +69,12 @@ jobs:
         run: vendor/bin/pint --test
 
       - name: Tests
-        run: php artisan test
+        run: php artisan test --log-junit=junit.xml
+
+      # Failed tests as annotations, readable on the run page without the log.
+      - name: Report failed tests
+        if: failure()
+        run: php scripts/ci-annotate.php junit.xml
 
       # Phase 8-2: a real backup with the database's own dump tool, restored into a
       # separate database and checked (the same commands the servers schedule).
@@ -102,7 +108,7 @@ jobs:
         run: npm ci
 
       - name: Unit tests
-        run: npm test
+        run: npx vitest run --reporter=default --reporter=github-actions
 
       - name: Build and check the bundle budget
         run: npm run build
