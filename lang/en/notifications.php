@@ -113,6 +113,35 @@ return [
             'sms' => '{{ product }}: the deletion of your account was cancelled. Not you? {{ link }}',
             'action' => 'Open My account',
         ],
+        'security_sign_in_attempts' => [
+            'subject' => 'Someone is trying to sign in to your {{ product }} account',
+            'body' => 'There were {{ count }} failed attempts to sign in to your {{ product }} account, starting {{ time }}.
+
+If this was you, there is nothing to do. If it was not you, your password may be known: change it now, and turn on two-step sign-in in My account > Security.',
+            'sms' => '{{ product }}: {{ count }} failed sign-ins to your account since {{ time }}. Not you? Change your password: {{ link }}',
+            'action' => 'Open My account',
+        ],
+        'security_alert' => [
+            'subject' => 'Security notice for {{ organization }}: {{ event }}',
+            'body' => '{{ details }}
+
+First seen: {{ time }}.
+
+The audit log shows who did what and when. If you do not recognise this, contact your service provider at once.',
+            'sms' => '{{ product }}: security notice for {{ organization }}: {{ event }}. {{ link }}',
+            'action' => 'Open the audit log',
+        ],
+        'security_partner_alert' => [
+            'subject' => 'Security notice for {{ partner }}: {{ event }}',
+            'body' => '{{ details }}
+
+First seen: {{ time }}.
+
+If you do not recognise this, revoke the key and tell us at once.',
+            'sms' => '{{ product }}: security notice for {{ partner }}: {{ event }}. {{ link }}',
+            'action' => 'Open API keys',
+        ],
+
         'partners_company_added' => [
             'subject' => '{{ company }} was added to {{ organization }}',
             'body' => "{{ partner }} added the company {{ company }} to {{ organization }}. It is part of your account and is billed with it.\n\nYou can add its people, branches and settings now.",
@@ -180,9 +209,15 @@ If this is not right, turn the account off at once and contact your gateway.",
         'identity_signup_attempt' => ['name' => 'Sign-up with a taken address', 'description' => 'To the owner of the address. Fixed wording.'],
         'identity_deletion_requested' => ['name' => 'Account deletion asked', 'description' => 'To the person, on every address, with the date. Fixed wording.'],
         'identity_deletion_cancelled' => ['name' => 'Account deletion cancelled', 'description' => 'To the person, on every address. Fixed wording.'],
+        'security_sign_in_attempts' => ['name' => 'Failed sign-in attempts', 'description' => 'To the person, on every address, when many sign-ins to their account fail. Fixed wording.'],
+        'security_alert' => ['name' => 'Security notice', 'description' => 'To the people who read the client\x27s audit log: exports, modules switched off, sensitive settings, sign-in resets. Fixed wording.'],
+        'security_partner_alert' => ['name' => 'Security notice to you', 'description' => 'To your owners, e.g. when an API key is created. Fixed wording.'],
     ],
 
     'placeholders' => [
+        'event' => 'What happened',
+        'details' => 'More about it',
+        'count' => 'How many times',
         'product' => 'Your product name',
         'time' => 'Date and time',
         'kind' => 'email or phone',
@@ -214,6 +249,9 @@ If this is not right, turn the account off at once and contact your gateway.",
 
     // Example values for previews.
     'samples' => [
+        'event' => 'Data export requested',
+        'details' => 'A full export of your data was requested.',
+        'count' => '12',
         'organization' => 'Sunrise School',
         'partner' => 'Acme Solutions',
         'staff' => 'Rahim Uddin',

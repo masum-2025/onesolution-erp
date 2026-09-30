@@ -19,7 +19,7 @@ server; **later** = planned in a named phase.
 | 7 | Offline data | done | `tests/js/offline.test.js` (AES-GCM store, non-extractable key, one store per person and organization, wiped on sign-out); `Frontend/FrontendSourceTest` (browser storage only through the offline store) |
 | 8 | Sync | done | `Offline/SyncTest` (op ids applied once, stale version = conflict, forged or expired leases refused, stale rules refused, revoked people's payments held) |
 | 9 | Infrastructure | done + operator | `Security/HeadersAndLimitsTest` (HSTS on HTTPS only, nosniff and referrer policy on every response); `Frontend/AppShellTest` (CSP, framing); `Security/SecurityCheckTest` (`security:check` fails a production deploy on `APP_DEBUG=true`, plain HTTP, admin DB user, missing keys…); firewall, private DB/Redis, TLS: [ops/server-hardening.md](ops/server-hardening.md) |
-| 10 | Monitoring | done (log, audit) + later (alerts, Phase 9-2) | `Audit/AuditCoreTest` (core audit always on, device and session named, shipping to an external store); `Audit/AdvancedAuditTest` (reports, exports, retention); `Security/SecurityLogTest` (failed sign-ins, refused requests with their code, rule and module changes; no emails, passwords, codes or tokens); `Security/CrossTenantRouteSweepTest` (cross-tenant attempts logged); JSON channel `security` in `config/logging.php`; alerts on spikes: Phase 9 |
+| 10 | Monitoring | done | `Monitoring/AlertsTest` (a simulated brute force raises one alert, told once to operators and the person; cross-tenant attempts, exports, sensitive changes; retries without duplicates); `Monitoring/HealthTest` (queue, failed jobs, sync errors, rule cache, backups, drill, scheduler, open alerts; token-protected `/internal/health`); `Monitoring/IncidentTest` (`security:revoke`); [incident-playbook.md](incident-playbook.md); `Audit/AuditCoreTest` (core audit always on, device and session named, shipping to an external store); `Audit/AdvancedAuditTest` (reports, exports, retention); `Security/SecurityLogTest` (failed sign-ins, refused requests with their code, rule and module changes; no emails, passwords, codes or tokens); `Security/CrossTenantRouteSweepTest` (cross-tenant attempts logged); JSON channel `security` in `config/logging.php`; alerts on spikes: Phase 9 |
 | 11 | Recovery | done + operator | `Security/BackupTest` (encrypted and signed sets, changed or cut files refused, key rotation, retention, restore drill into a separate database, never the app's own); CI job "Backup and restore drill" runs the real `mysqldump`/`pg_dump` on MySQL and PostgreSQL; schedule in `routes/console.php`; off-site write-once storage: [ops/backups.md](ops/backups.md) |
 | 12 | Future readiness | done + later (AI) | `.github/workflows/supply-chain.yml` (`composer audit`, `npm audit`, CycloneDX SBOM, weekly); `.github/dependabot.yml`; key versioning: backups (`BACKUP_KEY_V*`, `BackupTest`), app encryption (`APP_PREVIOUS_KEYS`); AI prompt injection and data scope: no AI feature has logic yet; tests come with the first one (rule `ai_assistant.data_scope` and consent records already exist) |
 
@@ -39,8 +39,8 @@ server; **later** = planned in a named phase.
   those are covered by each feature's own isolation tests.
 - The general API limits (120 per person, 600 per organization, 300 per
   address, per minute) are placeholders until real traffic is measured.
-- Alerts (email, Slack, SMS) on security events arrive in Phase 9; until then
-  the security log is for the log collector.
+- Alert thresholds (config/monitoring.php) are placeholders until real traffic
+  is measured; operators acknowledge alerts from the console (no operator UI yet).
 - Encrypted, write-once off-site storage needs an S3-compatible bucket with
   object lock; the default `backups` disk is local and `security:check` says so.
 - PostgreSQL has never run locally; it runs only in CI.

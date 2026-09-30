@@ -27,6 +27,7 @@ use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
+use App\Platform\Monitoring\Models\SecurityAlert;
 use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\Models\NotificationTemplate;
 use App\Platform\Notifications\Models\PartnerMailDomain;
@@ -115,6 +116,8 @@ const PLATFORM_MODELS = [
     DataExport::class,
     // Audit exports (9-1): same pattern as data exports; read through visible-organization lookups.
     AuditExport::class,
+    // Security alerts (9-2): platform operations data; organization/partner ids only say what an alert is about.
+    SecurityAlert::class,
     // Billing (5B-3): commercial records between the platform, partners and
     // clients. Partner plans and wholesale prices are partner or platform data;
     // subscriptions, invoices and commissions are read by the partner console

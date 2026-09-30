@@ -2,6 +2,7 @@
 
 namespace App\Platform\Security;
 
+use App\Platform\Security\Events\SecurityEventRecorded;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -27,11 +28,16 @@ class SecurityLog
     {
         $request = app()->runningInConsole() && ! app()->runningUnitTests() ? null : request();
 
-        Log::channel((string) config('security.log_channel'))->log($level, $event, [
+        $payload = [
             'event' => $event,
             ...$this->clean($context),
             ...$this->origin($request),
-        ]);
+        ];
+
+        Log::channel((string) config('security.log_channel'))->log($level, $event, $payload);
+
+        // Watched for alerts (Phase 9-2).
+        SecurityEventRecorded::dispatch($event, $payload, $level);
     }
 
     /**

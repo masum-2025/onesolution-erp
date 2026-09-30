@@ -7,6 +7,7 @@ use App\Platform\Countries\CountriesServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
 use App\Platform\Identity\IdentityServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
+use App\Platform\Monitoring\MonitoringServiceProvider;
 use App\Platform\Notifications\NotificationsServiceProvider;
 use App\Platform\Offline\OfflineServiceProvider;
 use App\Platform\Packaging\PackagingServiceProvider;
@@ -42,4 +43,5 @@ return [
     OfflineServiceProvider::class,
     SecurityServiceProvider::class,
     AuditServiceProvider::class,
+    MonitoringServiceProvider::class,
 ];

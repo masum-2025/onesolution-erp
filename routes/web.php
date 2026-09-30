@@ -10,6 +10,7 @@ use App\Platform\Identity\Http\Controllers\SignupController;
 use App\Platform\Identity\Http\Controllers\TwoFactorSessionController;
 use App\Platform\Identity\Http\Middleware\TrackUserSession;
 use App\Platform\Invitations\Http\InvitationController;
+use App\Platform\Monitoring\Http\HealthController;
 use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
 use App\Platform\Payments\Http\GatewayCallbackController;
@@ -99,6 +100,11 @@ Route::withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, Pr
 
 // Caddy on-demand TLS asks here before issuing a certificate: verified hosts only.
 Route::get('internal/tls/ask', TlsAskController::class);
+
+// Monitoring tools read the platform's health here (Phase 9-2): bearer token, no session.
+Route::get('internal/health', HealthController::class)
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class])
+    ->middleware('throttle:health');
 
 // Every other page path boots the app; its router decides what to show.
 Route::get('/{path?}', AppShellController::class)

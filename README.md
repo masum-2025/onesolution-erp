@@ -1698,6 +1698,53 @@ never removed; each removal is recorded as `audit.pruned` with counts. Money act
   No code change.
 - Open: a hash chain for tamper evidence across entries; a SIEM driver (HTTP) for shipping.
 
+## Alerts, health and incident response (Phase 9-2)
+
+Code: `app/Platform/Monitoring`, settings: `config/monitoring.php`, playbook:
+[docs/incident-playbook.md](docs/incident-playbook.md).
+
+### Security alerts
+
+Every security-log event (`SecurityEventRecorded`) is counted per alert kind and group in the
+cache; at the threshold one `security_alerts` row is raised and delivered by a queued job. While
+it stays open (within its cooldown, not acknowledged) repeats only count up; nobody is told twice,
+and a channel that was down is retried without resending the others.
+
+| Kind | Watches | Default (placeholder) | Told |
+|------|---------|-----------------------|------|
+| brute_force_account | failed sign-ins / second steps of one account | 10 in 10 min | operators, the person (every address) |
+| brute_force_address | failed sign-ins from one address | 30 in 10 min | operators |
+| access_denied_spike, rate_limited_spike | 403 / 429 per person or address | 50 / 100 in 5 min | operators |
+| cross_tenant_attempt | another tenant's id in an address | every one | operators |
+| data_export | data or audit log export requested | every one | operators, the organization |
+| module_switched_off, sensitive_rule_changed, mfa_reset | module off or purge, approved sensitive rule, sign-in reset | every one | operators, the organization |
+| partner_api_key_created | new partner API key | every one | operators, the partner's owners |
+| restore_drill_failed | the monthly restore drill failed | every one | operators |
+
+Operators: `MONITORING_MAIL_TO`, `MONITORING_SLACK_WEBHOOK`, `MONITORING_SMS_TO`, each with a
+minimum severity. Organizations: the people who may read its audit log (`security.alert`,
+partner-branded, fixed wording, bn/en). `php artisan security:alerts [--all] [--ack=id --note=]`.
+
+### Health
+
+`php artisan health:report [--json]` and `GET /internal/health` (`Authorization: Bearer
+$HEALTH_TOKEN`; 404 without it; 503 while a check fails): database, cache, queue depth, failed
+jobs (24 h), rejected offline changes (24 h), rule cache hit rate, last backup, last restore
+drill, scheduler heartbeat (`monitor:heartbeat` every minute), open alerts. Counts and times only.
+
+### Incident response
+
+`php artisan security:revoke --user=<email|id> | --organization=<id> | --partner=<id|slug>
+--reason="…" [--force]`: API tokens, browser sessions, partner API keys and offline devices, at
+once; audited as `security.access_revoked`.
+
+### Future expansion (Phase 9-2)
+
+- A new alert is a config entry (events, group, threshold, who is told); a new channel is one
+  method; partners and countries need no code.
+- Open: an operator console (UI) for alerts and health; per-partner alert recipients; tuning the
+  placeholder thresholds with real traffic.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

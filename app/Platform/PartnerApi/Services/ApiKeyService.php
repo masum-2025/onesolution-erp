@@ -56,7 +56,7 @@ class ApiKeyService
         return ['key' => $key, 'record' => $record];
     }
 
-    public function revoke(PartnerApiKey $key, User $actor): void
+    public function revoke(PartnerApiKey $key, ?User $actor): void
     {
         $key->forceFill(['revoked_at' => now()])->save();
         $this->audit->record(action: 'partner.api_key_revoked', target: $key, new: ['name' => $key->name, 'prefix' => $key->prefix], actor: $actor, partnerId: $key->partner_id);

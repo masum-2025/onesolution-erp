@@ -26,6 +26,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     'POST payments/{gateway}/notify', 'GET payments/{gateway}/return/{outcome}', 'POST payments/{gateway}/return/{outcome}',
     // TLS certificate check for the web server: answers only for verified domains.
     'GET internal/tls/ask',
+    // Health for monitoring tools: bearer token (404 without it), counts only, throttled.
+    'GET internal/health',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

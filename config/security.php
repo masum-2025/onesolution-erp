@@ -43,7 +43,7 @@ return [
         'partner.api_key_*', 'partner.domain_*', 'data.export_*', 'identity.data_downloaded',
         'support.requested', 'support.approved', 'support.auto_approved', 'support.session_started',
         'client.transfer*', 'payments.merchant_account.*', 'offline.device_revoked',
-        'offline.operation_quarantined', 'organization.moved', 'backup.*', 'audit.*',
+        'offline.operation_quarantined', 'organization.moved', 'backup.*', 'audit.*', 'security.*',
     ],
 
     'backups' => [

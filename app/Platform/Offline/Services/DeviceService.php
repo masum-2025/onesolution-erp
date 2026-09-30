@@ -47,7 +47,7 @@ class DeviceService
      * Removes a device from offline work: its leases stop at once and it
      * wipes its local data on its next contact.
      */
-    public function revoke(Device $device, User $actor, ?string $reason = null): Device
+    public function revoke(Device $device, ?User $actor, ?string $reason = null): Device
     {
         return DB::transaction(function () use ($device, $actor, $reason) {
             $device = Device::query()->whereKey($device->getKey())->lockForUpdate()->firstOrFail();
@@ -58,7 +58,8 @@ class DeviceService
             $now = CarbonImmutable::now();
             $device->forceFill([
                 'revoked_at' => $now,
-                'revoked_by' => $actor->getKey(),
+                // No actor: the platform (e.g. security:revoke during an incident).
+                'revoked_by' => $actor?->getKey(),
                 'revoke_reason' => $reason === null ? null : mb_substr($reason, 0, 500),
                 'wipe_requested_at' => $device->wipe_requested_at ?? $now,
             ])->save();

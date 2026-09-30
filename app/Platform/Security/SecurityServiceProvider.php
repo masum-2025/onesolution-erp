@@ -82,6 +82,9 @@ class SecurityServiceProvider extends ServiceProvider
                 'api_key_id' => $entry->api_key_id,
                 'target_type' => $entry->target_type,
                 'target_id' => $entry->target_id,
+                // Which rule or module, for alerts on sensitive changes (Phase 9-2).
+                'rule' => is_string($entry->new_values['rule'] ?? null) ? $entry->new_values['rule'] : null,
+                'module' => is_string($entry->new_values['module'] ?? null) ? $entry->new_values['module'] : null,
             ], str_ends_with($entry->action, '_failed') ? 'warning' : 'info');
         });
     }

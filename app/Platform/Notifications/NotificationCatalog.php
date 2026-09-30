@@ -164,6 +164,29 @@ final class NotificationCatalog
             'path' => '/account',
             'editable' => false,
         ],
+        // Security alerts (Phase 9-2). Fixed wording: a partner could otherwise
+        // soften a warning.
+        'security.sign_in_attempts' => [
+            'channels' => ['mail', 'sms'],
+            'placeholders' => ['product', 'count', 'time', 'link'],
+            'audience' => 'person',
+            'path' => '/account',
+            'editable' => false,
+        ],
+        'security.alert' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'event', 'details', 'time', 'link'],
+            'audience' => 'client',
+            'path' => '/audit-log',
+            'editable' => false,
+        ],
+        'security.partner_alert' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'partner', 'event', 'details', 'time', 'link'],
+            'audience' => 'partner',
+            'path' => '/partner/api-keys',
+            'editable' => false,
+        ],
         // A client's own payment gateway account (Phase 6): where its customers'
         // money goes. Fixed wording: a partner could otherwise soften the warning.
         'payments.merchant_change_requested' => [

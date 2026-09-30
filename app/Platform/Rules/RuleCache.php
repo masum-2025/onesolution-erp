@@ -2,6 +2,7 @@
 
 namespace App\Platform\Rules;
 
+use App\Platform\Monitoring\Metrics;
 use App\Platform\Rules\Enums\RuleScope;
 use Closure;
 use Illuminate\Support\Facades\Cache;
@@ -23,9 +24,13 @@ class RuleCache
 
         $cached = Cache::get($key);
         if (is_array($cached) && ($cached['valid_until'] ?? 0) > now()->getTimestamp()) {
+            // Hit rate for the health report (Phase 9-2).
+            app(Metrics::class)->count('rule_cache.hit');
+
             return $cached;
         }
 
+        app(Metrics::class)->count('rule_cache.miss');
         [$map, $secondsToBoundary] = $compute();
         $ttl = (int) config('platform_rules.cache_ttl_minutes') * 60;
 
