@@ -70,6 +70,15 @@ return [
         'identity_mfa_reset_requested' => 'দুই ধাপে সাইন ইন রিসেটের অনুরোধ',
         'identity_mfa_reset_approved' => 'দুই ধাপে সাইন ইন রিসেট হয়েছে',
         'identity_mfa_reset_rejected' => 'দুই ধাপে সাইন ইন রিসেট বাতিল',
+        'rule_changed' => 'সেটিং বদলানো হয়েছে',
+        'rule_change_requested' => 'সেটিং বদল অনুমোদনের অপেক্ষায়',
+        'audit_pruned' => 'পুরোনো অডিট তথ্য মুছে ফেলা হয়েছে (সংরক্ষণ নীতি)',
+        'audit_export_requested' => 'অডিট লগ এক্সপোর্টের অনুরোধ',
+        'audit_export_downloaded' => 'অডিট লগ এক্সপোর্ট ডাউনলোড করা হয়েছে',
+    ],
+
+    'errors' => [
+        'period_too_long' => 'সর্বোচ্চ :days দিনের সময়সীমা বেছে নিন।',
     ],
 
 ];

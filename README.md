@@ -1650,6 +1650,54 @@ tools; on Laragon set `BACKUP_MYSQLDUMP` / `BACKUP_MYSQL` (see `.env.example`).
   lock for off-site backups (needs the bucket); AI prompt-injection tests with the first AI feature;
   measuring real traffic to replace the placeholder limits.
 
+## Audit log (Phase 9-1)
+
+### Core audit (always on, every plan)
+
+`audit_logs` is append-only (the model refuses updates and deletes). Every change to money,
+payroll, rules, modules, permissions, branding, domains and every sign-in is recorded, whether or
+not `advanced_audit` is on (`tests/Feature/Audit/AuditCoreTest`). Each entry names who (person or
+partner API key), where (organization, partner), what (action, target, old/new values, reason),
+from where (IP, user agent, **offline device** `device_id`, **browser session** `session_id`).
+
+The audit screen filters by period (days in the organization's time zone), area (`rule`) or
+exact action (`rule.changed`), and person: `GET /api/organizations/{id}/audit-log?from=&to=&action=&actor=`.
+
+External store: `AUDIT_SHIP_DRIVER=log` writes every entry once, in order, as a JSON line to
+`storage/logs/audit.log` (`php artisan audit:ship`, every minute, 60 s lag so no entry is
+skipped); the log collector carries it to write-once storage. A new store = a new
+`AuditShipper` driver.
+
+### advanced_audit module (business, enterprise)
+
+| Endpoint | Permission | What |
+|----------|------------|------|
+| GET …/audit-log/report?from=&to= | advanced_audit.view | per day, top actions, most active people, support visits, money entries (≤ 92 days) |
+| GET / POST …/audit-log/exports | advanced_audit.export | CSV of a period (≤ 366 days, 200 000 rows), built in the background, one at a time |
+| GET …/audit-log/exports/{id}/link | advanced_audit.export | a signed link for 5 minutes; the file stays for `exports.retention_days` |
+
+CSV cells that a spreadsheet would run as a formula are prefixed with `'`; the file starts with a
+UTF-8 BOM so Bangla shows correctly. Requests and downloads are audited.
+
+Retention rules (sensitive: a second person approves; country-specific):
+
+| Rule | Default | Limits |
+|------|---------|--------|
+| `advanced_audit.retention_days` | empty = keep for ever | ≥ 365 days |
+| `advanced_audit.money_retention_days` | empty = keep for ever | ≥ 2922 days (8 years, placeholder for the adviser) |
+
+`php artisan audit:prune` (nightly) removes entries past these, only where the module is on,
+per company (with its units) or group (its own entries); entries without an organization are
+never removed; each removal is recorded as `audit.pruned` with counts. Money actions:
+`config/audit.php` `money_actions`.
+
+### Future expansion (Phase 9-1)
+
+- A new country sets its legal retention as a country value of the two rules; a new module's
+  money actions are one line in `money_actions`; a partner can lock retention for all clients.
+  No code change.
+- Open: a hash chain for tamper evidence across entries; a SIEM driver (HTTP) for shipping.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

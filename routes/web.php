@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppShellController;
+use App\Platform\Audit\Http\AdvancedAuditController;
 use App\Platform\Branding\Http\BrandAssetController;
 use App\Platform\Branding\Http\ClientBrandAssetController;
 use App\Platform\DataExport\Http\DataExportController;
@@ -78,6 +79,11 @@ Route::get('partner-preview/{preview}', [TemplatePreviewController::class, 'show
 Route::get('exports/{export}/download', [DataExportController::class, 'download'])
     ->middleware('signed:relative')
     ->name('exports.download');
+
+// Audit log exports (advanced_audit, Phase 9-1): signed, short-lived links.
+Route::get('audit-exports/{export}/download', [AdvancedAuditController::class, 'download'])
+    ->middleware('signed:relative')
+    ->name('audit-exports.download');
 
 // Payment gateways (Phase 5C-2): their server's notice, and the browser coming back.
 // No session and no CSRF: the gateway posts from its own site, and a new session

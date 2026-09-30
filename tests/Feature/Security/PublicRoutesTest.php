@@ -21,7 +21,7 @@ const REVIEWED_PUBLIC_ROUTES = [
     // Public brand images and the app manifest for the address's brand.
     'GET brand-assets/{partner}/{kind}', 'GET client-brand-assets/{organization}/logo', 'GET manifest.webmanifest',
     // Signed, expiring download links.
-    'GET exports/{export}/download', 'GET storage/{path}', 'PUT storage/{path}',
+    'GET exports/{export}/download', 'GET audit-exports/{export}/download', 'GET storage/{path}', 'PUT storage/{path}',
     // Gateway notices: signature checked and verified with the gateway; throttled.
     'POST payments/{gateway}/notify', 'GET payments/{gateway}/return/{outcome}', 'POST payments/{gateway}/return/{outcome}',
     // TLS certificate check for the web server: answers only for verified domains.

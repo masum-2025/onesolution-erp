@@ -84,6 +84,16 @@ return [
             'replace_placeholders' => false,
         ],
 
+        // Audit entries shipped to an external store (Phase 9-1, AUDIT_SHIP_DRIVER=log).
+        'audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/audit.log'),
+            'level' => 'info',
+            'days' => env('LOG_AUDIT_DAYS', 30),
+            'formatter' => JsonFormatter::class,
+            'replace_placeholders' => false,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

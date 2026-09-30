@@ -2,6 +2,7 @@
 
 use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
+use App\Platform\Audit\Http\AdvancedAuditController;
 use App\Platform\Audit\Http\AuditLogController;
 use App\Platform\Billing\Http\Controllers\OrganizationBillingController;
 use App\Platform\Billing\Http\Controllers\PartnerBillingController;
@@ -165,6 +166,13 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 
     // Trust and data ownership (Phase 5B-2): audit log, support access, data export.
     Route::get('organizations/{organization}/audit-log', AuditLogController::class);
+    // Reports and CSV exports of the audit log (advanced_audit, Phase 9-1).
+    Route::middleware('module:advanced_audit')->group(function () {
+        Route::get('organizations/{organization}/audit-log/report', [AdvancedAuditController::class, 'report'])->middleware('throttle:audit-report');
+        Route::get('organizations/{organization}/audit-log/exports', [AdvancedAuditController::class, 'exports']);
+        Route::post('organizations/{organization}/audit-log/exports', [AdvancedAuditController::class, 'store'])->middleware('throttle:data-export');
+        Route::get('organizations/{organization}/audit-log/exports/{export}/link', [AdvancedAuditController::class, 'link']);
+    });
     Route::get('organizations/{organization}/support-grants', [ClientSupportController::class, 'index']);
     Route::get('organizations/{organization}/exports', [DataExportController::class, 'index']);
     Route::get('organizations/{organization}/exports/{export}/link', [DataExportController::class, 'link']);

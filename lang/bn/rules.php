@@ -267,6 +267,7 @@ return [
         'identity' => 'সাইন আপ ও সাইন ইন',
         'payments' => 'অনলাইন পেমেন্ট',
         'regional' => 'দেশ ও অঞ্চল',
+        'audit' => 'অডিট লগ',
         'organization' => 'প্রতিষ্ঠান',
         'security' => 'নিরাপত্তা',
         'data' => 'ডেটা',

@@ -275,5 +275,6 @@ return [
         'identity' => 'Sign-up and sign-in',
         'payments' => 'Online payments',
         'regional' => 'Country and region',
+        'audit' => 'Audit log',
     ],
 ];

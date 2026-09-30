@@ -4,5 +4,5 @@
  */
 export function menuLink(item, router) {
     const own = item.route ? router.resolve(item.route) : null;
-    return own && own.name && !['not-found', 'module-app'].includes(own.name) ? own.path : `/apps/${item.module}/${item.key}`;
+    return own && own.name && !['not-found', 'module-app'].includes(own.name) ? own.fullPath : `/apps/${item.module}/${item.key}`;
 }

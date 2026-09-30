@@ -41,3 +41,9 @@ Schedule::command('backup:run')->dailyAt('01:30')->withoutOverlapping()->onOneSe
 
 // The restore drill: the newest set restored into the staging database and checked.
 Schedule::command('backup:restore-drill')->monthlyOn(2, '04:00')->withoutOverlapping()->onOneServer();
+
+// Audit entries past each organization's retention (advanced_audit) and old audit exports (Phase 9-1).
+Schedule::command('audit:prune')->dailyAt('03:15')->withoutOverlapping()->onOneServer();
+
+// New audit entries to the external audit store, when one is configured.
+Schedule::command('audit:ship')->everyMinute()->withoutOverlapping()->onOneServer();

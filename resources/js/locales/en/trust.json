@@ -11,7 +11,56 @@
         "after": "After",
         "page": "Page {page} of {pages}",
         "empty_title": "Nothing recorded yet",
-        "empty_text": "Changes and support visits will appear here as they happen."
+        "empty_text": "Changes and support visits will appear here as they happen.",
+        "tabs": { "log": "Log", "report": "Report", "exports": "Export" },
+        "filters": {
+            "from": "From",
+            "to": "To",
+            "area": "Area",
+            "all_areas": "All areas",
+            "clear": "Clear filters",
+            "none_title": "Nothing matches these filters",
+            "none_text": "Try a longer period or another area."
+        },
+        "areas": {
+            "auth": "Sign-in",
+            "identity": "Accounts and security",
+            "membership": "Members",
+            "role": "Roles",
+            "rule": "Settings",
+            "module": "Modules",
+            "organization": "Organization",
+            "billing": "Billing",
+            "payments": "Payments",
+            "data": "Data exports",
+            "support": "Support access",
+            "offline": "Offline devices",
+            "partner": "Service provider",
+            "audit": "Audit log"
+        },
+        "report": {
+            "period": "Period",
+            "days": "Last {days} days",
+            "total": "Entries",
+            "people": "People",
+            "support": "Support visits",
+            "money": "Money and pay",
+            "per_day": "Entries per day",
+            "top_actions": "Most frequent",
+            "top_people": "Most active people",
+            "no_people": "Only system entries",
+            "empty_title": "Nothing in this period",
+            "empty_text": "Pick a longer period, or come back once there is activity."
+        },
+        "exports": {
+            "request": "Prepare CSV",
+            "requested": "The export is being prepared. It appears below when it is ready.",
+            "period": "{from} to {to}",
+            "rows": "{rows} entries",
+            "empty_title": "No audit exports yet",
+            "empty_text": "Choose a period and prepare a CSV file to open in a spreadsheet.",
+            "note": "Up to a year per file. The file can be downloaded for a few days, then it is deleted; every download is recorded here."
+        }
     },
     "support": {
         "title": "Support access",

@@ -73,6 +73,15 @@ return [
         'identity_mfa_reset_requested' => 'Two-step sign-in reset requested',
         'identity_mfa_reset_approved' => 'Two-step sign-in reset',
         'identity_mfa_reset_rejected' => 'Two-step sign-in reset rejected',
+        'rule_changed' => 'Setting changed',
+        'rule_change_requested' => 'Setting change waiting for approval',
+        'audit_pruned' => 'Old audit entries removed (retention)',
+        'audit_export_requested' => 'Audit log export requested',
+        'audit_export_downloaded' => 'Audit log export downloaded',
+    ],
+
+    'errors' => [
+        'period_too_long' => 'Choose a period of at most :days days.',
     ],
 
 ];

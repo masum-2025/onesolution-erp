@@ -3,6 +3,7 @@
 namespace App\Platform\Offline\Services;
 
 use App\Models\User;
+use App\Platform\Audit\AuditLogger;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Offline\Exceptions\OfflineException;
 use App\Platform\Offline\Models\Device;
@@ -66,6 +67,8 @@ class SyncService
         $device = Device::query()->with('organization')->whereKey($deviceId)->where('user_id', $user->getKey())->first()
             ?? throw OfflineException::deviceNotFound();
         $device->forceFill(['last_seen_at' => CarbonImmutable::now()])->save();
+        // Audit entries written while applying this device's changes name it (Phase 9-1).
+        request()->attributes->set(AuditLogger::DEVICE_ATTRIBUTE, $device->getKey());
         $organization = $device->organization;
 
         if ($device->isRevoked() || $device->mustWipe()) {

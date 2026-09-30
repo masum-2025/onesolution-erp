@@ -6,6 +6,7 @@ use App\Platform\Access\Models\Permission;
 use App\Platform\Access\Models\Role;
 use App\Platform\Access\Models\RoleTemplate;
 use App\Platform\Audit\AuditLog;
+use App\Platform\Audit\Exports\AuditExport;
 use App\Platform\Billing\Models\Commission;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Billing\Models\InvoiceLine;
@@ -112,6 +113,8 @@ const PLATFORM_MODELS = [
     // context). Both are read only through visible-organization lookups.
     SupportGrant::class,
     DataExport::class,
+    // Audit exports (9-1): same pattern as data exports; read through visible-organization lookups.
+    AuditExport::class,
     // Billing (5B-3): commercial records between the platform, partners and
     // clients. Partner plans and wholesale prices are partner or platform data;
     // subscriptions, invoices and commissions are read by the partner console

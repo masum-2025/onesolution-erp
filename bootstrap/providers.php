@@ -1,6 +1,7 @@
 <?php
 
 use App\Platform\Access\AccessServiceProvider;
+use App\Platform\Audit\AuditServiceProvider;
 use App\Platform\Billing\BillingServiceProvider;
 use App\Platform\Countries\CountriesServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
@@ -40,4 +41,5 @@ return [
     CountriesServiceProvider::class,
     OfflineServiceProvider::class,
     SecurityServiceProvider::class,
+    AuditServiceProvider::class,
 ];
