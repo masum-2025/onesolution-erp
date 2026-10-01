@@ -35,6 +35,7 @@
 
 @source '../**/*.blade.php';
 @source '../js/**/*.{js,vue}';
+@source '../../Modules/*/resources/js/**/*.{js,vue}';
 
 @custom-variant dark (&:where(.dark, .dark *));
 

@@ -2,6 +2,7 @@ import { reactive } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import { loadNamespaces } from './lib/i18n';
 import { loadMe, session } from './lib/session';
+import { moduleRoutes } from './modules';
 
 /*
  * Every screen is its own lazy chunk; its translations load with it (meta.ns).
@@ -70,6 +71,8 @@ const routes = [
             { path: 'roles', name: 'roles', component: () => import('./pages/access/RolesPage.vue'), meta: { context: 'organization', ns: ['access'] } },
             { path: 'rules', name: 'rules', component: () => import('./pages/rules/RulesPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
             { path: 'approvals', name: 'approvals', component: () => import('./pages/rules/ApprovalsPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
+            // Screens of business modules (Modules/*/resources/js/routes.js).
+            ...moduleRoutes,
             {
                 path: 'apps/:module/:item',
                 name: 'module-app',

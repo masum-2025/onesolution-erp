@@ -8,6 +8,13 @@ import { emit } from './events';
  * Keys look like "rules.drawer.title"; the first part is the namespace.
  */
 const loaders = import.meta.glob('../locales/*/*.json', { import: 'default' });
+// A business module keeps its texts with its code: Modules/<Module>/resources/js/locales/{locale}/{namespace}.json.
+const moduleLoaders = Object.fromEntries(
+    Object.entries(import.meta.glob('../../../Modules/*/resources/js/locales/*/*.json', { import: 'default' })).map(([path, loader]) => [
+        path.split('/locales/')[1],
+        loader,
+    ]),
+);
 
 export const i18n = reactive({
     locale: 'en',
@@ -21,7 +28,7 @@ async function loadOne(locale, namespace) {
     i18n.messages[locale] ??= {};
     if (i18n.messages[locale][namespace]) return;
 
-    const loader = loaders[`../locales/${locale}/${namespace}.json`];
+    const loader = loaders[`../locales/${locale}/${namespace}.json`] ?? moduleLoaders[`${locale}/${namespace}.json`];
     i18n.messages[locale][namespace] = loader ? await loader() : {};
 }
 

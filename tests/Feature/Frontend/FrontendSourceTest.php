@@ -8,10 +8,15 @@ use Symfony\Component\Finder\Finder;
  * and every Bangla / English translation key present in both languages.
  */
 
+/** The app's own screens and the business modules' screens (Modules/*\/resources/js). */
 function frontendFiles(): Finder
 {
-    return (new Finder)->files()->in(resource_path('js'))->name(['*.vue', '*.js']);
+    return (new Finder)->files()->in([resource_path('js'), ...glob(base_path('Modules/*/resources/js'), GLOB_ONLYDIR)])->name(['*.vue', '*.js']);
 }
+
+it('sees the business modules\' screens too', function () {
+    expect(collect(frontendFiles())->contains(fn ($file) => str_contains($file->getPathname(), 'Hrm')))->toBeTrue();
+});
 
 it('never renders raw HTML', function () {
     foreach (frontendFiles() as $file) {
@@ -51,7 +56,7 @@ it('has the same translation keys in Bangla and English', function () {
         return $out;
     };
 
-    foreach (glob(resource_path('js/locales/en/*.json')) as $english) {
+    foreach ([...glob(resource_path('js/locales/en/*.json')), ...glob(base_path('Modules/*/resources/js/locales/en/*.json'))] as $english) {
         $bangla = str_replace(DIRECTORY_SEPARATOR.'en'.DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR.'bn'.DIRECTORY_SEPARATOR, $english);
         $bangla = str_replace('/en/', '/bn/', $bangla);
 

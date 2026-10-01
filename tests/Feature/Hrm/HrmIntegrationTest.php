@@ -34,6 +34,28 @@ it('names positions in both languages and offers those of the units above', func
     $this->asToken($this->w->token)->patchJson("{$url}/{$teacher['id']}", ['base_version' => 2, 'organization_id' => $this->w->b1->id])->assertUnprocessable();
 });
 
+it('gives the forms their choices, required details and where the numbers come from', function () {
+    orgRule($this->w->c1, 'hrm.probation_days', 60);
+    orgRule($this->w->c1, 'hrm.employment_types', ['permanent', 'contract']);
+    orgRule($this->w->c1, 'hrm.required_fields', ['phone', 'national_id']);
+    $this->withHeader('X-Locale', 'bn');
+
+    $options = $this->asToken($this->w->token)->getJson("/api/organizations/{$this->w->c1->id}/hrm/form-options?unit_id={$this->w->b1->id}")->assertOk()->json('data');
+
+    expect($options['unit']['id'])->toBe($this->w->b1->id)
+        ->and($options['employment_types'])->toBe([['value' => 'permanent', 'label' => 'স্থায়ী'], ['value' => 'contract', 'label' => 'চুক্তিভিত্তিক']])
+        ->and($options['required_fields'])->toBe(['phone', 'national_id'])
+        ->and($options['probation_days']['value'])->toBe(60)
+        ->and($options['probation_days']['source']['kind'])->toBe('inherited')
+        ->and($options['probation_days']['source']['name'])->toBe($this->w->c1->displayName())
+        ->and($options['notice_period_days']['source']['kind'])->toBe('default')
+        ->and($options['can'])->toBe(['manage' => true, 'exit' => true, 'view_sensitive' => true]);
+
+    $reader = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'Reader'));
+    expect($this->asToken(orgToken($reader, $this->w->c1))->getJson("/api/organizations/{$this->w->c1->id}/hrm/form-options")->json('data.can'))
+        ->toBe(['manage' => false, 'exit' => false, 'view_sensitive' => false]);
+});
+
 it('lets an employee see their own record in the portal, without ids', function () {
     $mine = hireVia($this, $this->w->token, $this->w->b1, ['national_id' => '1990123456789'])->json('data.id');
     $c2Owner = createMember($this->w->c2);

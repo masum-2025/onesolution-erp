@@ -4,6 +4,8 @@ namespace Modules\Hrm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
 use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
@@ -64,6 +66,58 @@ class EmployeeController extends Controller
             'data' => collect($page->items())->map(fn (Employee $employee) => $this->presenter->listItem($employee))->values(),
             'meta' => ['total' => $page->total(), 'page' => $page->currentPage(), 'per_page' => $page->perPage(), 'last_page' => $page->lastPage()],
         ]);
+    }
+
+    /**
+     * What the hire and edit forms need at a unit: the choices and required
+     * details from its rules, and where the probation and notice numbers
+     * come from (shown next to them).
+     */
+    public function formOptions(Request $request, string $organization, RuleResolver $rules, RuleContextFactory $contexts): JsonResponse
+    {
+        $request->validate(['unit_id' => ['nullable', 'string', 'size:26']]);
+        $unit = $this->unitIn($this->findVisible($organization), $request->input('unit_id'));
+        Gate::authorize('hrm.view', $unit);
+
+        $context = $contexts->forOrganization($unit);
+        $choices = fn (string $rule) => array_map(
+            fn (string $value) => ['value' => $value, 'label' => __("hrm::rules.{$rule}.options.{$value}")],
+            array_values((array) $rules->get("hrm.{$rule}", $context)),
+        );
+        $number = function (string $key) use ($rules, $context, $unit) {
+            $resolved = $rules->explain($key, $context);
+
+            return [
+                'value' => $resolved->value,
+                'source' => [
+                    'kind' => match (true) {
+                        $resolved->sourceLevel === null => 'default',
+                        $resolved->sourceScopeId === $unit->getKey() => 'self',
+                        default => 'inherited',
+                    },
+                    'level' => $resolved->sourceLevel,
+                    'name' => $resolved->sourceName,
+                ],
+            ];
+        };
+        $kind = (string) $rules->get('hrm.national_id_kind', $context);
+
+        return response()->json(['data' => [
+            'unit' => ['id' => $unit->getKey(), 'name' => $unit->displayName()],
+            'employment_types' => $choices('employment_types'),
+            'document_types' => $choices('document_types'),
+            'required_fields' => array_values((array) $rules->get('hrm.required_fields', $context)),
+            'national_id' => ['kind' => $kind, 'label' => __("hrm::rules.national_id_kind.options.{$kind}")],
+            'genders' => array_map(fn (string $value) => ['value' => $value, 'label' => __("hrm::hrm.genders.{$value}")], ['female', 'male', 'other', 'undisclosed']),
+            'document_max_kb' => (int) $rules->get('hrm.document_max_kb', $context),
+            'probation_days' => $number('hrm.probation_days'),
+            'notice_period_days' => $number('hrm.notice_period_days'),
+            'can' => [
+                'manage' => Gate::allows('hrm.manage', $unit),
+                'exit' => Gate::allows('hrm.exit', $unit),
+                'view_sensitive' => Gate::allows('hrm.view_sensitive', $unit),
+            ],
+        ]]);
     }
 
     public function store(HireEmployeeRequest $request, string $organization): JsonResponse

@@ -15,6 +15,7 @@ use Modules\Hrm\Http\Controllers\PositionController;
 Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
     ->prefix('organizations/{organization}/hrm')
     ->group(function () {
+        Route::get('form-options', [EmployeeController::class, 'formOptions']);
         Route::get('positions', [PositionController::class, 'index']);
         Route::get('employees', [EmployeeController::class, 'index']);
         Route::get('employees/{employee}', [EmployeeController::class, 'show']);

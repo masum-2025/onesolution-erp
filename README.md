@@ -1913,7 +1913,7 @@ php scripts/coverage-gate.php storage/clover.xml
   first, once the module has code).
 - Open: the staging host, the testing party and dates; the test itself.
 
-## HRM module (business module 1, HRM-1: backend)
+## HRM module (business module 1: HRM-1 backend, HRM-2 screens)
 
 Code: `Modules/Hrm` (the first business module with its own tables, routes and services; platform
 code is never changed for it, it only uses platform contracts). Turn it on per level like any
@@ -1946,11 +1946,29 @@ module (`module:hrm` on every route; 403 while off, data kept).
 Permissions: `hrm.view`, `hrm.manage`, `hrm.view_sensitive`, `hrm.exit` (the `hr_officer` template
 has `hrm.*`). Audit texts: `Modules/Hrm/lang/*/audit.php` (any module can name its actions this way).
 
+### Screens (HRM-2)
+
+Code: `Modules/Hrm/resources/js` (routes, pages, components, `locales/{en,bn}/hrm.json`).
+
+- **Employees** (`/hrm`): search by name or code, filter by status, paged list with status badges.
+- **Hire someone** (`/hrm/new`): three steps (person, job, check and save). Required details,
+  kinds of employment, the national id's name and the probation end come from
+  `GET …/hrm/form-options?unit_id=` — rule values of the chosen unit, each with where it comes
+  from (`self`, `inherited` from a level, or the `default`) and the `can` flags for that unit.
+- **Employee** (`/hrm/employees/{id}`): overview, personal details (edited with `base_version`;
+  masked ids revealed only with `hrm.view_sensitive`), history timeline, documents (upload within
+  the rule's size, open through the signed link, removal confirmed). Only the steps the status
+  and permissions allow are offered; the server checks again.
+- **Positions** (`/hrm/positions`): add and edit titles in English and Bangla, hide unused ones.
+
+Every screen has loading, empty and error states, works at phone width and in Bangla, and is
+its own lazy chunk. The shell is not changed by a module (see "Module screens" below).
+
 ### Future expansion (HRM)
 
 - A new country or sector needs no code: kinds of employment, required details, the id
   document, probation and notice are rules (country-specific where it matters).
-- Next: HRM-2 (screens), HRM-3 (CSV import, org chart, custom fields, document expiry alerts).
+- Next: HRM-3 (CSV import, org chart, custom fields, document expiry alerts).
   Salary and bank details belong to Payroll.
 
 ## Browser app (frontend foundation)
@@ -2012,13 +2030,22 @@ Data labels (rule names, categories, choices) come translated from the API; a mo
 
 Every screen is a lazy chunk. Budget, checked on every build
 (`scripts/check-bundle-size.js`): first-load JS ≤ 80 KB gzip, CSS ≤ 30 KB gzip
-(currently about 51 KB and 17 KB).
+(currently about 58 KB and 18 KB).
+
+### Module screens
+
+A module keeps its screens in its own folder: `Modules/{Name}/resources/js/routes.js` exports
+lazy routes (`meta: { context, ns, module }`) and `locales/{locale}/{ns}.json` its texts.
+`resources/js/modules.js` and `lib/i18n.js` pick them up with `import.meta.glob`, and
+`app.css` scans them for Tailwind classes, so adding a module needs no change to the shell.
+The source checks in `FrontendSourceTest` (no `v-html`, logical CSS, matching `en`/`bn` keys)
+cover module files too.
 
 ### Future expansion (frontend)
 
 - New language: add `resources/js/locales/{locale}/*.json` and the locale in
   `config/tenancy.php`; RTL languages already work through logical properties.
 - New partner brand: data (partner settings today, `partner_brands` in Phase 5B).
-- New module screens: a lazy route + a locale namespace; menu entries come from the
-  manifest. No change to the shell.
+- New module screens: `routes.js` + locale files inside the module (see "Module screens");
+  menu entries come from the manifest. No change to the shell.
 - `can` comes from real permissions (Phase 4); the UI keeps reading `can`. Phase 7 adds IndexedDB and the sync queue behind `lib/http.js`.
