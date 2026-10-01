@@ -55,9 +55,12 @@ class PaymentConfirmer
 
             // The same message may have been applied while this one waited for the lock.
             $event = GatewayEvent::query()->whereKey($event->getKey())->lockForUpdate()->firstOrFail();
+            // @codeCoverageIgnoreStart
+            // Only two requests at the same moment reach this (not reproducible in sequential tests).
             if ($event->processed_at !== null) {
                 return [$payment, 'duplicate'];
             }
+            // @codeCoverageIgnoreEnd
 
             $outcome = $this->transition($payment, $result);
 
@@ -177,9 +180,12 @@ class PaymentConfirmer
             ])->save();
 
             return $event;
+            // @codeCoverageIgnoreStart
+            // Only two requests at the same moment reach this; the unique index decides.
         } catch (UniqueConstraintViolationException) {
             // The same message arrived twice at once: the other request handles it.
             return $find();
         }
+        // @codeCoverageIgnoreEnd
     }
 }

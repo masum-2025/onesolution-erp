@@ -92,6 +92,61 @@ jobs:
           php artisan backup:run
           php artisan backup:restore-drill
 
+  # Phase 11: the critical paths (auth, tenancy, rules, access, sync, money)
+  # must stay covered; scripts/coverage-gate.php fails the job below target.
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: onesolution_erp_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -psecret" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: onesolution_erp_test
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, intl, sodium
+          coverage: pcov
+          ini-values: pcov.directory=app
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Tests with coverage
+        run: php artisan test --parallel --coverage-clover=clover.xml
+
+      - name: Critical-path coverage
+        run: php scripts/coverage-gate.php clover.xml
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-clover
+          path: clover.xml
+          retention-days: 30
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest

@@ -1,10 +1,13 @@
 <?php
 
+use App\Platform\Access\AccessResolver;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Offline\Models\Device;
+use App\Platform\Offline\Models\OfflineLease;
 use App\Platform\Offline\Models\QuarantinedOperation;
 use App\Platform\Offline\Models\SyncOperationRecord;
 use App\Platform\Offline\Services\DeviceService;
+use App\Platform\Offline\Services\OperationApplier;
 use App\Platform\Offline\SyncRecords;
 use App\Platform\Tenancy\Databases\PlacementStatus;
 use App\Platform\Tenancy\Databases\TenantDatabases;
@@ -17,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\Fixtures\FixtureCashReceipt;
+use Tests\Fixtures\FixtureMovingSync;
 use Tests\Fixtures\FixtureNoteSync;
 use Tests\Fixtures\FixtureReceiptSync;
 use Tests\Fixtures\FixtureSyncNote;
@@ -389,6 +393,104 @@ describe('with group G1 in its own database (Phase 10)', function () {
             ->assertStatus(503)->assertJsonPath('code', 'data_moving');
 
         expect($held->fresh()->status)->toBe(QuarantinedOperation::PENDING);
+    });
+});
+
+describe('refusal paths (Phase 11)', function () {
+    it('refuses a sync for an organization that is no longer active', function () {
+        $device = offlineDevice($this);
+        // The device still holds its sign-in from before.
+        $token = orgToken($this->clerk, $this->w->c1);
+        $this->w->c1->forceFill(['status' => 'suspended'])->save();
+
+        syncNow($this, $device, [], token: $token)->assertForbidden()->assertJsonPath('code', 'organization_inactive');
+    });
+
+    it('refuses a sync when the partner was closed', function () {
+        $device = offlineDevice($this);
+        $token = orgToken($this->clerk, $this->w->c1);
+        $this->w->partnerA->forceFill(['status' => 'closed'])->save();
+
+        syncNow($this, $device, [], token: $token)->assertForbidden()->assertJsonPath('code', 'organization_inactive');
+    });
+
+    it('wipes a device that missed the module being turned off', function () {
+        $device = offlineDevice($this);
+        toggles()->disable($this->w->g1, 'offline_mode', 'Test setup', confirm: true);
+        // The wipe flag never reached this device (e.g. it was added in between).
+        Device::query()->whereKey($device['device']['id'])->update(['wipe_requested_at' => null]);
+
+        syncNow($this, $device, [op($device, 'crm.note', 'create', ['title' => 'x y'])])
+            ->assertStatus(410)->assertJsonPath('code', 'module_off');
+        expect(Device::query()->find($device['device']['id'])->mustWipe())->toBeTrue();
+    });
+
+    it('revokes the device of someone no longer allowed to work offline', function () {
+        $device = offlineDevice($this);
+        DB::table('role_permissions')->where('permission_key', 'offline_mode.use')->delete();
+        app(AccessResolver::class)->forget();
+
+        syncNow($this, $device, [])->assertStatus(410)->assertJsonPath('code', 'permission_missing');
+        expect(Device::query()->find($device['device']['id'])->isRevoked())->toBeTrue();
+    });
+
+    it('refuses a revoked lease and a token that is not a lease at all', function () {
+        $device = offlineDevice($this);
+
+        syncNow($this, $device, [], lease: 'not-a-lease')->assertStatus(401)->assertJsonPath('code', 'lease_invalid');
+
+        OfflineLease::query()->whereKey($device['lease_id'])->update(['revoked_at' => now()]);
+        syncNow($this, $device, [])->assertStatus(401)->assertJsonPath('code', 'lease_invalid');
+    });
+
+    it('rejects changes under an unknown lease or of a kind not offered here', function () {
+        $device = offlineDevice($this);
+        $unknownLease = [...op($device, 'crm.note', 'create', ['title' => 'a b']), 'lease_id' => (string) Str::ulid()];
+        $badKind = op($device, 'nothing.here', 'create');
+
+        $response = syncNow($this, $device, [$unknownLease, $badKind])->assertOk();
+
+        expect($response->json("results.{$unknownLease['op_id']}.code"))->toBe('lease_unknown')
+            ->and($response->json("results.{$badKind['op_id']}.code"))->toBe('kind_unavailable');
+    });
+
+    it('checks the action and time again inside the pipeline (defence in depth)', function () {
+        $device = offlineDevice($this);
+        actInOrganization($this->clerk, $this->w->c1);
+        $applier = app(OperationApplier::class);
+
+        expect($applier->apply(op($device, 'crm.note', 'archive'), $this->clerk, $this->w->c1, null)->code)->toBe('invalid')
+            ->and($applier->apply(op($device, 'crm.note', 'create', ['title' => 'a b'], madeAt: 'garbled'), $this->clerk, $this->w->c1, null)->status)->toBe('applied');
+    });
+
+    it('applies nothing while the partner is suspended (read-only)', function () {
+        $device = offlineDevice($this);
+        $this->w->partnerA->forceFill(['status' => 'suspended', 'suspended_at' => now()])->save();
+
+        syncNow($this, $device, [$note = op($device, 'crm.note', 'create', ['title' => 'a b'])])
+            ->assertOk()->assertJsonPath("results.{$note['op_id']}.code", 'read_only');
+    });
+
+    it('keeps a change for later when a move starts during the write', function () {
+        app(SyncRecords::class)->register('crm', FixtureMovingSync::class);
+        $device = offlineDevice($this);
+
+        syncNow($this, $device, [$trap = op($device, 'crm.trap', 'create')])
+            ->assertOk()->assertJsonPath("results.{$trap['op_id']}.status", 'retry_later');
+        expect(SyncOperationRecord::query()->count())->toBe(0);
+    });
+
+    it('answers an already applied change from its record when a removed device sends it again', function () {
+        $device = offlineDevice($this);
+        $create = op($device, 'crm.note', 'create', ['title' => 'Counted stock']);
+        $first = syncNow($this, $device, [$create])->json("results.{$create['op_id']}");
+
+        app(DeviceService::class)->revoke(Device::query()->find($device['device']['id']), $this->admin);
+        $again = syncNow($this, $device, [$create])->assertStatus(410)->json("results.{$create['op_id']}");
+
+        // JSON columns may reorder keys.
+        expect($again)->toEqual($first)
+            ->and(QuarantinedOperation::query()->count())->toBe(0);
     });
 });
 

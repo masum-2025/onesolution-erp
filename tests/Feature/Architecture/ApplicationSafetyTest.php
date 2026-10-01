@@ -97,6 +97,22 @@ it('never locks rows inside an aggregate query (PostgreSQL refuses FOR UPDATE wi
     expect($locked)->toBe([]);
 });
 
+it('says why whenever code is left out of the coverage report (Phase 11)', function () {
+    $unexplained = [];
+
+    foreach (safetySources(APP_CODE) as $path => $contents) {
+        $lines = preg_split('/\R/', $contents);
+        foreach ($lines as $number => $line) {
+            if (str_contains($line, '@codeCoverageIgnore') && ! str_contains($line, '@codeCoverageIgnoreEnd')
+                && preg_match('/^\s*\/\/\s*\S.{10,}/', $lines[$number + 1] ?? '') !== 1) {
+                $unexplained[] = $path.':'.($number + 1);
+            }
+        }
+    }
+
+    expect($unexplained)->toBe([]);
+});
+
 it('never prints unescaped HTML', function () {
     // The scan must actually see the frontend (a wrong pattern would pass silently).
     expect(count(safetySources(['resources/js'], '/\.(vue|js|ts)$/')))->toBeGreaterThan(20);

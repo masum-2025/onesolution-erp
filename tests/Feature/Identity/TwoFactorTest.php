@@ -296,6 +296,32 @@ it('asks again before a sensitive action when the last second step is old', func
     inSession($this)->postJson('/api/me/security/recovery-codes')->assertOk();
 });
 
+it('ends an API second-step token after too many wrong codes (Phase 11)', function () {
+    [$secret] = setUpApp($this, $this->user);
+    $token = $this->postJson('/api/auth/login', ['email' => $this->user->email, 'password' => 'password'])->json('two_factor.token');
+
+    foreach (range(1, (int) config('identity.two_factor.max_attempts') - 1) as $try) {
+        $this->postJson('/api/auth/two-factor', ['token' => $token, 'code' => '000000'])->assertJsonPath('code', 'invalid_code');
+    }
+    $this->postJson('/api/auth/two-factor', ['token' => $token, 'code' => '000000'])->assertJsonPath('code', 'challenge_ended');
+    // Even the right code needs the password again now.
+    $this->postJson('/api/auth/two-factor', ['token' => $token, 'code' => totp($secret, 1)])->assertJsonPath('code', 'challenge_ended');
+});
+
+it('confirms a sensitive action with a passkey (Phase 11)', function () {
+    signInWithPassword($this, $this->user);
+    $device = new FakeAuthenticator;
+    $options = inSession($this)->postJson('/api/me/security/passkeys/options')->json('data');
+    inSession($this)->postJson('/api/me/security/passkeys', ['name' => 'Phone', 'credential' => $device->create($options, origin())])->assertCreated();
+
+    $this->travel(16)->minutes();
+    inSession($this)->postJson('/api/me/security/recovery-codes')->assertForbidden()->assertJsonPath('code', 'step_up_required');
+
+    $options = inSession($this)->postJson('/api/me/security/confirm/options')->assertOk()->json('data');
+    inSession($this)->postJson('/api/me/security/confirm', ['credential' => $device->get($options, origin())])->assertOk();
+    inSession($this)->postJson('/api/me/security/recovery-codes')->assertOk();
+});
+
 it('lets API clients confirm a sensitive action with a code in a header', function () {
     $owner = createMember($this->company);
     [$secret] = setUpApp($this, $owner);

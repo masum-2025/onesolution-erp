@@ -234,8 +234,11 @@ class SyncService
     {
         try {
             return is_string($value) && $value !== '' ? CarbonImmutable::parse($value)->utc() : null;
+            // @codeCoverageIgnoreStart
+            // Unreachable through the API: SyncRequest validates every date first.
         } catch (Throwable) {
             return null;
         }
+        // @codeCoverageIgnoreEnd
     }
 }
