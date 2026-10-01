@@ -22,6 +22,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET brand-assets/{partner}/{kind}', 'GET client-brand-assets/{organization}/logo', 'GET manifest.webmanifest',
     // Signed, expiring download links. (Laravel's generic storage/{path} route is off, Phase 11.)
     'GET exports/{export}/download', 'GET audit-exports/{export}/download',
+    // Module files (files/…): the HRM employee documents.
+    'GET files/hrm/{organization}/{document}',
     // Gateway notices: signature checked and verified with the gateway; throttled.
     'POST payments/{gateway}/notify', 'GET payments/{gateway}/return/{outcome}', 'POST payments/{gateway}/return/{outcome}',
     // TLS certificate check for the web server: answers only for verified domains.

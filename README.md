@@ -1913,6 +1913,46 @@ php scripts/coverage-gate.php storage/clover.xml
   first, once the module has code).
 - Open: the staging host, the testing party and dates; the test itself.
 
+## HRM module (business module 1, HRM-1: backend)
+
+Code: `Modules/Hrm` (the first business module with its own tables, routes and services; platform
+code is never changed for it, it only uses platform contracts). Turn it on per level like any
+module (`module:hrm` on every route; 403 while off, data kept).
+
+- **Positions** (`hrm_positions`): titles in every supported language, code, grade, active flag;
+  a unit sees its own and those of the units above.
+- **Employees** (`hrm_employees`): work in a company, branch or department (never a group);
+  code from `hrm.employee_code_format` (`{UNIT} {YYYY} {YY} {SEQ:n}`, running number per company
+  and year under a row lock); probation from `hrm.probation_days`; kinds of employment and
+  required details from rules. National and tax ids are **encrypted**, masked (`••••1234`) in
+  every answer; the full values only from `GET …/employees/{id}/sensitive` (`hrm.view_sensitive`,
+  recent second step, audited). A keyed hash finds a national id already used in the company.
+  Never deleted: employment ends with an exit.
+- **Employment steps** (`POST …/employees/{id}/steps/{confirm|transfer|promote|notice|exit|rehire}`,
+  with `base_version`): each writes an append-only `hrm_employment_events` row, an audit entry and
+  `Modules\Hrm\Events\EmploymentChanged` (`hrm.employee.*`, ids and dates only) for other modules.
+  Notice and exit need `hrm.exit`; the notice period is `hrm.notice_period_days`. A transfer stays
+  inside the company (`BelongsToOrganization::reassigning()`, the only way a record changes unit).
+- **Documents** (`hrm_documents`): kinds `hrm.document_types`, size `hrm.document_max_kb` (plan
+  level and above), PDF/JPG/PNG/WebP by content, private disk, opened through a 5-minute signed
+  link (`/files/hrm/…`), every add, open and removal audited.
+- **Portal**: `hrm.employee` subject with relation `self`: an employee sees their name, code,
+  position, unit, dates, status and contact, never ids or documents.
+- **Data export**: `HrmExporter` (`module.exporters`) adds positions, employees (with ids: the
+  client owns them), history and the document list to the client's export.
+- Tables are tenant tables (`Modules/Hrm/database/migrations/tenant`), so HRM data follows a
+  client into a dedicated or regional database and through `tenants:move`.
+
+Permissions: `hrm.view`, `hrm.manage`, `hrm.view_sensitive`, `hrm.exit` (the `hr_officer` template
+has `hrm.*`). Audit texts: `Modules/Hrm/lang/*/audit.php` (any module can name its actions this way).
+
+### Future expansion (HRM)
+
+- A new country or sector needs no code: kinds of employment, required details, the id
+  document, probation and notice are rules (country-specific where it matters).
+- Next: HRM-2 (screens), HRM-3 (CSV import, org chart, custom fields, document expiry alerts).
+  Salary and bank details belong to Payroll.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

@@ -58,13 +58,28 @@ class AuditQuery
             ->when(($filters['filter'] ?? null) === 'changes', fn (Builder $query) => $query->where('action', '!=', 'support.accessed'));
     }
 
-    /** The action in the reader's language, or the action key itself. */
+    /**
+     * The action in the reader's language, or the action key itself. A
+     * module names its own actions: "hrm.employee_hired" is read from
+     * "hrm::audit.employee_hired" when the platform has no label for it.
+     */
     public function label(string $action): string
     {
         $key = 'audit.actions.'.str_replace('.', '_', $action);
         $text = __($key);
+        if ($text !== $key) {
+            return $text;
+        }
 
-        return $text === $key ? $action : $text;
+        if (str_contains($action, '.')) {
+            $moduleKey = Str::before($action, '.').'::audit.'.str_replace('.', '_', Str::after($action, '.'));
+            $moduleText = __($moduleKey);
+            if ($moduleText !== $moduleKey) {
+                return $moduleText;
+            }
+        }
+
+        return $action;
     }
 
     /** Whether an entry is about money or pay (longer retention). */

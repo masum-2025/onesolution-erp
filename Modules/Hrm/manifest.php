@@ -2,19 +2,28 @@
 
 /*
 | Module manifest: read by App\Platform\Modules\ModuleRegistry.
-| Business numbers never live here; rules[] are declared in Phase 3.
+| Business numbers never live here; they are rules (Rules::get('hrm.*')).
 */
+
+use Modules\Hrm\Portal\EmployeeSubjects;
 
 return [
     'key' => 'hrm',
     'name' => 'hrm::module.name',
     'description' => 'hrm::module.description',
-    'version' => '0.1.0',
+    'version' => '1.0.0',
     'category' => 'business',
     'requires' => [],
     'sectors' => ['*'],
     'plans' => ['*'],
-    'permissions' => ['hrm.view', 'hrm.manage'],
+    'permissions' => [
+        'hrm.view',
+        'hrm.manage',
+        // Full national and tax ids (masked otherwise); every look is audited.
+        'hrm.view_sensitive',
+        // Notice and exit: ends someone's employment.
+        'hrm.exit',
+    ],
     'rules' => [
         [
             'key' => 'hrm.probation_days',
@@ -42,7 +51,7 @@ return [
         [
             'key' => 'hrm.employee_code_format',
             'type' => 'string',
-            // Placeholders: {BRANCH} {YYYY} {SEQ:n}
+            // Placeholders: {UNIT} {YYYY} {YY} {SEQ:n}
             'schema' => ['minLength' => 3, 'maxLength' => 50, 'pattern' => '^[A-Za-z0-9{}:_/-]+$'],
             'default' => 'EMP-{YYYY}-{SEQ:4}',
             'label' => 'hrm::rules.employee_code_format.label',
@@ -50,6 +59,64 @@ return [
             'overridable_levels' => ['platform', 'partner', 'group', 'company'],
             'category' => 'numbering',
             'sort_order' => 30,
+        ],
+        [
+            'key' => 'hrm.employment_types',
+            'type' => 'multi_enum',
+            'schema' => ['items' => ['enum' => ['permanent', 'contract', 'part_time', 'intern', 'daily_wage', 'consultant']], 'minItems' => 1],
+            'default' => ['permanent', 'contract', 'part_time', 'intern', 'daily_wage'],
+            'label' => 'hrm::rules.employment_types.label',
+            'description' => 'hrm::rules.employment_types.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'employment',
+            'sort_order' => 40,
+        ],
+        [
+            'key' => 'hrm.national_id_kind',
+            'type' => 'enum',
+            'schema' => ['enum' => ['national_id', 'nid', 'iqama', 'passport', 'ssn']],
+            'default' => 'national_id',
+            'label' => 'hrm::rules.national_id_kind.label',
+            'description' => 'hrm::rules.national_id_kind.description',
+            'overridable_levels' => ['platform', 'partner'],
+            'country_specific' => true,
+            'category' => 'personal',
+            'sort_order' => 50,
+        ],
+        [
+            'key' => 'hrm.required_fields',
+            'type' => 'multi_enum',
+            'schema' => ['items' => ['enum' => ['date_of_birth', 'gender', 'phone', 'email', 'national_id', 'address', 'emergency_contact']]],
+            'default' => ['phone'],
+            'label' => 'hrm::rules.required_fields.label',
+            'description' => 'hrm::rules.required_fields.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'personal',
+            'sort_order' => 60,
+        ],
+        [
+            'key' => 'hrm.document_types',
+            'type' => 'multi_enum',
+            'schema' => ['items' => ['enum' => ['national_id', 'certificate', 'contract', 'photo', 'cv', 'medical', 'other']], 'minItems' => 1],
+            'default' => ['national_id', 'certificate', 'contract', 'photo', 'cv', 'other'],
+            'label' => 'hrm::rules.document_types.label',
+            'description' => 'hrm::rules.document_types.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'documents',
+            'sort_order' => 70,
+        ],
+        [
+            'key' => 'hrm.document_max_kb',
+            'type' => 'integer',
+            'schema' => ['minimum' => 100, 'maximum' => 20480],
+            'default' => 5120,
+            'label' => 'hrm::rules.document_max_kb.label',
+            'description' => 'hrm::rules.document_max_kb.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'documents',
+            'sort_order' => 80,
         ],
     ],
     'menu' => [
@@ -61,7 +128,18 @@ return [
             'order' => 10,
         ],
     ],
-    'events' => [],
+    // Other modules listen to these (Attendance, Payroll); payloads carry ids only.
+    'events' => [
+        'hrm.employee.hired',
+        'hrm.employee.confirmed',
+        'hrm.employee.transferred',
+        'hrm.employee.promoted',
+        'hrm.employee.notice_given',
+        'hrm.employee.exited',
+        'hrm.employee.rehired',
+    ],
+    // An employee sees their own record in the client's portal.
+    'portal_subjects' => [EmployeeSubjects::class],
     'is_core' => false,
     'requires_consent' => false,
 ];

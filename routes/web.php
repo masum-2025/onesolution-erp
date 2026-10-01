@@ -108,5 +108,6 @@ Route::get('internal/health', HealthController::class)
 
 // Every other page path boots the app; its router decides what to show.
 Route::get('/{path?}', AppShellController::class)
-    ->where('path', '^(?!api/|session/|sanctum/|up$|build/|storage/).*$')
+    // files/: modules' signed download links (registered after this route).
+    ->where('path', '^(?!api/|session/|sanctum/|up$|build/|storage/|files/).*$')
     ->name('app');

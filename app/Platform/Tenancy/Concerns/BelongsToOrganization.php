@@ -52,13 +52,45 @@ trait BelongsToOrganization
 
         static::updating(function (Model $model) {
             if ($model->isDirty('organization_id')) {
-                throw new OrganizationChangeForbidden;
+                if (! static::$reassigning) {
+                    throw new OrganizationChangeForbidden;
+                }
+
+                // An audited reassignment (e.g. an HR transfer): both units must be writable here.
+                $context = app(CurrentContext::class);
+                if ($context->hasOrganization() && ! $context->canWriteTo($model->getOriginal('organization_id'))) {
+                    throw OrganizationAccessDenied::writeOutsideScope();
+                }
             }
 
             static::assertWritableFromContext($model);
         });
 
         static::deleting(fn (Model $model) => static::assertWritableFromContext($model));
+    }
+
+    /** True only inside reassigning(). */
+    private static bool $reassigning = false;
+
+    /**
+     * Run a callback that may move records to another unit the context can
+     * write to (an audited business action such as an HR transfer). Anywhere
+     * else, changing organization_id throws.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public static function reassigning(callable $callback): mixed
+    {
+        static::$reassigning = true;
+
+        try {
+            return $callback();
+        } finally {
+            static::$reassigning = false;
+        }
     }
 
     protected static function assertWritableFromContext(Model $model): void

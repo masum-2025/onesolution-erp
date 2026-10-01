@@ -323,6 +323,44 @@ function placeClient(Organization $root, ?string $database = 'dedicated'): void
 
 /*
 |--------------------------------------------------------------------------
+| HRM module helpers
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * The standard tenancy world with HRM on for every client, an owner of C1
+ * and their token.
+ */
+function hrmWorld(TestCase $test): object
+{
+    $w = tenancyWorld();
+    foreach ([$w->g1, $w->g2, $w->g3] as $group) {
+        toggles()->enable($group, 'hrm', 'Test setup');
+    }
+    $w->owner = createMember($w->c1);
+    $w->token = orgToken($w->owner, $w->c1);
+
+    return $w;
+}
+
+/**
+ * Hire through the API as $token at $organization; returns the response.
+ *
+ * @param  array<string, mixed>  $data
+ */
+function hireVia(TestCase $test, string $token, Organization $organization, array $data = []): TestResponse
+{
+    return $test->asToken($token)->postJson("/api/organizations/{$organization->id}/hrm/employees", [
+        'full_name' => 'Rahima Akter',
+        'employment_type' => 'permanent',
+        'joined_on' => '2026-10-01',
+        'phone' => '+8801711000000',
+        ...$data,
+    ]);
+}
+
+/*
+|--------------------------------------------------------------------------
 | Access helpers (Phase 4)
 |--------------------------------------------------------------------------
 */
