@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Private files leave only through the app's own signed, audited
+            // download routes; Laravel's generic /storage/{path} route stays off (Phase 11).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

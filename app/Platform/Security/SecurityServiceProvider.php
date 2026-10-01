@@ -6,8 +6,10 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Security\Backups\Contracts\DatabaseDumper;
 use App\Platform\Security\Backups\DumperFactory;
 use App\Platform\Security\Console\BackupRun;
+use App\Platform\Security\Console\ReleaseCheck;
 use App\Platform\Security\Console\RestoreDrill;
 use App\Platform\Security\Console\SecurityCheck;
+use App\Platform\Security\Console\SecurityEndpoints;
 use App\Platform\Tenancy\Context\ContextSource;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -36,7 +38,7 @@ class SecurityServiceProvider extends ServiceProvider
         $this->mirrorAuditToSecurityLog();
 
         if ($this->app->runningInConsole()) {
-            $this->commands([SecurityCheck::class, BackupRun::class, RestoreDrill::class]);
+            $this->commands([SecurityCheck::class, BackupRun::class, RestoreDrill::class, SecurityEndpoints::class, ReleaseCheck::class]);
         }
     }
 

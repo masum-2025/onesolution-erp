@@ -1,0 +1,4 @@
+{
+    "about": "Remediation tracker (Phase 11). One entry per finding of an authorized security test. Keep titles short and neutral; the full report stays with the testers outside this repository. See docs/security/pentest-scope.md.",
+    "findings": []
+}

@@ -20,8 +20,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET session/portal/invitations/{key}', 'POST session/portal/signup', 'POST session/portal/signup/verify',
     // Public brand images and the app manifest for the address's brand.
     'GET brand-assets/{partner}/{kind}', 'GET client-brand-assets/{organization}/logo', 'GET manifest.webmanifest',
-    // Signed, expiring download links.
-    'GET exports/{export}/download', 'GET audit-exports/{export}/download', 'GET storage/{path}', 'PUT storage/{path}',
+    // Signed, expiring download links. (Laravel's generic storage/{path} route is off, Phase 11.)
+    'GET exports/{export}/download', 'GET audit-exports/{export}/download',
     // Gateway notices: signature checked and verified with the gateway; throttled.
     'POST payments/{gateway}/notify', 'GET payments/{gateway}/return/{outcome}', 'POST payments/{gateway}/return/{outcome}',
     // TLS certificate check for the web server: answers only for verified domains.
@@ -63,8 +63,7 @@ it('limits every public endpoint that takes input', function () {
         $limited = in_array('api', $middleware, true)
             || collect($middleware)->contains(fn ($name) => is_string($name) && str_starts_with($name, 'throttle'));
 
-        // Signed upload links (storage) are single-use by signature, not by rate.
-        if ($isPublicWrite && ! $limited && $route->uri() !== 'storage/{path}') {
+        if ($isPublicWrite && ! $limited) {
             $unlimited[] = $route->uri();
         }
     }
