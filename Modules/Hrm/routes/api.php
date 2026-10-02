@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Hrm\Http\Controllers\CustomFieldController;
 use Modules\Hrm\Http\Controllers\EmployeeController;
 use Modules\Hrm\Http\Controllers\EmployeeDocumentController;
+use Modules\Hrm\Http\Controllers\EmployeeImportController;
 use Modules\Hrm\Http\Controllers\EmploymentStepController;
 use Modules\Hrm\Http\Controllers\PositionController;
 
@@ -17,6 +19,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
     ->group(function () {
         Route::get('form-options', [EmployeeController::class, 'formOptions']);
         Route::get('positions', [PositionController::class, 'index']);
+        Route::get('custom-fields', [CustomFieldController::class, 'index']);
+        Route::get('imports/columns', [EmployeeImportController::class, 'columns']);
+        Route::get('imports', [EmployeeImportController::class, 'index']);
+        Route::get('imports/{import}', [EmployeeImportController::class, 'show']);
         Route::get('employees', [EmployeeController::class, 'index']);
         Route::get('employees/{employee}', [EmployeeController::class, 'show']);
         Route::get('employees/{employee}/history', [EmployeeController::class, 'history']);
@@ -26,6 +32,11 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
         Route::middleware('throttle:tenancy-sensitive')->group(function () {
             Route::post('positions', [PositionController::class, 'store']);
             Route::patch('positions/{position}', [PositionController::class, 'update']);
+            Route::post('custom-fields', [CustomFieldController::class, 'store']);
+            Route::patch('custom-fields/{field}', [CustomFieldController::class, 'update']);
+            Route::post('imports', [EmployeeImportController::class, 'store']);
+            Route::post('imports/{import}/start', [EmployeeImportController::class, 'start']);
+            Route::delete('imports/{import}', [EmployeeImportController::class, 'destroy']);
             Route::post('employees', [EmployeeController::class, 'store']);
             Route::patch('employees/{employee}', [EmployeeController::class, 'update']);
             // Unknown steps are refused by the controller, after the organization checks.

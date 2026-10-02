@@ -76,4 +76,39 @@ class HrmException extends TenancyException
     {
         return new self('same_position', 422);
     }
+
+    public static function customFieldNotFound(): self
+    {
+        return new self('custom_field_not_found', 404);
+    }
+
+    public static function tooManyFields(int $max): self
+    {
+        return new self('too_many_fields', 422, ['max' => $max]);
+    }
+
+    public static function customFieldElsewhere(string $unit): self
+    {
+        return new self('custom_field_elsewhere', 403, ['unit' => $unit]);
+    }
+
+    public static function importNotFound(): self
+    {
+        return new self('import_not_found', 404);
+    }
+
+    public static function importBusy(): self
+    {
+        return new self('import_busy', 409);
+    }
+
+    public static function importNotReady(string $status): self
+    {
+        return new self('import_not_ready', 409, ['status' => $status]);
+    }
+
+    public static function importHasInvalid(): self
+    {
+        return new self('import_has_invalid', 422);
+    }
 }

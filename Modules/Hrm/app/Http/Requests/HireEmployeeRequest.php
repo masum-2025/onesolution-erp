@@ -30,6 +30,8 @@ class HireEmployeeRequest extends StrictFormRequest
             'tax_id' => ['nullable', 'string', 'max:40'],
             'employment_type' => ['string', 'max:30'],
             'manager_id' => ['nullable', 'string', 'size:26'],
+            // Extra fields, key => value; checked against the unit's fields by CustomFields.
+            'custom' => ['nullable', 'array', 'max:100'],
         ];
     }
 

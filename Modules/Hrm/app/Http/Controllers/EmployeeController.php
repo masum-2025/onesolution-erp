@@ -16,7 +16,9 @@ use Modules\Hrm\Http\Controllers\Concerns\FindsHrmRecords;
 use Modules\Hrm\Http\EmployeePresenter;
 use Modules\Hrm\Http\Requests\HireEmployeeRequest;
 use Modules\Hrm\Http\Requests\UpdateEmployeeRequest;
+use Modules\Hrm\Models\CustomField;
 use Modules\Hrm\Models\Employee;
+use Modules\Hrm\Services\CustomFields;
 use Modules\Hrm\Services\EmployeeLifecycle;
 
 /**
@@ -73,7 +75,7 @@ class EmployeeController extends Controller
      * details from its rules, and where the probation and notice numbers
      * come from (shown next to them).
      */
-    public function formOptions(Request $request, string $organization, RuleResolver $rules, RuleContextFactory $contexts): JsonResponse
+    public function formOptions(Request $request, string $organization, RuleResolver $rules, RuleContextFactory $contexts, CustomFields $customFields): JsonResponse
     {
         $request->validate(['unit_id' => ['nullable', 'string', 'size:26']]);
         $unit = $this->unitIn($this->findVisible($organization), $request->input('unit_id'));
@@ -112,10 +114,12 @@ class EmployeeController extends Controller
             'document_max_kb' => (int) $rules->get('hrm.document_max_kb', $context),
             'probation_days' => $number('hrm.probation_days'),
             'notice_period_days' => $number('hrm.notice_period_days'),
+            'custom_fields' => $customFields->applicableTo($unit)->map(fn (CustomField $field) => $this->presenter->customField($field, $unit))->values(),
             'can' => [
                 'manage' => Gate::allows('hrm.manage', $unit),
                 'exit' => Gate::allows('hrm.exit', $unit),
                 'view_sensitive' => Gate::allows('hrm.view_sensitive', $unit),
+                'configure' => Gate::allows('hrm.configure', $unit),
             ],
         ]]);
     }

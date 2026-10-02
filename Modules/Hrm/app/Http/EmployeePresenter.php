@@ -3,9 +3,12 @@
 namespace Modules\Hrm\Http;
 
 use App\Platform\Tenancy\Models\Organization;
+use Modules\Hrm\Models\CustomField;
 use Modules\Hrm\Models\Employee;
 use Modules\Hrm\Models\EmployeeDocument;
+use Modules\Hrm\Models\EmployeeImport;
 use Modules\Hrm\Models\EmploymentEvent;
+use Modules\Hrm\Models\ImportRow;
 use Modules\Hrm\Models\Position;
 
 /**
@@ -50,6 +53,7 @@ class EmployeePresenter
             'email' => $employee->email,
             'address' => $employee->address,
             'emergency_contact' => $employee->emergency_contact,
+            'custom' => (object) ($employee->custom ?? []),
             'national_id' => self::mask($employee->national_id),
             'tax_id' => self::mask($employee->tax_id),
             'manager' => $employee->manager === null ? null : ['id' => $employee->manager->getKey(), 'full_name' => $employee->manager->full_name],
@@ -111,6 +115,76 @@ class EmployeePresenter
             'is_active' => $position->is_active,
             'version' => $position->version,
         ];
+    }
+
+    /**
+     * An extra field as seen from $unit: "self" when set up there, else
+     * "inherited" with the unit it comes from (shown next to it).
+     *
+     * @return array<string, mixed>
+     */
+    public function customField(CustomField $field, ?Organization $unit = null): array
+    {
+        $locale = app()->getLocale();
+
+        return [
+            'id' => $field->getKey(),
+            'organization_id' => $field->organization_id,
+            'source' => [
+                'kind' => $unit === null || $field->organization_id === $unit->getKey() ? 'self' : 'inherited',
+                'unit' => $this->unitName($field->organization_id),
+            ],
+            'key' => $field->key,
+            'label' => $field->textIn('label'),
+            'labels' => $field->texts('label'),
+            'type' => $field->type->value,
+            'options' => array_map(fn (array $option) => [
+                'value' => $option['value'],
+                'label' => $option['label'][$locale] ?? $option['label']['en'] ?? $option['value'],
+                'labels' => $option['label'],
+            ], $field->options ?? []),
+            'is_required' => $field->is_required,
+            'sort_order' => $field->sort_order,
+            'is_active' => $field->is_active,
+            'version' => $field->version,
+        ];
+    }
+
+    /**
+     * An import and, with rows, the lines that need attention (problems
+     * named per column; the name only while the details are still kept).
+     *
+     * @return array<string, mixed>
+     */
+    public function import(EmployeeImport $import, bool $withRows = false): array
+    {
+        $shape = [
+            'id' => $import->getKey(),
+            'unit' => ['id' => $import->organization_id, 'name' => $this->unitName($import->organization_id)],
+            'file_name' => $import->file_name,
+            'status' => $import->status->value,
+            'status_label' => __('hrm::hrm.import_statuses.'.$import->status->value),
+            'total_rows' => $import->total_rows,
+            'valid_rows' => $import->total_rows - $import->invalid_rows,
+            'invalid_rows' => $import->invalid_rows,
+            'imported_rows' => $import->imported_rows,
+            'failed_rows' => $import->failed_rows,
+            'created_at' => $import->created_at?->toIso8601String(),
+            'finished_at' => $import->finished_at?->toIso8601String(),
+        ];
+
+        if ($withRows) {
+            $shape['progress'] = $import->rows()->whereIn('status', ['imported', 'failed'])->count();
+            $shape['problems'] = $import->rows()->whereNotNull('errors')->orderBy('row_no')->limit(500)->get()
+                ->map(fn (ImportRow $row) => [
+                    'row_no' => $row->row_no,
+                    'name' => $row->data['full_name'] ?? null,
+                    'status' => $row->status->value,
+                    'errors' => $row->errors,
+                ])->values();
+        }
+
+        return $shape;
     }
 
     /** "••••1234": enough to recognize, not enough to use. */

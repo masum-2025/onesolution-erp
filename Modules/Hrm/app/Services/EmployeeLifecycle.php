@@ -46,6 +46,7 @@ class EmployeeLifecycle
         private TenantDatabases $databases,
         private AuditLogger $audit,
         private CurrentContext $context,
+        private CustomFields $customFields,
     ) {}
 
     /**
@@ -56,9 +57,9 @@ class EmployeeLifecycle
         $company = $this->units->companyOf($unit);
         $joinedOn = CarbonImmutable::parse($data['joined_on'] ?? now()->toDateString());
         $position = $this->position($data['position_id'] ?? null, $company);
-        $this->checkDetails($company, $unit, $data, null, requireAll: true);
+        $custom = $this->checkDetails($company, $unit, $data, null, requireAll: true);
 
-        [$employee, $event] = $this->transaction($company, function () use ($unit, $company, $data, $joinedOn, $position, $actor) {
+        [$employee, $event] = $this->transaction($company, function () use ($unit, $company, $data, $joinedOn, $position, $actor, $custom) {
             $probationDays = (int) $this->rules->get('hrm.probation_days', $this->contexts->forOrganization($unit));
 
             $employee = new Employee;
@@ -69,6 +70,7 @@ class EmployeeLifecycle
                 'employee_code' => $this->codes->next($company, $unit, $joinedOn),
                 'position_id' => $position?->getKey(),
                 'national_id_hash' => Employee::hashOf($data['national_id'] ?? null),
+                'custom' => $custom === [] ? null : $custom,
                 'status' => $probationDays > 0 ? EmployeeStatus::Probation : EmployeeStatus::Active,
                 'joined_on' => $joinedOn,
                 'probation_ends_on' => $probationDays > 0 ? $joinedOn->addDays($probationDays) : null,
@@ -101,16 +103,24 @@ class EmployeeLifecycle
     public function update(Employee $employee, int $baseVersion, array $data, User $actor): Employee
     {
         $company = $this->companyOfEmployee($employee);
-        $this->checkDetails($company, $this->unitOf($employee), $data, $employee, requireAll: false);
+        $custom = $this->checkDetails($company, $this->unitOf($employee), $data, $employee, requireAll: false);
 
-        return $this->transaction($company, function () use ($employee, $baseVersion, $data, $actor) {
+        return $this->transaction($company, function () use ($employee, $baseVersion, $data, $actor, $custom) {
             $employee = $this->lock($employee, $baseVersion);
             $employee->fill(array_intersect_key($data, array_flip(self::EDITABLE)));
             if (array_key_exists('national_id', $data)) {
                 $employee->national_id_hash = Employee::hashOf($data['national_id']);
             }
 
-            $changed = array_values(array_diff(array_keys($employee->getDirty()), ['national_id_hash']));
+            $customChanged = array_key_exists('custom', $data) ? $this->changedKeys($employee->custom ?? [], $custom) : [];
+            if ($customChanged !== []) {
+                $employee->custom = $custom === [] ? null : $custom;
+            }
+
+            $changed = [
+                ...array_values(array_diff(array_keys($employee->getDirty()), ['national_id_hash', 'custom'])),
+                ...array_map(fn (string $key) => "custom.{$key}", $customChanged),
+            ];
             if ($changed === []) {
                 return $employee;
             }
@@ -330,8 +340,53 @@ class EmployeeLifecycle
      * unique national id, a manager from the same company.
      *
      * @param  array<string, mixed>  $data
+     * @return array<string, mixed> The employee's extra field values after the change.
      */
-    private function checkDetails(Organization $company, Organization $unit, array $data, ?Employee $employee, bool $requireAll): void
+    private function checkDetails(Organization $company, Organization $unit, array $data, ?Employee $employee, bool $requireAll): array
+    {
+        [$errors, $custom] = $this->detailErrors($company, $unit, $data, $employee, $requireAll);
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $custom;
+    }
+
+    /**
+     * What hiring with $data at $unit would refuse, without hiring (imports
+     * check every row first). Shapes are checked by HireEmployeeRequest.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, string> field => message
+     */
+    public function hireErrors(Organization $unit, array $data): array
+    {
+        $errors = [];
+        try {
+            $this->position($data['position_id'] ?? null, $this->units->companyOf($unit));
+        } catch (ValidationException $exception) {
+            $errors = array_map(fn (array $messages) => (string) $messages[0], $exception->errors());
+        } catch (HrmException) {
+            $errors['position_id'] = __('hrm::hrm.errors.position_not_found');
+        }
+
+        return [...$errors, ...$this->detailErrors($this->units->companyOf($unit), $unit, $data, null, true)[0]];
+    }
+
+    /** @return list<string> */
+    private function changedKeys(array $old, array $new): array
+    {
+        $keys = array_unique([...array_keys($old), ...array_keys($new)]);
+
+        return array_values(array_filter($keys, fn ($key) => ($old[$key] ?? null) !== ($new[$key] ?? null)));
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array{0: array<string, string>, 1: array<string, mixed>}
+     */
+    private function detailErrors(Organization $company, Organization $unit, array $data, ?Employee $employee, bool $requireAll): array
     {
         $context = $this->contexts->forOrganization($unit);
         $errors = [];
@@ -361,9 +416,9 @@ class EmployeeLifecycle
             }
         }
 
-        if ($errors !== []) {
-            throw ValidationException::withMessages($errors);
-        }
+        $custom = $this->customFields->check($unit, (array) ($data['custom'] ?? []), $employee?->custom ?? [], $requireAll);
+
+        return [[...$errors, ...$custom['errors']], $custom['values']];
     }
 
     /**

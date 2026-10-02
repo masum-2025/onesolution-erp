@@ -23,6 +23,8 @@ return [
         'hrm.view_sensitive',
         // Notice and exit: ends someone's employment.
         'hrm.exit',
+        // Extra employee fields: what the organization asks about everyone.
+        'hrm.configure',
     ],
     'rules' => [
         [
@@ -117,6 +119,39 @@ return [
             'overridable_levels' => ['platform', 'partner', 'plan'],
             'category' => 'documents',
             'sort_order' => 80,
+        ],
+        [
+            'key' => 'hrm.custom_fields_max',
+            'type' => 'integer',
+            'schema' => ['minimum' => 0, 'maximum' => 100],
+            'default' => 20,
+            'label' => 'hrm::rules.custom_fields_max.label',
+            'description' => 'hrm::rules.custom_fields_max.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'personal',
+            'sort_order' => 65,
+        ],
+        [
+            'key' => 'hrm.import_max_rows',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 5000],
+            'default' => 500,
+            'label' => 'hrm::rules.import_max_rows.label',
+            'description' => 'hrm::rules.import_max_rows.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'import',
+            'sort_order' => 90,
+        ],
+        [
+            'key' => 'hrm.import_max_kb',
+            'type' => 'integer',
+            'schema' => ['minimum' => 10, 'maximum' => 10240],
+            'default' => 1024,
+            'label' => 'hrm::rules.import_max_kb.label',
+            'description' => 'hrm::rules.import_max_kb.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'import',
+            'sort_order' => 100,
         ],
     ],
     'menu' => [

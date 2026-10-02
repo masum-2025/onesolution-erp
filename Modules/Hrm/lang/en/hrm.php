@@ -16,6 +16,18 @@ return [
         'exited' => 'Left the job',
         'rehired' => 'Rehired',
     ],
+    'import' => [
+        'no_access' => 'You no longer manage employees here, so this row was not imported.',
+    ],
+
+    'import_statuses' => [
+        'checked' => 'Checked',
+        'queued' => 'Waiting to start',
+        'running' => 'Importing',
+        'done' => 'Finished',
+        'cancelled' => 'Cancelled',
+    ],
+
     'genders' => [
         'female' => 'Female',
         'male' => 'Male',
@@ -37,6 +49,13 @@ return [
         'same_unit' => 'The employee already works in this unit.',
         'same_position' => 'The employee already has this position.',
         'position_in_use' => 'People hold this position. Mark it inactive instead of removing it.',
+        'custom_field_not_found' => 'Extra field not found. It may belong to another unit.',
+        'too_many_fields' => 'This company already has :max extra fields in use. Switch one off before adding another.',
+        'custom_field_elsewhere' => 'This field is set up at :unit. Change it there.',
+        'import_not_found' => 'Import not found. It may have been cancelled.',
+        'import_busy' => 'Another import is running for this company. Wait until it finishes, then try again.',
+        'import_not_ready' => 'This import cannot do that now (it is :status).',
+        'import_has_invalid' => 'Some rows have problems. Fix the file and upload it again, or choose to skip those rows.',
     ],
 
     'validation' => [
@@ -48,6 +67,29 @@ return [
         'position_inactive' => 'This position is no longer used. Choose another one.',
         'document_size' => 'The file is larger than :max KB. Choose a smaller file.',
         'exit_before_joining' => 'The last day cannot be before the joining date.',
+        'custom_unknown' => 'This field is not asked here (or it was switched off).',
+        'custom_text' => 'Write at most :max characters.',
+        'custom_number' => 'Write a number, like 12 or 3.5.',
+        'custom_date' => 'Write a date as YYYY-MM-DD or DD/MM/YYYY.',
+        'custom_choice' => 'Choose one of the options of this field.',
+        'custom_yes_no' => 'Answer yes or no.',
+        'custom_key_taken' => 'Another field of this company already uses this key. Choose a different one.',
+        'custom_options_kept' => 'Options already offered cannot be removed (employees may have them). You can rename them.',
+        'custom_options_required' => 'A choice field needs at least one option.',
+        'import_file' => 'Choose a CSV file (comma separated). In Excel: File > Save as > CSV UTF-8.',
+        'import_file_size' => 'The file is larger than :max KB. Split it into smaller files.',
+        'import_encoding' => 'The file is not in UTF-8. In Excel choose "CSV UTF-8" when saving so Bangla text stays readable.',
+        'import_empty' => 'The file has no employees. Fill in at least one row under the header.',
+        'import_too_many_rows' => 'The file has more than :max employees. Split it into smaller files.',
+        'import_missing_columns' => 'Columns missing from the header: :columns. Start from the template.',
+        'import_unknown_columns' => 'Unknown columns in the header: :columns. Use the column names of the template.',
+        'import_row_length' => 'This row has a different number of cells than the header.',
+        'import_formula' => 'Cells cannot start with = or @ (spreadsheet formulas).',
+        'import_date' => 'Write the date as YYYY-MM-DD or DD/MM/YYYY.',
+        'import_unit_code' => 'No unit of this company has this code.',
+        'import_position_code' => 'No position here has this code.',
+        'import_manager_code' => 'No current employee of this company has this code.',
+        'import_duplicate_in_file' => 'Row :row of this file has the same national id.',
     ],
 
     // What an employee sees of their own record in the portal.

@@ -25,5 +25,16 @@ export function hrmApi(organizationId) {
         upload: (id, form) => api(`${base}/employees/${id}/documents`, { method: 'POST', body: form }),
         documentLink: (id, documentId) => api(`${base}/employees/${id}/documents/${documentId}/link`),
         removeDocument: (id, documentId, reason) => api(`${base}/employees/${id}/documents/${documentId}`, { method: 'DELETE', body: { reason } }),
+
+        customFields: (unitId, all = false) => api(`${base}/custom-fields`, { query: { unit_id: unitId, all: all ? 1 : undefined } }),
+        createField: (body) => api(`${base}/custom-fields`, { method: 'POST', body }),
+        updateField: (id, body) => api(`${base}/custom-fields/${id}`, { method: 'PATCH', body }),
+
+        importColumns: (unitId) => api(`${base}/imports/columns`, { query: { unit_id: unitId } }),
+        imports: () => api(`${base}/imports`),
+        importFile: (form) => api(`${base}/imports`, { method: 'POST', body: form }),
+        importStatus: (id) => api(`${base}/imports/${id}`),
+        startImport: (id, skipInvalid) => api(`${base}/imports/${id}/start`, { method: 'POST', body: { skip_invalid: skipInvalid } }),
+        cancelImport: (id) => api(`${base}/imports/${id}`, { method: 'DELETE' }),
     };
 }

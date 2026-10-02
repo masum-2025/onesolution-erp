@@ -67,10 +67,23 @@ return [
         'description' => 'Upper size of one uploaded employee document.',
     ],
 
+    'custom_fields_max' => [
+        'label' => 'Extra employee fields (most)',
+        'description' => 'How many extra fields a company can ask about its employees.',
+    ],
+    'import_max_rows' => [
+        'label' => 'Employees per import file (most)',
+        'description' => 'Rows one CSV file may hold. Split larger lists into several files.',
+    ],
+    'import_max_kb' => [
+        'label' => 'Import file size (KB, most)',
+        'description' => 'Largest CSV file accepted for importing employees.',
+    ],
     'categories' => [
         'employment' => 'Employment',
         'numbering' => 'Numbering',
         'personal' => 'Personal details',
         'documents' => 'Documents',
+        'import' => 'Importing employees',
     ],
 ];

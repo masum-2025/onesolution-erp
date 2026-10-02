@@ -6,6 +6,7 @@ use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Hrm\Models\CustomField;
 use Modules\Hrm\Models\Employee;
 use Modules\Hrm\Models\EmployeeDocument;
 use Modules\Hrm\Models\EmploymentEvent;
@@ -47,6 +48,7 @@ class HrmExporter implements ExportsModuleData
                 'email' => $employee->email,
                 'address' => $employee->address === null ? null : json_encode($employee->address, JSON_UNESCAPED_UNICODE),
                 'emergency_contact' => $employee->emergency_contact === null ? null : json_encode($employee->emergency_contact, JSON_UNESCAPED_UNICODE),
+                'custom' => $employee->custom === null ? null : json_encode($employee->custom, JSON_UNESCAPED_UNICODE),
                 'national_id' => $employee->national_id,
                 'tax_id' => $employee->tax_id,
                 'employment_type' => $employee->employment_type,
@@ -57,6 +59,16 @@ class HrmExporter implements ExportsModuleData
                 'confirmed_on' => $employee->confirmed_on?->toDateString(),
                 'exits_on' => $employee->exits_on?->toDateString(),
                 'exit_reason' => $employee->exit_reason,
+            ]),
+            'custom_fields' => $this->rows(CustomField::class, $organization, $organizationIds, fn (CustomField $field) => [
+                'id' => $field->getKey(),
+                'organization_id' => $field->organization_id,
+                'key' => $field->key,
+                'label' => json_encode($field->texts('label'), JSON_UNESCAPED_UNICODE),
+                'type' => $field->type->value,
+                'options' => $field->options === null ? null : json_encode($field->options, JSON_UNESCAPED_UNICODE),
+                'is_required' => $field->is_required,
+                'is_active' => $field->is_active,
             ]),
             'employment_events' => $this->rows(EmploymentEvent::class, $organization, $organizationIds, fn (EmploymentEvent $event) => [
                 'id' => $event->getKey(),

@@ -1,11 +1,12 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Briefcase, ChevronLeft, ChevronRight, Search, UserPlus, Users, X } from 'lucide-vue-next';
+import { Briefcase, ChevronDown, ChevronLeft, ChevronRight, FileUp, ListPlus, Search, UserPlus, Users, X } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
+import AppMenu from '@/components/AppMenu.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -24,6 +25,13 @@ const org = currentOrganization();
 const hrm = hrmApi(org.id);
 const route = useRoute();
 const router = useRouter();
+
+// Set-up screens: positions and extra fields for everyone who reads HRM, importing for HR people.
+const more = computed(() => [
+    { label: t('hrm.positions_link'), icon: Briefcase, onSelect: () => router.push({ name: 'hrm-positions' }) },
+    { label: t('hrm.fields_link'), icon: ListPlus, onSelect: () => router.push({ name: 'hrm-fields' }) },
+    ...(can('hrm.manage') ? [{ label: t('hrm.import_link'), icon: FileUp, onSelect: () => router.push({ name: 'hrm-import' }) }] : []),
+]);
 
 const search = ref(route.query.q ?? '');
 const status = ref(route.query.status ?? '');
@@ -66,7 +74,11 @@ function clear() {
     <div>
         <PageHeader :title="t('hrm.title')" :description="t('hrm.text')">
             <template #actions>
-                <AppButton :to="{ name: 'hrm-positions' }" :icon="Briefcase">{{ t('hrm.positions_link') }}</AppButton>
+                <AppMenu :items="more" :label="t('hrm.more')">
+                    <template #trigger="{ toggle, attrs }">
+                        <AppButton :icon-end="ChevronDown" v-bind="attrs" @click="toggle(false)">{{ t('hrm.more') }}</AppButton>
+                    </template>
+                </AppMenu>
                 <AppButton v-if="can('hrm.manage')" variant="primary" :to="{ name: 'hrm-hire' }" :icon="UserPlus">{{ t('hrm.hire') }}</AppButton>
             </template>
         </PageHeader>

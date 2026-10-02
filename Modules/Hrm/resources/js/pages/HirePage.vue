@@ -15,7 +15,8 @@ import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { hrmApi } from '../api';
-import { addDays, hirePayload, missingRequired } from '../lib';
+import { addDays, hirePayload, missingCustom, missingRequired } from '../lib';
+import CustomFieldInputs from '../components/CustomFieldInputs.vue';
 
 /**
  * Hiring in three steps: the person, the job, a last check. Which details
@@ -48,6 +49,7 @@ const form = reactive({
     employment_type: '',
     manager_id: '',
     joined_on: new Date().toISOString().slice(0, 10),
+    custom: {},
 });
 
 const options = useResource(() => hrm.formOptions(form.organization_id));
@@ -63,6 +65,8 @@ watch(options.data, (value) => {
 
 const opts = computed(() => options.data.value?.data ?? null);
 const required = computed(() => new Set(opts.value?.required_fields ?? []));
+// Extra fields of the chosen unit (its own and those set up above it).
+const customFields = computed(() => opts.value?.custom_fields ?? []);
 const workUnits = computed(() => (units.data.value?.data ?? []).filter((unit) => ['company', 'branch', 'department', 'personal'].includes(unit.type)));
 const activeManagers = computed(() => (managers.data.value?.data ?? []).filter((person) => person.status !== 'exited'));
 const probationEnds = computed(() => {
@@ -72,13 +76,14 @@ const probationEnds = computed(() => {
 
 function label(field) {
     if (field === 'national_id' && opts.value) return opts.value.national_id.label;
+    if (field.startsWith('custom.')) return customFields.value.find((item) => `custom.${item.key}` === field)?.label ?? field;
     return t(`hrm.fields.${field === 'organization_id' ? 'unit' : field}`);
 }
 
 /** What is still missing on this step (rules first, then the always-required ones). */
 function missingOn(index) {
     if (index === 0) return [...new Set([...(form.full_name.trim() ? [] : ['full_name']), ...missingRequired(form, [...required.value].filter((field) => PERSON.includes(field)))])];
-    if (index === 1) return ['employment_type', 'joined_on', 'organization_id'].filter((field) => !form[field]);
+    if (index === 1) return [...['employment_type', 'joined_on', 'organization_id'].filter((field) => !form[field]), ...missingCustom(customFields.value, form.custom).map((field) => `custom.${field.key}`)];
     return [];
 }
 
@@ -95,6 +100,8 @@ async function save() {
     try {
         const body = hirePayload(form);
         if (body.organization_id === org.id) delete body.organization_id;
+        // Only the fields of the unit chosen last (another unit may ask other things).
+        if (body.custom) body.custom = Object.fromEntries(Object.entries(body.custom).filter(([key]) => customFields.value.some((field) => field.key === key)));
         const { data } = await hrm.hire(body);
         toast.success(t('hrm.hire_page.saved', { name: data.full_name, code: data.employee_code }));
         router.push({ name: 'hrm-employee', params: { id: data.id } });
@@ -229,6 +236,10 @@ function fieldError(name) {
                             <option v-for="person in activeManagers" :key="person.id" :value="person.id">{{ person.full_name }} ({{ person.employee_code }})</option>
                         </select>
                     </AppField>
+                    <fieldset v-if="customFields.length" class="grid gap-4 border-t border-line pt-4 sm:col-span-2 sm:grid-cols-2">
+                        <legend class="mb-1 text-[13px] font-medium text-fg-2">{{ t('hrm.custom.section') }}</legend>
+                        <CustomFieldInputs v-model="form.custom" :fields="customFields" :errors="errors" />
+                    </fieldset>
                 </div>
 
                 <!-- 3. Check and save -->

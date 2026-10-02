@@ -40,6 +40,7 @@ class Employee extends Model
             'exits_on' => 'immutable_date',
             'address' => 'array',
             'emergency_contact' => 'array',
+            'custom' => 'array',
             'national_id' => 'encrypted',
             'tax_id' => 'encrypted',
             'status' => EmployeeStatus::class,

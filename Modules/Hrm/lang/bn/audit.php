@@ -17,4 +17,10 @@ return [
     'document_added' => 'কর্মীর কাগজ যোগ',
     'document_downloaded' => 'কর্মীর কাগজ খোলা হয়েছে',
     'document_removed' => 'কর্মীর কাগজ সরানো হয়েছে',
+    'custom_field_created' => 'কর্মীর অতিরিক্ত ঘর যোগ',
+    'custom_field_updated' => 'কর্মীর অতিরিক্ত ঘর পরিবর্তন',
+    'import_checked' => 'কর্মীর ফাইল যাচাই',
+    'import_started' => 'কর্মী আমদানি শুরু',
+    'import_finished' => 'কর্মী আমদানি শেষ',
+    'import_cancelled' => 'কর্মী আমদানি বাতিল',
 ];

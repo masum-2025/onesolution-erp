@@ -7,4 +7,5 @@ return [
     'manage' => 'Manage Human Resources',
     'view_sensitive' => 'See full national and tax ids',
     'exit' => 'Give notice and end employment',
+    'configure' => 'Set up extra employee fields',
 ];

@@ -11,16 +11,22 @@ use Illuminate\Support\Facades\Cache;
  * Caches resolved rule maps per chain. Cache keys carry three version numbers:
  * global (platform / plan / role / user changes), partner, and tree (root
  * group). A change bumps the matching version, invalidating every descendant.
+ * They also carry a fingerprint of the rules defined in code, so a deploy that
+ * adds a rule or changes a default never reads a map cached before it.
  */
 class RuleCache
 {
+    private ?string $catalogTag = null;
+
+    public function __construct(private RuleCatalog $catalog) {}
+
     /**
      * @param  Closure(): array{0: array<string, array<string, mixed>>, 1: int|null}  $compute  Returns [map, seconds until the next effective-date boundary].
      * @return array{map: array<string, array<string, mixed>>, valid_until: int} valid_until is a Unix timestamp.
      */
     public function remember(RuleContext $context, Closure $compute): array
     {
-        $key = 'rules:resolved:'.$context->fingerprint().':'.$this->versionTag($context);
+        $key = 'rules:resolved:'.$context->fingerprint().':'.$this->versionTag($context).':'.$this->catalogTag();
 
         $cached = Cache::get($key);
         if (is_array($cached) && ($cached['valid_until'] ?? 0) > now()->getTimestamp()) {
@@ -72,6 +78,12 @@ class RuleCache
         if ($rootOrganizationId !== null) {
             $this->bump('root:'.$rootOrganizationId);
         }
+    }
+
+    /** Changes whenever a rule definition in code changes (keys, types, defaults, levels). */
+    private function catalogTag(): string
+    {
+        return $this->catalogTag ??= substr(hash('sha256', serialize($this->catalog->all())), 0, 16);
     }
 
     private function version(string $name): int

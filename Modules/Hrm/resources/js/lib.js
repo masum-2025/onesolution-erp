@@ -47,6 +47,11 @@ export function hirePayload(form) {
     for (const [key, value] of Object.entries(form)) {
         if (value === null || value === undefined) continue;
         if (typeof value === 'string' && value.trim() === '') continue;
+        if (key === 'custom') {
+            const custom = customPayload(value);
+            if (Object.keys(custom).length) body.custom = custom;
+            continue;
+        }
         if (typeof value === 'object') {
             const parts = Object.fromEntries(Object.entries(value).filter(([, part]) => part && String(part).trim() !== ''));
             if (Object.keys(parts).length) body[key] = parts;
@@ -66,6 +71,57 @@ export function changedDetails(original, form) {
         if (JSON.stringify(before) !== JSON.stringify(after)) changes[key] = after;
     }
     return changes;
+}
+
+const isEmpty = (value) => value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+
+/** Extra field values to send: empty ones left out, but "no" (false) and 0 kept. */
+export function customPayload(values) {
+    return Object.fromEntries(
+        Object.entries(values ?? {})
+            .filter(([, value]) => !isEmpty(value))
+            .map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value]),
+    );
+}
+
+/** Extra fields that changed; a cleared one is sent as null (the server merges). */
+export function changedCustom(before, after) {
+    const changes = {};
+    const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})]);
+    for (const key of keys) {
+        const old = isEmpty(before?.[key]) ? null : before[key];
+        const value = isEmpty(after?.[key]) ? null : typeof after[key] === 'string' ? after[key].trim() : after[key];
+        if (old !== value) changes[key] = value;
+    }
+    return changes;
+}
+
+/** Required extra fields still empty. */
+export function missingCustom(fields, values) {
+    return (fields ?? []).filter((field) => field.is_required && isEmpty(values?.[field.key]));
+}
+
+/**
+ * A field key suggested from its English label: "Blood group" -> "blood_group"
+ * (lower case letters, digits and _, starting with a letter, at most 40).
+ */
+export function fieldKeyFrom(label) {
+    const key = (label ?? '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^[^a-z]+/, '')
+        .replace(/_+$/, '')
+        .slice(0, 40)
+        .replace(/_+$/, '');
+    return key.length >= 2 ? key : '';
+}
+
+/**
+ * The import template: one header line with the column names. UTF-8 with a
+ * byte order mark, so Excel keeps Bangla text readable.
+ */
+export function csvTemplate(columns) {
+    return `﻿${(columns ?? []).map((column) => column.key).join(',')}\r\n`;
 }
 
 /** Which steps can be taken now, and which permission each needs. */

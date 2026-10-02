@@ -2,8 +2,10 @@
 
 namespace Modules\Hrm\Providers;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Hrm\Console\PruneImports;
 use Modules\Hrm\Export\HrmExporter;
 
 /**
@@ -23,6 +25,14 @@ class HrmServiceProvider extends ServiceProvider
     {
         $root = dirname(__DIR__, 2);
         $this->loadTranslationsFrom($root.'/lang', 'hrm');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([PruneImports::class]);
+        }
+        // Employee details of unstarted imports do not linger (HRM-3a).
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
+            $schedule->command('hrm:prune-imports')->dailyAt('03:50')->withoutOverlapping()->onOneServer();
+        });
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');

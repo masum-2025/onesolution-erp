@@ -17,4 +17,10 @@ return [
     'document_added' => 'Employee document added',
     'document_downloaded' => 'Employee document opened',
     'document_removed' => 'Employee document removed',
+    'custom_field_created' => 'Extra employee field added',
+    'custom_field_updated' => 'Extra employee field changed',
+    'import_checked' => 'Employee file checked',
+    'import_started' => 'Employee import started',
+    'import_finished' => 'Employee import finished',
+    'import_cancelled' => 'Employee import cancelled',
 ];

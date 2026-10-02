@@ -190,6 +190,36 @@ it('lets a new module add rules through its manifest alone', function () {
     expect(ruleFor('fleet.max_trip_hours', $this->w->c1))->toBe(8);
 });
 
+it('never reads a map cached before a deploy added a rule', function () {
+    // Cached under the old catalog.
+    expect(ruleFor('attendance.late_grace_minutes', $this->w->c1))->toBe(10);
+
+    $registry = ModuleRegistry::fromManifests([[
+        'key' => 'fleet',
+        'name' => 'fleet::module.name',
+        'version' => '0.1.0',
+        'category' => 'business',
+        'sectors' => ['*'],
+        'plans' => ['*'],
+        'rules' => [[
+            'key' => 'fleet.max_trip_hours',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 24],
+            'default' => 8,
+            'label' => 'fleet::rules.max_trip_hours.label',
+            'description' => 'fleet::rules.max_trip_hours.description',
+            'overridable_levels' => ['platform', 'company'],
+        ]],
+    ]], app(PlanCatalog::class)->keys());
+
+    // The new code starts with a fresh process: new catalog, new cache service, same cache store.
+    app()->instance(RuleCatalog::class, RuleCatalog::fromModules($registry, app(RuleValueValidator::class)));
+    app()->forgetInstance(RuleCache::class);
+    app()->forgetScopedInstances();
+
+    expect(ruleFor('fleet.max_trip_hours', $this->w->c1))->toBe(8);
+});
+
 it('prefers the value for the organization\'s country', function () {
     platformRule('payroll.overtime_multiplier', '2.0', country: 'BD');
     $india = createGroup($this->w->partnerA, 'India Group', ['country_code' => 'IN']);

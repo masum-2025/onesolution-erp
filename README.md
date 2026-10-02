@@ -1964,11 +1964,38 @@ Code: `Modules/Hrm/resources/js` (routes, pages, components, `locales/{en,bn}/hr
 Every screen has loading, empty and error states, works at phone width and in Bangla, and is
 its own lazy chunk. The shell is not changed by a module (see "Module screens" below).
 
+### Extra fields and imports (HRM-3a)
+
+- **Extra fields** (`hrm_custom_fields`, values in `hrm_employees.custom`): set up at a company,
+  branch or department (`hrm.configure`), filled in for that unit and the units below. Kinds:
+  text, number (kept as a decimal string), date, choice (labels in every language), yes/no.
+  Key and type never change; choices already offered stay; fields are switched off, never
+  removed (values stay). How many are in use per company: rule `hrm.custom_fields_max`.
+  Hiring, editing and importing check values the same way (`Services\CustomFields`).
+  `GET …/hrm/custom-fields?unit_id=&all=1`, `POST`, `PATCH …/custom-fields/{id}` (with
+  `base_version`); form-options lists the unit's fields with where they come from.
+- **CSV import** (`hrm_imports`, `hrm_import_rows`, needs `hrm.manage`): `GET …/imports/columns`
+  (template columns, extra fields as `custom_<key>`), `POST …/imports` (file: checked row by row,
+  nothing hired), `GET …/imports/{id}` (problems per row and column), `POST …/{id}/start`
+  (`skip_invalid` when some rows have problems), `DELETE …/{id}` (cancel). The file is never
+  stored; row details are encrypted and wiped when the import ends; `hrm:prune-imports` (daily)
+  cancels imports left unstarted for 7 days. UTF-8 (with or without BOM), comma, semicolon or
+  tab; dates `YYYY-MM-DD` or `DD/MM/YYYY`; units, positions and managers by code; cells starting
+  with `=` or `@` refused. Limits: rules `hrm.import_max_rows` (500) and `hrm.import_max_kb`
+  (1024). One running import per company. `Jobs\ImportEmployees` runs as the starter, checks
+  `hrm.manage` again, skips while HRM is off, and never hires a row twice.
+- Problem messages are written in the uploader's language when the file is checked.
+
+Rule cache: resolved rule maps are keyed by a fingerprint of the rules defined in code too, so
+a deploy that adds a rule or changes a default never reads a map cached before it.
+
 ### Future expansion (HRM)
 
 - A new country or sector needs no code: kinds of employment, required details, the id
   document, probation and notice are rules (country-specific where it matters).
-- Next: HRM-3 (CSV import, org chart, custom fields, document expiry alerts).
+- A sector's own employee details (MPO number for schools, licence for clinics) are extra
+  fields an organization sets up itself; no code change.
+- Next: HRM-3b (org chart, manager loops refused, document expiry alerts).
   Salary and bank details belong to Payroll.
 
 ## Browser app (frontend foundation)

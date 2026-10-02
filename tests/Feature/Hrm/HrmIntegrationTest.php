@@ -49,11 +49,11 @@ it('gives the forms their choices, required details and where the numbers come f
         ->and($options['probation_days']['source']['kind'])->toBe('inherited')
         ->and($options['probation_days']['source']['name'])->toBe($this->w->c1->displayName())
         ->and($options['notice_period_days']['source']['kind'])->toBe('default')
-        ->and($options['can'])->toBe(['manage' => true, 'exit' => true, 'view_sensitive' => true]);
+        ->and($options['can'])->toBe(['manage' => true, 'exit' => true, 'view_sensitive' => true, 'configure' => true]);
 
     $reader = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'Reader'));
     expect($this->asToken(orgToken($reader, $this->w->c1))->getJson("/api/organizations/{$this->w->c1->id}/hrm/form-options")->json('data.can'))
-        ->toBe(['manage' => false, 'exit' => false, 'view_sensitive' => false]);
+        ->toBe(['manage' => false, 'exit' => false, 'view_sensitive' => false, 'configure' => false]);
 });
 
 it('lets an employee see their own record in the portal, without ids', function () {
@@ -85,7 +85,7 @@ it('hands its data to the client\'s export, for that client only', function () {
     $datasets = app(HrmExporter::class)->export($this->w->c1, $ids);
     $employees = iterator_to_array($datasets['employees'], false);
 
-    expect(array_keys($datasets))->toBe(['positions', 'employees', 'employment_events', 'documents'])
+    expect(array_keys($datasets))->toBe(['positions', 'employees', 'custom_fields', 'employment_events', 'documents'])
         ->and(array_column($employees, 'id'))->toBe([$mine])
         ->and($employees[0]['national_id'])->toBe('1990123456789')
         ->and(iterator_to_array($datasets['employment_events'], false))->toHaveCount(1);

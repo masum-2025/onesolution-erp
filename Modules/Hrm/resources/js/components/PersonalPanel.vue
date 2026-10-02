@@ -6,7 +6,8 @@ import AppField from '@/components/AppField.vue';
 import { formatDate } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { changedDetails } from '../lib';
+import { changedCustom, changedDetails } from '../lib';
+import CustomFieldInputs from './CustomFieldInputs.vue';
 
 /**
  * Personal details: read, edit (only the changed fields, with the version
@@ -30,11 +31,14 @@ const revealed = ref(null);
 const revealing = ref(false);
 
 const idLabel = computed(() => props.options?.national_id.label ?? t('hrm.fields.national_id'));
+// Extra fields of the employee's unit (set up there or above it).
+const customFields = computed(() => props.options?.custom_fields ?? []);
 const genderLabel = computed(() => props.options?.genders.find((gender) => gender.value === props.employee.gender)?.label ?? props.employee.gender);
 
 function start() {
     for (const field of FIELDS) form[field] = props.employee[field] ?? '';
     form.national_id = '';
+    form.custom = { ...(props.employee.custom ?? {}) };
     errors.value = {};
     editing.value = true;
 }
@@ -43,6 +47,8 @@ async function save() {
     const changes = changedDetails(Object.fromEntries(FIELDS.map((field) => [field, props.employee[field] ?? null])), Object.fromEntries(FIELDS.map((field) => [field, form[field]])));
     // The national id is masked here: only a newly typed one is sent.
     if (form.national_id.trim()) changes.national_id = form.national_id.trim();
+    const custom = changedCustom(props.employee.custom, form.custom);
+    if (Object.keys(custom).length) changes.custom = custom;
     if (!Object.keys(changes).length) {
         toast.info(t('hrm.profile.nothing_changed'));
         editing.value = false;
@@ -87,6 +93,16 @@ async function reveal() {
 }
 
 const fieldError = (name) => errors.value[name]?.[0] ?? null;
+
+/** An extra field's value as people read it. */
+function customText(field) {
+    const value = props.employee.custom?.[field.key];
+    if (value === undefined || value === null || value === '') return '–';
+    if (field.type === 'choice') return field.options.find((option) => option.value === value)?.label ?? value;
+    if (field.type === 'yes_no') return value ? t('hrm.custom.yes') : t('hrm.custom.no');
+    if (field.type === 'date') return formatDate(value);
+    return value;
+}
 </script>
 
 <template>
@@ -116,6 +132,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <AppField v-slot="{ id }" :label="idLabel" :hint="employee.national_id ?? ''" :error="fieldError('national_id')" optional class="sm:col-span-2">
                 <input :id="id" v-model="form.national_id" class="field-input" dir="ltr" autocomplete="off" maxlength="40" />
             </AppField>
+            <fieldset v-if="customFields.length" class="grid gap-4 border-t border-line pt-4 sm:col-span-2 sm:grid-cols-2">
+                <legend class="mb-1 text-[13px] font-medium text-fg-2">{{ t('hrm.custom.section') }}</legend>
+                <CustomFieldInputs v-model="form.custom" :fields="customFields" :errors="errors" />
+            </fieldset>
             <div class="flex justify-end gap-2 sm:col-span-2">
                 <AppButton variant="ghost" @click="editing = false">{{ t('hrm.profile.cancel') }}</AppButton>
                 <AppButton variant="primary" type="submit" :loading="saving">{{ t('hrm.profile.save') }}</AppButton>
@@ -142,6 +162,15 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     <dd class="font-mono font-medium text-fg" dir="ltr">{{ revealed ? revealed.tax_id || '–' : employee.tax_id || '–' }}</dd>
                 </div>
             </dl>
+            <template v-if="customFields.length">
+                <h3 class="mt-6 mb-3 border-t border-line pt-4 text-[13px] font-medium text-fg-2">{{ t('hrm.custom.section') }}</h3>
+                <dl class="grid gap-x-6 gap-y-4 text-[13.5px] sm:grid-cols-2">
+                    <div v-for="field in customFields" :key="field.key">
+                        <dt class="text-muted">{{ field.label }}</dt>
+                        <dd class="font-medium text-fg">{{ customText(field) }}</dd>
+                    </div>
+                </dl>
+            </template>
             <div v-if="options?.can.view_sensitive && (employee.national_id || employee.tax_id)" class="mt-4 flex flex-wrap items-center gap-3">
                 <AppButton size="sm" variant="ghost" :icon="revealed ? EyeOff : Eye" :loading="revealing" @click="reveal">
                     {{ revealed ? t('hrm.profile.hide') : t('hrm.profile.reveal') }}
