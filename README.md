@@ -156,7 +156,19 @@ return [
     'plans' => ['*'],                           // or ['business', 'enterprise']
     'permissions' => ['payroll.view', 'payroll.run', 'payroll.approve'],
     'rules' => [],                              // Phase 3
-    'menu' => [['key' => 'payroll', 'label' => 'payroll::module.menu', 'route' => '/payroll', 'order' => 30]],
+    'menu' => [[
+        'key' => 'payroll', 'label' => 'payroll::module.menu', 'route' => '/payroll', 'order' => 30,
+        'icon' => 'banknote',                   // name from resources/js/lib/icons.js
+        'section' => 'people',                  // sidebar section; default = the module's category
+        'permission' => 'payroll.view',         // optional: entry only for people holding it
+        'children' => [                         // optional sub-pages (sidebar disclosure)
+            ['key' => 'runs', 'label' => 'payroll::module.menu_runs', 'route' => '/payroll', 'permission' => 'payroll.view'],
+        ],
+    ]],
+    // Header "New" menu; a permission of this module is required.
+    'quick_actions' => [['key' => 'run', 'label' => 'payroll::module.new_run', 'route' => '/payroll/new', 'permission' => 'payroll.run', 'icon' => 'banknote']],
+    // Header bell: AttentionProvider classes, asked only while the module is on.
+    'attention' => [],
     'is_core' => false,
     'requires_consent' => false,                // true for AI modules
 ];
@@ -2076,3 +2088,72 @@ cover module files too.
 - New module screens: `routes.js` + locale files inside the module (see "Module screens");
   menu entries come from the manifest. No change to the shell.
 - `can` comes from real permissions (Phase 4); the UI keeps reading `can`. Phase 7 adds IndexedDB and the sync queue behind `lib/http.js`.
+
+## App shell: sidebar, header and "My look" (UI-1)
+
+Sidebar and header of every screen (`resources/js/layouts`): `SidebarNav.vue`,
+`AppHeader.vue` (search → command palette, `QuickCreateMenu`, `NotificationBell`,
+`LanguageSwitcher`, `UserMenu`), put together by `AppShell.vue`.
+
+- **Sidebar**: platform screens in two sections (workspace, administration), then module
+  entries grouped by section (`menu.section`, default the module category; labels in
+  `lang/{locale}/modules.php` → `sections`). Modules with `children` open as a disclosure;
+  the page being viewed opens its module and marks the sub-page (longest matching link).
+  Collapsible to icons on desktop (remembered per browser): names stay as `aria-label` and
+  a tooltip, counts stay numbers.
+- **Header**: "New" lists the modules' `quick_actions` the person may use (none in read-only
+  or export-only organizations); the bell counts work waiting here; languages are shown by
+  name, never by a flag.
+
+### API
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/menu | `data`: entries with `section`, `section_label`, `icon`, `children` (filtered by permission); `quick_actions` |
+| GET | /api/attention | bell items `{key, label, count, path, tone}` for the current organization; empty for support staff |
+| PUT | /api/me/appearance | the person's own `template`, `accent`, `color_vision`, `contrast` (`null` clears); throttled |
+| GET | /api/me | adds `appearance` (what applies here, with source and lock) |
+
+Bell items come from `AttentionProvider` classes (`app/Platform/Attention`): the platform's
+(rule changes to approve, support access requests) and those modules list under `attention`.
+A provider checks its own permission and returns counts only, never names or amounts.
+
+### Brand bands
+
+A thin strip along the bottom edge of the header in the brand's colors (`band_colors`, up to
+four, side by side) and, level with it, one under the sidebar's brand row (`side_band_color`). Brand data, edited on
+the partner brand screen; empty = no band. The house brand uses its logo's colors
+(`config/branding.php`: blue, red, green; white for the sidebar). Decoration only, so no
+contrast check; colors are validated as hex like every brand color.
+
+### Templates, colors and who decides
+
+Rules (category "Look and feel"): `ui.shell_template` (`classic` dark sidebar, `light`) and
+`ui.accent` (`brand` or one of eight fixed colors). Overridable at platform, partner, plan,
+group, company and branch.
+
+- A level that **locks** a rule decides for everyone below; a **constraint** (`allowed`)
+  narrows the choices.
+- Otherwise the person's own choice (`users.ui_preferences`, one per identity, so the same in
+  every organization) wins; without one, the organization's value applies.
+- **Readability is never decided by an organization**: colour vision (`standard`,
+  `blue_orange` for red–green colour blindness) and contrast (`standard`, `high`) are always
+  the person's own. Light/dark stays a per-device choice.
+
+The look is applied as `data-shell`, `data-vision`, `data-contrast` on `<html>`
+(`lib/appearance.js`); `app.css` maps them to tokens (`--side-*`, `--c-ok/warn/bad`, text and
+line colors). The Blade shell applies the last look from this browser before first paint.
+Every fixed color carries white text at 4.5:1 or more (tested); states always show an icon
+and words as well as a color.
+
+"My look" screen: `/account/appearance` (from the person menu).
+
+### Future expansion (UI-1)
+
+- New template (e.g. icon rail, top navigation): add its value to `ui.shell_template`, the
+  CSS tokens and, if the layout differs, a component chosen by `appearance.template`. No
+  server code beyond the rule's list.
+- New module: menu `section`/`children`, `quick_actions` and `attention` in its manifest; the
+  shell needs no change. A new section needs a label in `modules.sections`.
+- A partner's default or locked look: rule values at the partner level, no code.
+- New language: locale files only.

@@ -8,6 +8,9 @@ export const brand = reactive({
     name: '',
     primary_color: '#2B4C9B',
     secondary_color: null,
+    // Thin strips under the header (its colors, e.g. the logo's) and, level with it, the sidebar's brand row.
+    band_colors: [],
+    side_band_color: null,
     font: null,
     support_email: null,
     support_phone: null,

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Table('partner_brands')]
 #[Fillable([
-    'partner_id', 'product_name', 'primary_color', 'secondary_color', 'font_key',
+    'partner_id', 'product_name', 'primary_color', 'secondary_color', 'band_colors', 'side_band_color', 'font_key',
     'logo_light_path', 'logo_dark_path', 'mark_path', 'favicon_path',
     'tagline', 'login_title', 'login_text', 'footer_text',
     'support_email', 'support_phone', 'terms_url', 'privacy_url', 'version',
@@ -35,6 +35,7 @@ class PartnerBrand extends Model
     protected function casts(): array
     {
         return [
+            'band_colors' => 'array',
             'tagline' => 'array',
             'login_title' => 'array',
             'login_text' => 'array',

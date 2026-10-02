@@ -37,6 +37,16 @@ return [
         'purge_scheduled' => 'Data deletion is scheduled for :date. You can cancel it until then.',
     ],
 
+    // Sidebar sections; a module's menu sits under its category unless it names one.
+    'sections' => [
+        'people' => 'People',
+        'business' => 'Business',
+        'governance' => 'Governance',
+        'ai' => 'AI',
+        'platform' => 'Platform',
+        'sustainability' => 'Sustainability',
+    ],
+
     'your_provider' => 'your service provider',
 
 ];

@@ -1,56 +1,57 @@
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { ChevronRight, Clock, Menu, Moon, Search, Sun } from 'lucide-vue-next';
+import { Clock } from 'lucide-vue-next';
 import SidebarNav from './SidebarNav.vue';
+import AppHeader from './AppHeader.vue';
 import ModeBanner from './ModeBanner.vue';
 import LegalBanner from './LegalBanner.vue';
 import DeletionBanner from './DeletionBanner.vue';
 import TwoFactorBanner from './TwoFactorBanner.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppButton from '@/components/AppButton.vue';
-import BrandMark from '@/components/BrandMark.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import { api } from '@/lib/http';
 import { cached } from '@/lib/cache';
 import { on } from '@/lib/events';
 import { can, currentOrganization, enterContext, hasOfflineData, isPortalMember, session } from '@/lib/session';
-import { setTheme, theme } from '@/lib/theme';
+import { readPref, writePref } from '@/lib/storage';
 import { formatNumber } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { i18n, t } from '@/lib/i18n';
-
-const OfflineIndicator = defineAsyncComponent(() => import('./OfflineIndicator.vue'));
 
 const route = useRoute();
 const mobileNav = ref(false);
 const palette = ref(false);
 const menu = ref([]);
+const quickActions = ref([]);
+// Sidebar collapsed to icons (desktop), remembered on this browser.
+const collapsed = ref(readPref('sidebar') === 'collapsed');
+
+function toggleSidebar() {
+    collapsed.value = !collapsed.value;
+    writePref('sidebar', collapsed.value ? 'collapsed' : null);
+}
 const pendingApprovals = ref(0);
 const now = ref(Date.now());
 const offlineOn = ref(false);
-
-const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
-
-const breadcrumb = computed(() => {
-    const context = session.me?.context;
-    if (!context) return [];
-    if (context.type === 'partner') return [{ id: context.id, name: context.name }];
-    return context.path ?? [];
-});
 
 async function loadShellData() {
     const org = currentOrganization();
     // Portal members have no module menu: their portal is their whole app.
     if (!org || isPortalMember()) {
         menu.value = [];
+        quickActions.value = [];
         pendingApprovals.value = 0;
         return;
     }
     try {
-        menu.value = (await cached('menu', () => api('/api/menu'))).data;
+        const response = await cached('menu', () => api('/api/menu'));
+        menu.value = response.data;
+        quickActions.value = response.quick_actions ?? [];
     } catch {
         menu.value = [];
+        quickActions.value = [];
     }
     refreshApprovals();
 }
@@ -140,9 +141,12 @@ watch(() => route.path, () => (mobileNav.value = false));
 </script>
 
 <template>
-    <div class="min-h-dvh lg:grid lg:grid-cols-[272px_minmax(0,1fr)] print:block">
-        <aside class="sticky top-0 hidden h-dvh border-e border-line bg-canvas lg:block print:hidden">
-            <SidebarNav :menu="menu" :pending-approvals="pendingApprovals" />
+    <div
+        class="min-h-dvh transition-[grid-template-columns] duration-300 ease-[var(--ease-soft)] lg:grid print:block"
+        :class="collapsed ? 'lg:grid-cols-[80px_minmax(0,1fr)]' : 'lg:grid-cols-[272px_minmax(0,1fr)]'"
+    >
+        <aside class="sticky top-0 z-40 hidden h-dvh border-e border-side-line lg:block print:hidden">
+            <SidebarNav :menu="menu" :pending-approvals="pendingApprovals" :collapsed="collapsed" collapsible @toggle="toggleSidebar" />
         </aside>
 
         <AppDrawer :open="mobileNav" side="start" width="max-w-[300px]" :title="t('core.nav.label')" @close="mobileNav = false">
@@ -151,39 +155,7 @@ watch(() => route.path, () => (mobileNav.value = false));
         </AppDrawer>
 
         <div class="flex min-w-0 flex-col">
-            <header class="glass sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line px-3 sm:px-6 lg:px-8 print:hidden">
-                <AppButton variant="ghost" size="icon" class="lg:hidden" :icon="Menu" :aria-label="t('core.nav.open')" @click="mobileNav = true" />
-                <BrandMark size="sm" class="lg:hidden" />
-
-                <nav class="hidden min-w-0 flex-1 items-center gap-1.5 text-[13px] sm:flex" :aria-label="t('core.breadcrumb')">
-                    <template v-for="(crumb, index) in breadcrumb" :key="crumb.id">
-                        <ChevronRight v-if="index > 0" class="size-3.5 shrink-0 text-faint rtl:rotate-180" aria-hidden="true" />
-                        <span class="truncate" :class="index === breadcrumb.length - 1 ? 'font-medium text-fg' : 'text-muted'">{{ crumb.name }}</span>
-                    </template>
-                </nav>
-                <div class="flex-1 sm:hidden" />
-
-                <button
-                    type="button"
-                    class="flex h-9 items-center gap-2 rounded-[9px] border border-line bg-surface px-2.5 text-[13px] text-muted shadow-xs transition hover:border-line-strong hover:text-fg sm:w-64"
-                    :aria-label="t('core.palette.open_label')"
-                    @click="palette = true"
-                >
-                    <Search class="size-4 shrink-0" aria-hidden="true" />
-                    <span class="hidden flex-1 text-start sm:block">{{ t('core.palette.trigger') }}</span>
-                    <span class="hidden items-center gap-0.5 sm:flex">
-                        <span class="kbd">{{ isMac ? '⌘' : 'Ctrl' }}</span><span class="kbd">K</span>
-                    </span>
-                </button>
-                <OfflineIndicator v-if="offlineOn" />
-                <AppButton
-                    variant="ghost"
-                    size="icon"
-                    :icon="theme.dark ? Sun : Moon"
-                    :aria-label="theme.dark ? t('core.palette.light_mode') : t('core.palette.dark_mode')"
-                    @click="setTheme(theme.dark ? 'light' : 'dark')"
-                />
-            </header>
+            <AppHeader :quick-actions="quickActions" :offline="offlineOn" :simple="isPortalMember()" @open-nav="mobileNav = true" @open-palette="palette = true" />
 
             <ModeBanner class="print:hidden" />
             <LegalBanner class="print:hidden" />

@@ -104,7 +104,16 @@
         "preview": "Preview",
         "preview_button": "Sign in",
         "saved": "Brand saved.",
-        "read_only": "Only partner owners can change the brand."
+        "read_only": "Only partner owners can change the brand.",
+        "bands": "Brand bands",
+        "bands_hint": "Thin strips of your brand colors under the header and the sidebar's brand row, like the colors of your logo. Leave empty for none.",
+        "band_colors": "Header band",
+        "band_colors_hint": "Up to four colors, side by side.",
+        "band_color_n": "Band color {n}",
+        "band_remove": "Remove band color {n}",
+        "band_add": "Add a color",
+        "side_band_color": "Sidebar band",
+        "side_band_color_hint": "One color under the sidebar's brand row, level with the header band."
     },
     "domains": {
         "title": "Domains",

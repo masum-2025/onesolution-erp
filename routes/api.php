@@ -2,6 +2,8 @@
 
 use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
+use App\Platform\Appearance\Http\AppearanceController;
+use App\Platform\Attention\Http\AttentionController;
 use App\Platform\Audit\Http\AdvancedAuditController;
 use App\Platform\Audit\Http\AuditLogController;
 use App\Platform\Billing\Http\Controllers\OrganizationBillingController;
@@ -85,6 +87,8 @@ Route::middleware(['auth:sanctum', 'throttle:offline-sync'])->group(function () 
 Route::middleware('auth:sanctum')->prefix('me')->group(function () {
     Route::get('account', [AccountController::class, 'show']);
     Route::patch('account', [AccountController::class, 'update']);
+    // The person's own look of the app: template, color, readability.
+    Route::put('appearance', [AppearanceController::class, 'update'])->middleware('throttle:tenancy-sensitive');
     Route::post('onboarding', [AccountController::class, 'onboarding']);
     Route::get('sessions', [AccountController::class, 'sessions']);
     Route::delete('sessions/{session}', [AccountController::class, 'endSession'])->where('session', '[0-9A-Za-z]{26}');
@@ -277,6 +281,8 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 
     // Module system (Phase 2)
     Route::get('menu', MenuController::class);
+    // The header bell: counts of work waiting for this person here.
+    Route::get('attention', AttentionController::class);
     // Countries the platform knows (Phase 6), for pickers and "comes from the country" hints.
     Route::get('countries', CountryController::class);
     Route::get('organizations/{organization}/modules', [ModuleController::class, 'index']);

@@ -53,10 +53,15 @@ class BrandService
             }
         }
 
-        foreach (['primary_color', 'secondary_color'] as $field) {
+        foreach (['primary_color', 'secondary_color', 'side_band_color'] as $field) {
             if (isset($changes[$field])) {
                 $changes[$field] = strtoupper($changes[$field]);
             }
+        }
+
+        // Bands are decoration (no text on them): any colors, upper case, empty = none.
+        if (array_key_exists('band_colors', $changes)) {
+            $changes['band_colors'] = $changes['band_colors'] ? array_map('strtoupper', array_values($changes['band_colors'])) : null;
         }
 
         return DB::transaction(function () use ($partner, $changes, $actor) {

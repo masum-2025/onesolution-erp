@@ -162,12 +162,72 @@ final class ModuleRegistry
             }
         }
 
+        foreach (['quick_actions', 'attention'] as $field) {
+            if (isset($manifest[$field]) && ! array_is_list($manifest[$field])) {
+                throw InvalidModuleManifest::because($key, "{$field} must be a list");
+            }
+        }
+
         foreach ($manifest['menu'] ?? [] as $item) {
             foreach (['key', 'label', 'route', 'order'] as $field) {
                 if (! isset($item[$field])) {
                     throw InvalidModuleManifest::because($key, "menu item is missing {$field}");
                 }
             }
+
+            if (isset($item['section']) && ! (is_string($item['section']) && preg_match('/^[a-z][a-z0-9_]{1,49}$/', $item['section']))) {
+                throw InvalidModuleManifest::because($key, 'menu section must be snake_case');
+            }
+
+            self::validatePermission($manifest, $item['permission'] ?? null, 'menu item', required: false);
+
+            if (isset($item['children']) && ! array_is_list($item['children'])) {
+                throw InvalidModuleManifest::because($key, 'menu children must be a list');
+            }
+
+            foreach ($item['children'] ?? [] as $child) {
+                foreach (['key', 'label', 'route'] as $field) {
+                    if (! isset($child[$field])) {
+                        throw InvalidModuleManifest::because($key, "menu child is missing {$field}");
+                    }
+                }
+                self::validatePermission($manifest, $child['permission'] ?? null, 'menu child', required: false);
+            }
+        }
+
+        // Creating something always needs a permission of the module itself.
+        foreach ($manifest['quick_actions'] ?? [] as $action) {
+            foreach (['key', 'label', 'route'] as $field) {
+                if (! isset($action[$field])) {
+                    throw InvalidModuleManifest::because($key, "quick action is missing {$field}");
+                }
+            }
+            self::validatePermission($manifest, $action['permission'] ?? null, 'quick action', required: true);
+        }
+
+        foreach ($manifest['attention'] ?? [] as $class) {
+            if (! is_string($class) || $class === '') {
+                throw InvalidModuleManifest::because($key, 'attention entries must be class names');
+            }
+        }
+    }
+
+    /**
+     * A permission named by a menu entry or quick action must be one the
+     * module declares, so a typo cannot silently hide (or show) an entry.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private static function validatePermission(array $manifest, mixed $permission, string $what, bool $required): void
+    {
+        $key = $manifest['key'];
+
+        if ($permission === null && ! $required) {
+            return;
+        }
+
+        if (! is_string($permission) || ! in_array($permission, $manifest['permissions'] ?? [], true)) {
+            throw InvalidModuleManifest::because($key, "{$what} permission [".(is_string($permission) ? $permission : '?')."] is not one of the module's permissions");
         }
     }
 

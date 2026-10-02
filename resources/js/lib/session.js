@@ -1,6 +1,7 @@
 import { reactive } from 'vue';
 import { api } from './http';
 import { applyBrand } from './brand';
+import { applyAppearance } from './appearance';
 import { setLocale } from './i18n';
 import { readPref } from './storage';
 import { resetCaches } from './cache';
@@ -16,6 +17,8 @@ export async function loadMe() {
         const { data } = await api('/api/me', { silentAuth: true });
         session.me = data;
         applyBrand(data.brand);
+        // After the brand: a highlight color the person picked replaces the brand color.
+        applyAppearance(data.appearance);
 
         // Language: picked on this device, else the person's profile, else the
         // organization's (own, inherited or its country's).

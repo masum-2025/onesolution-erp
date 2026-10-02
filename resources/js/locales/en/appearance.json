@@ -1,0 +1,51 @@
+{
+    "title": "My look",
+    "description": "How the app looks for you. Your choices follow you to every organization you work in, unless one has fixed its look.",
+    "reset": "Use my organization's look",
+    "locked_by": "Fixed by {name}",
+    "locked_help": "Your organization has fixed this for everyone. An administrator can change it under Rules → Look and feel.",
+    "template": {
+        "title": "Sidebar and header",
+        "text": "The style of the menu and the top bar.",
+        "classic": "Classic",
+        "classic_text": "dark sidebar",
+        "light": "Light",
+        "light_text": "light sidebar"
+    },
+    "accent": {
+        "title": "Highlight color",
+        "text": "Color of buttons, links and the selected page. Every color here keeps text easy to read.",
+        "brand": "Brand",
+        "indigo": "Indigo",
+        "blue": "Blue",
+        "teal": "Teal",
+        "green": "Green",
+        "violet": "Violet",
+        "rose": "Rose",
+        "orange": "Orange",
+        "slate": "Slate"
+    },
+    "readability": {
+        "title": "Easy to read",
+        "text": "These are always yours: no organization can turn them off."
+    },
+    "vision": {
+        "title": "Colors for states",
+        "standard": "Standard",
+        "standard_text": "Green for done, amber for soon, red for problems.",
+        "blue_orange": "Blue and orange",
+        "blue_orange_text": "For red–green colour blindness: blue for done, orange for problems.",
+        "sample_ok": "Paid",
+        "sample_warn": "Due soon",
+        "sample_bad": "Overdue"
+    },
+    "contrast": {
+        "title": "Contrast",
+        "standard": "Standard",
+        "high": "High"
+    },
+    "theme": {
+        "title": "Light or dark",
+        "device": "Saved on this device only."
+    }
+}

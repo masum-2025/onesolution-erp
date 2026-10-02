@@ -90,6 +90,8 @@ class BrandResolver
                 'name' => $this->text($house['name']) ?? 'One Solutions',
                 'primary_color' => strtoupper($this->color($house['primary_color']) ?? '#2B4C9B'),
                 'secondary_color' => null,
+                'band_colors' => $this->colors($house['band_colors'] ?? []),
+                'side_band_color' => $this->upper($house['side_band_color'] ?? null),
                 'font' => $fonts['inter'] ?? null,
                 'support_email' => filter_var($house['support_email'] ?? null, FILTER_VALIDATE_EMAIL) ?: null,
                 'support_phone' => null,
@@ -121,6 +123,8 @@ class BrandResolver
             // A white-label partner never falls back to the house logo; its color may fall back.
             'primary_color' => strtoupper($this->color($brand?->primary_color) ?? $this->color($house['primary_color']) ?? '#2B4C9B'),
             'secondary_color' => $this->color($brand?->secondary_color) === null ? null : strtoupper($brand->secondary_color),
+            'band_colors' => $this->colors($brand?->band_colors),
+            'side_band_color' => $this->upper($brand?->side_band_color),
             'font' => $fonts[$brand?->font_key ?? 'inter'] ?? $fonts['inter'] ?? null,
             'support_email' => filter_var($brand?->support_email, FILTER_VALIDATE_EMAIL) ?: null,
             'support_phone' => $this->text($brand?->support_phone, 30),
@@ -147,6 +151,19 @@ class BrandResolver
     private function color(mixed $value): ?string
     {
         return is_string($value) && preg_match(self::COLOR, $value) === 1 ? $value : null;
+    }
+
+    private function upper(mixed $value): ?string
+    {
+        return $this->color($value) === null ? null : strtoupper($value);
+    }
+
+    /**
+     * @return list<string> Up to four valid colors.
+     */
+    private function colors(mixed $value): array
+    {
+        return is_array($value) ? array_slice(array_values(array_filter(array_map(fn ($color) => $this->upper($color), $value))), 0, 4) : [];
     }
 
     private function path(mixed $value): ?string

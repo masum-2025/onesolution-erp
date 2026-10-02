@@ -100,7 +100,13 @@
         "partner_api": "API keys",
         "brand": "Our brand",
         "account": "My account",
-        "portal_home": "My records"
+        "portal_home": "My records",
+        "administration": "Administration",
+        "partner_console": "Partner console",
+        "partner_settings": "Settings",
+        "expand": "Expand the menu",
+        "collapse": "Collapse the menu",
+        "appearance": "My look"
     },
     "not_found": {
         "title": "This page does not exist",
@@ -225,5 +231,23 @@
     "two_factor": {
         "required_by": "This account requires two-step sign-in. Set it up by {date} to keep working here.",
         "set_up": "Set up"
+    },
+    "languages_short": {
+        "en": "EN",
+        "bn": "বাং",
+        "ar": "ع"
+    },
+    "attention": {
+        "label": "Things waiting for you",
+        "label_count": "{count} things waiting for you",
+        "title": "Waiting for you",
+        "empty": "All caught up",
+        "legal": "Terms to accept",
+        "two_factor": "Set up two-step sign-in"
+    },
+    "quick_create": {
+        "label": "Create something new",
+        "button": "New",
+        "heading": "Create"
     }
 }

@@ -49,6 +49,8 @@ class User extends Authenticatable
             // Two-step sign-in (Phase 8-1).
             'mfa_enabled_at' => 'immutable_datetime',
             'mfa_required_since' => 'immutable_datetime',
+            // Look of the app (template, color, readability): see AppearanceResolver.
+            'ui_preferences' => 'array',
             'password' => 'hashed',
         ];
     }

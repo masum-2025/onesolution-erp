@@ -100,7 +100,13 @@
         "partner_api": "API কী",
         "brand": "আমাদের ব্র্যান্ড",
         "account": "আমার অ্যাকাউন্ট",
-        "portal_home": "আমার রেকর্ড"
+        "portal_home": "আমার রেকর্ড",
+        "administration": "প্রশাসন",
+        "partner_console": "পার্টনার কনসোল",
+        "partner_settings": "সেটিংস",
+        "expand": "মেনু বড় করুন",
+        "collapse": "মেনু ছোট করুন",
+        "appearance": "আমার চেহারা"
     },
     "not_found": {
         "title": "এই পেজটি নেই",
@@ -225,5 +231,23 @@
     "two_factor": {
         "required_by": "এই অ্যাকাউন্টে দুই ধাপে সাইন ইন বাধ্যতামূলক। এখানে কাজ চালিয়ে যেতে {date}-এর মধ্যে চালু করুন।",
         "set_up": "চালু করুন"
+    },
+    "languages_short": {
+        "en": "EN",
+        "bn": "বাং",
+        "ar": "ع"
+    },
+    "attention": {
+        "label": "আপনার জন্য অপেক্ষমাণ কাজ",
+        "label_count": "আপনার জন্য {count}টি কাজ অপেক্ষায়",
+        "title": "আপনার অপেক্ষায়",
+        "empty": "সব কাজ শেষ",
+        "legal": "শর্ত গ্রহণ বাকি",
+        "two_factor": "দুই ধাপের সাইন-ইন চালু করুন"
+    },
+    "quick_create": {
+        "label": "নতুন কিছু তৈরি করুন",
+        "button": "নতুন",
+        "heading": "তৈরি করুন"
     }
 }

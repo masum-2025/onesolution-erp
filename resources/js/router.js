@@ -42,6 +42,8 @@ const routes = [
             },
             // The person's own account: the same in every context.
             { path: 'account', name: 'account', component: () => import('./pages/account/AccountPage.vue'), meta: { ns: ['identity', 'offline', 'security'] } },
+            // The person's own look of the app (template, color, readability).
+            { path: 'account/appearance', name: 'appearance', component: () => import('./pages/account/AppearancePage.vue'), meta: { ns: ['appearance'] } },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'support-access', name: 'support-access', component: () => import('./pages/trust/SupportAccessPage.vue'), meta: { context: 'organization', ns: ['trust'] } },
             { path: 'branding', name: 'brand', component: () => import('./pages/brand/ClientBrandPage.vue'), meta: { context: 'organization', ns: ['brand'] } },

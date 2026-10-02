@@ -40,6 +40,16 @@ return [
     ],
 
     'core' => [
+        'ui_shell_template' => [
+            'label' => 'App look (sidebar and header)',
+            'description' => 'classic = dark sidebar, light = light sidebar. Lock it to give everyone below the same look; otherwise each person can choose their own.',
+            'options' => ['classic' => 'Classic (dark sidebar)', 'light' => 'Light (light sidebar)'],
+        ],
+        'ui_accent' => [
+            'label' => 'Highlight color',
+            'description' => 'Color of buttons and the selected page. brand = your brand color. Lock it to keep it the same for everyone below.',
+            'options' => ['brand' => 'Brand color', 'indigo' => 'Indigo', 'blue' => 'Blue', 'teal' => 'Teal', 'green' => 'Green', 'violet' => 'Violet', 'rose' => 'Rose', 'orange' => 'Orange', 'slate' => 'Slate'],
+        ],
         'tenancy_max_depth' => [
             'label' => 'Maximum organization levels',
             'description' => 'How many levels deep an organization tree can go.',
@@ -264,6 +274,7 @@ return [
     ],
 
     'categories' => [
+        'appearance' => 'Look and feel',
         'organization' => 'Organization',
         'security' => 'Security',
         'data' => 'Data',
@@ -276,5 +287,10 @@ return [
         'payments' => 'Online payments',
         'regional' => 'Country and region',
         'audit' => 'Audit log',
+    ],
+
+    // Header bell.
+    'attention' => [
+        'approvals' => 'Rule changes to approve',
     ],
 ];

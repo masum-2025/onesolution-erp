@@ -20,4 +20,8 @@ return [
         'revoked' => 'Support access ended.',
     ],
 
+    // Header bell.
+    'attention' => [
+        'requests' => 'Support access requests',
+    ],
 ];

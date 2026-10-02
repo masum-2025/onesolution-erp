@@ -72,6 +72,17 @@
     --color-bad: var(--c-bad);
     --color-bad-soft: var(--c-bad-soft);
 
+    /* Sidebar of the shell template (see [data-shell] below). */
+    --color-side: var(--side-bg);
+    --color-side-fg: var(--side-fg);
+    --color-side-fg-2: var(--side-fg-2);
+    --color-side-muted: var(--side-muted);
+    --color-side-hover: var(--side-hover);
+    --color-side-active: var(--side-active);
+    --color-side-accent: var(--side-accent);
+    --color-side-line: var(--side-line);
+    --color-side-ring: var(--side-ring);
+
     --shadow-xs: 0 1px 2px rgb(16 16 20 / 0.05);
     --shadow-card: 0 1px 2px rgb(16 16 20 / 0.04), 0 1px 1px rgb(16 16 20 / 0.02);
     --shadow-pop: 0 8px 24px -6px rgb(16 16 20 / 0.14), 0 2px 6px -2px rgb(16 16 20 / 0.08);
@@ -154,6 +165,130 @@
     --c-bad-soft: color-mix(in oklab, #f87171 12%, var(--c-surface));
 
     color-scheme: dark;
+}
+
+/*
+ * Shell templates (sidebar and header), set on <html data-shell>. "classic":
+ * a deep sidebar tinted by the brand (or the person's highlight color);
+ * "light": the sidebar on the page surface. Text tokens keep 4.5:1 or more.
+ */
+:root,
+[data-shell='light'] {
+    --side-bg: var(--c-surface);
+    --side-glow: transparent;
+    --side-fg: var(--c-fg);
+    --side-fg-2: var(--c-fg-2);
+    --side-muted: var(--c-muted);
+    --side-hover: var(--c-subtle);
+    --side-active: var(--brand-soft);
+    --side-accent: var(--brand-text);
+    --side-line: var(--c-line);
+    --side-ring: var(--c-line);
+}
+
+[data-shell='classic'] {
+    --side-bg: color-mix(in oklab, var(--brand) 20%, #080c19);
+    --side-glow: color-mix(in oklab, var(--brand) 38%, transparent);
+    --side-fg: #f3f5fb;
+    --side-fg-2: #d9deeb;
+    --side-muted: #a6aec4;
+    --side-hover: rgb(255 255 255 / 0.06);
+    --side-active: rgb(255 255 255 / 0.1);
+    --side-accent: color-mix(in oklab, var(--brand) 45%, white);
+    --side-line: rgb(255 255 255 / 0.08);
+    --side-ring: rgb(255 255 255 / 0.12);
+}
+
+/*
+ * Colour vision (the person's own setting): red and green look alike for many
+ * people, so "good" turns blue and "bad" orange. Meaning never rests on color
+ * alone anyway: every state also has an icon and words.
+ */
+/* A preview of the standard colors inside a page that uses blue/orange (the "My look" screen). */
+[data-vision='standard'] {
+    --c-ok: #157f4b;
+    --c-ok-soft: #ecfdf5;
+    --c-warn: #b45309;
+    --c-warn-soft: #fffbeb;
+    --c-bad: #dc2626;
+    --c-bad-soft: #fef2f2;
+}
+
+.dark[data-vision='standard'],
+.dark [data-vision='standard'] {
+    --c-ok: #34d399;
+    --c-ok-soft: color-mix(in oklab, #34d399 12%, var(--c-surface));
+    --c-warn: #fbbf24;
+    --c-warn-soft: color-mix(in oklab, #fbbf24 12%, var(--c-surface));
+    --c-bad: #f87171;
+    --c-bad-soft: color-mix(in oklab, #f87171 12%, var(--c-surface));
+}
+
+[data-vision='blue_orange'] {
+    --c-ok: #0b5cad;
+    --c-ok-soft: #eef5ff;
+    --c-warn: #7a5900;
+    --c-warn-soft: #fdf9e7;
+    --c-bad: #b44708;
+    --c-bad-soft: #fff3eb;
+}
+
+.dark[data-vision='blue_orange'],
+.dark [data-vision='blue_orange'] {
+    --c-ok: #6aaefc;
+    --c-ok-soft: color-mix(in oklab, #6aaefc 12%, var(--c-surface));
+    --c-warn: #f4cf4a;
+    --c-warn-soft: color-mix(in oklab, #f4cf4a 12%, var(--c-surface));
+    --c-bad: #fb9a52;
+    --c-bad-soft: color-mix(in oklab, #fb9a52 12%, var(--c-surface));
+}
+
+/*
+ * Tailwind color utilities read --color-* tokens, which resolve where they are
+ * declared. Re-declare them on any element carrying a look, so a part of a page
+ * (e.g. the previews on "My look") can show another template or palette.
+ */
+[data-shell] {
+    --color-side: var(--side-bg);
+    --color-side-fg: var(--side-fg);
+    --color-side-fg-2: var(--side-fg-2);
+    --color-side-muted: var(--side-muted);
+    --color-side-hover: var(--side-hover);
+    --color-side-active: var(--side-active);
+    --color-side-accent: var(--side-accent);
+    --color-side-line: var(--side-line);
+    --color-side-ring: var(--side-ring);
+}
+
+[data-vision] {
+    --color-ok: var(--c-ok);
+    --color-ok-soft: var(--c-ok-soft);
+    --color-warn: var(--c-warn);
+    --color-warn-soft: var(--c-warn-soft);
+    --color-bad: var(--c-bad);
+    --color-bad-soft: var(--c-bad-soft);
+}
+
+/* Higher contrast (the person's own setting): darker secondary text, stronger lines. */
+[data-contrast='high'] {
+    --c-fg-2: #1d1d22;
+    --c-muted: #44444c;
+    --c-faint: #5b5b65;
+    --c-line: #c2c2ca;
+    --c-line-strong: #8c8c97;
+}
+
+.dark[data-contrast='high'] {
+    --c-fg-2: #ededf1;
+    --c-muted: #c6c6ce;
+    --c-faint: #a9a9b3;
+    --c-line: #3b3b43;
+    --c-line-strong: #5d5d67;
+}
+
+[data-contrast='high'][data-shell='classic'] {
+    --side-muted: #d0d6e6;
+    --side-line: rgb(255 255 255 / 0.18);
 }
 
 @layer base {
@@ -310,6 +445,72 @@
         background: color-mix(in oklab, var(--c-canvas) 78%, transparent);
         backdrop-filter: saturate(1.6) blur(14px);
         -webkit-backdrop-filter: saturate(1.6) blur(14px);
+    }
+
+    /* The sidebar surface: a soft glow of the highlight color at the top. */
+    .shell-side {
+        background:
+            radial-gradient(140% 42% at 0% 0%, var(--side-glow), transparent 70%),
+            var(--side-bg);
+        color: var(--side-fg);
+    }
+
+    /* Name of an icon-only (collapsed) sidebar entry, fixed on top of the page. */
+    .side-tip {
+        position: fixed;
+        z-index: 60;
+        translate: 0 -50%;
+        padding: 0.3rem 0.6rem;
+        border-radius: 8px;
+        background: var(--c-fg);
+        color: var(--c-canvas);
+        font-size: 12.5px;
+        font-weight: 500;
+        white-space: nowrap;
+        box-shadow: var(--shadow-pop);
+        pointer-events: none;
+        animation: var(--animate-fade-in);
+    }
+
+    .side-tip-rtl {
+        translate: -100% -50%;
+    }
+
+    /* The header "New" button: the highlight color with a soft glow. */
+    .new-button {
+        background:
+            linear-gradient(180deg, rgb(255 255 255 / 0.16), transparent 60%),
+            var(--brand);
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.2),
+            0 6px 16px -6px color-mix(in oklab, var(--brand) 70%, transparent);
+    }
+
+    .new-button:hover {
+        background-color: var(--brand-hover);
+        translate: 0 -1px;
+    }
+
+    /* The person's initials in the header. */
+    .avatar {
+        background:
+            radial-gradient(120% 120% at 0% 0%, color-mix(in oklab, var(--brand) 55%, white) 0%, transparent 65%),
+            var(--brand);
+        box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
+    }
+
+    /* The bell rings once when something is waiting (not with reduced motion). */
+    .bell-ring {
+        transform-origin: 50% 0;
+        animation: bell-ring 900ms var(--ease-soft) 1;
+    }
+
+    @keyframes bell-ring {
+        0%, 100% { rotate: 0deg; }
+        20% { rotate: 14deg; }
+        40% { rotate: -11deg; }
+        60% { rotate: 7deg; }
+        80% { rotate: -4deg; }
     }
 
     .tabular {

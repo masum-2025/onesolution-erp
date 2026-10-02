@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { CircleAlert, CircleCheck, ImagePlus, Lock, Trash2 } from 'lucide-vue-next';
+import { CircleAlert, CircleCheck, ImagePlus, Lock, Plus, Trash2, X } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -38,6 +38,8 @@ watch(data, (value) => {
         product_name: v.product_name ?? '',
         primary_color: v.primary_color ?? value.resolved.primary_color,
         secondary_color: v.secondary_color ?? '',
+        band_colors: [...(v.band_colors ?? [])],
+        side_band_color: v.side_band_color ?? '',
         font_key: v.font_key ?? 'inter',
         support_email: v.support_email ?? '',
         support_phone: v.support_phone ?? '',
@@ -53,6 +55,18 @@ const primaryProblem = computed(() => contrastProblem(form.primary_color, true))
 const secondaryProblem = computed(() => (form.secondary_color ? contrastProblem(form.secondary_color, false) : null));
 const previewColor = computed(() => (/^#[0-9A-Fa-f]{6}$/.test(form.primary_color ?? '') ? form.primary_color : '#2B4C9B'));
 
+// Brand bands: up to four colors along the top of the header, one along the sidebar's.
+const HEX = /^#[0-9A-Fa-f]{6}$/;
+const MAX_BANDS = 4;
+
+function addBand() {
+    if (form.band_colors.length < MAX_BANDS) form.band_colors.push(form.band_colors.at(-1) ?? previewColor.value);
+}
+
+function removeBand(index) {
+    form.band_colors.splice(index, 1);
+}
+
 const nullable = (value) => (typeof value === 'string' && value.trim() !== '' ? value.trim() : null);
 const texts = (value) => Object.fromEntries(Object.entries(value).map(([locale, text]) => [locale, nullable(text)]));
 
@@ -67,6 +81,8 @@ async function save() {
                 product_name: nullable(form.product_name),
                 primary_color: nullable(form.primary_color),
                 secondary_color: nullable(form.secondary_color),
+                band_colors: form.band_colors.filter((color) => HEX.test(color)),
+                side_band_color: nullable(form.side_band_color),
                 font_key: form.font_key,
                 support_email: nullable(form.support_email),
                 support_phone: nullable(form.support_phone),
@@ -201,6 +217,61 @@ async function togglePoweredBy(show) {
                             </template>
                         </AppField>
                     </div>
+                </fieldset>
+
+                <fieldset class="card space-y-4 p-5" :disabled="!canEdit">
+                    <legend class="sr-only">{{ t('partner.brand.bands') }}</legend>
+                    <div>
+                        <h2 class="text-[14.5px] font-semibold text-fg">{{ t('partner.brand.bands') }}</h2>
+                        <p class="mt-0.5 text-[12.5px] text-muted">{{ t('partner.brand.bands_hint') }}</p>
+                    </div>
+
+                    <!-- Preview: sidebar band beside the header band, as in the app. -->
+                    <div class="flex h-3 overflow-hidden rounded-md ring-1 ring-line" aria-hidden="true">
+                        <span class="w-1/4 bg-[#0f1630]">
+                            <span v-if="HEX.test(form.side_band_color)" class="block h-full" :style="{ background: form.side_band_color }" />
+                        </span>
+                        <span v-for="(color, index) in form.band_colors" :key="index" class="flex-1" :style="{ background: HEX.test(color) ? color : 'transparent' }" />
+                        <span v-if="!form.band_colors.length" class="flex-1 bg-subtle" />
+                    </div>
+
+                    <AppField :label="t('partner.brand.band_colors')" :hint="t('partner.brand.band_colors_hint')" :error="errors.band_colors" optional>
+                        <template #default>
+                            <ul class="flex flex-wrap items-center gap-2">
+                                <li v-for="(color, index) in form.band_colors" :key="index" class="flex items-center gap-1.5 rounded-lg border border-line p-1 pe-1.5">
+                                    <input
+                                        type="color"
+                                        class="size-8 shrink-0 cursor-pointer rounded-md border-0 bg-transparent p-0 disabled:cursor-default"
+                                        :value="HEX.test(color) ? color : '#2B4C9B'"
+                                        :aria-label="t('partner.brand.band_color_n', { n: index + 1 })"
+                                        @input="form.band_colors[index] = $event.target.value.toUpperCase()"
+                                    />
+                                    <input v-model="form.band_colors[index]" class="w-[5.5rem] bg-transparent font-mono text-[12.5px] uppercase outline-none" maxlength="7" dir="ltr" :aria-label="t('partner.brand.band_color_n', { n: index + 1 })" />
+                                    <button type="button" class="grid size-6 place-items-center rounded text-muted hover:bg-subtle hover:text-fg" :aria-label="t('partner.brand.band_remove', { n: index + 1 })" @click="removeBand(index)">
+                                        <X class="size-3.5" aria-hidden="true" />
+                                    </button>
+                                </li>
+                                <li v-if="form.band_colors.length < MAX_BANDS">
+                                    <AppButton size="sm" :icon="Plus" @click="addBand">{{ t('partner.brand.band_add') }}</AppButton>
+                                </li>
+                            </ul>
+                        </template>
+                    </AppField>
+
+                    <AppField :label="t('partner.brand.side_band_color')" :hint="t('partner.brand.side_band_color_hint')" :error="errors.side_band_color" optional>
+                        <template #default="{ id, invalid, describedby }">
+                            <div class="flex items-center gap-2 sm:max-w-xs">
+                                <input
+                                    type="color"
+                                    class="size-10 shrink-0 cursor-pointer rounded-lg border border-line bg-surface p-1 disabled:cursor-default"
+                                    :value="HEX.test(form.side_band_color) ? form.side_band_color : '#FFFFFF'"
+                                    :aria-label="t('partner.brand.side_band_color')"
+                                    @input="form.side_band_color = $event.target.value.toUpperCase()"
+                                />
+                                <input :id="id" v-model="form.side_band_color" class="field-input font-mono uppercase" maxlength="7" placeholder="#FFFFFF" dir="ltr" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
+                            </div>
+                        </template>
+                    </AppField>
                 </fieldset>
 
                 <section class="card p-5">

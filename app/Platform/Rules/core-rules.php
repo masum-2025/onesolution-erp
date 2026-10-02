@@ -744,4 +744,30 @@ return [
         'category' => 'security',
         'sort_order' => 164,
     ],
+    // Look of the app (sidebar and header). A level may lock it so everyone below
+    // sees the same; otherwise each person may pick their own (users.ui_preferences).
+    // Readability settings (colour vision, contrast, light/dark) are always the person's own.
+    [
+        'key' => 'ui.shell_template',
+        'type' => 'enum',
+        'schema' => ['enum' => ['classic', 'light']],
+        'default' => 'classic',
+        'label' => 'rules.core.ui_shell_template.label',
+        'description' => 'rules.core.ui_shell_template.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
+        'category' => 'appearance',
+        'sort_order' => 170,
+    ],
+    [
+        'key' => 'ui.accent',
+        'type' => 'enum',
+        // "brand" = the partner's brand color; the others are fixed, contrast-checked colors.
+        'schema' => ['enum' => ['brand', 'indigo', 'blue', 'teal', 'green', 'violet', 'rose', 'orange', 'slate']],
+        'default' => 'brand',
+        'label' => 'rules.core.ui_accent.label',
+        'description' => 'rules.core.ui_accent.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
+        'category' => 'appearance',
+        'sort_order' => 171,
+    ],
 ];

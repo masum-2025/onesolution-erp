@@ -72,4 +72,9 @@ return [
         'only_owner' => 'You are the only owner of :name, which has other members. Make one of them an owner first.',
         'partner_owner' => 'You own the partner account :name. Hand it over first.',
     ],
+
+    'appearance' => [
+        'saved' => 'Your look is saved.',
+        'invalid' => 'Choose one of the options shown.',
+    ],
 ];

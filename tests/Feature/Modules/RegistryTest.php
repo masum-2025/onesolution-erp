@@ -72,4 +72,29 @@ it('rejects invalid manifests', function (array $manifests, string $problem) {
     'bad key' => [[manifest('Alpha Module')], 'snake_case'],
     'self dependency' => [[manifest('alpha', ['requires' => ['alpha']])], 'cannot require itself'],
     'no sectors' => [[manifest('alpha', ['sectors' => []])], 'must not be empty'],
+    'menu permission not declared' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'menu' => [
+        ['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'permission' => 'alpha.manage'],
+    ]])], 'not one of the module'],
+    'menu child without route' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'menu' => [
+        ['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'children' => [['key' => 'b', 'label' => 'y']]],
+    ]])], 'menu child is missing route'],
+    'bad section' => [[manifest('alpha', ['menu' => [['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'section' => 'Money Movement']]])], 'section'],
+    'quick action without permission' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'quick_actions' => [
+        ['key' => 'new', 'label' => 'x', 'route' => '/a/new'],
+    ]])], 'quick action permission'],
+    'attention not a list' => [[manifest('alpha', ['attention' => ['x' => 'Foo']])], 'attention must be a list'],
 ]);
+
+it('reads sections, sub-pages and quick actions from a manifest', function () {
+    $module = ModuleRegistry::fromManifests([manifest('alpha', [
+        'permissions' => ['alpha.view', 'alpha.manage'],
+        'menu' => [['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'section' => 'people', 'children' => [
+            ['key' => 'list', 'label' => 'y', 'route' => '/a', 'permission' => 'alpha.view'],
+        ]]],
+        'quick_actions' => [['key' => 'new', 'label' => 'z', 'route' => '/a/new', 'permission' => 'alpha.manage']],
+    ])], ['starter'])->get('alpha');
+
+    expect($module->menu[0]['children'])->toHaveCount(1)
+        ->and($module->quickActions[0]['permission'])->toBe('alpha.manage')
+        ->and($module->attention)->toBe([]);
+});

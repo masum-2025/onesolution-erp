@@ -24,6 +24,10 @@ class UpdateBrandRequest extends StrictFormRequest
             'product_name' => ['sometimes', 'nullable', 'string', 'max:60'],
             'primary_color' => ['sometimes', 'nullable', 'string', self::COLOR],
             'secondary_color' => ['sometimes', 'nullable', 'string', self::COLOR],
+            // Thin strips under the header (up to four colors, e.g. the logo's) and, level with it, the sidebar's brand row.
+            'band_colors' => ['sometimes', 'nullable', 'array', 'list', 'max:4'],
+            'band_colors.*' => ['required', 'string', self::COLOR],
+            'side_band_color' => ['sometimes', 'nullable', 'string', self::COLOR],
             'font_key' => ['sometimes', 'nullable', 'string', Rule::in(array_keys((array) config('branding.fonts')))],
             'support_email' => ['sometimes', 'nullable', 'string', 'email', 'max:255'],
             'support_phone' => ['sometimes', 'nullable', 'string', 'regex:/^\+?[0-9 ()\-]{5,30}$/'],

@@ -16,8 +16,12 @@
     <script nonce="{{ Vite::cspNonce() }}">
         // Before first paint: theme and language from this browser's saved preferences.
         (function () {
-            var d = document.documentElement, theme = 'system', locale = null;
-            try { theme = localStorage.getItem('os.theme') || 'system'; locale = localStorage.getItem('os.locale'); } catch (e) {}
+            var d = document.documentElement, theme = 'system', locale = null, shell = null, vision = null, contrast = null;
+            try { theme = localStorage.getItem('os.theme') || 'system'; locale = localStorage.getItem('os.locale'); shell = localStorage.getItem('os.shell'); vision = localStorage.getItem('os.vision'); contrast = localStorage.getItem('os.contrast'); } catch (e) {}
+            // Look of the app as last applied here (the server's answer replaces it once loaded).
+            d.setAttribute('data-shell', shell === 'light' ? 'light' : 'classic');
+            if (vision === 'blue_orange') d.setAttribute('data-vision', vision);
+            if (contrast === 'high') d.setAttribute('data-contrast', contrast);
             var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             d.classList.toggle('dark', dark);
             if (locale && @json($locales).indexOf(locale) !== -1) { d.lang = locale; d.dir = @json($rtlLocales).indexOf(locale) !== -1 ? 'rtl' : 'ltr'; }

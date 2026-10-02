@@ -79,6 +79,8 @@ class PartnerBrandController extends Controller
                 'product_name' => $brand->product_name,
                 'primary_color' => $brand->primary_color,
                 'secondary_color' => $brand->secondary_color,
+                'band_colors' => $brand->band_colors ?? [],
+                'side_band_color' => $brand->side_band_color,
                 'font_key' => $brand->font_key,
                 'tagline' => (object) ($brand->tagline ?? []),
                 'login_title' => (object) ($brand->login_title ?? []),

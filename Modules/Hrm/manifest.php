@@ -161,7 +161,18 @@ return [
             'route' => '/hrm',
             'icon' => 'users',
             'order' => 10,
+            'section' => 'people',
+            'children' => [
+                ['key' => 'employees', 'label' => 'hrm::module.menu_employees', 'route' => '/hrm', 'permission' => 'hrm.view'],
+                ['key' => 'positions', 'label' => 'hrm::module.menu_positions', 'route' => '/hrm/positions', 'permission' => 'hrm.view'],
+                ['key' => 'fields', 'label' => 'hrm::module.menu_fields', 'route' => '/hrm/fields', 'permission' => 'hrm.configure'],
+                ['key' => 'import', 'label' => 'hrm::module.menu_import', 'route' => '/hrm/import', 'permission' => 'hrm.manage'],
+            ],
         ],
+    ],
+    // The header "New" menu.
+    'quick_actions' => [
+        ['key' => 'hire', 'label' => 'hrm::module.new_employee', 'route' => '/hrm/new', 'permission' => 'hrm.manage', 'icon' => 'user-plus'],
     ],
     // Other modules listen to these (Attendance, Payroll); payloads carry ids only.
     'events' => [

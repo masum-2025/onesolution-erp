@@ -5,6 +5,7 @@ namespace App\Platform\Tenancy\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Platform\Access\AccessResolver;
 use App\Platform\Access\Models\Role;
+use App\Platform\Appearance\AppearanceResolver;
 use App\Platform\Branding\BrandResolver;
 use App\Platform\Legal\Services\LegalService;
 use App\Platform\Partners\HostContext;
@@ -37,6 +38,7 @@ class MeController extends Controller
         HostContext $host,
         AccessResolver $access,
         SignInRequirements $requirements,
+        AppearanceResolver $appearance,
     ): JsonResponse {
         $user = $request->user();
         $active = $this->activeContext($request, $source, $resolver, $context, $access);
@@ -71,6 +73,8 @@ class MeController extends Controller
                 $context->hasOrganization() ? $context->organization() : $host->client(),
             ),
             'locales' => config('tenancy.supported_locales'),
+            // Look of the app here: the person's choices unless a level above locked them.
+            'appearance' => $appearance->for($user),
         ]]);
     }
 

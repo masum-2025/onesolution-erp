@@ -23,6 +23,10 @@ return [
         'support_email' => env('BRAND_SUPPORT_EMAIL'),
         'logo_url' => env('BRAND_LOGO_URL', '/brand/house/logo.png'),
         'mark_url' => env('BRAND_MARK_URL', '/brand/house/mark.png'),
+        // The logo's colors as a strip under the header, and its white level with
+        // it under the sidebar's brand row. Empty = no band.
+        'band_colors' => ['#2B4C9B', '#DD5144', '#23A562'],
+        'side_band_color' => '#FFFFFF',
         'tagline' => [
             'en' => 'the symbol of freedom',
             'bn' => 'স্বাধীনতার প্রতীক',

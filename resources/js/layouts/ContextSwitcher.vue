@@ -8,6 +8,9 @@ import { enterContext, session } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 
+// Icon only, for the collapsed sidebar.
+defineProps({ compact: Boolean });
+
 const router = useRouter();
 const context = computed(() => session.me?.context);
 
@@ -50,16 +53,20 @@ async function switchTo(target, name, path) {
             <button
                 type="button"
                 v-bind="attrs"
-                class="flex w-full items-center gap-2.5 rounded-xl p-1.5 text-start transition-colors hover:bg-subtle"
+                class="flex w-full items-center gap-2.5 rounded-xl border border-side-line bg-side-hover text-start transition-colors hover:border-side-ring hover:bg-side-active"
+                :class="compact ? 'justify-center p-1' : 'p-2'"
+                :title="compact ? context?.name : undefined"
                 @click="toggle(false)"
                 @keydown.down.prevent="toggle(true)"
             >
-                <OrgTypeIcon :type="context?.type === 'partner' ? 'partner' : context?.organization_type ?? 'company'" size="lg" />
-                <span class="min-w-0 flex-1">
-                    <span class="block truncate text-[13.5px] leading-tight font-semibold text-fg">{{ context?.name }}</span>
-                    <span class="mt-0.5 block truncate text-[12px] leading-tight text-muted">{{ subtitle }}</span>
-                </span>
-                <ChevronsUpDown class="size-4 shrink-0 text-faint" aria-hidden="true" />
+                <OrgTypeIcon :type="context?.type === 'partner' ? 'partner' : context?.organization_type ?? 'company'" size="md" />
+                <template v-if="!compact">
+                    <span class="min-w-0 flex-1">
+                        <span class="block truncate text-[13.5px] leading-tight font-semibold text-side-fg">{{ context?.name }}</span>
+                        <span class="mt-0.5 block truncate text-[12px] leading-tight text-side-muted">{{ subtitle }}</span>
+                    </span>
+                    <ChevronsUpDown class="size-4 shrink-0 text-side-muted" aria-hidden="true" />
+                </template>
             </button>
         </template>
     </AppMenu>

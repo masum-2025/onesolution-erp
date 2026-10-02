@@ -58,7 +58,51 @@ it('validates brand input', function (array $body, string $field) {
     'unknown font' => [['font_key' => 'comic_sans'], 'font_key'],
     'unknown field' => [['partner_id' => 'x'], 'partner_id'],
     'unsupported language' => [['login_text' => ['fr' => 'Bonjour']], 'login_text'],
+    'band color not a color' => [['band_colors' => ['#2B4C9B', 'red']], 'band_colors.1'],
+    'css injection in a band' => [['band_colors' => ['#000;}body{display:none']], 'band_colors.0'],
+    'too many band colors' => [['band_colors' => ['#111111', '#222222', '#333333', '#444444', '#555555']], 'band_colors'],
+    'band colors keyed' => [['band_colors' => ['a' => '#111111']], 'band_colors'],
+    'sidebar band not a color' => [['side_band_color' => 'white'], 'side_band_color'],
 ]);
+
+it('keeps the brand bands: the header\'s colors and the sidebar\'s', function () {
+    $this->asToken($this->token)->patchJson('/api/partner/brand', [
+        'band_colors' => ['#0f766e', '#f59e0b'],
+        'side_band_color' => '#ffffff',
+    ])->assertOk()
+        ->assertJsonPath('data.values.band_colors', ['#0F766E', '#F59E0B'])
+        ->assertJsonPath('data.resolved.band_colors', ['#0F766E', '#F59E0B'])
+        ->assertJsonPath('data.resolved.side_band_color', '#FFFFFF');
+
+    // Empty = no band.
+    $this->asToken($this->token)->patchJson('/api/partner/brand', ['band_colors' => [], 'side_band_color' => null])
+        ->assertOk()
+        ->assertJsonPath('data.resolved.band_colors', [])
+        ->assertJsonPath('data.resolved.side_band_color', null);
+});
+
+it('shows the bands to the partner\'s clients only', function (string $client, array $bands) {
+    $this->asToken($this->token)->patchJson('/api/partner/brand', ['band_colors' => ['#0f766e', '#f59e0b']])->assertOk();
+    // The token's partner user stays cached in the guard otherwise.
+    auth()->forgetGuards();
+
+    spaSession($this, createMember($this->w->{$client}), $this->w->{$client});
+    $this->getJson('/api/me')
+        ->assertJsonPath('data.context.id', $this->w->{$client}->id)
+        ->assertJsonPath('data.brand.band_colors', $bands);
+})->with([
+    'own client' => ['c1', ['#0F766E', '#F59E0B']],
+    'another partner\'s client' => ['c4', []],
+]);
+
+it('gives the house brand the logo\'s colors as bands', function () {
+    spaSession($this, createMember($this->w->c1), $this->w->c1);
+
+    $this->w->partnerA->forceFill(['is_house' => true])->save();
+    $this->getJson('/api/me')
+        ->assertJsonPath('data.brand.band_colors', ['#2B4C9B', '#DD5144', '#23A562'])
+        ->assertJsonPath('data.brand.side_band_color', '#FFFFFF');
+});
 
 it('stores raster images privately and refuses SVG', function () {
     $this->asToken($this->token)->postJson('/api/partner/brand/assets/logo_light', [
