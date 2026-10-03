@@ -45,6 +45,7 @@ return [
 
     'sections' => [
         'people' => 'মানুষ',
+        'finance' => 'অর্থ',
         'business' => 'ব্যবসা',
         'governance' => 'গভর্ন্যান্স',
         'ai' => 'এআই',

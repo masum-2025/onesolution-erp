@@ -2088,6 +2088,31 @@ Rules: `fiscal_year_start`, `journal_approval_above`, `allow_backdated_entries_d
 php vendor/bin/pest tests/Feature/Accounting
 ```
 
+### Screens (ACC-2)
+
+Code: `Modules/Accounting/resources/js` (routes, pages, `components/BooksGate.vue`, `lib.js`,
+`locales/{en,bn}/accounting.json`). Sidebar section **Finance**.
+
+- **Journal entries** (`/accounting`): filters (status, dates, search), paged list with status
+  badges; `/accounting/approvals` lists entries waiting for approval.
+- **Journal form** (`/accounting/journals/new`, `…/:id/edit`): lines with account, debit,
+  credit and branch/department; running totals and the difference; a new line offers the
+  balancing amount; "Save draft" or "Save and send". Amounts are typed as text (Bangla digits,
+  separators and ৳ accepted) and converted to minor units without floats (`parseAmount`).
+- **Journal page**: lines, status, source, links between an entry and its reversal; buttons
+  from the server's `can` (send, take back, approve with confirmation, reject and reverse with
+  a reason, change or remove a draft); printable.
+- **Chart of accounts**, **Reports** (trial balance, profit and loss, balance sheet, ledger;
+  per branch/department; printable), **Set up the books**, **Fiscal years** (close/reopen with
+  reason), **Posting accounts**. Every screen shows the setup offer while the books are not set
+  up, and the server's message at a group, branch or department.
+- **Dashboard** widgets: income and expenses this month (vs the same days last month, six-month
+  trend), entries waiting for approval, latest entries; the bell counts entries an approver may
+  approve (not their own). Quick action "New journal entry".
+- **Personal workspaces**: `access.separation_of_duties` may now be set at plan level; the
+  personal plans set it to `[]` (`database/seeders/data/rule-values.php`), so the one person of
+  a workspace writes and posts entries. Upgrading to a business plan brings the pairs back.
+
 ### Future expansion (Accounting)
 
 - A new sector is a new chart file (or none: `general`) and a sector package rule; a new

@@ -46,6 +46,7 @@ return [
 
     'sections' => [
         'people' => 'People',
+        'finance' => 'Finance',
         'business' => 'Business',
         'governance' => 'Governance',
         'ai' => 'AI',

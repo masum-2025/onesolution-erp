@@ -88,7 +88,8 @@ return [
         'default' => [],
         'label' => 'rules.core.access_separation_of_duties.label',
         'description' => 'rules.core.access_separation_of_duties.description',
-        'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+        // Plan level: one-person plans (personal workspaces) need no second person.
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
         // Weakening separation of duties needs a second person.
         'sensitive' => true,
         'category' => 'access',

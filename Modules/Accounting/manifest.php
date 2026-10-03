@@ -5,6 +5,11 @@
 | Business numbers never live here; they are rules (Rules::get('accounting.*')).
 */
 
+use Modules\Accounting\Dashboard\ExpensesThisMonth;
+use Modules\Accounting\Dashboard\IncomeThisMonth;
+use Modules\Accounting\Dashboard\RecentJournals;
+use Modules\Accounting\Dashboard\WaitingApproval;
+
 return [
     'key' => 'accounting',
     'name' => 'accounting::module.name',
@@ -119,7 +124,34 @@ return [
             'route' => '/accounting',
             'icon' => 'book',
             'order' => 40,
+            'section' => 'finance',
+            'children' => [
+                ['key' => 'journals', 'label' => 'accounting::module.menu_journals', 'route' => '/accounting', 'permission' => 'accounting.view'],
+                ['key' => 'approvals', 'label' => 'accounting::module.menu_approvals', 'route' => '/accounting/approvals', 'permission' => 'accounting.approve'],
+                ['key' => 'accounts', 'label' => 'accounting::module.menu_accounts', 'route' => '/accounting/accounts', 'permission' => 'accounting.view'],
+                ['key' => 'reports', 'label' => 'accounting::module.menu_reports', 'route' => '/accounting/reports', 'permission' => 'accounting.view'],
+            ],
         ],
+    ],
+    // The module's dashboard; `overview` widgets also show on the main overview.
+    'dashboard' => ['widgets' => [
+        ['key' => 'income', 'label' => 'accounting::dashboard.income', 'type' => 'stat', 'provider' => IncomeThisMonth::class, 'permission' => 'accounting.view', 'overview' => true],
+        ['key' => 'expenses', 'label' => 'accounting::dashboard.expenses', 'type' => 'stat', 'provider' => ExpensesThisMonth::class, 'permission' => 'accounting.view', 'overview' => true],
+        ['key' => 'waiting', 'label' => 'accounting::dashboard.waiting', 'type' => 'stat', 'provider' => WaitingApproval::class, 'permission' => 'accounting.view'],
+        ['key' => 'recent', 'label' => 'accounting::dashboard.recent', 'type' => 'list', 'provider' => RecentJournals::class, 'permission' => 'accounting.view', 'size' => 2],
+    ]],
+    // Work waiting in the header bell: entries to approve (for approvers).
+    'attention' => [WaitingApproval::class],
+    // Setup screens shown on the module's settings page (next to its rules).
+    'settings' => ['pages' => [
+        ['key' => 'setup', 'label' => 'accounting::module.menu_setup', 'route' => '/accounting/setup', 'permission' => 'accounting.manage'],
+        ['key' => 'accounts', 'label' => 'accounting::module.menu_accounts', 'route' => '/accounting/accounts', 'permission' => 'accounting.view'],
+        ['key' => 'fiscal_years', 'label' => 'accounting::module.menu_fiscal_years', 'route' => '/accounting/fiscal-years', 'permission' => 'accounting.view'],
+        ['key' => 'posting_accounts', 'label' => 'accounting::module.menu_posting_accounts', 'route' => '/accounting/posting-accounts', 'permission' => 'accounting.view'],
+    ]],
+    // The header "New" menu.
+    'quick_actions' => [
+        ['key' => 'journal', 'label' => 'accounting::module.new_journal', 'route' => '/accounting/journals/new', 'permission' => 'accounting.post', 'icon' => 'file-plus'],
     ],
     // Other modules listen to these; payloads carry ids only.
     'events' => ['accounting.journal.posted'],
@@ -130,8 +162,4 @@ return [
     ],
     'is_core' => false,
     'requires_consent' => false,
-    // Every module has a dashboard and a settings page; widgets and own setting
-    // screens come with the Accounting screens (ACC-2); its rules show already.
-    'dashboard' => ['widgets' => []],
-    'settings' => ['pages' => []],
 ];

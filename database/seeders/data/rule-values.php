@@ -66,6 +66,9 @@ return [
     // Personal plans (Phase 5C): one person; a team upgrades to a company.
     ['key' => 'plans.max_users', 'plan' => 'personal_free', 'value' => 1, 'reason' => 'Personal plan: one person.'],
     ['key' => 'plans.max_users', 'plan' => 'personal_plus', 'value' => 1, 'reason' => 'Personal plan: one person.'],
+    // One person keeps the books alone: nobody else could approve (separation of duties).
+    ['key' => 'access.separation_of_duties', 'plan' => 'personal_free', 'value' => [], 'reason' => 'Personal plan: one person, no second approver.'],
+    ['key' => 'access.separation_of_duties', 'plan' => 'personal_plus', 'value' => [], 'reason' => 'Personal plan: one person, no second approver.'],
     ['key' => 'plans.max_storage_mb', 'plan' => 'personal_free', 'value' => 500, 'reason' => 'Personal Free: 500 MB.'],
     ['key' => 'plans.max_storage_mb', 'plan' => 'personal_plus', 'value' => 5120, 'reason' => 'Personal Plus: 5 GB.'],
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'personal_plus', 'value' => 2000, 'reason' => 'Personal Plus storage limit.'],
