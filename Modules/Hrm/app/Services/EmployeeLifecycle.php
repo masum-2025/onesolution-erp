@@ -47,6 +47,7 @@ class EmployeeLifecycle
         private AuditLogger $audit,
         private CurrentContext $context,
         private CustomFields $customFields,
+        private ReportingLines $lines,
     ) {}
 
     /**
@@ -413,6 +414,10 @@ class EmployeeLifecycle
             $manager = $this->companyEmployees($company)->whereKey($data['manager_id'])->first();
             if ($manager === null || ! $manager->status->isEmployed() || $manager->getKey() === $employee?->getKey()) {
                 $errors['manager_id'] = __('hrm::hrm.validation.manager');
+            } elseif (($line = $this->lines->problem($this->companyEmployees($company), $employee, $manager, $max = (int) $this->rules->get('hrm.max_reporting_depth', $context))) !== null) {
+                $errors['manager_id'] = $line['problem'] === 'loop'
+                    ? __('hrm::hrm.validation.manager_loop', ['chain' => implode(' → ', $line['chain'])])
+                    : __('hrm::hrm.validation.manager_too_deep', ['max' => $max]);
             }
         }
 

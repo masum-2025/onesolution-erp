@@ -93,6 +93,9 @@ it('rejects invalid manifests', function (array $manifests, string $problem) {
     'duplicate widget' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'dashboard' => ['widgets' => [['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view'], ['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view']]]])], 'unique'],
     'bad widget size' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'dashboard' => ['widgets' => [['size' => 4] + ['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view']]]])], 'size must be'],
     'settings page without route' => [[manifest('alpha', ['settings' => ['pages' => [['key' => 'a', 'label' => 'x']]]])], 'settings page is missing route'],
+    'notification of another module' => [[manifest('alpha', ['notifications' => ['beta.sent' => ['channels' => ['mail'], 'placeholders' => [], 'audience' => 'client', 'path' => '/a']]])], 'notification [beta.sent]'],
+    'notification with an unknown channel' => [[manifest('alpha', ['notifications' => ['alpha.sent' => ['channels' => ['fax'], 'placeholders' => [], 'audience' => 'client', 'path' => '/a']]])], 'notification [alpha.sent]'],
+    'notifications as a list' => [[manifest('alpha', ['notifications' => [['channels' => ['mail']]]])], 'keyed by notification key'],
 ]);
 
 it('reads sections, sub-pages and quick actions from a manifest', function () {
@@ -116,5 +119,5 @@ it('gives every installed module a dashboard and a settings page', function () {
         }
     }
 
-    expect(app(ModuleRegistry::class)->get('hrm')->widgets)->toHaveCount(5);
+    expect(app(ModuleRegistry::class)->get('hrm')->widgets)->toHaveCount(6);
 });

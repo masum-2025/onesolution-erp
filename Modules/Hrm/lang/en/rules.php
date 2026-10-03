@@ -79,7 +79,16 @@ return [
         'label' => 'Import file size (KB, most)',
         'description' => 'Largest CSV file accepted for importing employees.',
     ],
+    'max_reporting_depth' => [
+        'label' => 'Longest reporting line',
+        'description' => 'How many managers may sit above anyone. Keeps the org chart readable.',
+    ],
+    'document_expiry_alert_days' => [
+        'label' => 'Document expiry reminders (days before)',
+        'description' => 'HR is told this many days before an employee document expires, once for each number. Empty = no reminders.',
+    ],
     'categories' => [
+        'structure' => 'Reporting lines',
         'employment' => 'Employment',
         'numbering' => 'Numbering',
         'personal' => 'Personal details',

@@ -6,6 +6,7 @@
 */
 
 use Modules\Hrm\Dashboard\ByPosition;
+use Modules\Hrm\Dashboard\ExpiringDocuments;
 use Modules\Hrm\Dashboard\Headcount;
 use Modules\Hrm\Dashboard\Joiners;
 use Modules\Hrm\Dashboard\OnProbation;
@@ -158,6 +159,30 @@ return [
             'category' => 'import',
             'sort_order' => 100,
         ],
+        [
+            'key' => 'hrm.max_reporting_depth',
+            'type' => 'integer',
+            // Longest chain of managers above anyone (keeps the org chart a readable tree).
+            'schema' => ['minimum' => 2, 'maximum' => 100],
+            'default' => 20,
+            'label' => 'hrm::rules.max_reporting_depth.label',
+            'description' => 'hrm::rules.max_reporting_depth.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'structure',
+            'sort_order' => 110,
+        ],
+        [
+            'key' => 'hrm.document_expiry_alert_days',
+            'type' => 'json',
+            // Days before a document expires when HR is told (each once), e.g. [30, 7, 1].
+            'schema' => ['type' => 'array', 'items' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 365], 'uniqueItems' => true, 'maxItems' => 5],
+            'default' => [30, 7, 1],
+            'label' => 'hrm::rules.document_expiry_alert_days.label',
+            'description' => 'hrm::rules.document_expiry_alert_days.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'documents',
+            'sort_order' => 75,
+        ],
     ],
     'menu' => [
         [
@@ -170,6 +195,7 @@ return [
             'children' => [
                 ['key' => 'employees', 'label' => 'hrm::module.menu_employees', 'route' => '/hrm', 'permission' => 'hrm.view'],
                 ['key' => 'positions', 'label' => 'hrm::module.menu_positions', 'route' => '/hrm/positions', 'permission' => 'hrm.view'],
+                ['key' => 'org_chart', 'label' => 'hrm::module.menu_org_chart', 'route' => '/hrm/org-chart', 'permission' => 'hrm.view'],
                 ['key' => 'fields', 'label' => 'hrm::module.menu_fields', 'route' => '/hrm/fields', 'permission' => 'hrm.configure'],
                 ['key' => 'import', 'label' => 'hrm::module.menu_import', 'route' => '/hrm/import', 'permission' => 'hrm.manage'],
             ],
@@ -182,7 +208,19 @@ return [
         ['key' => 'probation', 'label' => 'hrm::dashboard.probation', 'type' => 'stat', 'provider' => OnProbation::class, 'permission' => 'hrm.view', 'overview' => true],
         ['key' => 'by_position', 'label' => 'hrm::dashboard.by_position', 'type' => 'bars', 'provider' => ByPosition::class, 'permission' => 'hrm.view', 'size' => 2],
         ['key' => 'recent', 'label' => 'hrm::dashboard.recent', 'type' => 'list', 'provider' => RecentChanges::class, 'permission' => 'hrm.view', 'size' => 1],
+        ['key' => 'expiring', 'label' => 'hrm::dashboard.expiring', 'type' => 'list', 'provider' => ExpiringDocuments::class, 'permission' => 'hrm.view', 'overview' => true],
     ]],
+    // Work waiting in the header bell: documents to renew (for people who manage employees).
+    'attention' => [ExpiringDocuments::class],
+    // Messages HRM sends (wording in hrm::notifications; partners may reword them).
+    'notifications' => [
+        'hrm.document_expiring' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'count', 'documents', 'link'],
+            'audience' => 'client',
+            'path' => '/m/hrm',
+        ],
+    ],
     // Setup screens shown on the module's settings page (next to its rules).
     'settings' => ['pages' => [
         ['key' => 'positions', 'label' => 'hrm::module.menu_positions', 'route' => '/hrm/positions', 'permission' => 'hrm.view'],

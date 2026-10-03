@@ -14,6 +14,8 @@ export function hrmApi(organizationId) {
         updatePosition: (id, body) => api(`${base}/positions/${id}`, { method: 'PATCH', body }),
 
         employees: (query) => api(`${base}/employees`, { query }),
+        // One level of the org chart: the top (no manager) or one person's direct reports.
+        orgChart: (managerId = null) => api(`${base}/org-chart`, { query: { manager_id: managerId ?? undefined } }),
         employee: (id) => api(`${base}/employees/${id}`),
         hire: (body) => api(`${base}/employees`, { method: 'POST', body }),
         update: (id, body) => api(`${base}/employees/${id}`, { method: 'PATCH', body }),

@@ -8,5 +8,6 @@ return [
     'menu_positions' => 'পদ',
     'menu_fields' => 'অতিরিক্ত তথ্য',
     'menu_import' => 'ইমপোর্ট',
+    'menu_org_chart' => 'অর্গ চার্ট',
     'new_employee' => 'নতুন কর্মী',
 ];

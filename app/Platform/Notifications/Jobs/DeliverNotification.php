@@ -63,7 +63,7 @@ class DeliverNotification implements ShouldQueue
         }
 
         $wording = $templates->wording($partner, $delivery->notification_key, 'mail', $delivery->locale);
-        $action = __('notifications.templates.'.NotificationCatalog::slug($delivery->notification_key).'.action', [], $delivery->locale);
+        $action = __(app(NotificationCatalog::class)->textKey($delivery->notification_key, 'templates').'.action', [], $delivery->locale);
 
         $sender = $mail->send(
             $partner,

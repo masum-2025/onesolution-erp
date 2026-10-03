@@ -8,5 +8,6 @@ return [
     'menu_positions' => 'Positions',
     'menu_fields' => 'Extra fields',
     'menu_import' => 'Import',
+    'menu_org_chart' => 'Org chart',
     'new_employee' => 'New employee',
 ];

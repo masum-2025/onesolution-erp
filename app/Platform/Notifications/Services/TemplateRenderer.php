@@ -48,7 +48,7 @@ class TemplateRenderer
      */
     public function default(string $key, string $channel, string $locale): array
     {
-        $base = 'notifications.templates.'.NotificationCatalog::slug($key);
+        $base = $this->catalog->textKey($key, 'templates');
 
         return $channel === 'sms'
             ? ['subject' => null, 'body' => (string) __("{$base}.sms", [], $locale)]

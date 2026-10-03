@@ -212,6 +212,34 @@ final class ModuleRegistry
         }
 
         self::validateDashboardAndSettings($manifest);
+        self::validateNotifications($manifest);
+    }
+
+    /**
+     * Messages a module sends: keyed "{module}.{name}", with the channels,
+     * placeholders, audience and screen of a platform notification.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private static function validateNotifications(array $manifest): void
+    {
+        $key = $manifest['key'];
+
+        if (isset($manifest['notifications']) && (! is_array($manifest['notifications']) || ($manifest['notifications'] !== [] && array_is_list($manifest['notifications'])))) {
+            throw InvalidModuleManifest::because($key, 'notifications must be keyed by notification key');
+        }
+
+        foreach ($manifest['notifications'] ?? [] as $name => $definition) {
+            $valid = is_string($name) && str_starts_with($name, $key.'.') && preg_match('/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/', $name)
+                && is_array($definition['channels'] ?? null) && $definition['channels'] !== [] && array_diff($definition['channels'], ['mail', 'sms']) === []
+                && is_array($definition['placeholders'] ?? null)
+                && in_array($definition['audience'] ?? null, ['client', 'partner', 'person'], true)
+                && is_string($definition['path'] ?? null) && str_starts_with($definition['path'], '/');
+
+            if (! $valid) {
+                throw InvalidModuleManifest::because($key, "notification [{$name}] needs a \"{$key}.\" key, channels (mail/sms), placeholders, audience and path");
+            }
+        }
     }
 
     /** Widget types the app can draw (resources/js/components/dashboard). */

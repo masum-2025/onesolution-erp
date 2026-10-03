@@ -73,6 +73,16 @@ class Employee extends Model
     }
 
     /**
+     * People who report to this employee (any status; the org chart keeps the employed).
+     *
+     * @return HasMany<Employee, $this>
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'manager_id');
+    }
+
+    /**
      * @return HasMany<EmploymentEvent, $this>
      */
     public function events(): HasMany

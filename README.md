@@ -2001,14 +2001,37 @@ its own lazy chunk. The shell is not changed by a module (see "Module screens" b
 Rule cache: resolved rule maps are keyed by a fingerprint of the rules defined in code too, so
 a deploy that adds a rule or changes a default never reads a map cached before it.
 
+### Reporting lines, org chart and document expiry (HRM-3b)
+
+- Reporting lines stay a tree: a manager change that would close a loop is refused with the
+  loop spelled out ("A → C → B → A"), and a line may only be `hrm.max_reporting_depth`
+  managers long (20). New hires and imports cannot make loops (nobody reports to them yet), so
+  the check matters on edits and rehires; it runs in the same validation for all of them
+  (`Services\ReportingLines`).
+- `GET …/hrm/org-chart[?manager_id=]` (hrm.view): one level at a time, employed people only,
+  list fields only, up to 200 per level with the total. The top is everyone with no manager
+  inside the units the reader sees. Screen: `/hrm/org-chart` (sidebar "Org chart").
+- Document expiry: rule `hrm.document_expiry_alert_days` ([30, 7, 1]; empty = off).
+  `hrm:document-expiry` (daily 01:30 UTC, every client database) sends one message per
+  company to the people holding `hrm.manage`, listing each document due at a stage it has
+  not been reported at yet, and once more when it has expired (`hrm_document_alerts`,
+  stage = days or -1). Skips companies where HRM is off. Only the person's name, the
+  document title and the date are sent.
+- The same documents show in the HRM dashboard ("Documents to renew", also on the overview),
+  in the bell for people who manage employees, and as badges (icon + words) on the employee's
+  documents.
+- Modules may now declare their own notifications in the manifest (`notifications`, keys
+  "{module}.{name}"); wording lives in `{module}::notifications` and partners can reword them
+  like the platform's.
+
 ### Future expansion (HRM)
 
 - A new country or sector needs no code: kinds of employment, required details, the id
   document, probation and notice are rules (country-specific where it matters).
 - A sector's own employee details (MPO number for schools, licence for clinics) are extra
   fields an organization sets up itself; no code change.
-- Next: HRM-3b (org chart, manager loops refused, document expiry alerts).
-  Salary and bank details belong to Payroll.
+- Reminder days, line length and who is told are rules or permissions: a country or partner
+  changes them as data. Salary and bank details belong to Payroll.
 
 ## Browser app (frontend foundation)
 

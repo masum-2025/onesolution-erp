@@ -54,6 +54,8 @@ final readonly class ModuleDefinition
         // shows a "coming soon" dashboard or only the module's rules.
         public array $widgets = [],
         public array $settingsPages = [],
+        // Messages the module sends (NotificationCatalog), keyed "{module}.{name}".
+        public array $notifications = [],
     ) {}
 
     /**
@@ -84,6 +86,7 @@ final readonly class ModuleDefinition
             attention: array_values($manifest['attention'] ?? []),
             widgets: array_values($manifest['dashboard']['widgets'] ?? []),
             settingsPages: array_values($manifest['settings']['pages'] ?? []),
+            notifications: $manifest['notifications'] ?? [],
         );
     }
 

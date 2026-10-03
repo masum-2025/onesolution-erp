@@ -47,8 +47,8 @@ class PartnerTemplateController extends Controller
         return response()->json([
             'data' => array_map(fn (string $key) => [
                 'key' => $key,
-                'name' => __('notifications.catalog.'.NotificationCatalog::slug($key).'.name'),
-                'description' => __('notifications.catalog.'.NotificationCatalog::slug($key).'.description'),
+                'name' => __($this->catalog->textKey($key, 'catalog').'.name'),
+                'description' => __($this->catalog->textKey($key, 'catalog').'.description'),
                 'audience' => $this->catalog->get($key)['audience'],
                 'channels' => $this->catalog->get($key)['channels'],
                 'customized' => ($custom[$key] ?? collect())->map(fn ($row) => "{$row->channel}.{$row->locale}")->values(),
@@ -76,8 +76,8 @@ class PartnerTemplateController extends Controller
 
         return response()->json(['data' => [
             'key' => $notification,
-            'name' => __('notifications.catalog.'.NotificationCatalog::slug($notification).'.name'),
-            'description' => __('notifications.catalog.'.NotificationCatalog::slug($notification).'.description'),
+            'name' => __($this->catalog->textKey($notification, 'catalog').'.name'),
+            'description' => __($this->catalog->textKey($notification, 'catalog').'.description'),
             'placeholders' => array_map(fn (string $name) => ['name' => $name, 'description' => __("notifications.placeholders.{$name}")], $definition['placeholders']),
             'wording' => $wording,
             'can_edit' => $this->hasRole(PartnerUserRole::Owner),
@@ -127,7 +127,7 @@ class PartnerTemplateController extends Controller
             return response()->json(['data' => ['text' => $body, 'length' => mb_strlen($body), 'segments' => SmsText::segments($body), 'unicode' => SmsText::isUnicode($body)]]);
         }
 
-        $action = ['label' => __('notifications.templates.'.NotificationCatalog::slug($notification).'.action', [], $locale), 'url' => $values['link']];
+        $action = ['label' => __($this->catalog->textKey($notification, 'templates').'.action', [], $locale), 'url' => $values['link']];
         $rendered = $this->mail->render($partner, $body, $action, $locale);
 
         // The editor frames it from its own address, with its own policy (inline styles, no scripts).

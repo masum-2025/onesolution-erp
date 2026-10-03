@@ -17,10 +17,10 @@ it('groups module entries in sections with their sub-pages and quick actions', f
     expect($hrm['section'])->toBe('people')
         ->and($hrm['section_label'])->toBe('People')
         ->and($hrm['icon'])->toBe('users')
-        ->and(array_column($hrm['children'], 'key'))->toBe(['dashboard', 'employees', 'positions', 'fields', 'import', 'settings'])
+        ->and(array_column($hrm['children'], 'key'))->toBe(['dashboard', 'employees', 'positions', 'org_chart', 'fields', 'import', 'settings'])
         ->and($hrm['children'][0])->toBe(['key' => 'dashboard', 'label' => 'Dashboard', 'route' => '/m/hrm'])
         ->and($hrm['children'][1])->toBe(['key' => 'employees', 'label' => 'Employees', 'route' => '/hrm'])
-        ->and($hrm['children'][5])->toBe(['key' => 'settings', 'label' => 'Settings', 'route' => '/m/hrm/settings'])
+        ->and($hrm['children'][6])->toBe(['key' => 'settings', 'label' => 'Settings', 'route' => '/m/hrm/settings'])
         ->and($response->json('quick_actions'))->toBe([
             ['module' => 'hrm', 'key' => 'hire', 'label' => 'New employee', 'route' => '/hrm/new', 'icon' => 'user-plus'],
         ]);
@@ -32,7 +32,7 @@ it('shows only the sub-pages and quick actions the person may use', function () 
     $response = $this->asToken(orgToken($viewer, $this->w->c1))->getJson('/api/menu')->assertOk();
     $hrm = collect($response->json('data'))->firstWhere('module', 'hrm');
 
-    expect(array_column($hrm['children'], 'key'))->toBe(['dashboard', 'employees', 'positions', 'settings'])
+    expect(array_column($hrm['children'], 'key'))->toBe(['dashboard', 'employees', 'positions', 'org_chart', 'settings'])
         ->and($response->json('quick_actions'))->toBe([]);
 });
 

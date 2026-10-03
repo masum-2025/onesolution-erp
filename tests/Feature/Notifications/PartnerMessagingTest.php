@@ -172,9 +172,13 @@ it('counts SMS parts the way operators do', function (string $text, int $parts, 
 
 it('lists every message with the placeholders it may use and its default wording', function () {
     $this->asToken($this->ownerToken)->getJson('http://localhost/api/partner/templates')->assertOk()
-        ->assertJsonCount(19, 'data')
+        // 19 platform messages and HRM's (modules add their own).
+        ->assertJsonCount(20, 'data')
         ->assertJsonPath('data.0.key', 'support.requested')
         ->assertJsonPath('data.0.channels', ['mail', 'sms']);
+
+    $this->getJson('http://localhost/api/partner/templates/hrm.document_expiring')->assertOk()
+        ->assertJsonPath('data.name', 'Employee documents expiring');
 
     $this->getJson('http://localhost/api/partner/templates/support.requested')->assertOk()
         ->assertJsonPath('data.placeholders.0.name', 'product')

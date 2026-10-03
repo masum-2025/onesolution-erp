@@ -6,6 +6,7 @@ use Modules\Hrm\Http\Controllers\EmployeeController;
 use Modules\Hrm\Http\Controllers\EmployeeDocumentController;
 use Modules\Hrm\Http\Controllers\EmployeeImportController;
 use Modules\Hrm\Http\Controllers\EmploymentStepController;
+use Modules\Hrm\Http\Controllers\OrgChartController;
 use Modules\Hrm\Http\Controllers\PositionController;
 
 /*
@@ -19,6 +20,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
     ->group(function () {
         Route::get('form-options', [EmployeeController::class, 'formOptions']);
         Route::get('positions', [PositionController::class, 'index']);
+        Route::get('org-chart', OrgChartController::class);
         Route::get('custom-fields', [CustomFieldController::class, 'index']);
         Route::get('imports/columns', [EmployeeImportController::class, 'columns']);
         Route::get('imports', [EmployeeImportController::class, 'index']);

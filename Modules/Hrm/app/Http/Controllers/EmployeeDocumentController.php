@@ -15,6 +15,7 @@ use Modules\Hrm\Http\Controllers\Concerns\FindsHrmRecords;
 use Modules\Hrm\Http\EmployeePresenter;
 use Modules\Hrm\Http\Requests\EmployeeDocumentRequest;
 use Modules\Hrm\Models\EmployeeDocument;
+use Modules\Hrm\Services\DocumentExpiry;
 use Modules\Hrm\Services\EmployeeDocuments;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -27,15 +28,22 @@ class EmployeeDocumentController extends Controller
 {
     use FindsHrmRecords;
 
-    public function __construct(private EmployeeDocuments $documents, private EmployeePresenter $presenter) {}
+    public function __construct(private EmployeeDocuments $documents, private EmployeePresenter $presenter, private DocumentExpiry $expiry) {}
 
     public function index(string $organization, string $employee): JsonResponse
     {
         $employee = $this->employeeIn($this->findVisible($organization), $employee);
-        Gate::authorize('hrm.view', Organization::query()->findOrFail($employee->organization_id));
+        Gate::authorize('hrm.view', $unit = Organization::query()->findOrFail($employee->organization_id));
+
+        // Expired or expiring soon (by the unit's reminder days), shown next to each document.
+        $days = $this->expiry->daysFor($unit);
+        $today = $this->expiry->today($unit);
 
         return response()->json(['data' => $employee->documents()->orderByDesc('created_at')->get()
-            ->map(fn (EmployeeDocument $document) => $this->presenter->document($document))->values()]);
+            ->map(fn (EmployeeDocument $document) => [
+                ...$this->presenter->document($document),
+                'expiry' => DocumentExpiry::state($document->expires_on, $today, $days),
+            ])->values()]);
     }
 
     public function store(EmployeeDocumentRequest $request, string $organization, string $employee): JsonResponse

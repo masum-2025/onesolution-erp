@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import { ExternalLink, FileText, Paperclip, Trash2, Upload } from 'lucide-vue-next';
+import { CircleAlert, ExternalLink, FileText, Paperclip, Trash2, TriangleAlert, Upload } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -26,7 +26,8 @@ const props = defineProps({
 
 const list = useResource(() => props.hrm.documents(props.employeeId));
 const documents = computed(() => list.data.value?.data ?? []);
-const today = new Date().toISOString().slice(0, 10);
+// A date without a time: written as that same day everywhere.
+const dateOf = (document) => formatDate(document.expires_on, { dateStyle: 'medium', timeZone: 'UTC' });
 
 const adding = ref(false);
 const saving = ref(false);
@@ -131,9 +132,14 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     <span class="block truncate text-[13.5px] font-medium text-fg">{{ document.title }}</span>
                     <span class="block text-[12px] text-muted">{{ typeLabel(document.type) }} · {{ formatNumber(Math.ceil(document.size_bytes / 1024)) }} KB</span>
                 </span>
-                <AppBadge v-if="document.expires_on" :tone="document.expires_on < today ? 'bad' : 'outline'">
-                    {{ document.expires_on < today ? t('hrm.documents.expired', { date: formatDate(document.expires_on) }) : t('hrm.documents.expires', { date: formatDate(document.expires_on) }) }}
+                <!-- Expired / expiring soon (by the reminder days) carry an icon as well as a color. -->
+                <AppBadge v-if="document.expiry?.state === 'expired'" tone="bad" :icon="CircleAlert">
+                    {{ t('hrm.documents.expired', { date: dateOf(document) }) }}
                 </AppBadge>
+                <AppBadge v-else-if="document.expiry?.state === 'expiring'" tone="warn" :icon="TriangleAlert">
+                    {{ t('hrm.documents.expiring', { date: dateOf(document), days: formatNumber(document.expiry.days_left) }) }}
+                </AppBadge>
+                <AppBadge v-else-if="document.expires_on" tone="outline">{{ t('hrm.documents.expires', { date: dateOf(document) }) }}</AppBadge>
                 <AppButton size="icon-sm" variant="ghost" :icon="ExternalLink" :aria-label="t('hrm.documents.open')" @click="open(document)" />
                 <AppButton v-if="canEdit" size="icon-sm" variant="ghost" :icon="Trash2" :aria-label="t('hrm.documents.remove')" @click="remove(document)" />
             </li>

@@ -141,7 +141,8 @@
         "empty_title": "No documents",
         "empty_text": "Contracts, certificates and copies of ids kept for this employee appear here.",
         "expires": "Valid until {date}",
-        "expired": "Expired {date}"
+        "expired": "Expired {date}",
+        "expiring": "Expires {date} · in {days} days"
     },
     "positions": {
         "title": "Positions",
@@ -251,5 +252,18 @@
         "to_list": "See employees",
         "recent": "Recent imports",
         "recent_counts": "{rows} rows, {imported} imported"
+    },
+    "org_chart": {
+        "title": "Org chart",
+        "text": "Who reports to whom. Open a person to see the people who report to them.",
+        "back": "All employees",
+        "no_position": "No position",
+        "failed": "Could not load these people.",
+        "empty_title": "No one here yet",
+        "empty_text": "Hire people and set their managers to see the org chart.",
+        "toggle_one": "Show or hide the person who reports to {name}",
+        "toggle_other": "Show or hide the {shown} people who report to {name}",
+        "more_one": "1 more is not shown here. Use the employee list to find them.",
+        "more_other": "{shown} more are not shown here. Use the employee list to find them."
     }
 }

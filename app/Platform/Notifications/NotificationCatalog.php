@@ -2,6 +2,7 @@
 
 namespace App\Platform\Notifications;
 
+use App\Platform\Modules\ModuleRegistry;
 use InvalidArgumentException;
 
 /**
@@ -10,6 +11,9 @@ use InvalidArgumentException;
  * lang/{locale}/notifications.php under "templates.{key with dots as _}".
  * Partners may reword a notification but never add placeholders: only these
  * values are ever filled in.
+ *
+ * Modules add their own in the manifest (`notifications`, keys starting with
+ * the module key); their wording lives in "{module}::notifications".
  */
 final class NotificationCatalog
 {
@@ -212,12 +216,26 @@ final class NotificationCatalog
         ],
     ];
 
+    /** @var array<string, array<string, mixed>> The platform's and every module's notifications. */
+    private array $notifications;
+
+    public function __construct(?ModuleRegistry $modules = null)
+    {
+        $this->notifications = self::NOTIFICATIONS;
+
+        foreach ($modules?->all() ?? [] as $module) {
+            foreach ($module->notifications as $key => $definition) {
+                $this->notifications[$key] = [...$definition, 'lang' => "{$module->key}::notifications"];
+            }
+        }
+    }
+
     /**
      * @return list<string>
      */
     public function keys(): array
     {
-        return array_keys(self::NOTIFICATIONS);
+        return array_keys($this->notifications);
     }
 
     /**
@@ -227,12 +245,12 @@ final class NotificationCatalog
      */
     public function editableKeys(): array
     {
-        return array_values(array_filter($this->keys(), fn (string $key) => self::NOTIFICATIONS[$key]['editable'] ?? true));
+        return array_values(array_filter($this->keys(), fn (string $key) => $this->notifications[$key]['editable'] ?? true));
     }
 
     public function has(string $key): bool
     {
-        return isset(self::NOTIFICATIONS[$key]);
+        return isset($this->notifications[$key]);
     }
 
     /**
@@ -240,12 +258,22 @@ final class NotificationCatalog
      */
     public function get(string $key): array
     {
-        return self::NOTIFICATIONS[$key] ?? throw new InvalidArgumentException("Unknown notification [{$key}].");
+        return $this->notifications[$key] ?? throw new InvalidArgumentException("Unknown notification [{$key}].");
     }
 
     public function supports(string $key, string $channel): bool
     {
-        return $this->has($key) && in_array($channel, self::NOTIFICATIONS[$key]['channels'], true);
+        return $this->has($key) && in_array($channel, $this->notifications[$key]['channels'], true);
+    }
+
+    /**
+     * The translation key of a notification's text: "templates" (subject, body,
+     * sms, action) or "catalog" (name, description), e.g.
+     * notifications.templates.support_requested or hrm::notifications.templates.hrm_document_expiring.
+     */
+    public function textKey(string $key, string $section): string
+    {
+        return ($this->notifications[$key]['lang'] ?? 'notifications').".{$section}.".self::slug($key);
     }
 
     /** "support.requested" -> "support_requested" (translation keys). */

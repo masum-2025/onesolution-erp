@@ -43,7 +43,7 @@ it('lists the widgets of a module the person may see', function () {
         ->assertOk()
         ->assertJsonPath('module', ['key' => 'hrm', 'name' => 'Human Resources', 'description' => 'Employees, positions and employment records.'])
         ->assertJsonPath('data.0', ['module' => 'hrm', 'module_name' => 'Human Resources', 'key' => 'headcount', 'label' => 'Employees', 'type' => 'stat', 'size' => 1])
-        ->assertJsonCount(5, 'data');
+        ->assertJsonCount(6, 'data');
 });
 
 it('counts employees, joiners and probation from the records', function () {
@@ -132,7 +132,7 @@ it('never counts another organization or partner', function () {
 
 it('gathers the overview widgets of modules that are on', function () {
     $this->asToken($this->w->token)->getJson('/api/dashboard')->assertOk()
-        ->assertJsonPath('data.*.key', ['headcount', 'joiners', 'probation']);
+        ->assertJsonPath('data.*.key', ['headcount', 'joiners', 'probation', 'expiring']);
 
     toggles()->disable($this->w->g1, 'hrm', 'Stop HR');
 
@@ -142,7 +142,7 @@ it('gathers the overview widgets of modules that are on', function () {
 it('shows a module settings page with the setup screens the person may open', function () {
     $this->asToken($this->w->token)->getJson('/api/modules/hrm/settings')->assertOk()
         ->assertJsonPath('data.pages.*.key', ['positions', 'fields'])
-        ->assertJsonPath('data.rule_count', 11)
+        ->assertJsonPath('data.rule_count', 13)
         ->assertJsonPath('data.can_manage_modules', true);
 
     $viewer = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'HR viewer'));

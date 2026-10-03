@@ -64,6 +64,8 @@ return [
         'document_type' => 'Choose one of the kinds of documents offered here.',
         'duplicate_national_id' => 'Another employee of this company has the same national id.',
         'manager' => 'The manager must be a current employee of the same company, not the person themselves.',
+        'manager_loop' => 'This would make a loop: :chain. Choose a manager who does not report to this person.',
+        'manager_too_deep' => 'The reporting line above this manager is already :max people long. Choose a manager higher up.',
         'position_inactive' => 'This position is no longer used. Choose another one.',
         'document_size' => 'The file is larger than :max KB. Choose a smaller file.',
         'exit_before_joining' => 'The last day cannot be before the joining date.',
