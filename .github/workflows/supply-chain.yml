@@ -50,7 +50,7 @@ jobs:
           composer CycloneDX:make-sbom --output-format=JSON --output-file=sbom-php.cdx.json
           npx --yes @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom-js.cdx.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom-*.cdx.json
