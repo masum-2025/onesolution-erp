@@ -23,6 +23,7 @@ final readonly class ModuleDefinition
      * @param  list<class-string>  $attention  AttentionProvider classes (header bell).
      * @param  list<array{key: string, label: string, type: string, provider: class-string, permission?: string, size?: int, overview?: bool}>  $widgets  The module's dashboard.
      * @param  list<array{key: string, label: string, route: string, permission?: string}>  $settingsPages  The module's own setting screens (besides its rules).
+     * @param  array<string, array{label: string, type: string}>  $ledgerAccounts  Accounts the module posts to, keyed "{module}.{name}" (Accounting maps each to an account).
      */
     public function __construct(
         public string $key,
@@ -56,6 +57,8 @@ final readonly class ModuleDefinition
         public array $settingsPages = [],
         // Messages the module sends (NotificationCatalog), keyed "{module}.{name}".
         public array $notifications = [],
+        // Kinds of account the module posts to (Accounting's posting accounts), keyed "{module}.{name}".
+        public array $ledgerAccounts = [],
     ) {}
 
     /**
@@ -87,6 +90,7 @@ final readonly class ModuleDefinition
             widgets: array_values($manifest['dashboard']['widgets'] ?? []),
             settingsPages: array_values($manifest['settings']['pages'] ?? []),
             notifications: $manifest['notifications'] ?? [],
+            ledgerAccounts: $manifest['ledger_accounts'] ?? [],
         );
     }
 

@@ -2033,6 +2033,71 @@ a deploy that adds a rule or changes a default never reads a map cached before i
 - Reminder days, line length and who is told are rules or permissions: a country or partner
   changes them as data. Salary and bank details belong to Payroll.
 
+## Accounting module (business module 2: ACC-1 general ledger backend)
+
+Code: `Modules/Accounting`. Books are kept per **company** (or personal workspace); branches and
+departments are **cost centres** on journal lines. `module:accounting` on every route; 403 while
+off, data kept. All tables are tenant tables (`database/migrations/tenant`), so the books follow
+a client into a dedicated or regional database.
+
+- **Setup** (`GET|POST …/accounting/setup`, `accounting.manage`): copies a chart template
+  (`database/data/charts/{general,school,factory,retail}.php`, names in en/bn, sector templates
+  extend `general`) into the company's own accounts, maps posting accounts, adds the first fiscal
+  year. The template is the rule `accounting.chart_template` (sector packages set it). Once.
+- **Accounts** (`acc_accounts`): code, translated name, type (asset, liability, equity, income,
+  expense), group headings (`is_group`). Sub-accounts take their group's type. Type and kind are
+  fixed once an account has entries or sub-accounts; archive needs a zero balance, no posting
+  mapping and no active sub-accounts. Never deleted.
+- **Fiscal years and periods** (`acc_fiscal_years`, `acc_periods`): 12 monthly periods from
+  `accounting.fiscal_year_start` (country value, 07-01 for BD); later years follow without gaps.
+  `POST …/periods/{id}/close|reopen` (`accounting.close`; reopen needs a reason; refused while
+  entries in the period wait for approval).
+- **Journals** (`acc_journals`, `acc_journal_lines`): integer minor units + currency (the
+  company's). `draft → submit → posted`, or `→ pending_approval → approve|reject|withdraw` when
+  the total is above `accounting.journal_approval_above` (an amount in another currency always
+  waits). The writer or sender never approves (`own_journal`), and `accounting.post` /
+  `accounting.approve` are a separation-of-duties pair. People date entries inside
+  `allow_backdated_entries_days` / `allow_future_entries_days`; every posting needs an open
+  period. Posted journals never change (model guard): `reverse` writes a new journal with sides
+  swapped. Numbers are given at posting from `accounting.journal_number_format`
+  (`{YYYY} {YY} {FY} {SEQ:n}`, one sequence per fiscal year, row-locked), so they have no gaps.
+  `accounting.require_cost_centre` makes a branch or department compulsory on every line.
+- **Period totals** (`acc_balances`): per account, period and cost centre, written in the posting
+  transaction (the period row is locked first). Reports read whole periods from here and the cut
+  days of a period from the lines; sums are made in PHP (no raw SQL, same on MySQL and PostgreSQL).
+- **Reports** (`GET …/reports/{trial-balance|ledger|profit-loss|balance-sheet}`, own limiter
+  `accounting-reports`): `as_of` or `from`/`to`, optional `cost_centre_id` (its units included).
+  Until year-end closing (ACC-4) the balance sheet shows profit to date as `earnings_to_date`.
+- **Other modules post through `Modules\Accounting\Services\Ledger::post()`** only: a
+  `LedgerEntry` with `op_id` (same entry twice = one journal), source module/type/id and lines on
+  **posting keys** the module declares in its manifest (`ledger_accounts`, e.g.
+  `payroll.salary_expense` with its account type). Each company maps keys to its own accounts
+  (`GET|PUT …/posting-accounts/{key}`); no account is hardcoded. Call it from a queued job (no
+  tenant context) or at the company; a branch-level context cannot write the company's books.
+  `accounting.journal.posted` (`JournalPosted`, ids only) follows every posting.
+- **Data export**: `AccountingExporter` adds accounts, years, periods, journals, lines and
+  posting accounts to the client's export.
+
+Permissions: `accounting.view`, `accounting.post`, `accounting.approve`, `accounting.manage`,
+`accounting.close` (templates: `accountant` posts and manages, `finance_approver` approves and
+closes). Owners hold neither side of the post/approve pair: they give these to people.
+Rules: `fiscal_year_start`, `journal_approval_above`, `allow_backdated_entries_days`,
+`allow_future_entries_days`, `journal_number_format`, `chart_template`, `require_cost_centre`.
+
+```bash
+php vendor/bin/pest tests/Feature/Accounting
+```
+
+### Future expansion (Accounting)
+
+- A new sector is a new chart file (or none: `general`) and a sector package rule; a new
+  country is its fiscal year start and later its tax profile (ACC-4). No code change.
+- A partner sets or locks approval amounts, date windows and numbering for all its clients
+  through the rule engine.
+- Next: ACC-2 screens and dashboard widgets, ACC-3 receivables and payables, ACC-4 tax, bank
+  reconciliation and year-end closing (posting key `accounting.retained_earnings`),
+  `multi_currency` with exchange rates.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

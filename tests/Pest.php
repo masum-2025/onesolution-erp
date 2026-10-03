@@ -45,6 +45,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Modules\Accounting\Models\Account;
 use Tests\Fixtures\TenantNote;
 use Tests\TestCase;
 
@@ -203,6 +204,16 @@ function orgRule(Organization $organization, string $key, mixed $value, RuleMode
     return ruleService()->set(app(RuleTargets::class)->organization($organization->fresh()), $key, $mode, $value, 'Test setup', $actor);
 }
 
+/**
+ * An organization-level value that takes effect at once, even for a rule
+ * whose changes normally wait for a second person (setup only; maker-checker
+ * is tested in the rule engine's own tests).
+ */
+function trustedOrgRule(Organization $organization, string $key, mixed $value, RuleMode $mode = RuleMode::Set): RuleValue
+{
+    return ruleService()->set(app(RuleTargets::class)->organization($organization->fresh()), $key, $mode, $value, 'Test setup', trusted: true);
+}
+
 function ruleFor(string $key, Organization $organization): mixed
 {
     return app(RuleResolver::class)->get($key, app(RuleContextFactory::class)->forOrganization($organization->fresh()));
@@ -355,6 +366,70 @@ function hireVia(TestCase $test, string $token, Organization $organization, arra
         'employment_type' => 'permanent',
         'joined_on' => '2026-10-01',
         'phone' => '+8801711000000',
+        ...$data,
+    ]);
+}
+
+/**
+ * The tenancy world with Accounting on everywhere and, at C1, the people of
+ * a finance team: an accountant (writes, sets up), an approver (approves,
+ * closes periods) and a viewer. Owners hold neither side of the
+ * post/approve pair, so tests act as these people.
+ */
+function accountingWorld(): object
+{
+    $w = tenancyWorld();
+    foreach ([$w->g1, $w->g2, $w->g3] as $group) {
+        toggles()->enable($group, 'accounting', 'Test setup');
+    }
+    $w->accountant = staffWithRoles($w->c1, makeRole($w->c1, ['accounting.view', 'accounting.post', 'accounting.manage'], 'Accountant'));
+    $w->approver = staffWithRoles($w->c1, makeRole($w->c1, ['accounting.view', 'accounting.approve', 'accounting.close'], 'Approver'));
+    $w->viewer = staffWithRoles($w->c1, makeRole($w->c1, ['accounting.view'], 'Viewer'));
+    $w->token = orgToken($w->accountant, $w->c1);
+    $w->approverToken = orgToken($w->approver, $w->c1);
+    $w->viewerToken = orgToken($w->viewer, $w->c1);
+
+    return $w;
+}
+
+/**
+ * Set up a company's books through the API (fiscal year from 1 July 2026 unless told otherwise).
+ *
+ * @param  array<string, mixed>  $data
+ */
+function setUpBooks(TestCase $test, string $token, Organization $company, array $data = []): TestResponse
+{
+    return $test->asToken($token)->postJson("/api/organizations/{$company->id}/accounting/setup", [
+        'first_year_starts_on' => '2026-07-01',
+        ...$data,
+    ]);
+}
+
+/** The id of a company's account by its code. */
+function accountId(Organization $company, string $code): string
+{
+    return (string) Account::inTenantOf($company)->withoutGlobalScope(OrganizationScope::class)
+        ->where('organization_id', $company->getKey())->where('code', $code)->value('id');
+}
+
+/**
+ * Write a journal through the API. Lines are [code, debit, credit] or
+ * [code, debit, credit, cost centre id], amounts in minor units.
+ *
+ * @param  list<array{0: string, 1: int, 2: int, 3?: string}>  $lines
+ * @param  array<string, mixed>  $data
+ */
+function journalVia(TestCase $test, string $token, Organization $company, array $lines, array $data = []): TestResponse
+{
+    return $test->asToken($token)->postJson("/api/organizations/{$company->id}/accounting/journals", [
+        'entry_date' => '2026-10-15',
+        'narration' => 'Test entry',
+        'lines' => array_map(fn (array $line) => array_filter([
+            'account_id' => accountId($company, $line[0]),
+            'debit_minor' => $line[1],
+            'credit_minor' => $line[2],
+            'cost_centre_id' => $line[3] ?? null,
+        ], fn ($value) => $value !== null), $lines),
         ...$data,
     ]);
 }

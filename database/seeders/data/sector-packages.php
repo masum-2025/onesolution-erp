@@ -34,6 +34,7 @@ return [
             // School days start early and buses run late: a short grace period.
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
             ['key' => 'hrm.probation_days', 'value' => 180],
+            ['key' => 'accounting.chart_template', 'value' => 'school'],
         ],
         'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
     ],
@@ -42,13 +43,16 @@ return [
         'modules' => ['hrm', 'attendance', 'payroll', 'inventory', 'factory_erp', 'accounting'],
         'rules' => [
             ['key' => 'attendance.late_grace_minutes', 'value' => 5],
+            ['key' => 'accounting.chart_template', 'value' => 'factory'],
         ],
         'role_templates' => ['administrator', 'manager', 'hr_officer', 'accountant', 'finance_approver', 'staff'],
     ],
     [
         'key' => 'retail',
         'modules' => ['inventory', 'crm', 'accounting', 'hrm'],
-        'rules' => [],
+        'rules' => [
+            ['key' => 'accounting.chart_template', 'value' => 'retail'],
+        ],
         'role_templates' => ['administrator', 'manager', 'accountant', 'staff'],
     ],
 ];

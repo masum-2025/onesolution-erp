@@ -4,6 +4,8 @@
 
 return [
     'view' => 'View Accounting',
-    'post' => 'Post Accounting entries',
-    'approve' => 'Approve Accounting',
+    'post' => 'Write and post journal entries',
+    'approve' => 'Approve journal entries',
+    'manage' => 'Set up the books (accounts, fiscal years)',
+    'close' => 'Close and reopen accounting periods',
 ];

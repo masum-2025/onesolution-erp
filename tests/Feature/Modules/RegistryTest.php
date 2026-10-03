@@ -96,6 +96,9 @@ it('rejects invalid manifests', function (array $manifests, string $problem) {
     'notification of another module' => [[manifest('alpha', ['notifications' => ['beta.sent' => ['channels' => ['mail'], 'placeholders' => [], 'audience' => 'client', 'path' => '/a']]])], 'notification [beta.sent]'],
     'notification with an unknown channel' => [[manifest('alpha', ['notifications' => ['alpha.sent' => ['channels' => ['fax'], 'placeholders' => [], 'audience' => 'client', 'path' => '/a']]])], 'notification [alpha.sent]'],
     'notifications as a list' => [[manifest('alpha', ['notifications' => [['channels' => ['mail']]]])], 'keyed by notification key'],
+    'ledger account of another module' => [[manifest('alpha', ['ledger_accounts' => ['beta.cash' => ['label' => 'x', 'type' => 'asset']]])], 'ledger account [beta.cash]'],
+    'ledger account of an unknown type' => [[manifest('alpha', ['ledger_accounts' => ['alpha.cash' => ['label' => 'x', 'type' => 'money']]])], 'ledger account [alpha.cash]'],
+    'ledger accounts as a list' => [[manifest('alpha', ['ledger_accounts' => [['label' => 'x', 'type' => 'asset']]])], 'keyed by posting key'],
 ]);
 
 it('reads sections, sub-pages and quick actions from a manifest', function () {

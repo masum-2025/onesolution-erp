@@ -124,7 +124,8 @@ jobs:
           php-version: '8.4'
           extensions: mbstring, pdo_mysql, intl, sodium
           coverage: pcov
-          ini-values: pcov.directory=app
+          # Platform code and module code (Modules/*/app); vendor and storage are skipped.
+          ini-values: pcov.directory=., pcov.exclude="~(vendor|storage|node_modules)~"
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress

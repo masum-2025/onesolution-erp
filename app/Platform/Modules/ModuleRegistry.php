@@ -213,6 +213,35 @@ final class ModuleRegistry
 
         self::validateDashboardAndSettings($manifest);
         self::validateNotifications($manifest);
+        self::validateLedgerAccounts($manifest);
+    }
+
+    /** Kinds of account a ledger account may be (Accounting's account types). */
+    public const LEDGER_ACCOUNT_TYPES = ['asset', 'liability', 'equity', 'income', 'expense'];
+
+    /**
+     * Accounts a module posts to (e.g. "payroll.salary_expense"): each client
+     * maps them to accounts of its own chart; no account is hardcoded.
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private static function validateLedgerAccounts(array $manifest): void
+    {
+        $key = $manifest['key'];
+
+        if (isset($manifest['ledger_accounts']) && (! is_array($manifest['ledger_accounts']) || ($manifest['ledger_accounts'] !== [] && array_is_list($manifest['ledger_accounts'])))) {
+            throw InvalidModuleManifest::because($key, 'ledger_accounts must be keyed by posting key');
+        }
+
+        foreach ($manifest['ledger_accounts'] ?? [] as $name => $definition) {
+            $valid = is_string($name) && str_starts_with($name, $key.'.') && preg_match('/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/', $name)
+                && is_string($definition['label'] ?? null) && $definition['label'] !== ''
+                && in_array($definition['type'] ?? null, self::LEDGER_ACCOUNT_TYPES, true);
+
+            if (! $valid) {
+                throw InvalidModuleManifest::because($key, "ledger account [{$name}] needs a \"{$key}.\" key, a label and a type (asset, liability, equity, income or expense)");
+            }
+        }
     }
 
     /**

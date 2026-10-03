@@ -41,12 +41,12 @@ return [
     [
         'key' => 'accountant',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.post', 'payroll.view', 'payroll.run', 'custom_reports.view'],
+        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'payroll.view', 'payroll.run', 'custom_reports.view'],
     ],
     [
         'key' => 'finance_approver',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.approve', 'payroll.view', 'payroll.approve', 'rules.approve', 'custom_reports.view'],
+        'permissions' => ['accounting.view', 'accounting.approve', 'accounting.close', 'payroll.view', 'payroll.approve', 'rules.approve', 'custom_reports.view'],
     ],
     [
         'key' => 'hr_officer',

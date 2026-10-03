@@ -9,8 +9,9 @@
 | "coverage"). Areas need at least the given share of their statements run
 | by tests; the decision classes below need every statement run.
 |
+| Module code is measured too (phpunit.xml <source>, CI pcov.directory=.).
 | Payroll has no code yet: when the module gets business logic, add its
-| folder here (and its calculation classes to "full").
+| folder here and to phpunit.xml (and its calculation classes to "full").
 |
 */
 
@@ -28,6 +29,8 @@ return [
         // money
         'app/Platform/Billing' => 90,
         'app/Platform/Payments' => 90,
+        // the books (ACC-1)
+        'Modules/Accounting/app' => 90,
     ],
 
     // Classes that decide who may see or change what, and how much money moves.
@@ -54,6 +57,8 @@ return [
         'app/Platform/Billing/Money.php',
         'app/Platform/Payments/DecimalAmount.php',
         'app/Platform/Payments/Services/PaymentConfirmer.php',
+        'Modules/Accounting/app/Services/Books.php',
+        'Modules/Accounting/app/Services/Posting.php',
     ],
 
 ];

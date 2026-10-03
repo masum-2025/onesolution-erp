@@ -3,19 +3,43 @@
 return [
     'fiscal_year_start' => [
         'label' => 'Fiscal year start (MM-DD)',
-        'description' => 'First day of the financial year.',
+        'description' => 'First day of the financial year. Applies to fiscal years added after a change.',
     ],
     'journal_approval_above' => [
         'label' => 'Journal approval above',
-        'description' => 'Journal entries above this amount need a second approval. Empty = never.',
+        'description' => 'Journal entries above this amount need a second person to approve them. Empty = never.',
     ],
     'allow_backdated_entries_days' => [
         'label' => 'Backdated entries allowed (days)',
-        'description' => 'How many days back an entry may be dated.',
+        'description' => 'How many days back a person may date an entry.',
+    ],
+    'allow_future_entries_days' => [
+        'label' => 'Future-dated entries allowed (days)',
+        'description' => 'How many days ahead a person may date an entry. 0 = not after today.',
+    ],
+    'journal_number_format' => [
+        'label' => 'Journal number format',
+        'description' => 'How posted journals are numbered, e.g. JV-{YYYY}-{SEQ:5}. {YYYY} and {YY} are the year the fiscal year starts in, {FY} its name, {SEQ:5} the running number with 5 digits.',
+    ],
+    'chart_template' => [
+        'label' => 'Starting chart of accounts',
+        'description' => 'The list of accounts a company starts with when it sets up its books. The accounts can be changed afterwards.',
+        'options' => [
+            'general' => 'General business',
+            'school' => 'School',
+            'factory' => 'Factory',
+            'retail' => 'Shop and retail',
+        ],
+    ],
+    'require_cost_centre' => [
+        'label' => 'Branch or department on every line',
+        'description' => 'Every journal line must name the branch or department it belongs to.',
     ],
 
     'categories' => [
         'approval' => 'Approvals',
         'period' => 'Periods',
+        'numbering' => 'Numbering',
+        'setup' => 'Setup',
     ],
 ];
