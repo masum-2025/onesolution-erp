@@ -182,6 +182,8 @@ it('lets a new module add rules through its manifest alone', function () {
             'description' => 'fleet::rules.max_trip_hours.description',
             'overridable_levels' => ['platform', 'company'],
         ]],
+        'dashboard' => ['widgets' => []],
+        'settings' => ['pages' => []],
     ]], app(PlanCatalog::class)->keys());
 
     app()->instance(RuleCatalog::class, RuleCatalog::fromModules($registry, app(RuleValueValidator::class)));
@@ -210,6 +212,8 @@ it('never reads a map cached before a deploy added a rule', function () {
             'description' => 'fleet::rules.max_trip_hours.description',
             'overridable_levels' => ['platform', 'company'],
         ]],
+        'dashboard' => ['widgets' => []],
+        'settings' => ['pages' => []],
     ]], app(PlanCatalog::class)->keys());
 
     // The new code starts with a fresh process: new catalog, new cache service, same cache store.

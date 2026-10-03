@@ -14,6 +14,8 @@ function manifest(string $key, array $overrides = []): array
         'sectors' => ['*'],
         'plans' => ['*'],
         'permissions' => [],
+        'dashboard' => ['widgets' => []],
+        'settings' => ['pages' => []],
         ...$overrides,
     ];
 }
@@ -83,6 +85,14 @@ it('rejects invalid manifests', function (array $manifests, string $problem) {
         ['key' => 'new', 'label' => 'x', 'route' => '/a/new'],
     ]])], 'quick action permission'],
     'attention not a list' => [[manifest('alpha', ['attention' => ['x' => 'Foo']])], 'attention must be a list'],
+    'no dashboard' => [[manifest('alpha', ['dashboard' => null])], 'dashboard.widgets is required'],
+    'no settings' => [[manifest('alpha', ['settings' => []])], 'settings.pages is required'],
+    'unknown widget type' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'dashboard' => ['widgets' => [['type' => 'pie'] + ['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view']]]])], 'type [pie] is unknown'],
+    'widget without permission' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'dashboard' => ['widgets' => [array_diff_key(['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view'], ['permission' => 1])]]])], 'dashboard widget permission'],
+    'widget without provider' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'dashboard' => ['widgets' => [array_diff_key(['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view'], ['provider' => 1])]]])], 'missing provider'],
+    'duplicate widget' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'dashboard' => ['widgets' => [['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view'], ['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view']]]])], 'unique'],
+    'bad widget size' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'dashboard' => ['widgets' => [['size' => 4] + ['key' => 'count', 'label' => 'x', 'type' => 'stat', 'provider' => 'X', 'permission' => 'alpha.view']]]])], 'size must be'],
+    'settings page without route' => [[manifest('alpha', ['settings' => ['pages' => [['key' => 'a', 'label' => 'x']]]])], 'settings page is missing route'],
 ]);
 
 it('reads sections, sub-pages and quick actions from a manifest', function () {
@@ -97,4 +107,14 @@ it('reads sections, sub-pages and quick actions from a manifest', function () {
     expect($module->menu[0]['children'])->toHaveCount(1)
         ->and($module->quickActions[0]['permission'])->toBe('alpha.manage')
         ->and($module->attention)->toBe([]);
+});
+
+it('gives every installed module a dashboard and a settings page', function () {
+    foreach (app(ModuleRegistry::class)->all() as $module) {
+        foreach ($module->widgets as $widget) {
+            expect(class_exists($widget['provider']))->toBeTrue("{$module->key}: {$widget['provider']}");
+        }
+    }
+
+    expect(app(ModuleRegistry::class)->get('hrm')->widgets)->toHaveCount(5);
 });

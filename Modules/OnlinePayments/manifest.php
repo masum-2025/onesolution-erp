@@ -83,4 +83,10 @@ return [
     'events' => ['payments.collected'],
     'is_core' => false,
     'requires_consent' => false,
+    // Every module has a dashboard and a settings page; widgets and own setting
+    // screens come with the module's business screens (its rules show already).
+    'dashboard' => ['widgets' => []],
+    'settings' => ['pages' => [
+        ['key' => 'merchant_accounts', 'label' => 'online_payments::module.menu', 'route' => '/online-payments', 'permission' => 'online_payments.view'],
+    ]],
 ];

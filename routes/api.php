@@ -13,6 +13,8 @@ use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
 use App\Platform\Billing\Http\Controllers\SelfServeBillingController;
 use App\Platform\Branding\Http\ClientBrandController;
 use App\Platform\Countries\Http\CountryController;
+use App\Platform\Dashboard\Http\ModuleDashboardController;
+use App\Platform\Dashboard\Http\ModuleSettingsController;
 use App\Platform\DataExport\Http\DataExportController;
 use App\Platform\Identity\Http\Controllers\AccountController;
 use App\Platform\Identity\Http\Controllers\MfaResetController;
@@ -283,6 +285,11 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::get('menu', MenuController::class);
     // The header bell: counts of work waiting for this person here.
     Route::get('attention', AttentionController::class);
+    // Every module's dashboard and settings page (UI-1b), and the overview of all of them.
+    Route::get('dashboard', [ModuleDashboardController::class, 'overview']);
+    Route::get('modules/{module}/dashboard', [ModuleDashboardController::class, 'index'])->where('module', '[a-z][a-z0-9_]{1,49}');
+    Route::get('modules/{module}/dashboard/{widget}', [ModuleDashboardController::class, 'show'])->where(['module' => '[a-z][a-z0-9_]{1,49}', 'widget' => '[a-z][a-z0-9_]{1,49}']);
+    Route::get('modules/{module}/settings', ModuleSettingsController::class)->where('module', '[a-z][a-z0-9_]{1,49}');
     // Countries the platform knows (Phase 6), for pickers and "comes from the country" hints.
     Route::get('countries', CountryController::class);
     Route::get('organizations/{organization}/modules', [ModuleController::class, 'index']);

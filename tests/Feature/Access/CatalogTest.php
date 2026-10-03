@@ -68,6 +68,7 @@ it('rejects malformed separation-of-duties pairs in a manifest', function (array
         'requires' => [], 'sectors' => ['*'], 'plans' => ['*'],
         'permissions' => ['demo.run', 'demo.approve'], 'separation_of_duties' => $pairs,
         'rules' => [], 'menu' => [], 'events' => [],
+        'dashboard' => ['widgets' => []], 'settings' => ['pages' => []],
     ];
 
     ModuleRegistry::fromManifests([$manifest], app(PlanCatalog::class)->keys());

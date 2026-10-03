@@ -17,7 +17,8 @@ function groupFlat(rules) {
     return [...modules.values()].map((group) => ({ ...group, categories: [...group.categories.values()] }));
 }
 
-export function organizationRules(organizationId) {
+/** Rules at an organization; `module` limits the list to one module's (its settings page). */
+export function organizationRules(organizationId, { module = null } = {}) {
     const base = `/api/organizations/${organizationId}`;
     const rule = (key) => `${base}/rules/${encodeURIComponent(key)}`;
 
@@ -25,7 +26,7 @@ export function organizationRules(organizationId) {
         level: 'organization',
         canEdit: () => can('rules.manage'),
         supports: { trace: true, history: true, preview: true, rollback: true },
-        list: () => api(`${base}/rules`).then((response) => response.data),
+        list: () => api(module ? `${base}/rules?module=${encodeURIComponent(module)}` : `${base}/rules`).then((response) => response.data),
         show: (key) => api(rule(key)).then((response) => response.data),
         set: (key, body) => api(rule(key), { method: 'PUT', body }),
         reset: (key, body) => api(rule(key), { method: 'DELETE', body }),

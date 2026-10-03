@@ -89,4 +89,10 @@ return [
     'events' => ['offline.device_revoked', 'offline.operation_quarantined'],
     'is_core' => false,
     'requires_consent' => false,
+    // Every module has a dashboard and a settings page; widgets and own setting
+    // screens come with the module's business screens (its rules show already).
+    'dashboard' => ['widgets' => []],
+    'settings' => ['pages' => [
+        ['key' => 'devices', 'label' => 'offline_mode::module.menu', 'route' => '/offline', 'permission' => 'offline_mode.manage'],
+    ]],
 ];

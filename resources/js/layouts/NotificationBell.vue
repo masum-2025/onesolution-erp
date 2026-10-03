@@ -1,62 +1,35 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Bell, CheckCheck, CircleAlert, FileText, Info, KeyRound, TriangleAlert } from 'lucide-vue-next';
+import { Bell, CheckCheck } from 'lucide-vue-next';
 import AppMenu from '@/components/AppMenu.vue';
-import { api } from '@/lib/http';
+import { attentionItems, attentionTotal, refreshAttention } from '@/lib/attention';
 import { on } from '@/lib/events';
-import { currentOrganization, isPortalMember, session } from '@/lib/session';
+import { session } from '@/lib/session';
 import { formatNumber } from '@/lib/format';
 import { t } from '@/lib/i18n';
 
 /**
- * The header bell: work waiting for this person here, as counts with the
- * screen that handles it. From /api/attention (platform and module items)
- * plus what /api/me already says (terms to accept, second step to set up).
- * The number on the bell is always shown as a number, never a dot alone.
+ * The header bell: work waiting for this person here (lib/attention.js), as
+ * counts with the screen that handles it. The number on the bell is always
+ * shown as a number, never a dot alone.
  */
 const REFRESH_MS = 120000;
-const TONE_ICONS = { info: Info, warn: TriangleAlert, bad: CircleAlert };
 
 const router = useRouter();
-const remote = ref([]);
-
-const local = computed(() => {
-    const me = session.me;
-    const items = [];
-    if (me?.context?.legal_pending) {
-        items.push({ key: 'legal', label: t('core.attention.legal'), count: me.context.legal_pending, path: '/provider', tone: 'warn', icon: FileText });
-    }
-    if (me?.user?.two_factor?.setup_due_at && !me.user.two_factor.enabled) {
-        items.push({ key: 'two_factor', label: t('core.attention.two_factor'), count: 1, path: '/account#security', tone: 'warn', icon: KeyRound });
-    }
-    return items;
-});
-
-const items = computed(() => [...local.value, ...remote.value]);
-const total = computed(() => items.value.reduce((sum, item) => sum + item.count, 0));
+const total = attentionTotal;
 
 const menuItems = computed(() => {
-    if (!items.value.length) return [{ label: t('core.attention.empty'), icon: CheckCheck, disabled: true }];
-    return items.value.map((item) => ({
+    if (!attentionItems.value.length) return [{ label: t('core.attention.empty'), icon: CheckCheck, disabled: true }];
+    return attentionItems.value.map((item) => ({
         label: item.label,
-        icon: item.icon ?? TONE_ICONS[item.tone] ?? Info,
+        icon: item.icon,
         hint: formatNumber(item.count),
         onSelect: () => router.push(item.path),
     }));
 });
 
-async function refresh() {
-    if (!currentOrganization() || isPortalMember() || session.me?.context?.support) {
-        remote.value = [];
-        return;
-    }
-    try {
-        remote.value = (await api('/api/attention')).data;
-    } catch {
-        // The bell is a convenience: on failure it shows what it already knows.
-    }
-}
+const refresh = refreshAttention;
 
 let timer;
 let offApprovals;

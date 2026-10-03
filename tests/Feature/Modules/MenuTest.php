@@ -17,8 +17,10 @@ it('groups module entries in sections with their sub-pages and quick actions', f
     expect($hrm['section'])->toBe('people')
         ->and($hrm['section_label'])->toBe('People')
         ->and($hrm['icon'])->toBe('users')
-        ->and(array_column($hrm['children'], 'key'))->toBe(['employees', 'positions', 'fields', 'import'])
-        ->and($hrm['children'][0])->toBe(['key' => 'employees', 'label' => 'Employees', 'route' => '/hrm'])
+        ->and(array_column($hrm['children'], 'key'))->toBe(['dashboard', 'employees', 'positions', 'fields', 'import', 'settings'])
+        ->and($hrm['children'][0])->toBe(['key' => 'dashboard', 'label' => 'Dashboard', 'route' => '/m/hrm'])
+        ->and($hrm['children'][1])->toBe(['key' => 'employees', 'label' => 'Employees', 'route' => '/hrm'])
+        ->and($hrm['children'][5])->toBe(['key' => 'settings', 'label' => 'Settings', 'route' => '/m/hrm/settings'])
         ->and($response->json('quick_actions'))->toBe([
             ['module' => 'hrm', 'key' => 'hire', 'label' => 'New employee', 'route' => '/hrm/new', 'icon' => 'user-plus'],
         ]);
@@ -30,7 +32,7 @@ it('shows only the sub-pages and quick actions the person may use', function () 
     $response = $this->asToken(orgToken($viewer, $this->w->c1))->getJson('/api/menu')->assertOk();
     $hrm = collect($response->json('data'))->firstWhere('module', 'hrm');
 
-    expect(array_column($hrm['children'], 'key'))->toBe(['employees', 'positions'])
+    expect(array_column($hrm['children'], 'key'))->toBe(['dashboard', 'employees', 'positions', 'settings'])
         ->and($response->json('quick_actions'))->toBe([]);
 });
 
@@ -59,7 +61,8 @@ it('translates sections, sub-pages and quick actions', function () {
     $hrm = collect($response->json('data'))->firstWhere('module', 'hrm');
 
     expect($hrm['section_label'])->toBe('মানুষ')
-        ->and($hrm['children'][0]['label'])->toBe('কর্মী')
+        ->and($hrm['children'][0]['label'])->toBe('ড্যাশবোর্ড')
+        ->and($hrm['children'][1]['label'])->toBe('কর্মী')
         ->and($response->json('quick_actions.0.label'))->toBe('নতুন কর্মী');
 });
 
@@ -70,4 +73,12 @@ it('does not show one organization\'s modules in another\'s menu', function () {
 
     expect(collect($response->json('data'))->pluck('module'))->not->toContain('hrm')
         ->and($response->json('quick_actions'))->toBe([]);
+});
+
+it('gives every module entry a dashboard and settings, also without its own sub-pages', function () {
+    toggles()->enable($this->w->c1, 'crm', 'Sales team');
+
+    $crm = collect($this->asToken(orgToken($this->owner, $this->w->c1))->getJson('/api/menu')->json('data'))->firstWhere('module', 'crm');
+
+    expect(array_column($crm['children'], 'route'))->toBe(['/m/crm', '/m/crm/settings']);
 });

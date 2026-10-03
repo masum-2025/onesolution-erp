@@ -2157,3 +2157,51 @@ and words as well as a color.
   shell needs no change. A new section needs a label in `modules.sections`.
 - A partner's default or locked look: rule values at the partner level, no code.
 - New language: locale files only.
+
+## Module dashboards and settings (UI-1b)
+
+Every module has a dashboard (`/m/{module}`) and a settings page (`/m/{module}/settings`);
+the sidebar adds both to every module entry (first and last). The registry refuses a
+manifest without them:
+
+```php
+'dashboard' => ['widgets' => [
+    // type: stat | bars | list; size: 1-3 columns; overview: also on the main overview.
+    ['key' => 'headcount', 'label' => 'hrm::dashboard.headcount', 'type' => 'stat',
+     'provider' => Headcount::class, 'permission' => 'hrm.view', 'overview' => true],
+]],
+'settings' => ['pages' => [
+    ['key' => 'fields', 'label' => 'hrm::module.menu_fields', 'route' => '/hrm/fields', 'permission' => 'hrm.configure'],
+]],
+```
+
+An empty widget list shows a "coming soon" dashboard; the settings page always lists the
+module's rules (the rules editor limited to the module: source, lock, approval).
+
+- A widget is a `DashboardWidget` (`app/Platform/Dashboard`) that builds its answer with
+  `WidgetData::stat()` (value, change with tone good/bad/neutral, hint, trend series),
+  `::bars()` or `::list()`. It reads the current organization and its units; the models'
+  tenant scope limits that to what the person may see. Its permission must be one of the
+  module's; it is checked on every call.
+- The app draws them (`resources/js/components/dashboard`): changes always carry an arrow
+  and a sign, trend lines have a hidden table for screen readers, each widget loads and
+  fails on its own.
+- Overview (`/`): the modules' `overview` widgets, "Needs your action" (the same items as
+  the bell, `lib/attention.js`), quick actions, workspace numbers and settings.
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/dashboard | overview widgets of the modules that are on here (permission-filtered) |
+| GET | /api/modules/{module}/dashboard | the module's widgets the person may see; 403 `module_disabled` when off |
+| GET | /api/modules/{module}/dashboard/{widget} | one widget's data |
+| GET | /api/modules/{module}/settings | setup pages (permission-filtered), rule count, can turn modules on/off |
+
+HRM widgets: employees (6-month trend, change over 30 days), joined this month, on
+probation (ending within 30 days), employees by position, recent changes.
+
+### Future expansion (UI-1b)
+
+- A new module adds `dashboard` and `settings` to its manifest and its widget classes; no
+  change to the platform or the app. New widget types need a component and a type name.
+- Sector, country or partner differences come from the module's rules and data, not from
+  the dashboard code. Arranging or hiding widgets per person can come later.

@@ -27,7 +27,7 @@ const routes = [
         path: '/',
         component: AppShell,
         children: [
-            { path: '', name: 'home', component: () => import('./pages/OverviewPage.vue'), meta: { context: 'organization', ns: ['home', 'orgs'] } },
+            { path: '', name: 'home', component: () => import('./pages/OverviewPage.vue'), meta: { context: 'organization', ns: ['home', 'orgs', 'dashboard'] } },
             {
                 path: 'organizations',
                 name: 'organizations',
@@ -42,6 +42,9 @@ const routes = [
             },
             // The person's own account: the same in every context.
             { path: 'account', name: 'account', component: () => import('./pages/account/AccountPage.vue'), meta: { ns: ['identity', 'offline', 'security'] } },
+            // Every module's dashboard and settings page (UI-1b).
+            { path: 'm/:module([a-z][a-z0-9_]+)', name: 'module-dashboard', component: () => import('./pages/modules/ModuleDashboardPage.vue'), meta: { context: 'organization', ns: ['dashboard'] } },
+            { path: 'm/:module([a-z][a-z0-9_]+)/settings', name: 'module-settings', component: () => import('./pages/modules/ModuleSettingsPage.vue'), meta: { context: 'organization', ns: ['dashboard', 'rules'] } },
             // The person's own look of the app (template, color, readability).
             { path: 'account/appearance', name: 'appearance', component: () => import('./pages/account/AppearancePage.vue'), meta: { ns: ['appearance'] } },
             { path: 'audit-log', name: 'audit-log', component: () => import('./pages/trust/AuditLogPage.vue'), meta: { context: 'organization', ns: ['trust'] } },

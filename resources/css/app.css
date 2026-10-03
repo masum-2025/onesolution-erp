@@ -491,6 +491,20 @@
         translate: 0 -1px;
     }
 
+    /* The soft corner glow on dashboard cards (the highlight color, faint). */
+    .widget-glow {
+        background: radial-gradient(closest-side, color-mix(in oklab, var(--brand) 14%, transparent), transparent);
+    }
+
+    .widget {
+        transition: box-shadow 200ms var(--ease-soft), translate 200ms var(--ease-soft);
+    }
+
+    .widget:hover {
+        box-shadow: var(--shadow-pop);
+        translate: 0 -2px;
+    }
+
     /* The person's initials in the header. */
     .avatar {
         background:

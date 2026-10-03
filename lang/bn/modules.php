@@ -37,6 +37,12 @@ return [
         'purge_scheduled' => ':date তারিখে তথ্য মোছা নির্ধারিত হয়েছে। তার আগ পর্যন্ত বাতিল করতে পারবেন।',
     ],
 
+    // Added to every module's sidebar entry.
+    'menu' => [
+        'dashboard' => 'ড্যাশবোর্ড',
+        'settings' => 'সেটিংস',
+    ],
+
     'sections' => [
         'people' => 'মানুষ',
         'business' => 'ব্যবসা',

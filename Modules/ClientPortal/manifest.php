@@ -91,4 +91,10 @@ return [
     'events' => ['portal.link_approved', 'portal.link_revoked'],
     'is_core' => false,
     'requires_consent' => false,
+    // Every module has a dashboard and a settings page; widgets and own setting
+    // screens come with the module's business screens (its rules show already).
+    'dashboard' => ['widgets' => []],
+    'settings' => ['pages' => [
+        ['key' => 'portal', 'label' => 'client_portal::module.menu', 'route' => '/portal-admin', 'permission' => 'client_portal.view'],
+    ]],
 ];

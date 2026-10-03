@@ -19,6 +19,8 @@ import { t } from '@/lib/i18n';
 const props = defineProps({
     adapter: { type: Object, required: true },
     scopeName: { type: String, default: '' },
+    // One module's rules only (its settings page): no module list beside them.
+    single: Boolean,
 });
 
 const route = useRoute();
@@ -87,9 +89,9 @@ defineExpose({ reload: () => rules.reload() });
 </script>
 
 <template>
-    <div class="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
+    <div :class="!single && 'lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8'">
         <!-- Module navigation -->
-        <aside class="hidden lg:block">
+        <aside v-if="!single" class="hidden lg:block">
             <nav class="sticky top-20 space-y-0.5" :aria-label="t('rules.modules_nav')">
                 <button
                     type="button"

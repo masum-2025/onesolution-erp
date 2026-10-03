@@ -49,11 +49,16 @@ class MenuController extends Controller
                     'order' => $item['order'],
                     'section' => $section,
                     'section_label' => $this->sectionLabel($section),
-                    'children' => array_values(array_map(fn (array $child) => [
-                        'key' => $child['key'],
-                        'label' => __($child['label']),
-                        'route' => $child['route'],
-                    ], array_filter($item['children'] ?? [], $allows))),
+                    // Every module opens with its dashboard and ends with its settings (UI-1b).
+                    'children' => [
+                        ['key' => 'dashboard', 'label' => __('modules.menu.dashboard'), 'route' => "/m/{$key}"],
+                        ...array_map(fn (array $child) => [
+                            'key' => $child['key'],
+                            'label' => __($child['label']),
+                            'route' => $child['route'],
+                        ], array_values(array_filter($item['children'] ?? [], $allows))),
+                        ['key' => 'settings', 'label' => __('modules.menu.settings'), 'route' => "/m/{$key}/settings"],
+                    ],
                 ];
             }
 

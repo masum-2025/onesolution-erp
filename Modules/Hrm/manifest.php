@@ -5,6 +5,11 @@
 | Business numbers never live here; they are rules (Rules::get('hrm.*')).
 */
 
+use Modules\Hrm\Dashboard\ByPosition;
+use Modules\Hrm\Dashboard\Headcount;
+use Modules\Hrm\Dashboard\Joiners;
+use Modules\Hrm\Dashboard\OnProbation;
+use Modules\Hrm\Dashboard\RecentChanges;
 use Modules\Hrm\Portal\EmployeeSubjects;
 
 return [
@@ -170,6 +175,19 @@ return [
             ],
         ],
     ],
+    // The module's dashboard; `overview` widgets also show on the main overview.
+    'dashboard' => ['widgets' => [
+        ['key' => 'headcount', 'label' => 'hrm::dashboard.headcount', 'type' => 'stat', 'provider' => Headcount::class, 'permission' => 'hrm.view', 'overview' => true],
+        ['key' => 'joiners', 'label' => 'hrm::dashboard.joiners', 'type' => 'stat', 'provider' => Joiners::class, 'permission' => 'hrm.view', 'overview' => true],
+        ['key' => 'probation', 'label' => 'hrm::dashboard.probation', 'type' => 'stat', 'provider' => OnProbation::class, 'permission' => 'hrm.view', 'overview' => true],
+        ['key' => 'by_position', 'label' => 'hrm::dashboard.by_position', 'type' => 'bars', 'provider' => ByPosition::class, 'permission' => 'hrm.view', 'size' => 2],
+        ['key' => 'recent', 'label' => 'hrm::dashboard.recent', 'type' => 'list', 'provider' => RecentChanges::class, 'permission' => 'hrm.view', 'size' => 1],
+    ]],
+    // Setup screens shown on the module's settings page (next to its rules).
+    'settings' => ['pages' => [
+        ['key' => 'positions', 'label' => 'hrm::module.menu_positions', 'route' => '/hrm/positions', 'permission' => 'hrm.view'],
+        ['key' => 'fields', 'label' => 'hrm::module.menu_fields', 'route' => '/hrm/fields', 'permission' => 'hrm.configure'],
+    ]],
     // The header "New" menu.
     'quick_actions' => [
         ['key' => 'hire', 'label' => 'hrm::module.new_employee', 'route' => '/hrm/new', 'permission' => 'hrm.manage', 'icon' => 'user-plus'],

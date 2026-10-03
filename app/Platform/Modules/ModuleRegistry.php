@@ -210,6 +210,60 @@ final class ModuleRegistry
                 throw InvalidModuleManifest::because($key, 'attention entries must be class names');
             }
         }
+
+        self::validateDashboardAndSettings($manifest);
+    }
+
+    /** Widget types the app can draw (resources/js/components/dashboard). */
+    public const WIDGET_TYPES = ['stat', 'bars', 'list'];
+
+    /**
+     * Every module has a dashboard and a settings page. The manifest must say
+     * what is on them, even if that is nothing yet (an empty list).
+     *
+     * @param  array<string, mixed>  $manifest
+     */
+    private static function validateDashboardAndSettings(array $manifest): void
+    {
+        $key = $manifest['key'];
+
+        if (! is_array($manifest['dashboard']['widgets'] ?? null) || ! array_is_list($manifest['dashboard']['widgets'])) {
+            throw InvalidModuleManifest::because($key, 'dashboard.widgets is required (a list, may be empty)');
+        }
+
+        if (! is_array($manifest['settings']['pages'] ?? null) || ! array_is_list($manifest['settings']['pages'])) {
+            throw InvalidModuleManifest::because($key, 'settings.pages is required (a list, may be empty)');
+        }
+
+        $seen = [];
+        foreach ($manifest['dashboard']['widgets'] as $widget) {
+            foreach (['key', 'label', 'type', 'provider'] as $field) {
+                if (! is_string($widget[$field] ?? null) || $widget[$field] === '') {
+                    throw InvalidModuleManifest::because($key, "dashboard widget is missing {$field}");
+                }
+            }
+            if (! preg_match('/^[a-z][a-z0-9_]{1,49}$/', $widget['key']) || isset($seen[$widget['key']])) {
+                throw InvalidModuleManifest::because($key, "dashboard widget key [{$widget['key']}] must be snake_case and unique");
+            }
+            if (! in_array($widget['type'], self::WIDGET_TYPES, true)) {
+                throw InvalidModuleManifest::because($key, "dashboard widget type [{$widget['type']}] is unknown");
+            }
+            if (isset($widget['size']) && ! in_array($widget['size'], [1, 2, 3], true)) {
+                throw InvalidModuleManifest::because($key, 'dashboard widget size must be 1, 2 or 3');
+            }
+            // A widget shows the module's data: reading it needs a permission of the module.
+            self::validatePermission($manifest, $widget['permission'] ?? null, 'dashboard widget', required: true);
+            $seen[$widget['key']] = true;
+        }
+
+        foreach ($manifest['settings']['pages'] as $page) {
+            foreach (['key', 'label', 'route'] as $field) {
+                if (! isset($page[$field])) {
+                    throw InvalidModuleManifest::because($key, "settings page is missing {$field}");
+                }
+            }
+            self::validatePermission($manifest, $page['permission'] ?? null, 'settings page', required: false);
+        }
     }
 
     /**

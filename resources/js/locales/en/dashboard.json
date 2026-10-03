@@ -1,0 +1,23 @@
+{
+    "title": "Dashboard",
+    "overview": "Headline numbers",
+    "settings": "Settings",
+    "settings_title": "{module} settings",
+    "settings_text": "Setup screens and the rules of this module. Each rule shows where its value comes from and whether it is locked.",
+    "on_off": "Turn modules on or off",
+    "setup": "Setup",
+    "rules": "Rules",
+    "rule_count": "{count} rules",
+    "no_rules": "This module has no rules to set yet.",
+    "coming_title": "This dashboard is on its way",
+    "coming_text": "{module} will show its key numbers here once its screens are ready. Its settings already work.",
+    "widget_error": "This could not be loaded.",
+    "widget_empty": "Nothing to show yet.",
+    "change_up": "up {value} on the previous period",
+    "change_down": "down {value} on the previous period",
+    "change_flat": "no change on the previous period",
+    "needs_action": "Needs your action",
+    "needs_action_text": "Work waiting for you here.",
+    "all_clear": "All caught up. Nothing is waiting for you.",
+    "workspace": "Your workspace"
+}

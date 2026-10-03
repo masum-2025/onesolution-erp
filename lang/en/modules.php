@@ -38,6 +38,12 @@ return [
     ],
 
     // Sidebar sections; a module's menu sits under its category unless it names one.
+    // Added to every module's sidebar entry.
+    'menu' => [
+        'dashboard' => 'Dashboard',
+        'settings' => 'Settings',
+    ],
+
     'sections' => [
         'people' => 'People',
         'business' => 'Business',

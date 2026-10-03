@@ -21,6 +21,8 @@ final readonly class ModuleDefinition
      * @param  list<class-string>  $syncRecords  SyncableRecords classes.
      * @param  list<array{key: string, label: string, route: string, permission: string, icon?: string}>  $quickActions  Entries of the header "New" menu.
      * @param  list<class-string>  $attention  AttentionProvider classes (header bell).
+     * @param  list<array{key: string, label: string, type: string, provider: class-string, permission?: string, size?: int, overview?: bool}>  $widgets  The module's dashboard.
+     * @param  list<array{key: string, label: string, route: string, permission?: string}>  $settingsPages  The module's own setting screens (besides its rules).
      */
     public function __construct(
         public string $key,
@@ -48,6 +50,10 @@ final readonly class ModuleDefinition
         public array $quickActions = [],
         // Work waiting for someone, counted in the header bell: AttentionProvider classes.
         public array $attention = [],
+        // Every module has a dashboard and a settings page (UI-1b); an empty list
+        // shows a "coming soon" dashboard or only the module's rules.
+        public array $widgets = [],
+        public array $settingsPages = [],
     ) {}
 
     /**
@@ -76,7 +82,23 @@ final readonly class ModuleDefinition
             syncRecords: array_values($manifest['sync_records'] ?? []),
             quickActions: array_values($manifest['quick_actions'] ?? []),
             attention: array_values($manifest['attention'] ?? []),
+            widgets: array_values($manifest['dashboard']['widgets'] ?? []),
+            settingsPages: array_values($manifest['settings']['pages'] ?? []),
         );
+    }
+
+    /**
+     * @return array{key: string, label: string, type: string, provider: class-string, permission?: string, size?: int, overview?: bool}|null
+     */
+    public function widget(string $key): ?array
+    {
+        foreach ($this->widgets as $widget) {
+            if ($widget['key'] === $key) {
+                return $widget;
+            }
+        }
+
+        return null;
     }
 
     /** Translated display name. */

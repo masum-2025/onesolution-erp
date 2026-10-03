@@ -12,7 +12,7 @@ import AppDrawer from '@/components/AppDrawer.vue';
 import AppButton from '@/components/AppButton.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import { api } from '@/lib/http';
-import { cached } from '@/lib/cache';
+import { loadMenu } from '@/lib/menu';
 import { on } from '@/lib/events';
 import { can, currentOrganization, enterContext, hasOfflineData, isPortalMember, session } from '@/lib/session';
 import { readPref, writePref } from '@/lib/storage';
@@ -46,7 +46,7 @@ async function loadShellData() {
         return;
     }
     try {
-        const response = await cached('menu', () => api('/api/menu'));
+        const response = await loadMenu();
         menu.value = response.data;
         quickActions.value = response.quick_actions ?? [];
     } catch {
