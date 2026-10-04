@@ -2,19 +2,31 @@
 
 /*
 | Module manifest: read by App\Platform\Modules\ModuleRegistry.
-| Business numbers never live here; rules[] are declared in Phase 3.
+| Business numbers never live here; they are rules (Rules::get('attendance.*')).
 */
+
+use Modules\Attendance\Dashboard\CheckedInToday;
+use Modules\Attendance\Dashboard\CorrectionsWaiting;
 
 return [
     'key' => 'attendance',
     'name' => 'attendance::module.name',
     'description' => 'attendance::module.description',
-    'version' => '0.1.0',
+    'version' => '1.0.0',
     'category' => 'business',
+    // Employees are HRM's (read through Modules\Hrm\Directory\EmployeeDirectory).
     'requires' => ['hrm'],
     'sectors' => ['*'],
     'plans' => ['*'],
-    'permissions' => ['attendance.view', 'attendance.manage'],
+    'permissions' => [
+        'attendance.view',
+        // Shifts, holidays, rosters; punches written or voided by hand; corrections for someone.
+        'attendance.manage',
+        // Check in and out for oneself, and ask to fix one's own day.
+        'attendance.punch',
+        // Approve or reject corrections (never one's own).
+        'attendance.correct',
+    ],
     'rules' => [
         [
             'key' => 'attendance.late_grace_minutes',
@@ -52,6 +64,18 @@ return [
             'sort_order' => 30,
         ],
         [
+            'key' => 'attendance.overtime_min_minutes',
+            'type' => 'integer',
+            'schema' => ['minimum' => 0, 'maximum' => 240],
+            'default' => 30,
+            'label' => 'attendance::rules.overtime_min_minutes.label',
+            'description' => 'attendance::rules.overtime_min_minutes.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch', 'department'],
+            'country_specific' => true,
+            'category' => 'lateness',
+            'sort_order' => 35,
+        ],
+        [
             'key' => 'attendance.geo_fence_required',
             'type' => 'boolean',
             'default' => false,
@@ -60,6 +84,39 @@ return [
             'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch', 'department'],
             'category' => 'check_in',
             'sort_order' => 40,
+        ],
+        [
+            'key' => 'attendance.self_punch',
+            'type' => 'boolean',
+            'default' => true,
+            'label' => 'attendance::rules.self_punch.label',
+            'description' => 'attendance::rules.self_punch.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch', 'department'],
+            'category' => 'check_in',
+            'sort_order' => 45,
+        ],
+        [
+            'key' => 'attendance.early_punch_minutes',
+            'type' => 'integer',
+            'schema' => ['minimum' => 30, 'maximum' => 600],
+            'default' => 240,
+            'label' => 'attendance::rules.early_punch_minutes.label',
+            'description' => 'attendance::rules.early_punch_minutes.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'check_in',
+            'sort_order' => 50,
+        ],
+        [
+            'key' => 'attendance.correction_max_days',
+            'type' => 'integer',
+            'schema' => ['minimum' => 0, 'maximum' => 366],
+            'default' => 31,
+            'label' => 'attendance::rules.correction_max_days.label',
+            'description' => 'attendance::rules.correction_max_days.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
+            'sensitive' => true,
+            'category' => 'corrections',
+            'sort_order' => 60,
         ],
     ],
     'menu' => [
@@ -74,8 +131,11 @@ return [
     'events' => [],
     'is_core' => false,
     'requires_consent' => false,
-    // Every module has a dashboard and a settings page; widgets and own setting
-    // screens come with the module's business screens (its rules show already).
-    'dashboard' => ['widgets' => []],
+    // Screens (and their settings pages) come with ATT-2.
+    'dashboard' => ['widgets' => [
+        ['key' => 'checked_in', 'label' => 'attendance::dashboard.checked_in', 'type' => 'stat', 'provider' => CheckedInToday::class, 'permission' => 'attendance.view', 'overview' => true],
+        ['key' => 'corrections', 'label' => 'attendance::dashboard.corrections', 'type' => 'stat', 'provider' => CorrectionsWaiting::class, 'permission' => 'attendance.view'],
+    ]],
+    'attention' => [CorrectionsWaiting::class],
     'settings' => ['pages' => []],
 ];

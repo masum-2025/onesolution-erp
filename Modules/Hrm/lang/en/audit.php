@@ -5,6 +5,7 @@
 return [
     'employee_hired' => 'Employee hired',
     'employee_updated' => 'Employee details changed',
+    'login_linked' => 'Employee login linked',
     'employee_confirmed' => 'Employee confirmed after probation',
     'employee_transferred' => 'Employee transferred',
     'employee_promoted' => 'Employee promoted',

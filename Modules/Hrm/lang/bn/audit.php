@@ -5,6 +5,7 @@
 return [
     'employee_hired' => 'কর্মী নিয়োগ',
     'employee_updated' => 'কর্মীর তথ্য পরিবর্তন',
+    'login_linked' => 'কর্মীর লগইন যুক্ত করা হয়েছে',
     'employee_confirmed' => 'শিক্ষানবিশকাল শেষে স্থায়ীকরণ',
     'employee_transferred' => 'কর্মী বদলি',
     'employee_promoted' => 'কর্মীর পদোন্নতি',

@@ -167,6 +167,21 @@ class EmployeeController extends Controller
             ->header('Cache-Control', 'no-store, private');
     }
 
+    /** Link the login the employee uses (user_id), or unlink it (null). */
+    public function login(Request $request, string $organization, string $employee): JsonResponse
+    {
+        $employee = $this->employeeIn($this->findVisible($organization), $employee);
+        Gate::authorize('hrm.manage', $this->unitOf($employee));
+        $data = $request->validate([
+            'base_version' => ['required', 'integer', 'min:1'],
+            'user_id' => ['present', 'nullable', 'string', 'max:26'],
+        ]);
+
+        $linked = $this->lifecycle->linkLogin($employee, (int) $data['base_version'], $data['user_id'], $request->user());
+
+        return response()->json(['data' => $this->presenter->detail($linked->load(['position', 'manager']))]);
+    }
+
     public function history(string $organization, string $employee): JsonResponse
     {
         $employee = $this->employeeIn($this->findVisible($organization), $employee);

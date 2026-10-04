@@ -2299,6 +2299,55 @@ and the sidebar lights the entry with the longest matching link.
   reconciliation and year-end closing (posting key `accounting.retained_earnings`),
   `multi_currency` with exchange rates.
 
+## Attendance module (business module 3: ATT-1 backend)
+
+Requires HRM. Employees are HRM's and are only read through HRM's public service
+`Modules\Hrm\Directory\EmployeeDirectory` (`find`, `forUser`, `inUnits`, `many`, returning
+`EmployeeRecord`); Attendance never touches `hrm_*` tables. HR links an employee to the login they
+use with `PUT /api/organizations/{org}/hrm/employees/{id}/login` (`hrm.manage`; an active staff or
+portal member of the company, one employee per login; audited `hrm.login_linked`).
+
+- **Tables** (tenant, `organization_id` = the company, `unit_id` = the employee's branch or
+  department): `att_shifts` (start/end in minutes after midnight; end ≤ start = night shift;
+  unpaid break), `att_holidays` (company-wide or for a unit and below), `att_rosters` (shift from a
+  day; a new roster closes the previous one), `att_punches` (UTC instants, append-only, voided with
+  a reason, `op_id` unique), `att_days` (worked out), `att_corrections`.
+- **Days** (`Services\Days` + pure `Services\DayCalculator`): a day belongs to the shift rostered
+  for it; punches from `attendance.early_punch_minutes` (240) before the shift start until the same
+  time the next day count, so a night shift is one day dated when it started. First punch = in,
+  last = out. Worked = out − in, less the break. Late beyond `attendance.late_grace_minutes` (10);
+  half day beyond `attendance.half_day_after_minutes` (240); over time beyond the shift's expected
+  minutes once at least `attendance.overtime_min_minutes` (30). No punch: `absent` once the shift
+  is over, `pending` before; in without out after the shift: `incomplete`. Weekends
+  (`attendance.weekend_days` at the unit) and holidays are days off (time worked there is over
+  time). No days before joining or after leaving. Days are recalculated whenever a punch,
+  correction or read touches them, and `attendance:close-days` (daily 01:40 UTC) works out every
+  rostered employee's yesterday (company timezone) so absences appear.
+- **API** (`/api/organizations/{org}/attendance`, `module:attendance`, permission checked at the
+  employee's unit): `shifts` (GET; POST/PATCH `attendance.manage` at the company), `holidays`
+  (`?year`; POST/DELETE, a unit's own at that unit), `rosters` (`?employee_id`; POST
+  `{employee_ids, shift_id|null, from}`), `days?from&to[&employee_id]` (≤ 62 days, 50 employees a
+  page), `punches` (GET `?employee_id&from&to`; POST by HR with a note, local time, audited;
+  `punches/{id}/void` with a reason), `corrections` (GET `?status`; POST for someone,
+  `attendance.manage`; `corrections/{id}/{approve|reject}` with `attendance.correct`, never the
+  person who asked or whose day it is). Self-service through the linked login: `me`, `me/days?month`,
+  `me/corrections`, `me/punch` (`attendance.punch`, rule `attendance.self_punch`, 6 a minute, a
+  second tap within a minute or a repeated `op_id` is the same punch; `attendance.geo_fence_required`
+  refuses until location checks arrive in ATT-3). Corrections go back at most
+  `attendance.correction_max_days` (31, sensitive). Portal: `GET /api/portal/attendance/days?month`
+  for portal members linked to `hrm.employee` records.
+- **For Payroll**: `Modules\Attendance\Services\AttendanceSummary::forPeriod($company, $employeeIds,
+  $from, $to)` — per employee, days by status, attended days, worked, late and over-time minutes.
+- Dashboard: "Checked in today", "Corrections to decide" (also in the bell for deciders). Audit:
+  `attendance.shift_*`, `holiday_*`, `roster_assigned`, `punch_written`, `punch_voided`,
+  `correction_*`. Data export: `shifts`, `holidays`, `rosters`, `punches`, `days`, `corrections`.
+- Next: ATT-2 screens; ATT-3 location check, device files, offline punches. Leave is a later module.
+
+### Future expansion (Attendance)
+
+- A new sector or country changes rules only (weekend days, grace, over-time minimum) and its
+  holiday list; shifts and rosters are each company's own data. No code change.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

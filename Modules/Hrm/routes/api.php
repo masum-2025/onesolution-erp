@@ -41,6 +41,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
             Route::delete('imports/{import}', [EmployeeImportController::class, 'destroy']);
             Route::post('employees', [EmployeeController::class, 'store']);
             Route::patch('employees/{employee}', [EmployeeController::class, 'update']);
+            Route::put('employees/{employee}/login', [EmployeeController::class, 'login']);
             // Unknown steps are refused by the controller, after the organization checks.
             Route::post('employees/{employee}/steps/{step}', EmploymentStepController::class);
             Route::post('employees/{employee}/documents', [EmployeeDocumentController::class, 'store']);

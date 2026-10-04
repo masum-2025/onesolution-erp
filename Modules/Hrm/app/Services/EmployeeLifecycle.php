@@ -8,8 +8,10 @@ use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Databases\TenantDatabases;
+use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Exceptions\OrganizationAccessDenied;
 use App\Platform\Tenancy\Models\Organization;
+use App\Platform\Tenancy\Models\OrganizationMembership;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -130,6 +132,41 @@ class EmployeeLifecycle
             $employee->save();
 
             $this->audit->record('hrm.employee_updated', $employee, new: ['fields' => $changed], actor: $actor, organizationId: $employee->organization_id);
+
+            return $employee;
+        });
+    }
+
+    /**
+     * Link the employee to the login they use (or unlink it, null), so they
+     * can check in and see their own records. The login must belong to a
+     * member of the company (staff or portal) and to no other employee of it.
+     */
+    public function linkLogin(Employee $employee, int $baseVersion, ?string $userId, User $actor): Employee
+    {
+        $company = $this->companyOfEmployee($employee);
+        if ($userId !== null) {
+            $member = OrganizationMembership::query()->where('user_id', $userId)
+                ->whereIn('organization_id', Organization::query()->subtreeOf($company)->pluck('id')->all())
+                ->where('status', MembershipStatus::Active->value)->exists();
+            if (! $member) {
+                throw ValidationException::withMessages(['user_id' => __('hrm::hrm.validation.login_not_member')]);
+            }
+        }
+
+        return $this->transaction($company, function () use ($employee, $baseVersion, $userId, $actor, $company) {
+            $employee = $this->lock($employee, $baseVersion);
+            if ($userId !== null && Employee::query()->where('company_id', $company->getKey())->where('user_id', $userId)
+                ->whereKeyNot($employee->getKey())->where('status', '!=', EmployeeStatus::Exited->value)->exists()) {
+                throw ValidationException::withMessages(['user_id' => __('hrm::hrm.validation.login_taken')]);
+            }
+            if ($employee->user_id === $userId) {
+                return $employee;
+            }
+
+            $old = $employee->user_id;
+            $employee->forceFill(['user_id' => $userId, 'version' => $employee->version + 1])->save();
+            $this->audit->record('hrm.login_linked', $employee, old: ['user_id' => $old], new: ['user_id' => $userId], actor: $actor, organizationId: $employee->organization_id);
 
             return $employee;
         });
