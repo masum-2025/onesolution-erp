@@ -450,5 +450,48 @@
         "due": "Due {date}",
         "none_due": "Nothing is due on this invoice.",
         "print": "Print"
+    },
+    "tax": {
+        "title": "Tax codes",
+        "text": "The VAT rates the company charges on sales and pays on purchases. Documents keep the rate they were written with.",
+        "add": "Add tax code",
+        "edit": "Change tax code",
+        "code": "Code",
+        "rate": "Rate",
+        "kind": "Kind",
+        "applies_to": "Used on",
+        "active": "In use",
+        "off": "Not in use",
+        "saved": "Tax code saved.",
+        "none": "No tax",
+        "net": "Net",
+        "vat": "VAT",
+        "invalid_rate": "Enter a rate between 0 and 100, with at most 2 decimals.",
+        "empty_title": "No tax codes",
+        "empty_text": "Add the rates your company charges.",
+        "review_note": "Rates from the country profile are a starting point: confirm them with your tax adviser.",
+        "kinds": {
+            "standard": "Standard",
+            "reduced": "Reduced",
+            "zero": "Zero-rated",
+            "exempt": "Exempt"
+        },
+        "sides": {
+            "both": "Sales and purchases",
+            "sales": "Sales",
+            "purchases": "Purchases"
+        },
+        "report": {
+            "tab": "VAT",
+            "code": "Tax code",
+            "sales": "Sales",
+            "purchases": "Purchases",
+            "taxable": "Taxable",
+            "output": "Output VAT",
+            "input": "Input VAT",
+            "payable": "VAT payable",
+            "refundable": "VAT to claim back",
+            "no_tax": "No tax"
+        }
     }
 }

@@ -21,4 +21,5 @@ return [
     'menu_bills' => 'Bills and vendor credits',
     'menu_payments' => 'Money paid',
     'new_invoice' => 'New invoice',
+    'menu_tax_codes' => 'Tax codes',
 ];

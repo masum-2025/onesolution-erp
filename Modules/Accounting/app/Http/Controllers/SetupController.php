@@ -34,6 +34,8 @@ class SetupController extends Controller
             'suggested_template' => $this->chart->suggestedTemplate($company),
             'templates' => array_map(fn (string $key) => ['key' => $key, 'label' => __("accounting::accounting.templates.{$key}")], $templates->keys()),
             'fiscal_year_start' => $rules->get('accounting.fiscal_year_start', $contexts->forOrganization($company)),
+            // How the invoice form works out VAT for new documents.
+            'prices_include_tax' => (bool) $rules->get('accounting.prices_include_tax', $contexts->forOrganization($company)),
             'can_set_up' => Gate::allows('accounting.manage', $company),
         ]]);
     }

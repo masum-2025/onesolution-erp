@@ -52,7 +52,12 @@ return [
         'label' => 'Keep money not yet matched to invoices',
         'description' => 'Allow receiving or paying more than the invoices or bills chosen; the rest waits as an advance.',
     ],
+    'prices_include_tax' => [
+        'label' => 'Prices include tax',
+        'description' => 'Prices typed on invoices and bills already include VAT (as in shops). Off: VAT is added on top.',
+    ],
     'categories' => [
+        'tax' => 'Tax',
         'receivables' => 'Customers and vendors',
         'approval' => 'Approvals',
         'period' => 'Periods',

@@ -11,11 +11,11 @@ use LogicException;
 
 /**
  * One line of a document: what was sold or bought, quantity in thousandths
- * (1.5 = 1500), unit price and amount in minor units, and the income or
- * expense account and cost centre it goes to. A draft's lines are replaced
+ * (1.5 = 1500), unit price in minor units, its net amount and tax (with the
+ * code and rate used), and the income or expense account and cost centre. A draft's lines are replaced
  * as a whole; lines are never changed.
  */
-#[Fillable(['organization_id', 'document_id', 'line_no', 'description', 'quantity_milli', 'unit_price_minor', 'amount_minor', 'account_id', 'cost_centre_id'])]
+#[Fillable(['organization_id', 'document_id', 'line_no', 'description', 'quantity_milli', 'unit_price_minor', 'amount_minor', 'account_id', 'cost_centre_id', 'tax_code_id', 'tax_rate_bp', 'tax_minor'])]
 class DocumentLine extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;
@@ -31,6 +31,6 @@ class DocumentLine extends Model
 
     protected function casts(): array
     {
-        return ['line_no' => 'integer', 'quantity_milli' => 'integer', 'unit_price_minor' => 'integer', 'amount_minor' => 'integer'];
+        return ['line_no' => 'integer', 'quantity_milli' => 'integer', 'unit_price_minor' => 'integer', 'amount_minor' => 'integer', 'tax_rate_bp' => 'integer', 'tax_minor' => 'integer'];
     }
 }

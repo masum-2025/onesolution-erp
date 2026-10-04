@@ -80,7 +80,7 @@ it('hands the books to the client\'s data export, for that client only', functio
     $datasets = app(AccountingExporter::class)->export($this->w->c1, $ids);
     $journals = iterator_to_array($datasets['journals'], false);
 
-    expect(array_keys($datasets))->toBe(['accounts', 'fiscal_years', 'periods', 'journals', 'journal_lines', 'posting_accounts', 'parties', 'documents', 'document_lines', 'settlements', 'allocations'])
+    expect(array_keys($datasets))->toBe(['accounts', 'fiscal_years', 'periods', 'journals', 'journal_lines', 'posting_accounts', 'parties', 'documents', 'document_lines', 'tax_codes', 'settlements', 'allocations'])
         ->and(array_column($journals, 'id'))->toBe([$this->posted['id']])
         ->and($journals[0])->toMatchArray(['number' => 'JV-2026-00001', 'total_minor' => 1000, 'currency_code' => 'BDT'])
         ->and(iterator_to_array($datasets['journal_lines'], false))->toHaveCount(2)

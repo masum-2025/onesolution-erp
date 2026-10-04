@@ -38,6 +38,8 @@ return [
         'payment' => 'Money paid :number · :party',
     ],
     'posting_keys' => [
+        'tax_output' => 'VAT on sales (owed to the tax office)',
+        'tax_input' => 'VAT on purchases (claimed back)',
         'online_collections' => 'Money paid online by customers',
         'receivable' => 'What customers owe',
         'payable' => 'What is owed to vendors',
@@ -56,6 +58,7 @@ return [
         'paid_online' => 'Paid online for :number',
     ],
     'errors' => [
+        'tax_code_not_found' => 'Tax code not found. Reload the list of tax codes.',
         'sourced_journal' => 'This entry came from an invoice, receipt or another module. Void it there, so both stay in step.',
         'party_not_found' => 'Customer or vendor not found. Check the link or search the list.',
         'document_not_found' => 'Document not found. Check the link or search the list.',
@@ -104,6 +107,7 @@ return [
     ],
 
     'validation' => [
+        'tax_code' => 'Choose an active tax code for this kind of document, or none.',
         'party_role' => 'Mark it as a customer, a vendor, or both.',
         'party_customer' => 'Choose an active customer.',
         'party_vendor' => 'Choose an active vendor.',

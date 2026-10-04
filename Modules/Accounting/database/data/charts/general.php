@@ -24,6 +24,7 @@ return [
         ['code' => '1140', 'name' => ['en' => 'Accounts receivable', 'bn' => 'প্রাপ্য হিসাব'], 'parent' => '1100'],
         ['code' => '1150', 'name' => ['en' => 'Inventory', 'bn' => 'মজুদ পণ্য'], 'parent' => '1100'],
         ['code' => '1160', 'name' => ['en' => 'Advances and prepayments', 'bn' => 'অগ্রিম ও অগ্রিম পরিশোধ'], 'parent' => '1100'],
+        ['code' => '1170', 'name' => ['en' => 'VAT receivable (input VAT)', 'bn' => 'ফেরতযোগ্য ভ্যাট (উপকরণ কর)'], 'parent' => '1100'],
         ['code' => '1200', 'name' => ['en' => 'Fixed assets', 'bn' => 'স্থায়ী সম্পদ'], 'parent' => '1000', 'group' => true],
         ['code' => '1210', 'name' => ['en' => 'Furniture and fixtures', 'bn' => 'আসবাবপত্র ও ফিক্সচার'], 'parent' => '1200'],
         ['code' => '1220', 'name' => ['en' => 'Equipment and machinery', 'bn' => 'যন্ত্রপাতি'], 'parent' => '1200'],
@@ -67,5 +68,7 @@ return [
         'accounting.receivable' => '1140',
         'accounting.payable' => '2110',
         'accounting.online_collections' => '1130',
+        'accounting.tax_output' => '2130',
+        'accounting.tax_input' => '1170',
     ],
 ];

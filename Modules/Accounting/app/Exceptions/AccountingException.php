@@ -238,6 +238,11 @@ class AccountingException extends TenancyException
         return new self('nothing_to_allocate', 409);
     }
 
+    public static function taxCodeNotFound(): self
+    {
+        return new self('tax_code_not_found', 404);
+    }
+
     public static function rangeTooLarge(int $max): self
     {
         return new self('range_too_large', 422, ['max' => (string) $max]);

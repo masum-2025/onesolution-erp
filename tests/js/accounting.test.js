@@ -3,6 +3,10 @@ import {
     accountTree,
     amountText,
     autoAllocate,
+    bpToPercent,
+    documentTaxTotals,
+    percentToBp,
+    taxSplit,
     daysUntilDue,
     documentPayload,
     documentTotals,
@@ -202,5 +206,38 @@ describe('Accounting receivables and payables screens', () => {
         expect(daysUntilDue('2026-10-20', '2026-10-15')).toBe(5);
         expect(daysUntilDue('2026-10-10', '2026-10-15')).toBe(-5);
         expect(daysUntilDue('2027-03-01', '2027-02-28')).toBe(1);
+    });
+});
+
+describe('Accounting tax', () => {
+    it('works out VAT like the server: on top, or inside prices, integers half up', () => {
+        expect(taxSplit(100000, 1500, false)).toEqual({ net: 100000, tax: 15000 });
+        expect(taxSplit(333, 1500, false)).toEqual({ net: 333, tax: 50 });
+        expect(taxSplit(1000, 1500, true)).toEqual({ net: 870, tax: 130 });
+        expect(taxSplit(115000, 1500, true)).toEqual({ net: 100000, tax: 15000 });
+        expect(taxSplit(500, 0, true)).toEqual({ net: 500, tax: 0 });
+        expect(taxSplit(null, 1500, false)).toEqual({ net: null, tax: null });
+    });
+
+    it('adds up net, VAT and total of the lines being written', () => {
+        const codes = [{ id: 'vat15', rate_bp: 1500 }, { id: 'vat75', rate_bp: 750 }];
+        const lines = [
+            { quantity: '1', price: '1000', tax_code_id: 'vat15' },
+            { quantity: '1', price: '333.33', tax_code_id: 'vat75' },
+            { quantity: '1', price: '50', tax_code_id: '' },
+        ];
+        expect(documentTaxTotals(lines, 'BDT', codes, false)).toMatchObject({ net: 138333, tax: 17500, total: 155833, invalid: false });
+        expect(documentTaxTotals([{ quantity: '1', price: '10', tax_code_id: 'vat15' }], 'BDT', codes, true)).toMatchObject({ net: 870, tax: 130, total: 1000 });
+    });
+
+    it('reads rates as percentages and shows basis points back', () => {
+        expect(percentToBp('7.5')).toBe(750);
+        expect(percentToBp('১৫')).toBe(1500);
+        expect(percentToBp('100')).toBe(10000);
+        expect(percentToBp('100.01')).toBeNull();
+        expect(percentToBp('7.555')).toBeNull();
+        expect(bpToPercent(750)).toBe('7.5');
+        expect(bpToPercent(1500)).toBe('15');
+        expect(bpToPercent(5)).toBe('0.05');
     });
 });

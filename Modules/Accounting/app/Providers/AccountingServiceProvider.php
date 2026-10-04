@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Accounting\Charts\ChartTemplates;
 use Modules\Accounting\Console\MapPostingAccounts;
+use Modules\Accounting\Console\SeedTaxCodes;
 use Modules\Accounting\Export\AccountingExporter;
 
 /**
@@ -37,7 +38,7 @@ class AccountingServiceProvider extends ServiceProvider
             ->by('accounting-reports:'.($request->user()?->getKey() ?? $request->ip())));
 
         if ($this->app->runningInConsole()) {
-            $this->commands([MapPostingAccounts::class]);
+            $this->commands([MapPostingAccounts::class, SeedTaxCodes::class]);
         }
 
         if (! $this->app->routesAreCached()) {

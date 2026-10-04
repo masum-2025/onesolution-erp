@@ -97,7 +97,7 @@ it('shows a portal customer their own posted invoices, and nobody else\'s', func
         ->and($list['documents'][0])->toMatchArray(['number' => 'INV-2026-00001', 'balance_minor' => 350000, 'due_date' => '2026-11-14']);
 
     $one = $this->asToken($this->portal)->getJson("/api/portal/accounting/invoices/{$mine['id']}")->assertOk()->json('data');
-    expect($one['lines'][0])->toBe(['description' => 'Tuition fee October', 'quantity' => '1', 'unit_price_minor' => 350000, 'amount_minor' => 350000])
+    expect($one['lines'][0])->toBe(['description' => 'Tuition fee October', 'quantity' => '1', 'unit_price_minor' => 350000, 'amount_minor' => 350000, 'tax_rate_bp' => 0, 'tax_minor' => 0])
         ->and(json_encode($one))->not->toContain('account');
 
     // Another customer's invoice, by guessing its id: the same not found.

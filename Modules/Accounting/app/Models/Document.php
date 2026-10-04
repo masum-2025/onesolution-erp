@@ -18,7 +18,7 @@ use Modules\Accounting\Enums\DocumentType;
  */
 #[Fillable([
     'organization_id', 'type', 'party_id', 'issue_date', 'due_date', 'reference', 'notes',
-    'status', 'currency_code', 'total_minor', 'created_by', 'version',
+    'status', 'currency_code', 'net_minor', 'tax_minor', 'total_minor', 'prices_include_tax', 'created_by', 'version',
 ])]
 class Document extends Model
 {
@@ -52,7 +52,10 @@ class Document extends Model
             'status' => DocumentStatus::class,
             'issue_date' => 'immutable_date',
             'due_date' => 'immutable_date',
+            'net_minor' => 'integer',
+            'tax_minor' => 'integer',
             'total_minor' => 'integer',
+            'prices_include_tax' => 'boolean',
             'allocated_minor' => 'integer',
             'posted_at' => 'immutable_datetime',
             'voided_at' => 'immutable_datetime',

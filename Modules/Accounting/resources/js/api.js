@@ -31,6 +31,10 @@ export function accountingApi(organizationId) {
 
         report: (name, query) => api(`${base}/reports/${name}`, { query }),
 
+        taxCodes: () => api(`${base}/tax-codes`),
+        createTaxCode: (body) => api(`${base}/tax-codes`, { method: 'POST', body }),
+        updateTaxCode: (id, body) => api(`${base}/tax-codes/${id}`, { method: 'PATCH', body }),
+
         parties: (query) => api(`${base}/parties`, { query }),
         party: (id) => api(`${base}/parties/${id}`),
         createParty: (body) => api(`${base}/parties`, { method: 'POST', body }),

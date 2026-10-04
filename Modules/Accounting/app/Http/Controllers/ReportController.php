@@ -11,6 +11,7 @@ use Modules\Accounting\Http\Requests\ReportRequest;
 use Modules\Accounting\Services\Books;
 use Modules\Accounting\Services\Receivables;
 use Modules\Accounting\Services\Reports;
+use Modules\Accounting\Services\TaxReport;
 
 /**
  * Trial balance, account ledger, profit and loss, balance sheet, and for
@@ -39,6 +40,7 @@ class ReportController extends Controller
             'profit-loss' => $this->reports->profitAndLoss($company, $data['from'], $data['to'], $costCentres),
             'balance-sheet' => $this->reports->balanceSheet($company, $asOf, $costCentres),
             'aging' => $receivables->aging($company, $data['side'], $asOf),
+            'vat' => app(TaxReport::class)->vat($company, $data['from'], $data['to']),
             'statement' => $receivables->statement($company, $this->partyIn($company, $data['party_id']), $data['side'], $data['from'], $data['to']),
             default => throw AccountingException::unknownStep(),
         }]);

@@ -13,7 +13,7 @@ import { subtreeIds, visibleOrganizations } from '@/lib/organizations';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { accountingApi } from '../api';
-import { accountTree, documentFormLines, documentPayload, documentTotals, postableAccounts, sideOf, todayIn } from '../lib';
+import { accountTree, documentFormLines, documentPayload, documentTaxTotals, postableAccounts, sideOf, todayIn } from '../lib';
 
 /**
  * Write an invoice, credit note, bill or vendor credit, or change a draft or
@@ -41,7 +41,9 @@ const parties = ref([]);
 const accounts = ref([]);
 const units = ref([]);
 
-const blankLine = () => ({ description: '', quantity: '1', price: '', account_id: '', cost_centre_id: '' });
+const blankLine = () => ({ description: '', quantity: '1', price: '', account_id: '', cost_centre_id: '', tax_code_id: '' });
+const taxCodes = ref([]);
+const inclusive = ref(false);
 const form = reactive({
     party_id: route.query.party_id ?? '',
     issue_date: todayIn(session.me?.context?.settings?.timezone),
@@ -57,7 +59,13 @@ const lineAccounts = computed(() => {
     const usable = new Set(postableAccounts(accounts.value).filter((account) => allowed.includes(account.type)).map((account) => account.id));
     return accountTree(accounts.value).flat.filter((account) => usable.has(account.id));
 });
-const totals = computed(() => documentTotals(form.lines, currency.value));
+// Tax codes of this side; VAT on top of prices or inside them (the company rule, or the saved document's).
+const lineTaxCodes = computed(() => taxCodes.value.filter((code) => code.is_active && [side.value, 'both'].includes(code.applies_to)));
+const totals = computed(() => {
+    const result = documentTaxTotals(form.lines, currency.value, taxCodes.value, inclusive.value);
+    // A line shows quantity x price as typed: net, or with tax when prices include it.
+    return { ...result, amounts: result.rows.map((row) => (row.net === null ? null : row.net + (inclusive.value ? row.tax : 0))) };
+});
 const money = (amount) => formatMoney({ amount, currency: currency.value });
 
 onMounted(load);
@@ -68,13 +76,16 @@ async function load() {
     try {
         const existing = editingId.value ? (await books.document(editingId.value)).data : null;
         if (existing) type.value = existing.type;
-        const [setup, list, chart, visible] = await Promise.all([
+        const [setup, list, chart, visible, codes] = await Promise.all([
             books.setup(),
             books.parties({ role: side.value === 'sales' ? 'customers' : 'vendors', per_page: 100 }),
             books.accounts(),
             visibleOrganizations().catch(() => []),
+            books.taxCodes(),
         ]);
         currency.value = setup.data.currency;
+        inclusive.value = existing ? existing.prices_include_tax : setup.data.prices_include_tax;
+        taxCodes.value = codes.data;
         parties.value = list.data;
         accounts.value = chart.data;
         const inCompany = subtreeIds(visible, org.id);
@@ -177,16 +188,17 @@ const ready = computed(() => form.party_id && !totals.value.invalid && totals.va
             </section>
 
             <section class="card">
-                <div class="hidden gap-3 border-b border-line px-5 py-2 text-[12px] font-medium text-muted lg:grid lg:grid-cols-[minmax(0,1.6fr)_4.5rem_7rem_7rem_minmax(0,1.2fr)_minmax(0,1.2fr)]" aria-hidden="true">
+                <div class="hidden gap-3 border-b border-line px-5 py-2 text-[12px] font-medium text-muted lg:grid lg:grid-cols-[minmax(0,1.5fr)_4.5rem_7rem_7rem_minmax(0,1.2fr)_8.5rem_minmax(0,1fr)]" aria-hidden="true">
                     <span>{{ t('accounting.documents.description') }}</span>
                     <span class="pe-3 text-end">{{ t('accounting.documents.quantity') }}</span>
                     <span class="pe-3 text-end">{{ t('accounting.documents.price') }}</span>
                     <span class="text-end">{{ t('accounting.documents.amount') }}</span>
                     <span>{{ t('accounting.documents.account') }}</span>
+                    <span>{{ t('accounting.tax.vat') }}</span>
                     <span>{{ t('accounting.form.cost_centre') }}</span>
                 </div>
                 <ol class="divide-y divide-line">
-                    <li v-for="(line, index) in form.lines" :key="index" class="grid grid-cols-2 gap-3 px-4 py-4 sm:px-5 lg:grid-cols-[minmax(0,1.6fr)_4.5rem_7rem_7rem_minmax(0,1.2fr)_minmax(0,1.2fr)] lg:items-start">
+                    <li v-for="(line, index) in form.lines" :key="index" class="grid grid-cols-2 gap-3 px-4 py-4 sm:px-5 lg:grid-cols-[minmax(0,1.5fr)_4.5rem_7rem_7rem_minmax(0,1.2fr)_8.5rem_minmax(0,1fr)] lg:items-start">
                         <AppField v-slot="{ id }" :label="t('accounting.documents.description')" :error="fieldError(`lines.${index}.description`)" class="col-span-2 lg:col-span-1 lg:[&_label]:sr-only">
                             <input :id="id" v-model="line.description" class="field-input" maxlength="255" />
                         </AppField>
@@ -206,6 +218,12 @@ const ready = computed(() => form.party_id && !totals.value.invalid && totals.va
                                 <option v-for="account in lineAccounts" :key="account.id" :value="account.id">{{ account.code }} · {{ account.name }}</option>
                             </select>
                         </AppField>
+                        <AppField v-slot="{ id }" :label="t('accounting.tax.vat')" :error="fieldError(`lines.${index}.tax_code_id`)" class="col-span-2 lg:col-span-1 lg:[&_label]:sr-only">
+                            <select :id="id" v-model="line.tax_code_id" class="field-input" :disabled="!lineTaxCodes.length">
+                                <option value="">{{ t('accounting.tax.none') }}</option>
+                                <option v-for="code in lineTaxCodes" :key="code.id" :value="code.id">{{ code.name }}</option>
+                            </select>
+                        </AppField>
                         <div class="col-span-2 flex items-center justify-between gap-2 lg:col-span-1">
                             <select v-if="units.length" v-model="line.cost_centre_id" class="field-input min-w-0 flex-1" :aria-label="t('accounting.form.cost_centre')">
                                 <option value="">{{ t('accounting.form.no_cost_centre') }}</option>
@@ -218,7 +236,11 @@ const ready = computed(() => form.party_id && !totals.value.invalid && totals.va
                 </ol>
                 <div class="flex items-center justify-between border-t border-line px-4 py-3 sm:px-5">
                     <AppButton size="sm" variant="ghost" :icon="Plus" @click="form.lines.push(blankLine())">{{ t('accounting.documents.add_line') }}</AppButton>
-                    <span class="text-[14px]"><span class="text-muted">{{ t('accounting.documents.total') }}:</span> <span class="tabular font-semibold">{{ money(totals.total) }}</span></span>
+                    <span class="flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-[13px]" aria-live="polite">
+                        <span v-if="totals.tax"><span class="text-muted">{{ t('accounting.tax.net') }}:</span> <span class="tabular">{{ money(totals.net) }}</span></span>
+                        <span v-if="totals.tax"><span class="text-muted">{{ t('accounting.tax.vat') }}:</span> <span class="tabular">{{ money(totals.tax) }}</span></span>
+                        <span class="text-[14px]"><span class="text-muted">{{ t('accounting.documents.total') }}:</span> <span class="tabular font-semibold">{{ money(totals.total) }}</span></span>
+                    </span>
                 </div>
             </section>
 

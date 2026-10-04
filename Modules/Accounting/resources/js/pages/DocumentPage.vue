@@ -186,7 +186,7 @@ function printPage() {
                         </thead>
                         <tbody class="divide-y divide-line">
                             <tr v-for="line in document.lines" :key="line.line_no">
-                                <td class="py-2 pe-3">{{ line.description }}<span class="block text-[11.5px] text-muted print:hidden">{{ line.account_code }} · {{ line.account_name }}</span></td>
+                                <td class="py-2 pe-3">{{ line.description }}<span class="block text-[11.5px] text-muted print:hidden">{{ line.account_code }} · {{ line.account_name }}<template v-if="line.tax_minor"> · {{ t('accounting.tax.vat') }} {{ money(line.tax_minor) }}</template></span></td>
                                 <td class="tabular px-3 py-2 text-end">{{ formatNumber(line.quantity) }}</td>
                                 <td class="tabular px-3 py-2 text-end">{{ money(line.unit_price_minor) }}</td>
                                 <td class="tabular py-2 ps-3 text-end">{{ money(line.amount_minor) }}</td>
@@ -196,6 +196,10 @@ function printPage() {
                 </div>
 
                 <dl class="ms-auto mt-4 grid max-w-xs grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-[14px]">
+                    <template v-if="document.tax_minor">
+                        <dt class="text-muted">{{ t('accounting.tax.net') }}</dt><dd class="tabular text-end">{{ money(document.net_minor) }}</dd>
+                        <dt class="text-muted">{{ t('accounting.tax.vat') }}</dt><dd class="tabular text-end">{{ money(document.tax_minor) }}</dd>
+                    </template>
                     <dt class="font-semibold">{{ t('accounting.documents.total') }}</dt><dd class="tabular text-end font-semibold">{{ money(document.total_minor) }}</dd>
                     <template v-if="!isCredit(document.type) && document.allocated_minor > 0">
                         <dt class="text-muted">{{ t('accounting.documents.paid') }}</dt><dd class="tabular text-end">{{ money(document.allocated_minor) }}</dd>

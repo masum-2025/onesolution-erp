@@ -89,6 +89,8 @@ class PortalInvoiceController extends Controller
                     'quantity' => AccountingPresenter::quantityText($line->quantity_milli),
                     'unit_price_minor' => $line->unit_price_minor,
                     'amount_minor' => $line->amount_minor,
+                    'tax_rate_bp' => $line->tax_rate_bp,
+                    'tax_minor' => $line->tax_minor,
                 ])->values(),
             'payments' => $paid->map(fn (Allocation $allocation) => ['on' => $allocation->allocated_on->toDateString(), 'amount_minor' => $allocation->amount_minor])->values(),
             'can_pay' => $this->canPay($company, $found),
@@ -154,6 +156,8 @@ class PortalInvoiceController extends Controller
             'due_date' => $document->type->isCredit() ? null : $document->due_date->toDateString(),
             'status' => $document->status->value,
             'currency' => $document->currency_code,
+            'net_minor' => $document->net_minor,
+            'tax_minor' => $document->tax_minor,
             'total_minor' => $document->total_minor,
             'balance_minor' => $document->balance(),
         ];

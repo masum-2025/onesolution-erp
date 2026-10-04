@@ -204,6 +204,7 @@ export function documentPayload(form, currency) {
                 unit_price_minor: parseAmount(line.price, currency),
                 account_id: line.account_id,
                 ...(line.cost_centre_id ? { cost_centre_id: line.cost_centre_id } : {}),
+                ...(line.tax_code_id ? { tax_code_id: line.tax_code_id } : {}),
             })),
     };
 }
@@ -216,6 +217,7 @@ export function documentFormLines(document, currency, companyId) {
         price: amountText(line.unit_price_minor, currency) || '0',
         account_id: line.account_id,
         cost_centre_id: line.cost_centre_id === companyId ? '' : line.cost_centre_id,
+        tax_code_id: line.tax_code_id ?? '',
     }));
 }
 
@@ -252,4 +254,52 @@ export function daysUntilDue(dueDate, today) {
 /** The text key of a document status: credits say "used" where invoices say "paid". */
 export function statusKey(type, status) {
     return isCredit(type) && ['posted', 'partly_paid', 'paid'].includes(status) ? `accounting.credit_statuses.${status}` : `accounting.doc_statuses.${status}`;
+}
+
+/* ── Tax (ACC-4a) ──────────────────────────────────────────────────── */
+
+/**
+ * A line's net amount and tax, like the server (integers, half up): on top
+ * of the amount, or contained in it when prices include tax.
+ */
+export function taxSplit(amount, rateBp, inclusive) {
+    if (amount === null) return { net: null, tax: null };
+    if (!rateBp) return { net: amount, tax: 0 };
+    if (!inclusive) return { net: amount, tax: Number((BigInt(amount) * BigInt(rateBp) + 5000n) / 10000n) };
+    const divisor = 10000n + BigInt(rateBp);
+    const net = Number((BigInt(amount) * 10000n + divisor / 2n) / divisor);
+    return { net, tax: amount - net };
+}
+
+/** Net, tax and total of the lines being written, with each line's net amount and tax. */
+export function documentTaxTotals(lines, currency, taxCodes, inclusive) {
+    const rates = Object.fromEntries((taxCodes ?? []).map((code) => [code.id, code.rate_bp]));
+    let net = 0;
+    let tax = 0;
+    let invalid = false;
+    const rows = (lines ?? []).map((line) => {
+        const typed = lineAmount(quantityMilli(line.quantity), parseAmount(line.price, currency));
+        if (typed === null) {
+            invalid = true;
+            return { net: null, tax: null };
+        }
+        const split = taxSplit(typed, rates[line.tax_code_id] ?? 0, inclusive);
+        net += split.net;
+        tax += split.tax;
+        return split;
+    });
+    return { rows, net, tax, total: net + tax, invalid };
+}
+
+/** "7.5" (Bangla digits too) -> 750 basis points; null when not a percentage with at most 2 decimals. */
+export function percentToBp(text) {
+    const minor = parseAmount(text, 'XXX');
+    return minor === null || minor > 10000 ? null : minor;
+}
+
+/** 750 basis points -> "7.5". */
+export function bpToPercent(bp) {
+    const whole = Math.trunc(bp / 100);
+    const fraction = String(bp % 100).padStart(2, '0').replace(/0+$/, '');
+    return fraction ? `${whole}.${fraction}` : String(whole);
 }

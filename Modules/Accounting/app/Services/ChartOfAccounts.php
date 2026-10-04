@@ -38,6 +38,7 @@ class ChartOfAccounts
         private ModuleRegistry $modules,
         private ModuleResolver $resolver,
         private AuditLogger $audit,
+        private TaxCodes $taxCodes,
     ) {}
 
     /** The template the company's rule suggests. */
@@ -87,6 +88,9 @@ class ChartOfAccounts
                     $mapping->fill(['organization_id' => $company->getKey(), 'posting_key' => $key, 'account_id' => $ids[$code], 'version' => 1])->save();
                 }
             }
+
+            // The tax codes of the company's country (its own to change afterwards).
+            $this->taxCodes->seed($company, $actor);
 
             $year = $this->books->query(FiscalYear::class, $company)->orderBy('starts_on')->first()
                 ?? $this->calendar->addYear($company, $firstYearStartsOn, $actor);

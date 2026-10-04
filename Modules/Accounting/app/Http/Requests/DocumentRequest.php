@@ -31,12 +31,13 @@ class DocumentRequest extends StrictFormRequest
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'lines' => [$creating ? 'required' : 'sometimes', 'array', 'min:1', 'max:'.self::MAX_LINES],
-            'lines.*' => ['array:description,quantity,unit_price_minor,account_id,cost_centre_id'],
+            'lines.*' => ['array:description,quantity,unit_price_minor,account_id,cost_centre_id,tax_code_id'],
             'lines.*.description' => ['required', 'string', 'max:255'],
             'lines.*.quantity' => ['required', 'string', 'regex:/^\d{1,9}(\.\d{1,3})?$/'],
             'lines.*.unit_price_minor' => ['required', 'integer', 'min:0', 'max:'.JournalRequest::MAX_AMOUNT],
             'lines.*.account_id' => ['required', 'string', 'size:26'],
             'lines.*.cost_centre_id' => ['nullable', 'string', 'size:26'],
+            'lines.*.tax_code_id' => ['nullable', 'string', 'size:26'],
             'submit' => [$creating ? 'sometimes' : 'prohibited', 'boolean'],
         ];
     }

@@ -33,9 +33,10 @@ const tabs = computed(() => [
     { key: 'balance-sheet', label: t('accounting.reports.tabs.balance_sheet') },
     { key: 'ledger', label: t('accounting.reports.tabs.ledger') },
     { key: 'aging', label: t('accounting.aging.tab') },
+    { key: 'vat', label: t('accounting.tax.report.tab') },
 ]);
 const tab = ref(tabs.value.some((item) => item.key === route.query.report) ? route.query.report : 'trial-balance');
-const ranged = computed(() => ['profit-loss', 'ledger'].includes(tab.value));
+const ranged = computed(() => ['profit-loss', 'ledger', 'vat'].includes(tab.value));
 
 const today = todayIn(session.me?.context?.settings?.timezone);
 const filters = reactive({ as_of: today, from: monthOf(today).from, to: today, cost_centre_id: '', account_id: route.query.account_id ?? '', side: 'sales' });
@@ -71,7 +72,7 @@ async function show() {
     const query = ranged.value ? { from: filters.from, to: filters.to } : { as_of: filters.as_of };
     if (tab.value === 'ledger') query.account_id = filters.account_id;
     if (tab.value === 'aging') query.side = filters.side;
-    else if (filters.cost_centre_id) query.cost_centre_id = filters.cost_centre_id;
+    else if (filters.cost_centre_id && tab.value !== 'vat') query.cost_centre_id = filters.cost_centre_id;
 
     loading.value = true;
     error.value = null;
@@ -137,7 +138,7 @@ const sheetBalanced = computed(() => report.value && tab.value === 'balance-shee
                         <option value="purchases">{{ t('accounting.aging.purchases') }}</option>
                     </select>
                 </AppField>
-                <AppField v-else v-slot="{ id }" :label="t('accounting.reports.cost_centre')">
+                <AppField v-else-if="tab !== 'vat'" v-slot="{ id }" :label="t('accounting.reports.cost_centre')">
                     <select :id="id" v-model="filters.cost_centre_id" class="field-input">
                         <option value="">{{ t('accounting.reports.whole_company') }}</option>
                         <option v-for="unit in units" :key="unit.id" :value="unit.id">{{ unit.display_name }}</option>
@@ -264,6 +265,41 @@ const sheetBalanced = computed(() => report.value && tab.value === 'balance-shee
                             <td v-for="bucket in report.buckets" :key="bucket" class="tabular px-3 py-2.5 text-end">{{ money(report.totals.buckets[bucket]) }}</td>
                             <td class="tabular px-3 py-2.5 text-end">{{ money(-report.totals.credits_minor) }}</td>
                             <td class="tabular px-5 py-2.5 text-end">{{ money(report.totals.net_minor) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <!-- VAT: per tax code, output on sales and input on purchases -->
+                <table v-else-if="report && tab === 'vat'" class="w-full min-w-[44rem] text-[13.5px]">
+                    <thead class="border-b border-line text-[12px] text-muted">
+                        <tr>
+                            <th class="px-5 py-2.5 text-start font-medium">{{ t('accounting.tax.report.code') }}</th>
+                            <th class="px-3 py-2.5 text-end font-medium">{{ t('accounting.tax.report.sales') }} · {{ t('accounting.tax.report.taxable') }}</th>
+                            <th class="px-3 py-2.5 text-end font-medium">{{ t('accounting.tax.report.output') }}</th>
+                            <th class="px-3 py-2.5 text-end font-medium">{{ t('accounting.tax.report.purchases') }} · {{ t('accounting.tax.report.taxable') }}</th>
+                            <th class="px-5 py-2.5 text-end font-medium">{{ t('accounting.tax.report.input') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        <tr v-if="!report.rows.length"><td colspan="5" class="px-5 py-6 text-center text-muted">{{ t('accounting.reports.nothing') }}</td></tr>
+                        <tr v-for="row in report.rows" :key="row.tax_code_id ?? 'none'">
+                            <td class="px-5 py-2">{{ row.name ?? t('accounting.tax.report.no_tax') }}</td>
+                            <td class="tabular px-3 py-2 text-end">{{ money(row.sales_taxable_minor) }}</td>
+                            <td class="tabular px-3 py-2 text-end">{{ money(row.output_tax_minor) }}</td>
+                            <td class="tabular px-3 py-2 text-end">{{ money(row.purchases_taxable_minor) }}</td>
+                            <td class="tabular px-5 py-2 text-end">{{ money(row.input_tax_minor) }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="border-t border-line font-semibold">
+                        <tr>
+                            <td class="px-5 py-2.5" colspan="2">{{ t('accounting.reports.total') }}</td>
+                            <td class="tabular px-3 py-2.5 text-end">{{ money(report.output_tax_minor) }}</td>
+                            <td></td>
+                            <td class="tabular px-5 py-2.5 text-end">{{ money(report.input_tax_minor) }}</td>
+                        </tr>
+                        <tr :class="report.payable_minor < 0 ? 'text-ok' : ''">
+                            <td class="px-5 py-2.5" colspan="4">{{ report.payable_minor < 0 ? t('accounting.tax.report.refundable') : t('accounting.tax.report.payable') }}</td>
+                            <td class="tabular px-5 py-2.5 text-end text-[15px]">{{ money(Math.abs(report.payable_minor)) }}</td>
                         </tr>
                     </tfoot>
                 </table>

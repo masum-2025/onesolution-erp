@@ -33,4 +33,7 @@ return [
     'settlement_posted' => 'Money received or paid posted',
     'settlement_voided' => 'Money received or paid voided',
     'settlement_allocated' => 'Money set against documents',
+    'tax_codes_seeded' => 'Tax codes of the country added',
+    'tax_code_created' => 'Tax code added',
+    'tax_code_updated' => 'Tax code changed',
 ];

@@ -18,7 +18,7 @@ class ReportRequest extends StrictFormRequest
     public function rules(): array
     {
         $report = $this->route('report');
-        $range = in_array($report, ['ledger', 'profit-loss', 'statement'], true);
+        $range = in_array($report, ['ledger', 'profit-loss', 'statement', 'vat'], true);
         $parties = in_array($report, ['aging', 'statement'], true);
 
         return [
@@ -28,7 +28,7 @@ class ReportRequest extends StrictFormRequest
             'account_id' => [$report === 'ledger' ? 'required' : 'prohibited', 'string', 'size:26'],
             'side' => [$parties ? 'required' : 'prohibited', 'string', 'in:sales,purchases'],
             'party_id' => [$report === 'statement' ? 'required' : 'prohibited', 'string', 'size:26'],
-            'cost_centre_id' => [$parties ? 'prohibited' : 'nullable', 'string', 'size:26'],
+            'cost_centre_id' => [$parties || $report === 'vat' ? 'prohibited' : 'nullable', 'string', 'size:26'],
         ];
     }
 }

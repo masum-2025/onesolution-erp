@@ -17,6 +17,7 @@ use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\Period;
 use Modules\Accounting\Models\PostingAccount;
 use Modules\Accounting\Models\Settlement;
+use Modules\Accounting\Models\TaxCode;
 
 /**
  * The books in the client's data export: accounts, fiscal years and periods,
@@ -114,6 +115,8 @@ class AccountingExporter implements ExportsModuleData
                 'reference' => $document->reference,
                 'status' => $document->status->value,
                 'currency_code' => $document->currency_code,
+                'net_minor' => $document->net_minor,
+                'tax_minor' => $document->tax_minor,
                 'total_minor' => $document->total_minor,
                 'allocated_minor' => $document->allocated_minor,
                 'journal_id' => $document->journal_id,
@@ -128,6 +131,19 @@ class AccountingExporter implements ExportsModuleData
                 'amount_minor' => $line->amount_minor,
                 'account_id' => $line->account_id,
                 'cost_centre_id' => $line->cost_centre_id,
+                'tax_code_id' => $line->tax_code_id,
+                'tax_rate_bp' => $line->tax_rate_bp,
+                'tax_minor' => $line->tax_minor,
+            ]),
+            'tax_codes' => $this->rows(TaxCode::class, $organization, $organizationIds, fn (TaxCode $code) => [
+                'id' => $code->getKey(),
+                'organization_id' => $code->organization_id,
+                'code' => $code->code,
+                'name' => json_encode($code->texts('name'), JSON_UNESCAPED_UNICODE),
+                'rate_bp' => $code->rate_bp,
+                'kind' => $code->kind,
+                'applies_to' => $code->applies_to,
+                'is_active' => $code->is_active,
             ]),
             'settlements' => $this->rows(Settlement::class, $organization, $organizationIds, fn (Settlement $settlement) => [
                 'id' => $settlement->getKey(),

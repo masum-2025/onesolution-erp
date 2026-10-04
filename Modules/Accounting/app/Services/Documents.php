@@ -19,6 +19,7 @@ use Modules\Accounting\Models\FiscalYear;
 use Modules\Accounting\Models\Journal;
 use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\PostingAccount;
+use Modules\Accounting\Models\TaxCode;
 
 /**
  * Invoices, credit notes, bills and vendor credits:
@@ -55,10 +56,11 @@ class Documents
     {
         $this->books->assertSetUp($company);
         $party = $this->party($company, $type, $data['party_id']);
-        $lines = $this->checkLines($company, $type, $data['lines']);
+        $inclusive = (bool) $this->rules->get('accounting.prices_include_tax', $this->contexts->forOrganization($company));
+        $lines = $this->checkLines($company, $type, $data['lines'], $inclusive);
         $issued = CarbonImmutable::parse($data['issue_date'], 'UTC');
 
-        return $this->books->transaction($company, function () use ($company, $type, $data, $party, $lines, $issued, $actor) {
+        return $this->books->transaction($company, function () use ($company, $type, $data, $party, $lines, $inclusive, $issued, $actor) {
             $document = new Document;
             $document->fill([
                 'organization_id' => $company->getKey(),
@@ -70,7 +72,8 @@ class Documents
                 'notes' => $data['notes'] ?? null,
                 'status' => DocumentStatus::Draft,
                 'currency_code' => $this->books->currency($company),
-                'total_minor' => array_sum(array_column($lines, 'amount_minor')),
+                ...self::totals($lines),
+                'prices_include_tax' => $inclusive,
                 'created_by' => $actor->getKey(),
                 'version' => 1,
             ])->save();
@@ -99,10 +102,10 @@ class Documents
             }
             $document->fill(array_intersect_key($data, array_flip(['issue_date', 'due_date', 'reference', 'notes'])));
             if (isset($data['lines'])) {
-                $lines = $this->checkLines($company, $document->type, $data['lines']);
+                $lines = $this->checkLines($company, $document->type, $data['lines'], $document->prices_include_tax);
                 $this->books->query(DocumentLine::class, $company)->where('document_id', $document->getKey())->delete();
                 $this->writeLines($company, $document, $lines);
-                $document->total_minor = array_sum(array_column($lines, 'amount_minor'));
+                $document->fill(self::totals($lines));
             }
             $document->forceFill(['status' => DocumentStatus::Draft, 'reject_reason' => null, 'version' => $document->version + 1])->save();
 
@@ -234,13 +237,17 @@ class Documents
     /**
      * Lines as written: description, quantity (up to 3 decimals, as text),
      * unit price in minor units, an account of the right type, a cost centre
-     * inside the company. Amount = quantity x price, rounded half up.
+     * inside the company, optionally a tax code of this side. Quantity x price
+     * (rounded half up) is the net amount, or with prices including tax the
+     * gross one; TaxCodes::split works out the net and the tax.
      *
      * @param  list<array<string, mixed>>  $lines
-     * @return list<array{description: string, quantity_milli: int, unit_price_minor: int, amount_minor: int, account_id: string, cost_centre_id: string}>
+     * @return list<array{description: string, quantity_milli: int, unit_price_minor: int, amount_minor: int, account_id: string, cost_centre_id: string, tax_code_id: string|null, tax_rate_bp: int, tax_minor: int}>
      */
-    public function checkLines(Organization $company, DocumentType $type, array $lines): array
+    public function checkLines(Organization $company, DocumentType $type, array $lines, bool $pricesIncludeTax = false): array
     {
+        $taxCodes = $this->books->query(TaxCode::class, $company)->whereKey(array_values(array_filter(array_column($lines, 'tax_code_id'), 'is_string')))->get()->keyBy('id');
+        $side = $type->isSales() ? 'sales' : 'purchases';
         $accounts = $this->books->query(Account::class, $company)->whereKey(array_values(array_filter(array_column($lines, 'account_id'), 'is_string')))->get()->keyBy('id');
         $needsUnit = (bool) $this->rules->get('accounting.require_cost_centre', $this->contexts->forOrganization($company));
         $allowedTypes = $type->lineAccountTypes();
@@ -264,14 +271,22 @@ class Documents
             if ($quantity === null || $quantity === 0) {
                 $errors["lines.{$index}.quantity"] = __('accounting::accounting.validation.quantity');
             }
+            $taxCode = isset($line['tax_code_id']) ? ($taxCodes[$line['tax_code_id']] ?? null) : null;
+            if (isset($line['tax_code_id']) && ($taxCode === null || ! $taxCode->appliesTo($side))) {
+                $errors["lines.{$index}.tax_code_id"] = __('accounting::accounting.validation.tax_code');
+            }
+            $split = TaxCodes::split(self::amount((int) $quantity, $price), $taxCode?->rate_bp ?? 0, $pricesIncludeTax);
 
             $checked[] = [
                 'description' => (string) $line['description'],
                 'quantity_milli' => (int) $quantity,
                 'unit_price_minor' => $price,
-                'amount_minor' => self::amount((int) $quantity, $price),
+                'amount_minor' => $split['net'],
                 'account_id' => (string) ($line['account_id'] ?? ''),
                 'cost_centre_id' => (string) $costCentre,
+                'tax_code_id' => $taxCode?->getKey(),
+                'tax_rate_bp' => $taxCode?->rate_bp ?? 0,
+                'tax_minor' => $split['tax'],
             ];
         }
         if ($errors !== []) {
@@ -279,6 +294,20 @@ class Documents
         }
 
         return $checked;
+    }
+
+    /**
+     * A document's net, tax and total from its checked lines.
+     *
+     * @param  list<array{amount_minor: int, tax_minor: int}>  $lines
+     * @return array{net_minor: int, tax_minor: int, total_minor: int}
+     */
+    public static function totals(array $lines): array
+    {
+        $net = array_sum(array_column($lines, 'amount_minor'));
+        $tax = array_sum(array_column($lines, 'tax_minor'));
+
+        return ['net_minor' => $net, 'tax_minor' => $tax, 'total_minor' => $net + $tax];
     }
 
     /** "1.5" -> 1500 thousandths; null when it is not a quantity with at most 3 decimals. */
@@ -338,6 +367,18 @@ class Documents
                 'debit_minor' => $partyOnDebit ? 0 : $line->amount_minor,
                 'credit_minor' => $partyOnDebit ? $line->amount_minor : 0,
                 'memo' => mb_substr($line->description, 0, 255),
+            ];
+        }
+        // Tax per code: output tax on sales, input tax on purchases (posting keys accounting.tax_output / tax_input).
+        $taxKey = $document->type->isSales() ? 'accounting.tax_output' : 'accounting.tax_input';
+        foreach ($documentLines->where('tax_minor', '>', 0)->groupBy('tax_code_id') as $taxLines) {
+            $tax = (int) $taxLines->sum('tax_minor');
+            $lines[] = [
+                'account_id' => $this->books->query(PostingAccount::class, $company)->where('posting_key', $taxKey)->value('account_id') ?? throw AccountingException::postingAccountMissing($taxKey),
+                'cost_centre_id' => $taxLines->first()->cost_centre_id,
+                'debit_minor' => $partyOnDebit ? 0 : $tax,
+                'credit_minor' => $partyOnDebit ? $tax : 0,
+                'memo' => $this->books->query(TaxCode::class, $company)->whereKey($taxLines->first()->tax_code_id)->value('code'),
             ];
         }
         // Zero lines (free items) carry no amount in the books.

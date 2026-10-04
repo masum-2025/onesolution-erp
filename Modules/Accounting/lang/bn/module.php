@@ -21,4 +21,5 @@ return [
     'menu_bills' => 'বিল ও সরবরাহকারীর ক্রেডিট',
     'menu_payments' => 'পরিশোধিত টাকা',
     'new_invoice' => 'নতুন ইনভয়েস',
+    'menu_tax_codes' => 'করের কোড',
 ];

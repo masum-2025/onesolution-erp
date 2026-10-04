@@ -110,6 +110,10 @@ function printPage() {
                 </div>
 
                 <dl class="ms-auto mt-4 grid max-w-xs grid-cols-[1fr_auto] gap-x-6 gap-y-1 text-[14px]">
+                    <template v-if="invoice.tax_minor">
+                        <dt class="text-muted">{{ t('accounting.tax.net') }}</dt><dd class="tabular text-end">{{ money(invoice.net_minor) }}</dd>
+                        <dt class="text-muted">{{ t('accounting.tax.vat') }}</dt><dd class="tabular text-end">{{ money(invoice.tax_minor) }}</dd>
+                    </template>
                     <dt class="font-semibold">{{ t('accounting.documents.total') }}</dt><dd class="tabular text-end font-semibold">{{ money(invoice.total_minor) }}</dd>
                     <template v-if="!isCredit(invoice.type) && invoice.payments.length">
                         <dt class="text-muted">{{ t('accounting.documents.paid') }}</dt><dd class="tabular text-end">{{ money(invoice.total_minor - invoice.balance_minor) }}</dd>

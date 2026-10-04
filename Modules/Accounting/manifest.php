@@ -38,6 +38,8 @@ return [
         'accounting.sell',
         // Vendors, bills, vendor credits and money paid.
         'accounting.buy',
+        // Tax codes (rates the company charges and pays).
+        'accounting.tax',
     ],
     'separation_of_duties' => [
         ['accounting.post', 'accounting.approve'],
@@ -157,6 +159,18 @@ return [
             'sort_order' => 45,
         ],
         [
+            'key' => 'accounting.prices_include_tax',
+            'type' => 'boolean',
+            // Shops usually show prices with VAT; businesses invoicing businesses without.
+            'default' => false,
+            'label' => 'accounting::rules.prices_include_tax.label',
+            'description' => 'accounting::rules.prices_include_tax.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'tax',
+            'sort_order' => 65,
+        ],
+        [
             'key' => 'accounting.payment_terms_days',
             'type' => 'integer',
             'schema' => ['minimum' => 0, 'maximum' => 365],
@@ -250,6 +264,7 @@ return [
         ['key' => 'setup', 'label' => 'accounting::module.menu_setup', 'route' => '/accounting/setup', 'permission' => 'accounting.manage'],
         ['key' => 'accounts', 'label' => 'accounting::module.menu_accounts', 'route' => '/accounting/accounts', 'permission' => 'accounting.view'],
         ['key' => 'fiscal_years', 'label' => 'accounting::module.menu_fiscal_years', 'route' => '/accounting/fiscal-years', 'permission' => 'accounting.view'],
+        ['key' => 'tax_codes', 'label' => 'accounting::module.menu_tax_codes', 'route' => '/accounting/tax-codes', 'permission' => 'accounting.view'],
         ['key' => 'posting_accounts', 'label' => 'accounting::module.menu_posting_accounts', 'route' => '/accounting/posting-accounts', 'permission' => 'accounting.view'],
     ]],
     // The header "New" menu.
@@ -268,6 +283,9 @@ return [
         'accounting.payable' => ['label' => 'accounting::accounting.posting_keys.payable', 'type' => 'liability'],
         // Where money customers pay online arrives (the gateway's settlement account).
         'accounting.online_collections' => ['label' => 'accounting::accounting.posting_keys.online_collections', 'type' => 'asset'],
+        // VAT charged on sales (owed to the tax office) and paid on purchases (claimed back).
+        'accounting.tax_output' => ['label' => 'accounting::accounting.posting_keys.tax_output', 'type' => 'liability'],
+        'accounting.tax_input' => ['label' => 'accounting::accounting.posting_keys.tax_input', 'type' => 'asset'],
     ],
     // A customer sees their own invoices in the client's portal, and pays them online.
     'portal_subjects' => [CustomerSubjects::class],

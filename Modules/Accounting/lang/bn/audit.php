@@ -33,4 +33,7 @@ return [
     'settlement_posted' => 'প্রাপ্ত বা পরিশোধিত টাকা পোস্ট হয়েছে',
     'settlement_voided' => 'প্রাপ্ত বা পরিশোধিত টাকা বাতিল হয়েছে',
     'settlement_allocated' => 'টাকা কাগজের বিপরীতে বসানো হয়েছে',
+    'tax_codes_seeded' => 'দেশের করের কোড যোগ হয়েছে',
+    'tax_code_created' => 'করের কোড যোগ হয়েছে',
+    'tax_code_updated' => 'করের কোড বদলানো হয়েছে',
 ];

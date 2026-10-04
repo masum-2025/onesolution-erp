@@ -2188,10 +2188,38 @@ and the sidebar lights the entry with the longest matching link.
   the invoice as far as it is still due (the rest is an advance: the money was taken), with op id
   `payment-{id}` so a repeated notice is harmless. The payer returns to the invoice page.
 
+### Tax / VAT (ACC-4a)
+
+- **Tax codes** (`acc_tax_codes`, tenant table): code, translatable name, `rate_bp` (basis points,
+  1500 = 15%), kind (`standard`, `reduced`, `zero`, `exempt`), side (`both`, `sales`, `purchases`),
+  on/off, version. Setting up the books copies the codes of the company's country tax profile
+  (`database/data/tax/{profile}.php`; Bangladesh: `bd_vat.php`, 15 / 10 / 7.5 / 5 / zero / exempt).
+  **These rates are placeholders: the company's tax adviser must review them.** People with
+  `accounting.tax` add, rename, change or switch off codes (screen `/accounting/tax-codes`).
+  `php artisan accounting:seed-tax-codes` adds missing country codes to books set up earlier and
+  never changes codes a company edited (safe to run again).
+- **On invoices, bills and notes**: each line may carry a tax code of its side. The line keeps
+  the code, the rate it was written with and its tax (`tax_code_id`, `tax_rate_bp`, `tax_minor`);
+  the document keeps `net_minor`, `tax_minor`, `total_minor` and `prices_include_tax`.
+  Rule `accounting.prices_include_tax` (default off) decides whether prices are before VAT or
+  include it. Integer maths only, rounding half up per line: on top `tax = round(net × r / 10000)`;
+  inside `net = round(gross × 10000 / (10000 + r))`, `tax = gross − net`.
+- **Posting**: sales VAT (output) goes to posting key `accounting.tax_output` (template 2130),
+  purchase VAT (input) to `accounting.tax_input` (template 1170, "VAT receivable"), one line per
+  code; credit and debit notes reverse it. Books set up before ACC-4a have no 1170: map
+  `tax_input` on the posting accounts page (or add the account, then run
+  `accounting:map-postings`).
+- **VAT report** (`reports/vat?from=&to=`, tab "VAT" on Reports): per code, taxable sales and
+  output VAT, taxable purchases and input VAT, then VAT payable (or refundable). The export
+  includes the dataset `tax_codes`.
+- Not yet: VDS / TDS (withholding at source), supplementary duty chains and the official return
+  form (Mushak 9.1); they come as their own rules and reports.
+
 ### Future expansion (Accounting)
 
 - A new sector is a new chart file (or none: `general`) and a sector package rule; a new
-  country is its fiscal year start and later its tax profile (ACC-4). No code change.
+  country is its fiscal year start and its tax profile file (`database/data/tax/*.php`) with its
+  own codes and rates. No code change.
 - A partner sets or locks approval amounts, date windows and numbering for all its clients
   through the rule engine.
 - Next: ACC-2 screens and dashboard widgets, ACC-3 receivables and payables, ACC-4 tax, bank

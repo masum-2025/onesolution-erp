@@ -14,6 +14,7 @@ use Modules\Accounting\Http\Controllers\ReportController;
 use Modules\Accounting\Http\Controllers\SettlementController;
 use Modules\Accounting\Http\Controllers\SettlementStepController;
 use Modules\Accounting\Http\Controllers\SetupController;
+use Modules\Accounting\Http\Controllers\TaxCodeController;
 
 /*
 | Accounting API (loaded by AccountingServiceProvider under /api, group
@@ -37,6 +38,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:accounting'])
         Route::get('documents/{document}', [DocumentController::class, 'show']);
         Route::get('settlements', [SettlementController::class, 'index']);
         Route::get('settlements/{settlement}', [SettlementController::class, 'show']);
+        Route::get('tax-codes', [TaxCodeController::class, 'index']);
         // Unknown reports are refused by the controller, after the organization checks.
         Route::get('reports/{report}', ReportController::class)->middleware('throttle:accounting-reports');
 
@@ -59,6 +61,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:accounting'])
             Route::post('documents/{document}/{step}', DocumentStepController::class);
             Route::post('settlements', [SettlementController::class, 'store']);
             Route::post('settlements/{settlement}/{step}', SettlementStepController::class);
+            Route::post('tax-codes', [TaxCodeController::class, 'store']);
+            Route::patch('tax-codes/{code}', [TaxCodeController::class, 'update']);
         });
     });
 
