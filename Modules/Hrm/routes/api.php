@@ -28,6 +28,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
         Route::get('employees', [EmployeeController::class, 'index']);
         Route::get('employees/{employee}', [EmployeeController::class, 'show']);
         Route::get('employees/{employee}/history', [EmployeeController::class, 'history']);
+        Route::get('employees/{employee}/logins', [EmployeeController::class, 'logins']);
         Route::get('employees/{employee}/documents', [EmployeeDocumentController::class, 'index']);
         Route::get('employees/{employee}/documents/{document}/link', [EmployeeDocumentController::class, 'link']);
 

@@ -2341,7 +2341,30 @@ portal member of the company, one employee per login; audited `hrm.login_linked`
 - Dashboard: "Checked in today", "Corrections to decide" (also in the bell for deciders). Audit:
   `attendance.shift_*`, `holiday_*`, `roster_assigned`, `punch_written`, `punch_voided`,
   `correction_*`. Data export: `shifts`, `holidays`, `rosters`, `punches`, `days`, `corrections`.
-- Next: ATT-2 screens; ATT-3 location check, device files, offline punches. Leave is a later module.
+- Next: ATT-3 location check, device files, offline punches. Leave is a later module.
+
+### Screens (ATT-2)
+
+- `/attendance/me` (menu "My attendance", `attendance.punch`; quick action "Check in"): one large
+  check in / check out button (an `op_id` per tap), today, recent punches, the days of a month and
+  "Fix a day" (a correction with in/out times; an out time before the in time is the next
+  morning). Without a linked login it says to ask HR. Checking in needs `attendance.punch` where
+  the person signed in (their HRM unit may sit below that membership).
+- `/attendance` (Today): the day at the current unit and below — counts per status to filter by,
+  each person's status, in, out and time worked; a row opens a side panel with the punches, where
+  people with `attendance.manage` write a punch from a register (note required), void one with a
+  reason, or ask a correction on the person's behalf.
+- `/attendance/month`: employees × days with a short mark and colour per status (legend spells
+  each out), days at work per person; a cell opens the same panel.
+- `/attendance/corrections`: waiting / approved / rejected; approve or reject (optional note) only
+  where the server says the reader may decide.
+- Settings pages: `/attendance/shifts` (times as HH:MM, night shifts marked), `/attendance/holidays`
+  (by year; a branch or department may add its own), `/attendance/rosters` (choose people, a shift
+  or "no fixed hours", and the day it starts).
+- Portal: `/portal/attendance` — a portal member's own days by month.
+- HRM employee page, Overview: "Login" with link / change / unlink (`hrm.manage`); the list comes
+  from `GET …/hrm/employees/{id}/logins?search=` (active staff and portal members of the company,
+  not linked to another employee; name and email only). The employee detail includes `login`.
 
 ### Future expansion (Attendance)
 

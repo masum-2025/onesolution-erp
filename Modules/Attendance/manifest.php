@@ -126,16 +126,30 @@ return [
             'route' => '/attendance',
             'icon' => 'clock',
             'order' => 20,
+            'section' => 'people',
+            'children' => [
+                ['key' => 'today', 'label' => 'attendance::module.menu_today', 'route' => '/attendance', 'permission' => 'attendance.view'],
+                ['key' => 'me', 'label' => 'attendance::module.menu_me', 'route' => '/attendance/me', 'permission' => 'attendance.punch'],
+                ['key' => 'month', 'label' => 'attendance::module.menu_month', 'route' => '/attendance/month', 'permission' => 'attendance.view'],
+                ['key' => 'corrections', 'label' => 'attendance::module.menu_corrections', 'route' => '/attendance/corrections', 'permission' => 'attendance.view'],
+            ],
         ],
+    ],
+    // The header "New" menu: checking in from anywhere.
+    'quick_actions' => [
+        ['key' => 'check_in', 'label' => 'attendance::module.check_in', 'route' => '/attendance/me', 'permission' => 'attendance.punch', 'icon' => 'clock'],
     ],
     'events' => [],
     'is_core' => false,
     'requires_consent' => false,
-    // Screens (and their settings pages) come with ATT-2.
     'dashboard' => ['widgets' => [
         ['key' => 'checked_in', 'label' => 'attendance::dashboard.checked_in', 'type' => 'stat', 'provider' => CheckedInToday::class, 'permission' => 'attendance.view', 'overview' => true],
         ['key' => 'corrections', 'label' => 'attendance::dashboard.corrections', 'type' => 'stat', 'provider' => CorrectionsWaiting::class, 'permission' => 'attendance.view'],
     ]],
     'attention' => [CorrectionsWaiting::class],
-    'settings' => ['pages' => []],
+    'settings' => ['pages' => [
+        ['key' => 'shifts', 'label' => 'attendance::module.menu_shifts', 'route' => '/attendance/shifts', 'permission' => 'attendance.view'],
+        ['key' => 'holidays', 'label' => 'attendance::module.menu_holidays', 'route' => '/attendance/holidays', 'permission' => 'attendance.view'],
+        ['key' => 'rosters', 'label' => 'attendance::module.menu_rosters', 'route' => '/attendance/rosters', 'permission' => 'attendance.view'],
+    ]],
 ];

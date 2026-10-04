@@ -12,6 +12,8 @@ import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
+import { confirmAction } from '@/lib/dialogs';
+import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { hrmApi } from '../api';
 import { availableSteps, initials, statusTone } from '../lib';
@@ -19,6 +21,7 @@ import DocumentsPanel from '../components/DocumentsPanel.vue';
 import HistoryPanel from '../components/HistoryPanel.vue';
 import PersonalPanel from '../components/PersonalPanel.vue';
 import StepDialog from '../components/StepDialog.vue';
+import LoginDialog from '../components/LoginDialog.vue';
 
 /**
  * One employee: overview, personal details, history and documents, and the
@@ -63,6 +66,25 @@ const names = computed(() => ({
 }));
 
 const openStep = ref(null);
+const linking = ref(false);
+
+function linked(data) {
+    linking.value = false;
+    record.data.value = { data };
+}
+
+async function unlink() {
+    const confirmed = await confirmAction({ title: t('hrm.login.unlink_title'), message: t('hrm.login.unlink_text', { name: employee.value.full_name }), confirmLabel: t('hrm.login.unlink'), danger: true });
+    if (!confirmed) return;
+    try {
+        const { data } = await hrm.linkLogin(employee.value.id, { base_version: employee.value.version, user_id: null });
+        toast.success(t('hrm.login.unlinked'));
+        record.data.value = { data };
+    } catch (error) {
+        if (error.code === 'version_conflict') reload();
+        toast.error(error.message);
+    }
+}
 const history = ref(null);
 
 async function stepDone(data) {
@@ -129,6 +151,18 @@ const typeLabel = computed(() => opts.value?.employment_types.find((type) => typ
                     <div v-if="employee.confirmed_on"><dt class="text-muted">{{ t('hrm.fields.confirmed_on') }}</dt><dd class="font-medium text-fg">{{ formatDate(employee.confirmed_on) }}</dd></div>
                     <div v-if="employee.exits_on"><dt class="text-muted">{{ t('hrm.fields.exits_on') }}</dt><dd class="font-medium text-fg">{{ formatDate(employee.exits_on) }}</dd></div>
                     <div v-if="employee.exit_reason" class="sm:col-span-2"><dt class="text-muted">{{ t('hrm.fields.exit_reason') }}</dt><dd class="font-medium text-fg">{{ employee.exit_reason }}</dd></div>
+                    <!-- The login the employee uses (to check in and see their own records). -->
+                    <div class="sm:col-span-2 lg:col-span-3">
+                        <dt class="text-muted">{{ t('hrm.login.label') }}</dt>
+                        <dd class="flex flex-wrap items-center gap-2">
+                            <span v-if="employee.login" class="font-medium text-fg">{{ employee.login.name }} <span class="text-[12.5px] font-normal text-muted" dir="ltr">{{ employee.login.email }}</span></span>
+                            <span v-else class="text-muted">{{ t('hrm.login.none') }}</span>
+                            <template v-if="can.manage">
+                                <AppButton size="sm" variant="ghost" @click="linking = true">{{ employee.login ? t('hrm.login.change') : t('hrm.login.link') }}</AppButton>
+                                <AppButton v-if="employee.login" size="sm" variant="ghost" @click="unlink">{{ t('hrm.login.unlink') }}</AppButton>
+                            </template>
+                        </dd>
+                    </div>
                 </dl>
                 <p v-if="opts && !can.manage" class="mt-5 rounded-xl bg-subtle px-4 py-3 text-[12.5px] text-muted">{{ t('hrm.no_access') }}</p>
             </section>
@@ -137,6 +171,7 @@ const typeLabel = computed(() => opts.value?.employment_types.find((type) => typ
             <HistoryPanel v-else-if="tab === 'history'" ref="history" :employee-id="employee.id" :hrm="hrm" :names="names" />
             <DocumentsPanel v-else :employee-id="employee.id" :hrm="hrm" :options="opts" :can-edit="can.manage" />
 
+            <LoginDialog :open="linking" :employee="employee" :hrm="hrm" @close="linking = false" @linked="linked" @conflict="reload" />
             <StepDialog :open="openStep !== null" :step="openStep" :employee="employee" :hrm="hrm" :options="opts" @close="openStep = null" @done="stepDone" @conflict="reload" />
         </template>
     </div>

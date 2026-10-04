@@ -21,6 +21,9 @@ export function hrmApi(organizationId) {
         update: (id, body) => api(`${base}/employees/${id}`, { method: 'PATCH', body }),
         sensitive: (id) => api(`${base}/employees/${id}/sensitive`),
         history: (id) => api(`${base}/employees/${id}/history`),
+        // Logins that can be linked to the employee, and linking one (null unlinks).
+        logins: (id, search) => api(`${base}/employees/${id}/logins`, { query: { search: search || undefined } }),
+        linkLogin: (id, body) => api(`${base}/employees/${id}/login`, { method: 'PUT', body }),
         step: (id, step, body) => api(`${base}/employees/${id}/steps/${step}`, { method: 'POST', body }),
 
         documents: (id) => api(`${base}/employees/${id}/documents`),

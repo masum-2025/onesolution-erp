@@ -1,0 +1,179 @@
+{
+    "duration": "{hours} h {minutes} min",
+    "status": {
+        "present": "Present",
+        "late": "Late",
+        "half_day": "Half day",
+        "incomplete": "No check-out",
+        "absent": "Absent",
+        "pending": "Not in yet",
+        "weekend": "Weekend",
+        "holiday": "Holiday",
+        "no_shift": "No shift"
+    },
+    "short": {
+        "present": "P",
+        "late": "L",
+        "half_day": "H",
+        "incomplete": "I",
+        "absent": "A",
+        "pending": "·",
+        "weekend": "W",
+        "holiday": "O",
+        "no_shift": "–"
+    },
+    "source": {
+        "self": "Own check-in",
+        "manual": "Written by HR",
+        "correction": "From a correction"
+    },
+    "common": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "back": "Attendance",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {page} of {pages}",
+        "previous_month": "Previous month",
+        "next_month": "Next month"
+    },
+    "day": {
+        "in": "In",
+        "out": "Out",
+        "worked": "Worked",
+        "late": "Late by",
+        "overtime": "Over time",
+        "late_by": "late by {time}"
+    },
+    "me": {
+        "title": "My attendance",
+        "text": "Check in when you start and out when you finish. Your days are worked out from your shift.",
+        "ask": "Fix a day",
+        "not_linked": "Your login is not linked to an employee",
+        "not_linked_text": "Ask HR to link your login to your employee record, then come back here.",
+        "check_in": "Check in",
+        "check_out": "Check out",
+        "checked_in": "Checked in at {time}.",
+        "checked_out": "Checked out at {time}.",
+        "no_punch": "Checking in yourself is not available to you here. Your supervisor records your times.",
+        "month": "My days",
+        "no_days": "No days yet this month.",
+        "corrections": "My corrections"
+    },
+    "correction": {
+        "title": "Ask to fix a day",
+        "text": "Give the time you came in and/or left, and why. Someone else decides.",
+        "for": "For {name}. Someone else decides.",
+        "day": "Day",
+        "in": "In at",
+        "out": "Out at",
+        "next_morning": "The next morning (night shift)",
+        "reason": "Why",
+        "send": "Send",
+        "sent": "Sent. Someone else will decide.",
+        "status": {
+            "pending": "Waiting",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        }
+    },
+    "drawer": {
+        "ask": "Ask a correction",
+        "punches": "Punches",
+        "no_punches": "No punches on this day.",
+        "voided_because": "Voided: {reason}",
+        "void": "Void punch",
+        "void_title": "Void the punch at {time}?",
+        "void_text": "It stays for the record but no longer counts. Say why.",
+        "voided": "Punch voided.",
+        "time": "Time",
+        "note": "Note",
+        "note_hint": "e.g. from the paper register",
+        "write": "Write punch",
+        "written": "Punch written."
+    },
+    "today": {
+        "title": "Attendance",
+        "text": "Who is in today at {unit} and the units below it.",
+        "date": "Day",
+        "filter": "Show",
+        "everyone": "Everyone",
+        "none_with_status": "Nobody with this status",
+        "empty": "No employees here",
+        "empty_text": "Employees hired in HRM at this unit appear here."
+    },
+    "month": {
+        "title": "Month",
+        "text": "Each person's days at {unit}. Open a day to see its punches.",
+        "employee": "Employee",
+        "attended": "Days at work"
+    },
+    "corrections": {
+        "title": "Corrections",
+        "text": "Forgotten or wrong punches. Approving turns the times into punches.",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approve_title": "Approve the correction for {name}?",
+        "reject_title": "Reject the correction for {name}",
+        "approve_text": "The times become punches and the day is worked out again.",
+        "approve_done": "Approved.",
+        "reject_done": "Rejected.",
+        "times": "In {in} · Out {out}",
+        "yours": "You asked; someone else decides",
+        "waiting": "Waiting for someone who decides",
+        "empty_pending": "Nothing waiting",
+        "empty_approved": "No approved corrections",
+        "empty_rejected": "No rejected corrections"
+    },
+    "shifts": {
+        "title": "Shifts",
+        "text": "Working hours of the company. An end at or before the start ends the next morning.",
+        "add": "Add a shift",
+        "edit": "Edit shift",
+        "empty": "No shifts yet",
+        "empty_text": "Add the hours people work, then put them on a shift under Rosters.",
+        "next_day": "ends the next day",
+        "break_of": "{time} break",
+        "expected": "{time} expected",
+        "off": "Switched off",
+        "code": "Code",
+        "name": "Name",
+        "start": "Starts",
+        "end": "Ends",
+        "break": "Break (minutes)",
+        "active": "In use",
+        "saved": "Shift saved."
+    },
+    "holidays": {
+        "title": "Holidays",
+        "text": "Days off of the company, or of one branch or department. Weekends come from the rules.",
+        "previous_year": "Previous year",
+        "next_year": "Next year",
+        "add": "Add a holiday",
+        "empty": "No holidays this year",
+        "empty_text": "Add public holidays and the company's own days off.",
+        "added": "Holiday added.",
+        "remove": "Remove",
+        "remove_title": "Remove {name}?",
+        "remove_text": "The day becomes a working day again; its days are worked out again.",
+        "removed": "Holiday removed.",
+        "date": "Day",
+        "name": "Name",
+        "only_here": "Only for {unit} and the units below it"
+    },
+    "rosters": {
+        "title": "Rosters",
+        "text": "Who works which shift at {unit}. Choose people, a shift and the day it starts.",
+        "shift": "Shift",
+        "no_shift": "No fixed hours",
+        "from": "From",
+        "assign": "Put {count} on this shift",
+        "assigned": "{count} people put on the shift.",
+        "everyone": "Choose everyone"
+    },
+    "portal": {
+        "title": "My attendance",
+        "text": "Your days as your employer records them.",
+        "empty": "No days this month."
+    }
+}

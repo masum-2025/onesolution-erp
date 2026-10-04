@@ -43,6 +43,24 @@ it('links an employee to a login of the company, one employee per login', functi
     expect(app(EmployeeDirectory::class)->forUser($this->w->c1, $member))->toBeNull();
 });
 
+it('offers the company\'s members as logins to link, not those taken', function () {
+    $amina = staffWithRoles($this->w->b1, makeRole($this->w->b1, ['attendance.punch'], 'Worker'));
+    $amina->forceFill(['name' => 'Amina Begum'])->save();
+    $taken = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['attendance.punch'], 'Worker 2'));
+    $this->asToken($this->w->token)->putJson(($this->url)($this->other), ['base_version' => $this->other['version'], 'user_id' => $taken->id])->assertOk();
+    staffWithRoles($this->w->c2, makeRole($this->w->c2, ['attendance.punch'], 'Elsewhere'));
+    $logins = "/api/organizations/{$this->w->c1->id}/hrm/employees/{$this->employee['id']}/logins";
+
+    $ids = collect($this->asToken($this->w->token)->getJson($logins)->assertOk()->json('data'))->pluck('id');
+    expect($ids)->toContain($amina->id)->not->toContain($taken->id)
+        ->and($this->asToken($this->w->token)->getJson("{$logins}?search=Amina")->json('data'))->toBe([['id' => $amina->id, 'name' => 'Amina Begum', 'email' => $amina->email]]);
+
+    $viewer = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'Viewer')), $this->w->c1);
+    $this->asToken($viewer)->getJson($logins)->assertForbidden();
+    $linked = $this->asToken($this->w->token)->getJson("/api/organizations/{$this->w->c1->id}/hrm/employees/{$this->other['id']}")->json('data.login');
+    expect($linked)->toMatchArray(['id' => $taken->id, 'email' => $taken->email]);
+});
+
 it('keeps linking to HR managers of the unit', function () {
     $viewer = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'Viewer')), $this->w->c1);
     $this->asToken($viewer)->putJson(($this->url)($this->employee), ['base_version' => 1, 'user_id' => null])->assertForbidden();

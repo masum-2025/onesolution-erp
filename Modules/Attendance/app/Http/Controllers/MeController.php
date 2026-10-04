@@ -20,7 +20,9 @@ use Modules\Attendance\Services\Workplace;
 /**
  * An employee's own attendance, through the login HR linked to them: today,
  * checking in and out (attendance.punch), their days of a month and asking
- * to fix one. Only their own records, ever.
+ * to fix one. Only their own records, ever. Checking in needs
+ * attendance.punch where they signed in (their own record: their unit in
+ * HRM may sit below the membership that holds the permission).
  */
 class MeController extends Controller
 {
@@ -37,7 +39,7 @@ class MeController extends Controller
     /** Who they are here, today's day and punches, and whether they may punch. */
     public function show(Request $request, string $organization): JsonResponse
     {
-        [, $company] = $this->workplace($organization);
+        [$unit, $company] = $this->workplace($organization);
         $employee = $this->punches->employeeOf($company, $request->user());
         $today = $this->workplace->today($company);
         $day = $this->days->compute($company, $employee, $today);
@@ -49,15 +51,15 @@ class MeController extends Controller
                 ->where('punched_at', '>=', $this->workplace->at($company, $today->subDay(), 0))
                 ->orderByDesc('punched_at')->limit(20)->get()->map(fn (Punch $punch) => $this->presenter->punch($punch))->values(),
             'timezone' => $this->workplace->timezone($company),
-            'can_punch' => Gate::allows('attendance.punch', $this->unitOf($employee->unitId)),
+            'can_punch' => Gate::allows('attendance.punch', $unit),
         ]]);
     }
 
     public function punch(Request $request, string $organization): JsonResponse
     {
-        [, $company] = $this->workplace($organization);
+        [$unit, $company] = $this->workplace($organization);
         $employee = $this->punches->employeeOf($company, $request->user());
-        Gate::authorize('attendance.punch', $this->unitOf($employee->unitId));
+        Gate::authorize('attendance.punch', $unit);
         $opId = $request->validate(['op_id' => ['nullable', 'string', 'max:64']])['op_id'] ?? null;
 
         $punch = $this->punches->self($company, $request->user(), $opId);
@@ -92,9 +94,9 @@ class MeController extends Controller
 
     public function ask(CorrectionRequest $request, string $organization): JsonResponse
     {
-        [, $company] = $this->workplace($organization);
+        [$unit, $company] = $this->workplace($organization);
         $employee = $this->punches->employeeOf($company, $request->user());
-        Gate::authorize('attendance.punch', $this->unitOf($employee->unitId));
+        Gate::authorize('attendance.punch', $unit);
 
         $correction = $this->corrections->ask($company, $employee, $request->safe()->except('employee_id'), $request->user());
 

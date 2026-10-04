@@ -265,5 +265,22 @@
         "toggle_other": "Show or hide the {shown} people who report to {name}",
         "more_one": "1 more is not shown here. Use the employee list to find them.",
         "more_other": "{shown} more are not shown here. Use the employee list to find them."
+    },
+    "login": {
+        "label": "Login",
+        "none": "Not linked: they cannot check in or see their own records yet.",
+        "link": "Link a login",
+        "change": "Change",
+        "unlink": "Unlink",
+        "title": "Link a login",
+        "text": "Choose the login {name} uses. They can then check in and see their own records.",
+        "search": "Search by name or email",
+        "empty": "No member of the company to link. Invite them first under Members.",
+        "choose": "Link",
+        "close": "Close",
+        "linked": "Linked to {name}.",
+        "unlink_title": "Unlink the login?",
+        "unlink_text": "{name} can no longer check in with it. Their records stay.",
+        "unlinked": "Login unlinked."
     }
 }

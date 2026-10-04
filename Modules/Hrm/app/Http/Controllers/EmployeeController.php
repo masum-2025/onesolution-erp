@@ -3,11 +3,15 @@
 namespace Modules\Hrm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Support\Http\PerPage;
+use App\Platform\Tenancy\Enums\MembershipStatus;
+use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\Organization;
+use App\Platform\Tenancy\Models\OrganizationMembership;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -165,6 +169,32 @@ class EmployeeController extends Controller
 
         return response()->json(['data' => ['national_id' => $employee->national_id, 'tax_id' => $employee->tax_id]])
             ->header('Cache-Control', 'no-store, private');
+    }
+
+    /**
+     * Logins that can be linked to the employee: active staff and portal
+     * members of the company (name, email), not linked to another employee.
+     */
+    public function logins(Request $request, string $organization, string $employee): JsonResponse
+    {
+        $employee = $this->employeeIn($this->findVisible($organization), $employee);
+        Gate::authorize('hrm.manage', $this->unitOf($employee));
+        $search = trim((string) ($request->validate(['search' => ['nullable', 'string', 'max:100']])['search'] ?? ''));
+
+        $company = Organization::query()->findOrFail($employee->company_id);
+        $taken = Employee::query()->where('company_id', $company->getKey())->whereNotNull('user_id')->whereKeyNot($employee->getKey())
+            ->where('status', '!=', EmployeeStatus::Exited->value)->pluck('user_id')->all();
+        $users = OrganizationMembership::query()
+            ->whereIn('organization_id', Organization::query()->subtreeOf($company)->pluck('id')->all())
+            ->where('status', MembershipStatus::Active->value)
+            ->whereIn('membership_type', [MembershipType::Staff->value, MembershipType::Portal->value])
+            ->whereNotIn('user_id', $taken)
+            ->distinct()->pluck('user_id')->all();
+
+        return response()->json(['data' => User::query()->whereKey($users)
+            ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")))
+            ->orderBy('name')->limit(20)->get(['id', 'name', 'email'])
+            ->map(fn (User $user) => $user->only(['id', 'name', 'email']))->values()]);
     }
 
     /** Link the login the employee uses (user_id), or unlink it (null). */

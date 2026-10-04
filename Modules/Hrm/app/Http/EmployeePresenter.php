@@ -2,6 +2,7 @@
 
 namespace Modules\Hrm\Http;
 
+use App\Models\User;
 use App\Platform\Tenancy\Models\Organization;
 use Modules\Hrm\Models\CustomField;
 use Modules\Hrm\Models\Employee;
@@ -63,6 +64,8 @@ class EmployeePresenter
             'exits_on' => $employee->exits_on?->toDateString(),
             'exit_reason' => $employee->exit_reason,
             'user_id' => $employee->user_id,
+            // The login linked to the employee (they check in and see their own records with it).
+            'login' => $employee->user_id === null ? null : User::query()->whereKey($employee->user_id)->first(['id', 'name', 'email'])?->only(['id', 'name', 'email']),
         ];
     }
 
