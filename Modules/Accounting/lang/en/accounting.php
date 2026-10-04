@@ -38,6 +38,7 @@ return [
         'payment' => 'Money paid :number · :party',
     ],
     'posting_keys' => [
+        'online_collections' => 'Money paid online by customers',
         'receivable' => 'What customers owe',
         'payable' => 'What is owed to vendors',
         'retained_earnings' => 'Retained earnings (year-end closing)',
@@ -47,6 +48,13 @@ return [
     // Narration of a reversing journal.
     'reversal_narration' => 'Reversal of :number: :reason',
 
+    'portal' => [
+        'subject' => 'Customer',
+        'name' => 'Name',
+        'code' => 'Customer code',
+        'phone' => 'Phone',
+        'paid_online' => 'Paid online for :number',
+    ],
     'errors' => [
         'sourced_journal' => 'This entry came from an invoice, receipt or another module. Void it there, so both stay in step.',
         'party_not_found' => 'Customer or vendor not found. Check the link or search the list.',

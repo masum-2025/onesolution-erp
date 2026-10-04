@@ -32,7 +32,7 @@ const data = computed(() => portal.data.value);
                 <li v-for="record in data.records" :key="record.id">
                     <RouterLink
                         v-if="record.status === 'active'"
-                        :to="`/portal/records/${record.id}`"
+                        :to="record.page ?? `/portal/records/${record.id}`"
                         class="card flex items-center gap-4 p-4 transition hover:bg-subtle/60"
                     >
                         <div class="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-text">

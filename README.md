@@ -2169,6 +2169,25 @@ and the sidebar lights the entry with the longest matching link.
 - **Dashboard**: customers owe, overdue from customers, owed to vendors; the waiting count and the
   bell include documents and money.
 
+### Customer portal and online payment (ACC-3c)
+
+- **Portal subject `accounting.customer`** (relation `self`, `Modules\Accounting\Portal\CustomerSubjects`):
+  the client links a portal member (guardian, shop customer, client firm) to one of its customers,
+  as for any portal record. It implements the new optional `PortalSubjectPage`: the portal home
+  opens the module's own screen (`/portal/invoices?customer=…`) instead of the plain details.
+- **Portal API** (`/api/portal/accounting/invoices`, `…/{id}`, `…/{id}/pay`; `client_portal` and
+  `accounting` on): only the linked customers' posted invoices and credit notes (never drafts,
+  waiting, voided, other customers, accounts or journals; anything else is the same 404). Screens:
+  `/portal/invoices` (what is still due, the list) and `/portal/invoices/:id` (printable, lines
+  stacked on phones, "Pay online").
+- **Online payment** (`payment_collectables`: `Modules\Accounting\Payments\InvoiceCollectable`,
+  kind `accounting.invoice`): due = the invoice balance, only for the linked customer and while
+  `client_portal.allow_online_payment` is on; the money goes to the company's own merchant account
+  (`CollectPayment`). When the gateway confirms, `Settlements::recordOnline` writes a receipt into
+  the posting key `accounting.online_collections` (template: 1130) without approval, set against
+  the invoice as far as it is still due (the rest is an advance: the money was taken), with op id
+  `payment-{id}` so a repeated notice is harmless. The payer returns to the invoice page.
+
 ### Future expansion (Accounting)
 
 - A new sector is a new chart file (or none: `general`) and a sector package rule; a new

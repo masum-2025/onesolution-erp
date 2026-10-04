@@ -2,7 +2,9 @@
 
 namespace App\Platform\Portal\Services;
 
+use App\Platform\Portal\Contracts\PortalSubjectPage;
 use App\Platform\Portal\Models\PortalLink;
+use App\Platform\Portal\PortalSubject;
 use App\Platform\Portal\PortalSubjects;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
@@ -47,6 +49,7 @@ class PortalRecords
                     'relation' => $link->relation,
                     // Until the client approves, not even the name is shown.
                     'name' => $subject?->name,
+                    'page' => $subject === null ? null : $this->page($link->subject_type, $subject),
                 ];
             })
             ->values()
@@ -94,6 +97,7 @@ class PortalRecords
             'relation' => $link->relation,
             'name' => $subject->name,
             'fields' => $fields,
+            'page' => $this->page($link->subject_type, $subject),
             'online_payment' => (bool) $this->rules->get('client_portal.allow_online_payment', $this->contexts->forOrganization($organization)),
         ];
     }
@@ -111,5 +115,13 @@ class PortalRecords
         }
 
         return $hidden;
+    }
+
+    /** The module's own portal screen for the record, when it has one. */
+    private function page(string $type, PortalSubject $subject): ?string
+    {
+        $provider = $this->subjects->provider($type);
+
+        return $provider instanceof PortalSubjectPage ? $provider->portalPath($subject) : null;
     }
 }

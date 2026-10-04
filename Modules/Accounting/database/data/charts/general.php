@@ -66,5 +66,6 @@ return [
         'accounting.opening_balance' => '3300',
         'accounting.receivable' => '1140',
         'accounting.payable' => '2110',
+        'accounting.online_collections' => '1130',
     ],
 ];

@@ -435,5 +435,20 @@
         "over": "Over {days} days",
         "credits": "Credits",
         "net": "Net"
+    },
+    "portal_page": {
+        "title": "My invoices",
+        "text": "Invoices from {org}, what is paid and what is still due.",
+        "owes": "Still due",
+        "paid_up": "Nothing due",
+        "empty_title": "No invoices yet",
+        "empty_text": "Invoices from {org} appear here once they are issued.",
+        "back": "My invoices",
+        "pay": "Pay {amount} online",
+        "paying": "Opening the payment page…",
+        "paid_note": "Payments received",
+        "due": "Due {date}",
+        "none_due": "Nothing is due on this invoice.",
+        "print": "Print"
     }
 }

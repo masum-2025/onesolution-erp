@@ -29,7 +29,12 @@ const data = computed(() => record.data.value);
         <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
 
         <template v-else-if="data">
-            <PageHeader :title="data.name" :description="`${data.kind} · ${t(`portal.record.relation.${data.relation}`)}`" />
+            <PageHeader :title="data.name" :description="`${data.kind} · ${t(`portal.record.relation.${data.relation}`)}`">
+                <!-- A module with its own screen for the record (e.g. a customer's invoices). -->
+                <template v-if="data.page" #actions>
+                    <AppButton variant="primary" :to="data.page">{{ t('portal.record.open') }}</AppButton>
+                </template>
+            </PageHeader>
 
             <section class="card">
                 <p v-if="!data.fields.length" class="px-5 py-6 text-[13.5px] text-muted">{{ t('portal.record.empty') }}</p>

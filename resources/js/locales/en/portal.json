@@ -15,7 +15,8 @@
             "self": "Your own record"
         },
         "empty": "Nothing to show here.",
-        "payment_soon": "Online payment will appear here when {org} offers it."
+        "payment_soon": "Online payment will appear here when {org} offers it.",
+        "open": "Open"
     },
     "join": {
         "title": "Join a portal",

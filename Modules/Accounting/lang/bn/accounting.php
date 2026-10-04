@@ -37,6 +37,7 @@ return [
         'payment' => 'পরিশোধিত টাকা :number · :party',
     ],
     'posting_keys' => [
+        'online_collections' => 'গ্রাহকদের অনলাইনে দেওয়া টাকা',
         'receivable' => 'গ্রাহকদের কাছে পাওনা',
         'payable' => 'সরবরাহকারীদের দেনা',
         'retained_earnings' => 'সংরক্ষিত মুনাফা (বছর শেষের সমাপনী)',
@@ -45,6 +46,13 @@ return [
 
     'reversal_narration' => ':number উল্টানো হলো: :reason',
 
+    'portal' => [
+        'subject' => 'গ্রাহক',
+        'name' => 'নাম',
+        'code' => 'গ্রাহক কোড',
+        'phone' => 'ফোন',
+        'paid_online' => ':number এর জন্য অনলাইনে পরিশোধ',
+    ],
     'errors' => [
         'sourced_journal' => 'এই এন্ট্রি একটি ইনভয়েস, রসিদ বা অন্য মডিউল থেকে এসেছে। দুটো মিলিয়ে রাখতে সেখান থেকেই বাতিল (void) করুন।',
         'party_not_found' => 'গ্রাহক বা সরবরাহকারী পাওয়া যায়নি। লিংকটি দেখুন বা তালিকায় খুঁজুন।',

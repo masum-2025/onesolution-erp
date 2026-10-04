@@ -15,6 +15,7 @@ use Modules\Accounting\Enums\SettlementStatus;
 use Modules\Accounting\Enums\SettlementType;
 use Modules\Accounting\Exceptions\AccountingException;
 use Modules\Accounting\Models\Account;
+use Modules\Accounting\Models\Document;
 use Modules\Accounting\Models\FiscalYear;
 use Modules\Accounting\Models\Journal;
 use Modules\Accounting\Models\Party;
@@ -167,10 +168,55 @@ class Settlements
     }
 
     /**
+     * Money a customer paid online for an invoice, confirmed by the gateway:
+     * a receipt into the account of posting key accounting.online_collections,
+     * set against the invoice as far as it is still due (the rest is an
+     * advance: the money was taken already, whatever the overpayment rule
+     * says). No approval and no person: the gateway's confirmation is the
+     * check. The op id (one per payment) makes a repeated notice harmless.
+     */
+    public function recordOnline(Organization $company, Document $invoice, int $amountMinor, string $reference, string $opId): Settlement
+    {
+        $existing = $this->books->query(Settlement::class, $company)->where('op_id', $opId)->first();
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $account = $this->books->query(PostingAccount::class, $company)->where('posting_key', 'accounting.online_collections')->value('account_id')
+            ?? throw AccountingException::postingAccountMissing('accounting.online_collections');
+
+        return $this->books->transaction($company, function () use ($company, $invoice, $amountMinor, $reference, $opId, $account) {
+            /** @var Document $invoice */
+            $invoice = $this->books->query(Document::class, $company)->whereKey($invoice->getKey())->lockForUpdate()->firstOrFail();
+            $share = $invoice->status->isPosted() ? min($amountMinor, $invoice->balance()) : 0;
+
+            $settlement = new Settlement;
+            $settlement->fill([
+                'organization_id' => $company->getKey(),
+                'type' => SettlementType::Receipt,
+                'party_id' => $invoice->party_id,
+                'settled_on' => $this->books->today($company)->toDateString(),
+                'account_id' => $account,
+                'amount_minor' => $amountMinor,
+                'currency_code' => $this->books->currency($company),
+                'reference' => mb_substr($reference, 0, 100),
+                'memo' => mb_substr(__('accounting::accounting.portal.paid_online', ['number' => $invoice->number]), 0, 500),
+                'status' => SettlementStatus::PendingApproval,
+                'requested_allocations' => $share > 0 ? [['document_id' => $invoice->getKey(), 'amount_minor' => $share]] : [],
+                'op_id' => $opId,
+                'created_by' => null,
+                'version' => 1,
+            ])->save();
+
+            return $this->post($company, $settlement, null, null);
+        });
+    }
+
+    /**
      * Into the books: a number, a journal (money account against the party
      * account) posted at once, and the allocations asked for.
      */
-    private function post(Organization $company, Settlement $settlement, ?User $approver, User $actor): Settlement
+    private function post(Organization $company, Settlement $settlement, ?User $approver, ?User $actor): Settlement
     {
         $period = $this->calendar->openPeriodFor($company, $settlement->settled_on);
         /** @var FiscalYear $year */

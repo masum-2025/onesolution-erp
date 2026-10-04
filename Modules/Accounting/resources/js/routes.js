@@ -29,4 +29,8 @@ export default [
     { path: 'accounting/payments', name: 'accounting-payments', component: () => import('./pages/SettlementsPage.vue'), meta: { ...meta, type: 'payment' } },
     { path: 'accounting/settlements/new', name: 'accounting-settlement-new', component: () => import('./pages/SettlementFormPage.vue'), meta },
     { path: 'accounting/settlements/:id', name: 'accounting-settlement', component: () => import('./pages/SettlementPage.vue'), meta },
+
+    // A customer's own invoices in the client's portal (B2B2C): portal members may open these.
+    { path: 'portal/invoices', name: 'accounting-portal-invoices', component: () => import('./pages/PortalInvoicesPage.vue'), meta: { ...meta, portal: true } },
+    { path: 'portal/invoices/:id', name: 'accounting-portal-invoice', component: () => import('./pages/PortalInvoicePage.vue'), meta: { ...meta, portal: true } },
 ];

@@ -8,6 +8,7 @@ use Modules\Accounting\Http\Controllers\FiscalYearController;
 use Modules\Accounting\Http\Controllers\JournalController;
 use Modules\Accounting\Http\Controllers\JournalStepController;
 use Modules\Accounting\Http\Controllers\PartyController;
+use Modules\Accounting\Http\Controllers\PortalInvoiceController;
 use Modules\Accounting\Http\Controllers\PostingAccountController;
 use Modules\Accounting\Http\Controllers\ReportController;
 use Modules\Accounting\Http\Controllers\SettlementController;
@@ -59,4 +60,17 @@ Route::middleware(['auth:sanctum', 'org', 'module:accounting'])
             Route::post('settlements', [SettlementController::class, 'store']);
             Route::post('settlements/{settlement}/{step}', SettlementStepController::class);
         });
+    });
+
+/*
+| A customer's own invoices in the client's portal (B2B2C, ACC-3c): portal
+| members only (the API refuses them everything else), with the portal and
+| Accounting on; paying online uses the company's own merchant account.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:accounting'])
+    ->prefix('portal/accounting')
+    ->group(function () {
+        Route::get('invoices', [PortalInvoiceController::class, 'index']);
+        Route::get('invoices/{document}', [PortalInvoiceController::class, 'show']);
+        Route::post('invoices/{document}/pay', [PortalInvoiceController::class, 'pay'])->middleware('throttle:payments-start');
     });

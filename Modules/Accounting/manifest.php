@@ -12,6 +12,8 @@ use Modules\Accounting\Dashboard\IncomeThisMonth;
 use Modules\Accounting\Dashboard\RecentJournals;
 use Modules\Accounting\Dashboard\VendorsOwed;
 use Modules\Accounting\Dashboard\WaitingApproval;
+use Modules\Accounting\Payments\InvoiceCollectable;
+use Modules\Accounting\Portal\CustomerSubjects;
 
 return [
     'key' => 'accounting',
@@ -264,7 +266,12 @@ return [
         // What customers owe and what is owed to vendors (invoices, bills and the money that pays them).
         'accounting.receivable' => ['label' => 'accounting::accounting.posting_keys.receivable', 'type' => 'asset'],
         'accounting.payable' => ['label' => 'accounting::accounting.posting_keys.payable', 'type' => 'liability'],
+        // Where money customers pay online arrives (the gateway's settlement account).
+        'accounting.online_collections' => ['label' => 'accounting::accounting.posting_keys.online_collections', 'type' => 'asset'],
     ],
+    // A customer sees their own invoices in the client's portal, and pays them online.
+    'portal_subjects' => [CustomerSubjects::class],
+    'payment_collectables' => [InvoiceCollectable::class],
     'is_core' => false,
     'requires_consent' => false,
 ];
