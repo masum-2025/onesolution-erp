@@ -137,6 +137,7 @@ function printPage() {
         <div v-else-if="document" class="grid gap-5">
             <div class="flex flex-wrap items-center gap-2 print:hidden">
                 <AppBadge :tone="documentTone(document.status)" dot>{{ t(statusKey(document.type, document.status)) }}</AppBadge>
+                <AppBadge v-if="document.is_opening" tone="neutral">{{ t('accounting.opening.title') }}</AppBadge>
                 <span v-if="dueText" class="text-[13px]" :class="daysUntilDue(document.due_date, today) < 0 ? 'text-bad' : 'text-muted'">{{ dueText }}</span>
                 <span v-if="document.reject_reason && document.status === 'rejected'" class="rounded-lg bg-bad-soft px-3 py-1 text-[13px] text-bad">{{ t('accounting.journal.rejected', { reason: document.reject_reason }) }}</span>
                 <span v-if="document.void_reason" class="rounded-lg bg-subtle px-3 py-1 text-[13px] text-muted">{{ document.void_reason }}</span>

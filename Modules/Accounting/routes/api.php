@@ -7,6 +7,7 @@ use Modules\Accounting\Http\Controllers\DocumentStepController;
 use Modules\Accounting\Http\Controllers\FiscalYearController;
 use Modules\Accounting\Http\Controllers\JournalController;
 use Modules\Accounting\Http\Controllers\JournalStepController;
+use Modules\Accounting\Http\Controllers\OpeningController;
 use Modules\Accounting\Http\Controllers\PartyController;
 use Modules\Accounting\Http\Controllers\PortalInvoiceController;
 use Modules\Accounting\Http\Controllers\PostingAccountController;
@@ -39,6 +40,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:accounting'])
         Route::get('settlements', [SettlementController::class, 'index']);
         Route::get('settlements/{settlement}', [SettlementController::class, 'show']);
         Route::get('tax-codes', [TaxCodeController::class, 'index']);
+        Route::get('opening', [OpeningController::class, 'show']);
         // Unknown reports are refused by the controller, after the organization checks.
         Route::get('reports/{report}', ReportController::class)->middleware('throttle:accounting-reports');
 
@@ -48,6 +50,11 @@ Route::middleware(['auth:sanctum', 'org', 'module:accounting'])
             Route::patch('accounts/{account}', [AccountController::class, 'update']);
             Route::post('fiscal-years', [FiscalYearController::class, 'store']);
             Route::post('periods/{period}/{step}', [FiscalYearController::class, 'period']);
+            Route::post('fiscal-years/{year}/{step}', [FiscalYearController::class, 'year']);
+            Route::post('reopen-requests/{reopenRequest}/{step}', [FiscalYearController::class, 'reopenRequest']);
+            Route::put('opening', [OpeningController::class, 'update']);
+            Route::delete('opening', [OpeningController::class, 'destroy']);
+            Route::post('opening/{step}', [OpeningController::class, 'step']);
             Route::put('posting-accounts/{key}', [PostingAccountController::class, 'update']);
             Route::post('journals', [JournalController::class, 'store']);
             Route::patch('journals/{journal}', [JournalController::class, 'update']);

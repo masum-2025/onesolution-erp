@@ -10,13 +10,15 @@ use Modules\Accounting\Events\JournalPosted;
 use Modules\Accounting\Models\Balance;
 use Modules\Accounting\Models\FiscalYear;
 use Modules\Accounting\Models\Journal;
+use Modules\Accounting\Models\Period;
 
 /**
  * Puts a checked, balanced journal into the books: into its open period,
  * with the next number of the fiscal year, adding its lines to the period
  * totals. Locks the period row first, so postings of one period run one
  * after another and nobody closes the period halfway. Call inside a
- * transaction (Journals does).
+ * transaction (Journals does). Only the year-end closing names its period
+ * (the closed closing period, locked by the caller).
  */
 class Posting
 {
@@ -27,9 +29,9 @@ class Posting
         private AuditLogger $audit,
     ) {}
 
-    public function post(Organization $company, Journal $journal, ?User $approver, ?User $actor): Journal
+    public function post(Organization $company, Journal $journal, ?User $approver, ?User $actor, ?Period $into = null): Journal
     {
-        $period = $this->calendar->openPeriodFor($company, $journal->entry_date);
+        $period = $into ?? $this->calendar->openPeriodFor($company, $journal->entry_date);
         /** @var FiscalYear $year */
         $year = $this->books->query(FiscalYear::class, $company)->findOrFail($period->fiscal_year_id);
 

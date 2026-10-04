@@ -10,19 +10,24 @@ use Modules\Accounting\Http\AccountingPresenter;
 use Modules\Accounting\Http\Controllers\Concerns\FindsBooks;
 use Modules\Accounting\Http\Requests\FiscalYearRequest;
 use Modules\Accounting\Http\Requests\PeriodStepRequest;
+use Modules\Accounting\Http\Requests\YearStepRequest;
 use Modules\Accounting\Models\FiscalYear;
+use Modules\Accounting\Models\YearReopenRequest;
 use Modules\Accounting\Services\Books;
 use Modules\Accounting\Services\FiscalCalendar;
+use Modules\Accounting\Services\YearEnd;
 
 /**
  * Fiscal years with their periods; adding the next year; closing and
- * reopening a period (accounting.close, audited, reopening needs a reason).
+ * reopening a period (accounting.close, audited, reopening needs a reason);
+ * closing a year and asking to reopen it, which another person approves
+ * (accounting.close).
  */
 class FiscalYearController extends Controller
 {
     use FindsBooks;
 
-    public function __construct(private Books $books, private FiscalCalendar $calendar, private AccountingPresenter $presenter) {}
+    public function __construct(private Books $books, private FiscalCalendar $calendar, private YearEnd $yearEnd, private AccountingPresenter $presenter) {}
 
     public function index(string $organization): JsonResponse
     {
@@ -57,5 +62,37 @@ class FiscalYearController extends Controller
         };
 
         return response()->json(['data' => $this->presenter->period($changed)]);
+    }
+
+    /** Close a year, or ask to reopen a closed one. */
+    public function year(YearStepRequest $request, string $organization, string $year, string $step): JsonResponse
+    {
+        $company = $this->company($organization);
+        $found = $this->books->query(FiscalYear::class, $company)->whereKey($year)->first() ?? throw AccountingException::fiscalYearNotFound();
+        Gate::authorize('accounting.close', $company);
+
+        match ($step) {
+            'close' => $this->yearEnd->close($company, $found, (int) $request->validated('base_version'), $request->user()),
+            'reopen' => $this->yearEnd->requestReopen($company, $found, (string) $request->validated('reason'), $request->user()),
+            default => throw AccountingException::unknownStep(),
+        };
+
+        return response()->json(['data' => $this->presenter->year($this->books->query(FiscalYear::class, $company)->findOrFail($found->getKey()), $company)]);
+    }
+
+    /** Approve or reject a request to reopen a year (not one's own approval). */
+    public function reopenRequest(YearStepRequest $request, string $organization, string $reopenRequest, string $step): JsonResponse
+    {
+        $company = $this->company($organization);
+        $found = $this->books->query(YearReopenRequest::class, $company)->whereKey($reopenRequest)->first() ?? throw AccountingException::reopenRequestNotFound();
+        Gate::authorize('accounting.close', $company);
+
+        match ($step) {
+            'approve' => $this->yearEnd->approveReopen($company, $found, $request->user()),
+            'reject' => $this->yearEnd->rejectReopen($company, $found, $request->validated('note'), $request->user()),
+            default => throw AccountingException::unknownStep(),
+        };
+
+        return response()->json(['data' => $this->presenter->year($this->books->query(FiscalYear::class, $company)->findOrFail($found->fiscal_year_id), $company)]);
     }
 }

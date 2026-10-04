@@ -18,6 +18,13 @@ export function accountingApi(organizationId) {
         fiscalYears: () => api(`${base}/fiscal-years`),
         addFiscalYear: (body = {}) => api(`${base}/fiscal-years`, { method: 'POST', body }),
         periodStep: (id, step, body = {}) => api(`${base}/periods/${id}/${step}`, { method: 'POST', body }),
+        yearStep: (id, step, body = {}) => api(`${base}/fiscal-years/${id}/${step}`, { method: 'POST', body }),
+        reopenStep: (id, step, body = {}) => api(`${base}/reopen-requests/${id}/${step}`, { method: 'POST', body }),
+
+        opening: () => api(`${base}/opening`),
+        saveOpening: (body) => api(`${base}/opening`, { method: 'PUT', body }),
+        deleteOpening: (version) => api(`${base}/opening`, { method: 'DELETE', body: { base_version: version } }),
+        openingStep: (step, body) => api(`${base}/opening/${step}`, { method: 'POST', body }),
 
         postingAccounts: () => api(`${base}/posting-accounts`),
         setPostingAccount: (key, body) => api(`${base}/posting-accounts/${encodeURIComponent(key)}`, { method: 'PUT', body }),

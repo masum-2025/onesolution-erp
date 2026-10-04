@@ -19,6 +19,9 @@ import {
     journalPayload,
     lineTotals,
     monthOf,
+    openingForm,
+    openingPayload,
+    openingTotals,
     normalizeAmountText,
     parseAmount,
     postableAccounts,
@@ -239,5 +242,51 @@ describe('Accounting tax', () => {
         expect(bpToPercent(750)).toBe('7.5');
         expect(bpToPercent(1500)).toBe('15');
         expect(bpToPercent(5)).toBe('0.05');
+    });
+});
+
+describe('Accounting opening balances and year end', () => {
+    const form = {
+        opening_date: '2026-07-01',
+        accounts: [
+            { account_id: 'cash', debit: '৫,০০০', credit: '' },
+            { account_id: 'capital', debit: '', credit: '4000' },
+            { account_id: '', debit: '', credit: '' },
+        ],
+        customers: [{ party_id: 'karim', reference: ' OLD-17 ', issue_date: '2026-05-10', due_date: '', amount: '1500' }],
+        vendors: [{ party_id: 'paper', reference: '', issue_date: '2026-06-20', due_date: '2026-07-20', amount: '800.50' }],
+    };
+
+    it('adds debits and credits, customers on the debit side and vendors on the credit side', () => {
+        expect(openingTotals(form, 'BDT')).toEqual({ debit: 650000, credit: 480050, difference: 169950, invalid: false });
+        expect(openingTotals({ ...form, vendors: [{ ...form.vendors[0], amount: '-5' }] }, 'BDT').invalid).toBe(true);
+    });
+
+    it('sends filled lines only, accounts first, in minor units', () => {
+        const body = openingPayload(form, 'BDT');
+        expect(body.opening_date).toBe('2026-07-01');
+        expect(body.lines).toEqual([
+            { kind: 'account', account_id: 'cash', debit_minor: 500000 },
+            { kind: 'account', account_id: 'capital', credit_minor: 400000 },
+            { kind: 'customer', party_id: 'karim', amount_minor: 150000, issue_date: '2026-05-10', reference: 'OLD-17' },
+            { kind: 'vendor', party_id: 'paper', amount_minor: 80050, issue_date: '2026-06-20', due_date: '2026-07-20', reference: null },
+        ]);
+    });
+
+    it('turns saved opening balances back into form rows', () => {
+        const rows = openingForm({
+            opening_date: '2026-07-01',
+            lines: [
+                { kind: 'account', account_id: 'cash', debit_minor: 500000, credit_minor: 0 },
+                { kind: 'vendor', party_id: 'paper', amount_minor: 80050, reference: null, issue_date: '2026-06-20', due_date: '2026-07-20' },
+            ],
+        }, 'BDT');
+        expect(rows.accounts).toEqual([{ account_id: 'cash', debit: '5000.00', credit: '' }]);
+        expect(rows.customers).toEqual([]);
+        expect(rows.vendors[0]).toEqual({ party_id: 'paper', amount: '800.50', reference: '', issue_date: '2026-06-20', due_date: '2026-07-20' });
+    });
+
+    it('registers the opening balances screen', () => {
+        expect(moduleRoutes.find((route) => route.name === 'accounting-opening')?.meta.module).toBe('accounting');
     });
 });

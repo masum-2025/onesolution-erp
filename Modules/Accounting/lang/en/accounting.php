@@ -49,6 +49,9 @@ return [
 
     // Narration of a reversing journal.
     'reversal_narration' => 'Reversal of :number: :reason',
+    'year_close_narration' => 'Closing of fiscal year :year: income and expenses into retained earnings',
+    'opening_narration' => 'Opening balances',
+    'opening_document_line' => 'Opening balance',
 
     'portal' => [
         'subject' => 'Customer',
@@ -104,6 +107,21 @@ return [
         'pending_in_period' => ':count entries dated in this period are waiting for approval. Approve or reject them first.',
         'year_not_next' => 'Fiscal years follow each other without a gap: the next one starts on :date.',
         'range_too_large' => 'This range has more than :max entries. Choose a shorter date range.',
+        'fiscal_year_not_found' => 'Fiscal year not found. Reload the list of fiscal years.',
+        'reopen_request_not_found' => 'Request not found. Reload the list of fiscal years.',
+        'opening_not_found' => 'There are no opening balances yet. Enter them first.',
+        'closing_period' => 'This is the closing day of a fiscal year; it only holds the closing entry.',
+        'year_closed' => 'This fiscal year is closed. Ask to reopen the year first.',
+        'year_already_closed' => 'This fiscal year is already closed.',
+        'earlier_year_open' => 'Close the earlier fiscal years first: years close in order.',
+        'periods_still_open' => ':count months of this year are still open. Close them first.',
+        'reopen_already_asked' => 'Someone already asked to reopen this year. Approve or reject that request first.',
+        'own_reopen_request' => 'Another person has to approve reopening a year you asked for.',
+        'year_not_closed' => 'This fiscal year is open.',
+        'later_year_closed' => 'A later fiscal year is closed. Reopen that one first.',
+        'reopen_not_pending' => 'This request was already decided. Reload the page.',
+        'opening_posted' => 'The opening balances are posted and never change. Correct them with a journal entry or a credit note.',
+        'opening_document' => 'This is part of the opening balances. Correct it with a credit note instead.',
     ],
 
     'validation' => [
@@ -129,5 +147,10 @@ return [
         'cost_centre_outside' => 'Choose this company or one of its branches or departments.',
         'cost_centre_required' => 'Choose the branch or department this line belongs to.',
         'one_side' => 'Enter an amount on one side only: debit or credit.',
+        'opening_date' => 'Choose a date inside a fiscal year of the books.',
+        'opening_worked_account' => 'Enter customers and vendors as their own lines; this account is worked out from them.',
+        'opening_issue_date' => 'The old invoice or bill must be dated on or before the opening date.',
+        'due_before_issue' => 'The due date cannot be before the invoice date.',
+        'positive_amount' => 'Enter an amount above zero.',
     ],
 ];

@@ -2,6 +2,7 @@
 
 namespace Modules\Accounting\Http;
 
+use App\Models\User;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Gate;
 use Modules\Accounting\Enums\DocumentStatus;
@@ -15,10 +16,14 @@ use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\FiscalYear;
 use Modules\Accounting\Models\Journal;
 use Modules\Accounting\Models\JournalLine;
+use Modules\Accounting\Models\Opening;
+use Modules\Accounting\Models\OpeningLine;
 use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\Period;
 use Modules\Accounting\Models\Settlement;
+use Modules\Accounting\Models\YearReopenRequest;
 use Modules\Accounting\Services\Books;
+use Modules\Accounting\Services\Openings;
 
 /**
  * API shapes of the books. Amounts are integer minor units with the
@@ -51,13 +56,89 @@ class AccountingPresenter
      */
     public function year(FiscalYear $year, Organization $company): array
     {
+        $request = $this->books->query(YearReopenRequest::class, $company)->where('fiscal_year_id', $year->getKey())->where('status', YearReopenRequest::PENDING)->first();
+        $closes = Gate::allows('accounting.close', $company);
+
         return [
             'id' => $year->getKey(),
             'name' => $year->name,
             'starts_on' => $year->starts_on->toDateString(),
             'ends_on' => $year->ends_on->toDateString(),
-            'periods' => $this->books->query(Period::class, $company)->where('fiscal_year_id', $year->getKey())->orderBy('number')->get()
+            'status' => $year->status,
+            'closed_at' => $year->closed_at?->toIso8601String(),
+            'closing_journal_id' => $year->closing_journal_id,
+            'version' => $year->version,
+            'periods' => $this->books->query(Period::class, $company)->where('fiscal_year_id', $year->getKey())->where('is_closing', false)->orderBy('number')->get()
                 ->map(fn (Period $period) => $this->period($period))->values()->all(),
+            'reopen_request' => $request === null ? null : [
+                'id' => $request->getKey(),
+                'reason' => $request->reason,
+                'requested_by' => $request->requested_by,
+                'requested_by_name' => User::query()->whereKey($request->requested_by)->value('name'),
+                'requested_at' => $request->created_at?->toIso8601String(),
+                'mine' => $request->requested_by === auth()->id(),
+            ],
+            // What the buttons offer; every action is checked again on the server.
+            'can' => [
+                'close' => ! $year->isClosed() && $closes,
+                'reopen' => $year->isClosed() && $request === null && $closes,
+                'approve_reopen' => $request !== null && $request->requested_by !== auth()->id() && $closes,
+                'reject_reopen' => $request !== null && $closes,
+            ],
+        ];
+    }
+
+    /**
+     * The opening balances with their lines, totals and what the reader may do.
+     *
+     * @return array<string, mixed>
+     */
+    public function opening(Opening $opening, Organization $company): array
+    {
+        $lines = app(Openings::class)->lines($company, $opening);
+        $accounts = $this->books->query(Account::class, $company)->whereKey($lines->pluck('account_id')->filter()->unique()->values()->all())->get()->keyBy('id');
+        $parties = $this->books->query(Party::class, $company)->whereKey($lines->pluck('party_id')->filter()->unique()->values()->all())->pluck('name', 'id');
+        $mine = in_array(auth()->id(), [$opening->created_by, $opening->submitted_by], true);
+        $manages = Gate::allows('accounting.manage', $company);
+        $approves = Gate::allows('accounting.approve', $company);
+        $status = $opening->status;
+
+        return [
+            'id' => $opening->getKey(),
+            'opening_date' => $opening->opening_date->toDateString(),
+            'status' => $status->value,
+            'currency' => $this->books->currency($company),
+            'journal_id' => $opening->journal_id,
+            'created_by' => $opening->created_by,
+            'submitted_by' => $opening->submitted_by,
+            'reject_reason' => $opening->reject_reason,
+            'posted_at' => $opening->posted_at?->toIso8601String(),
+            'version' => $opening->version,
+            ...Openings::totals($lines),
+            'lines' => $lines->map(fn (OpeningLine $line) => [
+                'line_no' => $line->line_no,
+                'kind' => $line->kind,
+                'account_id' => $line->account_id,
+                'account_code' => $line->account_id === null ? null : ($accounts[$line->account_id]->code ?? null),
+                'account_name' => $line->account_id === null ? null : ($accounts[$line->account_id]->name ?? null),
+                'party_id' => $line->party_id,
+                'party_name' => $line->party_id === null ? null : ($parties[$line->party_id] ?? null),
+                'cost_centre_id' => $line->cost_centre_id,
+                'debit_minor' => $line->debit_minor,
+                'credit_minor' => $line->credit_minor,
+                'amount_minor' => $line->amount(),
+                'reference' => $line->reference,
+                'issue_date' => $line->issue_date?->toDateString(),
+                'due_date' => $line->due_date?->toDateString(),
+            ])->values()->all(),
+            'can' => [
+                'edit' => $status->isEditable() && $manages,
+                'submit' => $status->isEditable() && $manages,
+                'delete' => $status->isEditable() && $manages,
+                'withdraw' => $status === JournalStatus::PendingApproval && $opening->submitted_by === auth()->id(),
+                'approve' => $status === JournalStatus::PendingApproval && ! $mine && $approves,
+                'reject' => $status === JournalStatus::PendingApproval && ! $mine && $approves,
+            ],
         ];
     }
 
@@ -184,6 +265,7 @@ class AccountingPresenter
             'tax_minor' => $document->tax_minor,
             'total_minor' => $document->total_minor,
             'prices_include_tax' => $document->prices_include_tax,
+            'is_opening' => $document->is_opening,
             'allocated_minor' => $document->allocated_minor,
             'balance_minor' => $document->balance(),
             'version' => $document->version,
@@ -243,7 +325,7 @@ class AccountingPresenter
                 'submit' => $status->isEditable() && $writes,
                 'approve' => $status === DocumentStatus::PendingApproval && ! $mine && $approves,
                 'reject' => $status === DocumentStatus::PendingApproval && ! $mine && $approves,
-                'void' => $status->isPosted() && $document->allocated_minor === 0 && $approves,
+                'void' => $status->isPosted() && $document->allocated_minor === 0 && ! $document->is_opening && $approves,
                 'apply' => $document->type->isCredit() && $status->isPosted() && $document->balance() > 0 && $writes,
             ],
         ];

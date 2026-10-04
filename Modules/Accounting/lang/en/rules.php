@@ -56,6 +56,14 @@ return [
         'label' => 'Prices include tax',
         'description' => 'Prices typed on invoices and bills already include VAT (as in shops). Off: VAT is added on top.',
     ],
+    'year_close_requires_all_periods' => [
+        'label' => 'Close all months before the year',
+        'description' => 'A fiscal year closes only when each of its months is closed. When off, closing the year also closes the months still open.',
+    ],
+    'year_reopen_needs_second_person' => [
+        'label' => 'Second person to reopen a year',
+        'description' => 'Reopening a closed fiscal year needs another person to approve it.',
+    ],
     'categories' => [
         'tax' => 'Tax',
         'receivables' => 'Customers and vendors',

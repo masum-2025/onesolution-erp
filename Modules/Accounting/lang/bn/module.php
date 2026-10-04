@@ -10,6 +10,7 @@ return [
     'menu_reports' => 'রিপোর্ট',
     'menu_setup' => 'খাতা চালু করা',
     'menu_fiscal_years' => 'অর্থবছর',
+    'menu_opening' => 'প্রারম্ভিক জের',
     'menu_posting_accounts' => 'পোস্টিং হিসাব',
     'new_journal' => 'নতুন জাবেদা',
     'menu_sales' => 'বিক্রি',

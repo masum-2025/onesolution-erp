@@ -192,6 +192,10 @@ class Documents
             if ($document->allocated_minor > 0) {
                 throw AccountingException::documentHasPayments();
             }
+            // Opening items share the opening's journal: they are corrected with a credit note.
+            if ($document->is_opening) {
+                throw AccountingException::openingDocument();
+            }
 
             /** @var Journal $journal */
             $journal = $this->books->query(Journal::class, $company)->findOrFail($document->journal_id);

@@ -15,6 +15,7 @@ export default [
     { path: 'accounting/reports', name: 'accounting-reports', component: () => import('./pages/ReportsPage.vue'), meta },
     { path: 'accounting/setup', name: 'accounting-setup', component: () => import('./pages/SetupPage.vue'), meta },
     { path: 'accounting/fiscal-years', name: 'accounting-fiscal-years', component: () => import('./pages/FiscalYearsPage.vue'), meta },
+    { path: 'accounting/opening', name: 'accounting-opening', component: () => import('./pages/OpeningBalancesPage.vue'), meta },
     { path: 'accounting/tax-codes', name: 'accounting-tax-codes', component: () => import('./pages/TaxCodesPage.vue'), meta },
     { path: 'accounting/posting-accounts', name: 'accounting-posting-accounts', component: () => import('./pages/PostingAccountsPage.vue'), meta },
 

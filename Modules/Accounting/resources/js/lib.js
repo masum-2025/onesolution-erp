@@ -303,3 +303,82 @@ export function bpToPercent(bp) {
     const fraction = String(bp % 100).padStart(2, '0').replace(/0+$/, '');
     return fraction ? `${whole}.${fraction}` : String(whole);
 }
+
+/**
+ * Opening balances being written: account rows (debit or credit), what each
+ * customer still owes and what each vendor is still owed. Debits are the
+ * accounts' debits and the customers; credits the accounts' credits and the
+ * vendors. The difference goes to the opening balance account (the other
+ * way round); invalid is true while an amount cannot be read.
+ */
+export function openingTotals(form, currency) {
+    let debit = 0;
+    let credit = 0;
+    let invalid = false;
+    const add = (text, side) => {
+        const minor = parseAmount(text, currency);
+        if (minor === null) invalid = true;
+        else if (side === 'debit') debit += minor;
+        else credit += minor;
+    };
+    for (const row of form.accounts ?? []) {
+        add(row.debit, 'debit');
+        add(row.credit, 'credit');
+    }
+    for (const row of form.customers ?? []) add(row.amount, 'debit');
+    for (const row of form.vendors ?? []) add(row.amount, 'credit');
+
+    return { debit, credit, difference: debit - credit, invalid };
+}
+
+/** The opening balances for the API: empty rows left out, amounts in minor units. */
+export function openingPayload(form, currency) {
+    const party = (kind) => (row) => ({
+        kind,
+        party_id: row.party_id,
+        amount_minor: parseAmount(row.amount, currency),
+        issue_date: row.issue_date,
+        ...(row.due_date ? { due_date: row.due_date } : {}),
+        reference: row.reference?.trim() || null,
+    });
+    const filled = (row) => row.party_id || row.amount?.trim();
+
+    return {
+        opening_date: form.opening_date,
+        lines: [
+            ...(form.accounts ?? [])
+                .filter((row) => row.account_id || row.debit?.trim() || row.credit?.trim())
+                .map((row) => ({
+                    kind: 'account',
+                    account_id: row.account_id,
+                    ...(row.debit?.trim() ? { debit_minor: parseAmount(row.debit, currency) } : {}),
+                    ...(row.credit?.trim() ? { credit_minor: parseAmount(row.credit, currency) } : {}),
+                })),
+            ...(form.customers ?? []).filter(filled).map(party('customer')),
+            ...(form.vendors ?? []).filter(filled).map(party('vendor')),
+        ],
+    };
+}
+
+/** Form rows from saved opening balances (editing a draft or a rejected one). */
+export function openingForm(opening, currency) {
+    const lines = opening?.lines ?? [];
+    const partyRow = (line) => ({
+        party_id: line.party_id,
+        amount: amountText(line.amount_minor, currency),
+        reference: line.reference ?? '',
+        issue_date: line.issue_date ?? '',
+        due_date: line.due_date ?? '',
+    });
+
+    return {
+        opening_date: opening?.opening_date ?? '',
+        accounts: lines.filter((line) => line.kind === 'account').map((line) => ({
+            account_id: line.account_id,
+            debit: amountText(line.debit_minor, currency),
+            credit: amountText(line.credit_minor, currency),
+        })),
+        customers: lines.filter((line) => line.kind === 'customer').map(partyRow),
+        vendors: lines.filter((line) => line.kind === 'vendor').map(partyRow),
+    };
+}

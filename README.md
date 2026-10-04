@@ -2215,6 +2215,42 @@ and the sidebar lights the entry with the longest matching link.
 - Not yet: VDS / TDS (withholding at source), supplementary duty chains and the official return
   form (Mushak 9.1); they come as their own rules and reports.
 
+### Opening balances and year-end closing (ACC-4b)
+
+- **Opening balances** (`acc_openings` + `acc_opening_lines`, one set per company; screen
+  `/accounting/opening`, under Accounting settings). Account lines carry a debit or a credit;
+  what customers still owe and what vendors are still owed is entered per old invoice or bill
+  (reference, invoice date, due date: default the party's terms), never on the receivable or
+  payable account, so aging, statements and receipts work from day one. Whatever does not
+  balance goes to posting key `accounting.opening_balance` (template 3300), shown before posting.
+  `GET/PUT/DELETE …/opening`, `POST …/opening/{submit|withdraw|approve|reject}`: writing needs
+  `accounting.manage`, approving `accounting.approve`; above `accounting.journal_approval_above`
+  a second person approves, never the writer. Posting makes one journal (source
+  `accounting/opening`, dated the opening date; the backdating window does not apply, an open
+  period does) and an opening invoice or bill (`is_opening`, numbers `OB-00001`…) per customer or
+  vendor item. Posted openings never change; opening documents cannot be voided (credit notes
+  correct them).
+- **Closing a year** (`POST …/fiscal-years/{id}/close` with `base_version`, `accounting.close`):
+  years close in order; every month must be closed first (rule
+  `accounting.year_close_requires_all_periods`, default on; off = the open months are closed
+  now, refusing while entries in them wait for approval). One entry dated the year's last day
+  moves each income and expense balance (per branch or department) into posting key
+  `accounting.retained_earnings` (template 3200). It sits in the year's **closing period**
+  (`acc_periods.is_closing`, number 13, one day, always closed): profit and loss and the
+  dashboard leave it out, the trial balance, balance sheet and ledgers include it. The next year
+  is added when missing. Months of a closed year cannot be reopened.
+- **Reopening a year**: `POST …/fiscal-years/{id}/reopen` with a reason makes a request
+  (`acc_year_reopen_requests`); another person with `accounting.close` approves
+  (`POST …/reopen-requests/{id}/approve`) or rejects it (`…/reject`, optional note; the person
+  who asked may take it back this way). Rule `accounting.year_reopen_needs_second_person`
+  (sensitive, default on; off for personal plans) decides. Approval reverses the closing entry in
+  the same closing period; months stay closed until someone reopens the one they need. Only the
+  latest closed year reopens. Requests ring in the bell for the other closers; pending openings
+  for approvers.
+- Audit: `accounting.opening_*`, `accounting.year_closed`, `…year_reopen_requested`,
+  `…year_reopen_rejected`, `…year_reopened` (with the reason). The data export adds
+  `openings`, `opening_lines` and `year_reopen_requests`.
+
 ### Future expansion (Accounting)
 
 - A new sector is a new chart file (or none: `general`) and a sector package rule; a new

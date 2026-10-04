@@ -14,6 +14,7 @@ use Modules\Accounting\Exceptions\AccountingException;
 use Modules\Accounting\Models\Account;
 use Modules\Accounting\Models\Journal;
 use Modules\Accounting\Models\JournalLine;
+use Modules\Accounting\Models\Period;
 
 /**
  * The life of a journal entry:
@@ -269,10 +270,11 @@ class Journals
      * Post a journal whose record was already approved (or needed no approval):
      * a document or settlement that was checked and approved as a whole.
      * Balanced and usable accounts are still required; no second approval.
+     * $into: only for the year-end closing entry (see YearEnd).
      */
-    public function postApproved(Organization $company, Journal $journal, ?User $approver, ?User $actor): Journal
+    public function postApproved(Organization $company, Journal $journal, ?User $approver, ?User $actor, ?Period $into = null): Journal
     {
-        return $this->books->transaction($company, function () use ($company, $journal, $approver, $actor) {
+        return $this->books->transaction($company, function () use ($company, $journal, $approver, $actor, $into) {
             $journal = $this->lock($company, $journal, null);
             if (! $journal->status->isEditable()) {
                 throw AccountingException::notEditable();
@@ -280,7 +282,7 @@ class Journals
             $this->assertPostable($company, $journal);
             $journal->forceFill(['submitted_by' => $actor?->getKey(), 'submitted_at' => now()]);
 
-            return $this->posting->post($company, $journal, $approver, $actor);
+            return $this->posting->post($company, $journal, $approver, $actor, $into);
         });
     }
 

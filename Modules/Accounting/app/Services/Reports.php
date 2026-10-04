@@ -21,8 +21,10 @@ use Modules\Accounting\Models\Period;
  * the same code runs on MySQL and PostgreSQL. A cost centre filter includes
  * the units below it.
  *
- * Until fiscal years are closed into retained earnings (ACC-4), the balance
- * sheet shows all profit to date as "earnings to date".
+ * Closing a fiscal year moves its income and expenses into retained earnings
+ * with an entry in the year's closing period. Profit and loss leaves that
+ * entry out (it would cancel the year's profit); balances include it. The
+ * balance sheet shows the profit of years not yet closed as "earnings to date".
  */
 class Reports
 {
@@ -73,7 +75,8 @@ class Reports
         $opening = $this->totals($company, null, $before, $costCentres, [$account->getKey()])[$account->getKey()] ?? ['debit' => 0, 'credit' => 0];
         $balance = $account->type->balance($opening['debit'], $opening['credit']);
 
-        $lines = $this->postedLines($company, $from, $to, $costCentres)->where('acc_journal_lines.account_id', $account->getKey());
+        // A ledger lists closing entries too: they are real lines of the account.
+        $lines = $this->postedLines($company, $from, $to, $costCentres, withClosing: true)->where('acc_journal_lines.account_id', $account->getKey());
         if ((clone $lines)->count() > self::MAX_LEDGER_LINES) {
             throw AccountingException::rangeTooLarge(self::MAX_LEDGER_LINES);
         }
@@ -112,7 +115,7 @@ class Reports
      */
     public function profitAndLoss(Organization $company, string $from, string $to, ?array $costCentres): array
     {
-        $sections = $this->sections($company, $this->totals($company, $from, $to, $costCentres), [AccountType::Income, AccountType::Expense]);
+        $sections = $this->sections($company, $this->totals($company, $from, $to, $costCentres, withClosing: false), [AccountType::Income, AccountType::Expense]);
 
         return [
             'from' => $from,
@@ -145,15 +148,18 @@ class Reports
     }
 
     /**
-     * Posted debit and credit per account between two dates (from null = since the beginning).
+     * Posted debit and credit per account between two dates (from null = since
+     * the beginning). $withClosing false leaves out year-end closing entries
+     * (profit for a range); true gives balances.
      *
      * @param  list<string>|null  $costCentres
      * @param  list<string>|null  $accountIds
      * @return array<string, array{debit: int, credit: int}>
      */
-    public function totals(Organization $company, ?string $from, string $to, ?array $costCentres, ?array $accountIds = null): array
+    public function totals(Organization $company, ?string $from, string $to, ?array $costCentres, ?array $accountIds = null, bool $withClosing = true): array
     {
         $periods = $this->books->query(Period::class, $company)
+            ->when(! $withClosing, fn ($query) => $query->where('is_closing', false))
             ->where('starts_on', '<=', $to)
             ->when($from !== null, fn ($query) => $query->where('ends_on', '>=', $from))
             ->get();
@@ -198,16 +204,19 @@ class Reports
     }
 
     /**
-     * Lines of posted journals dated between two days.
+     * Lines of posted journals dated between two days. Closing entries sit in
+     * the closing period (read whole from its totals), so they are left out
+     * here unless a ledger lists them.
      *
      * @param  list<string>|null  $costCentres
      * @return Builder<JournalLine>
      */
-    private function postedLines(Organization $company, string $from, string $to, ?array $costCentres): Builder
+    private function postedLines(Organization $company, string $from, string $to, ?array $costCentres, bool $withClosing = false): Builder
     {
         return $this->books->query(JournalLine::class, $company)
             ->join('acc_journals', 'acc_journals.id', '=', 'acc_journal_lines.journal_id')
             ->where('acc_journals.status', JournalStatus::Posted->value)
+            ->when(! $withClosing, fn ($query) => $query->where(fn ($query) => $query->whereNull('acc_journals.source_type')->orWhere('acc_journals.source_type', '!=', YearEnd::SOURCE_TYPE)))
             ->whereBetween('acc_journals.entry_date', [$from, $to])
             ->when($costCentres !== null, fn ($query) => $query->whereIn('acc_journal_lines.cost_centre_id', $costCentres))
             ->select(['acc_journal_lines.account_id', 'acc_journal_lines.debit_minor', 'acc_journal_lines.credit_minor']);

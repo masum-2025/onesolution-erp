@@ -99,12 +99,13 @@ class FiscalCalendar
         return $start->greaterThan($today) ? $this->startIn($today->year - 1, $month, $day) : $start;
     }
 
-    /** The period that holds a date, or null when no fiscal year covers it. */
+    /** The (monthly) period that holds a date, or null when no fiscal year covers it. */
     public function periodFor(Organization $company, CarbonImmutable|string $date, bool $lock = false): ?Period
     {
         $day = $date instanceof CarbonImmutable ? $date->toDateString() : $date;
 
         return $this->books->query(Period::class, $company)
+            ->where('is_closing', false)
             ->where('starts_on', '<=', $day)
             ->where('ends_on', '>=', $day)
             ->when($lock, fn ($query) => $query->lockForUpdate())
@@ -130,7 +131,7 @@ class FiscalCalendar
     {
         return $this->books->transaction($company, function () use ($company, $period, $actor) {
             $period = $this->locked($company, $period);
-            if ($period->status === PeriodStatus::Closed) {
+            if ($period->is_closing || $period->status === PeriodStatus::Closed) {
                 throw AccountingException::periodAlreadyClosed();
             }
 
@@ -155,8 +156,15 @@ class FiscalCalendar
     {
         return $this->books->transaction($company, function () use ($company, $period, $reason, $actor) {
             $period = $this->locked($company, $period);
+            if ($period->is_closing) {
+                throw AccountingException::closingPeriod();
+            }
             if ($period->status !== PeriodStatus::Closed) {
                 throw AccountingException::periodNotClosed();
+            }
+            // A closed year is reopened as a whole first (with a second person).
+            if ($this->books->query(FiscalYear::class, $company)->whereKey($period->fiscal_year_id)->value('status') === FiscalYear::CLOSED) {
+                throw AccountingException::yearClosed();
             }
 
             $period->forceFill(['status' => PeriodStatus::Open, 'closed_by' => null, 'closed_at' => null])->save();

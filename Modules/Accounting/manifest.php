@@ -204,6 +204,29 @@ return [
             'category' => 'receivables',
             'sort_order' => 90,
         ],
+        [
+            'key' => 'accounting.year_close_requires_all_periods',
+            'type' => 'boolean',
+            // Off: closing a year also closes the months still open.
+            'default' => true,
+            'label' => 'accounting::rules.year_close_requires_all_periods.label',
+            'description' => 'accounting::rules.year_close_requires_all_periods.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'period',
+            'sort_order' => 37,
+        ],
+        [
+            'key' => 'accounting.year_reopen_needs_second_person',
+            'type' => 'boolean',
+            // One-person books (personal plans) cannot have a second person.
+            'default' => true,
+            'label' => 'accounting::rules.year_reopen_needs_second_person.label',
+            'description' => 'accounting::rules.year_reopen_needs_second_person.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'sensitive' => true,
+            'category' => 'period',
+            'sort_order' => 38,
+        ],
     ],
     'menu' => [
         [
@@ -264,6 +287,7 @@ return [
         ['key' => 'setup', 'label' => 'accounting::module.menu_setup', 'route' => '/accounting/setup', 'permission' => 'accounting.manage'],
         ['key' => 'accounts', 'label' => 'accounting::module.menu_accounts', 'route' => '/accounting/accounts', 'permission' => 'accounting.view'],
         ['key' => 'fiscal_years', 'label' => 'accounting::module.menu_fiscal_years', 'route' => '/accounting/fiscal-years', 'permission' => 'accounting.view'],
+        ['key' => 'opening', 'label' => 'accounting::module.menu_opening', 'route' => '/accounting/opening', 'permission' => 'accounting.view'],
         ['key' => 'tax_codes', 'label' => 'accounting::module.menu_tax_codes', 'route' => '/accounting/tax-codes', 'permission' => 'accounting.view'],
         ['key' => 'posting_accounts', 'label' => 'accounting::module.menu_posting_accounts', 'route' => '/accounting/posting-accounts', 'permission' => 'accounting.view'],
     ]],
@@ -274,7 +298,7 @@ return [
     ],
     // Other modules listen to these; payloads carry ids only.
     'events' => ['accounting.journal.posted'],
-    // Accounts Accounting itself posts to (year-end closing and opening balances, ACC-4).
+    // Accounts Accounting itself posts to (year-end closing and opening balances, ACC-4b).
     'ledger_accounts' => [
         'accounting.retained_earnings' => ['label' => 'accounting::accounting.posting_keys.retained_earnings', 'type' => 'equity'],
         'accounting.opening_balance' => ['label' => 'accounting::accounting.posting_keys.opening_balance', 'type' => 'equity'],

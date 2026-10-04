@@ -56,6 +56,7 @@ class Document extends Model
             'tax_minor' => 'integer',
             'total_minor' => 'integer',
             'prices_include_tax' => 'boolean',
+            'is_opening' => 'boolean',
             'allocated_minor' => 'integer',
             'posted_at' => 'immutable_datetime',
             'voided_at' => 'immutable_datetime',

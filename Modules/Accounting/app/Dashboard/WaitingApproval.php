@@ -15,13 +15,16 @@ use Modules\Accounting\Enums\JournalStatus;
 use Modules\Accounting\Enums\SettlementStatus;
 use Modules\Accounting\Models\Document;
 use Modules\Accounting\Models\Journal;
+use Modules\Accounting\Models\Opening;
 use Modules\Accounting\Models\Settlement;
+use Modules\Accounting\Models\YearReopenRequest;
 use Modules\Accounting\Services\Books;
 
 /**
- * Journal entries, documents and money records waiting for approval: a
- * count on the dashboard, and in the bell for approvers (only what they did
- * not write or send themselves).
+ * Journal entries, documents, money records and opening balances waiting
+ * for approval: a count on the dashboard, and in the bell for approvers
+ * (only what they did not write or send themselves). Requests to reopen a
+ * closed year ring for the other people who close the books.
  */
 final class WaitingApproval implements AttentionProvider, DashboardWidget
 {
@@ -38,26 +41,42 @@ final class WaitingApproval implements AttentionProvider, DashboardWidget
     public function items(CurrentContext $context): array
     {
         $company = $this->company($context);
-        if ($company === null || ! Gate::allows('accounting.approve', $company)) {
+        if ($company === null) {
             return [];
         }
 
         $mine = $context->user()?->getKey();
         $notMine = fn (Builder $query, string $column) => $query->where(fn ($inner) => $inner->whereNull($column)->orWhere($column, '!=', $mine));
-        $count = 0;
-        foreach ($this->waiting($company) as $kind => $query) {
-            $query = $notMine($query, 'created_by');
-            if ($kind !== 'settlements') {
-                $query = $notMine($query, 'submitted_by');
+        $items = [];
+        if (Gate::allows('accounting.approve', $company)) {
+            $counts = [];
+            foreach ($this->waiting($company) as $kind => $query) {
+                $query = $notMine($query, 'created_by');
+                if ($kind !== 'settlements') {
+                    $query = $notMine($query, 'submitted_by');
+                }
+                $counts[$kind] = $query->count();
             }
-            $count += $query->count();
+            $count = $counts['journals'] + $counts['documents'] + $counts['settlements'];
+            if ($count > 0) {
+                $items[] = new AttentionItem('accounting.journals_waiting', __('accounting::dashboard.attention'), $count, '/accounting/approvals', 'warn');
+            }
+            if ($counts['openings'] > 0) {
+                $items[] = new AttentionItem('accounting.opening_waiting', __('accounting::dashboard.attention_opening'), 1, '/accounting/opening', 'warn');
+            }
+        }
+        if (Gate::allows('accounting.close', $company)) {
+            $reopen = $notMine(app(Books::class)->query(YearReopenRequest::class, $company)->where('status', YearReopenRequest::PENDING), 'requested_by')->count();
+            if ($reopen > 0) {
+                $items[] = new AttentionItem('accounting.reopen_waiting', __('accounting::dashboard.attention_reopen'), $reopen, '/accounting/fiscal-years', 'warn');
+            }
         }
 
-        return $count === 0 ? [] : [new AttentionItem('accounting.journals_waiting', __('accounting::dashboard.attention'), $count, '/accounting/approvals', 'warn')];
+        return $items;
     }
 
     /**
-     * @return array{journals: Builder<Journal>, documents: Builder<Document>, settlements: Builder<Settlement>}
+     * @return array{journals: Builder<Journal>, documents: Builder<Document>, settlements: Builder<Settlement>, openings: Builder<Opening>}
      */
     private function waiting(Organization $company): array
     {
@@ -67,6 +86,7 @@ final class WaitingApproval implements AttentionProvider, DashboardWidget
             'journals' => $books->query(Journal::class, $company)->where('status', JournalStatus::PendingApproval->value),
             'documents' => $books->query(Document::class, $company)->where('status', DocumentStatus::PendingApproval->value),
             'settlements' => $books->query(Settlement::class, $company)->where('status', SettlementStatus::PendingApproval->value),
+            'openings' => $books->query(Opening::class, $company)->where('status', JournalStatus::PendingApproval->value),
         ];
     }
 }

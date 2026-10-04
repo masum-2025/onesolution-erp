@@ -44,7 +44,7 @@ trait ReadsBooks
         }
 
         $amount = 0;
-        foreach (app(Reports::class)->totals($company, $from->toDateString(), $to->toDateString(), null, $ids) as $total) {
+        foreach (app(Reports::class)->totals($company, $from->toDateString(), $to->toDateString(), null, $ids, withClosing: false) as $total) {
             $amount += $type->balance($total['debit'], $total['credit']);
         }
 

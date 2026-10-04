@@ -13,15 +13,20 @@ use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\FiscalYear;
 use Modules\Accounting\Models\Journal;
 use Modules\Accounting\Models\JournalLine;
+use Modules\Accounting\Models\Opening;
+use Modules\Accounting\Models\OpeningLine;
 use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\Period;
 use Modules\Accounting\Models\PostingAccount;
 use Modules\Accounting\Models\Settlement;
 use Modules\Accounting\Models\TaxCode;
+use Modules\Accounting\Models\YearReopenRequest;
 
 /**
  * The books in the client's data export: accounts, fiscal years and periods,
- * journals with their lines, posting accounts. Amounts stay minor units with
+ * journals with their lines, posting accounts, customers and vendors with
+ * their documents and money, tax codes, opening balances and requests to
+ * reopen years. Amounts stay minor units with
  * their currency. Runs without a tenant context, reading the client's own
  * database for exactly the organizations given.
  */
@@ -51,6 +56,9 @@ class AccountingExporter implements ExportsModuleData
                 'name' => $year->name,
                 'starts_on' => $year->starts_on->toDateString(),
                 'ends_on' => $year->ends_on->toDateString(),
+                'status' => $year->status,
+                'closed_at' => $year->closed_at?->toIso8601String(),
+                'closing_journal_id' => $year->closing_journal_id,
             ]),
             'periods' => $this->rows(Period::class, $organization, $organizationIds, fn (Period $period) => [
                 'id' => $period->getKey(),
@@ -59,6 +67,7 @@ class AccountingExporter implements ExportsModuleData
                 'starts_on' => $period->starts_on->toDateString(),
                 'ends_on' => $period->ends_on->toDateString(),
                 'status' => $period->status->value,
+                'is_closing' => $period->is_closing,
             ]),
             'journals' => $this->rows(Journal::class, $organization, $organizationIds, fn (Journal $journal) => [
                 'id' => $journal->getKey(),
@@ -167,6 +176,36 @@ class AccountingExporter implements ExportsModuleData
                 'amount_minor' => $allocation->amount_minor,
                 'allocated_on' => $allocation->allocated_on->toDateString(),
                 'voided' => $allocation->voided_at !== null,
+            ]),
+            'openings' => $this->rows(Opening::class, $organization, $organizationIds, fn (Opening $opening) => [
+                'id' => $opening->getKey(),
+                'organization_id' => $opening->organization_id,
+                'opening_date' => $opening->opening_date->toDateString(),
+                'status' => $opening->status->value,
+                'journal_id' => $opening->journal_id,
+            ]),
+            'opening_lines' => $this->rows(OpeningLine::class, $organization, $organizationIds, fn (OpeningLine $line) => [
+                'id' => $line->getKey(),
+                'opening_id' => $line->opening_id,
+                'line_no' => $line->line_no,
+                'kind' => $line->kind,
+                'account_id' => $line->account_id,
+                'party_id' => $line->party_id,
+                'cost_centre_id' => $line->cost_centre_id,
+                'debit_minor' => $line->debit_minor,
+                'credit_minor' => $line->credit_minor,
+                'reference' => $line->reference,
+                'issue_date' => $line->issue_date?->toDateString(),
+                'due_date' => $line->due_date?->toDateString(),
+            ]),
+            'year_reopen_requests' => $this->rows(YearReopenRequest::class, $organization, $organizationIds, fn (YearReopenRequest $request) => [
+                'id' => $request->getKey(),
+                'fiscal_year_id' => $request->fiscal_year_id,
+                'reason' => $request->reason,
+                'status' => $request->status,
+                'requested_by' => $request->requested_by,
+                'decided_by' => $request->decided_by,
+                'decided_at' => $request->decided_at?->toIso8601String(),
             ]),
         ];
     }

@@ -247,4 +247,79 @@ class AccountingException extends TenancyException
     {
         return new self('range_too_large', 422, ['max' => (string) $max]);
     }
+
+    public static function fiscalYearNotFound(): self
+    {
+        return new self('fiscal_year_not_found', 404);
+    }
+
+    public static function reopenRequestNotFound(): self
+    {
+        return new self('reopen_request_not_found', 404);
+    }
+
+    public static function openingNotFound(): self
+    {
+        return new self('opening_not_found', 404);
+    }
+
+    public static function closingPeriod(): self
+    {
+        return new self('closing_period', 409);
+    }
+
+    public static function yearClosed(): self
+    {
+        return new self('year_closed', 409);
+    }
+
+    public static function yearAlreadyClosed(): self
+    {
+        return new self('year_already_closed', 409);
+    }
+
+    public static function earlierYearOpen(): self
+    {
+        return new self('earlier_year_open', 409);
+    }
+
+    public static function reopenAlreadyAsked(): self
+    {
+        return new self('reopen_already_asked', 409);
+    }
+
+    public static function ownReopenRequest(): self
+    {
+        return new self('own_reopen_request', 403);
+    }
+
+    public static function yearNotClosed(): self
+    {
+        return new self('year_not_closed', 409);
+    }
+
+    public static function laterYearClosed(): self
+    {
+        return new self('later_year_closed', 409);
+    }
+
+    public static function reopenNotPending(): self
+    {
+        return new self('reopen_not_pending', 409);
+    }
+
+    public static function openingPosted(): self
+    {
+        return new self('opening_posted', 409);
+    }
+
+    public static function openingDocument(): self
+    {
+        return new self('opening_document', 409);
+    }
+
+    public static function periodsStillOpen(int $count): self
+    {
+        return new self('periods_still_open', 409, ['count' => (string) $count]);
+    }
 }

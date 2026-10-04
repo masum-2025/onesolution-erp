@@ -10,6 +10,8 @@ return [
     'recent' => 'Latest journal entries',
     'not_set_up' => 'Set up the books to see this',
     'attention' => 'Accounting entries to approve',
+    'attention_opening' => 'Opening balances to approve',
+    'attention_reopen' => 'Fiscal year to reopen',
     'customers_owe' => 'Customers owe',
     'customers_overdue' => 'Overdue from customers',
     'vendors_owed' => 'Owed to vendors',
