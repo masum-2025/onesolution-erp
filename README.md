@@ -2113,6 +2113,37 @@ Code: `Modules/Accounting/resources/js` (routes, pages, `components/BooksGate.vu
   personal plans set it to `[]` (`database/seeders/data/rule-values.php`), so the one person of
   a workspace writes and posts entries. Upgrading to a business plan brings the pairs back.
 
+### Receivables and payables (ACC-3a)
+
+- **Parties** (`acc_parties`, `…/parties`): customers and vendors (or both), contact details,
+  own payment terms; a CRM contact is linked by id only. Customers need `accounting.sell`,
+  vendors `accounting.buy`.
+- **Documents** (`acc_documents`, `acc_document_lines`, `…/documents`): invoices and credit notes
+  (sales, income accounts), bills and vendor credits (purchases, expense or asset accounts).
+  Lines: quantity as text with up to 3 decimals (stored in thousandths), unit price in minor
+  units, amount = quantity × price rounded half up. Due date from the party's terms, else
+  `accounting.payment_terms_days`. `submit` posts at once, or waits for approval above
+  `journal_approval_above` (approved by someone else with `accounting.approve`; the approved
+  document's journal posts without a second approval). Posting numbers it
+  (`accounting.document_number_formats`, one sequence per kind and fiscal year) and writes a
+  journal: receivable (posting key `accounting.receivable`) against the lines' accounts, or the
+  lines against payable (`accounting.payable`); credits the other way round.
+- **Settlements** (`acc_settlements`, `…/settlements`): money received (receipts) and paid
+  (payments) into or out of an asset account, with `op_id` so a repeat is harmless, approval
+  above the amount as for documents, and **allocations** (`acc_allocations`) to the party's open
+  invoices or bills. Unless `accounting.allow_overpayment`, the whole amount must be allocated;
+  otherwise the rest is an advance, allocated later (`…/settlements/{id}/allocate`). Credit notes
+  and vendor credits are applied the same way (`…/documents/{id}/apply`).
+- **Void** (`accounting.approve`): a settlement's journal is reversed and the documents it paid
+  are owed again; a document can be voided only when nothing is set against it. Journals made by
+  documents, settlements or other modules cannot be reversed on the journal page
+  (`sourced_journal`): they are undone where they came from.
+- **Reports**: `reports/aging?side=sales|purchases&as_of=` (open amounts by days overdue,
+  columns from `accounting.aging_buckets`, less unused credits and advances; correct for any past
+  day) and `reports/statement?side=&party_id=&from=&to=` (opening, running and closing balance).
+- Separation of duties: `accounting.sell` and `accounting.buy` are each paired with
+  `accounting.approve`.
+
 ### Future expansion (Accounting)
 
 - A new sector is a new chart file (or none: `general`) and a sector package rule; a new

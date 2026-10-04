@@ -4,12 +4,20 @@ namespace Modules\Accounting\Http;
 
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Gate;
+use Modules\Accounting\Enums\DocumentStatus;
 use Modules\Accounting\Enums\JournalStatus;
+use Modules\Accounting\Enums\SettlementStatus;
+use Modules\Accounting\Enums\SettlementType;
 use Modules\Accounting\Models\Account;
+use Modules\Accounting\Models\Allocation;
+use Modules\Accounting\Models\Document;
+use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\FiscalYear;
 use Modules\Accounting\Models\Journal;
 use Modules\Accounting\Models\JournalLine;
+use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\Period;
+use Modules\Accounting\Models\Settlement;
 use Modules\Accounting\Services\Books;
 
 /**
@@ -126,9 +134,182 @@ class AccountingPresenter
                 'withdraw' => $status === JournalStatus::PendingApproval && $journal->submitted_by === auth()->id(),
                 'approve' => $status === JournalStatus::PendingApproval && ! $mine && Gate::allows('accounting.approve', $company),
                 'reject' => $status === JournalStatus::PendingApproval && ! $mine && Gate::allows('accounting.approve', $company),
-                'reverse' => $status === JournalStatus::Posted && $journal->reverses_id === null && $journal->reversed_by_id === null && Gate::allows('accounting.post', $company),
+                // Entries made by invoices, receipts or other modules are undone there.
+                'reverse' => $status === JournalStatus::Posted && $journal->source_module === null && $journal->reverses_id === null && $journal->reversed_by_id === null && Gate::allows('accounting.post', $company),
             ],
         ];
+    }
+
+    /**
+     * @param  array{sales: int, purchases: int}|null  $balances  What the party owes (sales) and is owed (purchases).
+     * @return array<string, mixed>
+     */
+    public function party(Party $party, ?array $balances = null): array
+    {
+        return [
+            'id' => $party->getKey(),
+            'name' => $party->name,
+            'code' => $party->code,
+            'is_customer' => $party->is_customer,
+            'is_vendor' => $party->is_vendor,
+            'phone' => $party->phone,
+            'email' => $party->email,
+            'address' => $party->address,
+            'tax_number' => $party->tax_number,
+            'payment_terms_days' => $party->payment_terms_days,
+            'is_active' => $party->is_active,
+            'version' => $party->version,
+            ...($balances === null ? [] : ['balances' => $balances]),
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $parties  Party names by id.
+     * @return array<string, mixed>
+     */
+    public function documentItem(Document $document, array $parties = []): array
+    {
+        return [
+            'id' => $document->getKey(),
+            'type' => $document->type->value,
+            'number' => $document->number,
+            'party_id' => $document->party_id,
+            'party_name' => $parties[$document->party_id] ?? null,
+            'issue_date' => $document->issue_date->toDateString(),
+            'due_date' => $document->due_date->toDateString(),
+            'reference' => $document->reference,
+            'status' => $document->status->value,
+            'currency' => $document->currency_code,
+            'total_minor' => $document->total_minor,
+            'allocated_minor' => $document->allocated_minor,
+            'balance_minor' => $document->balance(),
+            'version' => $document->version,
+        ];
+    }
+
+    /**
+     * The whole document: lines, what paid it (or what it paid), and what
+     * the reader may do with it now.
+     *
+     * @return array<string, mixed>
+     */
+    public function document(Document $document, Organization $company): array
+    {
+        $party = $this->books->query(Party::class, $company)->find($document->party_id);
+        $lines = $this->books->query(DocumentLine::class, $company)->where('document_id', $document->getKey())->orderBy('line_no')->get();
+        $accounts = $this->books->query(Account::class, $company)->whereKey($lines->pluck('account_id')->unique()->values()->all())->get()->keyBy('id');
+        $column = $document->type->isCredit() ? 'credit_document_id' : 'document_id';
+        $allocations = $this->books->query(Allocation::class, $company)->where($column, $document->getKey())->whereNull('voided_at')->orderBy('created_at')->get();
+        $mine = in_array(auth()->id(), [$document->created_by, $document->submitted_by], true);
+        $writes = Gate::allows($document->type->isSales() ? 'accounting.sell' : 'accounting.buy', $company);
+        $approves = Gate::allows('accounting.approve', $company);
+        $status = $document->status;
+
+        return [
+            ...$this->documentItem($document, $party === null ? [] : [$party->getKey() => $party->name]),
+            'notes' => $document->notes,
+            'journal_id' => $document->journal_id,
+            'reject_reason' => $document->reject_reason,
+            'void_reason' => $document->void_reason,
+            'posted_at' => $document->posted_at?->toIso8601String(),
+            'voided_at' => $document->voided_at?->toIso8601String(),
+            'lines' => $lines->map(fn (DocumentLine $line) => [
+                'line_no' => $line->line_no,
+                'description' => $line->description,
+                'quantity' => self::quantityText($line->quantity_milli),
+                'unit_price_minor' => $line->unit_price_minor,
+                'amount_minor' => $line->amount_minor,
+                'account_id' => $line->account_id,
+                'account_code' => $accounts[$line->account_id]->code ?? null,
+                'account_name' => $accounts[$line->account_id]->name ?? null,
+                'cost_centre_id' => $line->cost_centre_id,
+            ])->values()->all(),
+            'allocations' => $allocations->map(fn (Allocation $allocation) => [
+                'settlement_id' => $allocation->settlement_id,
+                'credit_document_id' => $allocation->credit_document_id,
+                'document_id' => $allocation->document_id,
+                'amount_minor' => $allocation->amount_minor,
+                'allocated_on' => $allocation->allocated_on->toDateString(),
+            ])->values()->all(),
+            // What the buttons offer; every action is checked again on the server.
+            'can' => [
+                'edit' => $status->isEditable() && $writes,
+                'submit' => $status->isEditable() && $writes,
+                'approve' => $status === DocumentStatus::PendingApproval && ! $mine && $approves,
+                'reject' => $status === DocumentStatus::PendingApproval && ! $mine && $approves,
+                'void' => $status->isPosted() && $document->allocated_minor === 0 && $approves,
+                'apply' => $document->type->isCredit() && $status->isPosted() && $document->balance() > 0 && $writes,
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $parties  Party names by id.
+     * @return array<string, mixed>
+     */
+    public function settlementItem(Settlement $settlement, array $parties = []): array
+    {
+        return [
+            'id' => $settlement->getKey(),
+            'type' => $settlement->type->value,
+            'number' => $settlement->number,
+            'party_id' => $settlement->party_id,
+            'party_name' => $parties[$settlement->party_id] ?? null,
+            'settled_on' => $settlement->settled_on->toDateString(),
+            'account_id' => $settlement->account_id,
+            'status' => $settlement->status->value,
+            'currency' => $settlement->currency_code,
+            'amount_minor' => $settlement->amount_minor,
+            'allocated_minor' => $settlement->allocated_minor,
+            'unallocated_minor' => $settlement->unallocated(),
+            'reference' => $settlement->reference,
+            'version' => $settlement->version,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function settlement(Settlement $settlement, Organization $company): array
+    {
+        $party = $this->books->query(Party::class, $company)->find($settlement->party_id);
+        $allocations = $this->books->query(Allocation::class, $company)->where('settlement_id', $settlement->getKey())->whereNull('voided_at')->orderBy('created_at')->get();
+        $numbers = $this->books->query(Document::class, $company)->whereKey($allocations->pluck('document_id')->all())->pluck('number', 'id');
+        $writes = Gate::allows($settlement->type === SettlementType::Receipt ? 'accounting.sell' : 'accounting.buy', $company);
+        $approves = Gate::allows('accounting.approve', $company);
+        $pending = $settlement->status === SettlementStatus::PendingApproval;
+        $mine = auth()->id() === $settlement->created_by;
+
+        return [
+            ...$this->settlementItem($settlement, $party === null ? [] : [$party->getKey() => $party->name]),
+            'memo' => $settlement->memo,
+            'journal_id' => $settlement->journal_id,
+            'requested_allocations' => $settlement->requested_allocations,
+            'reject_reason' => $settlement->reject_reason,
+            'void_reason' => $settlement->void_reason,
+            'posted_at' => $settlement->posted_at?->toIso8601String(),
+            'allocations' => $allocations->map(fn (Allocation $allocation) => [
+                'document_id' => $allocation->document_id,
+                'document_number' => $numbers[$allocation->document_id] ?? null,
+                'amount_minor' => $allocation->amount_minor,
+                'allocated_on' => $allocation->allocated_on->toDateString(),
+            ])->values()->all(),
+            'can' => [
+                'approve' => $pending && ! $mine && $approves,
+                'reject' => $pending && ! $mine && $approves,
+                'void' => $settlement->status === SettlementStatus::Posted && $approves,
+                'allocate' => $settlement->status === SettlementStatus::Posted && $settlement->unallocated() > 0 && $writes,
+            ],
+        ];
+    }
+
+    /** 1500 thousandths -> "1.5"; 2000 -> "2". */
+    public static function quantityText(int $milli): string
+    {
+        $whole = intdiv($milli, 1000);
+        $fraction = rtrim(str_pad((string) ($milli % 1000), 3, '0', STR_PAD_LEFT), '0');
+
+        return $fraction === '' ? (string) $whole : "{$whole}.{$fraction}";
     }
 
     /**

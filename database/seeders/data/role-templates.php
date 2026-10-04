@@ -41,7 +41,7 @@ return [
     [
         'key' => 'accountant',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'payroll.view', 'payroll.run', 'custom_reports.view'],
+        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'payroll.view', 'payroll.run', 'custom_reports.view'],
     ],
     [
         'key' => 'finance_approver',
@@ -68,7 +68,7 @@ return [
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell'],
     ],
 
 ];

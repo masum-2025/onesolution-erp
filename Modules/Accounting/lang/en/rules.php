@@ -36,7 +36,24 @@ return [
         'description' => 'Every journal line must name the branch or department it belongs to.',
     ],
 
+    'document_number_formats' => [
+        'label' => 'Invoice, bill and receipt numbers',
+        'description' => 'How each kind is numbered when posted, e.g. INV-{YYYY}-{SEQ:5}. One running number per kind and fiscal year.',
+    ],
+    'payment_terms_days' => [
+        'label' => 'Payment terms (days)',
+        'description' => 'Days from the invoice or bill date to its due date, unless the customer or vendor has its own terms.',
+    ],
+    'aging_buckets' => [
+        'label' => 'Aging report columns (days overdue)',
+        'description' => 'Where the aging report starts a new column, e.g. 30, 60, 90.',
+    ],
+    'allow_overpayment' => [
+        'label' => 'Keep money not yet matched to invoices',
+        'description' => 'Allow receiving or paying more than the invoices or bills chosen; the rest waits as an advance.',
+    ],
     'categories' => [
+        'receivables' => 'Customers and vendors',
         'approval' => 'Approvals',
         'period' => 'Periods',
         'numbering' => 'Numbering',

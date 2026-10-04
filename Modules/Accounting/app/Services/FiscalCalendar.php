@@ -77,7 +77,7 @@ class FiscalCalendar
             // The running journal number of the year exists from the start (no race to create it).
             $this->books->table('acc_sequences', $company)->insert([
                 'id' => (string) Str::ulid(), 'organization_id' => $company->getKey(), 'fiscal_year_id' => $year->getKey(),
-                'last' => 0, 'created_at' => now(), 'updated_at' => now(),
+                'kind' => JournalNumbers::JOURNAL, 'last' => 0, 'created_at' => now(), 'updated_at' => now(),
             ]);
 
             $this->audit->record('accounting.fiscal_year_created', $year, new: [

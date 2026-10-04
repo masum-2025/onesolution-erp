@@ -7,11 +7,16 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Accounting\Models\Account;
+use Modules\Accounting\Models\Allocation;
+use Modules\Accounting\Models\Document;
+use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\FiscalYear;
 use Modules\Accounting\Models\Journal;
 use Modules\Accounting\Models\JournalLine;
+use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\Period;
 use Modules\Accounting\Models\PostingAccount;
+use Modules\Accounting\Models\Settlement;
 
 /**
  * The books in the client's data export: accounts, fiscal years and periods,
@@ -84,6 +89,68 @@ class AccountingExporter implements ExportsModuleData
                 'organization_id' => $mapping->organization_id,
                 'posting_key' => $mapping->posting_key,
                 'account_id' => $mapping->account_id,
+            ]),
+            'parties' => $this->rows(Party::class, $organization, $organizationIds, fn (Party $party) => [
+                'id' => $party->getKey(),
+                'organization_id' => $party->organization_id,
+                'name' => $party->name,
+                'code' => $party->code,
+                'is_customer' => $party->is_customer,
+                'is_vendor' => $party->is_vendor,
+                'phone' => $party->phone,
+                'email' => $party->email,
+                'address' => $party->address === null ? null : json_encode($party->address, JSON_UNESCAPED_UNICODE),
+                'tax_number' => $party->tax_number,
+                'payment_terms_days' => $party->payment_terms_days,
+                'is_active' => $party->is_active,
+            ]),
+            'documents' => $this->rows(Document::class, $organization, $organizationIds, fn (Document $document) => [
+                'id' => $document->getKey(),
+                'type' => $document->type->value,
+                'number' => $document->number,
+                'party_id' => $document->party_id,
+                'issue_date' => $document->issue_date->toDateString(),
+                'due_date' => $document->due_date->toDateString(),
+                'reference' => $document->reference,
+                'status' => $document->status->value,
+                'currency_code' => $document->currency_code,
+                'total_minor' => $document->total_minor,
+                'allocated_minor' => $document->allocated_minor,
+                'journal_id' => $document->journal_id,
+            ]),
+            'document_lines' => $this->rows(DocumentLine::class, $organization, $organizationIds, fn (DocumentLine $line) => [
+                'id' => $line->getKey(),
+                'document_id' => $line->document_id,
+                'line_no' => $line->line_no,
+                'description' => $line->description,
+                'quantity_milli' => $line->quantity_milli,
+                'unit_price_minor' => $line->unit_price_minor,
+                'amount_minor' => $line->amount_minor,
+                'account_id' => $line->account_id,
+                'cost_centre_id' => $line->cost_centre_id,
+            ]),
+            'settlements' => $this->rows(Settlement::class, $organization, $organizationIds, fn (Settlement $settlement) => [
+                'id' => $settlement->getKey(),
+                'type' => $settlement->type->value,
+                'number' => $settlement->number,
+                'party_id' => $settlement->party_id,
+                'settled_on' => $settlement->settled_on->toDateString(),
+                'account_id' => $settlement->account_id,
+                'amount_minor' => $settlement->amount_minor,
+                'allocated_minor' => $settlement->allocated_minor,
+                'currency_code' => $settlement->currency_code,
+                'reference' => $settlement->reference,
+                'status' => $settlement->status->value,
+                'journal_id' => $settlement->journal_id,
+            ]),
+            'allocations' => $this->rows(Allocation::class, $organization, $organizationIds, fn (Allocation $allocation) => [
+                'id' => $allocation->getKey(),
+                'settlement_id' => $allocation->settlement_id,
+                'credit_document_id' => $allocation->credit_document_id,
+                'document_id' => $allocation->document_id,
+                'amount_minor' => $allocation->amount_minor,
+                'allocated_on' => $allocation->allocated_on->toDateString(),
+                'voided' => $allocation->voided_at !== null,
             ]),
         ];
     }

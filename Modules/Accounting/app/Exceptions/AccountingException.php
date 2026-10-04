@@ -193,6 +193,51 @@ class AccountingException extends TenancyException
         return new self('year_not_next', 422, ['date' => $expected]);
     }
 
+    public static function sourcedJournal(): self
+    {
+        return new self('sourced_journal', 409);
+    }
+
+    public static function partyNotFound(): self
+    {
+        return new self('party_not_found', 404);
+    }
+
+    public static function documentNotFound(): self
+    {
+        return new self('document_not_found', 404);
+    }
+
+    public static function settlementNotFound(): self
+    {
+        return new self('settlement_not_found', 404);
+    }
+
+    public static function documentNotOpen(): self
+    {
+        return new self('document_not_open', 409);
+    }
+
+    public static function documentHasPayments(): self
+    {
+        return new self('document_has_payments', 409);
+    }
+
+    public static function notACredit(): self
+    {
+        return new self('not_a_credit', 422);
+    }
+
+    public static function settlementNotPosted(): self
+    {
+        return new self('settlement_not_posted', 409);
+    }
+
+    public static function nothingToAllocate(): self
+    {
+        return new self('nothing_to_allocate', 409);
+    }
+
     public static function rangeTooLarge(int $max): self
     {
         return new self('range_too_large', 422, ['max' => (string) $max]);

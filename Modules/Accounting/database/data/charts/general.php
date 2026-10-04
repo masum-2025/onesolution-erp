@@ -64,5 +64,7 @@ return [
     'postings' => [
         'accounting.retained_earnings' => '3200',
         'accounting.opening_balance' => '3300',
+        'accounting.receivable' => '1140',
+        'accounting.payable' => '2110',
     ],
 ];

@@ -9,10 +9,12 @@ use Modules\Accounting\Exceptions\AccountingException;
 use Modules\Accounting\Http\Controllers\Concerns\FindsBooks;
 use Modules\Accounting\Http\Requests\ReportRequest;
 use Modules\Accounting\Services\Books;
+use Modules\Accounting\Services\Receivables;
 use Modules\Accounting\Services\Reports;
 
 /**
- * Trial balance, account ledger, profit and loss, balance sheet. Dates
+ * Trial balance, account ledger, profit and loss, balance sheet, and for
+ * receivables and payables aging and a party statement. Dates
  * default to today in the company's timezone.
  */
 class ReportController extends Controller
@@ -21,7 +23,7 @@ class ReportController extends Controller
 
     public function __construct(private Books $books, private Reports $reports) {}
 
-    public function __invoke(ReportRequest $request, string $organization, string $report): JsonResponse
+    public function __invoke(ReportRequest $request, string $organization, string $report, Receivables $receivables): JsonResponse
     {
         $company = $this->company($organization);
         Gate::authorize('accounting.view', $company);
@@ -36,6 +38,8 @@ class ReportController extends Controller
             'ledger' => $this->reports->ledger($company, $this->accountIn($company, $data['account_id']), $data['from'], $data['to'], $costCentres),
             'profit-loss' => $this->reports->profitAndLoss($company, $data['from'], $data['to'], $costCentres),
             'balance-sheet' => $this->reports->balanceSheet($company, $asOf, $costCentres),
+            'aging' => $receivables->aging($company, $data['side'], $asOf),
+            'statement' => $receivables->statement($company, $this->partyIn($company, $data['party_id']), $data['side'], $data['from'], $data['to']),
             default => throw AccountingException::unknownStep(),
         }]);
     }

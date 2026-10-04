@@ -21,4 +21,6 @@ return [
     ],
     // Schools sell no goods.
     'remove' => ['4100', '5100'],
+    // Fees owed by families go to their own receivable account.
+    'postings' => ['accounting.receivable' => '1145'],
 ];

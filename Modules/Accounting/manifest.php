@@ -29,8 +29,16 @@ return [
         'accounting.manage',
         // Close and reopen periods.
         'accounting.close',
+        // Customers, invoices, credit notes and money received.
+        'accounting.sell',
+        // Vendors, bills, vendor credits and money paid.
+        'accounting.buy',
     ],
-    'separation_of_duties' => [['accounting.post', 'accounting.approve']],
+    'separation_of_duties' => [
+        ['accounting.post', 'accounting.approve'],
+        ['accounting.sell', 'accounting.approve'],
+        ['accounting.buy', 'accounting.approve'],
+    ],
     'rules' => [
         [
             'key' => 'accounting.fiscal_year_start',
@@ -116,6 +124,67 @@ return [
             'category' => 'setup',
             'sort_order' => 60,
         ],
+        [
+            'key' => 'accounting.document_number_formats',
+            'type' => 'json',
+            // Placeholders as for journals: {YYYY} {YY} {FY} {SEQ:n}; one running number per kind and fiscal year.
+            'schema' => [
+                'type' => 'object',
+                'required' => ['invoice', 'credit_note', 'bill', 'vendor_credit', 'receipt', 'payment'],
+                'additionalProperties' => false,
+                'properties' => array_fill_keys(
+                    ['invoice', 'credit_note', 'bill', 'vendor_credit', 'receipt', 'payment'],
+                    ['type' => 'string', 'minLength' => 3, 'maxLength' => 50, 'pattern' => '^[A-Za-z0-9{}:_/-]*\{SEQ(:\d+)?\}[A-Za-z0-9{}:_/-]*$'],
+                ),
+            ],
+            'default' => [
+                'invoice' => 'INV-{YYYY}-{SEQ:5}',
+                'credit_note' => 'CN-{YYYY}-{SEQ:5}',
+                'bill' => 'BILL-{YYYY}-{SEQ:5}',
+                'vendor_credit' => 'VC-{YYYY}-{SEQ:5}',
+                'receipt' => 'RCPT-{YYYY}-{SEQ:5}',
+                'payment' => 'PAY-{YYYY}-{SEQ:5}',
+            ],
+            'label' => 'accounting::rules.document_number_formats.label',
+            'description' => 'accounting::rules.document_number_formats.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'numbering',
+            'sort_order' => 45,
+        ],
+        [
+            'key' => 'accounting.payment_terms_days',
+            'type' => 'integer',
+            'schema' => ['minimum' => 0, 'maximum' => 365],
+            'default' => 30,
+            'label' => 'accounting::rules.payment_terms_days.label',
+            'description' => 'accounting::rules.payment_terms_days.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'receivables',
+            'sort_order' => 70,
+        ],
+        [
+            'key' => 'accounting.aging_buckets',
+            'type' => 'json',
+            // Days overdue where the aging report starts a new column, e.g. [30, 60, 90].
+            'schema' => ['type' => 'array', 'items' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 730], 'minItems' => 1, 'maxItems' => 6, 'uniqueItems' => true],
+            'default' => [30, 60, 90],
+            'label' => 'accounting::rules.aging_buckets.label',
+            'description' => 'accounting::rules.aging_buckets.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'receivables',
+            'sort_order' => 80,
+        ],
+        [
+            'key' => 'accounting.allow_overpayment',
+            'type' => 'boolean',
+            'default' => false,
+            'label' => 'accounting::rules.allow_overpayment.label',
+            'description' => 'accounting::rules.allow_overpayment.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'receivables',
+            'sort_order' => 90,
+        ],
     ],
     'menu' => [
         [
@@ -159,6 +228,9 @@ return [
     'ledger_accounts' => [
         'accounting.retained_earnings' => ['label' => 'accounting::accounting.posting_keys.retained_earnings', 'type' => 'equity'],
         'accounting.opening_balance' => ['label' => 'accounting::accounting.posting_keys.opening_balance', 'type' => 'equity'],
+        // What customers owe and what is owed to vendors (invoices, bills and the money that pays them).
+        'accounting.receivable' => ['label' => 'accounting::accounting.posting_keys.receivable', 'type' => 'asset'],
+        'accounting.payable' => ['label' => 'accounting::accounting.posting_keys.payable', 'type' => 'liability'],
     ],
     'is_core' => false,
     'requires_consent' => false,

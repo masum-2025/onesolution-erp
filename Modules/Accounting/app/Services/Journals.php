@@ -203,13 +203,17 @@ class Journals
      * Undo a posted journal with a new one that swaps its debits and credits,
      * dated $entryDate (today by default) and sent like any other journal.
      */
-    public function reverse(Organization $company, Journal $journal, ?string $entryDate, string $reason, User $actor): Journal
+    public function reverse(Organization $company, Journal $journal, ?string $entryDate, string $reason, User $actor, bool $fromSource = false): Journal
     {
-        return $this->books->transaction($company, function () use ($company, $journal, $entryDate, $reason, $actor) {
+        return $this->books->transaction($company, function () use ($company, $journal, $entryDate, $reason, $actor, $fromSource) {
             /** @var Journal $original */
             $original = $this->books->query(Journal::class, $company)->whereKey($journal->getKey())->lockForUpdate()->firstOrFail();
             if ($original->status !== JournalStatus::Posted) {
                 throw AccountingException::notPosted();
+            }
+            // An entry made by an invoice, receipt or another module is undone there (void), so both stay in step.
+            if ($original->source_module !== null && ! $fromSource) {
+                throw AccountingException::sourcedJournal();
             }
             if ($original->reverses_id !== null) {
                 throw AccountingException::reversalOfReversal();
@@ -229,11 +233,14 @@ class Journals
                     'credit_minor' => $line->debit_minor,
                     'memo' => $line->memo,
                 ])->all(),
-            ], $actor);
+            ], $actor, $fromSource ? ['module' => $original->source_module, 'type' => $original->source_type, 'id' => $original->source_id] : []);
 
             $this->audit->record('accounting.journal_reversed', $original, new: ['reversal_id' => $reversal->getKey()], reason: $reason, actor: $actor, organizationId: $company->getKey());
 
-            return $this->submit($company, $reversal, $reversal->version, $actor);
+            // Undoing an approved record posts at once (the void itself is the second person's step).
+            return $fromSource
+                ? $this->postApproved($company, $reversal, $actor, $actor)
+                : $this->submit($company, $reversal, $reversal->version, $actor);
         });
     }
 
@@ -244,12 +251,37 @@ class Journals
      */
     public function needsApproval(Organization $company, Journal $journal): bool
     {
+        return $this->amountNeedsApproval($company, $journal->total_minor, $journal->currency_code);
+    }
+
+    /** The same check for any amount (documents and settlements use it too). */
+    public function amountNeedsApproval(Organization $company, int $amountMinor, string $currency): bool
+    {
         $limit = $this->rules->get('accounting.journal_approval_above', $this->contexts->forOrganization($company));
         if (! is_array($limit)) {
             return false;
         }
 
-        return $limit['currency'] !== $journal->currency_code || $journal->total_minor > (int) $limit['amount'];
+        return $limit['currency'] !== $currency || $amountMinor > (int) $limit['amount'];
+    }
+
+    /**
+     * Post a journal whose record was already approved (or needed no approval):
+     * a document or settlement that was checked and approved as a whole.
+     * Balanced and usable accounts are still required; no second approval.
+     */
+    public function postApproved(Organization $company, Journal $journal, ?User $approver, ?User $actor): Journal
+    {
+        return $this->books->transaction($company, function () use ($company, $journal, $approver, $actor) {
+            $journal = $this->lock($company, $journal, null);
+            if (! $journal->status->isEditable()) {
+                throw AccountingException::notEditable();
+            }
+            $this->assertPostable($company, $journal);
+            $journal->forceFill(['submitted_by' => $actor?->getKey(), 'submitted_at' => now()]);
+
+            return $this->posting->post($company, $journal, $approver, $actor);
+        });
     }
 
     /**
@@ -325,7 +357,7 @@ class Journals
     }
 
     /** People date entries within the company's window (rules on backdating and future dates). */
-    private function assertDateAllowed(Organization $company, CarbonImmutable $date): void
+    public function assertDateAllowed(Organization $company, CarbonImmutable $date): void
     {
         $context = $this->contexts->forOrganization($company);
         $today = $this->books->today($company);
