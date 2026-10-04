@@ -2341,7 +2341,39 @@ portal member of the company, one employee per login; audited `hrm.login_linked`
 - Dashboard: "Checked in today", "Corrections to decide" (also in the bell for deciders). Audit:
   `attendance.shift_*`, `holiday_*`, `roster_assigned`, `punch_written`, `punch_voided`,
   `correction_*`. Data export: `shifts`, `holidays`, `rosters`, `punches`, `days`, `corrections`.
-- Next: ATT-3 location check, device files, offline punches. Leave is a later module.
+- Leave is a later module.
+
+### Workplaces, attendance machines, offline (ATT-3)
+
+- **Location check** (rule `attendance.geo_fence_required` at the unit): workplaces
+  (`att_locations`: a unit's point in millionths of a degree, integers, and a radius; a unit's
+  workplaces count for the units below it; screen `/attendance/locations`, typed or "use where this
+  device is now"; `GET/POST/PATCH …/attendance/locations`, `attendance.manage` at the workplace's
+  unit). A self check-in then sends `latitude_micro`, `longitude_micro`, `accuracy_m`; it is refused
+  when missing (`location_needed`), vaguer than `attendance.geo_max_accuracy_m` (100), when the unit
+  has no active workplace (`no_workplaces`), or outside every radius (`outside_workplace`, telling
+  how far). The location is asked for and kept only then (`att_punches.latitude_micro`,
+  `longitude_micro`, `accuracy_m`, `distance_m`, `location_id`); the API never returns the point,
+  only the distance and accuracy. `attendance:forget-locations` (daily 02:10 UTC) forgets points
+  older than `attendance.location_retention_days` (90, sensitive); distances stay.
+  `Support\GeoDistance` measures great-circle metres from integer points (no float columns).
+  New workplaces default to `attendance.geo_radius_m` (200).
+- **Attendance machine files** (`POST …/attendance/device-import`, `attendance.manage` at the unit,
+  6 a minute): a CSV with the employee code and the time (one column, or a date and a time column),
+  local time in one of the offered formats; the choice is remembered (`att_device_formats`,
+  `GET …/device-format`). Punches get source `device` and an `op_id` from employee and time, so a
+  file brought in twice adds nothing. Codes not of the unit (and below) and days the person was not
+  employed are skipped and reported; a time that cannot be read stops the file. Each touched day is
+  worked out once afterwards. Limits: `attendance.device_import_max_rows` / `…_max_kb`. HRM's
+  directory gained `byCodes()`.
+- **Offline** (with Offline mode on): manifest `sync_records` → `Offline\PunchSync` (kind
+  `attendance.punch`, create only, `attendance.punch` permission): the phone keeps the tap with the
+  time it happened (and the location when required) and sends it through `/api/sync`; it counts if
+  no older than `attendance.offline_max_age_hours` (72) and not in the future; source `offline`;
+  the same op_id is the same punch. "My attendance" keeps a tap offline when there is no network and
+  shows how many wait to be sent.
+- Audit: `attendance.location_added`, `location_updated`, `device_imported`. Export adds
+  `locations` and the punch location fields.
 
 ### Screens (ATT-2)
 

@@ -80,5 +80,5 @@ it('lists employees of a unit and below it on a day, and hands attendance to the
 
     app(CurrentContext::class)->clear();
     $datasets = app(AttendanceExporter::class)->export($this->w->c1, Organization::query()->subtreeOf($this->w->c1)->pluck('id')->all());
-    expect(array_keys($datasets))->toBe(['shifts', 'holidays', 'rosters', 'punches', 'days', 'corrections']);
+    expect(array_keys($datasets))->toBe(['shifts', 'holidays', 'rosters', 'punches', 'locations', 'days', 'corrections']);
 });

@@ -6,6 +6,7 @@ use App\Platform\Tenancy\Models\Organization;
 use Modules\Attendance\Models\AttendanceDay;
 use Modules\Attendance\Models\Correction;
 use Modules\Attendance\Models\Holiday;
+use Modules\Attendance\Models\Location;
 use Modules\Attendance\Models\Punch;
 use Modules\Attendance\Models\Roster;
 use Modules\Attendance\Models\Shift;
@@ -81,6 +82,27 @@ class AttendancePresenter
             'note' => $punch->note,
             'voided' => $punch->voided_at !== null,
             'void_reason' => $punch->void_reason,
+            // How far from the workplace and how sure the phone was; the point itself is never sent.
+            'distance_m' => $punch->distance_m,
+            'accuracy_m' => $punch->accuracy_m,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function location(Location $location, ?string $unitName = null): array
+    {
+        return [
+            'id' => $location->getKey(),
+            'unit_id' => $location->unit_id,
+            'unit_name' => $unitName,
+            'name' => $location->name,
+            'latitude_micro' => $location->latitude_micro,
+            'longitude_micro' => $location->longitude_micro,
+            'radius_m' => $location->radius_m,
+            'is_active' => $location->is_active,
+            'version' => $location->version,
         ];
     }
 

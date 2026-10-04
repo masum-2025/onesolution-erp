@@ -11,5 +11,6 @@ return [
     'menu_shifts' => 'শিফট',
     'menu_holidays' => 'ছুটির দিন',
     'menu_rosters' => 'রোস্টার',
+    'menu_locations' => 'কর্মস্থল',
     'check_in' => 'হাজিরা দিন',
 ];

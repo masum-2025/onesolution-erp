@@ -11,6 +11,7 @@ export default [
     { path: 'attendance/corrections', name: 'attendance-corrections', component: () => import('./pages/CorrectionsPage.vue'), meta },
     { path: 'attendance/shifts', name: 'attendance-shifts', component: () => import('./pages/ShiftsPage.vue'), meta },
     { path: 'attendance/holidays', name: 'attendance-holidays', component: () => import('./pages/HolidaysPage.vue'), meta },
+    { path: 'attendance/locations', name: 'attendance-locations', component: () => import('./pages/LocationsPage.vue'), meta },
     { path: 'attendance/rosters', name: 'attendance-rosters', component: () => import('./pages/RostersPage.vue'), meta },
 
     // An employee's own days in the client's portal (B2B2C): portal members may open this.

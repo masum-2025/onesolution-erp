@@ -12,4 +12,7 @@ return [
     'correction_asked' => 'সংশোধন চাওয়া হয়েছে',
     'correction_approved' => 'সংশোধন অনুমোদিত',
     'correction_rejected' => 'সংশোধন বাতিল',
+    'location_added' => 'কর্মস্থল যোগ করা হয়েছে',
+    'location_updated' => 'কর্মস্থল বদলানো হয়েছে',
+    'device_imported' => 'হাজিরা মেশিনের ফাইল আনা হয়েছে',
 ];

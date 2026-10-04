@@ -11,5 +11,6 @@ return [
     'menu_shifts' => 'Shifts',
     'menu_holidays' => 'Holidays',
     'menu_rosters' => 'Rosters',
+    'menu_locations' => 'Workplaces',
     'check_in' => 'Check in',
 ];

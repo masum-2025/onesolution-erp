@@ -25,7 +25,9 @@
     "source": {
         "self": "Own check-in",
         "manual": "Written by HR",
-        "correction": "From a correction"
+        "correction": "From a correction",
+        "device": "Attendance machine",
+        "offline": "Own check-in (offline)"
     },
     "common": {
         "cancel": "Cancel",
@@ -58,7 +60,13 @@
         "no_punch": "Checking in yourself is not available to you here. Your supervisor records your times.",
         "month": "My days",
         "no_days": "No days yet this month.",
-        "corrections": "My corrections"
+        "corrections": "My corrections",
+        "offline_off": "No network, and this phone is not set up for offline work. Try again when you are online.",
+        "kept_offline": "No network: your check-in is kept on this phone and sent when you are online.",
+        "location_denied": "Your location is needed to check in here. Allow location for this app and try again.",
+        "locating": "Finding where you are…",
+        "location_note": "Your location is checked only when you tap, against your workplace.",
+        "waiting_to_send": "{count} check-ins waiting to be sent"
     },
     "correction": {
         "title": "Ask to fix a day",
@@ -90,7 +98,8 @@
         "note": "Note",
         "note_hint": "e.g. from the paper register",
         "write": "Write punch",
-        "written": "Punch written."
+        "written": "Punch written.",
+        "distance": "{metres} m from the workplace"
     },
     "today": {
         "title": "Attendance",
@@ -175,5 +184,50 @@
         "title": "My attendance",
         "text": "Your days as your employer records them.",
         "empty": "No days this month."
+    },
+    "locations": {
+        "title": "Workplaces",
+        "text": "Where people may check in from when their unit asks for a location check. A unit's workplaces count for the units below it.",
+        "add": "Add a workplace",
+        "edit": "Edit workplace",
+        "empty": "No workplaces yet",
+        "empty_text": "Add the office, school or factory gate people check in at.",
+        "required_on": "People of {unit} must check in from a workplace (rule: location check).",
+        "required_off": "People of {unit} may check in from anywhere. Turn on the \"location check\" rule to use workplaces.",
+        "name": "Name",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "use_here": "Use where this device is now",
+        "no_gps": "This device cannot tell where it is. Type the latitude and longitude.",
+        "gps_denied": "Location was not allowed. Type the latitude and longitude instead.",
+        "found": "Found within {accuracy} m.",
+        "bad_point": "Type the latitude and longitude as numbers, like 23.810331 and 90.412521.",
+        "radius": "Radius (metres)",
+        "radius_hint": "Empty: the company's usual radius.",
+        "radius_of": "{metres} m radius",
+        "active": "In use",
+        "off": "Switched off",
+        "saved": "Workplace saved."
+    },
+    "device": {
+        "title": "Machine file",
+        "text": "A CSV file exported from a fingerprint or card attendance machine. Times are local time.",
+        "file": "File",
+        "code": "Employee code column",
+        "format": "Times look like",
+        "time_in": "The time is in",
+        "one_column": "One column (date and time)",
+        "two_columns": "Two columns (date, time)",
+        "datetime": "Date and time column",
+        "date": "Date column",
+        "time": "Time column",
+        "choose": "Choose a column",
+        "sample": "The first lines, as they will be read",
+        "import": "Bring in",
+        "done": "{added} punches brought in.",
+        "summary": "{added} brought in, {already} were in already.",
+        "not_employed": "{count} lines fell on days the person was not employed.",
+        "unknown": "Codes not of people here: {codes}",
+        "close": "Close"
     }
 }

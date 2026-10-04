@@ -7,6 +7,7 @@
 
 use Modules\Attendance\Dashboard\CheckedInToday;
 use Modules\Attendance\Dashboard\CorrectionsWaiting;
+use Modules\Attendance\Offline\PunchSync;
 
 return [
     'key' => 'attendance',
@@ -118,6 +119,73 @@ return [
             'category' => 'corrections',
             'sort_order' => 60,
         ],
+        [
+            'key' => 'attendance.geo_radius_m',
+            'type' => 'integer',
+            'schema' => ['minimum' => 20, 'maximum' => 5000],
+            'default' => 200,
+            'label' => 'attendance::rules.geo_radius_m.label',
+            'description' => 'attendance::rules.geo_radius_m.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch', 'department'],
+            'category' => 'check_in',
+            'sort_order' => 41,
+        ],
+        [
+            'key' => 'attendance.geo_max_accuracy_m',
+            'type' => 'integer',
+            'schema' => ['minimum' => 10, 'maximum' => 1000],
+            'default' => 100,
+            'label' => 'attendance::rules.geo_max_accuracy_m.label',
+            'description' => 'attendance::rules.geo_max_accuracy_m.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch', 'department'],
+            'category' => 'check_in',
+            'sort_order' => 42,
+        ],
+        [
+            'key' => 'attendance.location_retention_days',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 3650],
+            'default' => 90,
+            'label' => 'attendance::rules.location_retention_days.label',
+            'description' => 'attendance::rules.location_retention_days.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'sensitive' => true,
+            'category' => 'check_in',
+            'sort_order' => 43,
+        ],
+        [
+            'key' => 'attendance.offline_max_age_hours',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 720],
+            'default' => 72,
+            'label' => 'attendance::rules.offline_max_age_hours.label',
+            'description' => 'attendance::rules.offline_max_age_hours.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'check_in',
+            'sort_order' => 46,
+        ],
+        [
+            'key' => 'attendance.device_import_max_rows',
+            'type' => 'integer',
+            'schema' => ['minimum' => 100, 'maximum' => 100000],
+            'default' => 20000,
+            'label' => 'attendance::rules.device_import_max_rows.label',
+            'description' => 'attendance::rules.device_import_max_rows.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'devices',
+            'sort_order' => 70,
+        ],
+        [
+            'key' => 'attendance.device_import_max_kb',
+            'type' => 'integer',
+            'schema' => ['minimum' => 16, 'maximum' => 10240],
+            'default' => 5120,
+            'label' => 'attendance::rules.device_import_max_kb.label',
+            'description' => 'attendance::rules.device_import_max_kb.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'devices',
+            'sort_order' => 71,
+        ],
     ],
     'menu' => [
         [
@@ -147,9 +215,12 @@ return [
         ['key' => 'corrections', 'label' => 'attendance::dashboard.corrections', 'type' => 'stat', 'provider' => CorrectionsWaiting::class, 'permission' => 'attendance.view'],
     ]],
     'attention' => [CorrectionsWaiting::class],
+    // Checking in while the phone is offline (Offline mode on).
+    'sync_records' => [PunchSync::class],
     'settings' => ['pages' => [
         ['key' => 'shifts', 'label' => 'attendance::module.menu_shifts', 'route' => '/attendance/shifts', 'permission' => 'attendance.view'],
         ['key' => 'holidays', 'label' => 'attendance::module.menu_holidays', 'route' => '/attendance/holidays', 'permission' => 'attendance.view'],
         ['key' => 'rosters', 'label' => 'attendance::module.menu_rosters', 'route' => '/attendance/rosters', 'permission' => 'attendance.view'],
+        ['key' => 'locations', 'label' => 'attendance::module.menu_locations', 'route' => '/attendance/locations', 'permission' => 'attendance.view'],
     ]],
 ];

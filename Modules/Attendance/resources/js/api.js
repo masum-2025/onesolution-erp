@@ -10,7 +10,8 @@ export function attendanceApi(organizationId) {
 
     return {
         me: () => api(`${base}/me`),
-        punch: (opId) => api(`${base}/me/punch`, { method: 'POST', body: { op_id: opId } }),
+        // { op_id, latitude_micro?, longitude_micro?, accuracy_m? }
+        punch: (body) => api(`${base}/me/punch`, { method: 'POST', body }),
         myDays: (month) => api(`${base}/me/days`, { query: { month } }),
         myCorrections: () => api(`${base}/me/corrections`),
         askMine: (body) => api(`${base}/me/corrections`, { method: 'POST', body }),
@@ -32,6 +33,12 @@ export function attendanceApi(organizationId) {
         removeHoliday: (id) => api(`${base}/holidays/${id}`, { method: 'DELETE' }),
         rosters: (employeeId) => api(`${base}/rosters`, { query: { employee_id: employeeId } }),
         assign: (body) => api(`${base}/rosters`, { method: 'POST', body }),
+
+        locations: () => api(`${base}/locations`),
+        createLocation: (body) => api(`${base}/locations`, { method: 'POST', body }),
+        updateLocation: (id, body) => api(`${base}/locations/${id}`, { method: 'PATCH', body }),
+        deviceFormat: () => api(`${base}/device-format`),
+        importDevice: (body) => api(`${base}/device-import`, { method: 'POST', body }),
     };
 }
 

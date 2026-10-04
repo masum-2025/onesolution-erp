@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
     dayGrid,
+    decimalToMicro,
+    guessDeviceColumns,
+    microToDecimal,
+    positionFix,
     dayTone,
     durationParts,
     localDateTime,
@@ -74,5 +78,28 @@ describe('Attendance screens', () => {
         }
         expect(dayTone('absent')).toBe('bad');
         expect(Object.keys(bn).sort()).toEqual(Object.keys(en).sort());
+    });
+});
+
+describe('Attendance workplaces and machine files', () => {
+    it('turns typed coordinates into millionths of a degree without floats, and back', () => {
+        expect(decimalToMicro('23.810331')).toBe(23810331);
+        expect(decimalToMicro('-0.5')).toBe(-500000);
+        expect(decimalToMicro('90.4125215')).toBe(90412522);
+        expect(decimalToMicro('90')).toBe(90000000);
+        expect(decimalToMicro('abc')).toBeNull();
+        expect(microToDecimal(23810331)).toBe('23.810331');
+        expect(microToDecimal(-500000)).toBe('-0.500000');
+        expect(positionFix({ latitude: 23.8103314, longitude: 90.4125206, accuracy: 18.6 })).toEqual({ latitude_micro: 23810331, longitude_micro: 90412521, accuracy_m: 19 });
+    });
+
+    it('guesses the columns of attendance machine files', () => {
+        expect(guessDeviceColumns(['AC-No.', 'Name', 'Time', 'State'])).toEqual({ code: 'AC-No.', datetime: 'Time', date: '', time: '' });
+        expect(guessDeviceColumns(['User ID', 'Date/Time'])).toMatchObject({ code: 'User ID', datetime: 'Date/Time', date: '' });
+        expect(guessDeviceColumns(['Emp Code', 'Date', 'Time'])).toMatchObject({ code: 'Emp Code', date: 'Date', time: 'Time' });
+    });
+
+    it('registers the workplaces screen', () => {
+        expect(moduleRoutes.find((route) => route.name === 'attendance-locations')?.meta.module).toBe('attendance');
     });
 });

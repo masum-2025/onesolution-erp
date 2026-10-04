@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { ChevronLeft, ChevronRight, Fingerprint, LogIn, LogOut, PenLine, UserX } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, CloudOff, Fingerprint, LogIn, LogOut, MapPin, PenLine, UserX } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -11,14 +11,18 @@ import { useResource } from '@/lib/useResource';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
+import { enqueueOffline, offline } from '@/lib/offline';
 import { t } from '@/lib/i18n';
 import { attendanceApi } from '../api';
-import { dayTone, durationParts, nextPunch, shiftMonth } from '../lib';
+import { dayTone, durationParts, nextPunch, positionFix, shiftMonth } from '../lib';
 import CorrectionDialog from '../components/CorrectionDialog.vue';
 
 /**
  * An employee's own attendance: one big button to check in or out, today
  * as the server works it out, the days of a month, and asking to fix one.
+ * Where the unit asks for it the phone's location goes with the tap (only
+ * then); without a network the tap is kept on the phone (Offline mode) and
+ * sent when it is back.
  */
 const org = currentOrganization();
 const attendance = attendanceApi(org.id);
@@ -37,15 +41,58 @@ const asking = ref(null);
 const time = (iso) => (iso ? formatDate(iso, { timeStyle: 'short' }) : '—');
 const duration = (minutes) => t('attendance.duration', durationParts(minutes));
 
+const locating = ref(false);
+
+/** Where the phone is (asked only when the unit needs it); null when the person said no. */
+function locate() {
+    return new Promise((resolve) => {
+        if (!globalThis.navigator?.geolocation) {
+            resolve(null);
+            return;
+        }
+        locating.value = true;
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                locating.value = false;
+                resolve(positionFix(position.coords));
+            },
+            () => {
+                locating.value = false;
+                resolve(null);
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
+        );
+    });
+}
+
+async function keepOffline(fix) {
+    if (!offline.enabled) {
+        toast.error(t('attendance.me.offline_off'));
+        return;
+    }
+    await enqueueOffline('attendance.punch', 'create', fix ?? {});
+    toast.success(t('attendance.me.kept_offline'));
+}
+
 async function punch() {
     punching.value = true;
     try {
+        const fix = data.value.location_required ? await locate() : null;
+        if (data.value.location_required && !fix) {
+            toast.error(t('attendance.me.location_denied'));
+            return;
+        }
+        if (globalThis.navigator?.onLine === false) {
+            await keepOffline(fix);
+            return;
+        }
         const opId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
-        const { data: result } = await attendance.punch(opId);
+        const { data: result } = await attendance.punch({ op_id: opId, ...(fix ?? {}) });
         toast.success(t(action.value === 'in' ? 'attendance.me.checked_in' : 'attendance.me.checked_out', { time: time(result.punch.punched_at) }));
         await Promise.all([me.reload(), days.reload()]);
     } catch (error) {
-        toast.error(error.message);
+        if (error.code === 'network') await keepOffline(null);
+        else toast.error(error.message);
     } finally {
         punching.value = false;
     }
@@ -95,6 +142,12 @@ function sent() {
                     </span>
                 </button>
                 <p v-else class="rounded-xl bg-subtle px-4 py-3 text-[13px] text-muted">{{ t('attendance.me.no_punch') }}</p>
+                <p v-if="data.can_punch && data.location_required" class="flex items-center gap-1.5 text-[12.5px] text-muted">
+                    <MapPin class="size-4" aria-hidden="true" />{{ locating ? t('attendance.me.locating') : t('attendance.me.location_note') }}
+                </p>
+                <p v-if="offline.pending" class="flex items-center gap-1.5 rounded-full bg-warn-soft px-3 py-1 text-[12.5px] text-warn" role="status">
+                    <CloudOff class="size-4" aria-hidden="true" />{{ t('attendance.me.waiting_to_send', { count: offline.pending }) }}
+                </p>
 
                 <dl class="grid w-full grid-cols-3 gap-2 text-[13px]">
                     <div><dt class="text-muted">{{ t('attendance.day.in') }}</dt><dd class="tabular font-semibold">{{ time(today?.first_in_at) }}</dd></div>

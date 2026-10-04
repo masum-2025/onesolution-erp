@@ -116,7 +116,7 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
                     <li v-for="item in punches" :key="item.id" class="flex items-center gap-3 px-3 py-2">
                         <span class="tabular w-16 shrink-0 font-medium" :class="item.voided ? 'text-muted line-through' : ''">{{ time(item.punched_at) }}</span>
                         <span class="min-w-0 flex-1 text-muted">
-                            {{ t(`attendance.source.${item.source}`) }}<template v-if="item.note"> · {{ item.note }}</template>
+                            {{ t(`attendance.source.${item.source}`) }}<template v-if="item.note"> · {{ item.note }}</template><template v-if="item.distance_m !== null && item.distance_m !== undefined"> · {{ t('attendance.drawer.distance', { metres: item.distance_m }) }}</template>
                             <span v-if="item.voided" class="block text-[12px]">{{ t('attendance.drawer.voided_because', { reason: item.void_reason }) }}</span>
                         </span>
                         <AppButton v-if="canManage && !item.voided" size="icon-sm" variant="ghost" :icon="Ban" :aria-label="t('attendance.drawer.void')" @click="voidPunch(item)" />

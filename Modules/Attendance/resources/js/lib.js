@@ -97,3 +97,44 @@ export function nextPunch(today) {
     if (!today?.first_in_at) return 'in';
     return today.last_out_at ? 'in' : 'out';
 }
+
+/** "23.810331" or "-0.5" -> 23810331 / -500000 (millionths of a degree, string maths); null when not a number. */
+export function decimalToMicro(text) {
+    const match = /^\s*(-?)(\d{1,3})(?:\.(\d{1,9}))?\s*$/.exec(String(text ?? ''));
+    if (!match) return null;
+    const fraction = (match[3] ?? '').padEnd(6, '0');
+    // Beyond six decimals rounds half up on the seventh.
+    let micro = Number(match[2]) * 1000000 + Number(fraction.slice(0, 6));
+    if (fraction.length > 6 && Number(fraction[6]) >= 5) micro += 1;
+    return match[1] === '-' && micro !== 0 ? -micro : micro;
+}
+
+/** 23810331 -> "23.810331". */
+export function microToDecimal(micro) {
+    const value = Math.abs(Math.trunc(Number(micro) || 0));
+    const text = `${Math.floor(value / 1000000)}.${String(value % 1000000).padStart(6, '0')}`;
+    return micro < 0 ? `-${text}` : text;
+}
+
+/** A browser position as the API wants it: whole millionths of a degree and metres. */
+export function positionFix(coords) {
+    return {
+        latitude_micro: Math.round(coords.latitude * 1000000),
+        longitude_micro: Math.round(coords.longitude * 1000000),
+        accuracy_m: Math.max(0, Math.round(coords.accuracy ?? 0)),
+    };
+}
+
+/** A first guess of an attendance machine file's columns, from its headings. */
+export function guessDeviceColumns(columns) {
+    const find = (...words) => columns.find((name) => words.some((word) => name.toLowerCase().includes(word))) ?? '';
+    const date = find('date', 'তারিখ');
+    // Machines often put date and time in one "Time" column (no date column then).
+    const datetime = find('datetime', 'date time', 'date/time', 'checktime', 'check time', 'timestamp') || (date ? '' : find('time', 'সময়'));
+    return {
+        code: find('ac-no', 'ac no', 'no.', 'user id', 'userid', 'emp', 'code', 'badge', 'id'),
+        datetime,
+        date: datetime ? '' : date,
+        time: datetime ? '' : find('time', 'সময়'),
+    };
+}

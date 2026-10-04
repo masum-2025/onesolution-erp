@@ -69,6 +69,24 @@ class EmployeeDirectory
     }
 
     /**
+     * Employees by their code (as attendance machines know them); unknown codes are left out.
+     *
+     * @param  list<string>  $codes
+     * @return array<string, EmployeeRecord> By code.
+     */
+    public function byCodes(Organization $company, array $codes): array
+    {
+        $records = [];
+        foreach (array_chunk(array_values(array_unique($codes)), 500) as $chunk) {
+            foreach ($this->query($company)->whereIn('employee_code', $chunk)->get() as $employee) {
+                $records[$employee->employee_code] = $this->record($employee);
+            }
+        }
+
+        return $records;
+    }
+
+    /**
      * @return Builder<Employee>
      */
     private function query(Organization $company): Builder

@@ -5,6 +5,7 @@ use Modules\Attendance\Http\Controllers\AttendanceController;
 use Modules\Attendance\Http\Controllers\MeController;
 use Modules\Attendance\Http\Controllers\PortalAttendanceController;
 use Modules\Attendance\Http\Controllers\ScheduleController;
+use Modules\Attendance\Http\Controllers\WorkplaceController;
 
 /*
 | Attendance API (loaded by AttendanceServiceProvider under /api, group
@@ -22,6 +23,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:attendance'])
         Route::get('days', [AttendanceController::class, 'days']);
         Route::get('punches', [AttendanceController::class, 'punches']);
         Route::get('corrections', [AttendanceController::class, 'corrections']);
+        Route::get('locations', [WorkplaceController::class, 'locations']);
+        Route::get('device-format', [WorkplaceController::class, 'deviceFormat']);
         Route::get('me', [MeController::class, 'show']);
         Route::get('me/days', [MeController::class, 'days']);
         Route::get('me/corrections', [MeController::class, 'corrections']);
@@ -40,6 +43,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:attendance'])
             Route::post('corrections', [AttendanceController::class, 'ask']);
             Route::post('corrections/{correction}/{step}', [AttendanceController::class, 'decide']);
             Route::post('me/corrections', [MeController::class, 'ask']);
+            Route::post('locations', [WorkplaceController::class, 'storeLocation']);
+            Route::patch('locations/{location}', [WorkplaceController::class, 'updateLocation']);
+            // Machine files are read in memory: a few a minute per person.
+            Route::post('device-import', [WorkplaceController::class, 'importDevice'])->middleware('throttle:attendance-device-import');
         });
     });
 

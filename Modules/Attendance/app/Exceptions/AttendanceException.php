@@ -97,4 +97,34 @@ class AttendanceException extends TenancyException
     {
         return new self('version_conflict', 409, extra: ['current' => $current]);
     }
+
+    public static function locationNotFound(): self
+    {
+        return new self('location_not_found', 404);
+    }
+
+    public static function noWorkplaces(): self
+    {
+        return new self('no_workplaces', 409);
+    }
+
+    public static function locationVague(int $accuracy, int $max): self
+    {
+        return new self('location_vague', 422, ['accuracy' => (string) $accuracy, 'max' => (string) $max]);
+    }
+
+    public static function outsideWorkplace(int $metres, string $name): self
+    {
+        return new self('outside_workplace', 403, ['metres' => (string) $metres, 'name' => $name]);
+    }
+
+    public static function offlineTooOld(int $hours): self
+    {
+        return new self('offline_too_old', 422, ['hours' => (string) $hours]);
+    }
+
+    public static function offlineFuture(): self
+    {
+        return new self('offline_future', 422);
+    }
 }

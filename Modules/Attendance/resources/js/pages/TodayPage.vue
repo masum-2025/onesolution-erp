@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { CalendarDays, ClipboardCheck, Users } from 'lucide-vue-next';
+import { CalendarDays, ClipboardCheck, HardDriveUpload, Users } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -16,6 +16,7 @@ import { attendanceApi } from '../api';
 import { dayTone, durationParts, localDateTime, STATUSES, statusCounts } from '../lib';
 import CorrectionDialog from '../components/CorrectionDialog.vue';
 import DayDrawer from '../components/DayDrawer.vue';
+import DeviceImportDialog from '../components/DeviceImportDialog.vue';
 
 /**
  * The day at a unit (and the units below it): who is in, late, absent or
@@ -40,6 +41,7 @@ watch([date, page], () => list.reload());
 
 const open = ref(null);
 const correcting = ref(null);
+const importing = ref(false);
 const time = (iso) => (iso ? formatDate(iso, { timeStyle: 'short' }) : '—');
 const duration = (minutes) => t('attendance.duration', durationParts(minutes));
 </script>
@@ -49,6 +51,7 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
         <PageHeader :title="t('attendance.today.title')" :description="t('attendance.today.text', { unit: org.name })">
             <template #actions>
                 <AppButton variant="secondary" :icon="CalendarDays" :to="{ name: 'attendance-month' }">{{ t('attendance.month.title') }}</AppButton>
+                <AppButton v-if="can('attendance.manage')" variant="secondary" :icon="HardDriveUpload" @click="importing = true">{{ t('attendance.device.title') }}</AppButton>
                 <AppButton v-if="can('attendance.correct')" variant="secondary" :icon="ClipboardCheck" :to="{ name: 'attendance-corrections' }">{{ t('attendance.corrections.title') }}</AppButton>
             </template>
         </PageHeader>
@@ -98,6 +101,7 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
         </section>
 
         <DayDrawer :day="open" :attendance="attendance" :can-manage="can('attendance.manage')" @close="open = null" @changed="list.reload()" @correct="(day) => { correcting = day; open = null; }" />
+        <DeviceImportDialog :open="importing" :attendance="attendance" @close="importing = false" @imported="list.reload()" />
         <CorrectionDialog
             :open="correcting !== null"
             :date="correcting?.work_date ?? ''"

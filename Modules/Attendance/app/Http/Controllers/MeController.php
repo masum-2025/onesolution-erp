@@ -14,6 +14,7 @@ use Modules\Attendance\Models\Correction;
 use Modules\Attendance\Models\Punch;
 use Modules\Attendance\Services\Corrections;
 use Modules\Attendance\Services\Days;
+use Modules\Attendance\Services\Locations;
 use Modules\Attendance\Services\Punches;
 use Modules\Attendance\Services\Workplace;
 
@@ -33,6 +34,7 @@ class MeController extends Controller
         private Punches $punches,
         private Days $days,
         private Corrections $corrections,
+        private Locations $locations,
         private AttendancePresenter $presenter,
     ) {}
 
@@ -52,6 +54,8 @@ class MeController extends Controller
                 ->orderByDesc('punched_at')->limit(20)->get()->map(fn (Punch $punch) => $this->presenter->punch($punch))->values(),
             'timezone' => $this->workplace->timezone($company),
             'can_punch' => Gate::allows('attendance.punch', $unit),
+            // The phone sends where it is only when the person's unit asks for it.
+            'location_required' => $this->locations->required($this->unitOf($employee->unitId)),
         ]]);
     }
 
@@ -60,9 +64,15 @@ class MeController extends Controller
         [$unit, $company] = $this->workplace($organization);
         $employee = $this->punches->employeeOf($company, $request->user());
         Gate::authorize('attendance.punch', $unit);
-        $opId = $request->validate(['op_id' => ['nullable', 'string', 'max:64']])['op_id'] ?? null;
+        $data = $request->validate([
+            'op_id' => ['nullable', 'string', 'max:64'],
+            'latitude_micro' => ['nullable', 'integer', 'required_with:longitude_micro,accuracy_m'],
+            'longitude_micro' => ['nullable', 'integer', 'required_with:latitude_micro'],
+            'accuracy_m' => ['nullable', 'integer', 'min:0', 'required_with:latitude_micro'],
+        ]);
+        $fix = isset($data['latitude_micro']) ? ['latitude_micro' => (int) $data['latitude_micro'], 'longitude_micro' => (int) $data['longitude_micro'], 'accuracy_m' => (int) $data['accuracy_m']] : null;
 
-        $punch = $this->punches->self($company, $request->user(), $opId);
+        $punch = $this->punches->self($company, $request->user(), $data['op_id'] ?? null, $fix);
         $day = $this->days->compute($company, $employee, $this->workplace->dayOf($company, $punch->punched_at));
 
         return response()->json(['data' => ['punch' => $this->presenter->punch($punch), 'day' => $day === null ? null : $this->presenter->day($day)]], 201);

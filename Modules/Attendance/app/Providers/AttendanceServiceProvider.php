@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Attendance\Console\CloseDays;
+use Modules\Attendance\Console\ForgetLocations;
 use Modules\Attendance\Export\AttendanceExporter;
 
 /**
@@ -20,6 +21,9 @@ class AttendanceServiceProvider extends ServiceProvider
 {
     /** Punches one person may send a minute (a tap or two, retries). */
     private const PUNCHES_PER_MINUTE = 6;
+
+    /** Machine files one person may bring in a minute. */
+    private const DEVICE_IMPORTS_PER_MINUTE = 6;
 
     public function register(): void
     {
@@ -34,13 +38,16 @@ class AttendanceServiceProvider extends ServiceProvider
 
         RateLimiter::for('attendance-punch', fn (Request $request) => Limit::perMinute(self::PUNCHES_PER_MINUTE)
             ->by('attendance-punch:'.($request->user()?->getKey() ?? $request->ip())));
+        RateLimiter::for('attendance-device-import', fn (Request $request) => Limit::perMinute(self::DEVICE_IMPORTS_PER_MINUTE)
+            ->by('attendance-device-import:'.($request->user()?->getKey() ?? $request->ip())));
 
         if ($this->app->runningInConsole()) {
-            $this->commands([CloseDays::class]);
+            $this->commands([CloseDays::class, ForgetLocations::class]);
         }
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             // Each company's "yesterday" (its own timezone) is over by then; working a day out twice changes nothing.
             $schedule->command('attendance:close-days')->dailyAt('01:40')->withoutOverlapping()->onOneServer();
+            $schedule->command('attendance:forget-locations')->dailyAt('02:10')->withoutOverlapping()->onOneServer();
         });
 
         if (! $this->app->routesAreCached()) {

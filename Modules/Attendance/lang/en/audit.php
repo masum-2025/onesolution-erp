@@ -12,4 +12,7 @@ return [
     'correction_asked' => 'Correction asked for',
     'correction_approved' => 'Correction approved',
     'correction_rejected' => 'Correction rejected',
+    'location_added' => 'Workplace added',
+    'location_updated' => 'Workplace changed',
+    'device_imported' => 'Attendance machine file brought in',
 ];

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Modules\Attendance\Models\AttendanceDay;
 use Modules\Attendance\Models\Correction;
 use Modules\Attendance\Models\Holiday;
+use Modules\Attendance\Models\Location;
 use Modules\Attendance\Models\Punch;
 use Modules\Attendance\Models\Roster;
 use Modules\Attendance\Models\Shift;
@@ -45,6 +46,13 @@ class AttendanceExporter implements ExportsModuleData
                 'id' => $punch->getKey(), 'unit_id' => $punch->unit_id, 'employee_id' => $punch->employee_id,
                 'punched_at' => $punch->punched_at->toIso8601String(), 'source' => $punch->source, 'note' => $punch->note,
                 'voided' => $punch->voided_at !== null, 'void_reason' => $punch->void_reason,
+                'latitude_micro' => $punch->latitude_micro, 'longitude_micro' => $punch->longitude_micro,
+                'accuracy_m' => $punch->accuracy_m, 'distance_m' => $punch->distance_m, 'location_id' => $punch->location_id,
+            ]),
+            'locations' => $this->rows(Location::class, $organization, $organizationIds, fn (Location $location) => [
+                'id' => $location->getKey(), 'unit_id' => $location->unit_id, 'name' => $location->name,
+                'latitude_micro' => $location->latitude_micro, 'longitude_micro' => $location->longitude_micro,
+                'radius_m' => $location->radius_m, 'is_active' => $location->is_active,
             ]),
             'days' => $this->rows(AttendanceDay::class, $organization, $organizationIds, fn (AttendanceDay $day) => [
                 'id' => $day->getKey(), 'unit_id' => $day->unit_id, 'employee_id' => $day->employee_id,
