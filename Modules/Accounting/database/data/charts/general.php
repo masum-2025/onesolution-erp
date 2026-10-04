@@ -70,5 +70,10 @@ return [
         'accounting.online_collections' => '1130',
         'accounting.tax_output' => '2130',
         'accounting.tax_input' => '1170',
+        'payroll.salary_expense' => '5200',
+        'payroll.salaries_payable' => '2120',
+        'payroll.tax_payable' => '2130',
+        'payroll.deductions_payable' => '2140',
+        'payroll.payment_account' => '1120',
     ],
 ];

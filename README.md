@@ -2403,6 +2403,55 @@ portal member of the company, one employee per login; audited `hrm.login_linked`
 - A new sector or country changes rules only (weekend days, grace, over-time minimum) and its
   holiday list; shifts and rosters are each company's own data. No code change.
 
+## Payroll module (business module 4: PAY-1 backend)
+
+Requires HRM and Attendance; posts to Accounting where the company keeps books (optional).
+Employees come only through `Modules\Hrm\Directory\EmployeeDirectory`, days and minutes only
+through `Modules\Attendance\Services\AttendanceSummary`, the books only through
+`Modules\Accounting\Services\Ledger`.
+
+- **Tables** (tenant, `organization_id` = the company): `pay_components` (earning or deduction,
+  taxable, prorated), `pay_structures` + `pay_structure_items` (fixed amount, or basis points of
+  the basic), `pay_salaries` (basic and structure from a day; a new one closes the previous; history
+  kept), `pay_payment_details` (bank, mobile or cash; account number encrypted, always shown masked,
+  never in the audit log), `pay_runs` (one per company and month), `pay_run_approvals` (level, a
+  different person each), `pay_slips` + `pay_slip_lines` (frozen at approval; names kept as they
+  were), `pay_adjustments` (one-offs in a draft run).
+- **Calculating** (`Services\PayCalculator`, pure, integer minor units, half up): every employee
+  employed in the month gets a slip from the salary in force at the end of their time in it. Prorated
+  items are paid for employed days less absences and half of half days (rule
+  `payroll.deduct_absence`): amount × payable half-days ÷ (2 × days in the month). Over time =
+  minutes × base (`payroll.overtime_base`: basic or gross) ÷ (`payroll.monthly_hours` × 60) ×
+  `payroll.overtime_multiplier`. Late minutes are deducted at the basic's minute rate when
+  `payroll.late_deduction` is on. Tax at source: twelve times the month's taxable earnings through
+  `payroll.tax_slabs` (cumulative "up to" bands; **placeholders for a tax adviser**), a twelfth a
+  month. A slip without a salary or with net pay below zero has a `problem` and blocks sending.
+- **Run steps** (`/api/organizations/{org}/payroll/runs…`, at the company): `POST runs {period}`,
+  `…/calculate`, `…/adjustments` (adding or removing one clears the calculation), `…/submit`
+  (`payroll.run`), `…/approve` and `…/reject` with a reason (`payroll.approve`; never the person who
+  opened or sent it; `payroll.salary_approval_levels` different people), `…/pay {paid_on}`,
+  `DELETE runs/{id}` (drafts). At the last approval the run is posted (op `payroll-run-{id}`, dated
+  the month's last day): each branch's or department's earnings to `payroll.salary_expense`
+  against `payroll.salaries_payable`, `payroll.tax_payable` and `payroll.deductions_payable`;
+  paying posts salaries payable against `payroll.payment_account` (general chart: 5200, 2120, 2130,
+  2140, 1120). Event `payroll.run.approved` (ids only). An approved run never changes; a mistake is
+  put right next month.
+- **Setup and salaries**: `components`, `structures` (GET with `payroll.view`; POST/PATCH with
+  `payroll.run`), `employees/{id}` (salary history and masked payment details),
+  `POST employees/{id}/salary`, `PUT employees/{id}/payment` (at the employee's unit).
+- **Own payslips**: `GET …/payroll/me/slips[/{id}]` through the login HR linked — approved and paid
+  runs only.
+- Audit: `payroll.component_*`, `structure_*`, `salary_set`, `payment_details_set`, `run_*`,
+  `adjustment_*`. Data export: components, structures, items, salaries, payment details (in full,
+  the client's own data), runs, approvals, slips, lines, adjustments.
+- Next: PAY-2 screens, printable payslips, bank file; PAY-3 loans and advances, festival bonus,
+  provident fund, final settlement.
+
+### Future expansion (Payroll)
+
+- A new country sets its rules (over-time base and multiplier, monthly hours, tax slabs); a new
+  sector or company builds its own components and structures. No code change.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:
