@@ -2,7 +2,9 @@
 
 use App\Platform\Audit\AuditLog;
 use App\Platform\Audit\AuditQuery;
+use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
+use Modules\Accounting\Models\PostingAccount;
 
 /*
  * ACC-1: setting up a company's books from a chart template, fiscal years,
@@ -139,4 +141,20 @@ it('maps posting keys to accounts of the type they need', function () {
     $this->asToken($this->w->token)->putJson(($this->url)('/posting-accounts/payroll.nothing'), ['account_id' => accountId($this->w->c1, '3100')])
         ->assertNotFound()->assertJsonPath('code', 'unknown_posting_key');
     $this->asToken($this->w->viewerToken)->putJson($url, ['account_id' => accountId($this->w->c1, '3100'), 'base_version' => 2])->assertForbidden();
+});
+
+it('maps posting keys added after the books were set up, never changing a choice', function () {
+    setUpBooks($this, $this->w->token, $this->w->c1);
+    $mappings = fn () => PostingAccount::inTenantOf($this->w->c1)->withoutGlobalScope(OrganizationScope::class)
+        ->where('organization_id', $this->w->c1->id);
+    // As if receivable and payable came in a later release, and someone chose their own payable account.
+    $mappings()->whereIn('posting_key', ['accounting.receivable', 'accounting.payable'])->delete();
+    $this->asToken($this->w->token)->putJson(($this->url)('/posting-accounts/accounting.payable'), ['account_id' => accountId($this->w->c1, '2140')])->assertOk();
+
+    $this->artisan('accounting:map-postings')->expectsOutputToContain('Mapped 1 posting account(s).')->assertSuccessful();
+    expect($mappings()->pluck('account_id', 'posting_key')->all())->toMatchArray([
+        'accounting.receivable' => accountId($this->w->c1, '1140'),
+        'accounting.payable' => accountId($this->w->c1, '2140'),
+    ]);
+    $this->artisan('accounting:map-postings')->expectsOutputToContain('Mapped 0 posting account(s).');
 });

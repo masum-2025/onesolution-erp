@@ -12,4 +12,13 @@ return [
     'menu_fiscal_years' => 'Fiscal years',
     'menu_posting_accounts' => 'Posting accounts',
     'new_journal' => 'New journal entry',
+    'menu_sales' => 'Sales',
+    'menu_customers' => 'Customers',
+    'menu_invoices' => 'Invoices and credit notes',
+    'menu_receipts' => 'Money received',
+    'menu_purchases' => 'Purchases',
+    'menu_vendors' => 'Vendors',
+    'menu_bills' => 'Bills and vendor credits',
+    'menu_payments' => 'Money paid',
+    'new_invoice' => 'New invoice',
 ];

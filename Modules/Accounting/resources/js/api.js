@@ -30,5 +30,22 @@ export function accountingApi(organizationId) {
         step: (id, step, body) => api(`${base}/journals/${id}/${step}`, { method: 'POST', body }),
 
         report: (name, query) => api(`${base}/reports/${name}`, { query }),
+
+        parties: (query) => api(`${base}/parties`, { query }),
+        party: (id) => api(`${base}/parties/${id}`),
+        createParty: (body) => api(`${base}/parties`, { method: 'POST', body }),
+        updateParty: (id, body) => api(`${base}/parties/${id}`, { method: 'PATCH', body }),
+
+        documents: (query) => api(`${base}/documents`, { query }),
+        document: (id) => api(`${base}/documents/${id}`),
+        createDocument: (body) => api(`${base}/documents`, { method: 'POST', body }),
+        updateDocument: (id, body) => api(`${base}/documents/${id}`, { method: 'PATCH', body }),
+        deleteDocument: (id, version) => api(`${base}/documents/${id}`, { method: 'DELETE', body: { base_version: version } }),
+        documentStep: (id, step, body) => api(`${base}/documents/${id}/${step}`, { method: 'POST', body }),
+
+        settlements: (query) => api(`${base}/settlements`, { query }),
+        settlement: (id) => api(`${base}/settlements/${id}`),
+        createSettlement: (body) => api(`${base}/settlements`, { method: 'POST', body }),
+        settlementStep: (id, step, body) => api(`${base}/settlements/${id}/${step}`, { method: 'POST', body }),
     };
 }

@@ -213,6 +213,44 @@ class ChartOfAccounts
         ], array_keys($this->postingKeys()), $this->postingKeys()));
     }
 
+    /**
+     * Posting keys added after a company set up its books (e.g. receivable
+     * and payable came with ACC-3) get the account its chart template names,
+     * when the company has an active account with that code and the right
+     * type. Choices already made are never changed.
+     *
+     * @return list<string> The keys that were mapped.
+     */
+    public function mapMissingPostings(Organization $company, ?User $actor = null): array
+    {
+        $template = $this->suggestedTemplate($company);
+        if (! $this->books->isSetUp($company) || ! $this->templates->has($template)) {
+            return [];
+        }
+
+        return $this->books->transaction($company, function () use ($company, $template, $actor) {
+            $known = $this->postingKeys();
+            $mapped = $this->books->query(PostingAccount::class, $company)->pluck('posting_key')->all();
+            $done = [];
+            foreach ($this->templates->postings($template) as $key => $code) {
+                if (! isset($known[$key]) || in_array($key, $mapped, true)) {
+                    continue;
+                }
+                $account = $this->books->query(Account::class, $company)->where('code', $code)->first();
+                if ($account === null || ! $account->isPostable() || $account->type->value !== $known[$key]['type']) {
+                    continue;
+                }
+
+                $mapping = new PostingAccount;
+                $mapping->fill(['organization_id' => $company->getKey(), 'posting_key' => $key, 'account_id' => $account->getKey(), 'version' => 1])->save();
+                $this->audit->record('accounting.posting_account_set', $mapping, new: ['posting_key' => $key, 'account_id' => $account->getKey()], reason: 'Template default for a new posting key', actor: $actor, organizationId: $company->getKey());
+                $done[] = $key;
+            }
+
+            return $done;
+        });
+    }
+
     public function setPostingAccount(Organization $company, string $key, string $accountId, ?int $baseVersion, User $actor): PostingAccount
     {
         $definition = $this->postingKeys()[$key] ?? throw AccountingException::unknownPostingKey();

@@ -13,7 +13,9 @@ import {
     Link,
     Package,
     Plug,
+    Receipt,
     ScanText,
+    ShoppingCart,
     ShieldCheck,
     Sparkles,
     UserPlus,
@@ -28,6 +30,7 @@ import {
  */
 const ICONS = {
     banknote: Banknote,
+    cart: ShoppingCart,
     book: BookOpen,
     chart: ChartColumn,
     clock: Clock,
@@ -40,6 +43,7 @@ const ICONS = {
     link: Link,
     package: Package,
     plug: Plug,
+    receipt: Receipt,
     scan: ScanText,
     shield: ShieldCheck,
     sparkles: Sparkles,

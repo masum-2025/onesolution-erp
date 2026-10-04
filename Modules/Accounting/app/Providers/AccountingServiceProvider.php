@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Accounting\Charts\ChartTemplates;
+use Modules\Accounting\Console\MapPostingAccounts;
 use Modules\Accounting\Export\AccountingExporter;
 
 /**
@@ -34,6 +35,10 @@ class AccountingServiceProvider extends ServiceProvider
 
         RateLimiter::for('accounting-reports', fn (Request $request) => Limit::perMinute(self::REPORTS_PER_MINUTE)
             ->by('accounting-reports:'.($request->user()?->getKey() ?? $request->ip())));
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([MapPostingAccounts::class]);
+        }
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');

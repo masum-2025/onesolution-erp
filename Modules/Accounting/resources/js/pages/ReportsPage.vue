@@ -9,7 +9,7 @@ import AppTabs from '@/components/AppTabs.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
-import { formatDate, formatMoney } from '@/lib/format';
+import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { currentOrganization, session } from '@/lib/session';
 import { subtreeIds, visibleOrganizations } from '@/lib/organizations';
 import { t } from '@/lib/i18n';
@@ -32,12 +32,13 @@ const tabs = computed(() => [
     { key: 'profit-loss', label: t('accounting.reports.tabs.profit_loss') },
     { key: 'balance-sheet', label: t('accounting.reports.tabs.balance_sheet') },
     { key: 'ledger', label: t('accounting.reports.tabs.ledger') },
+    { key: 'aging', label: t('accounting.aging.tab') },
 ]);
 const tab = ref(tabs.value.some((item) => item.key === route.query.report) ? route.query.report : 'trial-balance');
 const ranged = computed(() => ['profit-loss', 'ledger'].includes(tab.value));
 
 const today = todayIn(session.me?.context?.settings?.timezone);
-const filters = reactive({ as_of: today, from: monthOf(today).from, to: today, cost_centre_id: '', account_id: route.query.account_id ?? '' });
+const filters = reactive({ as_of: today, from: monthOf(today).from, to: today, cost_centre_id: '', account_id: route.query.account_id ?? '', side: 'sales' });
 const units = ref([]);
 const accounts = ref([]);
 
@@ -69,7 +70,8 @@ async function show() {
     }
     const query = ranged.value ? { from: filters.from, to: filters.to } : { as_of: filters.as_of };
     if (tab.value === 'ledger') query.account_id = filters.account_id;
-    if (filters.cost_centre_id) query.cost_centre_id = filters.cost_centre_id;
+    if (tab.value === 'aging') query.side = filters.side;
+    else if (filters.cost_centre_id) query.cost_centre_id = filters.cost_centre_id;
 
     loading.value = true;
     error.value = null;
@@ -85,6 +87,15 @@ async function show() {
 
 function printPage() {
     window.print();
+}
+
+/** Column titles of the aging report from the company's limits (e.g. 30, 60, 90). */
+function bucketLabel(key) {
+    if (key === 'current') return t('accounting.aging.current');
+    const limits = report.value.bucket_limits;
+    if (key.startsWith('over_')) return t('accounting.aging.over', { days: formatNumber(Number(key.slice(5))) });
+    const index = limits.indexOf(Number(key.slice(5)));
+    return t('accounting.aging.upto', { from: formatNumber(index === 0 ? 1 : limits[index - 1] + 1), to: formatNumber(limits[index]) });
 }
 
 const sheetBalanced = computed(() => report.value && tab.value === 'balance-sheet' && report.value.assets.total_minor === report.value.total_liabilities_and_equity_minor);
@@ -120,7 +131,13 @@ const sheetBalanced = computed(() => report.value && tab.value === 'balance-shee
                 <AppField v-else v-slot="{ id }" :label="t('accounting.reports.as_of')">
                     <input :id="id" v-model="filters.as_of" type="date" class="field-input" />
                 </AppField>
-                <AppField v-slot="{ id }" :label="t('accounting.reports.cost_centre')">
+                <AppField v-if="tab === 'aging'" v-slot="{ id }" :label="t('accounting.aging.side')">
+                    <select :id="id" v-model="filters.side" class="field-input">
+                        <option value="sales">{{ t('accounting.aging.sales') }}</option>
+                        <option value="purchases">{{ t('accounting.aging.purchases') }}</option>
+                    </select>
+                </AppField>
+                <AppField v-else v-slot="{ id }" :label="t('accounting.reports.cost_centre')">
                     <select :id="id" v-model="filters.cost_centre_id" class="field-input">
                         <option value="">{{ t('accounting.reports.whole_company') }}</option>
                         <option v-for="unit in units" :key="unit.id" :value="unit.id">{{ unit.display_name }}</option>
@@ -219,6 +236,37 @@ const sheetBalanced = computed(() => report.value && tab.value === 'balance-shee
                         {{ sheetBalanced ? t('accounting.reports.balanced') : t('accounting.reports.not_balanced') }}
                     </p>
                 </div>
+
+                <!-- Aging: open amounts by days overdue -->
+                <table v-else-if="report && tab === 'aging'" class="w-full min-w-[44rem] text-[13.5px]">
+                    <thead class="border-b border-line text-[12px] text-muted">
+                        <tr>
+                            <th class="px-5 py-2.5 text-start font-medium">{{ t('accounting.aging.party') }}</th>
+                            <th v-for="bucket in report.buckets" :key="bucket" class="px-3 py-2.5 text-end font-medium">{{ bucketLabel(bucket) }}</th>
+                            <th class="px-3 py-2.5 text-end font-medium">{{ t('accounting.aging.credits') }}</th>
+                            <th class="px-5 py-2.5 text-end font-medium">{{ t('accounting.aging.net') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-line">
+                        <tr v-if="!report.rows.length"><td :colspan="report.buckets.length + 3" class="px-5 py-6 text-center text-muted">{{ t('accounting.reports.nothing') }}</td></tr>
+                        <tr v-for="row in report.rows" :key="row.party_id">
+                            <td class="px-5 py-2">
+                                <RouterLink class="font-medium text-brand-strong hover:underline" :to="{ name: 'accounting-party', params: { id: row.party_id } }">{{ row.party_name }}</RouterLink>
+                            </td>
+                            <td v-for="bucket in report.buckets" :key="bucket" class="tabular px-3 py-2 text-end" :class="bucket !== 'current' && row.buckets[bucket] ? 'text-bad' : ''">{{ row.buckets[bucket] ? money(row.buckets[bucket]) : '' }}</td>
+                            <td class="tabular px-3 py-2 text-end">{{ row.credits_minor ? money(-row.credits_minor) : '' }}</td>
+                            <td class="tabular px-5 py-2 text-end font-medium">{{ money(row.net_minor) }}</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="border-t border-line font-semibold">
+                        <tr>
+                            <td class="px-5 py-2.5">{{ t('accounting.reports.total') }}</td>
+                            <td v-for="bucket in report.buckets" :key="bucket" class="tabular px-3 py-2.5 text-end">{{ money(report.totals.buckets[bucket]) }}</td>
+                            <td class="tabular px-3 py-2.5 text-end">{{ money(-report.totals.credits_minor) }}</td>
+                            <td class="tabular px-5 py-2.5 text-end">{{ money(report.totals.net_minor) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
 
                 <!-- Account ledger -->
                 <table v-else-if="report && tab === 'ledger'" class="w-full min-w-[40rem] text-[13.5px]">

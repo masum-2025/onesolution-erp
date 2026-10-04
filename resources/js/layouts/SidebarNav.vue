@@ -53,6 +53,7 @@ const emit = defineEmits(['navigate', 'toggle']);
 const route = useRoute();
 const router = useRouter();
 const linkTo = (item) => menuLink(item, router);
+const itemKey = (item) => `${item.module}-${item.key}`;
 const isPartner = computed(() => session.me?.context?.type === 'partner');
 
 const exportItem = () => ({ to: '/export', label: t('core.nav.export'), icon: Download });
@@ -137,28 +138,38 @@ const moduleSections = computed(() => {
     return [...sections.values()];
 });
 
-const itemKey = (item) => `${item.module}-${item.key}`;
-
 function isActive(item) {
     return item.exact ? route.path === item.to : route.path === item.to || route.path.startsWith(`${item.to}/`);
 }
 
+/**
+ * The module entry and sub-page the current address belongs to: the longest
+ * matching link across every entry, so /hrm/positions selects "Positions",
+ * /hrm/employees/1 "Employees", and /accounting/sales the Sales entry rather
+ * than Accounting (whose own link, /accounting, is shorter).
+ */
+const activeLink = computed(() => {
+    let best = null;
+    const consider = (item, child) => {
+        const link = linkTo(child ? { ...child, module: item.module } : item);
+        const longer = !best || link.length > best.link.length || (link.length === best.link.length && child && !best.child);
+        if ((route.path === link || route.path.startsWith(`${link}/`)) && longer) {
+            best = { item: itemKey(item), child: child?.key ?? null, link };
+        }
+    };
+    for (const item of props.menu) {
+        consider(item, null);
+        for (const child of item.children ?? []) consider(item, child);
+    }
+    return best;
+});
+
 function moduleActive(item) {
-    const link = linkTo(item);
-    return route.path === link || route.path.startsWith(`${link}/`);
+    return activeLink.value?.item === itemKey(item);
 }
 
-/**
- * The sub-page the current address belongs to: the longest matching link,
- * so /hrm/positions selects "Positions" and /hrm/employees/1 "Employees".
- */
 function activeChild(item) {
-    let best = null;
-    for (const child of item.children ?? []) {
-        const link = linkTo({ ...child, module: item.module });
-        if ((route.path === link || route.path.startsWith(`${link}/`)) && (!best || link.length > best.link.length)) best = { key: child.key, link };
-    }
-    return best?.key ?? null;
+    return activeLink.value?.item === itemKey(item) ? activeLink.value.child : null;
 }
 
 // Open sections with sub-pages: the one holding the current page opens by itself.

@@ -5,9 +5,12 @@
 | Business numbers never live here; they are rules (Rules::get('accounting.*')).
 */
 
+use Modules\Accounting\Dashboard\CustomersOverdue;
+use Modules\Accounting\Dashboard\CustomersOwe;
 use Modules\Accounting\Dashboard\ExpensesThisMonth;
 use Modules\Accounting\Dashboard\IncomeThisMonth;
 use Modules\Accounting\Dashboard\RecentJournals;
+use Modules\Accounting\Dashboard\VendorsOwed;
 use Modules\Accounting\Dashboard\WaitingApproval;
 
 return [
@@ -201,11 +204,40 @@ return [
                 ['key' => 'reports', 'label' => 'accounting::module.menu_reports', 'route' => '/accounting/reports', 'permission' => 'accounting.view'],
             ],
         ],
+        [
+            'key' => 'sales',
+            'label' => 'accounting::module.menu_sales',
+            'route' => '/accounting/sales',
+            'icon' => 'receipt',
+            'order' => 41,
+            'section' => 'finance',
+            'children' => [
+                ['key' => 'customers', 'label' => 'accounting::module.menu_customers', 'route' => '/accounting/customers', 'permission' => 'accounting.view'],
+                ['key' => 'invoices', 'label' => 'accounting::module.menu_invoices', 'route' => '/accounting/sales', 'permission' => 'accounting.view'],
+                ['key' => 'receipts', 'label' => 'accounting::module.menu_receipts', 'route' => '/accounting/receipts', 'permission' => 'accounting.view'],
+            ],
+        ],
+        [
+            'key' => 'purchases',
+            'label' => 'accounting::module.menu_purchases',
+            'route' => '/accounting/purchases',
+            'icon' => 'cart',
+            'order' => 42,
+            'section' => 'finance',
+            'children' => [
+                ['key' => 'vendors', 'label' => 'accounting::module.menu_vendors', 'route' => '/accounting/vendors', 'permission' => 'accounting.view'],
+                ['key' => 'bills', 'label' => 'accounting::module.menu_bills', 'route' => '/accounting/purchases', 'permission' => 'accounting.view'],
+                ['key' => 'payments', 'label' => 'accounting::module.menu_payments', 'route' => '/accounting/payments', 'permission' => 'accounting.view'],
+            ],
+        ],
     ],
     // The module's dashboard; `overview` widgets also show on the main overview.
     'dashboard' => ['widgets' => [
         ['key' => 'income', 'label' => 'accounting::dashboard.income', 'type' => 'stat', 'provider' => IncomeThisMonth::class, 'permission' => 'accounting.view', 'overview' => true],
         ['key' => 'expenses', 'label' => 'accounting::dashboard.expenses', 'type' => 'stat', 'provider' => ExpensesThisMonth::class, 'permission' => 'accounting.view', 'overview' => true],
+        ['key' => 'customers_owe', 'label' => 'accounting::dashboard.customers_owe', 'type' => 'stat', 'provider' => CustomersOwe::class, 'permission' => 'accounting.view', 'overview' => true],
+        ['key' => 'customers_overdue', 'label' => 'accounting::dashboard.customers_overdue', 'type' => 'stat', 'provider' => CustomersOverdue::class, 'permission' => 'accounting.view'],
+        ['key' => 'vendors_owed', 'label' => 'accounting::dashboard.vendors_owed', 'type' => 'stat', 'provider' => VendorsOwed::class, 'permission' => 'accounting.view'],
         ['key' => 'waiting', 'label' => 'accounting::dashboard.waiting', 'type' => 'stat', 'provider' => WaitingApproval::class, 'permission' => 'accounting.view'],
         ['key' => 'recent', 'label' => 'accounting::dashboard.recent', 'type' => 'list', 'provider' => RecentJournals::class, 'permission' => 'accounting.view', 'size' => 2],
     ]],
@@ -220,6 +252,7 @@ return [
     ]],
     // The header "New" menu.
     'quick_actions' => [
+        ['key' => 'invoice', 'label' => 'accounting::module.new_invoice', 'route' => '/accounting/documents/new?type=invoice', 'permission' => 'accounting.sell', 'icon' => 'receipt'],
         ['key' => 'journal', 'label' => 'accounting::module.new_journal', 'route' => '/accounting/journals/new', 'permission' => 'accounting.post', 'icon' => 'file-plus'],
     ],
     // Other modules listen to these; payloads carry ids only.

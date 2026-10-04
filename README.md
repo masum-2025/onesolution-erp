@@ -2143,6 +2143,31 @@ Code: `Modules/Accounting/resources/js` (routes, pages, `components/BooksGate.vu
   day) and `reports/statement?side=&party_id=&from=&to=` (opening, running and closing balance).
 - Separation of duties: `accounting.sell` and `accounting.buy` are each paired with
   `accounting.approve`.
+- `php artisan accounting:map-postings`: after a release that adds posting keys, gives companies
+  that already keep books the accounts their chart template names (only unmapped keys; audited;
+  safe to run again). Run it on deploy of ACC-3.
+
+### Sales and purchases screens (ACC-3b)
+
+Sidebar (Finance): **Sales** (`/accounting/customers`, `/accounting/sales`, `/accounting/receipts`)
+and **Purchases** (`/accounting/vendors`, `/accounting/purchases`, `/accounting/payments`). A
+module may now have several menu entries: only its first gets the Dashboard and Settings links,
+and the sidebar lights the entry with the longest matching link.
+
+- **Customers / vendors**: list, add and change (`PartyDialog`), a party page with what it owes
+  (or has paid ahead), its documents and a printable statement for any range.
+- **Invoices / bills**: lists with status, overdue only and search (each row: what is still due
+  and when); a form with description, quantity, unit price, account (income for sales, expense or
+  asset for purchases) and branch, amounts worked out as the server does (`lineAmount`); a
+  printable document with the company's name and logo; approve, reject, void (with a reason),
+  apply a credit, record money against it.
+- **Money received / paid**: a form that lists the party's open documents with "fill oldest
+  first" (`AllocationPicker`, `autoAllocate`); one op id per form, so pressing twice records once;
+  a record page with approve, reject, void and allocate later.
+- **Approvals** (`/accounting/approvals`): journal entries, documents and money waiting for a
+  second person, in tabs. **Reports**: an Aging tab (sales or purchases, any day).
+- **Dashboard**: customers owe, overdue from customers, owed to vendors; the waiting count and the
+  bell include documents and money.
 
 ### Future expansion (Accounting)
 

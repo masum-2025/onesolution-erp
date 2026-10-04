@@ -34,10 +34,15 @@ class MenuController extends Controller
                 continue;
             }
 
+            $first = true;
             foreach ($module->menu as $item) {
                 if (! $allows($item)) {
                     continue;
                 }
+                // The module's first entry opens with its dashboard and ends with its settings (UI-1b);
+                // further entries (e.g. Accounting's Sales and Purchases) list only their own screens.
+                $withEnds = $first;
+                $first = false;
 
                 $section = $item['section'] ?? $module->category;
                 $items[] = [
@@ -49,15 +54,14 @@ class MenuController extends Controller
                     'order' => $item['order'],
                     'section' => $section,
                     'section_label' => $this->sectionLabel($section),
-                    // Every module opens with its dashboard and ends with its settings (UI-1b).
                     'children' => [
-                        ['key' => 'dashboard', 'label' => __('modules.menu.dashboard'), 'route' => "/m/{$key}"],
+                        ...($withEnds ? [['key' => 'dashboard', 'label' => __('modules.menu.dashboard'), 'route' => "/m/{$key}"]] : []),
                         ...array_map(fn (array $child) => [
                             'key' => $child['key'],
                             'label' => __($child['label']),
                             'route' => $child['route'],
                         ], array_values(array_filter($item['children'] ?? [], $allows))),
-                        ['key' => 'settings', 'label' => __('modules.menu.settings'), 'route' => "/m/{$key}/settings"],
+                        ...($withEnds ? [['key' => 'settings', 'label' => __('modules.menu.settings'), 'route' => "/m/{$key}/settings"]] : []),
                     ],
                 ];
             }

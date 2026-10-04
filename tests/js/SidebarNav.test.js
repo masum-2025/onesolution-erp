@@ -52,6 +52,8 @@ async function mountNav(path, props = {}, permissions = ['rules.approve']) {
             { path: '/hrm/positions', name: 'hrm-positions', component: Empty },
             { path: '/hrm/employees/:id', component: Empty },
             { path: '/approvals', component: Empty },
+            { path: '/accounting', name: 'accounting', component: Empty },
+            { path: '/accounting/sales', name: 'accounting-sales', component: Empty },
             { path: '/apps/:module/:key', name: 'module-app', component: Empty },
             { path: '/:any(.*)*', name: 'not-found', component: Empty },
         ],
@@ -81,6 +83,16 @@ describe('SidebarNav', () => {
 
         expect(wrapper.find('button[aria-expanded="true"]').text()).toContain('Human Resources');
         expect(wrapper.find('[aria-current="page"]').text()).toBe('Employees');
+        wrapper.unmount();
+    });
+
+    it('lights one entry when a module has several (the longest matching link wins)', async () => {
+        const books = { module: 'accounting', key: 'accounting', label: 'Accounting', route: '/accounting', icon: 'book', order: 40, section: 'finance', section_label: 'Finance', children: [{ key: 'journals', label: 'Journal entries', route: '/accounting' }] };
+        const sales = { module: 'accounting', key: 'sales', label: 'Sales', route: '/accounting/sales', icon: 'receipt', order: 41, section: 'finance', section_label: 'Finance', children: [{ key: 'invoices', label: 'Invoices', route: '/accounting/sales' }] };
+        const wrapper = await mountNav('/accounting/sales', { menu: [books, sales] });
+
+        expect(wrapper.findAll('button[aria-expanded="true"]').map((button) => button.text())).toEqual(['Sales']);
+        expect(wrapper.findAll('[aria-current="page"]').map((link) => link.text())).toEqual(['Invoices']);
         wrapper.unmount();
     });
 
