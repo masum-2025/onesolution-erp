@@ -26,6 +26,16 @@ export function accountingApi(organizationId) {
         deleteOpening: (version) => api(`${base}/opening`, { method: 'DELETE', body: { base_version: version } }),
         openingStep: (step, body) => api(`${base}/opening/${step}`, { method: 'POST', body }),
 
+        bankAccounts: () => api(`${base}/bank/accounts`),
+        bankDesk: (accountId, query) => api(`${base}/bank/accounts/${accountId}`, { query }),
+        importStatement: (accountId, body) => api(`${base}/bank/accounts/${accountId}/import`, { method: 'POST', body }),
+        bankAutoMatch: (accountId) => api(`${base}/bank/accounts/${accountId}/auto-match`, { method: 'POST' }),
+        bankLineStep: (id, step, body = {}) => api(`${base}/bank-lines/${id}/${step}`, { method: 'POST', body }),
+        deleteBankLine: (id) => api(`${base}/bank-lines/${id}`, { method: 'DELETE' }),
+        bankReconciliationPreview: (accountId, query) => api(`${base}/bank/accounts/${accountId}/reconciliation`, { query }),
+        finishReconciliation: (accountId, body) => api(`${base}/bank/accounts/${accountId}/reconciliations`, { method: 'POST', body }),
+        reopenReconciliation: (id, body) => api(`${base}/reconciliations/${id}/reopen`, { method: 'POST', body }),
+
         postingAccounts: () => api(`${base}/posting-accounts`),
         setPostingAccount: (key, body) => api(`${base}/posting-accounts/${encodeURIComponent(key)}`, { method: 'PUT', body }),
 

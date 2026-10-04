@@ -19,6 +19,9 @@ import {
     journalPayload,
     lineTotals,
     monthOf,
+    csvPreview,
+    guessBankColumns,
+    matchTotal,
     openingForm,
     openingPayload,
     openingTotals,
@@ -288,5 +291,35 @@ describe('Accounting opening balances and year end', () => {
 
     it('registers the opening balances screen', () => {
         expect(moduleRoutes.find((route) => route.name === 'accounting-opening')?.meta.module).toBe('accounting');
+    });
+});
+
+describe('Accounting bank matching', () => {
+    it('reads the heading row and first lines of a statement, quotes and all', () => {
+        const text = '\uFEFFDate;Narration;Withdrawal;Deposit\r\n03/10/2026;"Cash; deposit";;"1,500.00"\r\n\r\n06/10/2026;Rent "Oct";200.00;\r\n';
+        expect(csvPreview(text)).toEqual({
+            columns: ['Date', 'Narration', 'Withdrawal', 'Deposit'],
+            rows: [['03/10/2026', 'Cash; deposit', '', '1,500.00'], ['06/10/2026', 'Rent Oct', '200.00', '']],
+        });
+        expect(csvPreview('')).toEqual({ columns: [], rows: [] });
+    });
+
+    it('guesses columns from English or Bangla headings', () => {
+        expect(guessBankColumns(['Txn Date', 'Particulars', 'Cheque No', 'Withdrawal', 'Deposit', 'Balance'])).toEqual({
+            date: 'Txn Date', description: 'Particulars', reference: 'Cheque No', amount: '', money_in: 'Deposit', money_out: 'Withdrawal',
+        });
+        expect(guessBankColumns(['তারিখ', 'বিবরণ', 'টাকা'])).toMatchObject({ date: 'তারিখ', description: 'বিবরণ', amount: 'টাকা' });
+    });
+
+    it('adds the book lines chosen and says when they are exactly the statement line', () => {
+        const lines = [{ id: 'a', amount_minor: -20000 }, { id: 'b', amount_minor: -3000 }, { id: 'c', amount_minor: -17000 }];
+        expect(matchTotal(lines, ['a'], -20000)).toEqual({ total: -20000, exact: true });
+        expect(matchTotal(lines, ['b', 'c'], -20000)).toEqual({ total: -20000, exact: true });
+        expect(matchTotal(lines, ['b'], -20000)).toEqual({ total: -3000, exact: false });
+        expect(matchTotal(lines, [], 0)).toEqual({ total: 0, exact: false });
+    });
+
+    it('registers the bank matching screen', () => {
+        expect(moduleRoutes.find((route) => route.name === 'accounting-bank')?.meta.module).toBe('accounting');
     });
 });

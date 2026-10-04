@@ -8,6 +8,8 @@ use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Accounting\Models\Account;
 use Modules\Accounting\Models\Allocation;
+use Modules\Accounting\Models\BankLine;
+use Modules\Accounting\Models\BankMatch;
 use Modules\Accounting\Models\Document;
 use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\FiscalYear;
@@ -18,6 +20,7 @@ use Modules\Accounting\Models\OpeningLine;
 use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\Period;
 use Modules\Accounting\Models\PostingAccount;
+use Modules\Accounting\Models\Reconciliation;
 use Modules\Accounting\Models\Settlement;
 use Modules\Accounting\Models\TaxCode;
 use Modules\Accounting\Models\YearReopenRequest;
@@ -26,7 +29,8 @@ use Modules\Accounting\Models\YearReopenRequest;
  * The books in the client's data export: accounts, fiscal years and periods,
  * journals with their lines, posting accounts, customers and vendors with
  * their documents and money, tax codes, opening balances and requests to
- * reopen years. Amounts stay minor units with
+ * reopen years, statement lines with their matches and reconciliations.
+ * Amounts stay minor units with
  * their currency. Runs without a tenant context, reading the client's own
  * database for exactly the organizations given.
  */
@@ -206,6 +210,31 @@ class AccountingExporter implements ExportsModuleData
                 'requested_by' => $request->requested_by,
                 'decided_by' => $request->decided_by,
                 'decided_at' => $request->decided_at?->toIso8601String(),
+            ]),
+            'bank_lines' => $this->rows(BankLine::class, $organization, $organizationIds, fn (BankLine $line) => [
+                'id' => $line->getKey(),
+                'organization_id' => $line->organization_id,
+                'account_id' => $line->account_id,
+                'line_date' => $line->line_date->toDateString(),
+                'description' => $line->description,
+                'reference' => $line->reference,
+                'amount_minor' => $line->amount_minor,
+                'reconciliation_id' => $line->reconciliation_id,
+            ]),
+            'bank_matches' => $this->rows(BankMatch::class, $organization, $organizationIds, fn (BankMatch $match) => [
+                'id' => $match->getKey(),
+                'bank_line_id' => $match->bank_line_id,
+                'journal_line_id' => $match->journal_line_id,
+                'amount_minor' => $match->amount_minor,
+            ]),
+            'reconciliations' => $this->rows(Reconciliation::class, $organization, $organizationIds, fn (Reconciliation $reconciliation) => [
+                'id' => $reconciliation->getKey(),
+                'account_id' => $reconciliation->account_id,
+                'statement_date' => $reconciliation->statement_date->toDateString(),
+                'opening_balance_minor' => $reconciliation->opening_balance_minor,
+                'statement_balance_minor' => $reconciliation->statement_balance_minor,
+                'book_balance_minor' => $reconciliation->book_balance_minor,
+                'status' => $reconciliation->status,
             ]),
         ];
     }

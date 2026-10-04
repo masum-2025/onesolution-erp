@@ -60,6 +60,22 @@ return [
         'phone' => 'Phone',
         'paid_online' => 'Paid online for :number',
     ],
+    // Statement files and matching (ACC-4c).
+    'bank' => [
+        'file_size' => 'The file is larger than :max KB. Split the statement into shorter periods.',
+        'file_type' => 'Choose a CSV file (UTF-8) as the bank gives it, or saved from a spreadsheet as "CSV UTF-8".',
+        'too_many_rows' => 'The file has more than :max lines. Split the statement into shorter periods.',
+        'empty' => 'The file has a heading row but no lines.',
+        'column_missing' => 'The file has no column ":column". Choose the columns again.',
+        'amount_columns' => 'Choose the amount column, or the money in and money out columns.',
+        'row_date' => 'Line :row: ":value" is not a date written as :format.',
+        'row_amount' => 'Line :row: the amount cannot be read.',
+        'match_lines' => 'Choose posted entries of this account that are not matched yet.',
+        'match_amount' => 'The entries chosen must add up to the statement line exactly.',
+        'entry_same_account' => 'Choose the other account of the entry, not this one.',
+        'date_after' => 'Choose a day after the last reconciliation (:date).',
+        'opening_needed' => 'The first time, enter the statement balance before its first line.',
+    ],
     'errors' => [
         'tax_code_not_found' => 'Tax code not found. Reload the list of tax codes.',
         'sourced_journal' => 'This entry came from an invoice, receipt or another module. Void it there, so both stay in step.',
@@ -122,6 +138,15 @@ return [
         'reopen_not_pending' => 'This request was already decided. Reload the page.',
         'opening_posted' => 'The opening balances are posted and never change. Correct them with a journal entry or a credit note.',
         'opening_document' => 'This is part of the opening balances. Correct it with a credit note instead.',
+        'bank_line_not_found' => 'Statement line not found. Reload the page.',
+        'reconciliation_not_found' => 'Reconciliation not found. Reload the page.',
+        'not_a_money_account' => 'Choose an active cash, bank or wallet account (an asset account that is not a group).',
+        'bank_line_in_use' => 'This line is matched or reconciled. Undo that first.',
+        'bank_line_matched' => 'This line is matched already. Undo the match to change it.',
+        'bank_line_reconciled' => 'This line is inside a finished reconciliation. Reopen that reconciliation first.',
+        'statement_difference' => 'The statement balance does not agree with the lines up to that day. Check for missing lines or a wrong balance.',
+        'not_latest_reconciliation' => 'Only the latest reconciliation of an account can be reopened.',
+        'bank_lines_unmatched' => ':count statement lines up to that day are not matched. Match them or write the missing entries first.',
     ],
 
     'validation' => [

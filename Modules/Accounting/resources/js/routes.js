@@ -12,6 +12,7 @@ export default [
     { path: 'accounting/journals/:id/edit', name: 'accounting-journal-edit', component: () => import('./pages/JournalFormPage.vue'), meta },
     { path: 'accounting/approvals', name: 'accounting-approvals', component: () => import('./pages/ApprovalsPage.vue'), meta },
     { path: 'accounting/accounts', name: 'accounting-accounts', component: () => import('./pages/AccountsPage.vue'), meta },
+    { path: 'accounting/bank', name: 'accounting-bank', component: () => import('./pages/BankPage.vue'), meta },
     { path: 'accounting/reports', name: 'accounting-reports', component: () => import('./pages/ReportsPage.vue'), meta },
     { path: 'accounting/setup', name: 'accounting-setup', component: () => import('./pages/SetupPage.vue'), meta },
     { path: 'accounting/fiscal-years', name: 'accounting-fiscal-years', component: () => import('./pages/FiscalYearsPage.vue'), meta },

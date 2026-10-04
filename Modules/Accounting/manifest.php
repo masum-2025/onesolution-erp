@@ -5,6 +5,7 @@
 | Business numbers never live here; they are rules (Rules::get('accounting.*')).
 */
 
+use Modules\Accounting\Dashboard\BankUnmatched;
 use Modules\Accounting\Dashboard\CustomersOverdue;
 use Modules\Accounting\Dashboard\CustomersOwe;
 use Modules\Accounting\Dashboard\ExpensesThisMonth;
@@ -40,6 +41,8 @@ return [
         'accounting.buy',
         // Tax codes (rates the company charges and pays).
         'accounting.tax',
+        // Bring in bank, wallet and cash statements, match them with the books, finish and reopen reconciliations.
+        'accounting.reconcile',
     ],
     'separation_of_duties' => [
         ['accounting.post', 'accounting.approve'],
@@ -227,6 +230,40 @@ return [
             'category' => 'period',
             'sort_order' => 38,
         ],
+        [
+            'key' => 'accounting.bank_match_days',
+            'type' => 'integer',
+            // How many days a statement line and a book entry of the same amount may be apart to be proposed as a pair.
+            'schema' => ['minimum' => 0, 'maximum' => 31],
+            'default' => 3,
+            'label' => 'accounting::rules.bank_match_days.label',
+            'description' => 'accounting::rules.bank_match_days.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'bank',
+            'sort_order' => 100,
+        ],
+        [
+            'key' => 'accounting.bank_import_max_rows',
+            'type' => 'integer',
+            'schema' => ['minimum' => 10, 'maximum' => 20000],
+            'default' => 5000,
+            'label' => 'accounting::rules.bank_import_max_rows.label',
+            'description' => 'accounting::rules.bank_import_max_rows.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'bank',
+            'sort_order' => 110,
+        ],
+        [
+            'key' => 'accounting.bank_import_max_kb',
+            'type' => 'integer',
+            'schema' => ['minimum' => 16, 'maximum' => 10240],
+            'default' => 2048,
+            'label' => 'accounting::rules.bank_import_max_kb.label',
+            'description' => 'accounting::rules.bank_import_max_kb.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'bank',
+            'sort_order' => 120,
+        ],
     ],
     'menu' => [
         [
@@ -240,6 +277,7 @@ return [
                 ['key' => 'journals', 'label' => 'accounting::module.menu_journals', 'route' => '/accounting', 'permission' => 'accounting.view'],
                 ['key' => 'approvals', 'label' => 'accounting::module.menu_approvals', 'route' => '/accounting/approvals', 'permission' => 'accounting.approve'],
                 ['key' => 'accounts', 'label' => 'accounting::module.menu_accounts', 'route' => '/accounting/accounts', 'permission' => 'accounting.view'],
+                ['key' => 'bank', 'label' => 'accounting::module.menu_bank', 'route' => '/accounting/bank', 'permission' => 'accounting.view'],
                 ['key' => 'reports', 'label' => 'accounting::module.menu_reports', 'route' => '/accounting/reports', 'permission' => 'accounting.view'],
             ],
         ],
@@ -277,6 +315,7 @@ return [
         ['key' => 'customers_owe', 'label' => 'accounting::dashboard.customers_owe', 'type' => 'stat', 'provider' => CustomersOwe::class, 'permission' => 'accounting.view', 'overview' => true],
         ['key' => 'customers_overdue', 'label' => 'accounting::dashboard.customers_overdue', 'type' => 'stat', 'provider' => CustomersOverdue::class, 'permission' => 'accounting.view'],
         ['key' => 'vendors_owed', 'label' => 'accounting::dashboard.vendors_owed', 'type' => 'stat', 'provider' => VendorsOwed::class, 'permission' => 'accounting.view'],
+        ['key' => 'bank_unmatched', 'label' => 'accounting::dashboard.bank_unmatched', 'type' => 'stat', 'provider' => BankUnmatched::class, 'permission' => 'accounting.view'],
         ['key' => 'waiting', 'label' => 'accounting::dashboard.waiting', 'type' => 'stat', 'provider' => WaitingApproval::class, 'permission' => 'accounting.view'],
         ['key' => 'recent', 'label' => 'accounting::dashboard.recent', 'type' => 'list', 'provider' => RecentJournals::class, 'permission' => 'accounting.view', 'size' => 2],
     ]],

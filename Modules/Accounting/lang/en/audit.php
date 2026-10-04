@@ -46,4 +46,10 @@ return [
     'opening_rejected' => 'Opening balances rejected',
     'opening_withdrawn' => 'Opening balances taken back',
     'opening_posted' => 'Opening balances posted',
+    'bank_imported' => 'Bank statement brought in',
+    'bank_line_deleted' => 'Statement line removed',
+    'bank_matched' => 'Statement line matched',
+    'bank_unmatched' => 'Statement line match undone',
+    'reconciled' => 'Account reconciled with its statement',
+    'reconciliation_reopened' => 'Reconciliation reopened',
 ];

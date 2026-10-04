@@ -121,17 +121,18 @@ class Journals
      * Send a draft: posted straight away, or kept for a second person when the
      * amount needs approval. People's entries must also fall inside the dates
      * the company allows; other modules' postings only need an open period.
+     * $checkDate false: the date is a fact from elsewhere (a bank statement line).
      */
-    public function submit(Organization $company, Journal $journal, ?int $baseVersion, ?User $actor): Journal
+    public function submit(Organization $company, Journal $journal, ?int $baseVersion, ?User $actor, bool $checkDate = true): Journal
     {
-        return $this->books->transaction($company, function () use ($company, $journal, $baseVersion, $actor) {
+        return $this->books->transaction($company, function () use ($company, $journal, $baseVersion, $actor, $checkDate) {
             $journal = $this->lock($company, $journal, $baseVersion);
             if (! $journal->status->isEditable()) {
                 throw AccountingException::notEditable();
             }
 
             $this->assertPostable($company, $journal);
-            if ($actor !== null) {
+            if ($actor !== null && $checkDate) {
                 $this->assertDateAllowed($company, $journal->entry_date);
             }
 

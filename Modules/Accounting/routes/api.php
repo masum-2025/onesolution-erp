@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Accounting\Http\Controllers\AccountController;
+use Modules\Accounting\Http\Controllers\BankController;
 use Modules\Accounting\Http\Controllers\DocumentController;
 use Modules\Accounting\Http\Controllers\DocumentStepController;
 use Modules\Accounting\Http\Controllers\FiscalYearController;
@@ -41,6 +42,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:accounting'])
         Route::get('settlements/{settlement}', [SettlementController::class, 'show']);
         Route::get('tax-codes', [TaxCodeController::class, 'index']);
         Route::get('opening', [OpeningController::class, 'show']);
+        Route::get('bank/accounts', [BankController::class, 'accounts']);
+        Route::get('bank/accounts/{account}', [BankController::class, 'show']);
+        Route::get('bank/accounts/{account}/reconciliation', [BankController::class, 'preview']);
         // Unknown reports are refused by the controller, after the organization checks.
         Route::get('reports/{report}', ReportController::class)->middleware('throttle:accounting-reports');
 
@@ -55,6 +59,12 @@ Route::middleware(['auth:sanctum', 'org', 'module:accounting'])
             Route::put('opening', [OpeningController::class, 'update']);
             Route::delete('opening', [OpeningController::class, 'destroy']);
             Route::post('opening/{step}', [OpeningController::class, 'step']);
+            Route::post('bank/accounts/{account}/import', [BankController::class, 'import'])->middleware('throttle:accounting-bank-import');
+            Route::post('bank/accounts/{account}/auto-match', [BankController::class, 'autoMatch']);
+            Route::post('bank/accounts/{account}/reconciliations', [BankController::class, 'finish']);
+            Route::post('reconciliations/{reconciliation}/reopen', [BankController::class, 'reopen']);
+            Route::post('bank-lines/{line}/{step}', [BankController::class, 'line']);
+            Route::delete('bank-lines/{line}', [BankController::class, 'destroyLine']);
             Route::put('posting-accounts/{key}', [PostingAccountController::class, 'update']);
             Route::post('journals', [JournalController::class, 'store']);
             Route::patch('journals/{journal}', [JournalController::class, 'update']);

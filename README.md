@@ -2251,6 +2251,43 @@ and the sidebar lights the entry with the longest matching link.
   `…year_reopen_rejected`, `…year_reopened` (with the reason). The data export adds
   `openings`, `opening_lines` and `year_reopen_requests`.
 
+### Bank matching and reconciliation (ACC-4c)
+
+- **Statements** (`acc_bank_lines`, signed amounts: money in above zero): any usable asset account
+  (cash, bank, bKash/Nagad wallet). Screen `/accounting/bank` (menu "Bank matching").
+  `POST …/bank/accounts/{account}/import` takes a CSV file plus which columns hold the date,
+  description, reference and either one signed amount or money in / money out, and the date
+  format; the choice is remembered per account (`acc_bank_formats`). The file is read in memory
+  and never stored (UTF-8, BOM, `,` `;` or tab, size and rows limited by rules
+  `accounting.bank_import_max_kb` / `accounting.bank_import_max_rows`, 6 imports a minute per
+  person). All or nothing: wrong rows are listed (up to 10). Rows where nothing moved (balance
+  rows) and rows dated on or before the last finished reconciliation are skipped; a fingerprint
+  per line keeps the same file from adding anything twice. Amounts are parsed with string
+  arithmetic (`BankStatements::amount`: Bangla digits, thousands separators, `Tk`/`৳`,
+  `(100.00)` or `-100` for money out).
+- **Matching** (`acc_bank_matches`; posted journal lines never change): a statement line is
+  matched to one or more posted lines of the same account whose debit minus credit adds up to it
+  exactly; a journal line matches at most one statement line. The desk
+  (`GET …/bank/accounts/{account}`) proposes a pair when exactly one book line has the same
+  amount within `accounting.bank_match_days` (default 3) and fits no other line;
+  `…/auto-match` takes them all. A line the books lack (charges, interest) becomes a journal
+  entry from `POST …/bank-lines/{id}/entry` (the other account and words; dated the statement
+  day, so the backdating window does not apply; approval rules do), matched at once when posted.
+  `…/match`, `…/unmatch`, `DELETE …/bank-lines/{id}` (only unmatched, unreconciled lines).
+- **Reconciliation** (`acc_reconciliations`): statement day and balance (the first time also the
+  balance before its first line; later the previous statement balance). It finishes when every
+  statement line up to that day is matched and opening + lines = statement balance; the books'
+  balance and the entries the bank has not shown yet are shown alongside
+  (`GET …/reconciliation?statement_date=&statement_balance_minor=` previews). Finishing locks
+  those lines; only the latest reconciliation of an account reopens, with a reason.
+- Permission `accounting.reconcile` (accountant template); writing an entry also needs
+  `accounting.post`. Dashboard widget "Statement lines to match". Audit:
+  `accounting.bank_imported`, `bank_matched`, `bank_unmatched`, `bank_line_deleted`,
+  `reconciled`, `reconciliation_reopened` (reason). Export adds `bank_lines`, `bank_matches`,
+  `reconciliations`.
+- Not yet: direct bank feeds (APIs), several currencies (with 6-2), splitting one book line over
+  several statement lines.
+
 ### Future expansion (Accounting)
 
 - A new sector is a new chart file (or none: `general`) and a sector package rule; a new

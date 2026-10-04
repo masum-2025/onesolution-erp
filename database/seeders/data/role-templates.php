@@ -41,7 +41,7 @@ return [
     [
         'key' => 'accountant',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'payroll.view', 'payroll.run', 'custom_reports.view'],
+        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'accounting.reconcile', 'payroll.view', 'payroll.run', 'custom_reports.view'],
     ],
     [
         'key' => 'finance_approver',

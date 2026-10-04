@@ -64,8 +64,21 @@ return [
         'label' => 'Second person to reopen a year',
         'description' => 'Reopening a closed fiscal year needs another person to approve it.',
     ],
+    'bank_match_days' => [
+        'label' => 'Days apart for a proposed match',
+        'description' => 'A statement line and a book entry of the same amount are proposed as a pair when their dates are at most this many days apart.',
+    ],
+    'bank_import_max_rows' => [
+        'label' => 'Lines per statement file',
+        'description' => 'The most lines one statement file may bring in.',
+    ],
+    'bank_import_max_kb' => [
+        'label' => 'Statement file size (KB)',
+        'description' => 'The largest statement file accepted.',
+    ],
     'categories' => [
         'tax' => 'Tax',
+        'bank' => 'Bank and cash',
         'receivables' => 'Customers and vendors',
         'approval' => 'Approvals',
         'period' => 'Periods',

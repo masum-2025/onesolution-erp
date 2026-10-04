@@ -11,4 +11,5 @@ return [
     'sell' => 'Customers, invoices and money received',
     'buy' => 'Vendors, bills and money paid',
     'tax' => 'Tax codes',
+    'reconcile' => 'Match bank and cash statements',
 ];

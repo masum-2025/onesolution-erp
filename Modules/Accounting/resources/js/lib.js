@@ -382,3 +382,63 @@ export function openingForm(opening, currency) {
         vendors: lines.filter((line) => line.kind === 'vendor').map(partyRow),
     };
 }
+
+/** Split one CSV line into cells (quotes, doubled quotes, the delimiter given). */
+function csvCells(line, delimiter) {
+    const cells = [];
+    let cell = '';
+    let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (quoted) {
+            if (char === '"' && line[i + 1] === '"') {
+                cell += '"';
+                i++;
+            } else if (char === '"') quoted = false;
+            else cell += char;
+        } else if (char === '"') quoted = true;
+        else if (char === delimiter) {
+            cells.push(cell.trim());
+            cell = '';
+        } else cell += char;
+    }
+    cells.push(cell.trim());
+    return cells;
+}
+
+/**
+ * The heading row and first lines of a statement file (the server reads the
+ * whole file; this only fills the column choices and shows an example).
+ */
+export function csvPreview(text, sampleRows = 3) {
+    const lines = String(text ?? '').replace(/^﻿/, '').split(/\r?\n/).filter((line) => line.trim() !== '');
+    if (!lines.length) return { columns: [], rows: [] };
+    const first = lines[0];
+    const delimiter = [',', ';', '\t'].sort((a, b) => first.split(b).length - first.split(a).length)[0];
+    return {
+        columns: csvCells(first, delimiter).filter((name) => name !== ''),
+        rows: lines.slice(1, 1 + sampleRows).map((line) => csvCells(line, delimiter)),
+    };
+}
+
+/** A first guess of which column holds what, from heading words in English or Bangla. */
+export function guessBankColumns(columns) {
+    const find = (...words) => columns.find((name) => words.some((word) => name.toLowerCase().includes(word))) ?? '';
+    const moneyIn = find('deposit', 'credit', 'money in', 'জমা');
+    const moneyOut = find('withdraw', 'debit', 'money out', 'উত্তোলন', 'খরচ');
+    return {
+        date: find('date', 'তারিখ'),
+        description: find('narration', 'description', 'particular', 'details', 'বিবরণ'),
+        reference: find('ref', 'cheque', 'chq', 'transaction id', 'trx'),
+        amount: moneyIn || moneyOut ? '' : find('amount', 'অঙ্ক', 'টাকা'),
+        money_in: moneyIn,
+        money_out: moneyOut,
+    };
+}
+
+/** Book lines chosen for a statement line: their total and whether it is exactly the line's amount. */
+export function matchTotal(bookLines, chosenIds, amount) {
+    const chosen = new Set(chosenIds);
+    const total = (bookLines ?? []).filter((line) => chosen.has(line.id)).reduce((sum, line) => sum + line.amount_minor, 0);
+    return { total, exact: chosen.size > 0 && total === amount };
+}

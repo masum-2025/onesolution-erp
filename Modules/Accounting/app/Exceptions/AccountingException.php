@@ -322,4 +322,49 @@ class AccountingException extends TenancyException
     {
         return new self('periods_still_open', 409, ['count' => (string) $count]);
     }
+
+    public static function bankLineNotFound(): self
+    {
+        return new self('bank_line_not_found', 404);
+    }
+
+    public static function reconciliationNotFound(): self
+    {
+        return new self('reconciliation_not_found', 404);
+    }
+
+    public static function notAMoneyAccount(): self
+    {
+        return new self('not_a_money_account', 422);
+    }
+
+    public static function bankLineInUse(): self
+    {
+        return new self('bank_line_in_use', 409);
+    }
+
+    public static function bankLineMatched(): self
+    {
+        return new self('bank_line_matched', 409);
+    }
+
+    public static function bankLineReconciled(): self
+    {
+        return new self('bank_line_reconciled', 409);
+    }
+
+    public static function statementDifference(): self
+    {
+        return new self('statement_difference', 409);
+    }
+
+    public static function notLatestReconciliation(): self
+    {
+        return new self('not_latest_reconciliation', 409);
+    }
+
+    public static function bankLinesUnmatched(int $count): self
+    {
+        return new self('bank_lines_unmatched', 409, ['count' => (string) $count]);
+    }
 }

@@ -12,6 +12,8 @@ return [
     'attention' => 'Accounting entries to approve',
     'attention_opening' => 'Opening balances to approve',
     'attention_reopen' => 'Fiscal year to reopen',
+    'bank_unmatched' => 'Statement lines to match',
+    'bank_unmatched_hint' => 'Bank, wallet and cash lines not found in the books yet',
     'customers_owe' => 'Customers owe',
     'customers_overdue' => 'Overdue from customers',
     'vendors_owed' => 'Owed to vendors',

@@ -11,6 +11,7 @@ use Modules\Accounting\Enums\SettlementStatus;
 use Modules\Accounting\Enums\SettlementType;
 use Modules\Accounting\Models\Account;
 use Modules\Accounting\Models\Allocation;
+use Modules\Accounting\Models\BankLine;
 use Modules\Accounting\Models\Document;
 use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\FiscalYear;
@@ -20,6 +21,7 @@ use Modules\Accounting\Models\Opening;
 use Modules\Accounting\Models\OpeningLine;
 use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\Period;
+use Modules\Accounting\Models\Reconciliation;
 use Modules\Accounting\Models\Settlement;
 use Modules\Accounting\Models\YearReopenRequest;
 use Modules\Accounting\Services\Books;
@@ -388,6 +390,46 @@ class AccountingPresenter
                 'void' => $settlement->status === SettlementStatus::Posted && $approves,
                 'allocate' => $settlement->status === SettlementStatus::Posted && $settlement->unallocated() > 0 && $writes,
             ],
+        ];
+    }
+
+    /**
+     * A statement line with the book lines it stands for, or the one proposed.
+     *
+     * @param  list<array<string, mixed>>  $matches
+     * @param  array<string, mixed>|null  $suggestion
+     * @return array<string, mixed>
+     */
+    public function bankLine(BankLine $line, array $matches, ?array $suggestion): array
+    {
+        return [
+            'id' => $line->getKey(),
+            'line_date' => $line->line_date->toDateString(),
+            'description' => $line->description,
+            'reference' => $line->reference,
+            'amount_minor' => $line->amount_minor,
+            'matched_minor' => $line->matched_minor,
+            'status' => $line->isLocked() ? 'reconciled' : ($line->isMatched() ? 'matched' : 'unmatched'),
+            'matches' => $matches,
+            'suggestion' => $line->matched_minor === 0 ? $suggestion : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function reconciliation(Reconciliation $reconciliation): array
+    {
+        return [
+            'id' => $reconciliation->getKey(),
+            'statement_date' => $reconciliation->statement_date->toDateString(),
+            'opening_balance_minor' => $reconciliation->opening_balance_minor,
+            'statement_balance_minor' => $reconciliation->statement_balance_minor,
+            'book_balance_minor' => $reconciliation->book_balance_minor,
+            'status' => $reconciliation->status,
+            'finished_at' => $reconciliation->finished_at?->toIso8601String(),
+            'reopened_at' => $reconciliation->reopened_at?->toIso8601String(),
+            'reopen_reason' => $reconciliation->reopen_reason,
         ];
     }
 

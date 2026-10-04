@@ -22,6 +22,8 @@ class AccountingServiceProvider extends ServiceProvider
     /** Reports read many rows: at most this many per person per minute. */
     private const REPORTS_PER_MINUTE = 60;
 
+    private const BANK_IMPORTS_PER_MINUTE = 6;
+
     public function register(): void
     {
         $this->app->singleton(ChartTemplates::class);
@@ -36,6 +38,9 @@ class AccountingServiceProvider extends ServiceProvider
 
         RateLimiter::for('accounting-reports', fn (Request $request) => Limit::perMinute(self::REPORTS_PER_MINUTE)
             ->by('accounting-reports:'.($request->user()?->getKey() ?? $request->ip())));
+        // Statement files are read in memory: a few a minute per person.
+        RateLimiter::for('accounting-bank-import', fn (Request $request) => Limit::perMinute(self::BANK_IMPORTS_PER_MINUTE)
+            ->by('accounting-bank-import:'.($request->user()?->getKey() ?? $request->ip())));
 
         if ($this->app->runningInConsole()) {
             $this->commands([MapPostingAccounts::class, SeedTaxCodes::class]);

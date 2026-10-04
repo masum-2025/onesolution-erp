@@ -11,6 +11,7 @@ return [
     'menu_setup' => 'Set up the books',
     'menu_fiscal_years' => 'Fiscal years',
     'menu_opening' => 'Opening balances',
+    'menu_bank' => 'Bank matching',
     'menu_posting_accounts' => 'Posting accounts',
     'new_journal' => 'New journal entry',
     'menu_sales' => 'Sales',
