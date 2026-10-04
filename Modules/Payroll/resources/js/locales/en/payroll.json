@@ -1,0 +1,221 @@
+{
+    "common": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "back": "Back",
+        "code": "Code",
+        "name": "Name",
+        "active": "In use",
+        "off": "Switched off"
+    },
+    "status": {
+        "draft": "Draft",
+        "pending_approval": "Waiting for approval",
+        "approved": "Approved",
+        "paid": "Paid"
+    },
+    "kinds": {
+        "earning": "Earning",
+        "deduction": "Deduction"
+    },
+    "methods": {
+        "bank": "Bank account",
+        "mobile": "Mobile wallet",
+        "cash": "Cash"
+    },
+    "problems": {
+        "negative_net": "Deductions are more than the pay. Lower a deduction or add an earning.",
+        "no_salary": "No salary for this month. Set the salary, then calculate again."
+    },
+    "runs": {
+        "title": "Payroll",
+        "text": "Each month's salaries: calculate, check, send for approval and pay.",
+        "open": "Start a month",
+        "month": "Month",
+        "opened": "{month} started. Calculate it to see everyone's pay.",
+        "people": "{count} people",
+        "empty": "No payroll yet",
+        "empty_text": "Start a month to work out everyone's salary from their pay and attendance."
+    },
+    "run": {
+        "text": "{from} to {to}",
+        "levels": "{done} of {needed} approvals",
+        "people": "People",
+        "employee": "Employee",
+        "days": "Days employed",
+        "days_short": "Employed {days}/{of} days",
+        "absent": "{count} absent",
+        "no_slips": "Nobody yet. Press Calculate to work out the slips.",
+        "needs_calculation": "Not calculated yet. Press Calculate after salaries and attendance are ready; you can calculate again any time before sending.",
+        "sent_back": "Sent back: {reason}",
+        "adjustments": "One-off additions and deductions",
+        "no_adjustments": "None this month. Add a bonus, an arrear or a deduction here, then calculate again.",
+        "add_adjustment": "Add",
+        "remove_adjustment": "Remove",
+        "adjusted": "Added. Calculate again to see it on the slip.",
+        "kind": "Type",
+        "amount": "Amount",
+        "label": "Shown on the slip as",
+        "label_hint": "e.g. Eid bonus, Arrear for June",
+        "taxable": "Counts for income tax",
+        "bad_amount": "Write an amount above zero, like 1500 or 1500.50.",
+        "paid_on": "Paid on",
+        "pay_text": "Mark {amount} as paid to everyone after the bank or wallet transfer is done.",
+        "steps": {
+            "calculate": "Calculate",
+            "submit": "Send for approval",
+            "approve": "Approve",
+            "reject": "Send back",
+            "pay": "Mark paid",
+            "delete": "Delete this month"
+        },
+        "done": {
+            "calculate": "Calculated.",
+            "submit": "Sent for approval.",
+            "approve": "Approved.",
+            "reject": "Sent back to the payroll team.",
+            "pay": "Marked paid.",
+            "delete": "Deleted."
+        },
+        "confirm": {
+            "submit_title": "Send {month} for approval?",
+            "submit_text": "Net pay {amount}. Nothing can change while it is waiting; an approver can send it back.",
+            "approve_title": "Approve {month}?",
+            "approve_text": "Net pay {amount}. Approve only after checking the slips. Your name is recorded.",
+            "reject_title": "Send {month} back?",
+            "reject_text": "Say what must change. The payroll team sees your reason.",
+            "delete_title": "Delete {month}?",
+            "delete_text": "The draft and its slips go. You can start the month again."
+        }
+    },
+    "bank": {
+        "take": "Bank file",
+        "done": "Bank file saved. Keep it safe: it has full account numbers.",
+        "missing": "Bank file saved. {count} people have no account and must be paid another way.",
+        "columns": {
+            "code": "Employee code",
+            "name": "Employee",
+            "method": "Method",
+            "provider": "Bank or wallet",
+            "account_name": "Account name",
+            "account_number": "Account number",
+            "branch": "Branch",
+            "amount": "Amount"
+        }
+    },
+    "slip": {
+        "title": "Payslip",
+        "print": "Print",
+        "earnings": "Earnings",
+        "deductions": "Deductions",
+        "tax": "Income tax",
+        "total": "Total",
+        "net": "Net pay",
+        "days_paid": "Days employed",
+        "absent": "Days absent",
+        "overtime": "Over time",
+        "hours": "{hours} h {minutes} min",
+        "paid_on": "Paid on",
+        "footer": "This payslip was made by the payroll system and needs no signature."
+    },
+    "employees": {
+        "title": "Salaries",
+        "text": "Everyone's salary today and how they are paid.",
+        "search": "Search by name or code",
+        "missing": "{count} people have no salary. They will show as a problem in the month's payroll.",
+        "no_salary": "No salary",
+        "no_structure": "No structure",
+        "no_payment": "Payment not set",
+        "empty": "No employees",
+        "none_found": "Nobody found",
+        "empty_text": "Employees added in HR appear here.",
+        "status": {
+            "probation": "Probation",
+            "active": "Active",
+            "on_notice": "On notice",
+            "exited": "Left"
+        }
+    },
+    "pay": {
+        "text": "Salary history and where pay goes.",
+        "salary": "Salary",
+        "change_salary": "New salary",
+        "change_salary_text": "The new salary starts on the day you choose; the one before ends the day before.",
+        "basic_since": "Basic · {structure} · since {date}",
+        "no_salary": "No salary today.",
+        "need_structure": "Make a pay structure first:",
+        "structure": "Pay structure",
+        "basic": "Basic salary (monthly)",
+        "effective_from": "Starts on",
+        "reason": "Why",
+        "reason_hint": "e.g. Yearly increment",
+        "salary_saved": "Salary saved.",
+        "history": "Salary history",
+        "no_history": "No salary yet.",
+        "current": "Now",
+        "from": "From {from}",
+        "from_to": "{from} to {to}",
+        "payment": "Paid to",
+        "change_payment": "Change",
+        "no_payment": "Not set. Without it this person is left out of the bank file.",
+        "method": "Method",
+        "provider": "Bank or wallet",
+        "bank": "Bank",
+        "wallet": "Wallet (bKash, Nagad …)",
+        "account_name": "Account name",
+        "account_number": "Account number",
+        "number_kept": "On file: {masked}. Leave empty to keep it.",
+        "branch": "Branch",
+        "payment_saved": "Payment details saved."
+    },
+    "components": {
+        "title": "Pay components",
+        "text": "The parts of a salary: house rent, medical, transport, provident fund and so on.",
+        "add": "New component",
+        "edit": "Change component",
+        "saved": "Component saved.",
+        "empty": "No components yet",
+        "empty_text": "Add the allowances and deductions your salaries are made of.",
+        "taxed": "taxed",
+        "not_taxed": "not taxed",
+        "prorated": "cut for days not worked",
+        "full": "always in full",
+        "kind_fixed": "Cannot change once made.",
+        "sort": "Order on the slip",
+        "taxable": "Counts for income tax",
+        "prorate": "Cut for days not worked (joining, leaving, absence)"
+    },
+    "structures": {
+        "title": "Pay structures",
+        "text": "Ready-made salary shapes. Each gives the basic and the components on top of it.",
+        "add": "New structure",
+        "edit": "Change structure",
+        "saved": "Structure saved.",
+        "empty": "No structures yet",
+        "empty_text": "Make one for each kind of staff, like Officer or Worker.",
+        "basic": "Basic",
+        "basic_only": "Basic only",
+        "of_basic": "{percent}% of basic",
+        "items": "Components",
+        "items_hint": "Each one is a fixed amount or a percentage of the basic.",
+        "component": "Component",
+        "calc": "Worked out as",
+        "value": "Amount or percentage",
+        "calcs": {
+            "percent_of_basic": "% of basic",
+            "fixed": "Fixed amount"
+        },
+        "add_item": "Add component",
+        "remove_item": "Remove",
+        "bad_value": "Write an amount (like 1500) or a percentage (like 50).",
+        "need_component": "Make a pay component first:"
+    },
+    "mine": {
+        "title": "My payslips",
+        "text": "Your approved payslips, newest first.",
+        "approved": "Approved",
+        "paid_on": "Paid on {date}",
+        "empty": "No payslips yet",
+        "empty_text": "Your payslip appears here once the month's payroll is approved."
+    }
+}

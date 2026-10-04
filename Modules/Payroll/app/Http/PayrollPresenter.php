@@ -96,7 +96,7 @@ class PayrollPresenter
             'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes,
             'earnings_minor' => $slip->earnings_minor, 'deductions_minor' => $slip->deductions_minor, 'tax_minor' => $slip->tax_minor, 'net_minor' => $slip->net_minor,
             'problem' => $slip->problem,
-            ...($run === null ? [] : ['period' => $run->period, 'currency' => $run->currency_code, 'paid_on' => $run->paid_on?->toDateString()]),
+            ...($run === null ? [] : ['period' => $run->period, 'currency' => $run->currency_code, 'paid_on' => $run->paid_on?->toDateString(), 'company' => $run->organization?->name]),
             ...($lines === null ? [] : ['lines' => $lines->map(fn (SlipLine $line) => [
                 'kind' => $line->kind, 'code' => $line->code, 'name' => $line->name, 'amount_minor' => $line->amount_minor, 'taxable' => $line->taxable,
             ])->values()->all()]),

@@ -160,7 +160,7 @@ it('goes back to a draft when rejected, and the employee sees only approved slip
 it('keeps pay to the company and to people with the right, account numbers masked', function () {
     $this->asToken($this->runner)->putJson(($this->api)("employees/{$this->rahima['id']}/payment"), ['method' => 'bank', 'provider' => 'Dutch-Bangla Bank', 'account_number' => '1234-5678-9012'])->assertOk()
         ->assertJsonPath('data.account_number', '••••9012');
-    $this->asToken($this->runner)->putJson(($this->api)("employees/{$this->rahima['id']}/payment"), ['method' => 'mobile'])->assertUnprocessable()->assertJsonValidationErrors('account_number');
+    $this->asToken($this->runner)->putJson(($this->api)("employees/{$this->karim['id']}/payment"), ['method' => 'mobile'])->assertUnprocessable()->assertJsonValidationErrors('account_number');
     expect(json_encode(AuditLog::query()->where('action', 'payroll.payment_details_set')->sole()->new_values))->not->toContain('5678');
 
     $viewer = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'HR viewer')), $this->w->c1);

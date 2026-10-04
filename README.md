@@ -2403,7 +2403,7 @@ portal member of the company, one employee per login; audited `hrm.login_linked`
 - A new sector or country changes rules only (weekend days, grace, over-time minimum) and its
   holiday list; shifts and rosters are each company's own data. No code change.
 
-## Payroll module (business module 4: PAY-1 backend)
+## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 
 Requires HRM and Attendance; posts to Accounting where the company keeps books (optional).
 Employees come only through `Modules\Hrm\Directory\EmployeeDirectory`, days and minutes only
@@ -2444,13 +2444,52 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
 - Audit: `payroll.component_*`, `structure_*`, `salary_set`, `payment_details_set`, `run_*`,
   `adjustment_*`. Data export: components, structures, items, salaries, payment details (in full,
   the client's own data), runs, approvals, slips, lines, adjustments.
-- Next: PAY-2 screens, printable payslips, bank file; PAY-3 loans and advances, festival bonus,
-  provident fund, final settlement.
+- Next: PAY-3 loans and advances, festival bonus, provident fund, final settlement.
+
+### Screens, payslips and bank file (PAY-2)
+
+- `/payroll` (menu "Payroll runs"): months newest first with status and net pay; "Start a month"
+  suggests the month after the last one.
+- `/payroll/runs/{id}`: totals, each person's slip (problems first, with what to do; phones get a
+  list, wider screens a table), one-off additions and deductions (draft only), and only the steps
+  the server says this reader may take: calculate, send for approval, approve / send back with a
+  reason (approval levels shown as "1 of 2"), mark paid on a day, delete a draft. A version
+  conflict reloads the run.
+- **Bank file** (approved or paid runs): `GET …/runs/{id}/bank-file` with `payroll.run` at the
+  company, a recent second step (`two_factor.recent`) and 5 a minute per person; full account
+  numbers, `Cache-Control: no-store`; audited as `payroll.bank_file_taken` (period, lines, how many
+  without an account — never a number). The browser writes the CSV itself (UTF-8 BOM for Excel,
+  headings in the reader's language, a cell starting with `= + - @` gets a leading `'`) and never
+  keeps it.
+- `/payroll/runs/{run}/slips/{slip}`, `/payroll/me/slips/{id}`, `/portal/payslips/{id}`: one
+  printable payslip on the partner's branding and the company's name (`company` in the slip),
+  earnings, deductions and tax line by line, days employed / absent, over time, net pay.
+- `/payroll/employees` (`GET …/payroll/employees?search=`, `payroll.view` at the unit and below):
+  basic salary today, structure and payment method — never an account number; people without a
+  salary are counted at the top. `/payroll/employees/{id}`: current salary, history, "New salary"
+  (from a day; the earlier one ends the day before) and where pay goes. Leaving the account number
+  empty keeps the one on file (the screen only ever has it masked).
+- Settings pages: `/payroll/components`, `/payroll/structures` (each item a fixed amount or a
+  percentage of the basic; percentages become basis points, amounts minor units, Bangla digits
+  accepted). `meta.currency` comes with the employee and structure reads.
+- `/payroll/me` (menu "My payslips") and, in the client's portal, `/portal/payslips`
+  (`GET /api/portal/payroll/slips[/{id}]`, Client portal and Payroll on): the member's own
+  employees' approved slips only.
+- **Portal pages** (platform): a module may declare `portal_pages` in its manifest
+  (`[{subject: 'hrm.employee', label, route: '/portal/…'}]`); a portal record then lists those
+  screens while the module is on (`pages` in `GET /api/portal/records/{id}`). Payroll offers
+  "My payslips" and Attendance "My attendance" for an employee record.
+- Dashboard: "Last payroll" (net pay of the latest approved month) and "Waiting for approval";
+  the bell tells approvers about runs they did not open, send or already approve.
+- A company whose books were set up before Payroll was on must choose the five payroll posting
+  accounts (Accounting > Posting accounts) before the first approval; the approval says so.
 
 ### Future expansion (Payroll)
 
 - A new country sets its rules (over-time base and multiplier, monthly hours, tax slabs); a new
-  sector or company builds its own components and structures. No code change.
+  sector or company builds its own components and structures. A new bank format is a different
+  column order of the same data (a later per-company template). A partner's payslip carries its
+  own branding. No code change.
 
 ## Browser app (frontend foundation)
 

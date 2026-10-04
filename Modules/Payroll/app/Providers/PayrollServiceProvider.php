@@ -2,6 +2,9 @@
 
 namespace Modules\Payroll\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Payroll\Export\PayrollExporter;
@@ -24,6 +27,9 @@ class PayrollServiceProvider extends ServiceProvider
     {
         $root = dirname(__DIR__, 2);
         $this->loadTranslationsFrom($root.'/lang', 'payroll');
+
+        // Bank files carry full account numbers: a few a minute per person.
+        RateLimiter::for('payroll-bank-file', fn (Request $request) => Limit::perMinute(5)->by('payroll-bank-file:'.($request->user()?->getKey() ?? $request->ip())));
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');

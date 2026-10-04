@@ -31,8 +31,12 @@ const data = computed(() => record.data.value);
         <template v-else-if="data">
             <PageHeader :title="data.name" :description="`${data.kind} · ${t(`portal.record.relation.${data.relation}`)}`">
                 <!-- A module with its own screen for the record (e.g. a customer's invoices). -->
-                <template v-if="data.page" #actions>
-                    <AppButton variant="primary" :to="data.page">{{ t('portal.record.open') }}</AppButton>
+                <template v-if="data.page || data.pages?.length" #actions>
+                    <div class="flex flex-wrap gap-2">
+                        <AppButton v-if="data.page" variant="primary" :to="data.page">{{ t('portal.record.open') }}</AppButton>
+                        <!-- Other modules' screens for this record (an employee's payslips, attendance). -->
+                        <AppButton v-for="page in data.pages ?? []" :key="page.to" :variant="data.page ? 'secondary' : 'primary'" :to="page.to">{{ page.label }}</AppButton>
+                    </div>
                 </template>
             </PageHeader>
 

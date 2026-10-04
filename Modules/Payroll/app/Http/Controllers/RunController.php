@@ -3,6 +3,7 @@
 namespace Modules\Payroll\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Audit\AuditLogger;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
@@ -15,6 +16,7 @@ use Modules\Payroll\Http\Controllers\Concerns\FindsPayroll;
 use Modules\Payroll\Http\PayrollPresenter;
 use Modules\Payroll\Http\Requests\RunRequest;
 use Modules\Payroll\Models\Adjustment;
+use Modules\Payroll\Models\PaymentDetail;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
 use Modules\Payroll\Models\Slip;
@@ -107,6 +109,35 @@ class RunController extends Controller
         };
 
         return response()->json(['data' => $this->full($company, $changed)]);
+    }
+
+    /**
+     * What to send the bank for an approved or paid run: each employee's
+     * account in full and net pay. Behind a recent second step, never
+     * cached, and audited (who took it, how many lines, never the numbers).
+     */
+    public function bankFile(Request $request, string $organization, string $run, AuditLogger $audit): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        $found = $this->runIn($company, $run);
+        Gate::authorize('payroll.run', $company);
+        if (! in_array($found->status, [Run::APPROVED, Run::PAID], true)) {
+            throw PayrollException::notApproved();
+        }
+
+        $slips = $this->payrolls->query(Slip::class, $company)->where('run_id', $found->getKey())->where('net_minor', '>', 0)->orderBy('employee_name')->get();
+        $details = $this->payrolls->query(PaymentDetail::class, $company)->whereIn('employee_id', $slips->pluck('employee_id')->all())->get()->keyBy('employee_id');
+        $rows = $slips->map(fn (Slip $slip) => [
+            'employee_code' => $slip->employee_code, 'employee_name' => $slip->employee_name,
+            'method' => $details[$slip->employee_id]->method ?? null, 'provider' => $details[$slip->employee_id]->provider ?? null,
+            'account_name' => $details[$slip->employee_id]->account_name ?? null, 'account_number' => $details[$slip->employee_id]->account_number ?? null,
+            'branch' => $details[$slip->employee_id]->branch ?? null, 'amount_minor' => $slip->net_minor,
+        ])->values();
+        $audit->record('payroll.bank_file_taken', $found, new: ['period' => $found->period, 'lines' => $rows->count(), 'without_account' => $rows->whereNull('method')->count()],
+            actor: $request->user(), organizationId: $company->getKey());
+
+        return response()->json(['data' => ['period' => $found->period, 'currency' => $found->currency_code, 'rows' => $rows]])
+            ->header('Cache-Control', 'no-store, private');
     }
 
     public function destroy(Request $request, string $organization, string $run): JsonResponse

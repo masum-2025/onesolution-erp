@@ -13,4 +13,5 @@ return [
     'menu_rosters' => 'রোস্টার',
     'menu_locations' => 'কর্মস্থল',
     'check_in' => 'হাজিরা দিন',
+    'portal_days' => 'আমার হাজিরা',
 ];

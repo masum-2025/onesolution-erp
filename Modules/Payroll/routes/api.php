@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Payroll\Http\Controllers\MeController;
+use Modules\Payroll\Http\Controllers\PortalSlipController;
 use Modules\Payroll\Http\Controllers\RunController;
 use Modules\Payroll\Http\Controllers\SetupController;
 
@@ -17,6 +18,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:payroll'])
     ->group(function () {
         Route::get('components', [SetupController::class, 'components']);
         Route::get('structures', [SetupController::class, 'structures']);
+        Route::get('employees', [SetupController::class, 'employees']);
         Route::get('employees/{employee}', [SetupController::class, 'employee']);
         Route::get('runs', [RunController::class, 'index']);
         Route::get('runs/{run}', [RunController::class, 'show']);
@@ -37,5 +39,19 @@ Route::middleware(['auth:sanctum', 'org', 'module:payroll'])
             Route::delete('runs/{run}/adjustments/{adjustment}', [RunController::class, 'removeAdjustment']);
             // Unknown steps are refused by the controller, after the organization checks.
             Route::post('runs/{run}/{step}', [RunController::class, 'step']);
+
+            // Full account numbers: a recent second step, a few a minute.
+            Route::get('runs/{run}/bank-file', [RunController::class, 'bankFile'])->middleware(['two_factor.recent', 'throttle:payroll-bank-file']);
         });
+    });
+
+/*
+| An employee's own payslips in the client's portal (B2B2C): portal
+| members linked to their employee record, with the portal and Payroll on.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:payroll'])
+    ->prefix('portal/payroll')
+    ->group(function () {
+        Route::get('slips', [PortalSlipController::class, 'index']);
+        Route::get('slips/{slip}', [PortalSlipController::class, 'show']);
     });

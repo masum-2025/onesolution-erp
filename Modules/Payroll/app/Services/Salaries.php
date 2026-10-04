@@ -72,14 +72,15 @@ class Salaries
      */
     public function setPaymentDetails(Organization $company, EmployeeRecord $employee, array $data, User $actor): PaymentDetail
     {
-        if ($data['method'] !== 'cash' && empty($data['account_number'])) {
-            throw ValidationException::withMessages(['account_number' => __('payroll::payroll.validation.account_number')]);
-        }
-
         return $this->payrolls->transaction($company, function () use ($company, $employee, $data, $actor) {
             $detail = $this->payrolls->query(PaymentDetail::class, $company)->where('employee_id', $employee->id)->lockForUpdate()->first()
                 ?? new PaymentDetail(['organization_id' => $company->getKey(), 'employee_id' => $employee->id, 'version' => 0]);
             $cash = $data['method'] === 'cash';
+            // No number sent keeps the one on file (the screen only ever sees it masked).
+            $data['account_number'] = ($data['account_number'] ?? null) ?: $detail->account_number;
+            if (! $cash && empty($data['account_number'])) {
+                throw ValidationException::withMessages(['account_number' => __('payroll::payroll.validation.account_number')]);
+            }
             $detail->fill([
                 'method' => $data['method'],
                 'provider' => $cash ? null : ($data['provider'] ?? null),

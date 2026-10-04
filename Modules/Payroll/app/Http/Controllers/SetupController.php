@@ -3,8 +3,12 @@
 namespace Modules\Payroll\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Modules\Hrm\Directory\EmployeeDirectory;
+use Modules\Hrm\Directory\EmployeeRecord;
 use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Http\Controllers\Concerns\FindsPayroll;
 use Modules\Payroll\Http\PayrollPresenter;
@@ -67,7 +71,7 @@ class SetupController extends Controller
         Gate::authorize('payroll.view', $unit);
 
         return response()->json(['data' => $this->payrolls->query(Structure::class, $company)->orderBy('code')->get()
-            ->map(fn (Structure $structure) => $this->presenter->structure($structure, $this->setup->items($company, $structure)))->values()]);
+            ->map(fn (Structure $structure) => $this->presenter->structure($structure, $this->setup->items($company, $structure)))->values(), 'meta' => ['currency' => $this->payrolls->currency($company)]]);
     }
 
     public function storeStructure(SetupRequest $request, string $organization): JsonResponse
@@ -90,6 +94,37 @@ class SetupController extends Controller
         return response()->json(['data' => $this->presenter->structure($changed, $this->setup->items($company, $changed))]);
     }
 
+    /**
+     * Employees of the unit (and below it) with the salary in force today
+     * and how they are paid (masked), by name; ?search= narrows by name or code.
+     */
+    public function employees(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('payroll.view', $unit);
+        $search = mb_strtolower(trim((string) ($request->validate(['search' => ['nullable', 'string', 'max:100']])['search'] ?? '')));
+        $today = CarbonImmutable::now();
+
+        $employees = collect(app(EmployeeDirectory::class)->inUnits($company, $this->payrolls->subtreeIds($unit)))
+            ->filter(fn (EmployeeRecord $employee) => $employee->exitsOn === null || $employee->exitsOn->greaterThanOrEqualTo($today->subMonths(2)))
+            ->filter(fn (EmployeeRecord $employee) => $search === '' || str_contains(mb_strtolower($employee->name), $search) || str_contains(mb_strtolower($employee->code), $search))
+            ->take(300)->values();
+        $ids = $employees->pluck('id')->all();
+        $salaries = $this->payrolls->query(Salary::class, $company)->whereIn('employee_id', $ids)
+            ->where('effective_from', '<=', $today->toDateString())
+            ->where(fn ($query) => $query->whereNull('effective_to')->orWhere('effective_to', '>=', $today->toDateString()))
+            ->get()->keyBy('employee_id');
+        $payments = $this->payrolls->query(PaymentDetail::class, $company)->whereIn('employee_id', $ids)->get()->keyBy('employee_id');
+        $structures = $this->payrolls->query(Structure::class, $company)->get()->keyBy('id');
+
+        return response()->json(['data' => $employees->map(fn (EmployeeRecord $employee) => [
+            'id' => $employee->id, 'name' => $employee->name, 'code' => $employee->code, 'unit_id' => $employee->unitId, 'status' => $employee->status,
+            'basic_minor' => $salaries[$employee->id]->basic_minor ?? null,
+            'structure' => isset($salaries[$employee->id]) ? ($structures[$salaries[$employee->id]->structure_id]->name ?? null) : null,
+            'payment_method' => $payments[$employee->id]->method ?? null,
+        ])->values(), 'meta' => ['currency' => $this->payrolls->currency($company)]]);
+    }
+
     /** An employee's salary history (newest first) and payment details (masked). */
     public function employee(string $organization, string $employee): JsonResponse
     {
@@ -102,7 +137,7 @@ class SetupController extends Controller
             'salaries' => $this->payrolls->query(Salary::class, $company)->where('employee_id', $found->id)->orderByDesc('effective_from')->limit(50)->get()
                 ->map(fn (Salary $salary) => $this->presenter->salary($salary))->values(),
             'payment' => $this->presenter->paymentDetail($this->payrolls->query(PaymentDetail::class, $company)->where('employee_id', $found->id)->first()),
-        ]]);
+        ], 'meta' => ['currency' => $this->payrolls->currency($company)]]);
     }
 
     public function setSalary(EmployeePayRequest $request, string $organization, string $employee): JsonResponse

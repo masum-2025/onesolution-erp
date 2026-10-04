@@ -223,4 +223,8 @@ return [
         ['key' => 'rosters', 'label' => 'attendance::module.menu_rosters', 'route' => '/attendance/rosters', 'permission' => 'attendance.view'],
         ['key' => 'locations', 'label' => 'attendance::module.menu_locations', 'route' => '/attendance/locations', 'permission' => 'attendance.view'],
     ]],
+    // An employee opens their own days from their record in the client's portal.
+    'portal_pages' => [
+        ['subject' => 'hrm.employee', 'label' => 'attendance::module.portal_days', 'route' => '/portal/attendance'],
+    ],
 ];

@@ -13,4 +13,5 @@ return [
     'menu_rosters' => 'Rosters',
     'menu_locations' => 'Workplaces',
     'check_in' => 'Check in',
+    'portal_days' => 'My attendance',
 ];

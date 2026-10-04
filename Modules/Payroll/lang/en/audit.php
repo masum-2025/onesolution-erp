@@ -18,4 +18,5 @@ return [
     'run_rejected' => 'Payroll sent back',
     'run_paid' => 'Payroll paid',
     'run_deleted' => 'Payroll draft removed',
+    'bank_file_taken' => 'Bank file of a payroll taken',
 ];

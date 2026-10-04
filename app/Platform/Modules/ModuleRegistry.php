@@ -321,6 +321,14 @@ final class ModuleRegistry
             }
             self::validatePermission($manifest, $page['permission'] ?? null, 'settings page', required: false);
         }
+
+        // A portal screen opens from a record kind ("hrm.employee") at a path under /portal/.
+        foreach ($manifest['portal_pages'] ?? [] as $page) {
+            if (! is_string($page['subject'] ?? null) || ! preg_match('/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/', $page['subject'])
+                || ! is_string($page['label'] ?? null) || ! is_string($page['route'] ?? null) || ! str_starts_with($page['route'], '/portal/')) {
+                throw InvalidModuleManifest::because($key, 'portal page needs a subject (module.kind), a label and a route under /portal/');
+            }
+        }
     }
 
     /**

@@ -5,6 +5,9 @@
 | Business numbers never live here; rules[] are declared in Phase 3.
 */
 
+use Modules\Payroll\Dashboard\LastPayroll;
+use Modules\Payroll\Dashboard\PayrollWidgets;
+
 return [
     'key' => 'payroll',
     'name' => 'payroll::module.name',
@@ -135,6 +138,11 @@ return [
             'icon' => 'banknote',
             'order' => 30,
             'section' => 'people',
+            'children' => [
+                ['key' => 'runs', 'label' => 'payroll::module.menu_runs', 'route' => '/payroll', 'permission' => 'payroll.view'],
+                ['key' => 'employees', 'label' => 'payroll::module.menu_employees', 'route' => '/payroll/employees', 'permission' => 'payroll.view'],
+                ['key' => 'my_slips', 'label' => 'payroll::module.menu_my_slips', 'route' => '/payroll/me'],
+            ],
         ],
     ],
     // Other modules listen to these; payloads carry ids only.
@@ -149,8 +157,17 @@ return [
     ],
     'is_core' => false,
     'requires_consent' => false,
-    // Every module has a dashboard and a settings page; widgets and own setting
-    // screens come with the module's business screens (its rules show already).
-    'dashboard' => ['widgets' => []],
-    'settings' => ['pages' => []],
+    'dashboard' => ['widgets' => [
+        ['key' => 'last', 'label' => 'payroll::dashboard.last', 'type' => 'stat', 'provider' => LastPayroll::class, 'permission' => 'payroll.view', 'overview' => true],
+        ['key' => 'waiting', 'label' => 'payroll::dashboard.waiting', 'type' => 'stat', 'provider' => PayrollWidgets::class, 'permission' => 'payroll.view'],
+    ]],
+    'attention' => [PayrollWidgets::class],
+    'settings' => ['pages' => [
+        ['key' => 'components', 'label' => 'payroll::module.menu_components', 'route' => '/payroll/components', 'permission' => 'payroll.view'],
+        ['key' => 'structures', 'label' => 'payroll::module.menu_structures', 'route' => '/payroll/structures', 'permission' => 'payroll.view'],
+    ]],
+    // An employee opens their own payslips from their record in the client's portal.
+    'portal_pages' => [
+        ['subject' => 'hrm.employee', 'label' => 'payroll::module.portal_slips', 'route' => '/portal/payslips'],
+    ],
 ];

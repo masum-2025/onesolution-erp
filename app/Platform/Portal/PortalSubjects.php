@@ -73,6 +73,26 @@ class PortalSubjects
         )));
     }
 
+    /**
+     * Portal screens other modules offer for a record kind (an employee's
+     * payslips, their attendance), from modules on in this organization.
+     *
+     * @return list<array{label: string, to: string}>
+     */
+    public function pages(string $key, Organization $organization): array
+    {
+        $pages = [];
+        foreach ($this->modules->all() as $module) {
+            foreach ($module->portalPages as $page) {
+                if ($page['subject'] === $key && $this->resolver->resolve($module->key, $organization)->enabled) {
+                    $pages[] = ['label' => __($page['label']), 'to' => $page['route']];
+                }
+            }
+        }
+
+        return $pages;
+    }
+
     public function usable(string $key, Organization $organization): bool
     {
         return in_array($key, $this->available($organization), true);

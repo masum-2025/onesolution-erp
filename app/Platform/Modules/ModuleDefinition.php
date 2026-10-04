@@ -59,6 +59,8 @@ final readonly class ModuleDefinition
         public array $notifications = [],
         // Kinds of account the module posts to (Accounting's posting accounts), keyed "{module}.{name}".
         public array $ledgerAccounts = [],
+        // The module's own portal screens for another module's record kind: [{subject, label, route}].
+        public array $portalPages = [],
     ) {}
 
     /**
@@ -91,6 +93,7 @@ final readonly class ModuleDefinition
             settingsPages: array_values($manifest['settings']['pages'] ?? []),
             notifications: $manifest['notifications'] ?? [],
             ledgerAccounts: $manifest['ledger_accounts'] ?? [],
+            portalPages: array_values($manifest['portal_pages'] ?? []),
         );
     }
 

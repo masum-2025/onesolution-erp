@@ -98,6 +98,7 @@ class PortalRecords
             'name' => $subject->name,
             'fields' => $fields,
             'page' => $this->page($link->subject_type, $subject),
+            'pages' => $this->subjects->pages($link->subject_type, $organization),
             'online_payment' => (bool) $this->rules->get('client_portal.allow_online_payment', $this->contexts->forOrganization($organization)),
         ];
     }
