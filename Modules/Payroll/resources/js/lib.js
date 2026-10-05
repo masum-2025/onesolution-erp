@@ -83,6 +83,26 @@ export function sortBonusLines(lines) {
     return [...(lines ?? [])].sort((a, b) => Number(Boolean(a.not_paid_reason)) - Number(Boolean(b.not_paid_reason)) || a.employee_name.localeCompare(b.employee_name));
 }
 
+/**
+ * How a settlement line was worked out, as a translation key and its
+ * values (null for lines added by hand): the screen writes the sentence.
+ */
+export function settlementBasis(line) {
+    const basis = line?.basis;
+    if (!basis?.key) return null;
+    return { key: `payroll.settlement.basis.${basis.key}`, params: { ...(basis.params ?? {}), percent: basis.params?.percent === undefined ? undefined : bpToPercent(basis.params.percent) } };
+}
+
+/** Settlement lines in the order they read: what is paid, what comes off, then what is only shown. */
+export function settlementSections(lines) {
+    const all = lines ?? [];
+    return {
+        earnings: all.filter((line) => line.kind === 'earning'),
+        deductions: all.filter((line) => line.kind === 'deduction'),
+        info: all.filter((line) => line.kind === 'info'),
+    };
+}
+
 /** Slips with a problem first, then by name. */
 export function sortSlips(slips) {
     return [...(slips ?? [])].sort((a, b) => Number(Boolean(b.problem)) - Number(Boolean(a.problem)) || a.employee_name.localeCompare(b.employee_name));

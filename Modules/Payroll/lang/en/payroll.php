@@ -26,6 +26,12 @@ return [
         'own_loan' => 'Another person has to approve a loan you asked for.',
         'month_locked' => 'The payroll of :period is sent or approved already; its instalments cannot change.',
         'bonus_not_found' => 'Bonus not found. Reload the list.',
+        'settlement_not_found' => 'Settlement not found. Reload the list.',
+        'not_leaving' => 'This employee has no exit day yet. Record the exit in HR first.',
+        'settlement_exists' => 'This employee already has a final settlement. Open it from the list.',
+        'settlement_line_fixed' => 'This line is worked out from the rules; only lines added by hand can be removed.',
+        'settlement_owed' => 'The employee would owe money. Lower a deduction or add an earning, then send it.',
+        'settlement_stale' => 'A loan or the provident fund changed after this was calculated. Send it back, calculate again and send it.',
     ],
 
     'validation' => [
@@ -50,6 +56,8 @@ return [
         'loan' => 'Loan to :name',
         'bonus' => ':title (:date)',
         'bonus_payment' => ':title (:date) paid',
+        'settlement' => 'Final settlement of :name',
+        'settlement_payment' => 'Final settlement of :name paid',
     ],
 
     'posting_keys' => [
@@ -60,5 +68,8 @@ return [
         'payment_account' => 'Account salaries are paid from',
         'employee_loans' => 'Loans and advances to staff',
         'bonus_expense' => 'Festival bonuses (expense)',
+        'pf_payable' => 'Provident fund (owed to staff)',
+        'pf_employer_expense' => 'Provident fund, company share (expense)',
+        'gratuity_expense' => 'Gratuity (expense)',
     ],
 ];

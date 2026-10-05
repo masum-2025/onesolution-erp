@@ -22,7 +22,7 @@ namespace Modules\Payroll\Services;
 final class PayCalculator
 {
     /**
-     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, loans?: list<int>}  $facts
+     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
      * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_deduction: bool, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
      * @return array{lines: list<array{kind: string, code: string, name: array<string, string>, amount: int, taxable: bool}>, earnings: int, deductions: int, tax: int, net: int, problem: string|null}
      */
@@ -59,6 +59,13 @@ final class PayCalculator
                 'kind' => 'deduction', 'code' => 'LATE', 'name' => ['en' => 'Late arrival', 'bn' => 'দেরিতে আসা'],
                 'amount' => self::divide($facts['basic'] * $facts['late_minutes'], $minuteBase), 'taxable' => false,
             ];
+        }
+        // Provident fund on the basic paid: the employee's share comes off pay; the
+        // company's is shown (kind "employer") but changes neither earnings nor net.
+        if (isset($facts['pf']) && $lines[0]['amount'] > 0) {
+            [$employeeBp, $employerBp] = $facts['pf'];
+            $lines[] = ['kind' => 'deduction', 'code' => 'PF_EMPLOYEE', 'name' => ['en' => 'Provident fund', 'bn' => 'ভবিষ্য তহবিল'], 'amount' => self::share($lines[0]['amount'], $employeeBp), 'taxable' => false];
+            $lines[] = ['kind' => 'employer', 'code' => 'PF_EMPLOYER', 'name' => ['en' => 'Provident fund (company)', 'bn' => 'ভবিষ্য তহবিল (কোম্পানি)'], 'amount' => self::share($lines[0]['amount'], $employerBp), 'taxable' => false];
         }
         // Loan instalments of the month (worked out from each loan's balance by Runs).
         foreach ($facts['loans'] ?? [] as $amount) {
@@ -115,6 +122,41 @@ final class PayCalculator
         $count = max(1, $installments);
 
         return intdiv($principal + $count - 1, $count);
+    }
+
+    /**
+     * Gratuity on leaving: days of the basic for each whole year of service
+     * (a month's basic stands for 30 days), from a minimum of years.
+     */
+    public static function gratuity(int $basic, int $years, int $minYears, int $daysPerYear): int
+    {
+        if ($daysPerYear <= 0 || $years < max(1, $minYears)) {
+            return 0;
+        }
+
+        return self::divide($basic * $daysPerYear * $years, 30);
+    }
+
+    /**
+     * The share (basis points) of the company's provident fund contributions
+     * someone takes with them after these years of service: the last step
+     * reached; no steps means all of it.
+     *
+     * @param  list<array{0: int, 1: int}>  $steps  [after years, basis points], ascending
+     */
+    public static function vestedShare(int $years, array $steps): int
+    {
+        if ($steps === []) {
+            return 10000;
+        }
+        $share = 0;
+        foreach ($steps as [$after, $basisPoints]) {
+            if ($years >= $after) {
+                $share = $basisPoints;
+            }
+        }
+
+        return min(10000, $share);
     }
 
     /** Whole months of service from the day someone joined up to a day. */

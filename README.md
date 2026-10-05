@@ -2444,7 +2444,7 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
 - Audit: `payroll.component_*`, `structure_*`, `salary_set`, `payment_details_set`, `run_*`,
   `adjustment_*`. Data export: components, structures, items, salaries, payment details (in full,
   the client's own data), runs, approvals, slips, lines, adjustments.
-- Next: PAY-3b provident fund and final settlement.
+- Payroll complete through PAY-3b; later: leave encashment from a Leave module, yearly PF interest, gratuity accrual.
 
 ### Screens, payslips and bank file (PAY-2)
 
@@ -2520,6 +2520,40 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
   instalments, bonus runs and lines.
 - After deploy: migrate, `rules:sync`, `accounting:map-postings` (maps the two new posting keys in
   books set up earlier), `db:seed --class=RulesSeeder` for the BD bonus values.
+
+### Provident fund and final settlements (PAY-3b)
+
+- **Provident fund** (rules `payroll.pf_enabled`, `pf_employee_percent`, `pf_employer_percent`, at
+  the employee's unit): each slip takes the employee's share of the basic paid (`PF_EMPLOYEE`,
+  a deduction) and shows the company's (`PF_EMPLOYER`, kind `employer`: not paid out, not in
+  net). Approving the month writes both into `pay_pf_entries` (append-only; contributions
+  positive, withdrawals and forfeits negative) and posts the company share as
+  `payroll.pf_employer_expense` and both shares as `payroll.pf_payable` (general chart 2160 /
+  5200). `GET …/payroll/fund` lists balances; `GET …/me/fund` and `/api/portal/payroll/fund` the
+  person's own with movements. A "PF" pay component from before keeps working; do not use both.
+- **Final settlements** (`pay_settlements`, `pay_settlement_lines`, one per employee): for someone
+  whose HRM exit day is set. `GET …/payroll/settlements` gives `meta.due` (left within a year,
+  no settlement; the bell tells payroll staff). Opening works out, each with its `basis`:
+  gratuity (`payroll.gratuity_min_years`, `payroll.gratuity_days_per_year`; days of the basic at
+  the last day per whole year, a month = 30 days), the fund (own share in full, the company's as
+  far as `payroll.pf_vesting` allows after the years served, the rest shown as kept back), and
+  each loan still owed. Lines by hand (`POST …/settlements/{id}/lines`: notice pay, leave
+  encashment, something to recover) stay when calculated again; taxable ones carry tax as the
+  extra yearly tax on top of regular pay. A settlement that leaves the person owing cannot be
+  sent. Approval (someone who neither opened nor sent it) checks the fund and loans have not
+  changed, posts it (gratuity and lines by hand as expenses, the fund paid out, the kept-back
+  share back off the company's expense, loans and deductions, tax, net payable), closes the
+  loans (drafts that planned them need calculating again) and writes the fund's withdrawal and
+  forfeit. Paid like a salary; bank file with the same protection.
+- Someone who left sees their settlement and fund in the client's portal (their staff login no
+  longer maps to them once HR records the exit).
+- Screens: `/payroll/settlements`, `/payroll/settlements/{id}` (+ `/print`), `/payroll/fund`,
+  `/payroll/me/settlements/{id}`, `/portal/settlements/{id}`; "My payslips" shows the fund and
+  settlements. BD values (placeholders for an adviser): gratuity from 5 years, 30 days a year;
+  company share half after 3 years, all after 5.
+- After deploy: migrate, `rules:sync`, `accounting:map-postings`, `db:seed --class=RulesSeeder`.
+  Books set up earlier have no 2160: add "Provident fund payable" and choose it under Accounting >
+  Posting accounts before the first month with the fund is approved.
 
 ### Future expansion (Payroll)
 

@@ -125,6 +125,36 @@ class PayrollException extends TenancyException
         return new self('bonus_not_found', 404);
     }
 
+    public static function settlementNotFound(): self
+    {
+        return new self('settlement_not_found', 404);
+    }
+
+    public static function notLeaving(): self
+    {
+        return new self('not_leaving', 409);
+    }
+
+    public static function settlementExists(): self
+    {
+        return new self('settlement_exists', 409);
+    }
+
+    public static function settlementLineFixed(): self
+    {
+        return new self('settlement_line_fixed', 409);
+    }
+
+    public static function settlementOwed(): self
+    {
+        return new self('settlement_owed', 409);
+    }
+
+    public static function settlementStale(): self
+    {
+        return new self('settlement_stale', 409);
+    }
+
     public static function unknownStep(): self
     {
         return new self('unknown_step', 404);

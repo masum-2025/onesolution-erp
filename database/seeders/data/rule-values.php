@@ -60,6 +60,25 @@ return [
         'reason' => 'Bangladesh Labour Rules 2015, r.111(5): each of two yearly festival bonuses up to one month\'s basic. Verify with an adviser.',
     ],
 
+    [
+        'key' => 'payroll.gratuity_min_years',
+        'country' => 'BD',
+        'value' => 5,
+        'reason' => 'Bangladesh Labour Act 2006, s.2(10) and company gratuity schemes: commonly from five years of service. PLACEHOLDER: verify with an adviser.',
+    ],
+    [
+        'key' => 'payroll.gratuity_days_per_year',
+        'country' => 'BD',
+        'value' => 30,
+        'reason' => 'Bangladesh Labour Act 2006, s.2(10): thirty days of wages for each completed year. PLACEHOLDER: verify with an adviser.',
+    ],
+    [
+        'key' => 'payroll.pf_vesting',
+        'country' => 'BD',
+        'value' => [['after_years' => 3, 'percent' => '50'], ['after_years' => 5, 'percent' => '100']],
+        'reason' => 'Bangladesh Labour Act 2006, s.264: the company share after three years (part) and five years (all). PLACEHOLDER: verify with an adviser.',
+    ],
+
     // ── Plan defaults (plans: database/seeders/data/plans.php) ──────────
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'starter', 'value' => 2000, 'reason' => 'Starter plan storage limit.'],
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'business', 'value' => 10000, 'reason' => 'Business plan storage limit.'],

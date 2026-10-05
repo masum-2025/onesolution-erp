@@ -9,8 +9,11 @@ use Modules\Payroll\Models\BonusRun;
 use Modules\Payroll\Models\Component;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\PaymentDetail;
+use Modules\Payroll\Models\PfEntry;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\Salary;
+use Modules\Payroll\Models\Settlement;
+use Modules\Payroll\Models\SettlementLine;
 use Modules\Payroll\Models\Slip;
 use Modules\Payroll\Models\SlipLine;
 use Modules\Payroll\Models\Structure;
@@ -146,6 +149,41 @@ class PayrollPresenter
             'approved_at' => $bonus->approved_at?->toIso8601String(), 'paid_on' => $bonus->paid_on?->toDateString(),
             'journal_id' => $bonus->journal_id, 'payment_journal_id' => $bonus->payment_journal_id, 'version' => $bonus->version,
             ...($can === [] ? [] : ['can' => $can]),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, SettlementLine>|null  $lines
+     * @param  array<string, bool>  $can
+     * @return array<string, mixed>
+     */
+    public function settlement(Settlement $settlement, $lines = null, array $can = []): array
+    {
+        return [
+            'id' => $settlement->getKey(), 'employee_id' => $settlement->employee_id, 'employee_code' => $settlement->employee_code, 'employee_name' => $settlement->employee_name,
+            'joined_on' => $settlement->joined_on->toDateString(), 'left_on' => $settlement->left_on->toDateString(),
+            'service_years' => $settlement->service_years, 'service_months' => $settlement->service_months, 'basic_minor' => $settlement->basic_minor,
+            'status' => $settlement->status, 'currency' => $settlement->currency_code, 'earnings_minor' => $settlement->earnings_minor,
+            'deductions_minor' => $settlement->deductions_minor, 'tax_minor' => $settlement->tax_minor, 'net_minor' => $settlement->net_minor,
+            'calculated_at' => $settlement->calculated_at?->toIso8601String(), 'reject_reason' => $settlement->reject_reason,
+            'approved_at' => $settlement->approved_at?->toIso8601String(), 'paid_on' => $settlement->paid_on?->toDateString(),
+            'journal_id' => $settlement->journal_id, 'company' => $settlement->organization?->name, 'version' => $settlement->version,
+            ...($lines === null ? [] : ['lines' => $lines->map(fn (SettlementLine $line) => [
+                'id' => $line->getKey(), 'kind' => $line->kind, 'code' => $line->code, 'name' => $line->name, 'amount_minor' => $line->amount_minor,
+                'taxable' => $line->taxable, 'basis' => $line->basis, 'manual' => $line->manual,
+            ])->values()->all()]),
+            ...($can === [] ? [] : ['can' => $can]),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function pfEntry(PfEntry $entry): array
+    {
+        return [
+            'id' => $entry->getKey(), 'kind' => $entry->kind, 'period' => $entry->period, 'employee_minor' => $entry->employee_minor,
+            'employer_minor' => $entry->employer_minor, 'currency' => $entry->currency_code, 'created_at' => $entry->created_at?->toIso8601String(),
         ];
     }
 

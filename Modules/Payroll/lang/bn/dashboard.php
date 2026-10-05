@@ -10,4 +10,6 @@ return [
     'attention' => 'অনুমোদনের অপেক্ষায় বেতন',
     'attention_loans' => 'অনুমোদনের অপেক্ষায় ঋণ',
     'attention_bonuses' => 'অনুমোদনের অপেক্ষায় উৎসব বোনাস',
+    'attention_settlements_due' => 'চূড়ান্ত হিসাব ছাড়া চলে যাওয়া কর্মী',
+    'attention_settlements' => 'অনুমোদনের অপেক্ষায় চূড়ান্ত হিসাব',
 ];

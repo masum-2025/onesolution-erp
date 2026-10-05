@@ -59,7 +59,33 @@ return [
         'label' => 'Tax festival bonuses',
         'description' => 'Withhold income tax on festival bonuses, on top of the regular salary.',
     ],
+    'pf_enabled' => [
+        'label' => 'Provident fund',
+        'description' => 'Take the employee\'s share from each month\'s pay and add the company\'s share to their fund.',
+    ],
+    'pf_employee_percent' => [
+        'label' => 'Provident fund, employee share (% of basic)',
+        'description' => 'Taken from the basic paid each month.',
+    ],
+    'pf_employer_percent' => [
+        'label' => 'Provident fund, company share (% of basic)',
+        'description' => 'Added by the company each month, an expense of the company.',
+    ],
+    'pf_vesting' => [
+        'label' => 'Company share kept on leaving',
+        'description' => 'After so many years of service, this percent of the company\'s contributions goes with the employee. Empty: all of it.',
+    ],
+    'gratuity_min_years' => [
+        'label' => 'Gratuity from (years of service)',
+        'description' => 'No gratuity for less service.',
+    ],
+    'gratuity_days_per_year' => [
+        'label' => 'Gratuity (days of basic per year)',
+        'description' => 'Days of the basic for each whole year of service (a month counts as 30 days). 0 = no gratuity.',
+    ],
     'categories' => [
+        'fund' => 'Provident fund',
+        'leaving' => 'Leaving',
         'loans' => 'Loans and advances',
         'bonus' => 'Festival bonus',
         'attendance' => 'Attendance',

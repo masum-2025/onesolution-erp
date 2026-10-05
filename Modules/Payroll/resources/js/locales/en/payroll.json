@@ -116,7 +116,8 @@
         "overtime": "Over time",
         "hours": "{hours} h {minutes} min",
         "paid_on": "Paid on",
-        "footer": "This payslip was made by the payroll system and needs no signature."
+        "footer": "This payslip was made by the payroll system and needs no signature.",
+        "company_adds": "The company also adds"
     },
     "employees": {
         "title": "Salaries",
@@ -220,7 +221,9 @@
         "bonuses": "Festival bonuses",
         "loans": "Loans and advances",
         "loan_done": "Paid back in full",
-        "loan_left": "{count} instalments of {amount} left"
+        "loan_left": "{count} instalments of {amount} left",
+        "fund": "My provident fund",
+        "settlements": "Final settlement"
     },
     "loan_status": {
         "pending_approval": "Waiting for approval",
@@ -339,5 +342,64 @@
             "delete_title": "Delete {title}?"
         },
         "basic": "basic {amount}"
+    },
+    "fund": {
+        "title": "Provident fund",
+        "text": "What is held for each person: their own share and the company's.",
+        "total": "Held in all",
+        "empty": "Nothing in the fund yet",
+        "empty_text": "Turn on the provident fund under Rules; each approved month then adds both shares.",
+        "shares": "Own {own} · company {company}",
+        "last": "last {month}",
+        "kinds": {
+            "contribution": "Monthly share",
+            "withdrawal": "Paid out on leaving",
+            "forfeit": "Company share kept back"
+        }
+    },
+    "settlements": {
+        "title": "Final settlements",
+        "text": "What is owed to people who left: gratuity, provident fund, loans still owed and anything added by hand.",
+        "due": "Left without a final settlement",
+        "due_text": "Start one to work out what they are owed.",
+        "left_on": "Left on {date}",
+        "start": "Start",
+        "started": "Final settlement of {name} worked out. Check it and add notice pay or leave encashment if any.",
+        "empty": "No final settlements",
+        "empty_text": "When someone leaves (HR records the exit day) they appear here."
+    },
+    "settlement": {
+        "title": "Final settlement",
+        "text": "Joined {joined} · left {left} · {years} years {months} months",
+        "service": "{years} years {months} months",
+        "joined": "Joined",
+        "left": "Left",
+        "lines": "Lines",
+        "no_lines": "Nothing worked out. Calculate, or add a line by hand.",
+        "add_line": "Add a line",
+        "add_line_text": "Notice pay, leave encashment, something to recover …",
+        "label_hint": "e.g. Notice pay (2 months)",
+        "by_hand": "Added by hand",
+        "taxable": "taxed",
+        "owed": "The person would owe {amount}. Lower a deduction or add an earning before sending.",
+        "sections": {
+            "earnings": "Paid",
+            "deductions": "Taken off",
+            "info": "For the record"
+        },
+        "basis": {
+            "gratuity": "{years} whole years × {days} days of basic (from {min} years)",
+            "pf_employee": "Their own contributions in full",
+            "pf_employer": "{percent}% of the company's contributions after {years} years",
+            "pf_forfeit": "Not yet theirs after {years} years; stays with the company",
+            "loan": "Rest of a loan of {principal} paid out on {paid_out_on}"
+        },
+        "confirm": {
+            "submit_title": "Send the settlement of {name} for approval?",
+            "approve_title": "Approve the settlement of {name}?",
+            "reject_title": "Send the settlement of {name} back?",
+            "delete_title": "Delete the settlement of {name}?",
+            "delete_text": "The draft goes; you can start it again."
+        }
     }
 }

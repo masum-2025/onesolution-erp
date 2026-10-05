@@ -51,6 +51,19 @@ export function payrollApi(organizationId) {
         changeBonusLine: (id, lineId, body) => api(`${base}/bonuses/${id}/lines/${lineId}`, { method: 'PATCH', body }),
         deleteBonus: (id, version) => api(`${base}/bonuses/${id}`, { method: 'DELETE', body: { base_version: version } }),
         bonusBankFile: (id) => api(`${base}/bonuses/${id}/bank-file`),
+
+        fund: () => api(`${base}/fund`),
+        myFund: () => api(`${base}/me/fund`),
+        settlements: () => api(`${base}/settlements`),
+        settlement: (id) => api(`${base}/settlements/${id}`),
+        openSettlement: (employeeId) => api(`${base}/settlements`, { method: 'POST', body: { employee_id: employeeId } }),
+        settlementStep: (id, step, body) => api(`${base}/settlements/${id}/${step}`, { method: 'POST', body }),
+        addSettlementLine: (id, body) => api(`${base}/settlements/${id}/lines`, { method: 'POST', body }),
+        removeSettlementLine: (id, lineId) => api(`${base}/settlements/${id}/lines/${lineId}`, { method: 'DELETE' }),
+        deleteSettlement: (id, version) => api(`${base}/settlements/${id}`, { method: 'DELETE', body: { base_version: version } }),
+        settlementBankFile: (id) => api(`${base}/settlements/${id}/bank-file`),
+        mySettlements: () => api(`${base}/me/settlements`),
+        mySettlement: (id) => api(`${base}/me/settlements/${id}`),
     };
 }
 
@@ -61,4 +74,7 @@ export const portalPayrollApi = {
     loans: () => api('/api/portal/payroll/loans'),
     bonuses: () => api('/api/portal/payroll/bonuses'),
     bonus: (id) => api(`/api/portal/payroll/bonuses/${id}`),
+    fund: () => api('/api/portal/payroll/fund'),
+    settlements: () => api('/api/portal/payroll/settlements'),
+    settlement: (id) => api(`/api/portal/payroll/settlements/${id}`),
 };

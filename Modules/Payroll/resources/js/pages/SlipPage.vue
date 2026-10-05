@@ -30,7 +30,9 @@ const back = computed(() => ({ staff: { name: 'payroll-run', params: { id: route
 
 const money = (amount) => formatMoney({ amount, currency: slip.value?.currency });
 // Tax at source is listed with the deductions.
-const lines = (kind) => (slip.value?.lines ?? []).filter((line) => (kind === 'earning' ? line.kind === 'earning' : line.kind !== 'earning'));
+const lines = (kind) => (slip.value?.lines ?? []).filter((line) => (kind === 'earning' ? line.kind === 'earning' : ['deduction', 'tax'].includes(line.kind)));
+// What the company adds on top (its provident fund share): shown, never paid out on the slip.
+const employer = computed(() => (slip.value?.lines ?? []).filter((line) => line.kind === 'employer'));
 const printPage = () => window.print();
 const monthName = computed(() => (slip.value ? formatDate(`${slip.value.period}-01T00:00:00Z`, { month: 'long', year: 'numeric', timeZone: 'UTC' }) : ''));
 </script>
@@ -100,6 +102,10 @@ const monthName = computed(() => (slip.value ? formatDate(`${slip.value.period}-
             <div class="mt-6 flex items-center justify-between rounded-xl bg-brand-soft px-5 py-4 print:border print:border-line">
                 <span class="text-[14px] font-semibold">{{ t('payroll.slip.net') }}</span>
                 <span class="tabular text-[22px] font-semibold text-brand-text">{{ money(slip.net_minor) }}</span>
+            </div>
+            <div v-if="employer.length" class="mt-4 text-[13px]">
+                <h2 class="mb-1 text-[12.5px] font-semibold text-muted">{{ t('payroll.slip.company_adds') }}</h2>
+                <p v-for="(line, index) in employer" :key="index" class="flex justify-between gap-3"><span>{{ line.name }}</span><span class="tabular">{{ money(line.amount_minor) }}</span></p>
             </div>
             <p class="mt-5 text-[11.5px] text-muted">{{ t('payroll.slip.footer') }}</p>
         </article>

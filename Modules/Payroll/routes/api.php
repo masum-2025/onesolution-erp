@@ -4,8 +4,10 @@ use Illuminate\Support\Facades\Route;
 use Modules\Payroll\Http\Controllers\BonusController;
 use Modules\Payroll\Http\Controllers\LoanController;
 use Modules\Payroll\Http\Controllers\MeController;
+use Modules\Payroll\Http\Controllers\PfController;
 use Modules\Payroll\Http\Controllers\PortalSlipController;
 use Modules\Payroll\Http\Controllers\RunController;
+use Modules\Payroll\Http\Controllers\SettlementController;
 use Modules\Payroll\Http\Controllers\SetupController;
 
 /*
@@ -30,6 +32,12 @@ Route::middleware(['auth:sanctum', 'org', 'module:payroll'])
         Route::get('me/loans', [MeController::class, 'loans']);
         Route::get('me/bonuses', [MeController::class, 'bonuses']);
         Route::get('me/bonuses/{line}', [MeController::class, 'bonus']);
+        Route::get('me/fund', [MeController::class, 'fund']);
+        Route::get('me/settlements', [MeController::class, 'settlements']);
+        Route::get('me/settlements/{settlement}', [MeController::class, 'settlement']);
+        Route::get('fund', [PfController::class, 'index']);
+        Route::get('settlements', [SettlementController::class, 'index']);
+        Route::get('settlements/{settlement}', [SettlementController::class, 'show']);
         Route::get('loans', [LoanController::class, 'index']);
         Route::get('loans/{loan}', [LoanController::class, 'show']);
         Route::get('bonuses', [BonusController::class, 'index']);
@@ -57,10 +65,16 @@ Route::middleware(['auth:sanctum', 'org', 'module:payroll'])
             Route::patch('bonuses/{bonus}/lines/{line}', [BonusController::class, 'updateLine']);
             Route::delete('bonuses/{bonus}', [BonusController::class, 'destroy']);
             Route::post('bonuses/{bonus}/{step}', [BonusController::class, 'step']);
+            Route::post('settlements', [SettlementController::class, 'store']);
+            Route::post('settlements/{settlement}/lines', [SettlementController::class, 'addLine']);
+            Route::delete('settlements/{settlement}/lines/{line}', [SettlementController::class, 'removeLine']);
+            Route::delete('settlements/{settlement}', [SettlementController::class, 'destroy']);
+            Route::post('settlements/{settlement}/{step}', [SettlementController::class, 'step']);
 
             // Full account numbers: a recent second step, a few a minute.
             Route::get('runs/{run}/bank-file', [RunController::class, 'bankFile'])->middleware(['two_factor.recent', 'throttle:payroll-bank-file']);
             Route::get('bonuses/{bonus}/bank-file', [BonusController::class, 'bankFile'])->middleware(['two_factor.recent', 'throttle:payroll-bank-file']);
+            Route::get('settlements/{settlement}/bank-file', [SettlementController::class, 'bankFile'])->middleware(['two_factor.recent', 'throttle:payroll-bank-file']);
         });
     });
 
@@ -76,4 +90,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:payrol
         Route::get('loans', [PortalSlipController::class, 'loans']);
         Route::get('bonuses', [PortalSlipController::class, 'bonuses']);
         Route::get('bonuses/{line}', [PortalSlipController::class, 'bonus']);
+        Route::get('fund', [PortalSlipController::class, 'fund']);
+        Route::get('settlements', [PortalSlipController::class, 'settlements']);
+        Route::get('settlements/{settlement}', [PortalSlipController::class, 'settlement']);
     });

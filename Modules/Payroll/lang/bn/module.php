@@ -12,4 +12,6 @@ return [
     'portal_slips' => 'আমার বেতন স্লিপ',
     'menu_loans' => 'ঋণ ও অগ্রিম',
     'menu_bonuses' => 'উৎসব বোনাস',
+    'menu_settlements' => 'চূড়ান্ত হিসাব',
+    'menu_fund' => 'ভবিষ্য তহবিল',
 ];

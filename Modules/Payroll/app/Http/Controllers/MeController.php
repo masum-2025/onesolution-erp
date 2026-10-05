@@ -65,6 +65,30 @@ class MeController extends Controller
         return response()->json(['data' => $own->bonuses($company, [$employee->id])]);
     }
 
+    public function fund(Request $request, string $organization, OwnPay $own): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        $employee = $this->directory->forUser($company, $request->user()) ?? throw PayrollException::employeeNotFound();
+
+        return response()->json(['data' => $own->fund($company, [$employee->id])]);
+    }
+
+    public function settlements(Request $request, string $organization, OwnPay $own): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        $employee = $this->directory->forUser($company, $request->user()) ?? throw PayrollException::employeeNotFound();
+
+        return response()->json(['data' => $own->settlements($company, [$employee->id])]);
+    }
+
+    public function settlement(Request $request, string $organization, string $settlement, OwnPay $own): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        $employee = $this->directory->forUser($company, $request->user()) ?? throw PayrollException::employeeNotFound();
+
+        return response()->json(['data' => $own->settlement($company, [$employee->id], $settlement) ?? throw PayrollException::settlementNotFound()]);
+    }
+
     public function bonus(Request $request, string $organization, string $line, OwnPay $own): JsonResponse
     {
         [, $company] = $this->workplace($organization);

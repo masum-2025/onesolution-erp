@@ -13,9 +13,12 @@ use Modules\Payroll\Models\Component;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\LoanInstallment;
 use Modules\Payroll\Models\PaymentDetail;
+use Modules\Payroll\Models\PfEntry;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
 use Modules\Payroll\Models\Salary;
+use Modules\Payroll\Models\Settlement;
+use Modules\Payroll\Models\SettlementLine;
 use Modules\Payroll\Models\Slip;
 use Modules\Payroll\Models\SlipLine;
 use Modules\Payroll\Models\Structure;
@@ -98,6 +101,21 @@ class PayrollExporter implements ExportsModuleData
                 'bonus_run_id' => $row->bonus_run_id, 'employee_id' => $row->employee_id, 'employee_code' => $row->employee_code,
                 'employee_name' => $row->employee_name, 'basic_minor' => $row->basic_minor, 'service_months' => $row->service_months,
                 'not_paid_reason' => $row->not_paid_reason, 'gross_minor' => $row->gross_minor, 'tax_minor' => $row->tax_minor, 'net_minor' => $row->net_minor,
+            ]),
+            'pf_entries' => $this->rows(PfEntry::class, $organization, $organizationIds, fn (PfEntry $row) => [
+                'employee_id' => $row->employee_id, 'kind' => $row->kind, 'period' => $row->period, 'employee_minor' => $row->employee_minor,
+                'employer_minor' => $row->employer_minor, 'currency_code' => $row->currency_code, 'run_id' => $row->run_id, 'settlement_id' => $row->settlement_id,
+                'created_at' => $row->created_at?->toIso8601String(),
+            ]),
+            'settlements' => $this->rows(Settlement::class, $organization, $organizationIds, fn (Settlement $row) => [
+                'id' => $row->getKey(), 'employee_id' => $row->employee_id, 'employee_code' => $row->employee_code, 'employee_name' => $row->employee_name,
+                'joined_on' => $row->joined_on->toDateString(), 'left_on' => $row->left_on->toDateString(), 'service_years' => $row->service_years,
+                'status' => $row->status, 'currency_code' => $row->currency_code, 'earnings_minor' => $row->earnings_minor, 'deductions_minor' => $row->deductions_minor,
+                'tax_minor' => $row->tax_minor, 'net_minor' => $row->net_minor, 'paid_on' => $row->paid_on?->toDateString(), 'journal_id' => $row->journal_id,
+            ]),
+            'settlement_lines' => $this->rows(SettlementLine::class, $organization, $organizationIds, fn (SettlementLine $row) => [
+                'settlement_id' => $row->settlement_id, 'line_no' => $row->line_no, 'kind' => $row->kind, 'code' => $row->code,
+                'name' => $texts($row, 'name'), 'amount_minor' => $row->amount_minor, 'manual' => $row->manual,
             ]),
         ];
     }

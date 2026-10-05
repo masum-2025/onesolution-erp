@@ -68,6 +68,28 @@ class PortalSlipController extends Controller
         return response()->json(['data' => $company === null || $employees === [] ? [] : $own->bonuses($company, $employees)]);
     }
 
+    public function fund(OwnPay $own): JsonResponse
+    {
+        [$company, $employees] = $this->scope();
+
+        return response()->json(['data' => $company === null || $employees === [] ? null : $own->fund($company, $employees)]);
+    }
+
+    public function settlements(OwnPay $own): JsonResponse
+    {
+        [$company, $employees] = $this->scope();
+
+        return response()->json(['data' => $company === null || $employees === [] ? [] : $own->settlements($company, $employees)]);
+    }
+
+    public function settlement(string $settlement, OwnPay $own): JsonResponse
+    {
+        [$company, $employees] = $this->scope();
+        $found = $company === null ? null : $own->settlement($company, $employees, $settlement);
+
+        return response()->json(['data' => $found ?? throw PayrollException::settlementNotFound()]);
+    }
+
     public function bonus(string $line, OwnPay $own): JsonResponse
     {
         [$company, $employees] = $this->scope();

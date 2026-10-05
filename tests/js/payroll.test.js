@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountToMinor, bankCsv, bpToPercent, cleanNumber, firstRecoveryMonth, installmentOf, installmentTone, loanTone, minorToText, nextPeriod, percentToBp, runTone, sortBonusLines, sortSlips } from '../../Modules/Payroll/resources/js/lib.js';
+import { amountToMinor, bankCsv, bpToPercent, cleanNumber, firstRecoveryMonth, installmentOf, installmentTone, loanTone, minorToText, nextPeriod, percentToBp, runTone, settlementBasis, settlementSections, sortBonusLines, sortSlips } from '../../Modules/Payroll/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Payroll/resources/js/locales/en/payroll.json';
 import bn from '../../Modules/Payroll/resources/js/locales/bn/payroll.json';
@@ -118,5 +118,24 @@ describe('Payroll loans and bonuses screens', () => {
             expect(bn.installment_status[status]).toBeTruthy();
         }
         for (const reason of ['short_service', 'no_salary', 'excluded']) expect(bn.bonus.reasons[reason]).toBeTruthy();
+    });
+});
+
+describe('Payroll fund and final settlement screens', () => {
+    it('registers the settlement and fund screens, the portal one marked', () => {
+        const names = moduleRoutes.filter((route) => route.meta.module === 'payroll').map((route) => route.name);
+        expect(names).toEqual(expect.arrayContaining(['payroll-settlements', 'payroll-settlement', 'payroll-settlement-print', 'payroll-my-settlement', 'payroll-portal-settlement', 'payroll-fund']));
+        expect(moduleRoutes.find((route) => route.name === 'payroll-portal-settlement').meta).toMatchObject({ portal: true, slip: 'portal' });
+    });
+
+    it('says how each settlement line was worked out, in both languages', () => {
+        expect(settlementBasis({ basis: { key: 'pf_employer', params: { percent: 5000, years: 4 } } })).toEqual({ key: 'payroll.settlement.basis.pf_employer', params: { percent: '50', years: 4 } });
+        expect(settlementBasis({ basis: null, manual: true })).toBeNull();
+        for (const key of ['gratuity', 'pf_employee', 'pf_employer', 'pf_forfeit', 'loan']) {
+            expect(en.settlement.basis[key]).toBeTruthy();
+            expect(bn.settlement.basis[key]).toBeTruthy();
+        }
+        const parts = settlementSections([{ kind: 'earning' }, { kind: 'deduction' }, { kind: 'info' }, { kind: 'earning' }]);
+        expect([parts.earnings.length, parts.deductions.length, parts.info.length]).toEqual([2, 1, 1]);
     });
 });

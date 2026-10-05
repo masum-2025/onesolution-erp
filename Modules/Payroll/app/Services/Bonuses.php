@@ -215,14 +215,8 @@ class Bonuses
         $gross = $line->override_minor ?? PayCalculator::share($salary->basic_minor, $bonus->rate_bp);
         $tax = 0;
         if ($gross > 0 && $this->rules->get('payroll.bonus_taxable', $context)) {
-            // A full month of regular pay (no days missed): its taxable part is the base.
-            $rules = $this->runs->ruleSet($employee);
-            $month = PayCalculator::slip([
-                'basic' => $salary->basic_minor, 'items' => $this->runs->itemsFor($company, $salary, $components), 'period_days' => 30, 'employed_days' => 30,
-                'absent_days' => 0, 'half_days' => 0, 'overtime_minutes' => 0, 'late_minutes' => 0, 'adjustments' => [],
-            ], [...$rules, 'late_deduction' => false]);
-            $taxable = array_sum(array_map(fn (array $item) => $item['taxable'] ? $item['amount'] : 0, $month['lines']));
-            $tax = min($gross, PayCalculator::bonusTax($taxable, $gross, $rules['tax_slabs']));
+            $taxable = $this->runs->monthlyTaxable($company, $employee, $salary, $components);
+            $tax = min($gross, PayCalculator::bonusTax($taxable, $gross, $this->runs->ruleSet($employee)['tax_slabs']));
         }
         $line->fill(['gross_minor' => $gross, 'tax_minor' => $tax, 'net_minor' => $gross - $tax]);
     }

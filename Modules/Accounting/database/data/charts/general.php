@@ -37,6 +37,7 @@ return [
         ['code' => '2120', 'name' => ['en' => 'Salaries payable', 'bn' => 'প্রদেয় বেতন'], 'parent' => '2100'],
         ['code' => '2130', 'name' => ['en' => 'Taxes payable', 'bn' => 'প্রদেয় কর'], 'parent' => '2100'],
         ['code' => '2140', 'name' => ['en' => 'Accrued expenses', 'bn' => 'বকেয়া খরচ'], 'parent' => '2100'],
+        ['code' => '2160', 'name' => ['en' => 'Provident fund payable', 'bn' => 'প্রদেয় ভবিষ্য তহবিল'], 'parent' => '2100'],
         ['code' => '2200', 'name' => ['en' => 'Long-term liabilities', 'bn' => 'দীর্ঘমেয়াদি দায়'], 'parent' => '2000', 'group' => true],
         ['code' => '2210', 'name' => ['en' => 'Loans', 'bn' => 'ঋণ'], 'parent' => '2200'],
 
@@ -77,5 +78,8 @@ return [
         'payroll.payment_account' => '1120',
         'payroll.employee_loans' => '1160',
         'payroll.bonus_expense' => '5200',
+        'payroll.pf_payable' => '2160',
+        'payroll.pf_employer_expense' => '5200',
+        'payroll.gratuity_expense' => '5200',
     ],
 ];

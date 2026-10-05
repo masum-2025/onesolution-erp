@@ -21,6 +21,7 @@ use Modules\Payroll\Models\Adjustment;
 use Modules\Payroll\Models\Component;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\LoanInstallment;
+use Modules\Payroll\Models\PfEntry;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
 use Modules\Payroll\Models\Salary;
@@ -36,12 +37,15 @@ use Modules\Payroll\Models\StructureItem;
  * in it, the structure's items, Attendance's absences, half days, over time
  * and late minutes (AttendanceSummary), the run's adjustments, tax at
  * source (PayCalculator), and each active loan's instalment (planned for
- * the run, recovered when it is approved). Sending needs a calculation and no slip with a
+ * the run, recovered when it is approved) and provident fund (rule
+ * payroll.pf_enabled). Sending needs a calculation and no slip with a
  * problem. Approving takes payroll.salary_approval_levels different
  * people, never the one who sent it; at the last level the slips freeze
  * and, where the company keeps books (Accounting on), the salaries are
  * posted: expense per branch or department against salaries, tax and
- * deductions payable, loan instalments against the loans. Paying posts salaries payable against the payment
+ * deductions payable, loan instalments against the loans, provident fund
+ * (both shares; the company's as an expense) against the fund, and the
+ * month's contributions go into each employee's fund. Paying posts salaries payable against the payment
  * account. Every step is audited.
  */
 class Runs
@@ -179,6 +183,7 @@ class Runs
             }
 
             $this->recoverLoans($company, $run);
+            $this->contributeToFund($company, $run);
             $journal = $this->post($company, $run, "payroll-run-{$run->getKey()}", $run->period_to, $this->salaryLines($company, $run), 'run');
             $run->forceFill(['status' => Run::APPROVED, 'approved_at' => now(), 'journal_id' => $journal, 'version' => $run->version + 1])->save();
             $this->audit->record('payroll.run_approved', $run, new: [...$this->values($run), 'journal_id' => $journal], actor: $actor, organizationId: $company->getKey());
@@ -266,6 +271,7 @@ class Runs
             'absent_days' => $slip->absent_days, 'half_days' => $slip->half_days, 'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes,
             'adjustments' => $adjustments->map(fn (Adjustment $adjustment) => ['kind' => $adjustment->kind, 'label' => $adjustment->label, 'amount' => $adjustment->amount_minor, 'taxable' => $adjustment->taxable])->values()->all(),
             'loans' => $loans,
+            ...($this->pfShares($employee) === null ? [] : ['pf' => $this->pfShares($employee)]),
         ], $this->ruleSet($employee));
 
         $slip->fill([
@@ -313,10 +319,15 @@ class Runs
             $lines[] = LedgerLine::debit('payroll.salary_expense', (int) $unitSlips->sum('earnings_minor'), (string) $unitId);
         }
         $loans = (int) $this->payrolls->query(LoanInstallment::class, $company)->where('run_id', $run->getKey())->where('status', LoanInstallment::RECOVERED)->sum('amount_minor');
+        $fund = $this->payrolls->query(PfEntry::class, $company)->where('run_id', $run->getKey())->get(['employee_minor', 'employer_minor']);
+        $pfEmployee = (int) $fund->sum('employee_minor');
+        $pfEmployer = (int) $fund->sum('employer_minor');
+        $lines[] = LedgerLine::debit('payroll.pf_employer_expense', $pfEmployer);
         $lines[] = LedgerLine::credit('payroll.salaries_payable', $run->net_minor);
         $lines[] = LedgerLine::credit('payroll.tax_payable', $run->tax_minor);
-        $lines[] = LedgerLine::credit('payroll.deductions_payable', $run->deductions_minor - $loans);
+        $lines[] = LedgerLine::credit('payroll.deductions_payable', $run->deductions_minor - $loans - $pfEmployee);
         $lines[] = LedgerLine::credit('payroll.employee_loans', $loans);
+        $lines[] = LedgerLine::credit('payroll.pf_payable', $pfEmployee + $pfEmployer);
 
         return $lines;
     }
@@ -380,6 +391,54 @@ class Runs
         }
 
         return $amounts;
+    }
+
+    /**
+     * The provident fund shares (basis points of the basic) at the employee's unit, or null when the fund is off.
+     *
+     * @return array{0: int, 1: int}|null
+     */
+    public function pfShares(EmployeeRecord $employee): ?array
+    {
+        $context = $this->contexts->forOrganization(Organization::query()->findOrFail($employee->unitId));
+        if (! $this->rules->get('payroll.pf_enabled', $context)) {
+            return null;
+        }
+
+        return [
+            PayCalculator::toBasisPoints((string) $this->rules->get('payroll.pf_employee_percent', $context), 100) ?? 0,
+            PayCalculator::toBasisPoints((string) $this->rules->get('payroll.pf_employer_percent', $context), 100) ?? 0,
+        ];
+    }
+
+    /**
+     * A full month of regular pay for a salary (no days missed): its taxable part, the base for tax on one-off payments.
+     *
+     * @param  Collection<string, Component>  $components
+     */
+    public function monthlyTaxable(Organization $company, EmployeeRecord $employee, Salary $salary, Collection $components): int
+    {
+        $month = PayCalculator::slip([
+            'basic' => $salary->basic_minor, 'items' => $this->itemsFor($company, $salary, $components), 'period_days' => 30, 'employed_days' => 30,
+            'absent_days' => 0, 'half_days' => 0, 'overtime_minutes' => 0, 'late_minutes' => 0, 'adjustments' => [],
+        ], [...$this->ruleSet($employee), 'late_deduction' => false]);
+
+        return array_sum(array_map(fn (array $item) => $item['taxable'] ? $item['amount'] : 0, $month['lines']));
+    }
+
+    /** At approval each slip's provident fund shares go into the employee's fund. */
+    private function contributeToFund(Organization $company, Run $run): void
+    {
+        $slips = $this->payrolls->query(Slip::class, $company)->where('run_id', $run->getKey())->get(['id', 'employee_id', 'unit_id'])->keyBy('id');
+        $lines = $this->payrolls->query(SlipLine::class, $company)->whereIn('slip_id', $slips->keys()->all())->whereIn('code', ['PF_EMPLOYEE', 'PF_EMPLOYER'])->get()->groupBy('slip_id');
+        foreach ($lines as $slipId => $slipLines) {
+            $slip = $slips[$slipId];
+            (new PfEntry)->fill([
+                'organization_id' => $company->getKey(), 'employee_id' => $slip->employee_id, 'unit_id' => $slip->unit_id, 'kind' => PfEntry::CONTRIBUTION,
+                'period' => $run->period, 'employee_minor' => (int) $slipLines->where('code', 'PF_EMPLOYEE')->sum('amount_minor'),
+                'employer_minor' => (int) $slipLines->where('code', 'PF_EMPLOYER')->sum('amount_minor'), 'currency_code' => $run->currency_code, 'run_id' => $run->getKey(),
+            ])->save();
+        }
     }
 
     /** At approval the run's planned instalments are recovered; a loan paid back closes. */
