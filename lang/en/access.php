@@ -74,11 +74,15 @@ return [
         ],
         'finance_approver' => [
             'name' => 'Finance approver',
-            'description' => 'Approves journals, payroll and setting changes prepared by others.',
+            'description' => 'Approves journals, payroll, stock adjustments and setting changes prepared by others.',
         ],
         'hr_officer' => [
             'name' => 'HR officer',
             'description' => 'Manages employees and attendance, and adds members.',
+        ],
+        'store_keeper' => [
+            'name' => 'Store keeper',
+            'description' => 'Keeps the item list, receives, issues, transfers and counts stock.',
         ],
         'principal' => [
             'name' => 'Principal',

@@ -2562,6 +2562,60 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
   column order of the same data (a later per-company template). A partner's payslip carries its
   own branding. No code change.
 
+## Inventory module (business module 5: INV-1 backend, INV-2 screens)
+
+No other module needed; posts to Accounting where the company keeps books (optional). Other modules
+(POS, later Factory) use only `Modules\Inventory\Services\Stock` (items to sell, on hand, `take()`
+stock out for a record or back with negative quantities — once per record, cost returned, nothing
+posted) and the events `inventory.stock.low` / `inventory.moved` (ids only).
+
+- **Tables** (tenant, `organization_id` = the company): `inv_units` (decimals 0–3),
+  `inv_categories`, `inv_items` (SKU and barcode unique per company; stock or non-stock; batches;
+  sale price; reorder level), `inv_warehouses` (each belongs to a branch or department),
+  `inv_batches` + `inv_batch_stock`, `inv_moves` (append-only, signed quantity in thousandths and
+  value in minor units, source module/type/id), `inv_balances` (per item and warehouse; method fixed
+  when it starts), `inv_layers` (receipts left, oldest first), `inv_documents` + lines,
+  `inv_counts` + lines, `inv_sequences`.
+- **Ledger** (`Services\StockLedger`, the only way stock changes): in at the given or current cost;
+  out at weighted average or FIFO (rule `inventory.valuation_method`, per balance); taking all that
+  is left takes all the value left; below zero only where `inventory.allow_negative_stock`, at the
+  last known cost. Batch items need a batch coming in; going out takes the batch expiring first
+  (FEFO) unless one is named.
+- **Documents** (`/api/organizations/{org}/inventory/documents`, `inventory.manage` at the
+  warehouse's unit): receipt (cost per unit; posted stock against `inventory.grni`, goods received
+  not billed), issue (to `inventory.cogs`), adjustment (a reason; above
+  `inventory.adjustment_approval_above`, a money rule, empty = never, it waits for someone else with
+  `inventory.approve`; against `inventory.adjustment`), transfer (dispatch → in transit → receive at
+  the other warehouse with what arrived; the rest is a loss against `inventory.adjustment`).
+  Numbers per kind and year from rule `inventory.number_prefixes` (GRN-2026-00001). `op_id` makes
+  creating safe to retry. General chart: 1150 / 2115 (new) / 5100 / 5900; factory 1151 / 5110;
+  retail adjustments 5150.
+- **Counts** (`…/inventory/counts`): one open per warehouse; expected quantities taken at the start;
+  counted entered (items not expected can be added); someone else approves and each difference is
+  posted as a `count` move at today's cost.
+- **Reads**: `units|categories|warehouses|items` (+ POST/PATCH with `inventory.manage` at the
+  company), `items/{id}` (stock per warehouse, batches, last moves), `lookup?code=` (barcode or
+  SKU), `stock?warehouse_id&low=1`, `moves`, `expiring` (rule `inventory.expiry_alert_days`).
+  A unit sees its warehouses and those below.
+- Dashboard: stock value, items to reorder; bell: low stock, expiring batches, adjustments and counts
+  to approve. Permissions `inventory.view|manage|approve` (manage and approve kept apart); new role
+  template "Store keeper"; finance approver gets `inventory.approve`. Audit `inventory.*`; data
+  export adds the module's tables.
+- **Screens** (`Modules/Inventory/resources/js`): Stock (value, filter, low only), Items + item
+  dialog, Item (per warehouse, batches, moves), Receipts and issues list, one document (form with a
+  barcode scan box: scanning again adds one; steps post / dispatch / receive with what arrived /
+  approve / send back / cancel), Counts + one count (scan to find, counted vs expected), Expiring,
+  and settings pages for warehouses, units and categories.
+- **Accounting**: `accounting:map-postings` now also adds a template account a newer release added
+  (e.g. 2115, 2160) to books set up before it, under its group when the code is free.
+- After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings`.
+
+### Future expansion (Inventory)
+
+- A new sector or country needs no code: units, categories and prices are each company's data;
+  valuation, negative stock, approval limits, expiry warnings and number prefixes are rules. Serial
+  numbers, landed costs and supplier bills matched to receipts are later steps.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

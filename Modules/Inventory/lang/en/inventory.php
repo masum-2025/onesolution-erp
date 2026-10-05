@@ -1,0 +1,52 @@
+<?php
+
+// Inventory messages: errors, validation, journal narrations, posting keys.
+return [
+    'errors' => [
+        'not_company_unit' => 'Choose a company, branch or department; a group keeps no stock.',
+        'no_currency' => 'The company has no currency yet. Set its country or currency first.',
+        'item_not_found' => 'Item not found. Check the code or reload the list.',
+        'unit_not_found' => 'Unit not found. Reload the list.',
+        'category_not_found' => 'Category not found. Reload the list.',
+        'warehouse_not_found' => 'Warehouse not found here. Choose one of this unit\'s warehouses.',
+        'document_not_found' => 'Document not found. Reload the list.',
+        'count_not_found' => 'Stock count not found. Reload the list.',
+        'batch_not_found' => 'That batch is not known for this item. Check the batch number.',
+        'not_stock_item' => ':item is not kept in stock; it cannot be received or issued.',
+        'insufficient_stock' => 'Not enough :item in stock (:available on hand). Lower the quantity or receive more first.',
+        'batch_needed' => ':item is tracked by batch: give the batch number.',
+        'wrong_status' => 'This cannot be done now (it is :status). Reload and check.',
+        'own_document' => 'Another person has to approve what you entered or sent.',
+        'same_warehouse' => 'Choose two different warehouses for a transfer.',
+        'warehouse_inactive' => 'That warehouse is switched off. Switch it on or choose another.',
+        'unknown_step' => 'Unknown step.',
+        'count_open' => 'This warehouse already has a stock count open. Finish or cancel it first.',
+        'version_conflict' => 'Someone changed this meanwhile. Reload and try again.',
+    ],
+    'validation' => [
+        'taken' => 'Another item of this company already uses this code.',
+        'unit' => 'Choose an active unit of this company.',
+        'category' => 'Choose a category of this company (not the category itself).',
+        'warehouse_unit' => 'Choose a branch or department of this company.',
+        'item' => 'Choose an active item of this company.',
+        'item_moved' => 'The item has stock movements: its unit and kind can no longer change.',
+        'quantity' => 'Give a quantity above zero (an adjustment may be below zero).',
+        'decimals' => 'This unit allows :decimals decimals.',
+        'unit_cost' => 'Give the cost of one unit.',
+        'to_warehouse' => 'Choose the warehouse it goes to.',
+        'received_range' => 'Received can be from zero up to what was sent.',
+    ],
+    'narration' => [
+        'receipt' => 'Goods received :number',
+        'issue' => 'Goods issued :number',
+        'adjustment' => 'Stock adjusted :number',
+        'transfer_loss' => 'Lost in transfer :number',
+        'count' => 'Stock count :number',
+    ],
+    'posting_keys' => [
+        'stock' => 'Stock (inventory)',
+        'grni' => 'Goods received, not yet billed',
+        'cogs' => 'Cost of goods sold and used',
+        'adjustment' => 'Stock adjustments and losses',
+    ],
+];

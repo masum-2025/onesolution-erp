@@ -240,7 +240,8 @@ class ChartOfAccounts
                 if (! isset($known[$key]) || in_array($key, $mapped, true)) {
                     continue;
                 }
-                $account = $this->books->query(Account::class, $company)->where('code', $code)->first();
+                $account = $this->books->query(Account::class, $company)->where('code', $code)->first()
+                    ?? $this->addTemplateAccount($company, $template, (string) $code, $actor);
                 if ($account === null || ! $account->isPostable() || $account->type->value !== $known[$key]['type']) {
                     continue;
                 }
@@ -253,6 +254,33 @@ class ChartOfAccounts
 
             return $done;
         });
+    }
+
+    /**
+     * A template account a newer release added (e.g. goods received not
+     * billed), into books set up before it: only under its group as the
+     * company has it, and only where the code is free. Null otherwise.
+     */
+    private function addTemplateAccount(Organization $company, string $template, string $code, ?User $actor): ?Account
+    {
+        $definition = collect($this->templates->accounts($template))->firstWhere('code', $code);
+        if ($definition === null || $definition['group'] || $definition['parent'] === null) {
+            return null;
+        }
+        $parent = $this->books->query(Account::class, $company)->where('code', $definition['parent'])->first();
+        if ($parent === null || ! $parent->is_group || $parent->type !== $definition['type']) {
+            return null;
+        }
+
+        $account = new Account;
+        $account->fill([
+            'organization_id' => $company->getKey(), 'parent_id' => $parent->getKey(), 'code' => $code, 'type' => $definition['type'],
+            'is_group' => false, 'status' => AccountStatus::Active, 'version' => 1,
+        ]);
+        $account->putTexts('name', $definition['name'])->save();
+        $this->audit->record('accounting.account_created', $account, new: $this->auditValues($account), reason: 'Template account for a new posting key', actor: $actor, organizationId: $company->getKey());
+
+        return $account;
     }
 
     public function setPostingAccount(Organization $company, string $key, string $accountId, ?int $baseVersion, User $actor): PostingAccount

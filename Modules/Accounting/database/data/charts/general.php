@@ -34,6 +34,7 @@ return [
         ['code' => '2000', 'name' => ['en' => 'Liabilities', 'bn' => 'দায়'], 'type' => 'liability', 'group' => true],
         ['code' => '2100', 'name' => ['en' => 'Current liabilities', 'bn' => 'চলতি দায়'], 'parent' => '2000', 'group' => true],
         ['code' => '2110', 'name' => ['en' => 'Accounts payable', 'bn' => 'প্রদেয় হিসাব'], 'parent' => '2100'],
+        ['code' => '2115', 'name' => ['en' => 'Goods received, not yet billed', 'bn' => 'গ্রহণ করা মাল, বিল আসেনি'], 'parent' => '2100'],
         ['code' => '2120', 'name' => ['en' => 'Salaries payable', 'bn' => 'প্রদেয় বেতন'], 'parent' => '2100'],
         ['code' => '2130', 'name' => ['en' => 'Taxes payable', 'bn' => 'প্রদেয় কর'], 'parent' => '2100'],
         ['code' => '2140', 'name' => ['en' => 'Accrued expenses', 'bn' => 'বকেয়া খরচ'], 'parent' => '2100'],
@@ -81,5 +82,9 @@ return [
         'payroll.pf_payable' => '2160',
         'payroll.pf_employer_expense' => '5200',
         'payroll.gratuity_expense' => '5200',
+        'inventory.stock' => '1150',
+        'inventory.grni' => '2115',
+        'inventory.cogs' => '5100',
+        'inventory.adjustment' => '5900',
     ],
 ];

@@ -16,4 +16,6 @@ return [
         ['code' => '5150', 'name' => ['en' => 'Stock shrinkage', 'bn' => 'মজুদ ঘাটতি'], 'parent' => '5000'],
         ['code' => '5160', 'name' => ['en' => 'Card and wallet fees', 'bn' => 'কার্ড ও ওয়ালেট চার্জ'], 'parent' => '5000'],
     ],
+    // Shrinkage, breakage and count differences.
+    'postings' => ['inventory.adjustment' => '5150'],
 ];

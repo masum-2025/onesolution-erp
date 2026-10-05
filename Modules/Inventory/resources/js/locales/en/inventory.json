@@ -1,0 +1,263 @@
+{
+    "common": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "edit": "Change",
+        "delete": "Delete",
+        "code": "Code",
+        "name": "Name",
+        "active": "In use",
+        "off": "Switched off",
+        "warehouse": "Warehouse"
+    },
+    "types": {
+        "receipt": "Receive",
+        "issue": "Issue",
+        "transfer": "Transfer",
+        "adjustment": "Adjust"
+    },
+    "status": {
+        "draft": "Draft",
+        "pending_approval": "Waiting for approval",
+        "in_transit": "On the way",
+        "posted": "Posted",
+        "cancelled": "Cancelled",
+        "counting": "Counting"
+    },
+    "kinds": {
+        "stock": "Kept in stock",
+        "non_stock": "Not kept in stock (a service)"
+    },
+    "moves": {
+        "receipt": "Received",
+        "issue": "Issued",
+        "transfer_out": "Sent to another warehouse",
+        "transfer_in": "Arrived from another warehouse",
+        "adjustment": "Adjusted",
+        "count": "Count difference",
+        "sale": "Sold",
+        "return": "Returned"
+    },
+    "stock": {
+        "title": "Stock",
+        "text": "What is in each warehouse now, at cost.",
+        "value": "Stock value",
+        "all_warehouses": "All warehouses",
+        "only_low": "Only what needs reordering",
+        "search": "Search by name, SKU or barcode",
+        "at_cost": "{cost} each",
+        "empty": "Nothing in stock yet",
+        "none_low": "Nothing needs reordering",
+        "empty_text": "Receive goods to see them here."
+    },
+    "items": {
+        "title": "Items",
+        "text": "Everything you keep or sell, with its unit and price.",
+        "add": "New item",
+        "edit": "Change item",
+        "saved": "Item saved.",
+        "search": "Search by name, SKU or barcode",
+        "all_categories": "All categories",
+        "category": "Category",
+        "empty": "No items yet",
+        "none_found": "Nothing found",
+        "empty_text": "Add the goods you buy, keep and sell.",
+        "batches": "Batches",
+        "sku": "SKU (your code)",
+        "barcode": "Barcode",
+        "barcode_hint": "Scan it into this box.",
+        "unit": "Unit",
+        "choose_unit": "Choose a unit",
+        "kind": "Kind",
+        "price": "Sale price",
+        "reorder": "Reorder level",
+        "reorder_hint": "Warn when stock falls to this.",
+        "reorder_quantity": "Usual reorder quantity",
+        "track_batches": "Track batches and expiry dates",
+        "description": "Description"
+    },
+    "item": {
+        "on_hand": "On hand",
+        "value": "Value at cost",
+        "by_warehouse": "By warehouse",
+        "no_stock": "None in stock.",
+        "expires": "Expires {date}",
+        "moves": "Last moves",
+        "no_moves": "No moves yet."
+    },
+    "documents": {
+        "title": "Receipts and issues",
+        "text": "Goods received, issued, moved between warehouses and adjusted.",
+        "all": "All",
+        "filter": "Show",
+        "status": "Status",
+        "any_status": "Any status",
+        "empty": "Nothing here yet",
+        "empty_text": "Receive goods to start your stock."
+    },
+    "document": {
+        "new": {
+            "receipt": "Receive goods",
+            "issue": "Issue goods",
+            "transfer": "Move goods to another warehouse",
+            "adjustment": "Adjust stock"
+        },
+        "help": {
+            "receipt": "Goods that came in: the supplier, their invoice number and what each unit cost.",
+            "issue": "Goods that went out (used, sold outside the till, given away).",
+            "transfer": "Goods sent to another warehouse: they leave now and arrive when received there.",
+            "adjustment": "Stock found or lost (damage, theft, a mistake): a quantity below zero takes stock out. Say why."
+        },
+        "from": "From warehouse",
+        "to": "To warehouse",
+        "choose_to": "Choose where it goes",
+        "date": "Date",
+        "counterparty_receipt": "Received from",
+        "counterparty_issue": "Issued to",
+        "reference": "Their reference",
+        "reference_hint": "e.g. invoice or challan number",
+        "reason": "Why",
+        "reason_hint": "e.g. Damaged in the rain",
+        "lines": "Items",
+        "scan": "Scan a barcode or type a SKU, then Enter",
+        "item": "Item",
+        "choose_item": "Choose an item",
+        "quantity": "Quantity",
+        "unit_cost": "Cost of one",
+        "current_cost": "today's cost",
+        "batch": "Batch number",
+        "expires": "Expiry date",
+        "add_line": "Add an item",
+        "remove_line": "Remove",
+        "save_draft": "Save as draft",
+        "saved": "Saved. Check it, then post it.",
+        "deleted": "Draft deleted.",
+        "value": "Value",
+        "arrived": "Arrived",
+        "arrived_was": "{quantity} arrived",
+        "sent_back": "Sent back: {reason}",
+        "waiting": "Waiting for someone else to approve it; stock has not changed yet.",
+        "steps": {
+            "post": "Post",
+            "dispatch": "Send off",
+            "receive": "Mark received",
+            "approve": "Approve",
+            "reject": "Send back",
+            "cancel": "Cancel"
+        },
+        "done": {
+            "post": "Posted. Stock is up to date.",
+            "dispatch": "Sent off; it is on the way.",
+            "receive": "Received. Anything missing was written off as a loss.",
+            "approve": "Approved and posted.",
+            "reject": "Sent back.",
+            "cancel": "Cancelled."
+        },
+        "confirm": {
+            "post_title": "Post this {type}?",
+            "post_text": "Stock changes now and it goes into the books. A posted document cannot be changed; a mistake is corrected with an adjustment.",
+            "dispatch_title": "Send this transfer off?",
+            "dispatch_text": "The goods leave this warehouse now and are on the way until received.",
+            "receive_title": "Mark this transfer received?",
+            "receive_text": "Check the quantities that arrived; anything less than sent is a loss.",
+            "approve_title": "Approve this {type}?",
+            "approve_text": "Stock changes now and it goes into the books. Your name is recorded.",
+            "reject_title": "Send this {type} back?",
+            "reject_text": "Say what must change.",
+            "cancel_title": "Cancel this {type}?",
+            "cancel_text": "It stays on the list as cancelled; stock does not change.",
+            "delete_title": "Delete this draft?",
+            "delete_text": "Nothing was posted; the draft goes."
+        }
+    },
+    "line_errors": {
+        "item": "Choose an item.",
+        "quantity": "Give a quantity (this unit allows {decimals} decimals).",
+        "unit_cost": "Give the cost of one, like 120 or 120.50.",
+        "batch": "This item is tracked by batch: give the batch number.",
+        "none": "Add at least one item."
+    },
+    "validation": {
+        "amount": "Write an amount, like 150 or 150.50.",
+        "quantity": "Write a quantity (up to {decimals} decimals)."
+    },
+    "counts": {
+        "title": "Stock counts",
+        "text": "Count what is on the shelf; the differences are posted once approved.",
+        "open": "Start a count",
+        "open_text": "What the books expect is taken now; count, then send it for approval.",
+        "opened": "Count started. Enter what you find.",
+        "day": "Count date",
+        "empty": "No counts yet",
+        "empty_text": "Count a warehouse now and then to keep the books true.",
+        "page_text": "Count of {date}",
+        "progress": "{done} of {total} counted",
+        "expected": "Books say {quantity}",
+        "counted": "Counted",
+        "no_lines": "Nothing to count. Scan an item to add it.",
+        "not_found": "No item with the code {code}.",
+        "bad_quantity": "Check the quantity of {item}.",
+        "saved": "Counts saved.",
+        "posted": "Posted. The difference was {amount}.",
+        "steps": {
+            "submit": "Send for approval",
+            "approve": "Approve and post",
+            "reject": "Send back",
+            "cancel": "Cancel"
+        },
+        "done": {
+            "submit": "Sent for approval.",
+            "approve": "Approved; the differences are posted.",
+            "reject": "Sent back to the counters.",
+            "cancel": "Count cancelled."
+        },
+        "confirm": {
+            "submit_title": "Send the count for approval?",
+            "submit_text": "{done} of {total} items counted; those not counted do not change.",
+            "approve_title": "Approve the count?",
+            "approve_text": "Each difference is posted as found or lost stock. Your name is recorded.",
+            "reject_title": "Send the count back?",
+            "reject_text": "Say what to count again.",
+            "cancel_title": "Cancel the count?",
+            "cancel_text": "Nothing is posted."
+        }
+    },
+    "expiring": {
+        "title": "Expiring batches",
+        "text": "Batches in stock that expire within {days} days, or already have.",
+        "empty": "Nothing expiring",
+        "empty_text": "Batches near their expiry date show here.",
+        "expired": "Expired",
+        "soon": "Expires soon"
+    },
+    "setup": {
+        "saved": "Saved.",
+        "branch": "Branch or department",
+        "decimals": "Decimals allowed",
+        "decimals_hint": "0 for pieces; 3 for kg or litres.",
+        "decimals_of": "{count} decimals",
+        "parent": "Inside category",
+        "under": "Inside {name}",
+        "warehouses": {
+            "title": "Warehouses",
+            "text": "Where stock is kept; each belongs to a branch or department.",
+            "add": "New warehouse",
+            "empty": "No warehouses yet",
+            "empty_text": "Add the store rooms and shops where you keep goods."
+        },
+        "units": {
+            "title": "Units",
+            "text": "How items are counted: pieces, kilograms, litres, boxes.",
+            "add": "New unit",
+            "empty": "No units yet",
+            "empty_text": "Add the units your items are counted in."
+        },
+        "categories": {
+            "title": "Categories",
+            "text": "Groups of items, for finding and counting them.",
+            "add": "New category",
+            "empty": "No categories yet",
+            "empty_text": "Group items, like Food, Toiletries, Stationery."
+        }
+    }
+}

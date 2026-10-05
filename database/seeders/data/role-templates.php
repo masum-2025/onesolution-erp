@@ -46,12 +46,17 @@ return [
     [
         'key' => 'finance_approver',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.approve', 'accounting.close', 'payroll.view', 'payroll.approve', 'rules.approve', 'custom_reports.view'],
+        'permissions' => ['accounting.view', 'accounting.approve', 'accounting.close', 'payroll.view', 'payroll.approve', 'inventory.view', 'inventory.approve', 'rules.approve', 'custom_reports.view'],
     ],
     [
         'key' => 'hr_officer',
         'sector' => null,
         'permissions' => ['hrm.*', 'attendance.*', 'payroll.view', 'members.manage'],
+    ],
+    [
+        'key' => 'store_keeper',
+        'sector' => null,
+        'permissions' => ['inventory.view', 'inventory.manage'],
     ],
 
     // ── School ───────────────────────────────────────────────────────────

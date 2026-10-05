@@ -4,6 +4,7 @@ use App\Platform\Audit\AuditLog;
 use App\Platform\Audit\AuditQuery;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
+use Modules\Accounting\Models\Account;
 use Modules\Accounting\Models\PostingAccount;
 
 /*
@@ -157,4 +158,25 @@ it('maps posting keys added after the books were set up, never changing a choice
         'accounting.payable' => accountId($this->w->c1, '2140'),
     ]);
     $this->artisan('accounting:map-postings')->expectsOutputToContain('Mapped 0 posting account(s).');
+});
+
+it('adds a template account a later release brought, under its group, before mapping it', function () {
+    setUpBooks($this, $this->w->token, $this->w->c1);
+    $accounts = fn () => Account::inTenantOf($this->w->c1)->withoutGlobalScope(OrganizationScope::class)->where('organization_id', $this->w->c1->id);
+    $mappings = fn () => PostingAccount::inTenantOf($this->w->c1)->withoutGlobalScope(OrganizationScope::class)->where('organization_id', $this->w->c1->id);
+    // As if the books were set up before 2115 (goods received, not billed) existed.
+    $mappings()->where('posting_key', 'inventory.grni')->delete();
+    $accounts()->where('code', '2115')->delete();
+
+    $this->artisan('accounting:map-postings')->expectsOutputToContain('inventory.grni')->assertSuccessful();
+    $created = $accounts()->where('code', '2115')->sole();
+    expect($created->parent_id)->toBe(accountId($this->w->c1, '2100'))
+        ->and($mappings()->where('posting_key', 'inventory.grni')->value('account_id'))->toBe($created->id);
+
+    // A code taken by something else is left alone (nothing mapped, nothing created).
+    $mappings()->where('posting_key', 'inventory.grni')->delete();
+    $created->forceFill(['code' => '2199'])->save();
+    $accounts()->where('code', '2110')->update(['code' => '2115']);
+    $this->artisan('accounting:map-postings')->assertSuccessful();
+    expect($accounts()->where('code', '2115')->count())->toBe(1);
 });
