@@ -25,7 +25,7 @@ Every /api endpoint also has the general per-address, per-person and per-organiz
 
 | Method | Path | Access | Context | Module | Limits | Step-up |
 |---|---|---|---|---|---|---|
-| GET | `/api/countries` | signed in | organization |  |  |  |
+| GET | `/api/countries` | signed in |  |  |  |  |
 
 ## /api/dashboard
 

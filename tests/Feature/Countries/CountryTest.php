@@ -12,6 +12,7 @@ use App\Platform\Tenancy\Actions\AddMember;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Enums\OrganizationType;
+use App\Platform\Tenancy\Enums\PartnerUserRole;
 use App\Platform\Tenancy\Models\Partner;
 use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
 use Database\Seeders\CountriesSeeder;
@@ -186,6 +187,15 @@ it('lists countries in the reader\'s language', function () {
         ->assertOk()->assertJsonFragment(['code' => 'BD', 'name' => 'বাংলাদেশ', 'currency' => 'BDT', 'timezone' => 'Asia/Dhaka']);
     $this->asToken(orgToken($bd->owner, $bd->company))->withHeader('X-Locale', 'en')->getJson('/api/countries')
         ->assertOk()->assertJsonFragment(['code' => 'SA', 'name' => 'Saudi Arabia', 'default_locale' => 'ar']);
+});
+
+it('lists countries in the partner console too (the new-client form)', function () {
+    $this->asToken(partnerToken(createPartnerStaff($this->partner, PartnerUserRole::Owner), $this->partner))->getJson('/api/countries')
+        ->assertOk()->assertJsonFragment(['code' => 'BD', 'currency' => 'BDT']);
+});
+
+it('lists countries only to someone signed in', function () {
+    $this->getJson('/api/countries')->assertUnauthorized();
 });
 
 it('writes to each person in their own language, else the organization\'s', function () {

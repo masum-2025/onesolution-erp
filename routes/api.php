@@ -129,10 +129,12 @@ Route::middleware('auth:sanctum')->prefix('me')->group(function () {
     });
 });
 
-// Plans and sector packages (Phase 5): catalog data for pickers, any signed-in user.
+// Plans, sector packages (Phase 5) and countries (Phase 6): catalog data for pickers, any
+// signed-in user in any context (the partner console's new-client form uses them too).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('plans', [CatalogController::class, 'plans']);
     Route::get('sectors', [CatalogController::class, 'sectors']);
+    Route::get('countries', CountryController::class);
 });
 
 Route::middleware(['auth:sanctum', 'org'])->group(function () {
@@ -290,8 +292,6 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::get('modules/{module}/dashboard', [ModuleDashboardController::class, 'index'])->where('module', '[a-z][a-z0-9_]{1,49}');
     Route::get('modules/{module}/dashboard/{widget}', [ModuleDashboardController::class, 'show'])->where(['module' => '[a-z][a-z0-9_]{1,49}', 'widget' => '[a-z][a-z0-9_]{1,49}']);
     Route::get('modules/{module}/settings', ModuleSettingsController::class)->where('module', '[a-z][a-z0-9_]{1,49}');
-    // Countries the platform knows (Phase 6), for pickers and "comes from the country" hints.
-    Route::get('countries', CountryController::class);
     Route::get('organizations/{organization}/modules', [ModuleController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
         Route::post('organizations/{organization}/modules/{module}/enable', [ModuleController::class, 'enable']);
