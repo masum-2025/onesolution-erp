@@ -58,6 +58,16 @@ return [
         'sector' => null,
         'permissions' => ['inventory.view', 'inventory.manage'],
     ],
+    [
+        'key' => 'cashier',
+        'sector' => null,
+        'permissions' => ['pos.view', 'pos.sell', 'inventory.view'],
+    ],
+    [
+        'key' => 'shop_supervisor',
+        'sector' => null,
+        'permissions' => ['pos.view', 'pos.supervise', 'pos.manage', 'inventory.view'],
+    ],
 
     // ── School ───────────────────────────────────────────────────────────
     [

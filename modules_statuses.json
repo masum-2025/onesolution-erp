@@ -18,5 +18,6 @@
     "AdvancedAudit": true,
     "CustomReports": true,
     "ClientPortal": true,
-    "OnlinePayments": true
+    "OnlinePayments": true,
+    "Pos": true
 }

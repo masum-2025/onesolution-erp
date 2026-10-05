@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/pos",
+    "description": "Point of sale: counters, shifts, sales, payments and returns.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Pos\\": "app/"
+        }
+    }
+}

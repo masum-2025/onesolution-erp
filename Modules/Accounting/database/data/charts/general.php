@@ -86,5 +86,11 @@ return [
         'inventory.grni' => '2115',
         'inventory.cogs' => '5100',
         'inventory.adjustment' => '5900',
+        'pos.cash' => '1110',
+        'pos.card' => '1120',
+        'pos.mobile' => '1130',
+        'pos.sales' => '4100',
+        'pos.tax_output' => '2130',
+        'pos.cash_variance' => '5900',
     ],
 ];

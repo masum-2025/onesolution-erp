@@ -49,10 +49,10 @@ return [
     ],
     [
         'key' => 'retail',
-        'modules' => ['inventory', 'crm', 'accounting', 'hrm'],
+        'modules' => ['inventory', 'pos', 'crm', 'accounting', 'hrm'],
         'rules' => [
             ['key' => 'accounting.chart_template', 'value' => 'retail'],
         ],
-        'role_templates' => ['administrator', 'manager', 'accountant', 'staff'],
+        'role_templates' => ['administrator', 'manager', 'accountant', 'staff', 'store_keeper', 'cashier', 'shop_supervisor'],
     ],
 ];

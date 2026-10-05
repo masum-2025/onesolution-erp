@@ -17,5 +17,5 @@ return [
         ['code' => '5160', 'name' => ['en' => 'Card and wallet fees', 'bn' => 'কার্ড ও ওয়ালেট চার্জ'], 'parent' => '5000'],
     ],
     // Shrinkage, breakage and count differences.
-    'postings' => ['inventory.adjustment' => '5150'],
+    'postings' => ['inventory.adjustment' => '5150', 'pos.cash' => '1115', 'pos.card' => '1135', 'pos.mobile' => '1135', 'pos.cash_variance' => '5150'],
 ];

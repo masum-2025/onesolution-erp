@@ -2616,6 +2616,46 @@ posted) and the events `inventory.stock.low` / `inventory.moved` (ids only).
   valuation, negative stock, approval limits, expiry warnings and number prefixes are rules. Serial
   numbers, landed costs and supplier bills matched to receipts are later steps.
 
+## Point of sale module (business module 6: POS-1 backend, POS-2 screens)
+
+Needs Inventory (`requires: inventory`); posts to Accounting where the company keeps books. Uses
+only `Inventory\Services\Stock` (items, units, warehouse, `take()`) and
+`Accounting\Services\TaxCodes::salesRates` + `Ledger::post`. Customers are walk-in (a name on the
+receipt); CRM customers come later.
+
+- **Tables** (tenant, `organization_id` = the company): `pos_registers` (counter: unit, the
+  warehouse it sells from, payment methods cash/card/mobile), `pos_sessions` (shift: float,
+  expected / counted / variance, totals; one open per register), `pos_sales` (sale or return,
+  `op_id` unique, offline flag, review reason) + `pos_sale_lines` + `pos_payments`,
+  `pos_sequences`. Money in minor units, quantities in thousandths.
+- **Selling** (`POST /api/organizations/{org}/pos/sales`, `pos.sell`, throttled 60/min): prices
+  from the item, VAT from the item's tax code (rule `pos.prices_include_tax`), discounts above
+  `pos.max_discount_percent` need `pos.supervise`; change only from cash. Stock leaves the
+  register's warehouse; posting Dr pos.cash|card|mobile / Cr pos.sales, pos.tax_output; Dr
+  inventory.cogs / Cr inventory.stock. Numbers `R-{CODE}-2026-000001` (rule `pos.number_prefixes`).
+- **Offline**: sync kind `pos.sale` (money, idempotent by `op_id`, rule `pos.offline_sales`).
+  An offline sale is never lost: short stock, a closed shift or a discount over the limit are
+  accepted and marked for review instead of rejected.
+- **Returns** (`…/sales/{id}/return`, `pos.supervise`, within `pos.return_days`): chosen lines and
+  quantities, proportional amounts, stock back at the original cost, posting reversed, cash out.
+- **Shifts**: open with a float, close with the counted cash; a difference above
+  `pos.cash_variance_allowed` (sensitive money rule) waits for a supervisor who did not open or
+  close it, then posts to `pos.cash_variance`. Z report per shift.
+- Charts: general 1110 / 1120 / 1130 / 4100 / 2130 / 5900; retail 1115 / 1135 / 5150.
+  Permissions `pos.view|sell|supervise|manage`; role templates "Cashier" and "Shop supervisor";
+  retail package and the starter plan include POS. Audit `pos.*`; data export adds the tables.
+  Dashboard: today's takings; bell: shifts and sales to review.
+- **Screens** (`Modules/Pos/resources/js`): Till (counter remembered, scan or tap, cart, discount,
+  payment with quick cash and change, works offline), Receipt (80 mm print, returns), Sales and
+  returns, Shifts + one shift (Z report, close, review), Counters (settings).
+- After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings`.
+
+### Future expansion (POS)
+
+- A new sector, country or partner needs no code: methods, prices, VAT, limits, return days and
+  number prefixes are data and rules. CRM customers and loyalty, gift cards, card terminals and
+  bKash APIs are later steps behind the same payment methods.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

@@ -8,6 +8,7 @@ use Modules\Inventory\Exceptions\InventoryException;
 use Modules\Inventory\Models\Balance;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\Move;
+use Modules\Inventory\Models\Unit;
 use Modules\Inventory\Models\Warehouse;
 
 /**
@@ -50,6 +51,29 @@ class Stock
     }
 
     /**
+     * A warehouse of the company: its branch and whether it is in use; null when not the company's.
+     *
+     * @return array{id: string, unit_id: string, code: string, name: string, is_active: bool}|null
+     */
+    public function warehouse(Organization $company, string $id): ?array
+    {
+        $warehouse = $this->inventories->query(Warehouse::class, $company)->whereKey($id)->first();
+
+        return $warehouse === null ? null : ['id' => $warehouse->getKey(), 'unit_id' => $warehouse->unit_id, 'code' => $warehouse->code, 'name' => $warehouse->name, 'is_active' => $warehouse->is_active];
+    }
+
+    /**
+     * Units of measure: name and how many decimals a quantity may have.
+     *
+     * @return array<string, array{code: string, name: string, decimals: int}>
+     */
+    public function units(Organization $company): array
+    {
+        return $this->inventories->query(Unit::class, $company)->get()
+            ->mapWithKeys(fn (Unit $unit) => [$unit->getKey() => ['code' => $unit->code, 'name' => $unit->name, 'decimals' => $unit->decimals]])->all();
+    }
+
+    /**
      * Quantity on hand per item in a warehouse.
      *
      * @param  list<string>  $itemIds
@@ -65,13 +89,16 @@ class Stock
      * Stock leaves (quantities positive) or comes back (negative quantities) for another module's record.
      * Lines of non-stock items are passed over (cost 0). Returns the cost per line and in all.
      *
-     * @param  list<array{item_id: string, quantity_milli: int, batch_number?: string|null}>  $lines
+     * A line coming back may give the cost of one (what it left at); $force
+     * lets stock go below zero for something already done (an offline sale).
+     *
+     * @param  list<array{item_id: string, quantity_milli: int, batch_number?: string|null, unit_cost_minor?: int|null}>  $lines
      * @param  array{module: string, type: string, id: string, actor_id?: string|null}  $source
      * @return array{lines: list<int>, cost_minor: int, moved: bool}
      */
-    public function take(Organization $company, string $warehouseId, array $lines, array $source, CarbonImmutable $on): array
+    public function take(Organization $company, string $warehouseId, array $lines, array $source, CarbonImmutable $on, bool $force = false): array
     {
-        return $this->inventories->transaction($company, function () use ($company, $warehouseId, $lines, $source, $on) {
+        return $this->inventories->transaction($company, function () use ($company, $warehouseId, $lines, $source, $on, $force) {
             $done = $this->inventories->query(Move::class, $company)->where('source_module', $source['module'])->where('source_type', $source['type'])->where('source_id', $source['id'])->get();
             if ($done->isNotEmpty()) {
                 $total = -(int) $done->sum('value_minor');
@@ -90,11 +117,11 @@ class Stock
                 }
                 $quantity = (int) $line['quantity_milli'];
                 $kind = $quantity >= 0 ? 'sale' : 'return';
-                // A return comes back at what it left at today.
-                $cost = $quantity < 0 ? $this->ledger->unitCost($company, $item, $warehouse) : null;
+                // A return comes back at the cost given (what it left at), else today's.
+                $cost = $quantity < 0 ? ($line['unit_cost_minor'] ?? $this->ledger->unitCost($company, $item, $warehouse)) : null;
                 $moves = $this->ledger->move($company, $item, $warehouse, $kind, -$quantity, $cost,
                     ['source_module' => $source['module'], 'source_type' => $source['type'], 'source_id' => $source['id'], 'actor_id' => $source['actor_id'] ?? null],
-                    $on, ['number' => $line['batch_number'] ?? null]);
+                    $on, ['number' => $line['batch_number'] ?? null], null, $force);
                 $costs[] = -array_sum(array_map(fn (Move $move) => $move->value_minor, $moves));
             }
 

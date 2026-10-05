@@ -84,6 +84,14 @@ return [
             'name' => 'Store keeper',
             'description' => 'Keeps the item list, receives, issues, transfers and counts stock.',
         ],
+        'cashier' => [
+            'name' => 'Cashier',
+            'description' => 'Opens and closes a till shift and sells at the counter.',
+        ],
+        'shop_supervisor' => [
+            'name' => 'Shop supervisor',
+            'description' => 'Sets up counters, approves returns, big discounts and cash differences.',
+        ],
         'principal' => [
             'name' => 'Principal',
             'description' => 'Oversees the school and approves payroll, accounts and settings.',

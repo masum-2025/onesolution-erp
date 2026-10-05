@@ -122,6 +122,25 @@ class TaxCodes
      *
      * @return array{net: int, tax: int}
      */
+    /**
+     * The rate (basis points) of each active sales tax code asked for, for
+     * other modules (POS) pricing items by their tax code. Unknown or
+     * inactive codes are left out (no tax).
+     *
+     * @param  list<string>  $ids
+     * @return array<string, int>
+     */
+    public function salesRates(Organization $company, array $ids): array
+    {
+        if ($ids === [] || ! $this->books->isSetUp($company)) {
+            return [];
+        }
+
+        return $this->books->query(TaxCode::class, $company)->whereIn('id', $ids)->get()
+            ->filter(fn (TaxCode $code) => $code->appliesTo('sales'))
+            ->mapWithKeys(fn (TaxCode $code) => [$code->getKey() => $code->rate_bp])->all();
+    }
+
     public static function split(int $typedAmountMinor, int $rateBp, bool $pricesIncludeTax): array
     {
         if ($rateBp <= 0) {

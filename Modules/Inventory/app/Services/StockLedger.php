@@ -23,7 +23,8 @@ use Modules\Inventory\Models\Warehouse;
  *
  * - In (quantity above zero): valued at the unit cost given, or the current
  *   cost; becomes a layer.
- * - Out: valued by the balance's method, fixed when it started (rule
+ * - Out (beyond zero only by rule, or forced by a caller for something
+ *   already done, e.g. an offline sale): valued by the balance's method, fixed when it started (rule
  *   inventory.valuation_method): weighted average (the balance's value
  *   share) or FIFO (oldest layers first). Taking all that is left takes all
  *   the value left. Beyond zero only where inventory.allow_negative_stock
@@ -43,7 +44,7 @@ class StockLedger
      * @param  int|null  $valueMinor  Coming in: the exact value (a transfer arriving at what it left at), instead of quantity times cost.
      * @return list<Move>
      */
-    public function move(Organization $company, Item $item, Warehouse $warehouse, string $kind, int $quantityMilli, ?int $unitCostMinor, array $source, CarbonImmutable $on, array $batch = [], ?int $valueMinor = null): array
+    public function move(Organization $company, Item $item, Warehouse $warehouse, string $kind, int $quantityMilli, ?int $unitCostMinor, array $source, CarbonImmutable $on, array $batch = [], ?int $valueMinor = null, bool $force = false): array
     {
         if (! $item->keepsStock()) {
             throw InventoryException::notStockItem($item->sku);
@@ -60,14 +61,14 @@ class StockLedger
         }
 
         $wanted = -$quantityMilli;
-        if ($balance->quantity_milli < $wanted && ! $this->negativeAllowed($warehouse)) {
+        if ($balance->quantity_milli < $wanted && ! $force && ! $this->negativeAllowed($warehouse)) {
             throw InventoryException::insufficientStock($item->sku, $this->quantityText($balance->quantity_milli));
         }
 
         // Which batches it comes out of (FEFO unless one was named).
         $parts = [[null, $wanted]];
         if ($item->track_batches) {
-            $parts = $this->batchesOut($company, $item, $warehouse, $wanted, $batch['number'] ?? null);
+            $parts = $this->batchesOut($company, $item, $warehouse, $wanted, $batch['number'] ?? null, $force);
         }
 
         $moves = [];
@@ -236,13 +237,13 @@ class StockLedger
      *
      * @return list<array{0: string|null, 1: int}>
      */
-    private function batchesOut(Organization $company, Item $item, Warehouse $warehouse, int $wanted, ?string $number): array
+    private function batchesOut(Organization $company, Item $item, Warehouse $warehouse, int $wanted, ?string $number, bool $force = false): array
     {
         if ($number !== null && trim($number) !== '') {
             $batch = $this->inventories->query(Batch::class, $company)->where('item_id', $item->getKey())->where('number', trim($number))->first()
                 ?? throw InventoryException::notFound('batch');
             $held = (int) $this->inventories->query(BatchStock::class, $company)->where('batch_id', $batch->getKey())->where('warehouse_id', $warehouse->getKey())->value('quantity_milli');
-            if ($held < $wanted && ! $this->negativeAllowed($warehouse)) {
+            if ($held < $wanted && ! $force && ! $this->negativeAllowed($warehouse)) {
                 throw InventoryException::insufficientStock("{$item->sku} / {$batch->number}", $this->quantityText($held));
             }
 
