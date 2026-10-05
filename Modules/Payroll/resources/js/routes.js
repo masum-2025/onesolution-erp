@@ -14,8 +14,14 @@ export default [
     { path: 'payroll/structures', name: 'payroll-structures', component: () => import('./pages/StructuresPage.vue'), meta },
     { path: 'payroll/me', name: 'payroll-me', component: () => import('./pages/MySlipsPage.vue'), meta },
     { path: 'payroll/me/slips/:slip', name: 'payroll-my-slip', component: () => import('./pages/SlipPage.vue'), meta: { ...meta, slip: 'mine' } },
+    { path: 'payroll/me/bonuses/:line', name: 'payroll-my-bonus', component: () => import('./pages/BonusSlipPage.vue'), meta: { ...meta, slip: 'mine' } },
+    { path: 'payroll/loans', name: 'payroll-loans', component: () => import('./pages/LoansPage.vue'), meta },
+    { path: 'payroll/loans/:id', name: 'payroll-loan', component: () => import('./pages/LoanPage.vue'), meta },
+    { path: 'payroll/bonuses', name: 'payroll-bonuses', component: () => import('./pages/BonusesPage.vue'), meta },
+    { path: 'payroll/bonuses/:id', name: 'payroll-bonus', component: () => import('./pages/BonusPage.vue'), meta },
 
     // An employee's own payslips in the client's portal (B2B2C).
     { path: 'portal/payslips', name: 'payroll-portal', component: () => import('./pages/MySlipsPage.vue'), meta: { ...meta, portal: true } },
     { path: 'portal/payslips/:slip', name: 'payroll-portal-slip', component: () => import('./pages/SlipPage.vue'), meta: { ...meta, portal: true, slip: 'portal' } },
+    { path: 'portal/bonuses/:line', name: 'payroll-portal-bonus', component: () => import('./pages/BonusSlipPage.vue'), meta: { ...meta, portal: true, slip: 'portal' } },
 ];

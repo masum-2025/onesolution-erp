@@ -1,4 +1,4 @@
-import { currencyDigits, decimalStringToMinor, minorToDecimalString } from '@/lib/format';
+import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalString } from '@/lib/format';
 
 /**
  * Payroll helpers for the screens: amounts typed as text become integer
@@ -43,9 +43,44 @@ export function bpToPercent(bp) {
     return fraction ? `${Math.floor(value / 100)}.${fraction}` : String(Math.floor(value / 100));
 }
 
+/** Basis points as a percentage in the reader's digits (1250 -> "12.5", "১২.৫" in Bangla). */
+export function percentText(bp) {
+    return bpToPercent(bp).replace(/\d/g, (digit) => formatNumber(Number(digit)));
+}
+
 /** Tone of a run's status badge (always next to its label). */
 export function runTone(status) {
     return { draft: 'neutral', pending_approval: 'warn', approved: 'brand', paid: 'ok' }[status] ?? 'neutral';
+}
+
+/** Tone of a loan's status badge. */
+export function loanTone(status) {
+    return { pending_approval: 'warn', active: 'brand', closed: 'ok', rejected: 'bad', cancelled: 'neutral' }[status] ?? 'neutral';
+}
+
+/** Tone of a month in a loan's schedule. */
+export function installmentTone(status) {
+    return { recovered: 'ok', planned: 'brand', skipped: 'warn', due: 'neutral' }[status] ?? 'neutral';
+}
+
+/** The first month a new loan is recovered from: the month after it is paid out ("2026-10-05" -> "2026-11"). */
+export function firstRecoveryMonth(paidOutOn) {
+    const [year, month] = String(paidOutOn).split('-').map(Number);
+    if (!year || !month) return '';
+    const next = new Date(Date.UTC(year, month, 1));
+    return `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+/** Each instalment for a principal over a number of months, rounded up like the server (integer maths). */
+export function installmentOf(principalMinor, installments) {
+    const count = Math.max(1, Math.trunc(Number(installments) || 0));
+    const principal = Math.trunc(Number(principalMinor) || 0);
+    return Math.floor((principal + count - 1) / count);
+}
+
+/** Bonus lines: paid first by name, then those getting nothing. */
+export function sortBonusLines(lines) {
+    return [...(lines ?? [])].sort((a, b) => Number(Boolean(a.not_paid_reason)) - Number(Boolean(b.not_paid_reason)) || a.employee_name.localeCompare(b.employee_name));
 }
 
 /** Slips with a problem first, then by name. */

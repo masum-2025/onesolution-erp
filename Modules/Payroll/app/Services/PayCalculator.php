@@ -22,7 +22,7 @@ namespace Modules\Payroll\Services;
 final class PayCalculator
 {
     /**
-     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>}  $facts
+     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, loans?: list<int>}  $facts
      * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_deduction: bool, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
      * @return array{lines: list<array{kind: string, code: string, name: array<string, string>, amount: int, taxable: bool}>, earnings: int, deductions: int, tax: int, net: int, problem: string|null}
      */
@@ -60,6 +60,10 @@ final class PayCalculator
                 'amount' => self::divide($facts['basic'] * $facts['late_minutes'], $minuteBase), 'taxable' => false,
             ];
         }
+        // Loan instalments of the month (worked out from each loan's balance by Runs).
+        foreach ($facts['loans'] ?? [] as $amount) {
+            $lines[] = ['kind' => 'deduction', 'code' => 'LOAN', 'name' => ['en' => 'Loan instalment', 'bn' => 'ঋণের কিস্তি'], 'amount' => (int) $amount, 'taxable' => false];
+        }
         foreach ($facts['adjustments'] as $adjustment) {
             $lines[] = [
                 'kind' => $adjustment['kind'], 'code' => 'ADJUSTMENT', 'name' => ['en' => $adjustment['label']],
@@ -89,7 +93,47 @@ final class PayCalculator
      */
     public static function monthlyTax(int $monthlyTaxable, array $slabs): int
     {
-        $yearly = $monthlyTaxable * 12;
+        return self::divide(self::yearlyTax($monthlyTaxable * 12, $slabs), 12);
+    }
+
+    /**
+     * Tax at source on a festival bonus: the extra yearly tax the bonus
+     * brings on top of twelve months of the regular taxable pay.
+     *
+     * @param  list<array{0: int|null, 1: int}>  $slabs
+     */
+    public static function bonusTax(int $monthlyTaxable, int $bonus, array $slabs): int
+    {
+        $base = $monthlyTaxable * 12;
+
+        return self::yearlyTax($base + $bonus, $slabs) - self::yearlyTax($base, $slabs);
+    }
+
+    /** Each instalment of a loan: the principal over the instalments, rounded up (the last one takes what is left). */
+    public static function installment(int $principal, int $installments): int
+    {
+        $count = max(1, $installments);
+
+        return intdiv($principal + $count - 1, $count);
+    }
+
+    /** Whole months of service from the day someone joined up to a day. */
+    public static function serviceMonths(string $joined, string $on): int
+    {
+        [$y1, $m1, $d1] = array_map('intval', explode('-', $joined));
+        [$y2, $m2, $d2] = array_map('intval', explode('-', $on));
+        $months = ($y2 - $y1) * 12 + ($m2 - $m1) - ($d2 < $d1 ? 1 : 0);
+
+        return max(0, $months);
+    }
+
+    /**
+     * Yearly tax on a yearly taxable amount through cumulative bands.
+     *
+     * @param  list<array{0: int|null, 1: int}>  $slabs
+     */
+    private static function yearlyTax(int $yearly, array $slabs): int
+    {
         $done = 0;
         $basisPoints = 0;
         foreach ($slabs as [$upto, $rate]) {
@@ -103,7 +147,7 @@ final class PayCalculator
             }
         }
 
-        return self::divide(self::divide($basisPoints, 10000), 12);
+        return self::divide($basisPoints, 10000);
     }
 
     /** "1.5" -> 15000, "2" -> 20000, "7.25" -> 72500 (a decimal string as basis points; null when not one). */

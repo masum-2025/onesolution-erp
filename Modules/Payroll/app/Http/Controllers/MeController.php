@@ -12,11 +12,12 @@ use Modules\Payroll\Http\PayrollPresenter;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\Slip;
 use Modules\Payroll\Models\SlipLine;
+use Modules\Payroll\Services\OwnPay;
 use Modules\Payroll\Services\Payrolls;
 
 /**
- * An employee's own payslips (through the login HR linked to them): those
- * of approved or paid runs only, never a draft, never anyone else's.
+ * An employee's own payslips, loans and bonuses (through the login HR
+ * linked to them): approved ones only, never a draft, never anyone else's.
  */
 class MeController extends Controller
 {
@@ -46,5 +47,29 @@ class MeController extends Controller
         }
 
         return response()->json(['data' => $this->presenter->slip($found, $this->payrolls->query(SlipLine::class, $company)->where('slip_id', $found->getKey())->orderBy('line_no')->get(), $run)]);
+    }
+
+    public function loans(Request $request, string $organization, OwnPay $own): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        $employee = $this->directory->forUser($company, $request->user()) ?? throw PayrollException::employeeNotFound();
+
+        return response()->json(['data' => $own->loans($company, [$employee->id])]);
+    }
+
+    public function bonuses(Request $request, string $organization, OwnPay $own): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        $employee = $this->directory->forUser($company, $request->user()) ?? throw PayrollException::employeeNotFound();
+
+        return response()->json(['data' => $own->bonuses($company, [$employee->id])]);
+    }
+
+    public function bonus(Request $request, string $organization, string $line, OwnPay $own): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        $employee = $this->directory->forUser($company, $request->user()) ?? throw PayrollException::employeeNotFound();
+
+        return response()->json(['data' => $own->bonusLine($company, [$employee->id], $line) ?? throw PayrollException::bonusNotFound()]);
     }
 }

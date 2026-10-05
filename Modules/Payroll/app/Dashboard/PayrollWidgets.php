@@ -10,13 +10,16 @@ use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Gate;
+use Modules\Payroll\Models\BonusRun;
+use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
 use Modules\Payroll\Services\Payrolls;
 
 /**
  * Payroll waiting for approval: a count on the dashboard, and in the bell
- * for approvers who did not open, send or already approve it themselves.
+ * for approvers who did not open, send or already approve it themselves;
+ * loans and festival bonuses likewise.
  */
 final class PayrollWidgets implements AttentionProvider, DashboardWidget
 {
@@ -41,7 +44,17 @@ final class PayrollWidgets implements AttentionProvider, DashboardWidget
             ->where(fn ($query) => $query->whereNull('submitted_by')->orWhere('submitted_by', '!=', $me))
             ->where(fn ($query) => $query->whereNull('created_by')->orWhere('created_by', '!=', $me))->count();
 
-        return $count === 0 ? [] : [new AttentionItem('payroll.runs_waiting', __('payroll::dashboard.attention'), $count, '/payroll', 'warn')];
+        $loans = $payrolls->query(Loan::class, $company)->where('status', Loan::PENDING)
+            ->where(fn ($query) => $query->whereNull('created_by')->orWhere('created_by', '!=', $me))->count();
+        $bonuses = $payrolls->query(BonusRun::class, $company)->where('status', BonusRun::PENDING)
+            ->where(fn ($query) => $query->whereNull('submitted_by')->orWhere('submitted_by', '!=', $me))
+            ->where(fn ($query) => $query->whereNull('created_by')->orWhere('created_by', '!=', $me))->count();
+
+        return array_values(array_filter([
+            $count === 0 ? null : new AttentionItem('payroll.runs_waiting', __('payroll::dashboard.attention'), $count, '/payroll', 'warn'),
+            $loans === 0 ? null : new AttentionItem('payroll.loans_waiting', __('payroll::dashboard.attention_loans'), $loans, '/payroll/loans', 'warn'),
+            $bonuses === 0 ? null : new AttentionItem('payroll.bonuses_waiting', __('payroll::dashboard.attention_bonuses'), $bonuses, '/payroll/bonuses', 'warn'),
+        ]));
     }
 
     private function company(CurrentContext $context): ?Organization

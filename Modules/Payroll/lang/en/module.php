@@ -10,4 +10,6 @@ return [
     'menu_components' => 'Pay components',
     'menu_structures' => 'Pay structures',
     'portal_slips' => 'My payslips',
+    'menu_loans' => 'Loans and advances',
+    'menu_bonuses' => 'Festival bonuses',
 ];

@@ -90,6 +90,41 @@ class PayrollException extends TenancyException
         return new self('already_approved', 403);
     }
 
+    public static function loanChanged(): self
+    {
+        return new self('loan_changed', 409);
+    }
+
+    public static function loanNotFound(): self
+    {
+        return new self('loan_not_found', 404);
+    }
+
+    public static function loanNotPending(): self
+    {
+        return new self('loan_not_pending', 409);
+    }
+
+    public static function loanNotActive(): self
+    {
+        return new self('loan_not_active', 409);
+    }
+
+    public static function ownLoan(): self
+    {
+        return new self('own_loan', 403);
+    }
+
+    public static function monthLocked(string $period): self
+    {
+        return new self('month_locked', 409, ['period' => $period]);
+    }
+
+    public static function bonusNotFound(): self
+    {
+        return new self('bonus_not_found', 404);
+    }
+
     public static function unknownStep(): self
     {
         return new self('unknown_step', 404);

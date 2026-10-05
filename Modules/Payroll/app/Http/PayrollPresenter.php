@@ -4,7 +4,10 @@ namespace Modules\Payroll\Http;
 
 use Illuminate\Support\Collection;
 use Modules\Payroll\Models\Adjustment;
+use Modules\Payroll\Models\BonusLine;
+use Modules\Payroll\Models\BonusRun;
 use Modules\Payroll\Models\Component;
+use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\PaymentDetail;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\Salary;
@@ -109,5 +112,56 @@ class PayrollPresenter
     public function adjustment(Adjustment $adjustment): array
     {
         return $adjustment->only(['id', 'employee_id', 'kind', 'label', 'amount_minor', 'taxable']);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>|null  $schedule
+     * @param  array<string, bool>  $can
+     * @return array<string, mixed>
+     */
+    public function loan(Loan $loan, ?array $schedule = null, array $can = []): array
+    {
+        return [
+            'id' => $loan->getKey(), 'employee_id' => $loan->employee_id, 'employee_code' => $loan->employee_code, 'employee_name' => $loan->employee_name,
+            'kind' => $loan->kind, 'principal_minor' => $loan->principal_minor, 'installments' => $loan->installments, 'installment_minor' => $loan->installment_minor,
+            'start_period' => $loan->start_period, 'paid_out_on' => $loan->paid_out_on->toDateString(), 'reason' => $loan->reason, 'status' => $loan->status,
+            'recovered_minor' => $loan->recovered_minor, 'balance_minor' => $loan->balance(), 'currency' => $loan->currency_code,
+            'decided_at' => $loan->decided_at?->toIso8601String(), 'decision_note' => $loan->decision_note, 'journal_id' => $loan->journal_id, 'version' => $loan->version,
+            ...($schedule === null ? [] : ['schedule' => $schedule]),
+            ...($can === [] ? [] : ['can' => $can]),
+        ];
+    }
+
+    /**
+     * @param  array<string, bool>  $can
+     * @return array<string, mixed>
+     */
+    public function bonus(BonusRun $bonus, array $can = []): array
+    {
+        return [
+            'id' => $bonus->getKey(), 'title' => $bonus->title, 'titles' => $bonus->texts('title'), 'bonus_on' => $bonus->bonus_on->toDateString(),
+            'rate_bp' => $bonus->rate_bp, 'status' => $bonus->status, 'currency' => $bonus->currency_code, 'employees' => $bonus->employees,
+            'gross_minor' => $bonus->gross_minor, 'tax_minor' => $bonus->tax_minor, 'net_minor' => $bonus->net_minor,
+            'calculated_at' => $bonus->calculated_at?->toIso8601String(), 'reject_reason' => $bonus->reject_reason,
+            'approved_at' => $bonus->approved_at?->toIso8601String(), 'paid_on' => $bonus->paid_on?->toDateString(),
+            'journal_id' => $bonus->journal_id, 'payment_journal_id' => $bonus->payment_journal_id, 'version' => $bonus->version,
+            ...($can === [] ? [] : ['can' => $can]),
+        ];
+    }
+
+    /**
+     * A line of a bonus; with the bonus, what an employee's own view needs (title, day, currency, company).
+     *
+     * @return array<string, mixed>
+     */
+    public function bonusLine(BonusLine $line, ?BonusRun $bonus = null): array
+    {
+        return [
+            ...$line->only(['id', 'employee_id', 'employee_code', 'employee_name', 'unit_id', 'basic_minor', 'service_months', 'not_paid_reason', 'override_minor', 'excluded', 'gross_minor', 'tax_minor', 'net_minor']),
+            ...($bonus === null ? [] : [
+                'bonus_id' => $bonus->getKey(), 'title' => $bonus->title, 'bonus_on' => $bonus->bonus_on->toDateString(), 'rate_bp' => $bonus->rate_bp,
+                'currency' => $bonus->currency_code, 'paid_on' => $bonus->paid_on?->toDateString(), 'company' => $bonus->organization?->name,
+            ]),
+        ];
     }
 }

@@ -7,7 +7,11 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Payroll\Models\Adjustment;
+use Modules\Payroll\Models\BonusLine;
+use Modules\Payroll\Models\BonusRun;
 use Modules\Payroll\Models\Component;
+use Modules\Payroll\Models\Loan;
+use Modules\Payroll\Models\LoanInstallment;
 use Modules\Payroll\Models\PaymentDetail;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
@@ -74,6 +78,26 @@ class PayrollExporter implements ExportsModuleData
             'adjustments' => $this->rows(Adjustment::class, $organization, $organizationIds, fn (Adjustment $row) => [
                 'id' => $row->getKey(), 'run_id' => $row->run_id, 'employee_id' => $row->employee_id, 'kind' => $row->kind,
                 'label' => $row->label, 'amount_minor' => $row->amount_minor, 'taxable' => $row->taxable,
+            ]),
+            'loans' => $this->rows(Loan::class, $organization, $organizationIds, fn (Loan $row) => [
+                'id' => $row->getKey(), 'employee_id' => $row->employee_id, 'kind' => $row->kind, 'principal_minor' => $row->principal_minor,
+                'installments' => $row->installments, 'installment_minor' => $row->installment_minor, 'start_period' => $row->start_period,
+                'paid_out_on' => $row->paid_out_on->toDateString(), 'status' => $row->status, 'recovered_minor' => $row->recovered_minor,
+                'currency_code' => $row->currency_code, 'reason' => $row->reason, 'journal_id' => $row->journal_id,
+            ]),
+            'loan_installments' => $this->rows(LoanInstallment::class, $organization, $organizationIds, fn (LoanInstallment $row) => [
+                'loan_id' => $row->loan_id, 'period' => $row->period, 'status' => $row->status, 'amount_minor' => $row->amount_minor,
+                'run_id' => $row->run_id, 'reason' => $row->reason,
+            ]),
+            'bonus_runs' => $this->rows(BonusRun::class, $organization, $organizationIds, fn (BonusRun $row) => [
+                'id' => $row->getKey(), 'title' => $texts($row, 'title'), 'bonus_on' => $row->bonus_on->toDateString(), 'rate_bp' => $row->rate_bp,
+                'status' => $row->status, 'currency_code' => $row->currency_code, 'gross_minor' => $row->gross_minor, 'tax_minor' => $row->tax_minor,
+                'net_minor' => $row->net_minor, 'paid_on' => $row->paid_on?->toDateString(), 'journal_id' => $row->journal_id,
+            ]),
+            'bonus_lines' => $this->rows(BonusLine::class, $organization, $organizationIds, fn (BonusLine $row) => [
+                'bonus_run_id' => $row->bonus_run_id, 'employee_id' => $row->employee_id, 'employee_code' => $row->employee_code,
+                'employee_name' => $row->employee_name, 'basic_minor' => $row->basic_minor, 'service_months' => $row->service_months,
+                'not_paid_reason' => $row->not_paid_reason, 'gross_minor' => $row->gross_minor, 'tax_minor' => $row->tax_minor, 'net_minor' => $row->net_minor,
             ]),
         ];
     }

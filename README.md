@@ -2444,7 +2444,7 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
 - Audit: `payroll.component_*`, `structure_*`, `salary_set`, `payment_details_set`, `run_*`,
   `adjustment_*`. Data export: components, structures, items, salaries, payment details (in full,
   the client's own data), runs, approvals, slips, lines, adjustments.
-- Next: PAY-3 loans and advances, festival bonus, provident fund, final settlement.
+- Next: PAY-3b provident fund and final settlement.
 
 ### Screens, payslips and bank file (PAY-2)
 
@@ -2483,6 +2483,43 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
   the bell tells approvers about runs they did not open, send or already approve.
 - A company whose books were set up before Payroll was on must choose the five payroll posting
   accounts (Accounting > Posting accounts) before the first approval; the approval says so.
+
+### Loans, advances and festival bonuses (PAY-3a)
+
+- **Loans and advances** (`pay_loans`, `pay_loan_installments`): asked for by payroll staff
+  (`POST …/payroll/loans`: employee, kind loan/advance, principal, instalments, first month,
+  paid-out day), limited by rules `payroll.loan_max_installments` and
+  `payroll.loan_max_basic_multiple` (months of basic; 0 = no limit). Approved or rejected (reason)
+  by someone else with `payroll.approve`, or withdrawn while waiting (`…/loans/{id}/{approve|reject|cancel}`).
+  Approval pays it out: `payroll.employee_loans` against `payroll.payment_account` (general chart
+  1160 / 1120). Each instalment is the principal over the months rounded up; the last one takes
+  what is left.
+- **Recovery**: calculating a draft month plans each running loan's instalment (slip line `LOAN`,
+  status `planned`, never more than what other drafts left); approving the month recovers it and
+  credits `payroll.employee_loans` instead of other deductions payable; a loan paid back closes.
+  Calculating again or deleting the draft drops its planned rows. A month can be held back with a
+  reason (`POST …/loans/{id}/skips`, `DELETE …/skips/{period}`) only while that month's payroll
+  is a draft; the draft then needs calculating again. `GET …/loans/{id}` gives the schedule
+  (recovered, planned, held back, due).
+- **Festival bonuses** (`pay_bonus_runs`, `pay_bonus_lines`): `POST …/payroll/bonuses` (title per
+  language, the day it is for, a share of the basic or rule `payroll.bonus_percent_of_basic`).
+  Calculating gives everyone employed that day a line: nothing for service under
+  `payroll.bonus_min_service_months` (BD 12, placeholder), no salary, or left out by hand
+  (`PATCH …/bonuses/{id}/lines/{line}`); an amount set by hand counts even with short service and
+  stays when calculated again. Tax at source (rule `payroll.bonus_taxable`) is the extra yearly
+  tax the bonus brings on top of twelve months of regular taxable pay. Sent, approved by someone
+  who neither opened nor sent it (one level), paid; posted as `payroll.bonus_expense` per unit
+  against salaries and tax payable. Bank file `GET …/bonuses/{id}/bank-file` (same protection as
+  a month's).
+- **Own view**: `GET …/payroll/me/{loans|bonuses[/{line}]}` and
+  `/api/portal/payroll/{loans|bonuses[/{line}]}`; "My payslips" lists bonuses and loans with what
+  is left; a bonus slip prints on the company's branding.
+- Screens: `/payroll/loans`, `/payroll/loans/{id}`, `/payroll/bonuses`, `/payroll/bonuses/{id}`,
+  `/payroll/me/bonuses/{line}`, `/portal/bonuses/{line}`. The bell tells approvers about loans and
+  bonuses waiting. Audit: `payroll.loan_*`, `payroll.bonus_*`. Data export adds loans, loan
+  instalments, bonus runs and lines.
+- After deploy: migrate, `rules:sync`, `accounting:map-postings` (maps the two new posting keys in
+  books set up earlier), `db:seed --class=RulesSeeder` for the BD bonus values.
 
 ### Future expansion (Payroll)
 

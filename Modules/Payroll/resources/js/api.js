@@ -33,6 +33,24 @@ export function payrollApi(organizationId) {
 
         mySlips: () => api(`${base}/me/slips`),
         mySlip: (id) => api(`${base}/me/slips/${id}`),
+        myLoans: () => api(`${base}/me/loans`),
+        myBonuses: () => api(`${base}/me/bonuses`),
+        myBonus: (id) => api(`${base}/me/bonuses/${id}`),
+
+        loans: (query = {}) => api(`${base}/loans`, { query }),
+        loan: (id) => api(`${base}/loans/${id}`),
+        requestLoan: (body) => api(`${base}/loans`, { method: 'POST', body }),
+        loanStep: (id, step, body) => api(`${base}/loans/${id}/${step}`, { method: 'POST', body }),
+        skipMonth: (id, body) => api(`${base}/loans/${id}/skips`, { method: 'POST', body }),
+        unskipMonth: (id, period) => api(`${base}/loans/${id}/skips/${period}`, { method: 'DELETE' }),
+
+        bonuses: () => api(`${base}/bonuses`),
+        bonus: (id) => api(`${base}/bonuses/${id}`),
+        openBonus: (body) => api(`${base}/bonuses`, { method: 'POST', body }),
+        bonusStep: (id, step, body) => api(`${base}/bonuses/${id}/${step}`, { method: 'POST', body }),
+        changeBonusLine: (id, lineId, body) => api(`${base}/bonuses/${id}/lines/${lineId}`, { method: 'PATCH', body }),
+        deleteBonus: (id, version) => api(`${base}/bonuses/${id}`, { method: 'DELETE', body: { base_version: version } }),
+        bonusBankFile: (id) => api(`${base}/bonuses/${id}/bank-file`),
     };
 }
 
@@ -40,4 +58,7 @@ export function payrollApi(organizationId) {
 export const portalPayrollApi = {
     slips: () => api('/api/portal/payroll/slips'),
     slip: (id) => api(`/api/portal/payroll/slips/${id}`),
+    loans: () => api('/api/portal/payroll/loans'),
+    bonuses: () => api('/api/portal/payroll/bonuses'),
+    bonus: (id) => api(`/api/portal/payroll/bonuses/${id}`),
 };

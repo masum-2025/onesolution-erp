@@ -201,6 +201,6 @@ it('hands payroll to the client\'s data export', function () {
     app(CurrentContext::class)->clear();
     $datasets = app(PayrollExporter::class)->export($this->w->c1, Organization::query()->subtreeOf($this->w->c1)->pluck('id')->all());
 
-    expect(array_keys($datasets))->toBe(['components', 'structures', 'structure_items', 'salaries', 'payment_details', 'runs', 'run_approvals', 'slips', 'slip_lines', 'adjustments'])
+    expect(array_keys($datasets))->toBe(['components', 'structures', 'structure_items', 'salaries', 'payment_details', 'runs', 'run_approvals', 'slips', 'slip_lines', 'adjustments', 'loans', 'loan_installments', 'bonus_runs', 'bonus_lines'])
         ->and(iterator_to_array($datasets['slips'], false))->toHaveCount(2);
 });

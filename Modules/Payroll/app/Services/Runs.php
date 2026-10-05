@@ -4,16 +4,14 @@ namespace Modules\Payroll\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
-use App\Platform\Modules\ModuleResolver;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
-use Modules\Accounting\Ledger\LedgerEntry;
 use Modules\Accounting\Ledger\LedgerLine;
-use Modules\Accounting\Services\Ledger;
 use Modules\Attendance\Services\AttendanceSummary;
 use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Hrm\Directory\EmployeeRecord;
@@ -21,8 +19,11 @@ use Modules\Payroll\Events\PayrollApproved;
 use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Models\Adjustment;
 use Modules\Payroll\Models\Component;
+use Modules\Payroll\Models\Loan;
+use Modules\Payroll\Models\LoanInstallment;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
+use Modules\Payroll\Models\Salary;
 use Modules\Payroll\Models\Slip;
 use Modules\Payroll\Models\SlipLine;
 use Modules\Payroll\Models\StructureItem;
@@ -34,12 +35,13 @@ use Modules\Payroll\Models\StructureItem;
  * employed in the month: their salary in force at the end of their time
  * in it, the structure's items, Attendance's absences, half days, over time
  * and late minutes (AttendanceSummary), the run's adjustments, tax at
- * source (PayCalculator). Sending needs a calculation and no slip with a
+ * source (PayCalculator), and each active loan's instalment (planned for
+ * the run, recovered when it is approved). Sending needs a calculation and no slip with a
  * problem. Approving takes payroll.salary_approval_levels different
  * people, never the one who sent it; at the last level the slips freeze
  * and, where the company keeps books (Accounting on), the salaries are
  * posted: expense per branch or department against salaries, tax and
- * deductions payable. Paying posts salaries payable against the payment
+ * deductions payable, loan instalments against the loans. Paying posts salaries payable against the payment
  * account. Every step is audited.
  */
 class Runs
@@ -49,7 +51,7 @@ class Runs
         private Salaries $salaries,
         private EmployeeDirectory $directory,
         private AttendanceSummary $attendance,
-        private ModuleResolver $modules,
+        private PayrollPostings $postings,
         private RuleResolver $rules,
         private RuleContextFactory $contexts,
         private AuditLogger $audit,
@@ -84,6 +86,7 @@ class Runs
             $slips = $this->payrolls->query(Slip::class, $company)->where('run_id', $run->getKey());
             $this->payrolls->query(SlipLine::class, $company)->whereIn('slip_id', (clone $slips)->select('id'))->delete();
             $slips->delete();
+            $this->plannedOf($company, $run)->delete();
 
             $employees = array_filter(
                 $this->directory->inUnits($company, $this->payrolls->subtreeIds($company)),
@@ -175,6 +178,7 @@ class Runs
                 return $run;
             }
 
+            $this->recoverLoans($company, $run);
             $journal = $this->post($company, $run, "payroll-run-{$run->getKey()}", $run->period_to, $this->salaryLines($company, $run), 'run');
             $run->forceFill(['status' => Run::APPROVED, 'approved_at' => now(), 'journal_id' => $journal, 'version' => $run->version + 1])->save();
             $this->audit->record('payroll.run_approved', $run, new: [...$this->values($run), 'journal_id' => $journal], actor: $actor, organizationId: $company->getKey());
@@ -222,6 +226,7 @@ class Runs
             $this->payrolls->query(SlipLine::class, $company)->whereIn('slip_id', (clone $slips)->select('id'))->delete();
             $slips->delete();
             $this->payrolls->query(Adjustment::class, $company)->where('run_id', $run->getKey())->delete();
+            $this->plannedOf($company, $run)->delete();
             $this->audit->record('payroll.run_deleted', $run, old: $this->values($run), actor: $actor, organizationId: $company->getKey());
             $run->delete();
         });
@@ -253,20 +258,14 @@ class Runs
             return;
         }
 
-        $items = $this->payrolls->query(StructureItem::class, $company)->where('structure_id', $salary->structure_id)->orderBy('sort')->get()
-            ->map(function (StructureItem $item) use ($components) {
-                $component = $components[$item->component_id];
-
-                return [
-                    'code' => $component->code, 'name' => $component->texts('name'), 'kind' => $component->kind, 'taxable' => $component->taxable,
-                    'prorated' => $component->prorated, 'calc' => $item->calc, 'amount' => $item->amount_minor, 'rate_bp' => $item->rate_bp,
-                ];
-            })->values()->all();
+        $items = $this->itemsFor($company, $salary, $components);
+        $loans = $this->planLoans($company, $run, $employee);
 
         $result = PayCalculator::slip([
             'basic' => $salary->basic_minor, 'items' => $items, 'period_days' => $slip->period_days, 'employed_days' => $employedDays,
             'absent_days' => $slip->absent_days, 'half_days' => $slip->half_days, 'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes,
             'adjustments' => $adjustments->map(fn (Adjustment $adjustment) => ['kind' => $adjustment->kind, 'label' => $adjustment->label, 'amount' => $adjustment->amount_minor, 'taxable' => $adjustment->taxable])->values()->all(),
+            'loans' => $loans,
         ], $this->ruleSet($employee));
 
         $slip->fill([
@@ -286,7 +285,7 @@ class Runs
      *
      * @return array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_deduction: bool, tax_slabs: list<array{0: int|null, 1: int}>}
      */
-    private function ruleSet(EmployeeRecord $employee): array
+    public function ruleSet(EmployeeRecord $employee): array
     {
         $context = $this->contexts->forOrganization(Organization::query()->findOrFail($employee->unitId));
         $get = fn (string $key) => $this->rules->get($key, $context);
@@ -313,11 +312,13 @@ class Runs
         foreach ($slips->groupBy('unit_id') as $unitId => $unitSlips) {
             $lines[] = LedgerLine::debit('payroll.salary_expense', (int) $unitSlips->sum('earnings_minor'), (string) $unitId);
         }
+        $loans = (int) $this->payrolls->query(LoanInstallment::class, $company)->where('run_id', $run->getKey())->where('status', LoanInstallment::RECOVERED)->sum('amount_minor');
         $lines[] = LedgerLine::credit('payroll.salaries_payable', $run->net_minor);
         $lines[] = LedgerLine::credit('payroll.tax_payable', $run->tax_minor);
-        $lines[] = LedgerLine::credit('payroll.deductions_payable', $run->deductions_minor);
+        $lines[] = LedgerLine::credit('payroll.deductions_payable', $run->deductions_minor - $loans);
+        $lines[] = LedgerLine::credit('payroll.employee_loans', $loans);
 
-        return array_values(array_filter($lines, fn (LedgerLine $line) => $line->debitMinor + $line->creditMinor > 0));
+        return $lines;
     }
 
     /**
@@ -327,20 +328,85 @@ class Runs
      */
     private function post(Organization $company, Run $run, string $opId, CarbonImmutable $date, array $lines, string $type): ?string
     {
-        if ($lines === [] || ! $this->modules->isEnabled('accounting', $company)) {
-            return null;
+        return $this->postings->post($company, $opId, $date, __("payroll::payroll.narration.{$type}", ['period' => $run->period]), $type, $run->getKey(), $run->currency_code, $lines);
+    }
+
+    /**
+     * A salary's structure items, as PayCalculator takes them.
+     *
+     * @param  Collection<string, Component>  $components
+     * @return list<array<string, mixed>>
+     */
+    public function itemsFor(Organization $company, Salary $salary, Collection $components): array
+    {
+        return $this->payrolls->query(StructureItem::class, $company)->where('structure_id', $salary->structure_id)->orderBy('sort')->get()
+            ->map(function (StructureItem $item) use ($components) {
+                $component = $components[$item->component_id];
+
+                return [
+                    'code' => $component->code, 'name' => $component->texts('name'), 'kind' => $component->kind, 'taxable' => $component->taxable,
+                    'prorated' => $component->prorated, 'calc' => $item->calc, 'amount' => $item->amount_minor, 'rate_bp' => $item->rate_bp,
+                ];
+            })->values()->all();
+    }
+
+    /**
+     * This month's instalment of each of the employee's active loans: from
+     * its start month, unless the month is held back, never more than what
+     * other draft months have not already planned. Planned for the run.
+     *
+     * @return list<int>
+     */
+    private function planLoans(Organization $company, Run $run, EmployeeRecord $employee): array
+    {
+        $amounts = [];
+        $loans = $this->payrolls->query(Loan::class, $company)->where('employee_id', $employee->id)->where('status', Loan::ACTIVE)
+            ->where('start_period', '<=', $run->period)->orderBy('start_period')->get();
+        foreach ($loans as $loan) {
+            $rows = $this->payrolls->query(LoanInstallment::class, $company)->where('loan_id', $loan->getKey())->get();
+            if ($rows->contains(fn (LoanInstallment $row) => $row->period === $run->period)) {
+                continue;
+            }
+            $left = $loan->balance() - (int) $rows->where('status', LoanInstallment::PLANNED)->sum('amount_minor');
+            $amount = min($loan->installment_minor, $left);
+            if ($amount <= 0) {
+                continue;
+            }
+            (new LoanInstallment)->fill([
+                'organization_id' => $company->getKey(), 'loan_id' => $loan->getKey(), 'period' => $run->period,
+                'status' => LoanInstallment::PLANNED, 'amount_minor' => $amount, 'run_id' => $run->getKey(),
+            ])->save();
+            $amounts[] = $amount;
         }
 
-        return app(Ledger::class)->post($company, new LedgerEntry(
-            opId: $opId,
-            entryDate: $date->toDateString(),
-            narration: __("payroll::payroll.narration.{$type}", ['period' => $run->period]),
-            sourceModule: 'payroll',
-            sourceType: $type,
-            sourceId: $run->getKey(),
-            currency: $run->currency_code,
-            lines: $lines,
-        ))->id;
+        return $amounts;
+    }
+
+    /** At approval the run's planned instalments are recovered; a loan paid back closes. */
+    private function recoverLoans(Organization $company, Run $run): void
+    {
+        foreach ($this->plannedOf($company, $run)->get() as $row) {
+            /** @var Loan $loan */
+            $loan = $this->payrolls->query(Loan::class, $company)->whereKey($row->loan_id)->lockForUpdate()->firstOrFail();
+            if ($loan->status !== Loan::ACTIVE || $row->amount_minor > $loan->balance()) {
+                throw PayrollException::loanChanged();
+            }
+            $row->forceFill(['status' => LoanInstallment::RECOVERED])->save();
+            $loan->forceFill(['recovered_minor' => $loan->recovered_minor + $row->amount_minor, 'version' => $loan->version + 1]);
+            if ($loan->balance() === 0) {
+                $loan->status = Loan::CLOSED;
+            }
+            $loan->save();
+            if ($loan->status === Loan::CLOSED) {
+                $this->audit->record('payroll.loan_closed', $loan, new: ['recovered_minor' => $loan->recovered_minor, 'period' => $run->period], organizationId: $company->getKey());
+            }
+        }
+    }
+
+    /** @return Builder<LoanInstallment> */
+    private function plannedOf(Organization $company, Run $run): Builder
+    {
+        return $this->payrolls->query(LoanInstallment::class, $company)->where('run_id', $run->getKey())->where('status', LoanInstallment::PLANNED);
     }
 
     private function totals(Organization $company, Run $run): void

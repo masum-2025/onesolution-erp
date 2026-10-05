@@ -47,6 +47,19 @@ return [
         'reason' => 'Bangladesh individual income tax slabs FY 2024-25 (Finance Act 2024). Verify with a tax adviser before use.',
     ],
 
+    [
+        'key' => 'payroll.bonus_min_service_months',
+        'country' => 'BD',
+        'value' => 12,
+        'reason' => 'Bangladesh Labour Rules 2015, r.111(5): festival bonus after one year of continuous service. Verify with an adviser.',
+    ],
+    [
+        'key' => 'payroll.bonus_percent_of_basic',
+        'country' => 'BD',
+        'value' => '100',
+        'reason' => 'Bangladesh Labour Rules 2015, r.111(5): each of two yearly festival bonuses up to one month\'s basic. Verify with an adviser.',
+    ],
+
     // ── Plan defaults (plans: database/seeders/data/plans.php) ──────────
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'starter', 'value' => 2000, 'reason' => 'Starter plan storage limit.'],
     ['key' => 'offline_mode.max_cached_records', 'plan' => 'business', 'value' => 10000, 'reason' => 'Business plan storage limit.'],

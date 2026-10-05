@@ -8,4 +8,6 @@ return [
     'waiting' => 'Payroll to approve',
     'waiting_hint' => 'Months sent for approval',
     'attention' => 'Payroll to approve',
+    'attention_loans' => 'Loans to approve',
+    'attention_bonuses' => 'Festival bonuses to approve',
 ];

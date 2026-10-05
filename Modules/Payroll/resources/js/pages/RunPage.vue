@@ -16,7 +16,8 @@ import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { payrollApi } from '../api';
-import { amountToMinor, bankCsv, runTone, sortSlips } from '../lib';
+import { saveBankFile } from '../bank';
+import { amountToMinor, runTone, sortSlips } from '../lib';
 
 /**
  * One month's payroll: totals, each person's slip (problems first), one-off
@@ -121,13 +122,7 @@ async function bankFile() {
     busy.value = 'bank';
     try {
         const { data } = await payroll.bankFile(run.value.id);
-        const csv = bankCsv(data, ['code', 'name', 'method', 'provider', 'account_name', 'account_number', 'branch', 'amount'].map((key) => t(`payroll.bank.columns.${key}`)));
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-        link.download = `payroll-${data.period}.csv`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        const missing = data.rows.filter((row) => !row.method).length;
+        const missing = saveBankFile(data, `payroll-${data.period}.csv`);
         toast.success(missing ? t('payroll.bank.missing', { count: formatNumber(missing) }) : t('payroll.bank.done'));
     } catch (error) {
         toast.error(error.message);

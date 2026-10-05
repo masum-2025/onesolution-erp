@@ -75,5 +75,7 @@ return [
         'payroll.tax_payable' => '2130',
         'payroll.deductions_payable' => '2140',
         'payroll.payment_account' => '1120',
+        'payroll.employee_loans' => '1160',
+        'payroll.bonus_expense' => '5200',
     ],
 ];

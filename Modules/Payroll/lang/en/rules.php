@@ -39,7 +39,29 @@ return [
         'label' => 'Hours a month\'s pay stands for',
         'description' => 'The month\'s pay over these hours is the hourly rate (26 days x 8 hours = 208).',
     ],
+    'loan_max_installments' => [
+        'label' => 'Most instalments for a loan',
+        'description' => 'A loan or advance is recovered in at most this many monthly instalments.',
+    ],
+    'loan_max_basic_multiple' => [
+        'label' => 'Largest loan, in months of basic',
+        'description' => 'A loan may be at most this many months of the employee\'s basic salary (0 = no limit).',
+    ],
+    'bonus_min_service_months' => [
+        'label' => 'Service needed for a festival bonus (months)',
+        'description' => 'Employees with less service get no festival bonus unless an amount is set by hand.',
+    ],
+    'bonus_percent_of_basic' => [
+        'label' => 'Festival bonus (% of basic)',
+        'description' => 'The usual festival bonus as a percentage of the basic salary (100 = one month).',
+    ],
+    'bonus_taxable' => [
+        'label' => 'Tax festival bonuses',
+        'description' => 'Withhold income tax on festival bonuses, on top of the regular salary.',
+    ],
     'categories' => [
+        'loans' => 'Loans and advances',
+        'bonus' => 'Festival bonus',
         'attendance' => 'Attendance',
         'approval' => 'Approvals',
         'cycle' => 'Pay cycle',

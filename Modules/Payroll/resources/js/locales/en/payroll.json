@@ -216,6 +216,128 @@
         "approved": "Approved",
         "paid_on": "Paid on {date}",
         "empty": "No payslips yet",
-        "empty_text": "Your payslip appears here once the month's payroll is approved."
+        "empty_text": "Your payslip appears here once the month's payroll is approved.",
+        "bonuses": "Festival bonuses",
+        "loans": "Loans and advances",
+        "loan_done": "Paid back in full",
+        "loan_left": "{count} instalments of {amount} left"
+    },
+    "loan_status": {
+        "pending_approval": "Waiting for approval",
+        "active": "Running",
+        "closed": "Paid back",
+        "rejected": "Rejected",
+        "cancelled": "Withdrawn"
+    },
+    "loan_kinds": {
+        "loan": "Loan",
+        "advance": "Salary advance"
+    },
+    "installment_status": {
+        "recovered": "Recovered",
+        "planned": "In this month's draft",
+        "skipped": "Held back",
+        "due": "Due"
+    },
+    "loans": {
+        "title": "Loans and advances",
+        "text": "Money lent to staff, recovered from their salary month by month.",
+        "ask": "New loan",
+        "ask_text": "Another person approves it before the money is paid out.",
+        "all": "All",
+        "filter": "Show loans",
+        "empty": "No loans",
+        "empty_text": "Loans and salary advances you give staff appear here with what is left to recover.",
+        "per_month": "{amount} a month from {from}",
+        "left": "left",
+        "asked": "Loan sent for approval.",
+        "installments": "Instalments (months)",
+        "each": "{amount} each month",
+        "paid_out_on": "Paid out on",
+        "start_period": "Recover from",
+        "reason_hint": "e.g. Medical treatment",
+        "needs_approval": "Nothing is paid out or recovered until someone else approves it.",
+        "send": "Send for approval",
+        "loading_people": "Loading people…",
+        "choose_person": "Choose a person"
+    },
+    "loan": {
+        "text": "{kind} paid out on {date}",
+        "note": "Decision note: {note}",
+        "principal": "Lent",
+        "installment": "Each month",
+        "times": "{count} instalments",
+        "recovered": "Recovered",
+        "schedule": "Month by month",
+        "schedule_text": "Recovered with each approved payroll; a month can be held back while its payroll is a draft.",
+        "no_schedule": "Nothing yet.",
+        "skip": "Hold this month back",
+        "unskip": "Recover this month again",
+        "skip_title": "Hold {month} back?",
+        "skip_text": "Nothing is recovered that month; the loan takes a month longer. Say why.",
+        "skip_hint": "e.g. Unpaid leave this month",
+        "skipped": "{month} held back. Calculate that month again.",
+        "unskipped": "{month} will be recovered again. Calculate that month again.",
+        "steps": {
+            "approve": "Approve and pay out",
+            "reject": "Reject",
+            "cancel": "Withdraw"
+        },
+        "done": {
+            "approve": "Approved. Recovery starts with its first month.",
+            "reject": "Rejected.",
+            "cancel": "Withdrawn."
+        },
+        "confirm": {
+            "approve_title": "Approve the loan to {name}?",
+            "approve_text": "{amount} is paid out and recovered from the salary. Your name is recorded.",
+            "reject_title": "Reject the loan to {name}?",
+            "reject_text": "Say why; payroll staff see your reason.",
+            "cancel_title": "Withdraw the loan to {name}?",
+            "cancel_text": "The request for {amount} is closed. You can ask again."
+        },
+        "left": "Left to recover"
+    },
+    "bonuses": {
+        "title": "Festival bonuses",
+        "text": "Eid, Puja and other bonuses, paid apart from the monthly salary.",
+        "open": "New bonus",
+        "opened": "Bonus opened. Calculate it to see who gets what.",
+        "empty": "No bonuses yet",
+        "empty_text": "Open a bonus for a festival; everyone employed that day gets a line.",
+        "name": "Name",
+        "bonus_on": "For the day",
+        "bonus_on_hint": "Service is counted up to this day.",
+        "percent": "% of basic",
+        "percent_hint": "Empty: the company's usual share."
+    },
+    "bonus": {
+        "text": "For {date} · {percent}% of the basic",
+        "needs_calculation": "Not calculated yet. Calculate to see who gets the bonus; you can calculate again any time before sending.",
+        "paid_people": "People paid",
+        "gross": "Bonus",
+        "no_lines": "Nobody yet. Press Calculate.",
+        "service": "Service: {months} mo.",
+        "by_hand": "set by hand",
+        "after_tax": "{gross} less tax {tax}",
+        "change_line": "Change",
+        "change_text": "Leave the person out, or set an amount by hand (it counts even with short service).",
+        "leave_out": "Leave out of this bonus",
+        "set_by_hand": "Set the amount by hand",
+        "rate": "Rate",
+        "service_label": "Service",
+        "months": "{months} months",
+        "reasons": {
+            "short_service": "Short service",
+            "no_salary": "No salary",
+            "excluded": "Left out"
+        },
+        "confirm": {
+            "submit_title": "Send {title} for approval?",
+            "approve_title": "Approve {title}?",
+            "reject_title": "Send {title} back?",
+            "delete_title": "Delete {title}?"
+        },
+        "basic": "basic {amount}"
     }
 }

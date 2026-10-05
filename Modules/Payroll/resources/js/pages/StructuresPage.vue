@@ -12,12 +12,12 @@ import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import TranslatedFields from '@/components/TranslatedFields.vue';
 import { useResource } from '@/lib/useResource';
-import { formatMoney, formatNumber } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
 import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { payrollApi } from '../api';
-import { amountToMinor, bpToPercent, minorToText, percentToBp } from '../lib';
+import { amountToMinor, bpToPercent, minorToText, percentText, percentToBp } from '../lib';
 
 /**
  * Salary structures ("Officer", "Worker"): which components go on top of the
@@ -34,11 +34,8 @@ const components = computed(() => componentList.data.value?.data ?? []);
 const activeComponents = computed(() => components.value.filter((component) => component.is_active));
 const componentOf = (id) => components.value.find((component) => component.id === id);
 
-// "12.5" in the reader's digits (no number parsing of the decimal).
-const localDigits = (text) => text.replace(/\d/g, (digit) => formatNumber(Number(digit)));
-
 function describe(item) {
-    const value = item.calc === 'fixed' ? formatMoney({ amount: item.amount_minor ?? 0, currency: currency.value }) : t('payroll.structures.of_basic', { percent: localDigits(bpToPercent(item.rate_bp ?? 0)) });
+    const value = item.calc === 'fixed' ? formatMoney({ amount: item.amount_minor ?? 0, currency: currency.value }) : t('payroll.structures.of_basic', { percent: percentText(item.rate_bp ?? 0) });
     return `${componentOf(item.component_id)?.name ?? '—'} ${value}`;
 }
 

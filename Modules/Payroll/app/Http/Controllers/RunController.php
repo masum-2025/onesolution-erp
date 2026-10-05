@@ -16,11 +16,11 @@ use Modules\Payroll\Http\Controllers\Concerns\FindsPayroll;
 use Modules\Payroll\Http\PayrollPresenter;
 use Modules\Payroll\Http\Requests\RunRequest;
 use Modules\Payroll\Models\Adjustment;
-use Modules\Payroll\Models\PaymentDetail;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
 use Modules\Payroll\Models\Slip;
 use Modules\Payroll\Models\SlipLine;
+use Modules\Payroll\Services\BankFile;
 use Modules\Payroll\Services\Payrolls;
 use Modules\Payroll\Services\Runs;
 
@@ -116,7 +116,7 @@ class RunController extends Controller
      * account in full and net pay. Behind a recent second step, never
      * cached, and audited (who took it, how many lines, never the numbers).
      */
-    public function bankFile(Request $request, string $organization, string $run, AuditLogger $audit): JsonResponse
+    public function bankFile(Request $request, string $organization, string $run, AuditLogger $audit, BankFile $bank): JsonResponse
     {
         [, $company] = $this->workplace($organization);
         $found = $this->runIn($company, $run);
@@ -125,14 +125,8 @@ class RunController extends Controller
             throw PayrollException::notApproved();
         }
 
-        $slips = $this->payrolls->query(Slip::class, $company)->where('run_id', $found->getKey())->where('net_minor', '>', 0)->orderBy('employee_name')->get();
-        $details = $this->payrolls->query(PaymentDetail::class, $company)->whereIn('employee_id', $slips->pluck('employee_id')->all())->get()->keyBy('employee_id');
-        $rows = $slips->map(fn (Slip $slip) => [
-            'employee_code' => $slip->employee_code, 'employee_name' => $slip->employee_name,
-            'method' => $details[$slip->employee_id]->method ?? null, 'provider' => $details[$slip->employee_id]->provider ?? null,
-            'account_name' => $details[$slip->employee_id]->account_name ?? null, 'account_number' => $details[$slip->employee_id]->account_number ?? null,
-            'branch' => $details[$slip->employee_id]->branch ?? null, 'amount_minor' => $slip->net_minor,
-        ])->values();
+        $rows = collect($bank->rows($company, $this->payrolls->query(Slip::class, $company)->where('run_id', $found->getKey())->orderBy('employee_name')->get()
+            ->map(fn (Slip $slip) => ['employee_id' => $slip->employee_id, 'employee_code' => $slip->employee_code, 'employee_name' => $slip->employee_name, 'amount_minor' => $slip->net_minor])));
         $audit->record('payroll.bank_file_taken', $found, new: ['period' => $found->period, 'lines' => $rows->count(), 'without_account' => $rows->whereNull('method')->count()],
             actor: $request->user(), organizationId: $company->getKey());
 

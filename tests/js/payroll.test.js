@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountToMinor, bankCsv, bpToPercent, cleanNumber, minorToText, nextPeriod, percentToBp, runTone, sortSlips } from '../../Modules/Payroll/resources/js/lib.js';
+import { amountToMinor, bankCsv, bpToPercent, cleanNumber, firstRecoveryMonth, installmentOf, installmentTone, loanTone, minorToText, nextPeriod, percentToBp, runTone, sortBonusLines, sortSlips } from '../../Modules/Payroll/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Payroll/resources/js/locales/en/payroll.json';
 import bn from '../../Modules/Payroll/resources/js/locales/bn/payroll.json';
@@ -83,5 +83,40 @@ describe('Payroll screens', () => {
         expect(runTone('paid')).toBe('ok');
         for (const method of ['bank', 'mobile', 'cash']) expect(bn.methods[method]).toBeTruthy();
         expect(keys(bn).sort()).toEqual(keys(en).sort());
+    });
+});
+
+describe('Payroll loans and bonuses screens', () => {
+    it('registers the loan and bonus screens, the portal bonus marked', () => {
+        const names = moduleRoutes.filter((route) => route.meta.module === 'payroll').map((route) => route.name);
+        expect(names).toEqual(expect.arrayContaining(['payroll-loans', 'payroll-loan', 'payroll-bonuses', 'payroll-bonus', 'payroll-my-bonus', 'payroll-portal-bonus']));
+        expect(moduleRoutes.find((route) => route.name === 'payroll-portal-bonus').meta).toMatchObject({ portal: true, slip: 'portal' });
+    });
+
+    it('works out instalments and the first month like the server', () => {
+        expect(installmentOf(1000, 3)).toBe(334);
+        expect(installmentOf(6000000, 3)).toBe(2000000);
+        expect(installmentOf(500, 0)).toBe(500);
+        expect(firstRecoveryMonth('2026-10-05')).toBe('2026-11');
+        expect(firstRecoveryMonth('2026-12-31')).toBe('2027-01');
+        expect(firstRecoveryMonth('')).toBe('');
+    });
+
+    it('puts paid bonus lines first and gives every status a tone and a label', () => {
+        const sorted = sortBonusLines([
+            { employee_name: 'Zara', not_paid_reason: null },
+            { employee_name: 'Abul', not_paid_reason: 'short_service' },
+            { employee_name: 'Karim', not_paid_reason: null },
+        ]);
+        expect(sorted.map((line) => line.employee_name)).toEqual(['Karim', 'Zara', 'Abul']);
+        for (const status of ['pending_approval', 'active', 'closed', 'rejected', 'cancelled']) {
+            expect(loanTone(status)).toBeTruthy();
+            expect(bn.loan_status[status]).toBeTruthy();
+        }
+        for (const status of ['recovered', 'planned', 'skipped', 'due']) {
+            expect(installmentTone(status)).toBeTruthy();
+            expect(bn.installment_status[status]).toBeTruthy();
+        }
+        for (const reason of ['short_service', 'no_salary', 'excluded']) expect(bn.bonus.reasons[reason]).toBeTruthy();
     });
 });

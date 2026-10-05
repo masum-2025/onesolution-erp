@@ -12,6 +12,7 @@ use Modules\Payroll\Http\PayrollPresenter;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\Slip;
 use Modules\Payroll\Models\SlipLine;
+use Modules\Payroll\Services\OwnPay;
 use Modules\Payroll\Services\Payrolls;
 
 /**
@@ -51,6 +52,28 @@ class PortalSlipController extends Controller
         }
 
         return response()->json(['data' => $this->presenter->slip($found, $this->payrolls->query(SlipLine::class, $company)->where('slip_id', $found->getKey())->orderBy('line_no')->get(), $run)]);
+    }
+
+    public function loans(OwnPay $own): JsonResponse
+    {
+        [$company, $employees] = $this->scope();
+
+        return response()->json(['data' => $company === null || $employees === [] ? [] : $own->loans($company, $employees)]);
+    }
+
+    public function bonuses(OwnPay $own): JsonResponse
+    {
+        [$company, $employees] = $this->scope();
+
+        return response()->json(['data' => $company === null || $employees === [] ? [] : $own->bonuses($company, $employees)]);
+    }
+
+    public function bonus(string $line, OwnPay $own): JsonResponse
+    {
+        [$company, $employees] = $this->scope();
+        $found = $company === null ? null : $own->bonusLine($company, $employees, $line);
+
+        return response()->json(['data' => $found ?? throw PayrollException::bonusNotFound()]);
     }
 
     /**

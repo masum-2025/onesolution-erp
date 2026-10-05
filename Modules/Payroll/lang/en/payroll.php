@@ -19,6 +19,13 @@ return [
         'already_approved' => 'You approved this payroll already; the next level needs someone else.',
         'unknown_step' => 'Unknown step.',
         'version_conflict' => 'Someone changed this meanwhile. Reload and try again.',
+        'loan_changed' => 'A loan in this payroll changed after it was calculated. Send it back, calculate again and send it.',
+        'loan_not_found' => 'Loan not found. Reload the list.',
+        'loan_not_pending' => 'This loan was already decided.',
+        'loan_not_active' => 'Only a running loan can be held back a month.',
+        'own_loan' => 'Another person has to approve a loan you asked for.',
+        'month_locked' => 'The payroll of :period is sent or approved already; its instalments cannot change.',
+        'bonus_not_found' => 'Bonus not found. Reload the list.',
     ],
 
     'validation' => [
@@ -29,12 +36,20 @@ return [
         'before_joining' => 'The salary cannot start before the employee joined.',
         'account_number' => 'Give the account number, or choose cash.',
         'not_in_period' => 'The employee is not employed in this month.',
+        'too_many_installments' => 'At most :max instalments are allowed.',
+        'start_before_paid_out' => 'Recovery cannot start before the month the money is paid out.',
+        'after_exit' => 'The employee leaves before recovery would start.',
+        'no_salary_for_loan' => 'Set the employee\'s salary first; the loan limit comes from it.',
+        'loan_too_big' => 'A loan may be at most :months months of the basic salary.',
     ],
 
     // Narration of the journals payroll posts.
     'narration' => [
         'run' => 'Salaries :period',
         'payment' => 'Salaries :period paid',
+        'loan' => 'Loan to :name',
+        'bonus' => ':title (:date)',
+        'bonus_payment' => ':title (:date) paid',
     ],
 
     'posting_keys' => [
@@ -43,5 +58,7 @@ return [
         'tax_payable' => 'Tax withheld from salaries (payable)',
         'deductions_payable' => 'Other salary deductions (payable)',
         'payment_account' => 'Account salaries are paid from',
+        'employee_loans' => 'Loans and advances to staff',
+        'bonus_expense' => 'Festival bonuses (expense)',
     ],
 ];
