@@ -70,6 +70,11 @@ class InventoryException extends TenancyException
         return new self('unknown_step', 404);
     }
 
+    public static function notBillable(): self
+    {
+        return new self('not_billable', 409);
+    }
+
     public static function countOpen(): self
     {
         return new self('count_open', 409);

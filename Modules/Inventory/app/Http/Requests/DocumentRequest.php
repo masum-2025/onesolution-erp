@@ -8,7 +8,7 @@ use Modules\Inventory\Models\Document;
 /**
  * An inventory document (type, warehouses, day, lines), changed while a
  * draft (the version seen), or a step of it (the version seen; a reason to
- * reject; what arrived for a transfer).
+ * reject; what arrived for a transfer; the supplier for its bill).
  */
 class DocumentRequest extends StrictFormRequest
 {
@@ -24,6 +24,8 @@ class DocumentRequest extends StrictFormRequest
                 'reason' => [$step === 'reject' ? 'required' : 'prohibited', 'string', 'min:5', 'max:500'],
                 'received' => [$step === 'receive' ? 'sometimes' : 'prohibited', 'array', 'max:500'],
                 'received.*' => ['integer', 'min:0', 'max:999999999999'],
+                'party_id' => [$step === 'bill' ? 'required' : 'prohibited', 'string', 'size:26'],
+                'issue_date' => [$step === 'bill' ? 'sometimes' : 'prohibited', 'nullable', 'date_format:Y-m-d'],
             ];
         }
         $creating = $this->isMethod('post');

@@ -122,7 +122,8 @@ return [
     // Where stock goes in the books (Accounting maps each to an account).
     'ledger_accounts' => [
         'inventory.stock' => ['label' => 'inventory::inventory.posting_keys.stock', 'type' => 'asset'],
-        'inventory.grni' => ['label' => 'inventory::inventory.posting_keys.grni', 'type' => 'liability'],
+        // Cleared by the supplier's bill: Accounting lets bills use this account on their lines.
+        'inventory.grni' => ['label' => 'inventory::inventory.posting_keys.grni', 'type' => 'liability', 'cleared_by' => 'bills'],
         'inventory.cogs' => ['label' => 'inventory::inventory.posting_keys.cogs', 'type' => 'expense'],
         'inventory.adjustment' => ['label' => 'inventory::inventory.posting_keys.adjustment', 'type' => 'expense'],
     ],

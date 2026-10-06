@@ -1,14 +1,16 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, Check, PackageCheck, Plus, ScanBarcode, Send, Trash2, Truck, X } from 'lucide-vue-next';
+import { ArrowLeft, Check, FileText, PackageCheck, Plus, ScanBarcode, Send, Trash2, Truck, X } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
+import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { api } from '@/lib/http';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatMoney } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
@@ -23,7 +25,8 @@ import { emptyLine, formatQuantity, lineToApi, milliToText, minorToText, quantit
  * scan a barcode or pick an item; a second scan adds one more. Once saved,
  * the steps this reader may take show (the server checks each again):
  * post, dispatch and receive (with what arrived), approve or send back,
- * cancel, delete the draft.
+ * cancel, delete the draft; a posted receipt becomes the supplier's draft
+ * bill in Accounting (once; then a link to it).
  */
 const inventory = inventoryApi(currentOrganization().id);
 const route = useRoute();
@@ -175,6 +178,41 @@ async function step(name) {
     }
 }
 
+// The supplier's bill for a posted receipt (Accounting's suppliers; the one named on the receipt first).
+const billing = ref(false);
+const vendors = ref(null);
+const bill = reactive({ party_id: '', issue_date: '' });
+async function startBill() {
+    bill.issue_date = document.value.document_date;
+    billing.value = true;
+    if (vendors.value === null) {
+        try {
+            const { data } = await api(`/api/organizations/${currentOrganization().id}/accounting/parties`, { query: { role: 'vendors', per_page: 100 } });
+            vendors.value = data.filter((party) => party.is_active !== false);
+        } catch (error) {
+            vendors.value = [];
+            toast.error(error.message);
+        }
+    }
+    const named = (document.value.counterparty ?? '').trim().toLowerCase();
+    bill.party_id = vendors.value.find((party) => named && String(party.name).toLowerCase() === named)?.id ?? bill.party_id;
+}
+async function makeBill() {
+    if (!bill.party_id) return;
+    busy.value = 'bill';
+    try {
+        await inventory.documentStep(document.value.id, 'bill', { base_version: document.value.version, party_id: bill.party_id, issue_date: bill.issue_date || null });
+        toast.success(t('inventory.document.done.bill'));
+        billing.value = false;
+        record.reload();
+    } catch (error) {
+        if (error.code === 'version_conflict') record.reload();
+        toast.error(error.message);
+    } finally {
+        busy.value = null;
+    }
+}
+
 async function remove() {
     const confirmed = await confirmAction({ title: t('inventory.document.confirm.delete_title'), message: t('inventory.document.confirm.delete_text'), confirmLabel: t('inventory.common.delete'), danger: true });
     if (!confirmed) return;
@@ -209,12 +247,17 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
                         <AppButton v-if="document.can.approve" variant="primary" :icon="Check" :loading="busy === 'approve'" @click="step('approve')">{{ t('inventory.document.steps.approve') }}</AppButton>
                         <AppButton v-if="document.can.reject" variant="ghost" :icon="X" @click="step('reject')">{{ t('inventory.document.steps.reject') }}</AppButton>
                         <AppButton v-if="document.can.cancel" variant="ghost" :icon="X" @click="step('cancel')">{{ t('inventory.document.steps.cancel') }}</AppButton>
+                        <AppButton v-if="document.can.bill" variant="secondary" :icon="FileText" @click="startBill">{{ t('inventory.document.steps.bill') }}</AppButton>
                         <AppButton v-if="document.can.edit" variant="ghost" :icon="Trash2" :aria-label="t('inventory.common.delete')" @click="remove" />
                     </div>
                 </template>
             </PageHeader>
 
             <p v-if="document?.reject_reason && document.status === 'draft'" class="mb-4 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn" role="status">{{ t('inventory.document.sent_back', { reason: document.reject_reason }) }}</p>
+            <p v-if="document?.bill_id" class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-subtle px-4 py-3 text-[13px]" role="status">
+                <span>{{ t('inventory.document.bill.billed') }}</span>
+                <AppButton size="sm" variant="ghost" :icon="FileText" :to="{ name: 'accounting-document', params: { id: document.bill_id } }">{{ t('inventory.document.bill.open') }}</AppButton>
+            </p>
             <p v-if="document?.status === 'pending_approval'" class="mb-4 rounded-xl bg-subtle px-4 py-3 text-[13px] text-muted" role="status">{{ t('inventory.document.waiting') }}</p>
 
             <!-- A draft: the form. -->
@@ -320,5 +363,24 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
                 </section>
             </template>
         </template>
+        <AppDialog :open="billing" :title="t('inventory.document.bill.title')" :description="t('inventory.document.bill.text')" :icon="FileText" @close="billing = false">
+            <SkeletonRows v-if="vendors === null" :rows="2" />
+            <p v-else-if="!vendors.length" class="rounded-xl bg-subtle px-4 py-3 text-[13px] text-muted">{{ t('inventory.document.bill.none') }}</p>
+            <form v-else id="inventory-bill" class="grid gap-4" novalidate @submit.prevent="makeBill">
+                <AppField v-slot="{ id }" :label="t('inventory.document.bill.vendor')">
+                    <select :id="id" v-model="bill.party_id" class="field-input" required>
+                        <option value="" disabled>{{ t('inventory.document.bill.choose') }}</option>
+                        <option v-for="party in vendors" :key="party.id" :value="party.id">{{ party.name }}</option>
+                    </select>
+                </AppField>
+                <AppField v-slot="{ id }" :label="t('inventory.document.bill.date')">
+                    <input :id="id" v-model="bill.issue_date" type="date" class="field-input" />
+                </AppField>
+            </form>
+            <template #footer>
+                <AppButton variant="ghost" @click="billing = false">{{ t('inventory.common.cancel') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="inventory-bill" :icon="FileText" :loading="busy === 'bill'" :disabled="!bill.party_id">{{ t('inventory.document.steps.bill') }}</AppButton>
+            </template>
+        </AppDialog>
     </div>
 </template>

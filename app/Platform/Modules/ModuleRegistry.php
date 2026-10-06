@@ -236,7 +236,9 @@ final class ModuleRegistry
         foreach ($manifest['ledger_accounts'] ?? [] as $name => $definition) {
             $valid = is_string($name) && str_starts_with($name, $key.'.') && preg_match('/^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$/', $name)
                 && is_string($definition['label'] ?? null) && $definition['label'] !== ''
-                && in_array($definition['type'] ?? null, self::LEDGER_ACCOUNT_TYPES, true);
+                && in_array($definition['type'] ?? null, self::LEDGER_ACCOUNT_TYPES, true)
+                // Optional: a clearing account another document settles (only bills today).
+                && in_array($definition['cleared_by'] ?? null, [null, 'bills'], true);
 
             if (! $valid) {
                 throw InvalidModuleManifest::because($key, "ledger account [{$name}] needs a \"{$key}.\" key, a label and a type (asset, liability, equity, income or expense)");

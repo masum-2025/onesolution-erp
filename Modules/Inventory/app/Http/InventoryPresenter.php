@@ -104,7 +104,8 @@ class InventoryPresenter
             'warehouse_id' => $document->warehouse_id, 'to_warehouse_id' => $document->to_warehouse_id, 'document_date' => $document->document_date->toDateString(),
             'counterparty' => $document->counterparty, 'reference' => $document->reference, 'reason' => $document->reason, 'value_minor' => $document->value_minor,
             'currency' => $document->currency_code, 'reject_reason' => $document->reject_reason, 'posted_at' => $document->posted_at?->toIso8601String(),
-            'received_at' => $document->received_at?->toIso8601String(), 'journal_id' => $document->journal_id, 'version' => $document->version,
+            'received_at' => $document->received_at?->toIso8601String(), 'journal_id' => $document->journal_id, 'bill_id' => $document->bill_id,
+            'billed_at' => $document->billed_at?->toIso8601String(), 'version' => $document->version,
             ...($lines === null ? [] : ['lines' => $lines->map(fn (DocumentLine $line) => $line->only([
                 'id', 'line_no', 'item_id', 'quantity_milli', 'received_milli', 'unit_cost_minor', 'batch_number', 'value_minor', 'note',
             ]) + ['expires_on' => $line->expires_on?->toDateString()])->values()->all()]),

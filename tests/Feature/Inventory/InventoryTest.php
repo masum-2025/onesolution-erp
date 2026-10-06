@@ -205,3 +205,39 @@ it('rings the bell for stock at its reorder level and keeps stock to the company
     toggles()->disable($this->w->g1, 'inventory', 'Test setup', confirm: true);
     $this->asToken($this->keeper)->getJson(($this->api)('stock'))->assertForbidden();
 });
+
+it('makes the supplier bill from a posted receipt once, clearing goods received not billed', function () {
+    $buyer = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['inventory.view', 'inventory.manage', 'accounting.view', 'accounting.buy'], 'Buyer')), $this->w->c1);
+    $books = "/api/organizations/{$this->w->c1->id}/accounting";
+    $vendor = $this->asToken($buyer)->postJson("{$books}/parties", ['name' => 'Square Toiletries', 'is_vendor' => true])->assertCreated()->json('data.id');
+    $receipt = ($this->receive)([['item_id' => $this->soap['id'], 'quantity_milli' => 10000, 'unit_cost_minor' => 10000], ['item_id' => $this->rice['id'], 'quantity_milli' => 2500, 'unit_cost_minor' => 6850]]);
+    $receipt = $this->asToken($buyer)->getJson(($this->api)("documents/{$receipt['id']}"))->assertOk()->assertJsonPath('data.can.bill', true)->json('data');
+
+    // A store keeper without Accounting's buying permission cannot bill; a draft cannot be billed.
+    ($this->step)($receipt, 'bill', $this->keeper, ['party_id' => $vendor])->assertForbidden();
+    ($this->step)(($this->document)('receipt', [['item_id' => $this->soap['id'], 'quantity_milli' => 1000, 'unit_cost_minor' => 100]]), 'bill', $buyer, ['party_id' => $vendor])
+        ->assertConflict()->assertJsonPath('code', 'wrong_status');
+
+    $billed = ($this->step)($receipt, 'bill', $buyer, ['party_id' => $vendor])->assertOk()->assertJsonPath('data.can.bill', false)->json('data');
+    expect($billed['bill_id'])->not->toBeNull();
+    ($this->step)($billed, 'bill', $buyer, ['party_id' => $vendor])->assertConflict()->assertJsonPath('code', 'not_billable');
+
+    $bill = $this->asToken($buyer)->getJson("{$books}/documents/{$billed['bill_id']}")->assertOk()->json('data');
+    expect($bill)->toMatchArray(['type' => 'bill', 'status' => 'draft', 'total_minor' => 100000 + 17125, 'reference' => 'INV-778'])
+        ->and($bill['lines'])->toHaveCount(2);
+    $this->asToken($buyer)->postJson("{$books}/documents/{$bill['id']}/submit", ['base_version' => $bill['version']])->assertOk()->assertJsonPath('data.status', 'posted');
+    // Goods received not billed is back to nothing (the trial balance leaves out accounts at zero).
+    expect(($this->row)('2115'))->toBeNull();
+    expect(AuditLog::query()->where('action', 'inventory.document_billed')->count())->toBe(1);
+
+    // Other liabilities stay off bills: only accounts a module clears through bills.
+    $this->asToken($buyer)->postJson("{$books}/documents", ['type' => 'bill', 'party_id' => $vendor, 'issue_date' => '2026-11-01',
+        'lines' => [['description' => 'VAT', 'quantity' => '1', 'unit_price_minor' => 100, 'account_id' => accountId($this->w->c1, '2130')]]])
+        ->assertUnprocessable()->assertJsonValidationErrors('lines.0.account_id');
+
+    // Accounting off: no bill button, and the step is refused.
+    $next = ($this->receive)([['item_id' => $this->soap['id'], 'quantity_milli' => 1000, 'unit_cost_minor' => 10000]]);
+    toggles()->disable($this->w->g1, 'accounting', 'Test');
+    $next = $this->asToken($buyer)->getJson(($this->api)("documents/{$next['id']}"))->assertOk()->assertJsonPath('data.can.bill', false)->json('data');
+    ($this->step)($next, 'bill', $buyer, ['party_id' => $vendor])->assertForbidden();
+});

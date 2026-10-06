@@ -20,6 +20,7 @@ return [
         'same_warehouse' => 'Choose two different warehouses for a transfer.',
         'warehouse_inactive' => 'That warehouse is switched off. Switch it on or choose another.',
         'unknown_step' => 'Unknown step.',
+        'not_billable' => 'Only a posted goods receipt without a bill can be billed. Reload and check.',
         'count_open' => 'This warehouse already has a stock count open. Finish or cancel it first.',
         'version_conflict' => 'Someone changed this meanwhile. Reload and try again.',
     ],
@@ -42,6 +43,7 @@ return [
         'adjustment' => 'Stock adjusted :number',
         'transfer_loss' => 'Lost in transfer :number',
         'count' => 'Stock count :number',
+        'bill' => 'Made from goods receipt :number',
     ],
     'posting_keys' => [
         'stock' => 'Stock (inventory)',

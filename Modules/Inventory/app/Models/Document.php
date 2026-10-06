@@ -42,6 +42,7 @@ class Document extends Model
             'value_minor' => 'integer',
             'posted_at' => 'immutable_datetime',
             'received_at' => 'immutable_datetime',
+            'billed_at' => 'immutable_datetime',
             'version' => 'integer',
         ];
     }

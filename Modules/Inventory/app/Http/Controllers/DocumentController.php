@@ -7,6 +7,7 @@ use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Modules\Accounting\Services\Bills;
 use Modules\Inventory\Exceptions\InventoryException;
 use Modules\Inventory\Http\Controllers\Concerns\FindsInventory;
 use Modules\Inventory\Http\InventoryPresenter;
@@ -21,7 +22,8 @@ use Modules\Inventory\Services\Inventories;
  * in the address and below: read (inventory.view), written, posted and
  * dispatched (inventory.manage at the warehouse's unit), received
  * (inventory.manage at the receiving warehouse's unit), approved or rejected
- * (inventory.approve; never one's own).
+ * (inventory.approve; never one's own); a posted receipt billed (inventory.manage
+ * and Accounting's accounting.buy at the company).
  */
 class DocumentController extends Controller
 {
@@ -94,9 +96,13 @@ class DocumentController extends Controller
         $found = $this->documentIn($unit, $company, $document);
         $source = $this->unitOf($this->found(Warehouse::class, $company, $found->warehouse_id, 'warehouse')->unit_id);
         $permission = ['post' => 'inventory.manage', 'dispatch' => 'inventory.manage', 'cancel' => 'inventory.manage', 'receive' => 'inventory.manage',
-            'approve' => 'inventory.approve', 'reject' => 'inventory.approve'][$step] ?? throw InventoryException::unknownStep();
+            'approve' => 'inventory.approve', 'reject' => 'inventory.approve', 'bill' => 'inventory.manage'][$step] ?? throw InventoryException::unknownStep();
         $at = $step === 'receive' ? $this->unitOf($this->found(Warehouse::class, $company, (string) $found->to_warehouse_id, 'warehouse')->unit_id) : $source;
         Gate::authorize($permission, $at);
+        if ($step === 'bill') {
+            // The bill is Accounting's: its buyers' permission at the company too.
+            Gate::authorize('accounting.buy', $company);
+        }
         $version = (int) $request->validated('base_version');
         $actor = $request->user();
 
@@ -107,6 +113,7 @@ class DocumentController extends Controller
             'approve' => $this->documents->approve($company, $found, $version, $actor),
             'reject' => $this->documents->reject($company, $found, $version, (string) $request->validated('reason'), $actor),
             'cancel' => $this->documents->cancel($company, $found, $version, $actor),
+            'bill' => $this->documents->bill($company, $found, $version, (string) $request->validated('party_id'), $request->validated('issue_date'), $actor),
         };
 
         return response()->json(['data' => $this->full($company, $changed)]);
@@ -143,6 +150,8 @@ class DocumentController extends Controller
             'approve' => $document->status === Document::PENDING && $approves,
             'reject' => $document->status === Document::PENDING && $approves,
             'cancel' => in_array($document->status, [Document::DRAFT, Document::PENDING], true) && $manages,
+            'bill' => $document->type === 'receipt' && $document->status === Document::POSTED && $document->bill_id === null && $manages
+                && Gate::allows('accounting.buy', $company) && app(Bills::class)->available($company),
         ]);
     }
 }

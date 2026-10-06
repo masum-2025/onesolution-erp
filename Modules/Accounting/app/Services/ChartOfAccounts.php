@@ -184,19 +184,36 @@ class ChartOfAccounts
     /**
      * Posting keys modules declare (manifest ledger_accounts), with the kind of account each needs.
      *
-     * @return array<string, array{label: string, type: string, module: string}>
+     * @return array<string, array{label: string, type: string, module: string, cleared_by: string|null}>
      */
     public function postingKeys(): array
     {
         $keys = [];
         foreach ($this->modules->all() as $module) {
             foreach ($module->ledgerAccounts as $key => $definition) {
-                $keys[$key] = ['label' => $definition['label'], 'type' => $definition['type'], 'module' => $module->key];
+                $keys[$key] = ['label' => $definition['label'], 'type' => $definition['type'], 'module' => $module->key, 'cleared_by' => $definition['cleared_by'] ?? null];
             }
         }
         ksort($keys);
 
         return $keys;
+    }
+
+    /**
+     * Accounts a supplier's bill may use on its lines besides expenses and
+     * assets: those a module declares as cleared by bills (cleared_by: bills),
+     * e.g. goods received not billed. Other liabilities stay refused.
+     *
+     * @return list<string>
+     */
+    public function billClearingAccounts(Organization $company): array
+    {
+        $keys = array_keys(array_filter($this->postingKeys(), fn (array $definition) => $definition['cleared_by'] === 'bills'));
+        if ($keys === []) {
+            return [];
+        }
+
+        return $this->books->query(PostingAccount::class, $company)->whereIn('posting_key', $keys)->pluck('account_id')->unique()->values()->all();
     }
 
     /**

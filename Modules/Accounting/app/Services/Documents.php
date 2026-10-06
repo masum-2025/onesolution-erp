@@ -255,12 +255,14 @@ class Documents
         $accounts = $this->books->query(Account::class, $company)->whereKey(array_values(array_filter(array_column($lines, 'account_id'), 'is_string')))->get()->keyBy('id');
         $needsUnit = (bool) $this->rules->get('accounting.require_cost_centre', $this->contexts->forOrganization($company));
         $allowedTypes = $type->lineAccountTypes();
+        // A bill may also clear what a module parks for it (goods received not billed).
+        $clearing = $type->isSales() ? [] : app(ChartOfAccounts::class)->billClearingAccounts($company);
 
         $errors = [];
         $checked = [];
         foreach (array_values($lines) as $index => $line) {
             $account = $accounts[$line['account_id'] ?? ''] ?? null;
-            if ($account === null || ! $account->isPostable() || ! in_array($account->type, $allowedTypes, true)) {
+            if ($account === null || ! $account->isPostable() || ! (in_array($account->type, $allowedTypes, true) || in_array($account->getKey(), $clearing, true))) {
                 $errors["lines.{$index}.account_id"] = __('accounting::accounting.validation.line_account_'.($type->isSales() ? 'sales' : 'purchases'));
             }
             $costCentre = $this->books->costCentre($company, $line['cost_centre_id'] ?? null);

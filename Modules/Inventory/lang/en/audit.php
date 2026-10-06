@@ -17,6 +17,7 @@ return [
     'document_submitted' => 'Stock adjustment sent for approval',
     'document_rejected' => 'Stock adjustment sent back',
     'document_cancelled' => 'Stock document cancelled',
+    'document_billed' => 'Supplier bill made from a goods receipt',
     'document_dispatched' => 'Transfer dispatched',
     'document_received' => 'Transfer received',
     'count_opened' => 'Stock count opened',

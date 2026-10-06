@@ -143,7 +143,8 @@
             "receive": "Mark received",
             "approve": "Approve",
             "reject": "Send back",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "bill": "Make supplier bill"
         },
         "done": {
             "post": "Posted. Stock is up to date.",
@@ -151,7 +152,8 @@
             "receive": "Received. Anything missing was written off as a loss.",
             "approve": "Approved and posted.",
             "reject": "Sent back.",
-            "cancel": "Cancelled."
+            "cancel": "Cancelled.",
+            "bill": "Draft bill made in Accounting."
         },
         "confirm": {
             "post_title": "Post this {type}?",
@@ -168,6 +170,16 @@
             "cancel_text": "It stays on the list as cancelled; stock does not change.",
             "delete_title": "Delete this draft?",
             "delete_text": "Nothing was posted; the draft goes."
+        },
+        "bill": {
+            "title": "Supplier bill for this receipt",
+            "text": "A draft bill in Accounting at the costs received, clearing goods received not billed. Check the supplier's VAT there, then submit it.",
+            "vendor": "Supplier",
+            "choose": "Choose a supplier",
+            "none": "No suppliers yet. Add the supplier in Accounting → Parties first.",
+            "date": "Bill date",
+            "billed": "Billed: the supplier's bill is in Accounting.",
+            "open": "Open the bill"
         }
     },
     "line_errors": {

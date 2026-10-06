@@ -9,6 +9,7 @@ use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
+use Modules\Accounting\Services\Bills;
 use Modules\Inventory\Events\StockMoved;
 use Modules\Inventory\Exceptions\InventoryException;
 use Modules\Inventory\Models\Batch;
@@ -406,6 +407,44 @@ class Documents
         }
 
         return $fresh;
+    }
+
+    /**
+     * The supplier's bill for a posted goods receipt: a draft bill in
+     * Accounting (its public Bills service) at the receipt's costs, against
+     * goods received not billed, so the bill clears what the receipt parked
+     * there. Once per receipt; the person finishes the bill in Accounting.
+     */
+    public function bill(Organization $company, Document $document, int $baseVersion, string $partyId, ?string $issueDate, User $actor): Document
+    {
+        return $this->inventories->transaction($company, function () use ($company, $document, $baseVersion, $partyId, $issueDate, $actor) {
+            $document = $this->locked($company, $document, $baseVersion, [Document::POSTED]);
+            if ($document->type !== 'receipt' || $document->bill_id !== null) {
+                throw InventoryException::notBillable();
+            }
+            $warehouse = $this->inventories->query(Warehouse::class, $company)->findOrFail($document->warehouse_id);
+            $items = $this->inventories->query(Item::class, $company)->whereKey($this->linesOf($company, $document)->pluck('item_id')->unique()->all())->get()->keyBy('id');
+            $lines = $this->linesOf($company, $document)->map(fn (DocumentLine $line) => [
+                'description' => trim($items[$line->item_id]->sku.' '.$items[$line->item_id]->name.($line->batch_number ? " ({$line->batch_number})" : '')),
+                'quantity_milli' => $line->quantity_milli,
+                'unit_price_minor' => (int) $line->unit_cost_minor,
+            ])->values()->all();
+
+            $bill = app(Bills::class)->draftFor($company, [
+                'party_id' => $partyId,
+                'issue_date' => $issueDate ?? $document->document_date->toDateString(),
+                'reference' => $document->reference ?: $document->number,
+                'notes' => __('inventory::inventory.narration.bill', ['number' => $document->number]),
+                'clearing_key' => 'inventory.grni',
+                'cost_centre_id' => $warehouse->unit_id,
+                'lines' => $lines,
+            ], $actor);
+
+            $document->forceFill(['bill_id' => $bill['id'], 'billed_at' => now(), 'version' => $document->version + 1])->save();
+            $this->audit->record('inventory.document_billed', $document, new: [...$this->values($document), 'bill_id' => $bill['id'], 'bill_total_minor' => $bill['total_minor']], actor: $actor, organizationId: $company->getKey());
+
+            return $document;
+        });
     }
 
     /**
