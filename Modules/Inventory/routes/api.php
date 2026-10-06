@@ -30,7 +30,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory'])
         Route::get('counts', [CountController::class, 'index']);
         Route::get('counts/{count}', [CountController::class, 'show']);
         // Reports (valuation, reorder, slow, ledger): read in full, often exported, so limited.
-        Route::get('reports/{report}', [ReportController::class, 'show'])->middleware('throttle:inventory-reports')->where('report', '[a-z]{1,20}');
+        Route::get('reports/{report}', [ReportController::class, 'show'])->middleware('throttle:inventory-reports');
 
         Route::middleware('throttle:tenancy-sensitive')->group(function () {
             foreach (['units', 'categories', 'warehouses', 'items'] as $kind) {

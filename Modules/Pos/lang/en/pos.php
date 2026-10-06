@@ -24,6 +24,7 @@ return [
         'version_conflict' => 'Someone changed this meanwhile. Reload and try again.',
     ],
     'validation' => [
+        'report_range' => 'A report covers up to :days days. Choose a shorter range.',
         'code_taken' => 'Another counter of this company already has this code.',
         'unit' => 'Choose a branch or department of this company.',
         'warehouse' => 'Choose a warehouse of this company that is in use.',

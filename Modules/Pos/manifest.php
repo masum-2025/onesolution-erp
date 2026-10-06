@@ -109,6 +109,7 @@ return [
                 ['key' => 'till', 'label' => 'pos::module.menu_till', 'route' => '/pos', 'permission' => 'pos.sell'],
                 ['key' => 'sales', 'label' => 'pos::module.menu_sales', 'route' => '/pos/sales', 'permission' => 'pos.view'],
                 ['key' => 'shifts', 'label' => 'pos::module.menu_shifts', 'route' => '/pos/shifts', 'permission' => 'pos.view'],
+                ['key' => 'reports', 'label' => 'pos::module.menu_reports', 'route' => '/pos/reports', 'permission' => 'pos.supervise'],
             ],
         ],
     ],

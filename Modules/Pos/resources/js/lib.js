@@ -125,3 +125,56 @@ export function saleBody(cart, payments, extra = {}) {
         payments: payments.filter((payment) => payment.amount_minor > 0).map((payment) => ({ method: payment.method, amount_minor: payment.amount_minor, ...(payment.reference ? { reference: payment.reference } : {}) })),
     };
 }
+
+/** Most carts one counter keeps on hold. */
+export const MAX_HELD = 5;
+
+/**
+ * Puts a cart on hold (newest first, at most MAX_HELD): only what was
+ * picked and how many, never the customer's name; prices come back from the
+ * catalogue when it is resumed.
+ */
+export function holdCart(held, cart, id, at) {
+    const lines = cart.map((line) => ({ item_id: line.item_id, quantity_milli: line.quantity_milli, discount_minor: line.discount_minor || 0 }));
+    return [{ id, at, lines }, ...held].slice(0, MAX_HELD);
+}
+
+/**
+ * Takes a held cart back: today's names and prices from the catalogue;
+ * items no longer sold here are left out (and counted, to say so).
+ */
+export function resumeCart(held, id, catalogueItems) {
+    const found = held.find((entry) => entry.id === id);
+    if (!found) return { cart: [], held, dropped: 0 };
+    const cart = [];
+    let dropped = 0;
+    for (const line of found.lines) {
+        const item = catalogueItems.find((row) => row.id === line.item_id);
+        if (!item) {
+            dropped++;
+            continue;
+        }
+        addToCart(cart, item);
+        Object.assign(cart[cart.length - 1], { quantity_milli: line.quantity_milli, discount_minor: line.discount_minor });
+    }
+    return { cart, held: held.filter((entry) => entry.id !== id), dropped };
+}
+
+/** Held carts as saved on the device; anything unreadable is forgotten. */
+export function readHeld(text) {
+    try {
+        const list = JSON.parse(text ?? '[]');
+        return Array.isArray(list) ? list.filter((entry) => entry && typeof entry.id === 'string' && Array.isArray(entry.lines)).slice(0, MAX_HELD) : [];
+    } catch {
+        return [];
+    }
+}
+
+/** The days of a report period ("YYYY-MM-DD"), counted back from today. */
+export function reportRange(preset, today) {
+    const back = (days) => new Date(Date.parse(`${today}T00:00:00Z`) - days * 86400000).toISOString().slice(0, 10);
+    if (preset === 'week') return { from: back(6), to: today };
+    if (preset === 'month30') return { from: back(29), to: today };
+    if (preset === 'this_month') return { from: `${today.slice(0, 7)}-01`, to: today };
+    return { from: today, to: today };
+}

@@ -22,6 +22,7 @@ export function posApi(organizationId) {
 
         sales: (query = {}) => api(`${base}/sales`, { query }),
         sale: (id) => api(`${base}/sales/${id}`),
+        report: (query = {}) => api(`${base}/reports`, { query }),
         sell: (body) => api(`${base}/sales`, { method: 'POST', body }),
         giveBack: (id, body) => api(`${base}/sales/${id}/return`, { method: 'POST', body }),
     };

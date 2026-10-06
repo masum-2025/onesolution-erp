@@ -71,7 +71,17 @@
         "offline_off": "No connection, and offline selling is off here. Try again when online.",
         "give_change": "Give back",
         "receipt": "Receipt",
-        "next": "Next sale"
+        "next": "Next sale",
+        "hold": "Hold",
+        "held": "On hold ({count})",
+        "held_title": "Carts on hold",
+        "held_text": "Take a cart up again; the one you have now goes on hold in its place. Kept on this device only.",
+        "held_lines": "{count} items",
+        "resume": "Take up",
+        "discard": "Throw away",
+        "held_done": "Cart put on hold.",
+        "held_full": "At most {count} carts on hold. Finish or throw one away first.",
+        "held_dropped": "{count} items are no longer sold here and were left out."
     },
     "receipt": {
         "title": "Receipt",
@@ -100,7 +110,8 @@
         "only_review": "Only those to look at",
         "return": "Return",
         "empty": "No sales here",
-        "empty_text": "Sales made at the counters show here."
+        "empty_text": "Sales made at the counters show here.",
+        "reprint": "Print receipt {number} again"
     },
     "shifts": {
         "title": "Shifts",
@@ -145,5 +156,48 @@
         "warehouse": "Sells from warehouse",
         "warehouse_hint": "Stock comes out of this warehouse.",
         "methods": "Payments taken"
+    },
+    "reports": {
+        "title": "Takings",
+        "text": "What the counters took: totals, by day and hour, by cashier, by payment and by item.",
+        "period": "Period",
+        "presets": {
+            "today": "Today",
+            "week": "Last 7 days",
+            "month30": "Last 30 days",
+            "this_month": "This month",
+            "custom": "Choose days"
+        },
+        "from": "From",
+        "to": "To",
+        "all_counters": "All counters",
+        "csv": "Save as CSV",
+        "empty": "No sales in these days",
+        "empty_text": "Choose other days or another counter.",
+        "receipts": "{count} receipts",
+        "returns_count": "{count} returns",
+        "margin_share": "{percent}% of sales before VAT",
+        "hour": "{from}:00–{to}:00",
+        "tiles": {
+            "net": "Net takings",
+            "average": "Average receipt",
+            "returns": "Returns",
+            "tax": "VAT collected",
+            "discount": "Discounts given",
+            "margin": "Gross margin"
+        },
+        "by_day": "By day",
+        "by_hour": "By hour of the day",
+        "by_cashier": "By cashier",
+        "by_method": "By payment",
+        "by_item": "Best sellers",
+        "columns": {
+            "item": "Item",
+            "quantity": "Sold",
+            "amount": "Takings",
+            "margin": "Margin before VAT",
+            "receipts": "Receipts",
+            "returns": "Returns"
+        }
     }
 }

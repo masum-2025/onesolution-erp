@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Banknote, CloudOff, CreditCard, Minus, Plus, Printer, ReceiptText, ScanBarcode, ShoppingCart, Smartphone, Store, X } from 'lucide-vue-next';
+import { Banknote, CloudOff, CreditCard, Hourglass, Minus, PauseCircle, Plus, Printer, ReceiptText, ScanBarcode, ShoppingCart, Smartphone, Store, Trash2, X } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -12,12 +12,12 @@ import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { enqueueOffline, offline, offlineRecords } from '@/lib/offline';
 import { readPref, writePref } from '@/lib/storage';
-import { formatMoney, formatNumber } from '@/lib/format';
+import { formatDateTime, formatMoney, formatNumber } from '@/lib/format';
 import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { posApi } from '../api';
-import { addToCart, amountToMinor, discountShare, formatQuantity, minorToText, percentToBp, priceCart, quickCash, saleBody, settle } from '../lib';
+import { addToCart, amountToMinor, discountShare, formatQuantity, holdCart, MAX_HELD, minorToText, percentToBp, priceCart, quickCash, readHeld, resumeCart, saleBody, settle } from '../lib';
 
 /**
  * The counter. Choose a counter (remembered on this device), open a shift
@@ -25,6 +25,8 @@ import { addToCart, amountToMinor, discountShare, formatQuantity, minorToText, p
  * more), change quantities and discounts, and take payment — cash with
  * quick amounts and the change worked out, card, mobile wallet, or a mix.
  * Without a connection the sale is kept on the device and sent later.
+ * A cart can be put on hold (a customer went back for something) and taken
+ * up again; held carts stay on this device per counter, without names.
  */
 const pos = posApi(currentOrganization().id);
 const router = useRouter();
@@ -118,6 +120,44 @@ function clearCart() {
     cart.value = [];
     customer.value = '';
 }
+
+// Carts on hold at this counter (this device only; prices refreshed on resume).
+const heldKey = computed(() => `pos.held.${registerId.value}`);
+const held = ref([]);
+watch(heldKey, () => {
+    held.value = readHeld(readPref(heldKey.value));
+}, { immediate: true });
+const saveHeld = (list) => {
+    held.value = list;
+    writePref(heldKey.value, list.length ? JSON.stringify(list) : null);
+};
+const showHeld = ref(false);
+function hold() {
+    if (!cart.value.length) return;
+    if (held.value.length >= MAX_HELD) {
+        toast.error(t('pos.till.held_full', { count: formatNumber(MAX_HELD) }));
+        return;
+    }
+    saveHeld(holdCart(held.value, cart.value, globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`, new Date().toISOString()));
+    clearCart();
+    toast.success(t('pos.till.held_done'));
+}
+function resume(id) {
+    // What is in the cart now goes on hold in its place.
+    let list = held.value;
+    if (cart.value.length) list = holdCart(list.filter((entry) => entry.id !== id), cart.value, globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`, new Date().toISOString()).concat(list.filter((entry) => entry.id === id));
+    const result = resumeCart(list, id, catalogue.items);
+    customer.value = '';
+    cart.value = result.cart;
+    saveHeld(result.held);
+    showHeld.value = false;
+    if (result.dropped) toast.error(t('pos.till.held_dropped', { count: formatNumber(result.dropped) }));
+}
+function discardHeld(id) {
+    saveHeld(held.value.filter((entry) => entry.id !== id));
+    if (!held.value.length) showHeld.value = false;
+}
+const heldTotal = (entry) => priceCart(resumeCart([entry], entry.id, catalogue.items).cart, includeTax.value).total;
 
 // Opening a shift.
 const floatText = ref('');
@@ -250,7 +290,11 @@ function nextSale() {
                 <aside class="card flex flex-col lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)]">
                     <header class="flex items-center justify-between border-b border-line px-4 py-3">
                         <h2 class="flex items-center gap-2 text-[15px] font-semibold"><ShoppingCart class="size-4.5" aria-hidden="true" />{{ t('pos.till.cart') }}</h2>
-                        <AppButton v-if="cart.length" size="sm" variant="ghost" :icon="X" @click="clearCart">{{ t('pos.till.clear') }}</AppButton>
+                        <span class="flex items-center gap-1">
+                            <AppButton v-if="held.length" size="sm" variant="ghost" :icon="Hourglass" @click="showHeld = true">{{ t('pos.till.held', { count: formatNumber(held.length) }) }}</AppButton>
+                            <AppButton v-if="cart.length" size="sm" variant="ghost" :icon="PauseCircle" @click="hold">{{ t('pos.till.hold') }}</AppButton>
+                            <AppButton v-if="cart.length" size="sm" variant="ghost" :icon="X" :aria-label="t('pos.till.clear')" @click="clearCart" />
+                        </span>
                     </header>
                     <p v-if="!cart.length" class="px-4 py-10 text-center text-[13px] text-muted">{{ t('pos.till.cart_empty') }}</p>
                     <ul v-else class="min-h-0 flex-1 divide-y divide-line overflow-y-auto">
@@ -350,6 +394,18 @@ function nextSale() {
                 <AppButton v-if="done?.id" variant="secondary" :icon="Printer" @click="router.push({ name: 'pos-sale', params: { id: done.id }, query: { print: '1' } })">{{ t('pos.till.receipt') }}</AppButton>
                 <AppButton variant="primary" autofocus @click="nextSale">{{ t('pos.till.next') }}</AppButton>
             </template>
+        </AppDialog>
+        <AppDialog :open="showHeld" :title="t('pos.till.held_title')" :description="t('pos.till.held_text')" :icon="Hourglass" @close="showHeld = false">
+            <ul class="divide-y divide-line">
+                <li v-for="entry in held" :key="entry.id" class="flex items-center gap-3 py-2.5">
+                    <span class="min-w-0 flex-1 text-[13.5px]">
+                        <span class="block font-medium">{{ t('pos.till.held_lines', { count: formatNumber(entry.lines.length) }) }} · <span class="tabular">{{ money(heldTotal(entry)) }}</span></span>
+                        <span class="block text-[12px] text-muted">{{ formatDateTime(entry.at) }}</span>
+                    </span>
+                    <AppButton size="sm" variant="primary" @click="resume(entry.id)">{{ t('pos.till.resume') }}</AppButton>
+                    <AppButton size="sm" variant="ghost" :icon="Trash2" :aria-label="t('pos.till.discard')" @click="discardHeld(entry.id)" />
+                </li>
+            </ul>
         </AppDialog>
     </div>
 </template>

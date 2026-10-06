@@ -7,6 +7,7 @@ return [
     'menu' => 'Point of sale',
     'menu_till' => 'Sell',
     'menu_sales' => 'Sales and returns',
+    'menu_reports' => 'Takings',
     'menu_shifts' => 'Shifts',
     'menu_registers' => 'Counters',
 ];

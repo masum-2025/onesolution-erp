@@ -92,33 +92,8 @@ export function lineToApi(line, { type, decimals, currency, tracksBatches }) {
     return [out, null];
 }
 
-/**
- * A CSV file of rows (first row the headings), safe to open in a
- * spreadsheet: a cell that could start a formula is kept as text.
- */
-export function toCsv(rows) {
-    const cell = (value) => {
-        let text = value === null || value === undefined ? '' : String(value);
-        if (/^[=+\-@\t\r]/.test(text) && !/^-?\d+(\.\d+)?$/.test(text)) text = `'${text}`;
-        return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-    };
-    return `﻿${rows.map((row) => row.map(cell).join(',')).join('\r\n')}\r\n`;
-}
-
-/** Hands the reader a text file to save (no server round trip). */
-export function downloadText(name, text, type = 'text/csv;charset=utf-8') {
-    const url = URL.createObjectURL(new Blob([text], { type }));
-    const link = Object.assign(document.createElement('a'), { href: url, download: name });
-    document.body.append(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-/** Thousandths -> "12.5" for a CSV (plain digits, no grouping). */
-export function milliForCsv(milli) {
-    return milli === null || milli === undefined ? '' : milliToText(milli);
-}
+// CSV saving is shared by the screens.
+export { downloadText, milliForCsv, toCsv } from '@/lib/csv';
 
 // Barcodes for labels, drawn as SVG on the page: EAN-13 for 13-digit
 // barcodes, Code 128 (set B) for anything else (SKUs). Each returns the

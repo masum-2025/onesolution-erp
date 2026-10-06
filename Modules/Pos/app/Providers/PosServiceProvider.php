@@ -27,6 +27,7 @@ class PosServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom($root.'/lang', 'pos');
 
         // A busy counter makes a sale every few seconds; still bounded per person.
+        RateLimiter::for('pos-reports', fn (Request $request) => Limit::perMinute(30)->by('pos-reports:'.($request->user()?->getKey() ?? $request->ip())));
         RateLimiter::for('pos-sales', fn (Request $request) => Limit::perMinute(60)->by('pos-sales:'.($request->user()?->getKey() ?? $request->ip())));
 
         if (! $this->app->routesAreCached()) {

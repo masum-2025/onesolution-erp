@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ReceiptText, Search } from 'lucide-vue-next';
+import { Printer, ReceiptText, Search } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
@@ -47,8 +47,8 @@ const sales = computed(() => list.data.value?.data ?? []);
             <ErrorState v-else-if="list.error.value" compact :error="list.error.value" @retry="list.reload()" />
             <EmptyState v-else-if="!sales.length" :icon="ReceiptText" :title="t('pos.sales.empty')" :text="t('pos.sales.empty_text')" compact />
             <ul v-else class="divide-y divide-line">
-                <li v-for="sale in sales" :key="sale.id">
-                    <RouterLink :to="{ name: 'pos-sale', params: { id: sale.id } }" class="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3 hover:bg-surface-2">
+                <li v-for="sale in sales" :key="sale.id" class="flex items-center">
+                    <RouterLink :to="{ name: 'pos-sale', params: { id: sale.id } }" class="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1 py-3 ps-5 pe-2 hover:bg-surface-2">
                         <span class="min-w-0 flex-1">
                             <span class="block font-mono text-[13.5px] font-medium" dir="ltr">{{ sale.number }}</span>
                             <span class="block text-[12.5px] text-muted">{{ formatDateTime(sale.sold_at) }} · {{ registerName(sale.register_id) }}<template v-if="sale.customer_name"> · {{ sale.customer_name }}</template></span>
@@ -57,6 +57,9 @@ const sales = computed(() => list.data.value?.data ?? []);
                         <AppBadge v-if="sale.offline" tone="neutral">{{ t('pos.receipt.offline') }}</AppBadge>
                         <AppBadge v-if="sale.review_reason" tone="warn" dot>{{ t(`pos.review.${sale.review_reason}`) }}</AppBadge>
                         <span class="tabular w-32 text-end text-[14px] font-semibold" :class="sale.kind === 'return' ? 'text-bad' : ''">{{ sale.kind === 'return' ? '−' : '' }}{{ formatMoney({ amount: sale.total_minor, currency: sale.currency }) }}</span>
+                    </RouterLink>
+                    <RouterLink :to="{ name: 'pos-sale', params: { id: sale.id }, query: { print: '1' } }" class="me-3 grid size-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-ink" :aria-label="t('pos.sales.reprint', { number: sale.number })" :title="t('pos.sales.reprint', { number: sale.number })">
+                        <Printer class="size-4" aria-hidden="true" />
                     </RouterLink>
                 </li>
             </ul>

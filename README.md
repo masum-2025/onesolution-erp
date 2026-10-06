@@ -2610,6 +2610,25 @@ posted) and the events `inventory.stock.low` / `inventory.moved` (ids only).
   (e.g. 2115, 2160) to books set up before it, under its group when the code is free.
 - After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings`.
 
+### Supplier bills, reports and labels (INV-3)
+
+- **Bill from a receipt** (`POST …/inventory/documents/{id}/bill {base_version, party_id, issue_date?}`,
+  `inventory.manage` at the warehouse's unit and Accounting's `accounting.buy` at the company): a
+  posted goods receipt becomes the supplier's **draft** bill through Accounting's public
+  `Modules\Accounting\Services\Bills` (lines at the receipt's costs on `inventory.grni`, cost centre
+  the warehouse's unit), once per receipt (`inv_documents.bill_id`, audit `inventory.document_billed`).
+  A module marks such a posting key `cleared_by: bills` in its manifest; only those liabilities may
+  sit on bill lines, every other liability is still refused. Accounting off or not set up: no
+  button, 403.
+- **Reports** (`GET …/inventory/reports/{valuation|reorder|slow|ledger}`, `inventory.view`, the unit's
+  warehouses or one, rate limited `inventory-reports` 30/min): value on a day (today's balances less
+  the later moves), what to reorder (the item's reorder quantity, else up to twice its level), slow
+  movers (`days`, nothing sold, issued or sent on), one item's ledger (`item_id`, `from`, `to`; opening,
+  running balance, closing; at most 3,000 moves). Totals are added up in PHP, not SQL. Screens save
+  each as CSV (`resources/js/lib/csv.js`: byte order mark, formula-like cells kept as text).
+- **Labels** (`/inventory/labels`, also from an item): shop name, item, price and barcode drawn as SVG
+  (EAN-13 when the barcode is a valid one, else Code 128 of the barcode or SKU), on an A4 sheet (3 × 8)
+  or a 50 × 30 mm label printer.
 ### Future expansion (Inventory)
 
 - A new sector or country needs no code: units, categories and prices are each company's data;
@@ -2650,6 +2669,25 @@ receipt); CRM customers come later.
   returns, Shifts + one shift (Z report, close, review), Counters (settings).
 - After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings`.
 
+### Takings, held carts and reprints (POS-3)
+
+- **Takings** (`GET …/pos/reports?from&to&register_id`, `pos.supervise` or `pos.manage`, at most 366
+  days, rate limited `pos-reports` 30/min): totals (net, average receipt, returns, VAT, discounts,
+  margin before VAT), and by day and hour (the company's timezone), cashier, payment method (cash net
+  of change) and item; returns count against them. Screen `/pos/reports` with periods and CSV.
+- **Hold a cart** at the till and take it up later: kept on the device per counter (at most 5), items
+  and quantities only (no customer name), prices refreshed from the catalogue on resume.
+- **Reprint** any receipt from the sales list (opens it with `?print=1`).
+
+### Demo shop (local only)
+
+`php artisan db:seed --class=DemoStockSeeder` (also part of `migrate --seed` in `APP_ENV=local`; only
+adds, stops when the shop exists) builds **Demo Super Shop** in the demo group: retail books, 30
+items with Bangla and English names, barcodes, VAT and batches, three suppliers (two receipts billed,
+two to bill), transfers to the Dhanmondi and Uttara floors (one on the way), an adjustment waiting for
+approval, an open count, three counters with two weeks of shifts, sales and returns (one cash
+difference to review) and a shift open today. Logins `shop.owner@`, `store@`, `cashier@`,
+`supervisor@demo.test`, password `One@2002`.
 ### Future expansion (POS)
 
 - A new sector, country or partner needs no code: methods, prices, VAT, limits, return days and

@@ -74,4 +74,10 @@ class Tills
     {
         return $this->settings->values($company)['currency_code'] ?? throw PosException::noCurrency();
     }
+
+    /** The company's timezone (days and hours in reports are its own). */
+    public function timezone(Organization $company): string
+    {
+        return ($this->settings->values($company)['timezone'] ?? null) ?: 'UTC';
+    }
 }

@@ -203,3 +203,29 @@ it('prices with integers: VAT inside or on top, change from cash only', function
         ->and(Pricing::discountShare(2000, 11500))->toBe(1739)
         ->and(Pricing::part(23000, 1000, 2000))->toBe(11500);
 });
+
+it('reports takings by day, hour, cashier, method and item to supervisors only, returns counted against them', function () {
+    ($this->open)()->assertCreated();
+    // Two soaps cash (230.00, 300.00 handed over: 70.00 change) and ten pens by card (100.00).
+    $sale = ($this->sell)([['item_id' => $this->soap['id'], 'quantity_milli' => 2000]], [['method' => 'cash', 'amount_minor' => 30000]])->assertCreated()->json('data');
+    ($this->sell)([['item_id' => $this->pen['id'], 'quantity_milli' => 10000]], [['method' => 'card', 'amount_minor' => 10000]])->assertCreated();
+    $line = $this->asToken($this->supervisor)->getJson(($this->api)("sales/{$sale['id']}"))->json('data.lines.0.id');
+    $this->asToken($this->supervisor)->postJson(($this->api)("sales/{$sale['id']}/return"), ['op_id' => (string) str()->ulid(), 'register_id' => $this->till['id'],
+        'reason' => 'Wrong one', 'lines' => [['line_id' => $line, 'quantity_milli' => 1000]]])->assertCreated();
+
+    $this->asToken($this->cashier)->getJson(($this->api)('reports'))->assertForbidden();
+    $report = $this->asToken($this->supervisor)->getJson(($this->api)('reports?from=2026-11-02&to=2026-11-02'))->assertOk()->json('data');
+    expect($report['totals'])->toMatchArray(['sales' => 33000, 'sales_count' => 2, 'returns' => 11500, 'returns_count' => 1, 'net' => 21500, 'average' => 16500])
+        ->and(collect($report['methods'])->pluck('amount', 'method')->all())->toEqual(['cash' => 23000 - 11500, 'card' => 10000])
+        ->and(collect($report['items'])->firstWhere('sku', 'SOAP'))->toMatchArray(['quantity_milli' => 1000, 'amount' => 11500])
+        ->and($report['cashiers'])->toHaveCount(2)
+        ->and($report['days'])->toBe([['date' => '2026-11-02', 'amount' => 21500, 'count' => 2]]);
+    // Every sale falls in one hour of the company's day.
+    expect(collect($report['hours'])->sum('count'))->toBe(2)->and($report['hours'])->toHaveCount(24);
+
+    // A year at most; another company's counter is not found.
+    $this->asToken($this->supervisor)->getJson(($this->api)('reports?from=2025-01-01&to=2026-11-02'))->assertUnprocessable()->assertJsonValidationErrors('to');
+    $other = orgToken(staffWithRoles($this->w->c2, makeRole($this->w->c2, ['pos.view', 'pos.supervise'], 'Elsewhere')), $this->w->c2);
+    $this->asToken($other)->getJson(($this->api)("reports?register_id={$this->till['id']}", $this->w->c2))->assertNotFound();
+    expect($this->asToken($other)->getJson(($this->api)('reports', $this->w->c2))->assertOk()->json('data.totals.sales_count'))->toBe(0);
+});

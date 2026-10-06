@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { describe, expect, it } from 'vitest';
-import { addToCart, amountToMinor, discountShare, formatQuantity, percentToBp, priceCart, quantityToMilli, quickCash, saleBody, settle, shiftTone, splitTax } from '../../Modules/Pos/resources/js/lib.js';
+import { addToCart, amountToMinor, discountShare, formatQuantity, holdCart, MAX_HELD, percentToBp, priceCart, quantityToMilli, quickCash, readHeld, reportRange, resumeCart, saleBody, settle, shiftTone, splitTax } from '../../Modules/Pos/resources/js/lib.js';
+import { milliForCsv } from '../../resources/js/lib/csv.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Pos/resources/js/locales/en/pos.json';
 import bn from '../../Modules/Pos/resources/js/locales/bn/pos.json';
@@ -12,7 +13,7 @@ function keys(tree, prefix = '') {
 describe('Point of sale screens', () => {
     it('registers its screens with the app shell', () => {
         const names = moduleRoutes.filter((route) => route.meta.module === 'pos').map((route) => route.name);
-        expect(names).toEqual(expect.arrayContaining(['pos', 'pos-sales', 'pos-sale', 'pos-shifts', 'pos-shift', 'pos-registers']));
+        expect(names).toEqual(expect.arrayContaining(['pos-reports', 'pos', 'pos-sales', 'pos-sale', 'pos-shifts', 'pos-shift', 'pos-registers']));
     });
 
     it('prices the cart exactly as the server does (the same cases as PosTest)', () => {
@@ -59,5 +60,35 @@ describe('Point of sale screens', () => {
         }
         for (const reason of ['negative_stock', 'late_session', 'discount']) expect(bn.review[reason]).toBeTruthy();
         expect(keys(bn).sort()).toEqual(keys(en).sort());
+    });
+
+    it('holds carts without names and takes them up at the prices of today', () => {
+        const soap = { id: 's', sku: 'SOAP', name: 'Soap', unit_id: 'u', sale_price_minor: 11500, tax_rate_bp: 1500 };
+        const pen = { id: 'p', sku: 'PEN', name: 'Pen', unit_id: 'u', sale_price_minor: 1000, tax_rate_bp: 0 };
+        const cart = addToCart(addToCart(addToCart([], soap), soap), pen);
+        cart[0].discount_minor = 500;
+        let held = holdCart([], cart, 'a', '2026-11-02T04:00:00Z');
+        expect(JSON.stringify(held)).not.toContain('Soap');
+        expect(held[0].lines).toEqual([{ item_id: 's', quantity_milli: 2000, discount_minor: 500 }, { item_id: 'p', quantity_milli: 1000, discount_minor: 0 }]);
+        // The pen is no longer sold; the soap now costs more.
+        const back = resumeCart(held, 'a', [{ ...soap, sale_price_minor: 12000 }]);
+        expect(back.dropped).toBe(1);
+        expect(back.held).toEqual([]);
+        expect(back.cart).toMatchObject([{ item_id: 's', quantity_milli: 2000, discount_minor: 500, unit_price_minor: 12000 }]);
+        for (let index = 0; index < MAX_HELD + 2; index++) held = holdCart(held, cart, `h${index}`, 'x');
+        expect(held).toHaveLength(MAX_HELD);
+        expect(readHeld(JSON.stringify(held))).toHaveLength(MAX_HELD);
+        expect(readHeld('not json')).toEqual([]);
+        expect(readHeld('[{"id":1}]')).toEqual([]);
+    });
+
+    it('works out report periods and plain CSV quantities', () => {
+        expect(reportRange('today', '2026-11-02')).toEqual({ from: '2026-11-02', to: '2026-11-02' });
+        expect(reportRange('week', '2026-11-02')).toEqual({ from: '2026-10-27', to: '2026-11-02' });
+        expect(reportRange('month30', '2026-03-01').from).toBe('2026-01-31');
+        expect(reportRange('this_month', '2026-11-02').from).toBe('2026-11-01');
+        expect(milliForCsv(12500)).toBe('12.5');
+        expect(milliForCsv(-3000)).toBe('-3');
+        expect(milliForCsv(1005)).toBe('1.005');
     });
 });

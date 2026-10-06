@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Pos\Http\Controllers\RegisterController;
+use Modules\Pos\Http\Controllers\ReportController;
 use Modules\Pos\Http\Controllers\SaleController;
 use Modules\Pos\Http\Controllers\SessionController;
 
@@ -21,6 +22,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:pos'])
         Route::get('sessions/{session}', [SessionController::class, 'show']);
         Route::get('sales', [SaleController::class, 'index']);
         Route::get('sales/{sale}', [SaleController::class, 'show']);
+        Route::get('reports', ReportController::class)->middleware('throttle:pos-reports');
 
         Route::middleware('throttle:tenancy-sensitive')->group(function () {
             Route::post('registers', [RegisterController::class, 'store']);
