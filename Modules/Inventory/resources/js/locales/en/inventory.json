@@ -271,5 +271,86 @@
             "empty": "No categories yet",
             "empty_text": "Group items, like Food, Toiletries, Stationery."
         }
+    },
+    "reports": {
+        "title": "Stock reports",
+        "names": {
+            "valuation": "Value",
+            "reorder": "To reorder",
+            "slow": "Slow movers",
+            "ledger": "Item ledger"
+        },
+        "help": {
+            "valuation": "Quantity and value of every item in each warehouse on a day.",
+            "reorder": "Items at or below their reorder level, and how much to order. Print it as a shopping list.",
+            "slow": "Stock that has not been sold, issued or sent on for a while: money sitting on the shelf.",
+            "ledger": "Every move of one item between two days, with the balance after each."
+        },
+        "all_warehouses": "All warehouses here",
+        "as_of": "On the day",
+        "as_of_hint": "Empty = today.",
+        "days": "Not out for",
+        "days_option": "{days} days",
+        "item": "Item",
+        "choose_item": "Choose an item",
+        "pick_item": "Choose an item to see its ledger.",
+        "from": "From",
+        "to": "To",
+        "csv": "Save as CSV",
+        "print": "Print",
+        "total": "Total value",
+        "order_total": "Estimated cost to reorder",
+        "opening": "Opening on {date}",
+        "closing": "Closing on {date}",
+        "idle": "Last out {date} ({days} days)",
+        "never_out": "Never gone out",
+        "empty": {
+            "valuation": "No stock on that day",
+            "reorder": "Nothing to reorder",
+            "slow": "No slow movers: everything is moving",
+            "ledger": "No moves in these days"
+        },
+        "columns": {
+            "sku": "SKU",
+            "item": "Item",
+            "warehouse": "Warehouse",
+            "quantity": "Quantity",
+            "value": "Value",
+            "level": "Reorder level",
+            "order": "Order",
+            "cost": "Average cost",
+            "last_out": "Last out",
+            "idle_days": "Days idle",
+            "date": "Date",
+            "kind": "What",
+            "balance": "Balance",
+            "balance_value": "Balance value"
+        },
+        "kinds": {
+            "receipt": "Received",
+            "issue": "Issued",
+            "transfer_out": "Sent to another warehouse",
+            "transfer_in": "From another warehouse",
+            "adjustment": "Adjusted",
+            "count": "Counted",
+            "sale": "Sold",
+            "return": "Returned"
+        }
+    },
+    "labels": {
+        "title": "Barcode labels",
+        "text": "Choose items and how many labels of each, then print on an A4 sheet or a label printer.",
+        "print": "Print {count} labels",
+        "find": "Find items",
+        "find_hint": "Name, SKU or barcode",
+        "layout": "Paper",
+        "layouts": {
+            "sheet": "A4 sheet (3 × 8)",
+            "roll": "Label printer (50 × 30 mm)"
+        },
+        "empty": "No items with a sale price",
+        "fewer": "One label less of {item}",
+        "more": "One label more of {item}",
+        "preview": "How they will print:"
     }
 }

@@ -2,6 +2,9 @@
 
 namespace Modules\Inventory\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Inventory\Export\InventoryExporter;
@@ -24,6 +27,7 @@ class InventoryServiceProvider extends ServiceProvider
     {
         $root = dirname(__DIR__, 2);
         $this->loadTranslationsFrom($root.'/lang', 'inventory');
+        RateLimiter::for('inventory-reports', fn (Request $request) => Limit::perMinute(30)->by('inventory-reports:'.($request->user()?->getKey() ?? $request->ip())));
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');

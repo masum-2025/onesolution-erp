@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Inventory\Http\Controllers\CatalogController;
 use Modules\Inventory\Http\Controllers\CountController;
 use Modules\Inventory\Http\Controllers\DocumentController;
+use Modules\Inventory\Http\Controllers\ReportController;
 use Modules\Inventory\Http\Controllers\StockController;
 
 /*
@@ -28,6 +29,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory'])
         Route::get('documents/{document}', [DocumentController::class, 'show']);
         Route::get('counts', [CountController::class, 'index']);
         Route::get('counts/{count}', [CountController::class, 'show']);
+        // Reports (valuation, reorder, slow, ledger): read in full, often exported, so limited.
+        Route::get('reports/{report}', [ReportController::class, 'show'])->middleware('throttle:inventory-reports')->where('report', '[a-z]{1,20}');
 
         Route::middleware('throttle:tenancy-sensitive')->group(function () {
             foreach (['units', 'categories', 'warehouses', 'items'] as $kind) {

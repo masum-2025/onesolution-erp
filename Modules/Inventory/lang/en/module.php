@@ -8,6 +8,8 @@ return [
     'menu_stock' => 'Stock',
     'menu_items' => 'Items',
     'menu_documents' => 'Receipts and issues',
+    'menu_reports' => 'Reports',
+    'menu_labels' => 'Labels',
     'menu_counts' => 'Stock counts',
     'menu_warehouses' => 'Warehouses',
     'menu_units' => 'Units',

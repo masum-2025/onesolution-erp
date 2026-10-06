@@ -75,6 +75,11 @@ class InventoryException extends TenancyException
         return new self('not_billable', 409);
     }
 
+    public static function rangeTooLong(int $most): self
+    {
+        return new self('range_too_long', 422, ['most' => (string) $most]);
+    }
+
     public static function countOpen(): self
     {
         return new self('count_open', 409);

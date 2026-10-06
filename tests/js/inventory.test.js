@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountToMinor, cleanNumber, formatQuantity, levelTone, lineToApi, milliToText, quantityToMilli, statusTone } from '../../Modules/Inventory/resources/js/lib.js';
+import { amountToMinor, barcodeModules, cleanNumber, CODE128_TABLE, code128Modules, ean13Modules, ean13Valid, formatQuantity, levelTone, lineToApi, milliToText, quantityToMilli, statusTone, toCsv } from '../../Modules/Inventory/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Inventory/resources/js/locales/en/inventory.json';
 import bn from '../../Modules/Inventory/resources/js/locales/bn/inventory.json';
@@ -51,5 +51,37 @@ describe('Inventory screens', () => {
             expect(bn.status[status]).toBeTruthy();
         }
         expect(keys(bn).sort()).toEqual(keys(en).sort());
+    });
+
+    it('draws barcodes for labels: EAN-13 when valid, else Code 128', () => {
+        expect(ean13Valid('4006381333931')).toBe(true);
+        expect(ean13Valid('4006381333932')).toBe(false);
+        const ean = ean13Modules('4006381333931');
+        expect(ean).toHaveLength(95);
+        expect(ean.slice(0, 3)).toBe('101');
+        expect(ean.slice(45, 50)).toBe('01010');
+        // First digit 4 = LGLLGG; the second digit 0 in set L.
+        expect(ean.slice(3, 10)).toBe('0001101');
+        // Every Code 128 symbol is 11 modules wide, the stop 13.
+        expect(CODE128_TABLE).toHaveLength(107);
+        CODE128_TABLE.forEach((pattern, value) => expect([...pattern].reduce((sum, width) => sum + Number(width), 0), String(value)).toBe(value === 106 ? 13 : 11));
+        // Start B, two symbols, check, stop: 11 * 4 + 13.
+        expect(code128Modules('AB')).toHaveLength(57);
+        expect(code128Modules('চাল')).toBeNull();
+        // Start, nine characters, check: eleven symbols of 11 modules, and the stop.
+        expect(barcodeModules('RICE-MINI')).toHaveLength(11 * 11 + 13);
+    });
+
+    it('saves CSV that a spreadsheet opens safely', () => {
+        const csv = toCsv([['Item', 'Value'], ['=HYPERLINK("x")', '-1500.50'], ['Rice, 25 kg', '১২']]);
+        expect(csv.startsWith('\uFEFF')).toBe(true);
+        expect(csv).toContain(`"'=HYPERLINK(""x"")"`);
+        expect(csv).toContain(',-1500.50\r\n');
+        expect(csv).toContain('"Rice, 25 kg",১২');
+    });
+
+    it('opens the reports and labels screens', () => {
+        const names = moduleRoutes.filter((route) => route.meta.module === 'inventory').map((route) => route.name);
+        expect(names).toEqual(expect.arrayContaining(['inventory-reports', 'inventory-labels']));
     });
 });

@@ -7,6 +7,7 @@ use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Modules\Inventory\Exceptions\InventoryException;
@@ -73,5 +74,13 @@ class Inventories
     public function currency(Organization $company): string
     {
         return $this->settings->values($company)['currency_code'] ?? throw InventoryException::noCurrency();
+    }
+
+    /** Today at the company (its timezone), as a UTC date. */
+    public function today(Organization $company): CarbonImmutable
+    {
+        $zone = $this->settings->values($company)['timezone'] ?? 'UTC';
+
+        return CarbonImmutable::parse(CarbonImmutable::now()->setTimezone($zone ?: 'UTC')->toDateString(), 'UTC');
     }
 }

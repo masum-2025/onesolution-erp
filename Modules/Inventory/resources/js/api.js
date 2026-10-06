@@ -17,6 +17,7 @@ export function inventoryApi(organizationId) {
         stock: (query = {}) => api(`${base}/stock`, { query }),
         moves: (query = {}) => api(`${base}/moves`, { query }),
         expiring: () => api(`${base}/expiring`),
+        report: (name, query = {}) => api(`${base}/reports/${name}`, { query }),
 
         documents: (query = {}) => api(`${base}/documents`, { query }),
         document: (id) => api(`${base}/documents/${id}`),

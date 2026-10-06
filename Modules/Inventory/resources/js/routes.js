@@ -15,6 +15,8 @@ export default [
     { path: 'inventory/counts', name: 'inventory-counts', component: () => import('./pages/CountsPage.vue'), meta },
     { path: 'inventory/counts/:id', name: 'inventory-count', component: () => import('./pages/CountPage.vue'), meta },
     { path: 'inventory/expiring', name: 'inventory-expiring', component: () => import('./pages/ExpiringPage.vue'), meta },
+    { path: 'inventory/reports', name: 'inventory-reports', component: () => import('./pages/ReportsPage.vue'), meta },
+    { path: 'inventory/labels', name: 'inventory-labels', component: () => import('./pages/LabelsPage.vue'), meta },
     { path: 'inventory/warehouses', name: 'inventory-warehouses', component: () => import('./pages/SetupPage.vue'), meta: { ...meta, kind: 'warehouses' } },
     { path: 'inventory/units', name: 'inventory-units', component: () => import('./pages/SetupPage.vue'), meta: { ...meta, kind: 'units' } },
     { path: 'inventory/categories', name: 'inventory-categories', component: () => import('./pages/SetupPage.vue'), meta: { ...meta, kind: 'categories' } },

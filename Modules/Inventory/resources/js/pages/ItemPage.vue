@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, History, PenLine, Warehouse } from 'lucide-vue-next';
+import { ArrowLeft, History, PenLine, Tags, Warehouse } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -47,6 +47,7 @@ const editing = ref(false);
                     </span>
                 </template>
                 <template #actions>
+                    <AppButton v-if="item.sale_price_minor !== null" variant="ghost" :icon="Tags" :to="{ name: 'inventory-labels', query: { items: item.id } }">{{ t('inventory.labels.title') }}</AppButton>
                     <AppButton v-if="can('inventory.manage')" variant="secondary" :icon="PenLine" @click="editing = true">{{ t('inventory.common.edit') }}</AppButton>
                 </template>
             </PageHeader>

@@ -21,6 +21,8 @@ return [
         'warehouse_inactive' => 'That warehouse is switched off. Switch it on or choose another.',
         'unknown_step' => 'Unknown step.',
         'not_billable' => 'Only a posted goods receipt without a bill can be billed. Reload and check.',
+        'range_too_long' => 'More than :most moves in that range. Choose fewer days or one warehouse.',
+        'report_not_found' => 'Unknown report.',
         'count_open' => 'This warehouse already has a stock count open. Finish or cancel it first.',
         'version_conflict' => 'Someone changed this meanwhile. Reload and try again.',
     ],

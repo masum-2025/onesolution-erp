@@ -114,6 +114,8 @@ return [
                 ['key' => 'items', 'label' => 'inventory::module.menu_items', 'route' => '/inventory/items', 'permission' => 'inventory.view'],
                 ['key' => 'documents', 'label' => 'inventory::module.menu_documents', 'route' => '/inventory/documents', 'permission' => 'inventory.view'],
                 ['key' => 'counts', 'label' => 'inventory::module.menu_counts', 'route' => '/inventory/counts', 'permission' => 'inventory.view'],
+                ['key' => 'reports', 'label' => 'inventory::module.menu_reports', 'route' => '/inventory/reports', 'permission' => 'inventory.view'],
+                ['key' => 'labels', 'label' => 'inventory::module.menu_labels', 'route' => '/inventory/labels', 'permission' => 'inventory.view'],
             ],
         ],
     ],

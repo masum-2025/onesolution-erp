@@ -241,3 +241,37 @@ it('makes the supplier bill from a posted receipt once, clearing goods received 
     $next = $this->asToken($buyer)->getJson(($this->api)("documents/{$next['id']}"))->assertOk()->assertJsonPath('data.can.bill', false)->json('data');
     ($this->step)($next, 'bill', $buyer, ['party_id' => $vendor])->assertForbidden();
 });
+
+it('reports stock value on a day, what to reorder, slow movers and one item\'s ledger, for the warehouses a reader sees', function () {
+    ($this->receive)([['item_id' => $this->soap['id'], 'quantity_milli' => 10000, 'unit_cost_minor' => 10000], ['item_id' => $this->rice['id'], 'quantity_milli' => 50000, 'unit_cost_minor' => 7000]]);
+    $this->travelTo(CarbonImmutable::parse('2026-11-05 04:00:00', 'UTC'));
+    $this->keeper = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['inventory.view', 'inventory.manage'], 'Keeper again')), $this->w->c1);
+    ($this->step)(($this->document)('issue', [['item_id' => $this->soap['id'], 'quantity_milli' => 6000]], ['document_date' => '2026-11-04']), 'post')->assertOk();
+    $report = fn (string $name, array $query = [], $token = null, $unit = null) => $this->asToken($token ?? $this->keeper)->getJson(($this->api)("reports/{$name}?".http_build_query($query), $unit));
+
+    // Value on the 2nd (before the issue) and today.
+    $before = collect($report('valuation', ['as_of' => '2026-11-02'])->assertOk()->json('data'))->keyBy('item_id');
+    expect($before[$this->soap['id']])->toMatchArray(['quantity_milli' => 10000, 'value_minor' => 100000]);
+    expect(collect($report('valuation')->json('data'))->keyBy('item_id')[$this->soap['id']])->toMatchArray(['quantity_milli' => 4000, 'value_minor' => 40000]);
+    $report('valuation', ['as_of' => '2027-01-01'])->assertUnprocessable()->assertJsonValidationErrors('as_of');
+
+    // Soap is below its reorder level of 5; rice has no level.
+    expect($report('reorder')->json('data'))->toHaveCount(1)->and($report('reorder')->json('data.0'))->toMatchArray(['item_id' => $this->soap['id'], 'quantity_milli' => 4000, 'unit_cost_minor' => 10000]);
+    // Rice never went out: slow. Soap went out yesterday: not slow.
+    expect(collect($report('slow', ['days' => 30])->json('data'))->pluck('item_id')->all())->toBe([$this->rice['id']]);
+
+    $ledger = $report('ledger', ['item_id' => $this->soap['id'], 'from' => '2026-11-03', 'to' => '2026-11-05'])->assertOk();
+    expect($ledger->json('meta.opening'))->toBe(['quantity_milli' => 10000, 'value_minor' => 100000])
+        ->and($ledger->json('data'))->toHaveCount(1)
+        ->and($ledger->json('data.0'))->toMatchArray(['kind' => 'issue', 'quantity_milli' => -6000, 'balance_milli' => 4000])
+        ->and($ledger->json('meta.closing'))->toBe(['quantity_milli' => 4000, 'value_minor' => 40000]);
+    $report('ledger')->assertUnprocessable()->assertJsonValidationErrors('item_id');
+    $report('nonsense')->assertNotFound();
+
+    // A branch reader sees only the branch shop (nothing there), not the main store; another company sees nothing of this one.
+    $branch = orgToken(staffWithRoles($this->w->b1, makeRole($this->w->c1, ['inventory.view'], 'Branch viewer')), $this->w->b1);
+    expect($report('valuation', [], $branch, $this->w->b1)->assertOk()->json('data'))->toBe([]);
+    $report('valuation', ['warehouse_id' => $this->main['id']], $branch, $this->w->b1)->assertNotFound();
+    $other = orgToken(staffWithRoles($this->w->c2, makeRole($this->w->c2, ['inventory.view'], 'Elsewhere')), $this->w->c2);
+    $this->asToken($other)->getJson("/api/organizations/{$this->w->c1->id}/inventory/reports/valuation")->assertNotFound();
+});
