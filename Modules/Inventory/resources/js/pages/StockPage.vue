@@ -74,7 +74,7 @@ const actions = [
         <section class="card mb-5 flex flex-wrap items-end gap-4 p-5">
             <div class="min-w-0 flex-1">
                 <p class="text-[12.5px] text-muted">{{ t('inventory.stock.value') }}</p>
-                <p class="tabular text-[22px] font-semibold text-brand-text">{{ formatMoney({ amount: list.data.value?.meta?.value_minor ?? 0, currency }) }}</p>
+                <p class="tabular text-[22px] font-semibold text-brand-text">{{ list.error.value ? '—' : formatMoney({ amount: list.data.value?.meta?.value_minor ?? 0, currency }) }}</p>
             </div>
             <label class="grid gap-1 text-[12.5px] text-muted">
                 {{ t('inventory.common.warehouse') }}

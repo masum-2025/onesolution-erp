@@ -38,6 +38,12 @@ describe('money in minor units, without floats', () => {
         expect(formatMoney({ amount: 150050, currency: 'BDT' })).toMatch(/১,৫০০\.৫০/);
         await setLocale('en', { remember: false });
     });
+
+    it('shows the number alone when the currency is not known yet, never "undefined"', () => {
+        expect(formatMoney({ amount: 0, currency: undefined })).not.toContain('undefined');
+        expect(formatMoney({ amount: 150050, currency: null })).toContain('1,500.50');
+        expect(formatMoney({ amount: null, currency: 'BDT' })).toBe('—');
+    });
 });
 
 describe('durations', () => {

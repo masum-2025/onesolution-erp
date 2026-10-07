@@ -92,6 +92,8 @@ export function decimalStringToMinor(text, digits) {
 export function formatMoney(money) {
     if (!money || money.amount === null || money.amount === undefined) return '—';
     const digits = currencyDigits(money.currency);
+    // No currency known yet (still loading, or the module is off): the number alone, never "undefined".
+    if (!money.currency) return formatDecimal(minorToDecimalString(money.amount, digits));
     try {
         return new Intl.NumberFormat(localeTag(), { style: 'currency', currency: money.currency }).format(
             minorToDecimalString(money.amount, digits),
