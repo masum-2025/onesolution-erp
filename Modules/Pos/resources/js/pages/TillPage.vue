@@ -87,6 +87,25 @@ function scanned() {
 // The cart.
 const cart = ref([]);
 const customer = ref('');
+// A returning customer by mobile number (CRM's contact when it is on, else earlier sales here).
+const phone = ref('');
+const found = ref(null);
+const looking = ref(false);
+async function lookUp() {
+    const typed = phone.value.trim();
+    found.value = null;
+    if (typed.replace(/[^0-9০-৯]/g, '').length < 10) return;
+    looking.value = true;
+    try {
+        const { data } = await pos.customer(typed);
+        found.value = data;
+        if (data.found && data.name && !customer.value.trim()) customer.value = data.name;
+    } catch (error) {
+        found.value = { error: error.message };
+    } finally {
+        looking.value = false;
+    }
+}
 const includeTax = computed(() => catalogue.meta.prices_include_tax ?? true);
 const priced = computed(() => priceCart(cart.value, includeTax.value));
 const overLimit = computed(() => discountShare(priced.value.discount, priced.value.subtotal) > percentToBp(catalogue.meta.max_discount_percent ?? '0') && !can('pos.supervise'));
@@ -119,6 +138,8 @@ function saveDiscount() {
 function clearCart() {
     cart.value = [];
     customer.value = '';
+    phone.value = '';
+    found.value = null;
 }
 
 // Carts on hold at this counter (this device only; prices refreshed on resume).
@@ -196,7 +217,7 @@ const done = ref(null);
 async function complete() {
     if (!settlement.value.ok) return;
     const opId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${cart.value.length}`;
-    const body = saleBody(cart.value, paymentRows.value, { op_id: opId, register_id: register.value.id, ...(customer.value.trim() ? { customer_name: customer.value.trim() } : {}) });
+    const body = saleBody(cart.value, paymentRows.value, { op_id: opId, register_id: register.value.id, ...(customer.value.trim() ? { customer_name: customer.value.trim() } : {}), ...(phone.value.trim() ? { customer_phone: phone.value.trim() } : {}) });
     completing.value = true;
     try {
         if (globalThis.navigator?.onLine === false) throw Object.assign(new Error('offline'), { code: 'network' });
@@ -211,9 +232,11 @@ async function complete() {
             toast.error(t('pos.till.offline_off'));
             return;
         }
-        // The queue gives the sale its own op id.
+        // The queue gives the sale its own op id. No customer details are kept on the device (personal data).
         const data = { ...body };
         delete data.op_id;
+        delete data.customer_name;
+        delete data.customer_phone;
         await enqueueOffline('pos.sale', 'create', { ...data, session_id: shift.value?.id ?? null });
         done.value = { id: null, number: null, change: settlement.value.change, offline: true };
     } finally {
@@ -316,7 +339,16 @@ function nextSale() {
                         </li>
                     </ul>
                     <footer class="border-t border-line px-4 py-3">
-                        <input v-model="customer" class="field-input mb-3" maxlength="150" :placeholder="t('pos.till.customer')" :aria-label="t('pos.till.customer')" />
+                        <div class="mb-3 grid grid-cols-2 gap-2">
+                            <input v-model="phone" type="tel" inputmode="tel" dir="ltr" class="field-input tabular" maxlength="20" :placeholder="t('pos.till.phone')" :aria-label="t('pos.till.phone')" @blur="lookUp" @keydown.enter.prevent="lookUp" />
+                            <input v-model="customer" class="field-input" maxlength="150" :placeholder="t('pos.till.customer')" :aria-label="t('pos.till.customer')" />
+                        </div>
+                        <p v-if="looking" class="-mt-2 mb-2 text-[12px] text-muted">{{ t('pos.till.looking') }}</p>
+                        <p v-else-if="found?.error" class="-mt-2 mb-2 text-[12px] text-bad">{{ found.error }}</p>
+                        <p v-else-if="found?.found" class="-mt-2 mb-2 rounded-lg bg-ok-soft px-3 py-1.5 text-[12px] text-ok">
+                            {{ t('pos.till.returning', { name: found.name ?? '', count: formatNumber(found.purchases) }) }}<template v-if="found.points !== null"> · {{ t('pos.till.points', { count: formatNumber(found.points) }) }}</template>
+                        </p>
+                        <p v-else-if="found" class="-mt-2 mb-2 text-[12px] text-muted">{{ t('pos.till.new_customer') }}</p>
                         <dl class="grid grid-cols-[1fr_auto] gap-y-1 text-[13px]">
                             <dt class="text-muted">{{ t('pos.till.subtotal') }}</dt><dd class="tabular text-end">{{ money(priced.subtotal) }}</dd>
                             <template v-if="priced.discount"><dt class="text-muted">{{ t('pos.till.discounts') }}</dt><dd class="tabular text-end text-bad">−{{ money(priced.discount) }}</dd></template>

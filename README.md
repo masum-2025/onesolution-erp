@@ -2694,6 +2694,58 @@ difference to review) and a shift open today. Logins `shop.owner@`, `store@`, `c
   number prefixes are data and rules. CRM customers and loyalty, gift cards, card terminals and
   bKash APIs are later steps behind the same payment methods.
 
+## CRM module (business module 7: CRM-1 backend, CRM-2 screens, CRM-3 POS and demo)
+
+Works alone (`requires: []`); uses Inventory items, Accounting VAT codes and invoices, and POS sales
+when they are on, only through their public services (`Inventory\Services\Stock`,
+`Accounting\Services\TaxCodes::salesRates|salesCodes`, the new `Accounting\Services\Customers`) and
+the event `Modules\Pos\Events\SaleMade` (`pos.sale_made`: ids and amounts, no personal data).
+
+- **Tables** (tenant, `organization_id` = the company, `unit_id` = the branch a record belongs to):
+  `crm_contacts` (person or organization, phone in E.164 unique per company, email, tags, source,
+  owner, SMS and email consent with its time, spent, purchases, points, `extra`), `crm_pipelines` +
+  `crm_stages` (per company; the sector's pipeline from `database/data/pipelines.php` made on first
+  use), `crm_deals`, `crm_activities` (calls, visits, notes; a task has a time and a person),
+  `crm_quotes` + `crm_quote_lines` (estimates and quotations), `crm_fields` (the company's own fields),
+  `crm_points` (append-only, once per source), `crm_sequences`.
+- **Extra fields** (`/crm/fields`, `crm.manage`): text, long text, number (decimal string), money
+  (minor units), date, choice (labels per language), yes/no; on contacts, deals, quotes and quote
+  lines; needed or not, printed on quotes or not. Key and type fixed once made; switched off, never
+  removed (old records keep values). Checked the same way in forms and imports.
+- **Contacts** (`…/crm/contacts`): `crm.view` reads the unit's and below, `crm.edit` writes (an
+  `op_id` makes creating safe to retry), duplicates by rule `crm.duplicate_match` (phone, or phone and
+  email) refused naming the match. Removed on request (`crm.manage`): details cleared for good,
+  amounts kept, the audit records why but never the details. CSV import (checked, then made;
+  duplicates skipped; rate limited) and export (`crm.export`, rate limited, audited with the count).
+  "Make a customer" creates the Accounting party once (`acc_parties.crm_contact_id`).
+- **Deals** board per pipeline; moving to the lost stage needs a reason, to the won stage closes it,
+  back to an open stage reopens it. **Follow-ups**: mine late / today / coming / done; `crm:remind`
+  (every 5 minutes) mails each once rule `crm.follow_up_reminder_minutes` before (`crm.follow_up_due`).
+- **Estimates and quotations**: lines from Inventory items or free text, discount, VAT inside or on
+  top (rule `crm.quote_prices_include_tax`), valid `crm.quote_valid_days`, numbers by
+  `crm.number_prefixes` (EST-/QT-2026-00001). Draft → sent (changing makes it a draft again) →
+  accepted (its deal won; with `accounting.sell` and books kept, the customer and a **draft invoice**
+  on posting key `crm.sales`: general chart 4100, school 4120) or declined (a reason); an estimate is
+  turned into a quotation. Printed on A4 with the brand and the printed extra fields.
+- **POS** (no CRM needed): a sale keeps `customer_phone` (E.164; Bangla digits read); `GET
+  …/pos/customers?phone=` finds the customer (CRM contact with points when CRM is on, else the earlier
+  sales here); the sales list searches by mobile number. With CRM on the sale's contact is found or
+  added at the counter and earns points (`crm.loyalty_points_per_100`, 0 = off); a return takes its
+  share back. Offline sales keep no customer details on the device (personal data).
+- Permissions `crm.view|edit|manage|export`; role templates "Sales person" and "Sales manager";
+  general and retail packages include CRM. Dashboard: open deals; bell: follow-ups due. Data export
+  adds the tables.
+- Demo (local only): `php artisan db:seed --class=DemoCrmSeeder` after `DemoStockSeeder`; login
+  `sales@demo.test`, password `One@2002`.
+- After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings`; schedule runs
+  `crm:remind`.
+
+### Future expansion (CRM)
+
+- A new sector adds its pipeline to `database/data/pipelines.php`; a country its phone format in the
+  country data; a company its own fields and stages on screen. No code change for any of them.
+  Campaigns (bulk SMS or email to those who consented), points spent at the counter, web lead forms
+  and quote e-mail with PDF are later steps.
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

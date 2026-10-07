@@ -15,7 +15,7 @@ it('collects core, module and rule-editing permissions', function () {
         ->and($catalog->get('payroll.approve')->moduleKey)->toBe('payroll')
         ->and($catalog->get('roles.manage')->isCore())->toBeTrue()
         // Modules without rules get no rules.edit permission.
-        ->and($catalog->has('rules.edit.crm'))->toBeFalse();
+        ->and($catalog->has('rules.edit.custom_reports'))->toBeFalse();
 });
 
 it('labels every permission in Bangla and English', function () {

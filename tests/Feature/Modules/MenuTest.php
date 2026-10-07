@@ -76,9 +76,9 @@ it('does not show one organization\'s modules in another\'s menu', function () {
 });
 
 it('gives every module entry a dashboard and settings, also without its own sub-pages', function () {
-    toggles()->enable($this->w->c1, 'crm', 'Sales team');
+    toggles()->enable($this->w->c1, 'api_integration', 'Integrations');
 
-    $crm = collect($this->asToken(orgToken($this->owner, $this->w->c1))->getJson('/api/menu')->json('data'))->firstWhere('module', 'crm');
+    $crm = collect($this->asToken(orgToken($this->owner, $this->w->c1))->getJson('/api/menu')->json('data'))->firstWhere('module', 'api_integration');
 
-    expect(array_column($crm['children'], 'route'))->toBe(['/m/crm', '/m/crm/settings']);
+    expect(array_column($crm['children'], 'route'))->toBe(['/m/api_integration', '/m/api_integration/settings']);
 });

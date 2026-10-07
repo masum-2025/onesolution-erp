@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([HousePartnerSeeder::class, RulesSeeder::class, CountriesSeeder::class, AccessSeeder::class, PackagingSeeder::class, BillingSeeder::class, LegalSeeder::class]);
 
         if (app()->environment('local')) {
-            $this->call([DemoHierarchySeeder::class, DemoModulesSeeder::class, DemoAccessSeeder::class, DemoPartnerSeeder::class, DemoIdentitySeeder::class, DemoStockSeeder::class]);
+            $this->call([DemoHierarchySeeder::class, DemoModulesSeeder::class, DemoAccessSeeder::class, DemoPartnerSeeder::class, DemoIdentitySeeder::class, DemoStockSeeder::class, DemoCrmSeeder::class]);
         }
     }
 }

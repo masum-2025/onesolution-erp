@@ -21,7 +21,13 @@ const router = useRouter();
 const day = ref(route.query.date ?? '');
 const review = ref(route.query.review === '1');
 const number = ref('');
-const list = useResource(() => pos.sales({ ...(day.value ? { date: day.value } : {}), ...(review.value ? { review: 1 } : {}), ...(number.value.trim() ? { number: number.value.trim() } : {}) }));
+const list = useResource(() => pos.sales({ ...(day.value ? { date: day.value } : {}), ...(review.value ? { review: 1 } : {}), ...searchBy(number.value) }));
+// One box: a receipt number, or a mobile number (10 digits or more, Bangla digits too) for a customer's sales.
+function searchBy(text) {
+    const typed = text.trim();
+    if (!typed) return {};
+    return /^[+০-৯0-9\s-]{10,}$/.test(typed) && !/[A-Za-z]/.test(typed) ? { phone: typed } : { number: typed };
+}
 watch([day, review], () => {
     router.replace({ query: { ...(day.value ? { date: day.value } : {}), ...(review.value ? { review: '1' } : {}) } });
     list.reload();
@@ -38,7 +44,7 @@ const sales = computed(() => list.data.value?.data ?? []);
             <label class="grid gap-1 text-[12.5px] text-muted">{{ t('pos.sales.day') }}<input v-model="day" type="date" class="field-input" /></label>
             <div class="relative min-w-0 max-w-xs flex-1">
                 <Search class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
-                <input v-model="number" class="field-input ps-9 font-mono" dir="ltr" :placeholder="t('pos.sales.number')" :aria-label="t('pos.sales.number')" @keydown.enter="list.reload()" />
+                <input v-model="number" class="field-input ps-9 font-mono" dir="ltr" :placeholder="t('pos.sales.number_or_phone')" :aria-label="t('pos.sales.number')" @keydown.enter="list.reload()" />
             </div>
             <AppSwitch v-model="review" :label="t('pos.sales.only_review')" show-label />
         </section>

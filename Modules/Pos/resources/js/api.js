@@ -21,6 +21,7 @@ export function posApi(organizationId) {
         reviewShift: (id, body) => api(`${base}/sessions/${id}/review`, { method: 'POST', body }),
 
         sales: (query = {}) => api(`${base}/sales`, { query }),
+        customer: (phone) => api(`${base}/customers`, { query: { phone } }),
         sale: (id) => api(`${base}/sales/${id}`),
         report: (query = {}) => api(`${base}/reports`, { query }),
         sell: (body) => api(`${base}/sales`, { method: 'POST', body }),

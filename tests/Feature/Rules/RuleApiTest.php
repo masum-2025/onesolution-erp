@@ -37,9 +37,9 @@ it('lists rules grouped by module with value, source and editability', function 
     $groups = $this->asToken($this->token)->getJson($this->rules)->assertOk()->json('data');
     $grace = findRule($groups, 'attendance.late_grace_minutes');
 
-    // Modules without rules (e.g. crm) have no group.
+    // Modules without rules (e.g. custom_reports) have no group.
     expect(array_column($groups, 'module'))->toContain('core', 'attendance', 'payroll', 'inventory')
-        ->and(array_column($groups, 'module'))->not->toContain('crm')
+        ->and(array_column($groups, 'module'))->not->toContain('custom_reports')
         ->and($grace['value'])->toBe(20)
         ->and($grace['source'])->toBe(['level' => 'group', 'id' => $this->w->g1->id, 'name' => 'G1'])
         ->and($grace['label'])->toBe('Late grace period (minutes)')

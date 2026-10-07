@@ -152,8 +152,8 @@ it('shows a module settings page with the setup screens the person may open', fu
 });
 
 it('gives every module a dashboard and a settings page, even before it has widgets', function () {
-    toggles()->enable($this->w->g1, 'crm', 'Sales team');
+    toggles()->enable($this->w->g1, 'api_integration', 'Integrations');
 
-    $this->asToken($this->w->token)->getJson('/api/modules/crm/dashboard')->assertOk()->assertJsonPath('data', []);
-    $this->asToken($this->w->token)->getJson('/api/modules/crm/settings')->assertOk()->assertJsonPath('data.pages', []);
+    $this->asToken($this->w->token)->getJson('/api/modules/api_integration/dashboard')->assertOk()->assertJsonPath('data', []);
+    $this->asToken($this->w->token)->getJson('/api/modules/api_integration/settings')->assertOk()->assertJsonPath('data.pages', []);
 });

@@ -4,6 +4,7 @@ namespace Modules\Crm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Support\Http\PerPage;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,7 +45,7 @@ class ContactController extends Controller
             'mine' => ['nullable', 'boolean'], 'inactive' => ['nullable', 'boolean'], 'page' => ['nullable', 'integer', 'min:1'],
         ]);
         $query = $this->query($request, $unit, $company, $filters)->orderBy('name');
-        $page = $query->paginate(50);
+        $page = $query->paginate(PerPage::from($request, 50));
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Contact $contact) => $this->presenter->contact($contact))->values(),

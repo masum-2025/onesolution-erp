@@ -81,7 +81,12 @@
         "discard": "Throw away",
         "held_done": "Cart put on hold.",
         "held_full": "At most {count} carts on hold. Finish or throw one away first.",
-        "held_dropped": "{count} items are no longer sold here and were left out."
+        "held_dropped": "{count} items are no longer sold here and were left out.",
+        "phone": "Mobile number",
+        "looking": "Looking up…",
+        "returning": "{name} — {count} purchases before",
+        "points": "{count} points",
+        "new_customer": "A new customer: the number is kept with this sale."
     },
     "receipt": {
         "title": "Receipt",
@@ -111,7 +116,8 @@
         "return": "Return",
         "empty": "No sales here",
         "empty_text": "Sales made at the counters show here.",
-        "reprint": "Print receipt {number} again"
+        "reprint": "Print receipt {number} again",
+        "number_or_phone": "Receipt or mobile number"
     },
     "shifts": {
         "title": "Shifts",

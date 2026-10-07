@@ -5,6 +5,7 @@ use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Database\Seeders\AccessSeeder;
 use Database\Seeders\CountriesSeeder;
+use Database\Seeders\DemoCrmSeeder;
 use Database\Seeders\DemoHierarchySeeder;
 use Database\Seeders\DemoModulesSeeder;
 use Database\Seeders\DemoStockSeeder;
@@ -13,6 +14,10 @@ use Database\Seeders\PackagingSeeder;
 use Database\Seeders\RulesSeeder;
 use Illuminate\Support\Facades\Hash;
 use Modules\Accounting\Services\Reports;
+use Modules\Crm\Models\Contact;
+use Modules\Crm\Models\Deal;
+use Modules\Crm\Models\Quote;
+use Modules\Crm\Services\Crm;
 use Modules\Inventory\Models\Document;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\StockCount;
@@ -53,6 +58,19 @@ it('builds the demo shop with stock, bills, counters and two weeks of sales, onc
     $trial = app(Reports::class)->trialBalance($shop, '2026-10-06', null);
     expect($trial['total_debit_minor'])->toBe($trial['total_credit_minor'])->and($trial['total_debit_minor'])->toBeGreaterThan(0);
     expect(Hash::check(DemoStockSeeder::PASSWORD, User::query()->where('email', 'cashier@demo.test')->value('password')))->toBeTrue();
+
+    // The CRM demo on top: customers, deals, follow-ups, quotes (one invoiced), counter sales with numbers.
+    $this->seed(DemoCrmSeeder::class);
+    $crm = app(Crm::class);
+    expect($crm->query(Contact::class, $shop)->count())->toBeGreaterThanOrEqual(15)
+        ->and($crm->query(Deal::class, $shop)->where('status', 'won')->count())->toBe(1)
+        ->and($crm->query(Quote::class, $shop)->whereNotNull('invoice_id')->count())->toBe(1)
+        ->and($crm->query(Quote::class, $shop)->where('status', 'converted')->count())->toBe(1)
+        ->and($crm->query(Contact::class, $shop)->where('points', '>', 0)->count())->toBeGreaterThan(0)
+        ->and($tills->query(Sale::class, $shop)->whereNotNull('customer_id')->count())->toBeGreaterThan(0);
+    $contacts = $crm->query(Contact::class, $shop)->count();
+    $this->seed(DemoCrmSeeder::class);
+    expect($crm->query(Contact::class, $shop)->count())->toBe($contacts);
 
     $sales = $tills->query(Sale::class, $shop)->count();
     $this->seed(DemoStockSeeder::class);
