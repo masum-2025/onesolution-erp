@@ -86,7 +86,21 @@
         "looking": "খোঁজা হচ্ছে…",
         "returning": "{name} — আগে {count}টি কেনাকাটা",
         "points": "{count} পয়েন্ট",
-        "new_customer": "নতুন ক্রেতা: নম্বরটি এই বিক্রির সঙ্গে রাখা হবে।"
+        "new_customer": "নতুন ক্রেতা: নম্বরটি এই বিক্রির সঙ্গে রাখা হবে।",
+        "leave": "ফিরে যান",
+        "full_screen": "পূর্ণ পর্দা",
+        "exit_full_screen": "পূর্ণ পর্দা থেকে বের হন",
+        "item": "পণ্য",
+        "quantity": "পরিমাণ",
+        "price": "দাম",
+        "line_total": "টাকা",
+        "remove": "লাইন সরান",
+        "total": "মোট",
+        "items_count": "পণ্য",
+        "new_bill": "নতুন বিল",
+        "categories": "ক্যাটাগরি",
+        "all_items": "সব",
+        "keys": "F2 স্ক্যান · F4 নগদ · F8 অপেক্ষা · F9 নতুন বিল · Del/+/− বাছাই করা লাইন"
     },
     "receipt": {
         "title": "রসিদ",

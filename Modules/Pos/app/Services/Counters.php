@@ -74,6 +74,7 @@ class Counters
                 'on_hand_milli' => $item['kind'] === 'stock' ? ($onHand[$item['id']] ?? 0) : null,
             ], $items),
             'units' => $this->stock->units($company),
+            'categories' => $this->stock->categories($company),
         ];
     }
 

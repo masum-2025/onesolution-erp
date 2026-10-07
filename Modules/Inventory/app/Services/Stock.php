@@ -6,6 +6,7 @@ use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Modules\Inventory\Exceptions\InventoryException;
 use Modules\Inventory\Models\Balance;
+use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\Move;
 use Modules\Inventory\Models\Unit;
@@ -60,6 +61,17 @@ class Stock
         $warehouse = $this->inventories->query(Warehouse::class, $company)->whereKey($id)->first();
 
         return $warehouse === null ? null : ['id' => $warehouse->getKey(), 'unit_id' => $warehouse->unit_id, 'code' => $warehouse->code, 'name' => $warehouse->name, 'is_active' => $warehouse->is_active];
+    }
+
+    /**
+     * Item categories in use: name in the reader's language (a counter groups its buttons by them).
+     *
+     * @return array<string, string>
+     */
+    public function categories(Organization $company): array
+    {
+        return $this->inventories->query(Category::class, $company)->where('is_active', true)->orderBy('code')->get()
+            ->mapWithKeys(fn (Category $category) => [$category->getKey() => $category->name])->all();
     }
 
     /**

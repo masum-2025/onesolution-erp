@@ -21,6 +21,8 @@ import { toast } from '@/lib/toast';
 import { i18n, t } from '@/lib/i18n';
 
 const route = useRoute();
+// A page that fills the screen (the till): no sidebar, header or banners; it brings its own way out.
+const focus = computed(() => route.meta.focus === true);
 const mobileNav = ref(false);
 const palette = ref(false);
 const menu = ref([]);
@@ -143,9 +145,9 @@ watch(() => route.path, () => (mobileNav.value = false));
 <template>
     <div
         class="min-h-dvh transition-[grid-template-columns] duration-300 ease-[var(--ease-soft)] lg:grid print:block"
-        :class="collapsed ? 'lg:grid-cols-[80px_minmax(0,1fr)]' : 'lg:grid-cols-[272px_minmax(0,1fr)]'"
+        :class="focus ? 'lg:grid-cols-1' : collapsed ? 'lg:grid-cols-[80px_minmax(0,1fr)]' : 'lg:grid-cols-[272px_minmax(0,1fr)]'"
     >
-        <aside class="sticky top-0 z-40 hidden h-dvh border-e border-side-line lg:block print:hidden">
+        <aside v-if="!focus" class="sticky top-0 z-40 hidden h-dvh border-e border-side-line lg:block print:hidden">
             <SidebarNav :menu="menu" :pending-approvals="pendingApprovals" :collapsed="collapsed" collapsible @toggle="toggleSidebar" />
         </aside>
 
@@ -155,12 +157,14 @@ watch(() => route.path, () => (mobileNav.value = false));
         </AppDrawer>
 
         <div class="flex min-w-0 flex-col">
-            <AppHeader :quick-actions="quickActions" :offline="offlineOn" :simple="isPortalMember()" @open-nav="mobileNav = true" @open-palette="palette = true" />
+            <AppHeader v-if="!focus" :quick-actions="quickActions" :offline="offlineOn" :simple="isPortalMember()" @open-nav="mobileNav = true" @open-palette="palette = true" />
 
-            <ModeBanner class="print:hidden" />
-            <LegalBanner class="print:hidden" />
-            <DeletionBanner class="print:hidden" />
-            <TwoFactorBanner class="print:hidden" />
+            <template v-if="!focus">
+                <ModeBanner class="print:hidden" />
+                <LegalBanner class="print:hidden" />
+                <DeletionBanner class="print:hidden" />
+                <TwoFactorBanner class="print:hidden" />
+            </template>
 
             <Transition enter-active-class="transition duration-200" enter-from-class="opacity-0 -translate-y-1">
                 <!-- Support time is set by the grant, not renewed here. -->
@@ -173,8 +177,8 @@ watch(() => route.path, () => (mobileNav.value = false));
                 </div>
             </Transition>
 
-            <main id="main" class="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 print:p-0">
-                <div class="mx-auto max-w-6xl">
+            <main id="main" class="flex-1 print:p-0" :class="focus ? 'px-3 py-3 sm:px-4' : 'px-4 py-6 sm:px-6 lg:px-8 lg:py-8'">
+                <div class="mx-auto" :class="focus ? 'max-w-none' : 'max-w-6xl'">
                     <RouterView v-slot="{ Component, route: current }">
                         <Transition enter-active-class="transition duration-200 ease-[var(--ease-soft)]" enter-from-class="opacity-0 translate-y-1" mode="out-in">
                             <!-- Keyed by language too: switching it reloads the page's server data. -->

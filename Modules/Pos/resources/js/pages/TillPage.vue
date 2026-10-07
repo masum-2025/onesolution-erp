@@ -1,7 +1,7 @@
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Banknote, CloudOff, CreditCard, Hourglass, Minus, PauseCircle, Plus, Printer, ReceiptText, ScanBarcode, ShoppingCart, Smartphone, Store, Trash2, X } from 'lucide-vue-next';
+import { ArrowLeft, Banknote, CloudOff, CreditCard, Hourglass, Maximize, Minimize, Minus, PauseCircle, Percent, Phone, Plus, Printer, ReceiptText, ScanBarcode, Smartphone, Store, Trash2, UserRound, X } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -27,8 +27,29 @@ import { addToCart, amountToMinor, discountShare, formatQuantity, holdCart, MAX_
  * Without a connection the sale is kept on the device and sent later.
  * A cart can be put on hold (a customer went back for something) and taken
  * up again; held carts stay on this device per counter, without names.
+ * Laid out like a counter terminal: the bill on the left (scan box, lines
+ * as a table, totals, hold, payment buttons), item buttons by category on
+ * the right. It fills the window (no sidebar or header), can take the whole
+ * screen, and works from the keyboard: F2 scan, F4 cash, F6 card, F7 mobile,
+ * F8 hold, F9 a new bill, Delete removes the chosen line, + and − change it.
  */
 const pos = posApi(currentOrganization().id);
+// Whole screen, like a counter terminal (the browser's full screen; Esc leaves it too).
+const fullScreen = ref(Boolean(globalThis.document?.fullscreenElement));
+const syncFullScreen = () => { fullScreen.value = Boolean(document.fullscreenElement); };
+async function toggleFullScreen() {
+    try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else await document.documentElement.requestFullscreen();
+    } catch {
+        // Not allowed here (e.g. an embedded view): the till still fills the window.
+    }
+}
+onMounted(() => document.addEventListener('fullscreenchange', syncFullScreen));
+onBeforeUnmount(() => {
+    document.removeEventListener('fullscreenchange', syncFullScreen);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+});
 const router = useRouter();
 const registers = useResource(() => pos.registers());
 const registerList = computed(() => (registers.data.value?.data ?? []).filter((row) => row.is_active));
@@ -41,14 +62,14 @@ watch(registerId, (id) => id && writePref('pos.register', id));
 const shift = computed(() => register.value?.session ?? null);
 
 // The catalogue: online from the server, offline from what the device kept.
-const catalogue = reactive({ items: [], units: {}, meta: {}, loading: false, error: null });
+const catalogue = reactive({ items: [], units: {}, categories: {}, meta: {}, loading: false, error: null });
 async function loadCatalogue() {
     if (!register.value) return;
     catalogue.loading = true;
     catalogue.error = null;
     try {
         const response = await pos.catalogue(register.value.id);
-        Object.assign(catalogue, { items: response.data.items, units: response.data.units, meta: response.meta });
+        Object.assign(catalogue, { items: response.data.items, units: response.data.units, categories: response.data.categories ?? {}, meta: response.meta });
     } catch (error) {
         const kept = offline.enabled ? await offlineRecords('pos.sale') : [];
         if (kept.length) Object.assign(catalogue, { items: kept, meta: { ...catalogue.meta, offline: true } });
@@ -65,10 +86,15 @@ const money = (amount) => formatMoney({ amount, currency: currency.value });
 // Finding items.
 const search = ref('');
 const scanBox = ref(null);
+// Item buttons by category (only categories that have items to sell).
+const category = ref('');
+const categoryTabs = computed(() => Object.entries(catalogue.categories).filter(([id]) => catalogue.items.some((item) => item.category_id === id)).map(([id, name]) => ({ id, name })));
 const shown = computed(() => {
     const needle = search.value.trim().toLowerCase();
-    const list = needle ? catalogue.items.filter((item) => item.name.toLowerCase().includes(needle) || item.sku.toLowerCase().includes(needle) || item.barcode === search.value.trim()) : catalogue.items;
-    return list.slice(0, 60);
+    const list = needle
+        ? catalogue.items.filter((item) => item.name.toLowerCase().includes(needle) || item.sku.toLowerCase().includes(needle) || item.barcode === search.value.trim())
+        : catalogue.items.filter((item) => !category.value || item.category_id === category.value);
+    return list.slice(0, 120);
 });
 function scanned() {
     const code = search.value.trim();
@@ -111,13 +137,21 @@ const priced = computed(() => priceCart(cart.value, includeTax.value));
 const overLimit = computed(() => discountShare(priced.value.discount, priced.value.subtotal) > percentToBp(catalogue.meta.max_discount_percent ?? '0') && !can('pos.supervise'));
 const decimals = (line) => catalogue.units[line.unit_id]?.decimals ?? 0;
 const step = (line) => 10 ** (3 - Math.min(3, decimals(line)));
+// The chosen bill line (keys and the discount act on it); the last one added by default.
+const chosen = ref(-1);
 function add(item) {
     addToCart(cart.value, item);
+    chosen.value = cart.value.findIndex((line) => line.item_id === item.id);
     nextTick(() => scanBox.value?.focus());
 }
+function removeLine(index) {
+    cart.value.splice(index, 1);
+    chosen.value = Math.min(chosen.value, cart.value.length - 1);
+}
+const itemCount = computed(() => cart.value.reduce((sum, line) => sum + line.quantity_milli, 0));
 function bump(line, by) {
     const next = line.quantity_milli + by * Math.max(step(line), 1000);
-    if (next <= 0) cart.value = cart.value.filter((row) => row !== line);
+    if (next <= 0) removeLine(cart.value.indexOf(line));
     else line.quantity_milli = next;
 }
 const discountFor = ref(null);
@@ -137,6 +171,7 @@ function saveDiscount() {
 }
 function clearCart() {
     cart.value = [];
+    chosen.value = -1;
     customer.value = '';
     phone.value = '';
     found.value = null;
@@ -207,11 +242,34 @@ const payments = reactive({ cash: '', card: '', mobile: '', reference: '' });
 const paymentRows = computed(() => (register.value?.payment_methods ?? ['cash']).map((method) => ({ method, amount_minor: amountToMinor(payments[method] || '0', currency.value) ?? 0, reference: method !== 'cash' ? payments.reference : null })));
 const settlement = computed(() => settle(priced.value.total, paymentRows.value));
 const icons = { cash: Banknote, card: CreditCard, mobile: Smartphone };
-function startPayment() {
+function startPayment(method = null) {
+    if (!cart.value.length || overLimit.value) return;
+    const methods = register.value?.payment_methods ?? ['cash'];
     Object.assign(payments, { cash: '', card: '', mobile: '', reference: '' });
-    payments[(register.value?.payment_methods ?? ['cash'])[0]] = minorToText(priced.value.total, currency.value);
+    payments[methods.includes(method) ? method : methods[0]] = minorToText(priced.value.total, currency.value);
     paying.value = true;
 }
+const methods = computed(() => register.value?.payment_methods ?? ['cash']);
+
+// Keyboard keys at the counter (not while a dialog is open).
+function onKey(event) {
+    if (!shift.value || paying.value || done.value || discountFor.value || showHeld.value) return;
+    const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName) && event.target !== scanBox.value;
+    const keys = { F2: () => scanBox.value?.focus(), F4: () => startPayment('cash'), F6: () => startPayment('card'), F7: () => startPayment('mobile'), F8: hold, F9: clearCart };
+    if (keys[event.key]) {
+        event.preventDefault();
+        keys[event.key]();
+        return;
+    }
+    if (typing || search.value || chosen.value < 0 || !cart.value[chosen.value]) return;
+    if (event.key === 'Delete') removeLine(chosen.value);
+    else if (event.key === '+') bump(cart.value[chosen.value], 1);
+    else if (event.key === '-') bump(cart.value[chosen.value], -1);
+    else return;
+    event.preventDefault();
+}
+onMounted(() => window.addEventListener('keydown', onKey));
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 const completing = ref(false);
 const done = ref(null);
 async function complete() {
@@ -261,20 +319,23 @@ function nextSale() {
 
         <template v-else>
             <!-- The counter bar -->
-            <div class="mb-4 flex flex-wrap items-center gap-3">
-                <select v-if="registerList.length > 1" v-model="registerId" class="field-input w-auto font-medium" :aria-label="t('pos.till.counter')">
+            <div class="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-side px-3 py-2 text-side-fg">
+                <AppButton variant="ghost" size="sm" :icon="ArrowLeft" class="!text-side-fg hover:!bg-white/10" :to="{ name: 'pos-sales' }">{{ t('pos.till.leave') }}</AppButton>
+                <select v-if="registerList.length > 1" v-model="registerId" class="field-input h-8 w-auto py-0 font-medium" :aria-label="t('pos.till.counter')">
                     <option v-for="row in registerList" :key="row.id" :value="row.id">{{ row.name }}</option>
                 </select>
-                <h1 v-else class="text-[20px] font-semibold">{{ register?.name }}</h1>
+                <h1 v-else class="text-[16px] font-semibold">{{ register?.name }}</h1>
                 <AppBadge v-if="shift" tone="ok" dot>{{ t('pos.till.shift_open') }}</AppBadge>
                 <AppBadge v-if="!offline.online || catalogue.meta.offline" tone="warn" dot><CloudOff class="me-1 inline size-3.5" aria-hidden="true" />{{ t('pos.till.offline') }}</AppBadge>
                 <AppBadge v-if="offline.pending" tone="brand">{{ t('pos.till.pending', { count: formatNumber(offline.pending) }) }}</AppBadge>
                 <span class="flex-1" />
-                <AppButton v-if="shift" variant="ghost" size="sm" :icon="ReceiptText" :to="{ name: 'pos-shift', params: { id: shift.id } }">{{ t('pos.till.close_shift') }}</AppButton>
+                <span class="hidden text-[12px] opacity-75 xl:inline">{{ t('pos.till.keys') }}</span>
+                <AppButton v-if="shift" variant="ghost" size="sm" :icon="ReceiptText" class="!text-side-fg hover:!bg-white/10" :to="{ name: 'pos-shift', params: { id: shift.id } }">{{ t('pos.till.close_shift') }}</AppButton>
+                <AppButton variant="ghost" size="sm" :icon="fullScreen ? Minimize : Maximize" class="!text-side-fg hover:!bg-white/10" @click="toggleFullScreen">{{ t(fullScreen ? 'pos.till.exit_full_screen' : 'pos.till.full_screen') }}</AppButton>
             </div>
 
             <!-- No shift yet -->
-            <section v-if="!shift" class="card mx-auto max-w-md p-6 text-center">
+            <section v-if="!shift" class="card mx-auto mt-10 max-w-md p-6 text-center">
                 <span class="mx-auto mb-3 grid size-14 place-items-center rounded-2xl bg-brand-soft text-brand-text"><Store class="size-7" aria-hidden="true" /></span>
                 <h2 class="text-[17px] font-semibold">{{ t('pos.till.open_title') }}</h2>
                 <p class="mt-1 text-[13px] text-muted">{{ t('pos.till.open_text') }}</p>
@@ -286,80 +347,126 @@ function nextSale() {
                 </form>
             </section>
 
-            <!-- Selling -->
-            <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_24rem]">
-                <section class="min-w-0">
-                    <div class="relative mb-3">
-                        <ScanBarcode class="pointer-events-none absolute inset-y-0 start-3.5 my-auto size-5 text-muted" aria-hidden="true" />
-                        <input ref="scanBox" v-model="search" autofocus class="field-input h-12 ps-11 text-[15px]" :placeholder="t('pos.till.scan')" :aria-label="t('pos.till.scan')" @keydown.enter.prevent="scanned" />
-                    </div>
-                    <SkeletonRows v-if="catalogue.loading && !catalogue.items.length" :rows="4" />
-                    <ErrorState v-else-if="catalogue.error" compact :error="catalogue.error" @retry="loadCatalogue" />
-                    <p v-else-if="!shown.length" class="card px-5 py-8 text-center text-[13.5px] text-muted">{{ t('pos.till.nothing_found') }}</p>
-                    <div v-else class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
-                        <button v-for="item in shown" :key="item.id" type="button"
-                            class="card flex min-h-24 flex-col items-start justify-between p-3 text-start transition hover:border-brand hover:shadow-md active:scale-[0.98]"
-                            :class="item.on_hand_milli !== null && item.on_hand_milli <= 0 ? 'opacity-60' : ''" @click="add(item)">
-                            <span class="line-clamp-2 text-[13.5px] font-medium leading-snug">{{ item.name }}</span>
-                            <span class="mt-2 flex w-full items-end justify-between gap-2">
-                                <span class="tabular text-[15px] font-semibold text-brand-text">{{ money(item.sale_price_minor) }}</span>
-                                <span v-if="item.on_hand_milli !== null" class="tabular text-[11.5px] text-muted">{{ formatQuantity(item.on_hand_milli) }}</span>
-                            </span>
-                        </button>
-                    </div>
-                </section>
-
-                <!-- The cart -->
-                <aside class="card flex flex-col lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)]">
-                    <header class="flex items-center justify-between border-b border-line px-4 py-3">
-                        <h2 class="flex items-center gap-2 text-[15px] font-semibold"><ShoppingCart class="size-4.5" aria-hidden="true" />{{ t('pos.till.cart') }}</h2>
-                        <span class="flex items-center gap-1">
-                            <AppButton v-if="held.length" size="sm" variant="ghost" :icon="Hourglass" @click="showHeld = true">{{ t('pos.till.held', { count: formatNumber(held.length) }) }}</AppButton>
-                            <AppButton v-if="cart.length" size="sm" variant="ghost" :icon="PauseCircle" @click="hold">{{ t('pos.till.hold') }}</AppButton>
-                            <AppButton v-if="cart.length" size="sm" variant="ghost" :icon="X" :aria-label="t('pos.till.clear')" @click="clearCart" />
-                        </span>
-                    </header>
-                    <p v-if="!cart.length" class="px-4 py-10 text-center text-[13px] text-muted">{{ t('pos.till.cart_empty') }}</p>
-                    <ul v-else class="min-h-0 flex-1 divide-y divide-line overflow-y-auto">
-                        <li v-for="(line, index) in cart" :key="line.item_id" class="px-4 py-2.5">
-                            <div class="flex items-start justify-between gap-2">
-                                <span class="min-w-0 text-[13.5px] font-medium">{{ line.name }}</span>
-                                <span class="tabular shrink-0 text-[13.5px] font-semibold">{{ money(priced.lines[index].total) }}</span>
-                            </div>
-                            <div class="mt-1.5 flex items-center gap-2">
-                                <AppButton size="icon-sm" variant="secondary" :icon="Minus" :aria-label="t('pos.till.less')" @click="bump(line, -1)" />
-                                <span class="tabular w-12 text-center text-[14px] font-semibold">{{ formatQuantity(line.quantity_milli) }}</span>
-                                <AppButton size="icon-sm" variant="secondary" :icon="Plus" :aria-label="t('pos.till.more')" @click="bump(line, 1)" />
-                                <span class="text-[12px] text-muted">× {{ money(line.unit_price_minor) }}</span>
-                                <span class="flex-1" />
-                                <button type="button" class="text-[12px] font-medium text-brand-text hover:underline" @click="editDiscount(line)">
-                                    {{ line.discount_minor ? t('pos.till.discount_of', { amount: money(line.discount_minor) }) : t('pos.till.discount') }}
-                                </button>
-                            </div>
-                        </li>
-                    </ul>
-                    <footer class="border-t border-line px-4 py-3">
-                        <div class="mb-3 grid grid-cols-2 gap-2">
-                            <input v-model="phone" type="tel" inputmode="tel" dir="ltr" class="field-input tabular" maxlength="20" :placeholder="t('pos.till.phone')" :aria-label="t('pos.till.phone')" @blur="lookUp" @keydown.enter.prevent="lookUp" />
-                            <input v-model="customer" class="field-input" maxlength="150" :placeholder="t('pos.till.customer')" :aria-label="t('pos.till.customer')" />
+            <!-- Selling: the bill (left), item buttons (right) -->
+            <div v-else class="grid grid-cols-1 gap-3 lg:h-[calc(100dvh-5.25rem)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+                <!-- The bill -->
+                <section class="card flex min-h-0 flex-col overflow-hidden">
+                    <div class="grid gap-2 border-b border-line p-3 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)]">
+                        <div class="relative">
+                            <ScanBarcode class="pointer-events-none absolute inset-y-0 start-3 my-auto size-5 text-muted" aria-hidden="true" />
+                            <input ref="scanBox" v-model="search" autofocus class="field-input h-11 ps-10 text-[15px]" :placeholder="t('pos.till.scan')" :aria-label="t('pos.till.scan')" @keydown.enter.prevent="scanned" />
                         </div>
-                        <p v-if="looking" class="-mt-2 mb-2 text-[12px] text-muted">{{ t('pos.till.looking') }}</p>
-                        <p v-else-if="found?.error" class="-mt-2 mb-2 text-[12px] text-bad">{{ found.error }}</p>
-                        <p v-else-if="found?.found" class="-mt-2 mb-2 rounded-lg bg-ok-soft px-3 py-1.5 text-[12px] text-ok">
+                        <div class="relative">
+                            <Phone class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
+                            <input v-model="phone" type="tel" inputmode="tel" dir="ltr" class="field-input h-11 ps-9 tabular" maxlength="20" :placeholder="t('pos.till.phone')" :aria-label="t('pos.till.phone')" @blur="lookUp" @keydown.enter.prevent="lookUp" />
+                        </div>
+                        <div class="relative">
+                            <UserRound class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
+                            <input v-model="customer" class="field-input h-11 ps-9" maxlength="150" :placeholder="t('pos.till.customer')" :aria-label="t('pos.till.customer')" />
+                        </div>
+                        <p v-if="looking" class="text-[12px] text-muted sm:col-span-3">{{ t('pos.till.looking') }}</p>
+                        <p v-else-if="found?.error" class="text-[12px] text-bad sm:col-span-3">{{ found.error }}</p>
+                        <p v-else-if="found?.found" class="rounded-lg bg-ok-soft px-3 py-1.5 text-[12px] text-ok sm:col-span-3">
                             {{ t('pos.till.returning', { name: found.name ?? '', count: formatNumber(found.purchases) }) }}<template v-if="found.points !== null"> · {{ t('pos.till.points', { count: formatNumber(found.points) }) }}</template>
                         </p>
-                        <p v-else-if="found" class="-mt-2 mb-2 text-[12px] text-muted">{{ t('pos.till.new_customer') }}</p>
-                        <dl class="grid grid-cols-[1fr_auto] gap-y-1 text-[13px]">
-                            <dt class="text-muted">{{ t('pos.till.subtotal') }}</dt><dd class="tabular text-end">{{ money(priced.subtotal) }}</dd>
-                            <template v-if="priced.discount"><dt class="text-muted">{{ t('pos.till.discounts') }}</dt><dd class="tabular text-end text-bad">−{{ money(priced.discount) }}</dd></template>
-                            <dt class="text-muted">{{ t(includeTax ? 'pos.till.vat_included' : 'pos.till.vat') }}</dt><dd class="tabular text-end">{{ money(priced.tax) }}</dd>
-                        </dl>
+                        <p v-else-if="found" class="text-[12px] text-muted sm:col-span-3">{{ t('pos.till.new_customer') }}</p>
+                    </div>
+
+                    <!-- Lines -->
+                    <div class="min-h-40 flex-1 overflow-y-auto">
+                        <p v-if="!cart.length" class="grid h-full place-items-center px-4 py-10 text-center text-[14px] text-muted">{{ t('pos.till.cart_empty') }}</p>
+                        <table v-else class="w-full text-[13.5px]">
+                            <thead class="sticky top-0 z-10 bg-subtle text-[11.5px] uppercase tracking-wide text-muted">
+                                <tr>
+                                    <th class="w-8 px-2 py-2 text-start font-medium">#</th>
+                                    <th class="px-2 py-2 text-start font-medium">{{ t('pos.till.item') }}</th>
+                                    <th class="px-2 py-2 text-center font-medium">{{ t('pos.till.quantity') }}</th>
+                                    <th class="hidden px-2 py-2 text-end font-medium sm:table-cell">{{ t('pos.till.price') }}</th>
+                                    <th class="px-2 py-2 text-end font-medium">{{ t('pos.till.line_total') }}</th>
+                                    <th class="w-8" />
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-line">
+                                <tr v-for="(line, index) in cart" :key="line.item_id" class="cursor-pointer" :class="chosen === index ? 'bg-brand-soft' : 'hover:bg-surface-2'" @click="chosen = index">
+                                    <td class="px-2 py-2 text-muted tabular">{{ formatNumber(index + 1) }}</td>
+                                    <td class="px-2 py-2">
+                                        <span class="block font-medium leading-snug">{{ line.name }}</span>
+                                        <button type="button" class="text-[11.5px] font-medium text-brand-text hover:underline" @click.stop="editDiscount(line)">
+                                            {{ line.discount_minor ? t('pos.till.discount_of', { amount: money(line.discount_minor) }) : t('pos.till.discount') }}
+                                        </button>
+                                    </td>
+                                    <td class="px-1 py-2">
+                                        <span class="flex items-center justify-center gap-1">
+                                            <AppButton size="icon-sm" variant="secondary" :icon="Minus" :aria-label="t('pos.till.less')" @click.stop="bump(line, -1)" />
+                                            <span class="tabular w-10 text-center font-semibold">{{ formatQuantity(line.quantity_milli) }}</span>
+                                            <AppButton size="icon-sm" variant="secondary" :icon="Plus" :aria-label="t('pos.till.more')" @click.stop="bump(line, 1)" />
+                                        </span>
+                                    </td>
+                                    <td class="hidden px-2 py-2 text-end tabular sm:table-cell">{{ money(line.unit_price_minor) }}</td>
+                                    <td class="px-2 py-2 text-end tabular font-semibold">{{ money(priced.lines[index].total) }}</td>
+                                    <td class="px-1 py-2"><AppButton size="icon-sm" variant="ghost" :icon="Trash2" :aria-label="t('pos.till.remove')" @click.stop="removeLine(index)" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totals and actions -->
+                    <footer class="border-t border-line bg-surface-2 p-3">
+                        <div class="grid grid-cols-[1fr_auto] items-end gap-3">
+                            <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-[13px]">
+                                <dt class="text-muted">{{ t('pos.till.items_count') }}</dt><dd class="tabular">{{ formatQuantity(itemCount) }}</dd>
+                                <dt class="text-muted">{{ t('pos.till.subtotal') }}</dt><dd class="tabular">{{ money(priced.subtotal) }}</dd>
+                                <template v-if="priced.discount"><dt class="text-muted">{{ t('pos.till.discounts') }}</dt><dd class="tabular text-bad">−{{ money(priced.discount) }}</dd></template>
+                                <dt class="text-muted">{{ t(includeTax ? 'pos.till.vat_included' : 'pos.till.vat') }}</dt><dd class="tabular">{{ money(priced.tax) }}</dd>
+                            </dl>
+                            <div class="text-end">
+                                <p class="text-[12px] font-medium uppercase tracking-wide text-muted">{{ t('pos.till.total') }}</p>
+                                <p class="tabular text-[34px] font-bold leading-none text-brand-text">{{ money(priced.total) }}</p>
+                            </div>
+                        </div>
                         <p v-if="overLimit" class="mt-2 rounded-lg bg-warn-soft px-3 py-2 text-[12px] text-warn">{{ t('pos.till.over_limit', { percent: catalogue.meta.max_discount_percent }) }}</p>
-                        <AppButton variant="primary" size="lg" class="mt-3 w-full justify-between text-[17px]" :disabled="!cart.length || overLimit" @click="startPayment">
-                            <span>{{ t('pos.till.pay') }}</span><span class="tabular">{{ money(priced.total) }}</span>
-                        </AppButton>
+                        <div class="mt-3 grid grid-cols-4 gap-2">
+                            <AppButton variant="secondary" :icon="PauseCircle" :disabled="!cart.length" @click="hold">{{ t('pos.till.hold') }} <kbd class="kbd">F8</kbd></AppButton>
+                            <AppButton variant="secondary" :icon="Hourglass" :disabled="!held.length" @click="showHeld = true">{{ t('pos.till.held', { count: formatNumber(held.length) }) }}</AppButton>
+                            <AppButton variant="secondary" :icon="Percent" :disabled="chosen < 0 || !cart[chosen]" @click="editDiscount(cart[chosen])">{{ t('pos.till.discount') }}</AppButton>
+                            <AppButton variant="danger-soft" :icon="X" :disabled="!cart.length" @click="clearCart">{{ t('pos.till.new_bill') }} <kbd class="kbd">F9</kbd></AppButton>
+                        </div>
+                        <div class="mt-2 grid gap-2" :class="methods.length > 2 ? 'grid-cols-3' : methods.length === 2 ? 'grid-cols-2' : 'grid-cols-1'">
+                            <button v-for="method in methods" :key="method" type="button" :disabled="!cart.length || overLimit"
+                                class="flex h-14 items-center justify-center gap-2 rounded-xl text-[16px] font-semibold text-white shadow-sm transition active:translate-y-px disabled:opacity-45"
+                                :class="{ cash: 'bg-ok hover:brightness-110', card: 'bg-brand hover:brightness-110', mobile: 'bg-side hover:brightness-125' }[method]" @click="startPayment(method)">
+                                <component :is="icons[method]" class="size-5" aria-hidden="true" />{{ t(`pos.methods.${method}`) }}
+                                <kbd class="kbd !border-white/40 !bg-white/15 !text-white">{{ { cash: 'F4', card: 'F6', mobile: 'F7' }[method] }}</kbd>
+                            </button>
+                        </div>
                     </footer>
-                </aside>
+                </section>
+
+                <!-- Item buttons -->
+                <section class="card flex min-h-0 flex-col overflow-hidden">
+                    <div class="flex gap-1.5 overflow-x-auto border-b border-line p-2" role="tablist" :aria-label="t('pos.till.categories')">
+                        <button type="button" role="tab" :aria-selected="!category" class="shrink-0 rounded-lg px-3 py-2 text-[13px] font-medium"
+                            :class="!category ? 'bg-brand text-brand-fg' : 'bg-subtle hover:bg-surface-2'" @click="category = ''; search = ''">{{ t('pos.till.all_items') }}</button>
+                        <button v-for="tab in categoryTabs" :key="tab.id" type="button" role="tab" :aria-selected="category === tab.id" class="shrink-0 rounded-lg px-3 py-2 text-[13px] font-medium"
+                            :class="category === tab.id ? 'bg-brand text-brand-fg' : 'bg-subtle hover:bg-surface-2'" @click="category = tab.id; search = ''">{{ tab.name }}</button>
+                    </div>
+                    <div class="min-h-0 flex-1 overflow-y-auto p-2">
+                        <SkeletonRows v-if="catalogue.loading && !catalogue.items.length" :rows="4" />
+                        <ErrorState v-else-if="catalogue.error" compact :error="catalogue.error" @retry="loadCatalogue" />
+                        <p v-else-if="!shown.length" class="px-5 py-8 text-center text-[13.5px] text-muted">{{ t('pos.till.nothing_found') }}</p>
+                        <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                            <button v-for="item in shown" :key="item.id" type="button"
+                                class="flex min-h-[5.5rem] flex-col items-start justify-between rounded-xl border border-line bg-surface p-2.5 text-start shadow-xs transition hover:border-brand hover:shadow-md active:scale-[0.97]"
+                                :class="item.on_hand_milli !== null && item.on_hand_milli <= 0 ? 'opacity-50' : ''" @click="add(item)">
+                                <span class="line-clamp-2 text-[13px] font-medium leading-snug">{{ item.name }}</span>
+                                <span class="mt-1.5 flex w-full items-end justify-between gap-1">
+                                    <span class="tabular text-[14px] font-bold text-brand-text">{{ money(item.sale_price_minor) }}</span>
+                                    <span v-if="item.on_hand_milli !== null" class="tabular text-[11px] text-muted">{{ formatQuantity(item.on_hand_milli) }}</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </template>
 
@@ -441,3 +548,16 @@ function nextSale() {
         </AppDialog>
     </div>
 </template>
+
+<style scoped>
+.kbd {
+    margin-inline-start: 0.25rem;
+    border: 1px solid var(--color-line-strong, #d0d5dd);
+    border-radius: 4px;
+    padding: 0 0.3rem;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.45;
+    opacity: 0.85;
+}
+</style>

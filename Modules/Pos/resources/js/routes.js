@@ -5,7 +5,8 @@
 const meta = { context: 'organization', ns: ['pos'], module: 'pos' };
 
 export default [
-    { path: 'pos', name: 'pos', component: () => import('./pages/TillPage.vue'), meta },
+    // The till fills the screen (no sidebar or header), like a counter terminal.
+    { path: 'pos', name: 'pos', component: () => import('./pages/TillPage.vue'), meta: { ...meta, focus: true } },
     { path: 'pos/sales', name: 'pos-sales', component: () => import('./pages/SalesPage.vue'), meta },
     { path: 'pos/sales/:id', name: 'pos-sale', component: () => import('./pages/ReceiptPage.vue'), meta },
     { path: 'pos/reports', name: 'pos-reports', component: () => import('./pages/ReportsPage.vue'), meta },

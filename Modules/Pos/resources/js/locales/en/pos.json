@@ -86,7 +86,21 @@
         "looking": "Looking up…",
         "returning": "{name} — {count} purchases before",
         "points": "{count} points",
-        "new_customer": "A new customer: the number is kept with this sale."
+        "new_customer": "A new customer: the number is kept with this sale.",
+        "leave": "Back",
+        "full_screen": "Full screen",
+        "exit_full_screen": "Leave full screen",
+        "item": "Item",
+        "quantity": "Qty",
+        "price": "Price",
+        "line_total": "Amount",
+        "remove": "Remove line",
+        "total": "Total",
+        "items_count": "Items",
+        "new_bill": "New bill",
+        "categories": "Categories",
+        "all_items": "All",
+        "keys": "F2 scan · F4 cash · F8 hold · F9 new bill · Del/+/− the chosen line"
     },
     "receipt": {
         "title": "Receipt",
