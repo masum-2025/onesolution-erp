@@ -66,7 +66,17 @@ return [
     [
         'key' => 'shop_supervisor',
         'sector' => null,
-        'permissions' => ['pos.view', 'pos.supervise', 'pos.manage', 'inventory.view'],
+        'permissions' => ['pos.view', 'pos.supervise', 'pos.manage', 'inventory.view', 'crm.view'],
+    ],
+    [
+        'key' => 'sales_person',
+        'sector' => null,
+        'permissions' => ['crm.view', 'crm.edit', 'inventory.view'],
+    ],
+    [
+        'key' => 'sales_manager',
+        'sector' => null,
+        'permissions' => ['crm.view', 'crm.edit', 'crm.manage', 'crm.export', 'inventory.view'],
     ],
 
     // ── School ───────────────────────────────────────────────────────────

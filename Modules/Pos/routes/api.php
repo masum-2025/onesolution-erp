@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Pos\Http\Controllers\CustomerController;
 use Modules\Pos\Http\Controllers\RegisterController;
 use Modules\Pos\Http\Controllers\ReportController;
 use Modules\Pos\Http\Controllers\SaleController;
@@ -34,4 +35,6 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:pos'])
         });
         // Selling is the counter's everyday work: its own, more generous limit.
         Route::post('sales', [SaleController::class, 'store'])->middleware('throttle:pos-sales');
+        // A returning customer by mobile number (bounded like the sales).
+        Route::get('customers', CustomerController::class)->middleware('throttle:pos-sales');
     });

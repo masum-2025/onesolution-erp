@@ -141,6 +141,23 @@ class TaxCodes
             ->mapWithKeys(fn (TaxCode $code) => [$code->getKey() => $code->rate_bp])->all();
     }
 
+    /**
+     * The sales tax codes a company uses, for other modules' pickers (CRM
+     * quotations): id, code, name in the reader's language, rate.
+     *
+     * @return list<array{id: string, code: string, name: string, rate_bp: int}>
+     */
+    public function salesCodes(Organization $company): array
+    {
+        if (! $this->books->isSetUp($company)) {
+            return [];
+        }
+
+        return $this->books->query(TaxCode::class, $company)->where('is_active', true)->orderBy('rate_bp')->get()
+            ->filter(fn (TaxCode $code) => $code->appliesTo('sales'))
+            ->map(fn (TaxCode $code) => ['id' => $code->getKey(), 'code' => $code->code, 'name' => $code->textIn('name'), 'rate_bp' => (int) $code->rate_bp])->values()->all();
+    }
+
     public static function split(int $typedAmountMinor, int $rateBp, bool $pricesIncludeTax): array
     {
         if ($rateBp <= 0) {

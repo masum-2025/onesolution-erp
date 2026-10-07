@@ -23,9 +23,9 @@
 return [
     [
         'key' => 'general',
-        'modules' => ['hrm', 'attendance', 'accounting'],
+        'modules' => ['hrm', 'attendance', 'accounting', 'crm'],
         'rules' => [],
-        'role_templates' => ['administrator', 'manager', 'staff'],
+        'role_templates' => ['administrator', 'manager', 'staff', 'sales_person', 'sales_manager'],
     ],
     [
         'key' => 'school',
@@ -53,6 +53,6 @@ return [
         'rules' => [
             ['key' => 'accounting.chart_template', 'value' => 'retail'],
         ],
-        'role_templates' => ['administrator', 'manager', 'accountant', 'staff', 'store_keeper', 'cashier', 'shop_supervisor'],
+        'role_templates' => ['administrator', 'manager', 'accountant', 'staff', 'store_keeper', 'cashier', 'shop_supervisor', 'sales_person', 'sales_manager'],
     ],
 ];

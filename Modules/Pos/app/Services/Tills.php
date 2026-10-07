@@ -75,6 +75,12 @@ class Tills
         return $this->settings->values($company)['currency_code'] ?? throw PosException::noCurrency();
     }
 
+    /** The company's country (customers' phone numbers are read by it). */
+    public function country(Organization $company): ?string
+    {
+        return $this->settings->values($company)['country_code'] ?? null;
+    }
+
     /** The company's timezone (days and hours in reports are its own). */
     public function timezone(Organization $company): string
     {

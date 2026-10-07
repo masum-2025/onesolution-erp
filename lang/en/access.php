@@ -92,6 +92,14 @@ return [
             'name' => 'Shop supervisor',
             'description' => 'Sets up counters, approves returns, big discounts and cash differences.',
         ],
+        'sales_person' => [
+            'name' => 'Sales person',
+            'description' => 'Adds contacts and deals, follows up, makes estimates and quotations.',
+        ],
+        'sales_manager' => [
+            'name' => 'Sales manager',
+            'description' => 'Runs the sales team: pipelines, extra fields, the follow-ups of everyone, contact exports.',
+        ],
         'principal' => [
             'name' => 'Principal',
             'description' => 'Oversees the school and approves payroll, accounts and settings.',

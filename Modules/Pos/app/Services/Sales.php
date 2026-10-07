@@ -4,6 +4,7 @@ namespace Modules\Pos\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Identity\Support\PhoneNumber;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
@@ -13,8 +14,10 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Modules\Accounting\Ledger\LedgerLine;
 use Modules\Accounting\Services\TaxCodes;
+use Modules\Crm\Services\Customers;
 use Modules\Inventory\Exceptions\InventoryException;
 use Modules\Inventory\Services\Stock;
+use Modules\Pos\Events\SaleMade;
 use Modules\Pos\Exceptions\PosException;
 use Modules\Pos\Models\Payment;
 use Modules\Pos\Models\Register;
@@ -103,13 +106,15 @@ class Sales
         }
 
         $settled = $this->settle($register, $totals['total'], $data['payments']);
+        $customer = $this->customer($company, $register, $data, $actor, $offline);
 
-        return $this->tills->transaction($company, function () use ($company, $register, $session, $data, $actor, $madeAt, $offline, $reviews, $items, $priced, $totals, $settled, $includeTax) {
+        $sale = $this->tills->transaction($company, function () use ($company, $register, $session, $data, $actor, $madeAt, $offline, $reviews, $items, $priced, $totals, $settled, $includeTax, $customer) {
             $soldAt = $madeAt ?? CarbonImmutable::now();
             $sale = new Sale;
             $sale->fill([
                 'organization_id' => $company->getKey(), 'register_id' => $register->getKey(), 'session_id' => $session->getKey(), 'unit_id' => $register->unit_id,
-                'number' => $this->number($company, $register, 'sale', $soldAt), 'kind' => 'sale', 'sold_at' => $soldAt, 'customer_name' => $data['customer_name'] ?? null,
+                'number' => $this->number($company, $register, 'sale', $soldAt), 'kind' => 'sale', 'sold_at' => $soldAt, 'customer_name' => $customer['name'],
+                'customer_phone' => $customer['phone'], 'customer_id' => $customer['id'],
                 'subtotal_minor' => $totals['subtotal'], 'discount_minor' => $totals['discount'], 'tax_minor' => $totals['tax'], 'total_minor' => $totals['total'],
                 'paid_minor' => $settled['paid'], 'change_minor' => $settled['change'], 'currency_code' => $session->currency_code, 'prices_include_tax' => $includeTax,
                 'offline' => $offline, 'created_by' => $actor->getKey(), 'op_id' => $data['op_id'], 'version' => 1,
@@ -163,6 +168,9 @@ class Sales
 
             return $sale;
         });
+        SaleMade::dispatch($company->getKey(), $sale->getKey(), 'sale', $sale->customer_id, (int) $sale->total_minor, $sale->currency_code, $sale->sold_at->toDateString());
+
+        return $sale;
     }
 
     /**
@@ -185,7 +193,7 @@ class Sales
         }
         $session = $this->sessions->current($company, $register) ?? throw PosException::noOpenSession();
 
-        return $this->tills->transaction($company, function () use ($company, $sale, $register, $session, $data, $actor) {
+        $back = $this->tills->transaction($company, function () use ($company, $sale, $register, $session, $data, $actor) {
             $original = $this->tills->query(SaleLine::class, $company)->where('sale_id', $sale->getKey())->lockForUpdate()->get()->keyBy('id');
             $rows = [];
             foreach ($data['lines'] as $index => $entry) {
@@ -216,7 +224,7 @@ class Sales
             $back->fill([
                 'organization_id' => $company->getKey(), 'register_id' => $register->getKey(), 'session_id' => $session->getKey(), 'unit_id' => $register->unit_id,
                 'number' => $this->number($company, $register, 'return', $at), 'kind' => 'return', 'original_sale_id' => $sale->getKey(), 'sold_at' => $at,
-                'customer_name' => $sale->customer_name, 'reason' => $data['reason'], 'subtotal_minor' => $total + array_sum(array_column($rows, 'discount')),
+                'customer_name' => $sale->customer_name, 'customer_phone' => $sale->customer_phone, 'customer_id' => $sale->customer_id, 'reason' => $data['reason'], 'subtotal_minor' => $total + array_sum(array_column($rows, 'discount')),
                 'discount_minor' => array_sum(array_column($rows, 'discount')), 'tax_minor' => $tax, 'total_minor' => $total, 'paid_minor' => $total, 'change_minor' => 0,
                 'cost_minor' => array_sum(array_column($rows, 'cost')), 'currency_code' => $sale->currency_code, 'prices_include_tax' => $sale->prices_include_tax,
                 'created_by' => $actor->getKey(), 'op_id' => $data['op_id'], 'version' => 1,
@@ -255,6 +263,40 @@ class Sales
 
             return $back;
         });
+        if ($back->wasRecentlyCreated) {
+            SaleMade::dispatch($company->getKey(), $back->getKey(), 'return', $back->customer_id, -(int) $back->total_minor, $back->currency_code, $back->sold_at->toDateString());
+        }
+
+        return $back;
+    }
+
+    /**
+     * The customer of a sale: the mobile number typed (kept in E.164, by the
+     * company's country) and name; with CRM on here, its contact (found by
+     * number, else added at the counter's branch). Without CRM the number
+     * still finds the customer's earlier sales.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{name: string|null, phone: string|null, id: string|null}
+     */
+    private function customer(Organization $company, Register $register, array $data, User $actor, bool $offline = false): array
+    {
+        $name = trim((string) ($data['customer_name'] ?? '')) ?: null;
+        $typed = trim((string) ($data['customer_phone'] ?? ''));
+        if ($typed === '') {
+            return ['name' => $name, 'phone' => null, 'id' => null];
+        }
+        $phone = PhoneNumber::normalize($typed, $this->tills->country($company));
+        if ($phone === null) {
+            // Offline the sale is already made: a number that does not read is left off, the sale kept.
+            if ($offline) {
+                return ['name' => $name, 'phone' => null, 'id' => null];
+            }
+            throw ValidationException::withMessages(['customer_phone' => __('pos::pos.validation.phone')]);
+        }
+        $contact = class_exists(Customers::class) ? app(Customers::class)->remember($company, $register->unit_id, $name, $phone, $actor) : null;
+
+        return ['name' => $name ?? $contact['name'] ?? null, 'phone' => $phone, 'id' => $contact['id'] ?? null];
     }
 
     /**

@@ -36,7 +36,7 @@ class PosExporter implements ExportsModuleData
             ]),
             'sales' => $this->rows(Sale::class, $organization, $organizationIds, fn (Sale $row) => [
                 'id' => $row->getKey(), 'number' => $row->number, 'kind' => $row->kind, 'register_id' => $row->register_id, 'session_id' => $row->session_id,
-                'original_sale_id' => $row->original_sale_id, 'sold_at' => $row->sold_at->toIso8601String(), 'customer_name' => $row->customer_name,
+                'original_sale_id' => $row->original_sale_id, 'sold_at' => $row->sold_at->toIso8601String(), 'customer_name' => $row->customer_name, 'customer_phone' => $row->customer_phone, 'customer_id' => $row->customer_id,
                 'subtotal_minor' => $row->subtotal_minor, 'discount_minor' => $row->discount_minor, 'tax_minor' => $row->tax_minor, 'total_minor' => $row->total_minor,
                 'cost_minor' => $row->cost_minor, 'currency_code' => $row->currency_code, 'offline' => $row->offline, 'review_reason' => $row->review_reason, 'journal_id' => $row->journal_id,
             ]),

@@ -62,6 +62,7 @@ class SaleSync implements SyncableRecords
             'register_id' => ['required', 'string', 'max:26'],
             'session_id' => ['nullable', 'string', 'max:26'],
             'customer_name' => ['nullable', 'string', 'max:150'],
+            'customer_phone' => ['nullable', 'string', 'max:20'],
             'lines' => ['required', 'array', 'min:1', 'max:200'],
             'lines.*.item_id' => ['required', 'string', 'max:26'],
             'lines.*.quantity_milli' => ['required', 'integer', 'min:1'],

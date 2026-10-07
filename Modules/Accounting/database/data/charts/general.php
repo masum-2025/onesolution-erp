@@ -92,5 +92,6 @@ return [
         'pos.sales' => '4100',
         'pos.tax_output' => '2130',
         'pos.cash_variance' => '5900',
+        'crm.sales' => '4100',
     ],
 ];

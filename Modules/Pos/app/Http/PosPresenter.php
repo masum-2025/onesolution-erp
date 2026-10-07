@@ -50,7 +50,7 @@ class PosPresenter
     {
         return [
             'id' => $sale->getKey(), 'number' => $sale->number, 'kind' => $sale->kind, 'register_id' => $sale->register_id, 'session_id' => $sale->session_id,
-            'original_sale_id' => $sale->original_sale_id, 'sold_at' => $sale->sold_at->toIso8601String(), 'customer_name' => $sale->customer_name, 'reason' => $sale->reason,
+            'original_sale_id' => $sale->original_sale_id, 'sold_at' => $sale->sold_at->toIso8601String(), 'customer_name' => $sale->customer_name, 'customer_phone' => $sale->customer_phone, 'customer_id' => $sale->customer_id, 'reason' => $sale->reason,
             'subtotal_minor' => $sale->subtotal_minor, 'discount_minor' => $sale->discount_minor, 'tax_minor' => $sale->tax_minor, 'total_minor' => $sale->total_minor,
             'paid_minor' => $sale->paid_minor, 'change_minor' => $sale->change_minor, 'currency' => $sale->currency_code, 'prices_include_tax' => $sale->prices_include_tax,
             'offline' => $sale->offline, 'review_reason' => $sale->review_reason, 'journal_id' => $sale->journal_id, 'version' => $sale->version,

@@ -3,6 +3,7 @@
 namespace Modules\Pos\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Identity\Support\PhoneNumber;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class SaleController extends Controller
     {
         [$unit, $company] = $this->workplace($organization);
         abort_unless(Gate::any(['pos.view', 'pos.sell'], $unit), 403);
-        $filters = $request->validate(['session_id' => ['nullable', 'string', 'max:26'], 'register_id' => ['nullable', 'string', 'max:26'], 'date' => ['nullable', 'date_format:Y-m-d'], 'review' => ['nullable', 'boolean'], 'number' => ['nullable', 'string', 'max:40']]);
+        $filters = $request->validate(['session_id' => ['nullable', 'string', 'max:26'], 'register_id' => ['nullable', 'string', 'max:26'], 'date' => ['nullable', 'date_format:Y-m-d'], 'review' => ['nullable', 'boolean'], 'number' => ['nullable', 'string', 'max:40'], 'phone' => ['nullable', 'string', 'max:20'], 'customer_id' => ['nullable', 'string', 'max:26']]);
         $query = $this->tills->query(Sale::class, $company)->whereIn('register_id', $this->registerIds($unit, $company))->orderByDesc('sold_at')->limit(300);
         foreach (['session_id', 'register_id', 'number'] as $key) {
             if (! empty($filters[$key])) {
@@ -45,6 +46,13 @@ class SaleController extends Controller
         }
         if (! empty($filters['review'])) {
             $query->whereNotNull('review_reason');
+        }
+        if (! empty($filters['phone'])) {
+            // A customer's sales by mobile number (an unreadable number finds nothing).
+            $query->where('customer_phone', PhoneNumber::normalize($filters['phone'], $this->tills->country($company)) ?? '-');
+        }
+        if (! empty($filters['customer_id'])) {
+            $query->where('customer_id', $filters['customer_id']);
         }
 
         return response()->json(['data' => $query->get()->map(fn (Sale $sale) => $this->presenter->sale($sale))->values()]);

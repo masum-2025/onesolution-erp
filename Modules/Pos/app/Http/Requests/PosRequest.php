@@ -70,6 +70,7 @@ class PosRequest extends StrictFormRequest
             'op_id' => ['required', 'string', 'max:64'],
             'register_id' => ['required', 'string', 'max:26'],
             'customer_name' => ['nullable', 'string', 'max:150'],
+            'customer_phone' => ['nullable', 'string', 'max:20'],
             'lines' => ['required', 'array', 'min:1', 'max:200'],
             'lines.*' => ['array:item_id,quantity_milli,discount_minor'],
             'lines.*.item_id' => ['required', 'string', 'max:26'],

@@ -17,6 +17,8 @@ final class PhoneNumber
      */
     public static function normalize(string $input, ?string $country): ?string
     {
+        // Bangla digits (typed on a Bangla keyboard) read as 0-9.
+        $input = strtr($input, ['০' => '0', '১' => '1', '২' => '2', '৩' => '3', '৪' => '4', '৫' => '5', '৬' => '6', '৭' => '7', '৮' => '8', '৯' => '9']);
         $digits = preg_replace('/[^\d+]/', '', $input) ?? '';
         $countries = self::formats();
 

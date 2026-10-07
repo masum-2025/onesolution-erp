@@ -113,7 +113,8 @@ return [
             ],
         ],
     ],
-    'events' => [],
+    // Other modules listen to these (CRM: purchases and points); payloads carry ids and amounts only.
+    'events' => ['pos.sale_made'],
     // Money in and out at the counter (Accounting maps each to an account); cost uses Inventory's keys.
     'ledger_accounts' => [
         'pos.cash' => ['label' => 'pos::pos.posting_keys.cash', 'type' => 'asset'],
