@@ -60,7 +60,7 @@ class Admissions
                 return $existing;
             }
         }
-        $this->checkPlace($company, $data['program_id'], $data['level_id'], $data['session_id']);
+        $this->checkPlace($company, $data['program_id'] ?? null, $data['level_id'] ?? null, $data['session_id'] ?? null);
         $applicant = array_intersect_key((array) $data['applicant'], array_flip(self::APPLICANT));
         // Required own fields of an application are asked for now (people from another module may not have them yet).
         $applicant['extra'] = $this->fields->apply($company, 'admission', (array) ($applicant['extra'] ?? []), [], $source === 'direct', 'applicant.extra');
@@ -71,9 +71,9 @@ class Admissions
                 'organization_id' => $company->getKey(),
                 'unit_id' => $unitId,
                 'number' => $this->numbers->admissionNumber($company, (int) $this->education->today($company)->format('Y')),
-                'program_id' => $data['program_id'],
-                'level_id' => $data['level_id'],
-                'session_id' => $data['session_id'],
+                'program_id' => $data['program_id'] ?? null,
+                'level_id' => $data['level_id'] ?? null,
+                'session_id' => $data['session_id'] ?? null,
                 'applicant' => $applicant,
                 'source' => $source,
                 'source_ref' => $sourceRef,
@@ -153,6 +153,9 @@ class Admissions
             if (! isset(self::NEXT[$admission->status])) {
                 throw EducationException::wrongStatus($admission->status);
             }
+            if ($admission->program_id === null || $admission->level_id === null || $admission->session_id === null) {
+                throw EducationException::notPlaced();
+            }
             $applicant = $admission->applicant;
             if (trim((string) ($applicant['name'] ?? '')) === '') {
                 throw ValidationException::withMessages(['applicant.name' => __('education::education.validation.applicant_name')]);
@@ -180,9 +183,19 @@ class Admissions
         });
     }
 
-    /** A level of the program, and a session of the kind the program is taught in. */
-    private function checkPlace(Organization $company, string $programId, string $levelId, string $sessionId): void
+    /**
+     * A level of the program, and a session of the kind the program is taught
+     * in. No place at all is allowed (an application from CRM, placed later);
+     * half a place is not.
+     */
+    private function checkPlace(Organization $company, ?string $programId, ?string $levelId, ?string $sessionId): void
     {
+        if ($programId === null && $levelId === null && $sessionId === null) {
+            return;
+        }
+        if ($programId === null || $levelId === null || $sessionId === null) {
+            throw EducationException::notPlaced();
+        }
         /** @var Program $program */
         $program = $this->education->find(Program::class, $company, $programId, 'program');
         $level = $this->education->find(Level::class, $company, $levelId, 'level');

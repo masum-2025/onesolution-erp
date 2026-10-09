@@ -66,6 +66,44 @@ class EducationException extends TenancyException
         return new self('unknown_preset', 404);
     }
 
+    public static function nothingToPromote(): self
+    {
+        return new self('nothing_to_promote', 422);
+    }
+
+    /** These students are already on a list that is not applied yet. */
+    public static function promotionOpen(): self
+    {
+        return new self('promotion_open', 409);
+    }
+
+    /** The person who made or handed in a list cannot approve it. */
+    public static function ownPromotion(): self
+    {
+        return new self('own_promotion', 403);
+    }
+
+    public static function changedSince(): self
+    {
+        return new self('changed_since', 409);
+    }
+
+    public static function undoTooLate(): self
+    {
+        return new self('undo_too_late', 409);
+    }
+
+    public static function undoMovedOn(): self
+    {
+        return new self('undo_moved_on', 409);
+    }
+
+    /** An application to admit has no program, level and session yet. */
+    public static function notPlaced(): self
+    {
+        return new self('not_placed', 422);
+    }
+
     public static function badPhoto(): self
     {
         return new self('bad_photo', 422, [], ['field' => 'photo']);

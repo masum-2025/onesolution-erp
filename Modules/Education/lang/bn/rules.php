@@ -34,7 +34,12 @@ return [
         'label' => 'শিক্ষক দেখবেন',
         'description' => 'own_sections: শুধু নিজের (শ্রেণি শিক্ষক হিসেবে) শাখার শিক্ষার্থী; all: ক্যাম্পাসের সব শিক্ষার্থী।',
     ],
+    'crm_admission_pipelines' => [
+        'label' => 'যে গ্রাহক-পাইপলাইনগুলো ভর্তির',
+        'description' => 'এই পাইপলাইনগুলোতে (কী অনুযায়ী) জেতা ডিল এখানে আবেদন হয়ে আসবে, যেমন ["admissions"]।',
+    ],
     'categories' => [
+        'admissions' => 'ভর্তি',
         'numbering' => 'নম্বর',
         'sections' => 'শাখা ও রোল',
         'promotion' => 'প্রমোশন',

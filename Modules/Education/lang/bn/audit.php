@@ -22,4 +22,12 @@ return [
     'admission_admitted' => 'আবেদনকারী ভর্তি হয়েছে',
     'enrollment_placed' => 'শিক্ষার্থী অন্য শাখায় গেছে',
     'rolls_numbered' => 'রোল নম্বর বসানো হয়েছে',
+    'students_imported' => 'শিক্ষার্থী ইমপোর্ট হয়েছে',
+    'promotion_created' => 'প্রমোশন তালিকা তৈরি হয়েছে',
+    'promotion_decided' => 'প্রমোশনের সিদ্ধান্ত বদলেছে',
+    'promotion_submitted' => 'প্রমোশন তালিকা অনুমোদনের জন্য জমা হয়েছে',
+    'promotion_rejected' => 'প্রমোশন তালিকা ফেরত পাঠানো হয়েছে',
+    'promotion_cancelled' => 'প্রমোশন তালিকা বাতিল হয়েছে',
+    'promotion_applied' => 'প্রমোশন চালু হয়েছে',
+    'promotion_undone' => 'প্রমোশন ফেরানো হয়েছে',
 ];

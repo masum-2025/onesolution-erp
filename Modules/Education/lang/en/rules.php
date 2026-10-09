@@ -34,7 +34,12 @@ return [
         'label' => 'Teachers see',
         'description' => 'own_sections: only the students of the sections they are class teacher of; all: every student of the campus.',
     ],
+    'crm_admission_pipelines' => [
+        'label' => 'Customer pipelines that are admissions',
+        'description' => 'Deals won in these pipelines (by key) become applications here, for example ["admissions"].',
+    ],
     'categories' => [
+        'admissions' => 'Admissions',
         'numbering' => 'Numbers',
         'sections' => 'Sections and rolls',
         'promotion' => 'Promotion',

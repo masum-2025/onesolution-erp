@@ -38,33 +38,6 @@ beforeEach(function () {
     $this->as = fn (?string $token = null) => $this->asToken($token ?? $this->token);
 });
 
-/** The C1 school from the Bangladeshi preset, a 2026 year and session, and section A of class 6 at branch B1. */
-function eduSchool(object $test): object
-{
-    ($test->as)()->postJson(($test->api)('presets/bd_school/apply'))->assertOk();
-    $setup = ($test->as)()->getJson(($test->api)('setup'))->assertOk()->json('data');
-    $sec = collect($setup['programs'])->firstWhere('code', 'SEC');
-    $class6 = collect($setup['levels'])->first(fn ($level) => $level['program_id'] === $sec['id'] && $level['code'] === 'C6');
-    $year = ($test->as)()->postJson(($test->api)('structure/years'), ['name' => '2026', 'starts_on' => '2026-01-01', 'ends_on' => '2026-12-31', 'status' => 'open'])->assertCreated()->json('data');
-    $session = ($test->as)()->postJson(($test->api)('structure/sessions'), ['academic_year_id' => $year['id'], 'kind' => 'year', 'name' => ['en' => '2026', 'bn' => '২০২৬'], 'starts_on' => '2026-01-01', 'ends_on' => '2026-12-31', 'status' => 'open'])->assertCreated()->json('data');
-    $section = ($test->as)()->postJson(($test->api)('structure/sections'), ['unit_id' => $test->w->b1->id, 'session_id' => $session['id'], 'level_id' => $class6['id'], 'name' => 'A', 'capacity' => 2])->assertCreated()->json('data');
-
-    return (object) ['setup' => $setup, 'program' => $sec, 'class6' => $class6, 'year' => $year, 'session' => $session, 'section' => $section];
-}
-
-function newStudent(object $test, object $school, array $data = [], ?string $token = null)
-{
-    return ($test->as)($token)->postJson(($test->api)('students'), [
-        'name' => 'Rahim Uddin',
-        'program_id' => $school->program['id'],
-        'unit_id' => $test->w->b1->id,
-        'gender' => 'male',
-        'guardians' => [['name' => 'Abdul Karim', 'phone' => '01711-000000', 'relation' => 'father']],
-        'enrollment' => ['session_id' => $school->session['id'], 'level_id' => $school->class6['id'], 'section_id' => $school->section['id']],
-        ...$data,
-    ]);
-}
-
 // ── Structure ──
 
 it('sets up an institution from a preset once, with levels that promote to the next', function () {

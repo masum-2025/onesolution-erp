@@ -26,6 +26,7 @@ use Modules\Education\Services\Access;
 use Modules\Education\Services\Education;
 use Modules\Education\Services\Enrollments;
 use Modules\Education\Services\Fields;
+use Modules\Education\Services\StudentImporter;
 use Modules\Education\Services\Students;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -128,6 +129,40 @@ class StudentController extends Controller
         $changed = $this->students->update($company, $found, (int) $data['base_version'], $data, $request->user());
 
         return response()->json(['data' => $this->presenter->student($company, $changed, Gate::allows('education.view_sensitive', $unit), $this->enrollments->current($company, $changed->getKey()))]);
+    }
+
+    /**
+     * Rows read from a spreadsheet on the screen: checked (commit false) or
+     * made (commit true), placed in the session and level chosen for the file.
+     */
+    public function import(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        if ($unit->type === OrganizationType::Group) {
+            throw EducationException::notCompanyUnit();
+        }
+        Gate::authorize('education.admit', $unit);
+        $data = $request->validate([
+            'unit_id' => ['nullable', 'string', 'size:26'],
+            'program_id' => ['required', 'string', 'size:26'], 'session_id' => ['required', 'string', 'size:26'],
+            'level_id' => ['required', 'string', 'size:26'], 'section_id' => ['nullable', 'string', 'size:26'],
+            'commit' => ['required', 'boolean'],
+            'rows' => ['required', 'array', 'min:1', 'max:'.StudentImporter::MAX_ROWS],
+            'rows.*' => ['array'],
+            'rows.*.*' => ['nullable', 'string', 'max:300'],
+        ]);
+        // Private columns only from people who may see them.
+        $private = array_merge(StudentImporter::SENSITIVE, app(Fields::class)->of($company, 'student')->where('is_sensitive', true)->pluck('key')->all());
+        foreach ($data['rows'] as $row) {
+            if (array_filter(array_intersect_key($row, array_flip($private)), fn ($value) => $value !== null && $value !== '') !== []) {
+                Gate::authorize('education.view_sensitive', $unit);
+                break;
+            }
+        }
+        $unitId = $this->unitFor($unit, $data['unit_id'] ?? null);
+        $result = app(StudentImporter::class)->import($company, $unitId, array_intersect_key($data, array_flip(['program_id', 'session_id', 'level_id', 'section_id'])), $data['rows'], (bool) $data['commit'], $request->user());
+
+        return response()->json(['data' => $result]);
     }
 
     public function leave(Request $request, string $organization, string $student): JsonResponse

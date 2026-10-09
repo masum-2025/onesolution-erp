@@ -108,6 +108,21 @@ class Customers
     /**
      * @return array{id: string, name: string, phone: string, points: int, purchases: int, last_purchase_on: string|null}
      */
+    /**
+     * A contact by id, for another module acting on a CRM event (name, phone and email; null when unknown or removed).
+     *
+     * @return array{id: string, name: string, phone: string|null, email: string|null, unit_id: string}|null
+     */
+    public function contact(Organization $company, string $contactId): ?array
+    {
+        if (! $this->available($company)) {
+            return null;
+        }
+        $contact = $this->crm->query(Contact::class, $company)->whereKey($contactId)->whereNull('anonymized_at')->first();
+
+        return $contact === null ? null : ['id' => $contact->getKey(), 'name' => $contact->name, 'phone' => $contact->phone, 'email' => $contact->email, 'unit_id' => $contact->unit_id];
+    }
+
     private static function shape(Contact $contact): array
     {
         return ['id' => $contact->getKey(), 'name' => $contact->name, 'phone' => (string) $contact->phone, 'points' => (int) $contact->points,

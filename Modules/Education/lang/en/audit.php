@@ -22,4 +22,12 @@ return [
     'admission_admitted' => 'Applicant admitted',
     'enrollment_placed' => 'Student moved to another section',
     'rolls_numbered' => 'Roll numbers given',
+    'students_imported' => 'Students imported',
+    'promotion_created' => 'Promotion list made',
+    'promotion_decided' => 'Promotion decisions changed',
+    'promotion_submitted' => 'Promotion list handed in for approval',
+    'promotion_rejected' => 'Promotion list sent back',
+    'promotion_cancelled' => 'Promotion list cancelled',
+    'promotion_applied' => 'Promotion applied',
+    'promotion_undone' => 'Promotion undone',
 ];

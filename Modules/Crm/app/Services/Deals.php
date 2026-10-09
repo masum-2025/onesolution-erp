@@ -5,7 +5,9 @@ namespace Modules\Crm\Services;
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Tenancy\Models\Organization;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Modules\Crm\Events\DealWon;
 use Modules\Crm\Exceptions\CrmException;
 use Modules\Crm\Models\Contact;
 use Modules\Crm\Models\Deal;
@@ -92,6 +94,12 @@ class Deals
                 'closed_at' => $status === Deal::OPEN ? null : ($deal->status === $status ? $deal->closed_at : now()), 'version' => $deal->version + 1,
             ])->save();
             $this->audit->record('crm.deal_moved', $deal, old: $old, new: $this->values($deal), actor: $actor, organizationId: $company->getKey());
+            // Won now (not before): other modules may act on it.
+            if ($status === Deal::WON && $old['status'] !== Deal::WON) {
+                $key = (string) $this->crm->query(Pipeline::class, $company)->whereKey($deal->pipeline_id)->value('key');
+                $event = new DealWon($company->getKey(), $deal->unit_id, $deal->getKey(), $deal->contact_id, $key, $actor->getKey());
+                DB::afterCommit(fn () => event($event));
+            }
 
             return $deal;
         });

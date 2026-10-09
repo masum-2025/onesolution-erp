@@ -2888,9 +2888,33 @@ subject `education.student` (relations guardian, self), only portal fields, neve
 
 `StudentAdmitted`, `StudentLeft`, `EnrollmentChanged`, for fees, attendance and exams.
 
+### Promotion (EDU-1b, `/education/promotions`)
+
+1. A list for a session's level (or one section) at a campus: every studying student, to be
+   promoted to the next level (graduate on the last). One open list per student.
+2. Decisions per student: promote, repeat (more often than `education.max_repeats` needs a
+   reason), leave (reason) or graduate (last level only), and the section next session
+   (`section_id` on the lines call places everyone at once).
+3. Submitted: applied now, or with `education.promotion_approval` after another person
+   approves (`education.approve_promotion`, never the maker), or sent back with a note.
+4. Applying is all or nothing: this session's enrollments end (promoted, repeated, left,
+   graduated), the next session's are made inside each section's capacity.
+5. Undo within `education.promotion_undo_days`, while nothing moved on since.
+
+### Students from a spreadsheet and from CRM
+
+- `POST students/import` with the rows read on the screen: `commit: false` checks every row
+  (errors per column, duplicates by birth registration number or name and guardian phone, section
+  room), `commit: true` makes the good ones (a row is never made twice). Private columns need
+  `education.view_sensitive`.
+- A won deal of a pipeline listed in `education.crm_admission_pipelines` (default
+  `["admissions"]`) becomes an application, once per deal (CRM event `DealWon`, contact read
+  through `Customers::contact()`), with the contact as guardian and no place yet: the office
+  places it before admitting.
+
 ### Future expansion (Education)
 
-- EDU-1b: promotion (preview, undo, approval), CSV import, admissions from CRM. EDU-2 screens.
+- EDU-2 screens.
   EDU-3 certificates and ID cards; EDU-4 course registration; then fees, exams, attendance.
 - A new country, a new kind of institution, own terms: a preset file, lists, own fields and
   wording (LANG-1). No code change.

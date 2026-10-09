@@ -40,6 +40,13 @@ class Numbers
         return ($prefixes['admission'] ?? 'ADM').'-'.$year.'-'.str_pad((string) $this->next($company, 'admission', $year), 4, '0', STR_PAD_LEFT);
     }
 
+    public function promotionNumber(Organization $company, int $year): string
+    {
+        $prefixes = (array) $this->rules->get('education.number_prefixes', $this->contexts->forOrganization($company));
+
+        return ($prefixes['promotion'] ?? 'PRM').'-'.$year.'-'.str_pad((string) $this->next($company, 'promotion', $year), 4, '0', STR_PAD_LEFT);
+    }
+
     private function next(Organization $company, string $kind, int $year): int
     {
         $sequence = $this->education->query(Sequence::class, $company)->where('kind', $kind)->where('year', $year)->lockForUpdate()->first();

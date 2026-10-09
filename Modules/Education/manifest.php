@@ -120,6 +120,18 @@ return [
             'category' => 'access',
             'sort_order' => 80,
         ],
+        [
+            'key' => 'education.crm_admission_pipelines',
+            'type' => 'json',
+            // CRM pipelines (by key) whose won deals become applications here.
+            'schema' => ['type' => 'array', 'items' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]*$'], 'uniqueItems' => true, 'maxItems' => 10],
+            'default' => ['admissions'],
+            'label' => 'education::rules.crm_admission_pipelines.label',
+            'description' => 'education::rules.crm_admission_pipelines.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'admissions',
+            'sort_order' => 90,
+        ],
     ],
     // Screens come with EDU-2.
     'menu' => [],
