@@ -72,6 +72,22 @@ return [
             'name' => 'Retail shop',
             'description' => 'Stock, customers and accounts for shops and stores.',
         ],
+        'college' => [
+            'name' => 'College',
+            'description' => 'Higher secondary and degree classes: students, admissions, staff and accounts.',
+        ],
+        'university' => [
+            'name' => 'University',
+            'description' => 'Faculties, semesters and credits: students, admissions, staff and accounts.',
+        ],
+        'madrasa' => [
+            'name' => 'Madrasa',
+            'description' => 'Ebtedayee to Alim: students, admissions, staff and accounts.',
+        ],
+        'coaching' => [
+            'name' => 'Coaching centre',
+            'description' => 'Courses in terms and batches: students, admissions and accounts.',
+        ],
     ],
 
 ];

@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/education",
+    "description": "Schools, colleges, universities, madrasas and coaching centres.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Education\\": "app/"
+        }
+    }
+}

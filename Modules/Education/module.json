@@ -1,0 +1,11 @@
+{
+    "name": "Education",
+    "alias": "education",
+    "description": "Schools, colleges, universities, madrasas and coaching centres: programs, sessions, students, guardians and admissions.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Education\\Providers\\EducationServiceProvider"
+    ],
+    "files": []
+}

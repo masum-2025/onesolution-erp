@@ -29,7 +29,7 @@ return [
     ],
     [
         'key' => 'school',
-        'modules' => ['hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             // School days start early and buses run late: a short grace period.
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
@@ -37,6 +37,46 @@ return [
             ['key' => 'accounting.chart_template', 'value' => 'school'],
         ],
         'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
+    ],
+    // Other education institutions: the same module, their own structure from a preset
+    // (Education > presets); the school chart of accounts fits them (fees, salaries).
+    [
+        'key' => 'college',
+        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'rules' => [
+            ['key' => 'hrm.probation_days', 'value' => 180],
+            ['key' => 'accounting.chart_template', 'value' => 'school'],
+        ],
+        'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
+    ],
+    [
+        'key' => 'university',
+        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'rules' => [
+            ['key' => 'hrm.probation_days', 'value' => 180],
+            ['key' => 'accounting.chart_template', 'value' => 'school'],
+            // Lecturers see every student of their campus; there are no class teachers.
+            ['key' => 'education.teacher_scope', 'value' => 'all'],
+        ],
+        'role_templates' => ['registrar', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
+    ],
+    [
+        'key' => 'madrasa',
+        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'rules' => [
+            ['key' => 'attendance.late_grace_minutes', 'value' => 10],
+            ['key' => 'accounting.chart_template', 'value' => 'school'],
+        ],
+        'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
+    ],
+    [
+        'key' => 'coaching',
+        'modules' => ['education', 'hrm', 'attendance', 'accounting'],
+        'rules' => [
+            ['key' => 'accounting.chart_template', 'value' => 'school'],
+            ['key' => 'education.teacher_scope', 'value' => 'all'],
+        ],
+        'role_templates' => ['administrator', 'teacher', 'office_staff', 'accountant'],
     ],
     [
         'key' => 'factory',

@@ -1,0 +1,25 @@
+<?php
+
+// Audit log labels of education actions (education.*).
+return [
+    'structure_created' => 'Education structure added',
+    'structure_updated' => 'Education structure changed',
+    'structure_removed' => 'Curriculum entry or prerequisite taken out',
+    'preset_applied' => 'Ready-made education structure applied',
+    'field_created' => 'Own field added',
+    'field_updated' => 'Own field changed',
+    'student_created' => 'Student added',
+    'student_updated' => 'Student changed',
+    'student_viewed_sensitive' => 'Student\'s private details opened',
+    'student_left' => 'Student left or graduated',
+    'student_photo_changed' => 'Student photo changed',
+    'guardian_linked' => 'Guardian linked to a student',
+    'guardian_unlinked' => 'Guardian unlinked from a student',
+    'guardian_updated' => 'Guardian changed',
+    'admission_created' => 'Application taken',
+    'admission_updated' => 'Application changed',
+    'admission_moved' => 'Application decision',
+    'admission_admitted' => 'Applicant admitted',
+    'enrollment_placed' => 'Student moved to another section',
+    'rolls_numbered' => 'Roll numbers given',
+];

@@ -106,11 +106,15 @@ return [
         ],
         'teacher' => [
             'name' => 'Teacher',
-            'description' => 'Takes attendance and views staff information.',
+            'description' => 'Takes attendance, sees staff information and the students of their own sections.',
         ],
         'office_staff' => [
             'name' => 'Office staff',
-            'description' => 'Handles admission contacts, stock and day-to-day account entries.',
+            'description' => 'Takes admissions, keeps student records, stock and day-to-day account entries.',
+        ],
+        'registrar' => [
+            'name' => 'Registrar',
+            'description' => 'Runs programs, admissions and student records; sees private details.',
         ],
     ],
 

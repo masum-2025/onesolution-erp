@@ -19,5 +19,6 @@
     "CustomReports": true,
     "ClientPortal": true,
     "OnlinePayments": true,
-    "Pos": true
+    "Pos": true,
+    "Education": true
 }

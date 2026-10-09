@@ -2830,6 +2830,71 @@ the event `Modules\Pos\Events\SaleMade` (`pos.sale_made`: ids and amounts, no pe
   country data; a company its own fields and stages on screen. No code change for any of them.
   Campaigns (bulk SMS or email to those who consented), points spent at the counter, web lead forms
   and quote e-mail with PDF are later steps.
+
+## Education module (business module 8: EDU-1a backend)
+
+Code: `Modules/Education` (module `education`, sectors school, college, university, madrasa,
+coaching). One module for every kind of institution: nothing about a kind of school or a country
+is in the code. Records live in the client's database (tenant migration); `organization_id` is the
+institution (company), `unit_id` the campus (branch).
+
+### Structure (data, `/education/structure/{kind}`)
+
+| kind | what |
+|---|---|
+| `units` | faculty / department / institute, any depth |
+| `programs` | what students follow; `progression` year, semester or term; periods a year; total credits; what a level and a section are called there ("শ্রেণি"/"Semester", "শাখা"/"Batch") |
+| `levels` | steps of a program; `next_level_id` is where promotion goes (none on the last) |
+| `lists` | own lists: gender, relation, shift, medium, stream, category |
+| `years`, `sessions` | academic years and the periods taught in them (a whole year, semesters or terms) |
+| `sections` | a session's group of one level at a campus, capacity (rule default), class teacher (HRM employee) |
+| `batches`, `subjects`, `curricula`, `curriculum_items`, `prerequisites` | intakes, subjects with credits (hundredths), each level's subjects per stream |
+
+Everything is switched off rather than removed; references must be the institution's own and fit
+(a section's session must be of its program's kind, a next level of the same program, sessions
+inside their year, no prerequisite circles). Presets (`database/data/presets/*.php`:
+`bd_school`, `bd_college`, `university`, `madrasa`, `coaching`) make what is missing and can be
+applied again; a new country or kind of institution is a new data file.
+
+### Students, guardians, admissions, enrollments
+
+- A student gets a code by `education.student_code_format` (`{YYYY}{YY}{PROGRAM}{SEQ:n}`), is
+  at a campus, in a program (and batch). Birth registration number encrypted, found by a keyed hash
+  (the same number twice is refused). Date of birth, ids and sensitive own fields only with
+  `education.view_sensitive` (read and write; opening them is audited; the audit never holds them).
+- One phone, one guardian: siblings share their parents; one primary guardian per student.
+- Applications: applied → test → offered → admitted / rejected / withdrawn; admitting makes the
+  student, guardians and first enrollment. Numbers by `education.number_prefixes`.
+- Enrollments: one per student and session, never rewritten (history stays); sections keep to
+  their capacity; rolls by `education.roll_number_mode` (manual, name, admission order).
+- A student leaves or graduates; nothing is deleted. Photos private, through 5-minute signed links.
+- Own fields (`edu_fields`) on students, guardians and applications: required, shown in the
+  portal, printed on documents, or sensitive.
+
+### Who sees what
+
+`education.view`, `.manage` (structure, fields, presets), `.admit`, `.edit_students`,
+`.view_sensitive`, `.promote`, `.approve_promotion` (EDU-1b). A teacher (view only) sees the
+students of the sections they are class teacher of (`education.teacher_scope` = own_sections; their
+login linked to an HRM employee), or every student (`all`). Guardians and students in the portal:
+subject `education.student` (relations guardian, self), only portal fields, never private details.
+
+### Rules
+
+`education.student_code_format`, `number_prefixes`, `section_capacity_default`, `roll_number_mode`,
+`promotion_approval` (sensitive), `promotion_undo_days`, `max_repeats`, `teacher_scope`.
+
+### Events (ids only)
+
+`StudentAdmitted`, `StudentLeft`, `EnrollmentChanged`, for fees, attendance and exams.
+
+### Future expansion (Education)
+
+- EDU-1b: promotion (preview, undo, approval), CSV import, admissions from CRM. EDU-2 screens.
+  EDU-3 certificates and ID cards; EDU-4 course registration; then fees, exams, attendance.
+- A new country, a new kind of institution, own terms: a preset file, lists, own fields and
+  wording (LANG-1). No code change.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

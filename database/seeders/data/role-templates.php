@@ -83,17 +83,31 @@ return [
     [
         'key' => 'principal',
         'sector' => 'school',
-        'permissions' => ['*.view', 'hrm.manage', 'attendance.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve'],
+        'permissions' => [
+            '*.view', 'hrm.manage', 'attendance.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
+            'education.manage', 'education.view_sensitive', 'education.approve_promotion',
+        ],
     ],
     [
         'key' => 'teacher',
         'sector' => 'school',
-        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view'],
+        // Students of their own sections only (rule education.teacher_scope).
+        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view'],
     ],
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote'],
+    ],
+
+    // ── University ───────────────────────────────────────────────────────
+    [
+        'key' => 'registrar',
+        'sector' => 'university',
+        'permissions' => [
+            '*.view', 'members.manage', 'education.manage', 'education.admit', 'education.edit_students',
+            'education.view_sensitive', 'education.promote', 'crm.manage',
+        ],
     ],
 
 ];
