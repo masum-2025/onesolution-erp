@@ -2,6 +2,7 @@
 
 namespace Modules\Hrm\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 use Illuminate\Validation\Rule;
 use Modules\Hrm\Enums\CustomFieldType;
@@ -18,7 +19,7 @@ class CustomFieldRequest extends StrictFormRequest
     public function rules(): array
     {
         $creating = $this->isMethod('post');
-        $locales = implode(',', (array) config('tenancy.supported_locales'));
+        $locales = implode(',', LanguageRegistry::codes());
 
         return [
             'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],

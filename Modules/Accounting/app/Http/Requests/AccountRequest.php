@@ -2,6 +2,7 @@
 
 namespace Modules\Accounting\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 use Modules\Accounting\Enums\AccountStatus;
 use Modules\Accounting\Enums\AccountType;
@@ -18,7 +19,7 @@ class AccountRequest extends StrictFormRequest
     public function rules(): array
     {
         $creating = $this->isMethod('post');
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
 
         return [
             'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],

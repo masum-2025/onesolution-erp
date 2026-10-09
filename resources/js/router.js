@@ -75,6 +75,8 @@ const routes = [
             { path: 'modules', name: 'modules', component: () => import('./pages/modules/ModulesPage.vue'), meta: { context: 'organization', ns: ['modules'] } },
             { path: 'roles', name: 'roles', component: () => import('./pages/access/RolesPage.vue'), meta: { context: 'organization', ns: ['access'] } },
             { path: 'rules', name: 'rules', component: () => import('./pages/rules/RulesPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
+            // A group's or company's own wording (LANG-1, multi_language).
+            { path: 'languages', name: 'languages', component: () => import('./pages/languages/LanguagesPage.vue'), meta: { context: 'organization', ns: ['languages'] } },
             { path: 'approvals', name: 'approvals', component: () => import('./pages/rules/ApprovalsPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
             // Screens of business modules (Modules/*/resources/js/routes.js).
             ...moduleRoutes,
@@ -143,6 +145,12 @@ const routes = [
                 name: 'partner-template',
                 component: () => import('./pages/partner/PartnerTemplateEditorPage.vue'),
                 meta: { context: 'partner', ns: ['partner', 'messaging'] },
+            },
+            {
+                path: 'partner/languages',
+                name: 'partner-languages',
+                component: () => import('./pages/partner/PartnerLanguagesPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'languages'] },
             },
             {
                 path: 'partner/brand',

@@ -116,6 +116,7 @@ skip or simplify a requirement.
 ## 5. User-friendliness checklist
 
 - Works in Bangla and English from day one; other languages by adding files
+  or in the language editor (database, LANG-1)
 - Clear, specific error messages that tell the user what to do next
 - Mobile-first layouts; usable on slow networks; small, lazy-loaded bundles
 - Loading, empty and error states for every screen

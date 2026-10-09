@@ -1411,8 +1411,92 @@ fails the build on a float/double/decimal money column, a float cast or type in 
 
 ### Future expansion (Phase 6-1)
 
-- New country: a data file. New language: its translation files plus one config entry.
+- New country: a data file. New language: its translation files plus one config entry, or
+  added at runtime in the language editor (LANG-1, below).
 - Later in Phase 6: Arabic texts, exchange rates, bKash and Stripe drivers (6-2).
+
+## Languages and wording in the database (LANG-1)
+
+Code: `app/Platform/Localization`, module `multi_language` (permission
+`multi_language.manage`, screen `/languages`), partner console `/partner/languages`.
+
+The translation files stay the base (en, bn ship with the code, tested). On top of them,
+any level can reword a text, and the platform can add a language without a deploy:
+
+```
+company wording → group → partner → platform → file of that language
+→ the language's fallback file (database languages) → the key itself
+```
+
+- **Platform** (the house partner's owners): adds languages (draft → offered → off; only
+  drafts can be removed), translates them, rewords any text for everyone.
+- **Partner** (owners change, other staff look): rewords texts for all of its clients.
+- **Group / company**: their own wording for their people (a branch reads its company's),
+  only while `multi_language` is on there and the partner allows it (rule
+  `i18n.allow_overrides`). Off: the texts stay stored, unused.
+
+### Tables
+
+| table | what |
+|---|---|
+| `languages` | database languages only: code (BCP 47), names, direction, fallback (a file language), status |
+| `translation_overrides` | one text: level (`scope_type` platform/partner/organization, `scope_id`), locale, channel (`ui`/`server`), key, value, version |
+| `translation_versions` | a counter per level, raised on every change (the cache hash) |
+
+### Rules
+
+| rule | levels | meaning |
+|---|---|---|
+| `i18n.allow_overrides` | platform, partner, plan | clients may use their own wording (default on) |
+| `i18n.languages` | platform … company | language codes offered here; empty = every published one |
+| `i18n.publish_min_percent` | platform | share translated before a language can be offered (80) |
+
+### What is checked on every save
+
+Only keys the code has (`TranslationCatalog`, read from the English files; plural forms of a
+`…_other` key count too); plain text only (no tags; texts are also shown escaped everywhere);
+only the placeholders of the original (`{name}` in the browser, `:name` on the server); at most
+1000 characters; imports (≤ 5000 texts) are all or nothing. Every change is audited
+(`i18n.text_saved`, `i18n.text_reset`, `i18n.texts_imported`, `i18n.language_*`).
+
+### Speed
+
+- The shell and `/api/me` carry `languages`, `locales` and `i18n: { hash, overlays }`. With no
+  wording anywhere the hash is `0` and **the browser makes no extra request**.
+- A file language with wording: one request, `GET /api/i18n/{hash}/{locale}` (only the reworded
+  keys). A database language: per screen namespace, `GET /api/i18n/{hash}/{locale}/{namespace}`.
+- While the hash in the address is current the answer is `private, max-age=31536000,
+  immutable`; any change raises the level's version, so the hash (and address) changes.
+- Server side, everything is read from the cache: a level's state (`i18n:v:{scope}`) and its
+  texts per version (`i18n:blob:…`). Laravel's translator (`OverlayTranslator`) checks the
+  wording of the current request's levels once per request, then the files.
+
+### API
+
+| method | path | who |
+|---|---|---|
+| GET | /api/i18n/{hash}/{locale}[/{namespace}] | anyone (the current context's wording) |
+| GET | /api/organizations/{id}/languages | `multi_language.manage` |
+| GET | /api/organizations/{id}/translations?locale&channel&namespace&filter&q&page | `multi_language.manage` |
+| PUT | /api/organizations/{id}/translations `{locale, channel, key, value}` | `multi_language.manage` |
+| POST | /api/organizations/{id}/translations/reset `{locale, channel, key}` | `multi_language.manage` |
+| POST | /api/organizations/{id}/translations/import `{locale, channel, texts: [{key, value}]}` | `multi_language.manage` |
+| GET | /api/organizations/{id}/translations/export?locale&channel | `multi_language.manage` |
+| GET, PUT, POST | /api/partner/languages, /api/partner/translations… (`level`: partner, or platform for the house partner) | partner staff read, owners change |
+| POST, PATCH, DELETE | /api/partner/languages[/{code}] | house partner owners |
+
+### Commands
+
+- `php artisan i18n:missing [locale] [--list]`: how much of each language is translated.
+- `php artisan i18n:export {locale} [--dry-run]`: writes a language's platform texts into
+  translation files next to the English ones, so a language made in the editor can ship with
+  the code (then add it to `tenancy.supported_locales`).
+
+### Future expansion (LANG-1)
+
+- A new language, a partner's own terms, a school's "Grade" for "Class": data only, no code.
+- Not yet: suggested translations by AI (with the `ai_assistant` module and consent), wording
+  per branch or per person (deliberately left out: more cache variants, more confusion).
 
 ## Offline mode and secure sync (Phase 7-1: server)
 

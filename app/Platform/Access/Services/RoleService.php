@@ -10,6 +10,7 @@ use App\Platform\Access\Models\Role;
 use App\Platform\Access\Models\RoleTemplate;
 use App\Platform\Access\PermissionCatalog;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
@@ -113,7 +114,7 @@ class RoleService
         $permissions = $this->normalize($this->templatePermissions($template));
         $this->assertNoConflict($permissions, $organization);
 
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
         $name = array_combine($locales, array_map(fn (string $locale) => $template->label($locale), $locales));
         $description = array_combine($locales, array_map(fn (string $locale) => $template->description($locale), $locales));
 
@@ -461,7 +462,7 @@ class RoleService
     private function cleanTexts(array $texts): array
     {
         $clean = [];
-        foreach ((array) config('tenancy.supported_locales') as $locale) {
+        foreach (LanguageRegistry::codes() as $locale) {
             $text = trim((string) ($texts[$locale] ?? ''));
             if ($text !== '') {
                 $clean[$locale] = $text;

@@ -7,6 +7,7 @@ use App\Platform\Billing\BillingServiceProvider;
 use App\Platform\Countries\CountriesServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
 use App\Platform\Identity\IdentityServiceProvider;
+use App\Platform\Localization\LocalizationServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
 use App\Platform\Monitoring\MonitoringServiceProvider;
 use App\Platform\Notifications\NotificationsServiceProvider;
@@ -26,6 +27,7 @@ use App\Providers\AppServiceProvider;
 return [
     AppServiceProvider::class,
     TenancyServiceProvider::class,
+    LocalizationServiceProvider::class,
     PartnersServiceProvider::class,
     PackagingServiceProvider::class,
     ModulesServiceProvider::class,

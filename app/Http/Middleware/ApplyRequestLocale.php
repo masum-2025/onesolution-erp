@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Platform\Localization\LanguageRegistry;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +20,7 @@ class ApplyRequestLocale
     {
         $locale = $request->header('X-Locale');
 
-        if (is_string($locale) && in_array($locale, config('tenancy.supported_locales'), true)) {
+        if (is_string($locale) && in_array($locale, LanguageRegistry::codes(), true)) {
             app()->setLocale($locale);
             $request->attributes->set(self::CHOSEN, true);
         }

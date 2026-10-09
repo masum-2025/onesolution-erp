@@ -1,6 +1,6 @@
 <script setup>
 import AppField from './AppField.vue';
-import { direction, t } from '@/lib/i18n';
+import { direction, languageName } from '@/lib/i18n';
 import { FALLBACK_LOCALE, textLocales } from '@/lib/texts';
 
 /**
@@ -36,7 +36,7 @@ function errorFor(locale) {
         <AppField
             v-for="locale in textLocales()"
             :key="locale"
-            :label="`${label} (${t(`core.languages.${locale}`)})`"
+            :label="`${label} (${languageName(locale)})`"
             :error="errorFor(locale)"
             :optional="!(required && locale === FALLBACK_LOCALE)"
         >

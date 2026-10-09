@@ -4,6 +4,7 @@ namespace App\Platform\Tenancy\Http\Middleware;
 
 use App\Http\Middleware\ApplyRequestLocale;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Security\SecurityLog;
 use App\Platform\Tenancy\Context\ContextResolver;
 use App\Platform\Tenancy\Context\ContextSource;
@@ -75,7 +76,7 @@ class ResolveOrganization
         // organization's (own, inherited or its country's). See LocaleResolver.
         if (! ApplyRequestLocale::wasChosen($request)) {
             foreach ([$request->user()?->locale, $context->locale()] as $locale) {
-                if (is_string($locale) && in_array($locale, config('tenancy.supported_locales'), true)) {
+                if (is_string($locale) && in_array($locale, LanguageRegistry::codes(), true)) {
                     app()->setLocale($locale);
                     break;
                 }

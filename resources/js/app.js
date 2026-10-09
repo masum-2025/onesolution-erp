@@ -18,7 +18,9 @@ async function boot() {
     applyBrand(JSON.parse(el.dataset.brand));
     applySignupOptions(JSON.parse(el.dataset.signup ?? '{}'));
     initTheme();
-    await initI18n(locales, readPref('locale') ?? el.dataset.defaultLocale);
+    // Languages offered here and the hash of their database wording (LANG-1).
+    const state = { languages: JSON.parse(el.dataset.languages ?? '[]'), i18n: JSON.parse(el.dataset.i18n ?? '{}') };
+    await initI18n(locales, readPref('locale') ?? el.dataset.defaultLocale, state);
 
     createApp(App).use(router).mount(el);
 

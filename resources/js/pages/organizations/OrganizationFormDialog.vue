@@ -13,7 +13,7 @@ import { visibleOrganizations } from '@/lib/organizations';
 import { currencyName } from '@/lib/display';
 import { countries, loadCountries } from '@/lib/countries';
 import { cleanTexts, textsFor } from '@/lib/texts';
-import { i18n, t } from '@/lib/i18n';
+import { i18n, languageName, t } from '@/lib/i18n';
 import { session } from '@/lib/session';
 import { toast } from '@/lib/toast';
 
@@ -218,7 +218,7 @@ const inheritHint = t('orgs.form.inherit_hint');
                         <template #default="{ id, invalid }">
                             <select :id="id" v-model="form.default_locale" class="field-input" :aria-invalid="invalid || undefined">
                                 <option value="">{{ t('orgs.form.inherit') }}</option>
-                                <option v-for="locale in session.me?.locales ?? i18n.locales" :key="locale" :value="locale">{{ t(`core.languages.${locale}`) }}</option>
+                                <option v-for="locale in session.me?.locales ?? i18n.locales" :key="locale" :value="locale">{{ languageName(locale) }}</option>
                             </select>
                         </template>
                     </AppField>

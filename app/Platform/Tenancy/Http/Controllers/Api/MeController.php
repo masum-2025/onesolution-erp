@@ -8,6 +8,7 @@ use App\Platform\Access\Models\Role;
 use App\Platform\Appearance\AppearanceResolver;
 use App\Platform\Branding\BrandResolver;
 use App\Platform\Legal\Services\LegalService;
+use App\Platform\Localization\LocalizationState;
 use App\Platform\Partners\HostContext;
 use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use App\Platform\Tenancy\Context\ContextResolver;
@@ -39,9 +40,12 @@ class MeController extends Controller
         AccessResolver $access,
         SignInRequirements $requirements,
         AppearanceResolver $appearance,
+        LocalizationState $localization,
     ): JsonResponse {
         $user = $request->user();
         $active = $this->activeContext($request, $source, $resolver, $context, $access);
+        // Languages offered in this context and the hash of its wording (LANG-1).
+        $languages = $localization->current();
 
         return response()->json(['data' => [
             'user' => [
@@ -72,7 +76,9 @@ class MeController extends Controller
                 $host->isPlatform() ? ($active === null ? null : $context->partner()) : $host->partner(),
                 $context->hasOrganization() ? $context->organization() : $host->client(),
             ),
-            'locales' => config('tenancy.supported_locales'),
+            'locales' => $languages['locales'],
+            'languages' => $languages['languages'],
+            'i18n' => $languages['i18n'],
             // Look of the app here: the person's choices unless a level above locked them.
             'appearance' => $appearance->for($user),
         ]]);

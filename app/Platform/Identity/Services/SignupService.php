@@ -11,6 +11,7 @@ use App\Platform\Identity\Models\OtpChallenge;
 use App\Platform\Identity\Support\Addresses;
 use App\Platform\Identity\Support\PhoneNumber;
 use App\Platform\Legal\Services\LegalService;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Notifications\Services\Notifier;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
@@ -53,7 +54,7 @@ class SignupService
             throw IdentityException::botCheckFailed();
         }
 
-        $locale = in_array($data['locale'] ?? null, (array) config('tenancy.supported_locales'), true)
+        $locale = in_array($data['locale'] ?? null, LanguageRegistry::codes(), true)
             ? $data['locale']
             : (string) config('tenancy.defaults.default_locale');
 

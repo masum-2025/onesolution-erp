@@ -5,6 +5,7 @@ namespace App\Platform\Identity\Services;
 use App\Models\User;
 use App\Platform\Identity\Events\PersonalWorkspaceCreated;
 use App\Platform\Identity\Exceptions\IdentityException;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
@@ -42,7 +43,7 @@ class PersonalWorkspaces
 
         return DB::transaction(function () use ($user, $partner, $countryCode, $locale, $plan) {
             $names = [];
-            foreach ((array) config('tenancy.supported_locales') as $language) {
+            foreach (LanguageRegistry::codes() as $language) {
                 $names[$language] = __('identity.workspace_name', ['name' => $user->name], $language);
             }
 

@@ -22,7 +22,7 @@ import { confirmAction } from '@/lib/dialogs';
 import { formatDateTime, formatRelative } from '@/lib/format';
 import { loadMe, logout } from '@/lib/session';
 import { confirmSignOut } from '@/lib/signout';
-import { i18n, setLocale, t } from '@/lib/i18n';
+import { i18n, languageName, setLocale, t } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
 
 /**
@@ -48,7 +48,7 @@ watch(me, (value) => {
     Object.assign(profile, { name: value.name, locale: value.locale ?? i18n.locale, timezone: value.timezone ?? '', marketing: value.marketing });
 });
 
-const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
+const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: languageName(locale) })));
 
 async function saveProfile() {
     savingProfile.value = true;

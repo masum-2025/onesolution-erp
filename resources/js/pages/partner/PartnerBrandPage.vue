@@ -10,7 +10,7 @@ import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { applyBrand, contrastProblem, readableOn } from '@/lib/brand';
 import { toast } from '@/lib/toast';
-import { direction, t } from '@/lib/i18n';
+import { direction, languageName, t } from '@/lib/i18n';
 import { textLocales, textsFor } from '@/lib/texts';
 
 /**
@@ -312,7 +312,7 @@ async function togglePoweredBy(show) {
                         <AppField
                             v-for="locale in textLocales()"
                             :key="locale"
-                            :label="`${t(`partner.brand.${field}`)} · ${t(`core.languages.${locale}`)}`"
+                            :label="`${t(`partner.brand.${field}`)} · ${languageName(locale)}`"
                             :error="locale === 'en' ? errors[field] : null"
                             optional
                         >

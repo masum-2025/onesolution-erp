@@ -8,6 +8,7 @@ use App\Platform\Identity\Contracts\BotCheck;
 use App\Platform\Identity\Exceptions\IdentityException;
 use App\Platform\Identity\Models\OtpChallenge;
 use App\Platform\Identity\Support\PhoneNumber;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Notifications\Services\Notifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -41,7 +42,7 @@ class RecoveryService
         }
 
         $partner = $this->gate->addressPartner();
-        $locale = in_array($data['locale'] ?? null, (array) config('tenancy.supported_locales'), true)
+        $locale = in_array($data['locale'] ?? null, LanguageRegistry::codes(), true)
             ? $data['locale']
             : (string) config('tenancy.defaults.default_locale');
 

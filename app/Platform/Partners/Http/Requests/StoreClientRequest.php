@@ -3,6 +3,7 @@
 namespace App\Platform\Partners\Http\Requests;
 
 use App\Platform\Countries\CountryCatalog;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Packaging\SectorCatalog;
 use App\Platform\Partners\Services\PartnerClientService;
@@ -27,7 +28,7 @@ class StoreClientRequest extends StrictFormRequest
      */
     public function rules(): array
     {
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
         $existing = $this->input('structure') === PartnerClientService::EXISTING_GROUP;
 
         return [

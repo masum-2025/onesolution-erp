@@ -2,6 +2,7 @@
 
 namespace App\Platform\Partners\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 use Illuminate\Validation\Rule;
 
@@ -14,7 +15,7 @@ class UpdateBrandRequest extends StrictFormRequest
      */
     public function rules(): array
     {
-        $locales = implode(',', (array) config('tenancy.supported_locales'));
+        $locales = implode(',', LanguageRegistry::codes());
         $texts = fn (int $max) => [
             ['sometimes', 'nullable', 'array:'.$locales],
             ['nullable', 'string', 'max:'.$max],

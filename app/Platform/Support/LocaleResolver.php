@@ -3,6 +3,7 @@
 namespace App\Platform\Support;
 
 use App\Models\User;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
 
@@ -14,7 +15,8 @@ use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
  *   3. the organization's language (its own, inherited, or its country's),
  *   4. the platform default.
  *
- * Only languages the app has texts for are used; anything else is skipped.
+ * Only languages people may use (the file languages and the published
+ * database ones) are used; anything else is skipped.
  * Timezones follow the same idea: the person's, then the organization's
  * (own, inherited or country), then UTC.
  */
@@ -49,7 +51,7 @@ class LocaleResolver
 
     public function supports(?string $locale): bool
     {
-        return is_string($locale) && in_array($locale, (array) config('tenancy.supported_locales'), true);
+        return app(LanguageRegistry::class)->supports($locale);
     }
 
     public static function direction(string $locale): string

@@ -3,6 +3,7 @@
 namespace App\Platform\Branding;
 
 use App\Platform\Branding\Models\ClientBrand;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
@@ -186,7 +187,7 @@ class BrandResolver
         }
 
         $out = [];
-        foreach (config('tenancy.supported_locales') as $locale) {
+        foreach (LanguageRegistry::codes() as $locale) {
             if (($text = $this->text($value[$locale] ?? null, $max)) !== null) {
                 $out[$locale] = $text;
             }

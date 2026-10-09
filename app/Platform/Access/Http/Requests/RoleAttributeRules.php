@@ -3,6 +3,7 @@
 namespace App\Platform\Access\Http\Requests;
 
 use App\Platform\Access\PermissionCatalog;
+use App\Platform\Localization\LanguageRegistry;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -17,7 +18,7 @@ trait RoleAttributeRules
      */
     protected function roleRules(bool $creating): array
     {
-        $locales = implode(',', (array) config('tenancy.supported_locales'));
+        $locales = implode(',', LanguageRegistry::codes());
 
         return [
             'name' => [$creating ? 'required' : 'sometimes', 'array:'.$locales],

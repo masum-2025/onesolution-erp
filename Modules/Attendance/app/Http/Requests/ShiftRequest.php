@@ -2,6 +2,7 @@
 
 namespace Modules\Attendance\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 
 /**
@@ -17,7 +18,7 @@ class ShiftRequest extends StrictFormRequest
     {
         $creating = $this->isMethod('post');
         $required = $creating ? 'required' : 'sometimes';
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
 
         return [
             'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],

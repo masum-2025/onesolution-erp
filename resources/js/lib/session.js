@@ -2,7 +2,7 @@ import { reactive } from 'vue';
 import { api } from './http';
 import { applyBrand } from './brand';
 import { applyAppearance } from './appearance';
-import { setLocale } from './i18n';
+import { configureLanguages, setLocale } from './i18n';
 import { readPref } from './storage';
 import { resetCaches } from './cache';
 
@@ -19,6 +19,8 @@ export async function loadMe() {
         applyBrand(data.brand);
         // After the brand: a highlight color the person picked replaces the brand color.
         applyAppearance(data.appearance);
+        // Languages offered in this context and its own wording (LANG-1): another context may differ.
+        await configureLanguages(data);
 
         // Language: picked on this device, else the person's profile, else the
         // organization's (own, inherited or its country's).

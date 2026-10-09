@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Platform\Branding\BrandResolver;
 use App\Platform\Identity\Services\SignupGate;
+use App\Platform\Localization\LocalizationState;
 use App\Platform\Partners\HostContext;
 use App\Platform\Support\LocaleResolver;
 use Illuminate\Contracts\View\View;
@@ -15,20 +16,24 @@ use Illuminate\Contracts\View\View;
  */
 class AppShellController extends Controller
 {
-    public function __invoke(BrandResolver $brands, HostContext $host, SignupGate $signup, LocaleResolver $locales): View
+    public function __invoke(BrandResolver $brands, HostContext $host, SignupGate $signup, LocaleResolver $locales, LocalizationState $localization): View
     {
         $brand = $brands->for($host->partner(), $host->client());
         // A client's own address speaks its language (or its country's) until the person picks one.
         $locale = $locales->resolve(organization: $host->client());
-        $supported = (array) config('tenancy.supported_locales');
+        // Languages offered on this address, and the hash of its wording (LANG-1).
+        $state = $localization->current();
+        $directions = array_column($state['languages'], 'direction', 'code');
 
         return view('app', [
             'brand' => $brand,
             'favicon' => $this->favicon($brand),
-            'locales' => $supported,
+            'locales' => $state['locales'],
+            'languages' => $state['languages'],
+            'i18n' => $state['i18n'],
             'defaultLocale' => $locale,
-            'direction' => LocaleResolver::direction($locale),
-            'rtlLocales' => array_values(array_filter($supported, fn (string $code) => LocaleResolver::direction($code) === 'rtl')),
+            'direction' => $directions[$locale] ?? LocaleResolver::direction($locale),
+            'rtlLocales' => array_keys(array_filter($directions, fn (string $direction) => $direction === 'rtl')),
             // Which sign-up, sign-in and recovery options this address offers (no secrets).
             'signup' => $signup->options(),
         ]);

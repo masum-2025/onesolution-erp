@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { Check, Languages } from 'lucide-vue-next';
 import AppMenu from '@/components/AppMenu.vue';
-import { i18n, setLocale, t } from '@/lib/i18n';
+import { has, i18n, languageName, setLocale, t } from '@/lib/i18n';
 
 /**
  * Language of the screen. Languages are shown by their own name (English,
@@ -10,11 +10,14 @@ import { i18n, setLocale, t } from '@/lib/i18n';
  */
 const items = computed(() =>
     i18n.locales.map((locale) => ({
-        label: t(`core.languages.${locale}`),
+        label: languageName(locale),
         icon: locale === i18n.locale ? Check : null,
         onSelect: () => setLocale(locale),
     })),
 );
+
+// A language added later has no short form in the files: its code stands in ("HI").
+const short = computed(() => (has(`core.languages_short.${i18n.locale}`) ? t(`core.languages_short.${i18n.locale}`) : i18n.locale.toUpperCase()));
 </script>
 
 <template>
@@ -28,7 +31,7 @@ const items = computed(() =>
                 @keydown.down.prevent="toggle(true)"
             >
                 <Languages class="size-4 text-muted" aria-hidden="true" />
-                <span>{{ t(`core.languages_short.${i18n.locale}`) }}</span>
+                <span>{{ short }}</span>
             </button>
         </template>
     </AppMenu>

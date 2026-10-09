@@ -3,6 +3,7 @@
 namespace App\Platform\Tenancy\Http\Requests;
 
 use App\Platform\Countries\CountryCatalog;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Packaging\SectorCatalog;
 use Illuminate\Validation\Rule;
 
@@ -17,7 +18,7 @@ trait OrganizationAttributeRules
      */
     protected function organizationAttributeRules(bool $partial): array
     {
-        $locales = config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
         $fallback = config('app.fallback_locale');
         $presence = $partial ? 'sometimes' : 'required';
 

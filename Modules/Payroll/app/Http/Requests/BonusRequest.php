@@ -2,6 +2,7 @@
 
 namespace Modules\Payroll\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 
 /**
@@ -31,7 +32,7 @@ class BonusRequest extends StrictFormRequest
                 'override_minor' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:999999999999'],
             ];
         }
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
 
         return [
             'title' => ['required', 'array:'.implode(',', $locales)],

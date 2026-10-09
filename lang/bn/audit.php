@@ -80,6 +80,12 @@ return [
         'tenant_database_moved' => 'তথ্য নতুন জায়গায় সরানো হয়েছে',
         'tenant_database_move_failed' => 'তথ্য সরানো থামানো হয়েছে; কিছুই বদলায়নি',
         'tenant_database_source_purged' => 'সরানোর পর তথ্যের পুরোনো কপি মুছে ফেলা হয়েছে',
+        'i18n_text_saved' => 'শব্দ বদলানো হয়েছে',
+        'i18n_text_reset' => 'শব্দ আগের (উপরের স্তরের) লেখায় ফেরানো হয়েছে',
+        'i18n_texts_imported' => 'শব্দ ইমপোর্ট করা হয়েছে',
+        'i18n_language_added' => 'ভাষা যোগ করা হয়েছে',
+        'i18n_language_changed' => 'ভাষা বদলানো হয়েছে',
+        'i18n_language_removed' => 'ভাষা সরানো হয়েছে',
     ],
 
     'errors' => [

@@ -2,6 +2,7 @@
 
 namespace Modules\Attendance\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 
 /** A day off: the date, its name, and optionally the unit it is for (else the whole company). */
@@ -12,7 +13,7 @@ class HolidayRequest extends StrictFormRequest
      */
     public function rules(): array
     {
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
 
         return [
             'on' => ['required', 'date_format:Y-m-d'],

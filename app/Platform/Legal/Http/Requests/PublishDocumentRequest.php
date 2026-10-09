@@ -2,6 +2,7 @@
 
 namespace App\Platform\Legal\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 
 /**
@@ -15,7 +16,7 @@ class PublishDocumentRequest extends StrictFormRequest
      */
     public function rules(): array
     {
-        $locales = implode(',', (array) config('tenancy.supported_locales'));
+        $locales = implode(',', LanguageRegistry::codes());
 
         return [
             'title' => ['required', "array:{$locales}"],

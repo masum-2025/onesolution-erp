@@ -11,7 +11,7 @@ import { useResource } from '@/lib/useResource';
 import { countryName } from '@/lib/display';
 import { signup } from '@/lib/identity';
 import { loadMe, session } from '@/lib/session';
-import { i18n, setLocale, t } from '@/lib/i18n';
+import { i18n, languageName, setLocale, t } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
 
 /**
@@ -31,7 +31,7 @@ const form = reactive({
 });
 
 const sectors = useResource(() => api('/api/sectors').then((response) => response.data));
-const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
+const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: languageName(locale) })));
 const countries = computed(() => [...new Set([form.country, ...COUNTRIES])].filter(Boolean).map((code) => ({ code, name: countryName(code) })));
 
 async function chooseLanguage(locale) {

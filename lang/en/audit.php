@@ -83,6 +83,12 @@ return [
         'tenant_database_moved' => 'Data moved to a new storage location',
         'tenant_database_move_failed' => 'Data move stopped; nothing changed',
         'tenant_database_source_purged' => 'Old copy of the data removed after a move',
+        'i18n_text_saved' => 'Wording changed',
+        'i18n_text_reset' => 'Wording reset to the inherited text',
+        'i18n_texts_imported' => 'Wording imported',
+        'i18n_language_added' => 'Language added',
+        'i18n_language_changed' => 'Language changed',
+        'i18n_language_removed' => 'Language removed',
     ],
 
     'errors' => [

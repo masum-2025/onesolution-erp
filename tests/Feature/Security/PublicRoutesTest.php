@@ -30,6 +30,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET internal/tls/ask',
     // Health for monitoring tools: bearer token (404 without it), counts only, throttled.
     'GET internal/health',
+    // Reworded texts for the browser (LANG-1): the current context's wording only (a signed-in
+    // person's verified context, else the address's partner), plain texts, throttled.
+    'GET api/i18n/{hash}/{locale}/{namespace?}',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

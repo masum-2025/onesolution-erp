@@ -771,4 +771,42 @@ return [
         'category' => 'appearance',
         'sort_order' => 171,
     ],
+    // Languages and wording (LANG-1). Base texts ship in files; the platform adds
+    // languages and every level may reword texts in the database, inside these limits.
+    [
+        'key' => 'i18n.allow_overrides',
+        'type' => 'boolean',
+        // Whether clients (their groups and companies) may use their own wording. A partner turns it off to keep its own.
+        'default' => true,
+        'label' => 'rules.core.i18n_allow_overrides.label',
+        'description' => 'rules.core.i18n_allow_overrides.description',
+        'overridable_levels' => ['platform', 'partner', 'plan'],
+        'category' => 'language',
+        'sort_order' => 180,
+    ],
+    [
+        'key' => 'i18n.languages',
+        'type' => 'json',
+        // Languages people may pick here; empty = every published language. Unknown codes are passed over.
+        'schema' => ['type' => 'array', 'items' => ['type' => 'string', 'pattern' => '^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$'], 'uniqueItems' => true, 'maxItems' => 50],
+        'default' => [],
+        'label' => 'rules.core.i18n_languages.label',
+        'description' => 'rules.core.i18n_languages.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+        'category' => 'language',
+        'sort_order' => 181,
+    ],
+    [
+        'key' => 'i18n.publish_min_percent',
+        'type' => 'integer',
+        // A database language is offered only once this share of its texts is translated.
+        'schema' => ['minimum' => 0, 'maximum' => 100],
+        'default' => 80,
+        'label' => 'rules.core.i18n_publish_min_percent.label',
+        'description' => 'rules.core.i18n_publish_min_percent.description',
+        'overridable_levels' => ['platform'],
+        'partner_editable' => false,
+        'category' => 'language',
+        'sort_order' => 182,
+    ],
 ];

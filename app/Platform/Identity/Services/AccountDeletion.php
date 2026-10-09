@@ -12,6 +12,7 @@ use App\Platform\Identity\Events\WorkspaceErased;
 use App\Platform\Identity\Exceptions\IdentityException;
 use App\Platform\Identity\Models\OtpChallenge;
 use App\Platform\Identity\Models\UserSession;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Notifications\Services\Notifier;
 use App\Platform\Packaging\Models\Subscription;
 use App\Platform\Packaging\Services\SubscriptionService;
@@ -281,7 +282,7 @@ class AccountDeletion
         }
 
         $names = [];
-        foreach ((array) config('tenancy.supported_locales') as $locale) {
+        foreach (LanguageRegistry::codes() as $locale) {
             $names[$locale] = __('identity.erased_workspace', [], $locale);
         }
         $root->forceFill(['status' => OrganizationStatus::Archived, 'name' => $names])->save();

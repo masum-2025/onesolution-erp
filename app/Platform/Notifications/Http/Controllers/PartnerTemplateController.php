@@ -4,6 +4,7 @@ namespace App\Platform\Notifications\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Notifications\Exceptions\NotificationException;
 use App\Platform\Notifications\Http\Requests\TemplateRequest;
 use App\Platform\Notifications\Models\NotificationTemplate;
@@ -53,7 +54,7 @@ class PartnerTemplateController extends Controller
                 'channels' => $this->catalog->get($key)['channels'],
                 'customized' => ($custom[$key] ?? collect())->map(fn ($row) => "{$row->channel}.{$row->locale}")->values(),
             ], $this->catalog->editableKeys()),
-            'locales' => config('tenancy.supported_locales'),
+            'locales' => LanguageRegistry::codes(),
             'can_edit' => $this->hasRole(PartnerUserRole::Owner),
         ]);
     }
@@ -66,7 +67,7 @@ class PartnerTemplateController extends Controller
 
         $wording = [];
         foreach ($definition['channels'] as $channel) {
-            foreach ((array) config('tenancy.supported_locales') as $locale) {
+            foreach (LanguageRegistry::codes() as $locale) {
                 $wording[$channel][$locale] = [
                     ...$this->renderer->wording($partner, $notification, $channel, $locale),
                     'default' => $this->renderer->default($notification, $channel, $locale),
@@ -146,7 +147,7 @@ class PartnerTemplateController extends Controller
     {
         if (! in_array($notification, $this->catalog->editableKeys(), true)
             || ($channel !== null && ! $this->catalog->supports($notification, $channel))
-            || ($locale !== null && ! in_array($locale, (array) config('tenancy.supported_locales'), true))) {
+            || ($locale !== null && ! in_array($locale, LanguageRegistry::codes(), true))) {
             throw NotificationException::unknownNotification();
         }
     }

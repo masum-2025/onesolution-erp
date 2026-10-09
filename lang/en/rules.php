@@ -271,9 +271,22 @@ return [
             'label' => 'Confirm again after (minutes)',
             'description' => 'Sensitive actions ask for the second step again if the last one is older than this.',
         ],
+        'i18n_allow_overrides' => [
+            'label' => 'Clients may use their own wording',
+            'description' => 'When on, groups and companies can change words of the app for their own people (for example "Grade" instead of "Class"). Turn it off to keep one wording for every client.',
+        ],
+        'i18n_languages' => [
+            'label' => 'Languages offered',
+            'description' => 'Language codes people may choose here, for example ["en", "bn"]. Empty means every published language.',
+        ],
+        'i18n_publish_min_percent' => [
+            'label' => 'Translated share needed to publish a language (%)',
+            'description' => 'A new language is offered to people only when at least this share of its texts is translated. Missing texts show in its fallback language.',
+        ],
     ],
 
     'categories' => [
+        'language' => 'Language and wording',
         'appearance' => 'Look and feel',
         'organization' => 'Organization',
         'security' => 'Security',

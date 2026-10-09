@@ -2,6 +2,7 @@
 
 namespace Modules\Pos\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 use Modules\Pos\Models\Register;
 
@@ -34,7 +35,7 @@ class PosRequest extends StrictFormRequest
             return [
                 'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],
                 'code' => [$required, 'string', 'regex:/^[A-Za-z0-9\-]{1,12}$/'],
-                'name' => [$required, 'array:'.implode(',', (array) config('tenancy.supported_locales'))],
+                'name' => [$required, 'array:'.implode(',', LanguageRegistry::codes())],
                 'name.en' => [$required, 'string', 'min:1', 'max:80'],
                 'name.*' => ['nullable', 'string', 'max:80'],
                 'unit_id' => [$required, 'string', 'max:26'],

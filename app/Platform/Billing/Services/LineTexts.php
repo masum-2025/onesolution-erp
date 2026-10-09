@@ -2,6 +2,7 @@
 
 namespace App\Platform\Billing\Services;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Packaging\Models\PartnerPlan;
 use App\Platform\Packaging\PlanCatalog;
 use Carbon\CarbonImmutable;
@@ -21,7 +22,7 @@ class LineTexts
     public function make(string $key, callable $replace): array
     {
         $texts = [];
-        foreach ((array) config('tenancy.supported_locales') as $locale) {
+        foreach (LanguageRegistry::codes() as $locale) {
             $texts[$locale] = __("billing.lines.{$key}", $replace($locale), $locale);
         }
 

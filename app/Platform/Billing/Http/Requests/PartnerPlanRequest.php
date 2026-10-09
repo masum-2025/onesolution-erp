@@ -2,6 +2,7 @@
 
 namespace App\Platform\Billing\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Support\Http\StrictFormRequest;
 use Illuminate\Validation\Rule;
@@ -20,7 +21,7 @@ class PartnerPlanRequest extends StrictFormRequest
     {
         $creating = $this->isMethod('post');
         $required = $creating ? 'required' : 'sometimes';
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
 
         return [
             'base_plan_key' => [$required, 'string', Rule::in(app(PlanCatalog::class)->keys())],

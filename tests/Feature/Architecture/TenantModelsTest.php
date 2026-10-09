@@ -24,6 +24,8 @@ use App\Platform\Identity\Models\UserSession;
 use App\Platform\Invitations\Models\Invitation;
 use App\Platform\Legal\Models\DocumentAcceptance;
 use App\Platform\Legal\Models\LegalDocument;
+use App\Platform\Localization\Models\Language;
+use App\Platform\Localization\Models\TranslationOverride;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
@@ -184,6 +186,11 @@ const PLATFORM_MODELS = [
     // database; written only by TenantPlacements and the move tool.
     TenantPlacement::class,
     TenantMove::class,
+    // Languages and wording (LANG-1): languages are the platform's; a text belongs
+    // to a level (platform, partner, group, company) named by scope_type/scope_id,
+    // read for the request's own chain only (ScopeChain, from the context).
+    Language::class,
+    TranslationOverride::class,
 ];
 
 /**

@@ -19,7 +19,7 @@ import {
 import OrgTypeIcon from './OrgTypeIcon.vue';
 import { useModal } from '@/lib/useModal';
 import { api } from '@/lib/http';
-import { i18n, setLocale, t } from '@/lib/i18n';
+import { i18n, languageName, setLocale, t } from '@/lib/i18n';
 import { setTheme, theme } from '@/lib/theme';
 import { can, currentOrganization, enterContext, session } from '@/lib/session';
 import { visibleOrganizations } from '@/lib/organizations';
@@ -98,7 +98,7 @@ const actions = computed(() => [
     },
     ...i18n.locales
         .filter((locale) => locale !== i18n.locale)
-        .map((locale) => ({ id: `lang-${locale}`, label: t(`core.languages.${locale}`), icon: Languages, run: () => setLocale(locale) })),
+        .map((locale) => ({ id: `lang-${locale}`, label: languageName(locale), icon: Languages, run: () => setLocale(locale) })),
 ]);
 
 const contexts = computed(() => {

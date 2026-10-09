@@ -4,7 +4,7 @@ import { Moon, Sun } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import BrandMark from '@/components/BrandMark.vue';
-import { i18n, setLocale, t } from '@/lib/i18n';
+import { i18n, languageName, setLocale, t } from '@/lib/i18n';
 import { setTheme, theme } from '@/lib/theme';
 
 defineProps({
@@ -12,7 +12,7 @@ defineProps({
     withoutBrand: Boolean,
 });
 
-const languages = computed(() => i18n.locales.map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
+const languages = computed(() => i18n.locales.map((locale) => ({ value: locale, label: languageName(locale) })));
 </script>
 
 <template>

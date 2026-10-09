@@ -6,7 +6,7 @@ import AppMenu from '@/components/AppMenu.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import { logout, session } from '@/lib/session';
 import { confirmSignOut } from '@/lib/signout';
-import { i18n, setLocale, t } from '@/lib/i18n';
+import { i18n, languageName, setLocale, t } from '@/lib/i18n';
 import { setTheme, theme } from '@/lib/theme';
 import { toast } from '@/lib/toast';
 
@@ -40,7 +40,7 @@ const themeOptions = computed(() => [
     { value: 'system', label: t('core.theme.system'), icon: Monitor },
 ]);
 
-const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
+const languageOptions = computed(() => i18n.locales.map((locale) => ({ value: locale, label: languageName(locale) })));
 
 const items = computed(() => [
     { label: t('core.nav.account'), icon: UserRound, onSelect: () => router.push({ name: 'account' }) },

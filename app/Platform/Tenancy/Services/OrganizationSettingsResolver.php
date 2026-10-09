@@ -4,6 +4,7 @@ namespace App\Platform\Tenancy\Services;
 
 use App\Platform\Countries\CountryCatalog;
 use App\Platform\Countries\CountryDefinition;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Collection;
 
@@ -80,7 +81,7 @@ class OrganizationSettingsResolver
     /** The country's first language the app speaks (UI texts exist for it). */
     private function usableLocale(CountryDefinition $country): ?string
     {
-        $supported = (array) config('tenancy.supported_locales');
+        $supported = LanguageRegistry::codes();
         $candidates = array_values(array_unique([$country->defaultLocale, ...$country->locales]));
 
         foreach ($candidates as $locale) {

@@ -23,6 +23,9 @@ use App\Platform\Identity\Http\Controllers\SecurityController;
 use App\Platform\Identity\Http\Controllers\UpgradeController;
 use App\Platform\Legal\Http\Controllers\ClientLegalController;
 use App\Platform\Legal\Http\Controllers\PartnerLegalController;
+use App\Platform\Localization\Http\Controllers\OrganizationTranslationController;
+use App\Platform\Localization\Http\Controllers\PartnerLanguageController;
+use App\Platform\Localization\Http\Controllers\TextBundleController;
 use App\Platform\Modules\Http\Controllers\MenuController;
 use App\Platform\Modules\Http\Controllers\ModuleConsentController;
 use App\Platform\Modules\Http\Controllers\ModuleController;
@@ -77,6 +80,11 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('me', MeController::class)->middleware('auth:sanctum');
+
+// Reworded texts for the browser (LANG-1): signed in or not, for the current context; cached under their hash.
+Route::get('i18n/{hash}/{locale}/{namespace?}', TextBundleController::class)
+    ->where(['hash' => '[0-9a-f]{1,16}', 'locale' => '[A-Za-z0-9-]{2,20}', 'namespace' => '[A-Za-z0-9_]{1,60}'])
+    ->middleware('throttle:i18n');
 
 // Offline sync (Phase 7): signed in, outside the organization middleware on purpose
 // (a removed device or ended membership must still hand over its changes and be told to wipe).
@@ -303,6 +311,18 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::delete('organizations/{organization}/modules/{module}/purge', [ModulePurgeController::class, 'destroy']);
     });
 
+    // A group's or company's own wording (LANG-1, multi_language).
+    Route::middleware('module:multi_language')->group(function () {
+        Route::get('organizations/{organization}/languages', [OrganizationTranslationController::class, 'show']);
+        Route::get('organizations/{organization}/translations', [OrganizationTranslationController::class, 'index']);
+        Route::get('organizations/{organization}/translations/export', [OrganizationTranslationController::class, 'export'])->middleware('throttle:i18n-import');
+        Route::middleware('throttle:tenancy-sensitive')->group(function () {
+            Route::put('organizations/{organization}/translations', [OrganizationTranslationController::class, 'update']);
+            Route::post('organizations/{organization}/translations/reset', [OrganizationTranslationController::class, 'reset']);
+        });
+        Route::post('organizations/{organization}/translations/import', [OrganizationTranslationController::class, 'import'])->middleware('throttle:i18n-import');
+    });
+
     // Rule engine (Phase 3)
     Route::get('organizations/{organization}/rules', [OrganizationRuleController::class, 'index']);
     Route::get('organizations/{organization}/rules/{key}', [OrganizationRuleController::class, 'show']);
@@ -402,6 +422,19 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
         Route::post('messaging/test-email', [PartnerMessagingController::class, 'testEmail']);
         Route::post('messaging/test-sms', [PartnerMessagingController::class, 'testSms']);
     });
+
+    // Languages and wording (LANG-1): the partner's own wording; the platform's languages for the house partner.
+    Route::get('languages', [PartnerLanguageController::class, 'index']);
+    Route::get('translations', [PartnerLanguageController::class, 'texts']);
+    Route::get('translations/export', [PartnerLanguageController::class, 'export'])->middleware('throttle:i18n-import');
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        Route::put('translations', [PartnerLanguageController::class, 'update']);
+        Route::post('translations/reset', [PartnerLanguageController::class, 'reset']);
+        Route::post('languages', [PartnerLanguageController::class, 'store']);
+        Route::patch('languages/{code}', [PartnerLanguageController::class, 'updateLanguage'])->where('code', '[A-Za-z0-9-]{2,20}');
+        Route::delete('languages/{code}', [PartnerLanguageController::class, 'destroy'])->where('code', '[A-Za-z0-9-]{2,20}');
+    });
+    Route::post('translations/import', [PartnerLanguageController::class, 'import'])->middleware('throttle:i18n-import');
 
     Route::get('rules', [PartnerRuleController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {

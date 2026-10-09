@@ -2,6 +2,7 @@
 
 namespace Modules\Inventory\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 use Modules\Inventory\Models\Item;
 
@@ -18,7 +19,7 @@ class CatalogRequest extends StrictFormRequest
     {
         $creating = $this->isMethod('post');
         $required = $creating ? 'required' : 'sometimes';
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
         $common = [
             'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],
             'name' => [$required, 'array:'.implode(',', $locales)],

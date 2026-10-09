@@ -94,6 +94,7 @@
         "billing": "Billing",
         "partner_messaging": "Email & SMS",
         "partner_templates": "Message wording",
+        "partner_languages": "Languages and wording",
         "partner_transfers": "Transfers",
         "partner_legal": "Legal documents",
         "provider": "Provider & terms",

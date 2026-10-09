@@ -2,6 +2,7 @@
 
 namespace App\Platform\Identity\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Packaging\SectorCatalog;
 use App\Platform\Support\Http\StrictFormRequest;
@@ -18,7 +19,7 @@ class UpgradeRequest extends StrictFormRequest
      */
     public function rules(): array
     {
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
         $rules = [
             'name' => ['required', 'array', 'array:'.implode(',', $locales)],
             'sector_key' => ['nullable', 'string', Rule::in(app(SectorCatalog::class)->keys())],

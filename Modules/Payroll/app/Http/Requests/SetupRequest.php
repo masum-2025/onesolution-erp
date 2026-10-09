@@ -2,6 +2,7 @@
 
 namespace Modules\Payroll\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 use Modules\Payroll\Models\Component;
 use Modules\Payroll\Models\StructureItem;
@@ -20,7 +21,7 @@ class SetupRequest extends StrictFormRequest
     {
         $creating = $this->isMethod('post');
         $required = $creating ? 'required' : 'sometimes';
-        $locales = (array) config('tenancy.supported_locales');
+        $locales = LanguageRegistry::codes();
         $common = [
             'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],
             'code' => [$required, 'string', 'regex:/^[A-Za-z0-9.\-_]{1,20}$/'],

@@ -2,6 +2,7 @@
 
 namespace App\Platform\Identity\Http\Requests;
 
+use App\Platform\Localization\LanguageRegistry;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -52,6 +53,6 @@ trait IdentityRules
      */
     protected function localeRule(bool $required = false): array
     {
-        return [$required ? 'required' : 'nullable', 'string', Rule::in((array) config('tenancy.supported_locales'))];
+        return [$required ? 'required' : 'nullable', 'string', Rule::in(LanguageRegistry::codes())];
     }
 }

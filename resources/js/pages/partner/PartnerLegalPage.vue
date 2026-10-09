@@ -15,7 +15,7 @@ import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate } from '@/lib/format';
 import { toast } from '@/lib/toast';
-import { t } from '@/lib/i18n';
+import { languageName, t } from '@/lib/i18n';
 import { textLocales } from '@/lib/texts';
 
 /**
@@ -41,7 +41,7 @@ const errors = ref({});
 const saving = ref(false);
 const preview = ref(false);
 // Every language the app speaks, each in its own name.
-const langs = computed(() => textLocales().map((locale) => ({ value: locale, label: t(`core.languages.${locale}`) })));
+const langs = computed(() => textLocales().map((locale) => ({ value: locale, label: languageName(locale) })));
 
 async function startNew(row, target = 'partner') {
     errors.value = {};

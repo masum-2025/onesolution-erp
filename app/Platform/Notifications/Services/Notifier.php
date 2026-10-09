@@ -4,6 +4,7 @@ namespace App\Platform\Notifications\Services;
 
 use App\Models\User;
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Notifications\Jobs\DeliverNotification;
 use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\NotificationCatalog;
@@ -45,7 +46,7 @@ class Notifier
         bool $allChannels = false,
     ): array {
         $definition = $this->catalog->get($key);
-        $supported = (array) config('tenancy.supported_locales');
+        $supported = LanguageRegistry::codes();
         $fixed = in_array($locale, $supported, true) ? $locale : null;
         $organizationLocale = $this->locale($organization);
         $common = [
@@ -105,7 +106,7 @@ class Notifier
 
     public function locale(?Organization $organization): string
     {
-        $supported = (array) config('tenancy.supported_locales');
+        $supported = LanguageRegistry::codes();
         $locale = $organization === null ? null : ($this->settings->values($organization)['default_locale'] ?? null);
 
         return in_array($locale, $supported, true) ? $locale : (string) config('tenancy.defaults.default_locale', 'en');

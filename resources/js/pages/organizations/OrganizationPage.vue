@@ -21,7 +21,7 @@ import { can, currentOrganization } from '@/lib/session';
 import { loadSectors } from '@/lib/packaging';
 import { formatDate } from '@/lib/format';
 import { settingSource, settingValue } from '@/lib/display';
-import { direction, t } from '@/lib/i18n';
+import { direction, languageName, t } from '@/lib/i18n';
 import { textLocales } from '@/lib/texts';
 
 const route = useRoute();
@@ -143,7 +143,7 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
                         <h2 class="border-b border-line px-5 py-4 text-[14.5px] font-semibold text-fg">{{ t('orgs.show.details') }}</h2>
                         <dl class="divide-y divide-line text-[13.5px]">
                             <div v-for="locale in textLocales()" :key="locale" class="flex gap-4 px-5 py-3">
-                                <dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.name') }} ({{ t(`core.languages.${locale}`) }})</dt>
+                                <dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.name') }} ({{ languageName(locale) }})</dt>
                                 <dd class="min-w-0 font-medium text-fg" :lang="locale" :dir="direction(locale)">{{ org.name?.[locale] || '—' }}</dd>
                             </div>
                             <div class="flex gap-4 px-5 py-3"><dt class="w-36 shrink-0 text-muted">{{ t('orgs.form.type') }}</dt><dd class="text-fg">{{ t(`core.org_types.${org.type}`) }}</dd></div>
