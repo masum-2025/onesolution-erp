@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Modules\Education\Http\Controllers\Concerns\FindsEducation;
 use Modules\Education\Http\EducationPresenter;
+use Modules\Education\Models\Field;
+use Modules\Education\Services\Fields;
 use Modules\Education\Services\Presets;
 use Modules\Education\Services\Structure;
 use Modules\Education\Services\Teachers;
@@ -23,7 +25,7 @@ class SetupController extends Controller
 {
     use FindsEducation;
 
-    public function __construct(private Structure $structure, private Presets $presets, private Teachers $teachers, private EducationPresenter $presenter) {}
+    public function __construct(private Structure $structure, private Presets $presets, private Teachers $teachers, private Fields $fields, private EducationPresenter $presenter) {}
 
     public function show(string $organization): JsonResponse
     {
@@ -42,6 +44,11 @@ class SetupController extends Controller
             'years' => $present('years'),
             'sessions' => $present('sessions'),
             'units' => $present('units'),
+            'batches' => $present('batches'),
+            // The own fields forms ask for, by record kind (sensitive ones only for people who may see them).
+            'fields' => collect(Field::ENTITIES)->mapWithKeys(fn (string $entity) => [$entity => $this->fields->of($company, $entity)
+                ->filter(fn (Field $field) => ! $field->is_sensitive || Gate::allows('education.view_sensitive', $unit))
+                ->map(fn (Field $field) => $this->presenter->field($field))->values()]),
             'teachers' => Gate::allows('education.manage', $unit) ? $this->teachers->in($company, $units) : [],
             'hrm' => $this->teachers->available($company),
             'presets' => $this->presets->all(),

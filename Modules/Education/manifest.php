@@ -133,8 +133,25 @@ return [
             'sort_order' => 90,
         ],
     ],
-    // Screens come with EDU-2.
-    'menu' => [],
+    'menu' => [
+        [
+            'key' => 'education',
+            'label' => 'education::module.menu',
+            'route' => '/education',
+            'icon' => 'graduation-cap',
+            'order' => 40,
+            'section' => 'business',
+            'children' => [
+                ['key' => 'overview', 'label' => 'education::module.menu_overview', 'route' => '/education', 'permission' => 'education.view'],
+                ['key' => 'students', 'label' => 'education::module.menu_students', 'route' => '/education/students', 'permission' => 'education.view'],
+                ['key' => 'sections', 'label' => 'education::module.menu_sections', 'route' => '/education/sections', 'permission' => 'education.view'],
+            ],
+        ],
+    ],
+    // The header "New" menu.
+    'quick_actions' => [
+        ['key' => 'student', 'label' => 'education::module.new_student', 'route' => '/education/students?new=1', 'permission' => 'education.admit', 'icon' => 'user-plus'],
+    ],
     // Other modules (fees, attendance, exams) listen to these; payloads carry ids only.
     'events' => ['education.student_admitted', 'education.student_left', 'education.enrollment_changed'],
     'portal_subjects' => [StudentSubjects::class],
@@ -144,5 +161,8 @@ return [
         ['key' => 'students', 'label' => 'education::dashboard.students', 'type' => 'stat', 'provider' => EducationWidgets::class, 'permission' => 'education.view', 'overview' => true],
     ]],
     'attention' => [EducationWidgets::class],
-    'settings' => ['pages' => []],
+    'settings' => ['pages' => [
+        ['key' => 'structure', 'label' => 'education::module.menu_structure', 'route' => '/education/structure', 'permission' => 'education.manage'],
+        ['key' => 'fields', 'label' => 'education::module.menu_fields', 'route' => '/education/fields', 'permission' => 'education.manage'],
+    ]],
 ];

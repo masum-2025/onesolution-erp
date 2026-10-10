@@ -1,5 +1,7 @@
 {
     "optional": "optional",
+    "yes": "Yes",
+    "no": "No",
     "language": "Language",
     "breadcrumb": "Breadcrumb",
     "user_menu": "Account menu",

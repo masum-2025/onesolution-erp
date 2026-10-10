@@ -57,6 +57,8 @@ class StudentController extends Controller
             'q' => ['nullable', 'string', 'max:100'], 'status' => ['nullable', 'in:'.implode(',', Student::STATUSES)],
             'program_id' => ['nullable', 'string', 'size:26'], 'session_id' => ['nullable', 'string', 'size:26'], 'level_id' => ['nullable', 'string', 'size:26'],
             'section_id' => ['nullable', 'string', 'size:26'], 'page' => ['nullable', 'integer', 'min:1'], 'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
+            // Studying now but in no section yet (in the session given, else in any).
+            'unplaced' => ['nullable', 'boolean'],
         ]);
         $sections = $this->access->sections($company, $unit, $request->user());
         $query = $this->education->query(Student::class, $company)->whereIn('unit_id', $this->unitIds($unit));
@@ -71,8 +73,11 @@ class StudentController extends Controller
         $query->when($filters['status'] ?? null, fn ($inner, $status) => $inner->where('status', $status))
             ->when($filters['program_id'] ?? null, fn ($inner, $program) => $inner->where('program_id', $program));
         $placed = array_filter(array_intersect_key($filters, array_flip(['session_id', 'level_id', 'section_id'])));
-        if ($placed !== []) {
-            $enrolled = $this->education->query(Enrollment::class, $company)->where($placed)->pluck('student_id')->all();
+        $unplaced = filter_var($filters['unplaced'] ?? false, FILTER_VALIDATE_BOOL);
+        if ($placed !== [] || $unplaced) {
+            $enrolled = $this->education->query(Enrollment::class, $company)->where($placed)
+                ->when($unplaced, fn ($inner) => $inner->where('status', 'active')->whereNull('section_id'))
+                ->pluck('student_id')->all();
             $query->whereIn('id', $enrolled);
         }
 

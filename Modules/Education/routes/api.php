@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Education\Http\Controllers\AdmissionController;
 use Modules\Education\Http\Controllers\EnrollmentController;
 use Modules\Education\Http\Controllers\FieldController;
+use Modules\Education\Http\Controllers\OverviewController;
 use Modules\Education\Http\Controllers\PromotionController;
 use Modules\Education\Http\Controllers\SetupController;
 use Modules\Education\Http\Controllers\StructureController;
@@ -21,6 +22,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:education'])
     ->prefix('organizations/{organization}/education')
     ->group(function () {
         Route::get('setup', [SetupController::class, 'show']);
+        Route::get('overview', OverviewController::class);
         Route::get('structure/{kind}', [StructureController::class, 'index']);
         Route::get('fields', [FieldController::class, 'index']);
         Route::get('students', [StudentController::class, 'index']);

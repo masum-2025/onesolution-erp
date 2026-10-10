@@ -2831,7 +2831,7 @@ the event `Modules\Pos\Events\SaleMade` (`pos.sale_made`: ids and amounts, no pe
   Campaigns (bulk SMS or email to those who consented), points spent at the counter, web lead forms
   and quote e-mail with PDF are later steps.
 
-## Education module (business module 8: EDU-1a backend)
+## Education module (business module 8: EDU-1 backend, EDU-2a screens)
 
 Code: `Modules/Education` (module `education`, sectors school, college, university, madrasa,
 coaching). One module for every kind of institution: nothing about a kind of school or a country
@@ -2912,9 +2912,38 @@ subject `education.student` (relations guardian, self), only portal fields, neve
   through `Customers::contact()`), with the contact as guardian and no place yet: the office
   places it before admitting.
 
+### Screens (EDU-2a)
+
+Menu "Education" (`education.view`): Overview, Students, Sections; under Settings: Programs,
+classes and sessions, Own fields (`education.manage`). Header "New" menu: New student
+(`education.admit`). Code: `Modules/Education/resources/js` (pages, dialogs, `lib.js` tested in
+`tests/js/education.test.js`, texts in `locales/{en,bn}/education.json`).
+
+- **Overview** (`GET education/overview?session_id=`): the open session by default, its sections
+  with seats taken, students, students in no section, nearly full sections (90 %+), and, only for
+  people who can act on them, applications and promotions waiting. Until the institution is set
+  up, managers get two steps (pick a preset, make the year with its sessions); others are told
+  who has to do it.
+- **Students**: search by name, code or phone (Bangla digits too), filters status, program, class
+  and "not in a section" (`students?unplaced=1`). New student in three steps (student, guardians,
+  class and section; sent with an `op_id`); a server error opens the step it belongs to.
+- **Student**: details (private ones only with `education.view_sensitive`), own fields, photo
+  (checked for size here, kind and size on the server), where they study now, move to another
+  section, mark as left or graduated (asked twice), guardians (add, change, remove; relation and
+  switches are per student), classes over time.
+- **Sections / Section**: sections of a session class by class, how full (bar, numbers and a word,
+  never colour alone), class teacher; roster in roll order, number rolls by the rule, move one
+  student.
+- **Structure** and **Own fields**: every kind made and switched on/off in one form; presets can
+  be applied again; field key and kind fixed once made; private fields never in the portal.
+- `GET education/setup` also gives batches and the own fields forms ask for (private ones only
+  for people allowed to see them).
+
+Deferred to EDU-2b: admissions screens, promotion screens, importing students from a spreadsheet.
+
 ### Future expansion (Education)
 
-- EDU-2 screens.
+- EDU-2b admissions, promotions and import screens.
   EDU-3 certificates and ID cards; EDU-4 course registration; then fees, exams, attendance.
 - A new country, a new kind of institution, own terms: a preset file, lists, own fields and
   wording (LANG-1). No code change.
