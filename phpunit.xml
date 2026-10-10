@@ -19,6 +19,8 @@
         </include>
     </source>
     <php>
+        <!-- The whole suite (1300+ tests in one process) needs more than PHP's 512M default here. -->
+        <ini name="memory_limit" value="1G"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

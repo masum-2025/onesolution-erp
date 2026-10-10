@@ -30,4 +30,11 @@ return [
     'promotion_cancelled' => 'Promotion list cancelled',
     'promotion_applied' => 'Promotion applied',
     'promotion_undone' => 'Promotion undone',
+    'document_template_created' => 'Document design made',
+    'document_template_updated' => 'Document design changed',
+    'document_preset_applied' => 'Ready-made document design added',
+    'document_asset_added' => 'Image for documents added',
+    'document_asset_updated' => 'Image for documents changed',
+    'document_issued' => 'Document issued',
+    'document_revoked' => 'Document revoked',
 ];

@@ -47,6 +47,15 @@ class Numbers
         return ($prefixes['promotion'] ?? 'PRM').'-'.$year.'-'.str_pad((string) $this->next($company, 'promotion', $year), 4, '0', STR_PAD_LEFT);
     }
 
+    /** "IDC-2026-0001" for an ID card, "CRT-…" for a certificate, "LTR-…" for a letter: counted per kind and year. */
+    public function documentNumber(Organization $company, string $kind, int $year): string
+    {
+        $prefixes = (array) $this->rules->get('education.number_prefixes', $this->contexts->forOrganization($company));
+        $prefix = $prefixes[$kind] ?? ['id_card' => 'IDC', 'certificate' => 'CRT', 'letter' => 'LTR'][$kind] ?? 'DOC';
+
+        return $prefix.'-'.$year.'-'.str_pad((string) $this->next($company, ['id_card' => 'doc_card', 'certificate' => 'doc_cert', 'letter' => 'doc_letter'][$kind] ?? 'doc_other', $year), 4, '0', STR_PAD_LEFT);
+    }
+
     private function next(Organization $company, string $kind, int $year): int
     {
         $sequence = $this->education->query(Sequence::class, $company)->where('kind', $kind)->where('year', $year)->lockForUpdate()->first();

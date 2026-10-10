@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Education\Http\Controllers\AdmissionController;
+use Modules\Education\Http\Controllers\DocumentController;
+use Modules\Education\Http\Controllers\DocumentTemplateController;
 use Modules\Education\Http\Controllers\EnrollmentController;
 use Modules\Education\Http\Controllers\FieldController;
 use Modules\Education\Http\Controllers\OverviewController;
@@ -9,6 +11,7 @@ use Modules\Education\Http\Controllers\PromotionController;
 use Modules\Education\Http\Controllers\SetupController;
 use Modules\Education\Http\Controllers\StructureController;
 use Modules\Education\Http\Controllers\StudentController;
+use Modules\Education\Http\Controllers\VerifyController;
 
 /*
 | Education API (loaded by EducationServiceProvider under /api, group "api"):
@@ -32,6 +35,13 @@ Route::middleware(['auth:sanctum', 'org', 'module:education'])
         Route::get('admissions/{admission}', [AdmissionController::class, 'show']);
         Route::get('promotions', [PromotionController::class, 'index']);
         Route::get('promotions/{batch}', [PromotionController::class, 'show']);
+        Route::get('document-templates', [DocumentTemplateController::class, 'index']);
+        Route::get('document-templates/{template}', [DocumentTemplateController::class, 'show']);
+        Route::get('document-assets', [DocumentTemplateController::class, 'assets']);
+        Route::get('documents', [DocumentController::class, 'index']);
+        Route::get('documents/{document}', [DocumentController::class, 'show']);
+        // Filling a design with a student's values: often while designing.
+        Route::post('document-templates/{template}/preview', [DocumentTemplateController::class, 'preview'])->middleware('throttle:education-preview');
         // Checking a file and then making it: a few per minute.
         Route::post('students/import', [StudentController::class, 'import'])->middleware('throttle:education-import');
 
@@ -63,5 +73,17 @@ Route::middleware(['auth:sanctum', 'org', 'module:education'])
             Route::patch('admissions/{admission}', [AdmissionController::class, 'update']);
             Route::post('admissions/{admission}/step', [AdmissionController::class, 'step']);
             Route::post('admissions/{admission}/admit', [AdmissionController::class, 'admit']);
+
+            Route::post('document-templates', [DocumentTemplateController::class, 'store']);
+            Route::patch('document-templates/{template}', [DocumentTemplateController::class, 'update']);
+            Route::post('document-templates/presets/{preset}/apply', [DocumentTemplateController::class, 'applyPreset']);
+            Route::post('document-assets', [DocumentTemplateController::class, 'storeAsset']);
+            Route::patch('document-assets/{asset}', [DocumentTemplateController::class, 'updateAsset']);
+            Route::post('documents', [DocumentController::class, 'store']);
+            Route::post('documents/{document}/revoke', [DocumentController::class, 'revoke']);
         });
     });
+
+// The public check behind a document's QR code: no sign-in, a few a minute per address,
+// one answer for every code that does not verify (VerifyController).
+Route::get('public/education/verify/{organization}/{code}', VerifyController::class)->middleware('throttle:education-verify');

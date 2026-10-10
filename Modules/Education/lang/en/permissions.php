@@ -9,4 +9,5 @@ return [
     'view_sensitive' => 'See and change private details (date of birth, registration and ID numbers)',
     'promote' => 'Prepare promotions',
     'approve_promotion' => 'Approve promotions',
+    'issue_documents' => 'Issue, print and revoke ID cards and certificates',
 ];

@@ -2962,9 +2962,45 @@ waiting lists from the overview tile). Header "New" menu: New application.
   every row checked by the server first, then the good rows admitted once.
 - `GET education/setup` also gives `can.promote`, `can.approve_promotion` and the promotion rules.
 
+### ID cards and certificates (EDU-3a backend)
+
+- **Designs** (`/education/document-templates`, read with `education.manage` or
+  `education.issue_documents`, changed with `education.manage`): kind `id_card`, `certificate`,
+  `letter`; one language; page `id_card` (85.6 x 54 mm), `a4`, `a5`, portrait or landscape; items
+  placed in tenths of a millimetre (whole numbers; text size in tenths of a point, line height in
+  percent): `text` (with `{placeholders}`), `image`, `photo`, `qr`, `line`, `box`;
+  questions asked when issuing (`inputs`, printed as `{input.key}`). `DocumentLayout` checks
+  everything (unknown placeholders, items outside the page, foreign images are refused; unknown
+  keys dropped). Draft -> active -> retired; changed in place with the version read.
+- **Placeholders**: `student.*` (name, name_local, code, admission_no, gender, phone, date_of_birth*,
+  birth_registration_no*, admitted_on, left_on, left_reason, status), `guardian.father|mother|
+  primary|primary_phone`, `program`, `level`, `section`, `roll`, `session`, `batch`, `category`,
+  `shift`, `medium`, `stream`, `institution.name`, `document.number|date|valid_until`,
+  `field.<key>` (own student fields printed on documents) and `input.<key>`. (*) private: issuing or
+  opening such a document needs `education.view_sensitive`. In Bangla, dates and rolls use Bangla
+  digits.
+- **Ready-made designs** (`database/data/documents/*.php`, added as drafts by
+  `POST document-templates/presets/{key}/apply`): `bd_id_card`, `id_card_en`, `bd_testimonial`,
+  `bd_transfer_certificate`, `bd_character_certificate`. A new country is a new data file.
+- **Images** (`document-assets`): JPG/PNG/WebP up to 1 MB, stored privately, signed 30-minute
+  links, switched off instead of deleted.
+- **Issuing** (`POST documents`, `education.issue_documents`): an active design to up to 500
+  students at once, all or nothing, safe to retry with `op_id`. Each document gets a number
+  (`education.number_prefixes`: IDC/CRT/LTR) and a random 12-letter code, and keeps the design,
+  values, a summary and the photo as at issue. ID cards are for studying students, valid by
+  `education.id_card_valid_months` (0: to the end of their session); a second valid card needs
+  `replace: true` (the old one is revoked). `POST documents/{id}/revoke` with a reason; nothing is
+  deleted. Events `DocumentIssued`, `DocumentRevoked`.
+- **QR check** (public, `GET /api/public/education/verify/{organization}/{code}`, 20 a minute and
+  300 a day per address): valid / revoked / expired, the institution (name, logo), kind, number,
+  dates, and of the student only what `education.verify_shows` allows (name, class). A wrong code,
+  another institution or Education switched off get the same 404. `GET documents/{id}` gives the
+  QR (SVG) for `/verify/{organization}/{code}` on the address it was opened at.
+
 ### Future expansion (Education)
 
-- EDU-3 certificates and ID cards; EDU-4 course registration; then fees, exams, attendance.
+- EDU-3b screens (designer, issue and print, register, public check page).
+  EDU-4 course registration; then fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.
 - A new country, a new kind of institution, own terms: a preset file, lists, own fields and
   wording (LANG-1). No code change.
 

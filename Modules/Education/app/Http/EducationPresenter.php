@@ -5,11 +5,15 @@ namespace Modules\Education\Http;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Education\Models\Admission;
+use Modules\Education\Models\Document;
+use Modules\Education\Models\DocumentAsset;
+use Modules\Education\Models\DocumentTemplate;
 use Modules\Education\Models\Enrollment;
 use Modules\Education\Models\Field;
 use Modules\Education\Models\Guardian;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\StudentGuardian;
+use Modules\Education\Services\DocumentLayout;
 use Modules\Education\Services\Fields;
 use Modules\Education\Services\Structure;
 use Modules\Education\Services\Students;
@@ -133,6 +137,71 @@ class EducationPresenter
             'decided_at' => $admission->decided_at?->toIso8601String(),
             'created_at' => $admission->created_at?->toIso8601String(),
             'version' => $admission->version,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function template(DocumentTemplate $template, bool $withLayout = false): array
+    {
+        return [
+            'id' => $template->getKey(),
+            'key' => $template->key,
+            'kind' => $template->kind,
+            'name' => $template->texts('name'),
+            'name_text' => $template->textIn('name'),
+            'locale' => $template->locale,
+            'page' => $template->page,
+            'page_size' => DocumentLayout::dimensions($template->page),
+            'status' => $template->status,
+            'version' => $template->version,
+            'inputs' => $template->inputs ?? [],
+            ...($withLayout ? ['layout' => $template->layout] : ['elements' => count($template->layout['elements'] ?? [])]),
+            'updated_at' => $template->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function asset(DocumentAsset $asset, string $url): array
+    {
+        return ['id' => $asset->getKey(), ...$asset->only(['kind', 'name', 'mime', 'size_bytes', 'is_active']), 'url' => $url];
+    }
+
+    /**
+     * A document: its register line, and with $snapshot its design, values and links to print it.
+     *
+     * @param  array<string, mixed>  $snapshot  asset_links, photo_url, qr, verify_path when printing.
+     * @return array<string, mixed>
+     */
+    public function document(Document $document, ?array $snapshot = null): array
+    {
+        $today = now()->toImmutable();
+
+        return [
+            'id' => $document->getKey(),
+            'kind' => $document->kind,
+            'title' => $document->texts('title'),
+            'title_text' => $document->textIn('title'),
+            'number' => $document->number,
+            'student_id' => $document->student_id,
+            'student_name' => $document->snapshot['summary']['student_name'] ?? null,
+            'unit_id' => $document->unit_id,
+            'template_id' => $document->template_id,
+            'template_version' => $document->template_version,
+            'locale' => $document->locale,
+            'status' => $document->statusOn($today),
+            'issued_on' => $document->issued_on->toDateString(),
+            'valid_until' => $document->valid_until?->toDateString(),
+            'issued_by' => $document->issued_by,
+            'revoked_at' => $document->revoked_at?->toIso8601String(),
+            'revoke_reason' => $document->revoke_reason,
+            'has_sensitive' => $document->has_sensitive,
+            ...($snapshot === null ? [] : [
+                'page' => $document->snapshot['page'],
+                'page_size' => DocumentLayout::dimensions($document->snapshot['page']),
+                'layout' => $document->snapshot['layout'],
+                'values' => (object) ($document->snapshot['values'] ?? []),
+                ...$snapshot,
+            ]),
         ];
     }
 

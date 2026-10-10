@@ -10,6 +10,9 @@ use Modules\Education\Models\AcademicUnit;
 use Modules\Education\Models\AcademicYear;
 use Modules\Education\Models\Admission;
 use Modules\Education\Models\Batch;
+use Modules\Education\Models\Document;
+use Modules\Education\Models\DocumentAsset;
+use Modules\Education\Models\DocumentTemplate;
 use Modules\Education\Models\Curriculum;
 use Modules\Education\Models\CurriculumItem;
 use Modules\Education\Models\Enrollment;
@@ -68,6 +71,13 @@ class EducationExporter implements ExportsModuleData
             'admissions' => $this->rows(Admission::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'number', 'program_id', 'level_id', 'session_id', 'applicant', 'source', 'status', 'note', 'student_id'])),
             'enrollments' => $this->rows(Enrollment::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'session_id', 'level_id', 'section_id', 'roll_no', 'status', 'started_on', 'ended_on'])),
             'fields' => $this->rows(Field::class, $organization, $organizationIds, fn ($row) => $plain($row, ['entity', 'key', 'type', 'options', 'is_required', 'portal_visible', 'on_documents', 'is_sensitive', 'is_active'], ['label'])),
+            'document_templates' => $this->rows(DocumentTemplate::class, $organization, $organizationIds, fn ($row) => $plain($row, ['key', 'kind', 'locale', 'page', 'layout', 'inputs', 'status', 'version'], ['name'])),
+            // Images themselves stay in the institution's files; their list is exported.
+            'document_assets' => $this->rows(DocumentAsset::class, $organization, $organizationIds, fn ($row) => $plain($row, ['kind', 'name', 'mime', 'size_bytes', 'is_active'])),
+            'documents' => $this->rows(Document::class, $organization, $organizationIds, fn ($row) => [
+                ...$plain($row, ['unit_id', 'template_id', 'template_version', 'kind', 'student_id', 'number', 'code', 'locale', 'snapshot', 'issued_on', 'valid_until', 'issued_by', 'revoked_by', 'revoke_reason'], ['title']),
+                'revoked_at' => $row->revoked_at?->toIso8601String(),
+            ]),
         ];
     }
 

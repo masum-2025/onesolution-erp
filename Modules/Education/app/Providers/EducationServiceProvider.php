@@ -30,6 +30,9 @@ class EducationServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom($root.'/lang', 'education');
 
         RateLimiter::for('education-import', fn (Request $request) => Limit::perMinute(10)->by('education-import:'.($request->user()?->getKey() ?? $request->ip())));
+        RateLimiter::for('education-preview', fn (Request $request) => Limit::perMinute(60)->by('education-preview:'.($request->user()?->getKey() ?? $request->ip())));
+        // The public QR check: per address, so codes cannot be tried one after another.
+        RateLimiter::for('education-verify', fn (Request $request) => [Limit::perMinute(20)->by('education-verify:'.$request->ip()), Limit::perDay(300)->by('education-verify-day:'.$request->ip())]);
 
         // Won admission deals become applications (CRM may be missing: then nothing listens).
         if (class_exists(DealWon::class)) {

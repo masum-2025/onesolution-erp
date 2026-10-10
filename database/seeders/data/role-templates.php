@@ -85,7 +85,7 @@ return [
         'sector' => 'school',
         'permissions' => [
             '*.view', 'hrm.manage', 'attendance.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
-            'education.manage', 'education.view_sensitive', 'education.approve_promotion',
+            'education.manage', 'education.view_sensitive', 'education.approve_promotion', 'education.issue_documents',
         ],
     ],
     [
@@ -97,7 +97,7 @@ return [
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents'],
     ],
 
     // ── University ───────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ return [
         'sector' => 'university',
         'permissions' => [
             '*.view', 'members.manage', 'education.manage', 'education.admit', 'education.edit_students',
-            'education.view_sensitive', 'education.promote', 'crm.manage',
+            'education.view_sensitive', 'education.promote', 'education.issue_documents', 'crm.manage',
         ],
     ],
 

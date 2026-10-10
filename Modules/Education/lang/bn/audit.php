@@ -30,4 +30,11 @@ return [
     'promotion_cancelled' => 'প্রমোশন তালিকা বাতিল হয়েছে',
     'promotion_applied' => 'প্রমোশন চালু হয়েছে',
     'promotion_undone' => 'প্রমোশন ফেরানো হয়েছে',
+    'document_template_created' => 'ডকুমেন্টের নকশা তৈরি',
+    'document_template_updated' => 'ডকুমেন্টের নকশা বদল',
+    'document_preset_applied' => 'তৈরি ডকুমেন্ট নকশা যোগ',
+    'document_asset_added' => 'ডকুমেন্টের ছবি যোগ',
+    'document_asset_updated' => 'ডকুমেন্টের ছবি বদল',
+    'document_issued' => 'ডকুমেন্ট দেওয়া হয়েছে',
+    'document_revoked' => 'ডকুমেন্ট বাতিল',
 ];

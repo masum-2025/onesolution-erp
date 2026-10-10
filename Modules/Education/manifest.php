@@ -20,7 +20,7 @@ return [
     'plans' => ['*'],
     'permissions' => [
         'education.view', 'education.manage', 'education.admit', 'education.edit_students',
-        'education.view_sensitive', 'education.promote', 'education.approve_promotion',
+        'education.view_sensitive', 'education.promote', 'education.approve_promotion', 'education.issue_documents',
     ],
     'rules' => [
         [
@@ -43,10 +43,13 @@ return [
                 'properties' => [
                     'admission' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9]{1,6}$'],
                     'promotion' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9]{1,6}$'],
+                    'id_card' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9]{1,6}$'],
+                    'certificate' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9]{1,6}$'],
+                    'letter' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9]{1,6}$'],
                 ],
                 'additionalProperties' => false,
             ],
-            'default' => ['admission' => 'ADM', 'promotion' => 'PRM'],
+            'default' => ['admission' => 'ADM', 'promotion' => 'PRM', 'id_card' => 'IDC', 'certificate' => 'CRT', 'letter' => 'LTR'],
             'label' => 'education::rules.number_prefixes.label',
             'description' => 'education::rules.number_prefixes.description',
             'overridable_levels' => ['platform', 'partner', 'group', 'company'],
@@ -132,6 +135,31 @@ return [
             'category' => 'admissions',
             'sort_order' => 90,
         ],
+        [
+            'key' => 'education.id_card_valid_months',
+            'type' => 'integer',
+            // 0: until the end of the session the student is in.
+            'schema' => ['minimum' => 0, 'maximum' => 120],
+            'default' => 0,
+            'label' => 'education::rules.id_card_valid_months.label',
+            'description' => 'education::rules.id_card_valid_months.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'documents',
+            'sort_order' => 100,
+        ],
+        [
+            'key' => 'education.verify_shows',
+            'type' => 'json',
+            // What the public QR check shows besides the institution, the document and whether it is valid.
+            'schema' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['student_name', 'level', 'issued_on', 'valid_until']], 'uniqueItems' => true, 'maxItems' => 4],
+            'default' => ['student_name', 'level', 'issued_on', 'valid_until'],
+            'label' => 'education::rules.verify_shows.label',
+            'description' => 'education::rules.verify_shows.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'sensitive' => true,
+            'category' => 'documents',
+            'sort_order' => 110,
+        ],
     ],
     'menu' => [
         [
@@ -157,7 +185,7 @@ return [
         ['key' => 'student', 'label' => 'education::module.new_student', 'route' => '/education/students?new=1', 'permission' => 'education.admit', 'icon' => 'user-plus'],
     ],
     // Other modules (fees, attendance, exams) listen to these; payloads carry ids only.
-    'events' => ['education.student_admitted', 'education.student_left', 'education.enrollment_changed'],
+    'events' => ['education.student_admitted', 'education.student_left', 'education.enrollment_changed', 'education.document_issued', 'education.document_revoked'],
     'portal_subjects' => [StudentSubjects::class],
     'is_core' => false,
     'requires_consent' => false,

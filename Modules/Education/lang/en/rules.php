@@ -38,11 +38,20 @@ return [
         'label' => 'Customer pipelines that are admissions',
         'description' => 'Deals won in these pipelines (by key) become applications here, for example ["admissions"].',
     ],
+    'id_card_valid_months' => [
+        'label' => 'ID cards are valid for (months)',
+        'description' => '0: until the end of the session the student is in. Otherwise this many months from the day it is issued.',
+    ],
+    'verify_shows' => [
+        'label' => 'What the QR check shows',
+        'description' => 'Besides the institution, the document and whether it is valid: any of student_name, level, issued_on, valid_until. Private details are never shown.',
+    ],
     'categories' => [
         'admissions' => 'Admissions',
         'numbering' => 'Numbers',
         'sections' => 'Sections and rolls',
         'promotion' => 'Promotion',
         'access' => 'Who sees what',
+        'documents' => 'ID cards and certificates',
     ],
 ];

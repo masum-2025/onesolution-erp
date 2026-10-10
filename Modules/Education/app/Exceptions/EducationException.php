@@ -108,4 +108,41 @@ class EducationException extends TenancyException
     {
         return new self('bad_photo', 422, [], ['field' => 'photo']);
     }
+
+    public static function templateNotActive(): self
+    {
+        return new self('template_not_active', 409);
+    }
+
+    /** A valid document of the kind exists; replacing it must be asked for. */
+    public static function documentExists(string $name, string $kind, string $number, string $studentId): self
+    {
+        return new self('document_exists', 409, ['name' => $name, 'kind' => $kind, 'number' => $number], ['student_id' => $studentId, 'number' => $number]);
+    }
+
+    public static function documentRevoked(): self
+    {
+        return new self('document_revoked', 409);
+    }
+
+    public static function badAsset(int $kb): self
+    {
+        return new self('bad_asset', 422, ['kb' => (string) $kb], ['field' => 'file']);
+    }
+
+    public static function notActiveStudent(string $name, string $status): self
+    {
+        return new self('not_active_student', 409, ['name' => $name, 'status' => $status]);
+    }
+
+    public static function unknownDocumentPreset(): self
+    {
+        return new self('unknown_document_preset', 404);
+    }
+
+    /** One answer for a wrong code, an unknown institution or Education switched off. */
+    public static function verifyNotFound(): self
+    {
+        return new self('verify_not_found', 404);
+    }
 }
