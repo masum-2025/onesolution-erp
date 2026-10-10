@@ -145,11 +145,15 @@ return [
                 ['key' => 'overview', 'label' => 'education::module.menu_overview', 'route' => '/education', 'permission' => 'education.view'],
                 ['key' => 'students', 'label' => 'education::module.menu_students', 'route' => '/education/students', 'permission' => 'education.view'],
                 ['key' => 'sections', 'label' => 'education::module.menu_sections', 'route' => '/education/sections', 'permission' => 'education.view'],
+                ['key' => 'admissions', 'label' => 'education::module.menu_admissions', 'route' => '/education/admissions', 'permission' => 'education.admit'],
+                // Approvers (who may not make lists) reach waiting lists from the overview.
+                ['key' => 'promotions', 'label' => 'education::module.menu_promotions', 'route' => '/education/promotions', 'permission' => 'education.promote'],
             ],
         ],
     ],
     // The header "New" menu.
     'quick_actions' => [
+        ['key' => 'admission', 'label' => 'education::module.new_admission', 'route' => '/education/admissions?new=1', 'permission' => 'education.admit', 'icon' => 'file-plus'],
         ['key' => 'student', 'label' => 'education::module.new_student', 'route' => '/education/students?new=1', 'permission' => 'education.admit', 'icon' => 'user-plus'],
     ],
     // Other modules (fees, attendance, exams) listen to these; payloads carry ids only.

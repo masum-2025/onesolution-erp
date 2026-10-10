@@ -83,6 +83,7 @@ class Admissions
                 'op_id' => $data['op_id'] ?? null,
                 'version' => 1,
             ]);
+            $admission->search_text = Admission::searchText($applicant);
             $admission->save();
             $this->audit->record('education.admission_created', $admission, new: [...$admission->only(['number', 'program_id', 'level_id', 'session_id', 'source']), 'name' => $applicant['name'] ?? null], actor: $actor, organizationId: $company->getKey());
 
@@ -109,6 +110,7 @@ class Admissions
                 $applicant = [...$admission->applicant, ...array_intersect_key((array) $data['applicant'], array_flip(self::APPLICANT))];
                 $applicant['extra'] = $this->fields->apply($company, 'admission', (array) ($data['applicant']['extra'] ?? []), (array) ($admission->applicant['extra'] ?? []), false, 'applicant.extra');
                 $admission->applicant = $applicant;
+                $admission->search_text = Admission::searchText($applicant);
             }
             $admission->version++;
             $admission->save();

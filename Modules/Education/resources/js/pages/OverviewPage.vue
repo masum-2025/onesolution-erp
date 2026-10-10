@@ -59,8 +59,8 @@ const tiles = computed(() => {
         { key: 'sections', icon: LayoutGrid, value: stats.value.sections, to: { name: 'education-sections', query: sessionId.value ? { session: sessionId.value } : {} } },
         { key: 'nearly_full', icon: TriangleAlert, value: stats.value.nearly_full, warn: stats.value.nearly_full > 0 },
     ];
-    if (stats.value.applications !== null) list.push({ key: 'applications', icon: FileText, value: stats.value.applications });
-    if (stats.value.promotions_waiting !== null) list.push({ key: 'promotions', icon: ClipboardCheck, value: stats.value.promotions_waiting, warn: stats.value.promotions_waiting > 0 });
+    if (stats.value.applications !== null) list.push({ key: 'applications', icon: FileText, value: stats.value.applications, to: { name: 'education-admissions' } });
+    if (stats.value.promotions_waiting !== null) list.push({ key: 'promotions', icon: ClipboardCheck, value: stats.value.promotions_waiting, warn: stats.value.promotions_waiting > 0, to: { name: 'education-promotions', query: { status: 'pending_approval' } } });
     return list;
 });
 

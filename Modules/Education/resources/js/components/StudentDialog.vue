@@ -1,10 +1,9 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { Check, Plus, Trash2, UserPlus } from 'lucide-vue-next';
+import { Check, UserPlus } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import AppSwitch from '@/components/AppSwitch.vue';
 import OwnFields from '@/components/OwnFields.vue';
 import { currentOrganization } from '@/lib/session';
 import { textIn } from '@/lib/texts';
@@ -12,7 +11,8 @@ import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { educationApi } from '../api';
 import { useEducationSetup } from '../setup';
-import { fieldsToApi, fieldsToForm, fullness, newOpId, stepOfError } from '../lib';
+import { emptyGuardian, fieldsToApi, fieldsToForm, fullness, guardianToApi, newOpId, stepOfError } from '../lib';
+import GuardianFields from './GuardianFields.vue';
 
 /**
  * A student admitted directly (three steps: the student, their guardians,
@@ -55,8 +55,6 @@ const place = reactive({ session_id: '', level_id: '', section_id: '' });
 const errors = ref({});
 const saving = ref(false);
 let opId = null;
-
-const emptyGuardian = (relation) => ({ relation, name: '', phone: '', email: '', occupation: '', national_id: '', is_primary: false, can_pick_up: true, receives_notices: true, extra: {} });
 
 watch(
     () => props.open,
@@ -125,21 +123,6 @@ watch(() => [place.session_id, place.level_id], () => {
     if (!sections.value.some((section) => section.id === place.section_id)) place.section_id = '';
 });
 
-function addGuardian() {
-    const used = new Set(guardians.value.map((guardian) => guardian.relation));
-    const relation = setup.list('relation').map((item) => item.key).find((key) => !used.has(key)) ?? 'guardian';
-    guardians.value.push({ ...emptyGuardian(relation), is_primary: guardians.value.length === 0 });
-}
-
-function removeGuardian(index) {
-    const [removed] = guardians.value.splice(index, 1);
-    if (removed.is_primary && guardians.value.length) guardians.value[0].is_primary = true;
-}
-
-function makePrimary(index) {
-    guardians.value.forEach((guardian, at) => (guardian.is_primary = at === index));
-}
-
 // Checks people can see before going on; the server checks everything again.
 function checkStep() {
     const found = {};
@@ -202,18 +185,7 @@ async function submit() {
             ...studentBody(),
             op_id: opId,
             admitted_on: form.admitted_on || null,
-            guardians: guardians.value.map((guardian) => ({
-                relation: guardian.relation,
-                name: clean(guardian.name),
-                phone: clean(guardian.phone),
-                email: clean(guardian.email),
-                occupation: clean(guardian.occupation),
-                ...(sensitive.value ? { national_id: clean(guardian.national_id) } : {}),
-                is_primary: guardian.is_primary,
-                can_pick_up: guardian.can_pick_up,
-                receives_notices: guardian.receives_notices,
-                extra: fieldsToApi(guardianFields.value, guardian.extra),
-            })),
+            guardians: guardians.value.map((guardian) => guardianToApi(guardian, guardianFields.value, { sensitive: sensitive.value })),
             enrollment: place.session_id && place.level_id ? { session_id: place.session_id, level_id: place.level_id, section_id: place.section_id || null } : null,
         };
         const { data } = await education.createStudent(body);
@@ -338,42 +310,7 @@ const sectionText = (section) => {
             <template v-else-if="step === 'guardians'">
                 <p class="text-[13px] text-muted">{{ t('education.new_student.guardians_text') }}</p>
                 <p v-if="!guardians.length" class="rounded-xl bg-subtle px-4 py-3 text-[13px] text-muted">{{ t('education.new_student.no_guardians') }}</p>
-                <fieldset v-for="(guardian, index) in guardians" :key="index" class="space-y-4 rounded-xl border border-line p-4">
-                    <legend class="flex items-center gap-2 px-1 text-[13px] font-medium text-fg-2">
-                        {{ setup.listName('relation', guardian.relation) || t('education.guardian.title') }}
-                        <span v-if="guardian.is_primary" class="rounded-full bg-brand-soft px-2 py-0.5 text-[11.5px] text-brand-text">{{ t('education.guardian.primary') }}</span>
-                    </legend>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <AppField v-slot="{ id }" :label="t('education.guardian.relation')" :error="fieldError(`guardians.${index}.relation`)">
-                            <select :id="id" v-model="guardian.relation" class="field-input">
-                                <option v-for="item in setup.list('relation')" :key="item.key" :value="item.key">{{ textIn(item.name) }}</option>
-                            </select>
-                        </AppField>
-                        <AppField v-slot="{ id }" :label="t('education.guardian.name')" :error="fieldError(`guardians.${index}.name`)">
-                            <input :id="id" v-model="guardian.name" class="field-input" maxlength="150" autocomplete="off" />
-                        </AppField>
-                        <AppField v-slot="{ id }" :label="t('education.guardian.phone')" :hint="t('education.guardian.phone_hint')" :error="fieldError(`guardians.${index}.phone`)">
-                            <input :id="id" v-model="guardian.phone" type="tel" inputmode="tel" dir="ltr" class="field-input" maxlength="30" autocomplete="off" />
-                        </AppField>
-                        <AppField v-slot="{ id }" :label="t('education.guardian.occupation')" :error="fieldError(`guardians.${index}.occupation`)" optional>
-                            <input :id="id" v-model="guardian.occupation" class="field-input" maxlength="100" autocomplete="off" />
-                        </AppField>
-                        <AppField v-slot="{ id }" :label="t('education.guardian.email')" :error="fieldError(`guardians.${index}.email`)" optional>
-                            <input :id="id" v-model="guardian.email" type="email" dir="ltr" class="field-input" maxlength="190" autocomplete="off" />
-                        </AppField>
-                        <AppField v-if="sensitive" v-slot="{ id }" :label="t('education.guardian.national_id')" :error="fieldError(`guardians.${index}.national_id`)" optional>
-                            <input :id="id" v-model="guardian.national_id" dir="ltr" inputmode="numeric" class="field-input tabular" maxlength="40" autocomplete="off" />
-                        </AppField>
-                    </div>
-                    <OwnFields v-model="guardian.extra" :fields="guardianFields" :errors="errors" :prefix="`guardians.${index}.extra`" />
-                    <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
-                        <AppSwitch :model-value="guardian.is_primary" :label="t('education.guardian.primary')" show-label @update:model-value="makePrimary(index)" />
-                        <AppSwitch v-model="guardian.can_pick_up" :label="t('education.guardian.can_pick_up')" show-label />
-                        <AppSwitch v-model="guardian.receives_notices" :label="t('education.guardian.receives_notices')" show-label />
-                        <AppButton size="sm" variant="danger-soft" :icon="Trash2" class="ms-auto" @click="removeGuardian(index)">{{ t('education.guardian.remove') }}</AppButton>
-                    </div>
-                </fieldset>
-                <AppButton v-if="guardians.length < 6" size="sm" :icon="Plus" @click="addGuardian">{{ t('education.new_student.add_guardian') }}</AppButton>
+                <GuardianFields v-model="guardians" :errors="errors" />
             </template>
 
             <template v-else>

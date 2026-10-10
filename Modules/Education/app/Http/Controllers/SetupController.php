@@ -3,6 +3,8 @@
 namespace Modules\Education\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +34,7 @@ class SetupController extends Controller
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('education.view', $unit);
         $units = $this->unitIds($unit);
+        $rule = fn (string $key) => app(RuleResolver::class)->get("education.{$key}", app(RuleContextFactory::class)->forOrganization($company));
         $present = fn (string $kind, array $filters = []) => $this->structure->list($company, $kind, $filters)->map(fn ($record) => $this->presenter->structure($kind, $record))->values();
 
         return response()->json(['data' => [
@@ -52,11 +55,15 @@ class SetupController extends Controller
             'teachers' => Gate::allows('education.manage', $unit) ? $this->teachers->in($company, $units) : [],
             'hrm' => $this->teachers->available($company),
             'presets' => $this->presets->all(),
+            // Rules the screens explain (whether a list waits for approval, how long undo lasts, repeats allowed).
+            'rules' => ['promotion_approval' => (bool) $rule('promotion_approval'), 'promotion_undo_days' => (int) $rule('promotion_undo_days'), 'max_repeats' => (int) $rule('max_repeats')],
             'can' => [
                 'manage' => Gate::allows('education.manage', $unit),
                 'admit' => Gate::allows('education.admit', $unit),
                 'edit_students' => Gate::allows('education.edit_students', $unit),
                 'view_sensitive' => Gate::allows('education.view_sensitive', $unit),
+                'promote' => Gate::allows('education.promote', $unit),
+                'approve_promotion' => Gate::allows('education.approve_promotion', $unit),
             ],
         ]]);
     }

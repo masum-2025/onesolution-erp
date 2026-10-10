@@ -2939,12 +2939,32 @@ classes and sessions, Own fields (`education.manage`). Header "New" menu: New st
 - `GET education/setup` also gives batches and the own fields forms ask for (private ones only
   for people allowed to see them).
 
-Deferred to EDU-2b: admissions screens, promotion screens, importing students from a spreadsheet.
+### Screens (EDU-2b): admissions, promotion, import
+
+Menu "Admissions" (`education.admit`) and "Promotion" (`education.promote`; approvers open
+waiting lists from the overview tile). Header "New" menu: New application.
+
+- **Admissions**: status tabs with counts (`meta.counts`), search by number, applicant name or a
+  phone of the applicant or a guardian (`admissions?q=`, Bangla digits too; kept in
+  `edu_admissions.search_text`, written with every change, filled for old rows by the migration).
+  An application: next decisions with a note (not admitted / withdrawn asked twice), change while
+  undecided (guardians only by people who may see private details, so national ids are never
+  lost), **Admit** into a section with a seat (or later), then the student opens.
+- **Promotion**: a list per class (or section) from a session to the next of the same kind; per
+  student promote / repeat / leave / graduate (last class), next section and reason (needed to
+  leave or to repeat beyond `education.max_repeats`), or everyone into one section. Hand in:
+  applied at once, or with `education.promotion_approval` approved by someone else (never the
+  maker) or sent back with a note; undo within `education.promotion_undo_days`. Lists show who
+  made and approved them (`people`).
+- **Import** (`/education/import`, `education.admit`): place, a CSV read in the browser (never
+  stored; CRM's reader moved to `resources/js/lib/csv.js`), a sample file with the columns this
+  reader may use (private ones only with `education.view_sensitive`, own student fields by key),
+  every row checked by the server first, then the good rows admitted once.
+- `GET education/setup` also gives `can.promote`, `can.approve_promotion` and the promotion rules.
 
 ### Future expansion (Education)
 
-- EDU-2b admissions, promotions and import screens.
-  EDU-3 certificates and ID cards; EDU-4 course registration; then fees, exams, attendance.
+- EDU-3 certificates and ID cards; EDU-4 course registration; then fees, exams, attendance.
 - A new country, a new kind of institution, own terms: a preset file, lists, own fields and
   wording (LANG-1). No code change.
 

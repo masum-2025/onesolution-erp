@@ -39,5 +39,20 @@ export function educationApi(organizationId) {
         roster: (section) => api(`${base}/sections/${section}/students`),
         place: (enrollment, body) => api(`${base}/enrollments/${enrollment}/place`, { method: 'POST', body }),
         rolls: (section, body = {}) => api(`${base}/sections/${section}/rolls`, { method: 'POST', body }),
+
+        admissions: (query = {}) => api(`${base}/admissions`, { query }),
+        admission: (id) => api(`${base}/admissions/${id}`),
+        createAdmission: (body) => api(`${base}/admissions`, { method: 'POST', body }),
+        updateAdmission: (id, body) => api(`${base}/admissions/${id}`, { method: 'PATCH', body }),
+        admissionStep: (id, body) => api(`${base}/admissions/${id}/step`, { method: 'POST', body }),
+        admit: (id, body) => api(`${base}/admissions/${id}/admit`, { method: 'POST', body }),
+
+        promotions: (query = {}) => api(`${base}/promotions`, { query }),
+        promotion: (id) => api(`${base}/promotions/${id}`),
+        createPromotion: (body) => api(`${base}/promotions`, { method: 'POST', body }),
+        decide: (id, body) => api(`${base}/promotions/${id}/lines`, { method: 'POST', body }),
+        promotionStep: (id, step, body) => api(`${base}/promotions/${id}/${step}`, { method: 'POST', body }),
+
+        importStudents: (body) => api(`${base}/students/import`, { method: 'POST', body }),
     };
 }

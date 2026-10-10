@@ -124,46 +124,8 @@ export function fieldText(field, value, money) {
     return String(value);
 }
 
-/**
- * A small CSV reader (commas or semicolons, quotes, a byte order mark): the
- * first row is the headings, lower-cased; returns a list of {heading: value}.
- */
-export function readCsv(text) {
-    const clean = String(text ?? '').replace(/^﻿/, '');
-    const firstLine = clean.split(/\r?\n/, 1)[0] ?? '';
-    const delimiter = (firstLine.match(/;/g)?.length ?? 0) > (firstLine.match(/,/g)?.length ?? 0) ? ';' : ',';
-    const rows = [];
-    let row = [];
-    let cell = '';
-    let quoted = false;
-    for (let index = 0; index < clean.length; index++) {
-        const char = clean[index];
-        if (quoted) {
-            if (char === '"' && clean[index + 1] === '"') {
-                cell += '"';
-                index++;
-            } else if (char === '"') quoted = false;
-            else cell += char;
-        } else if (char === '"') quoted = true;
-        else if (char === delimiter) {
-            row.push(cell);
-            cell = '';
-        } else if (char === '\n' || char === '\r') {
-            if (char === '\r' && clean[index + 1] === '\n') index++;
-            row.push(cell);
-            rows.push(row);
-            row = [];
-            cell = '';
-        } else cell += char;
-    }
-    if (cell !== '' || row.length) {
-        row.push(cell);
-        rows.push(row);
-    }
-    const [head = [], ...body] = rows.filter((cells) => cells.some((value) => value.trim() !== ''));
-    const keys = head.map((name) => name.trim().toLowerCase().replace(/\s+/g, '_'));
-    return body.map((cells) => Object.fromEntries(keys.map((key, index) => [key, (cells[index] ?? '').trim()])));
-}
+/** Read with the shared CSV reader (kept here for the CRM screens that import it). */
+export { readCsv } from '@/lib/csv';
 
 /** Tone of a quote's status badge. */
 export function quoteTone(quote) {

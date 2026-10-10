@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+    ADMISSION_NEXT,
+    admissionTone,
     byLevel,
+    canAdmit,
+    decisionTotals,
+    emptyGuardian,
+    guardianToApi,
+    guardianToForm,
+    importColumns,
+    prepareImport,
+    promotionTone,
     fieldsToApi,
     fieldsToForm,
     fieldText,
@@ -15,6 +25,8 @@ import {
     suggestSessions,
 } from '../../Modules/Education/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
+import { readCsv } from '../../resources/js/lib/csv.js';
+import { readCsv as crmReadCsv } from '../../Modules/Crm/resources/js/lib.js';
 import en from '../../Modules/Education/resources/js/locales/en/education.json';
 import bn from '../../Modules/Education/resources/js/locales/bn/education.json';
 
@@ -26,7 +38,7 @@ describe('education screens', () => {
     it('registers its screens behind the education module', () => {
         const routes = moduleRoutes.filter((route) => route.meta.module === 'education');
         expect(routes.map((route) => route.name)).toEqual(
-            expect.arrayContaining(['education', 'education-students', 'education-student', 'education-sections', 'education-section', 'education-structure', 'education-fields']),
+            expect.arrayContaining(['education', 'education-students', 'education-student', 'education-sections', 'education-section', 'education-structure', 'education-fields', 'education-admissions', 'education-admission', 'education-promotions', 'education-promotion', 'education-import']),
         );
         expect(routes.every((route) => route.meta.ns.includes('education'))).toBe(true);
     });
@@ -128,5 +140,47 @@ describe('education screens', () => {
     it('makes a new op id each time', () => {
         expect(newOpId()).not.toBe(newOpId());
         expect(newOpId().length).toBeLessThanOrEqual(64);
+    });
+
+    it('follows the application decisions the server allows', () => {
+        expect(ADMISSION_NEXT.applied).toEqual(['test', 'offered', 'rejected', 'withdrawn']);
+        expect(ADMISSION_NEXT.offered).not.toContain('test');
+        expect(ADMISSION_NEXT.admitted).toBeUndefined();
+        expect(canAdmit('offered')).toBe(true);
+        expect(canAdmit('rejected')).toBe(false);
+        expect(admissionTone('rejected')).toBe('bad');
+        expect(promotionTone('pending_approval')).toBe('warn');
+        for (const status of ['applied', 'test', 'offered', 'admitted', 'rejected', 'withdrawn']) expect(en.admission_statuses[status]).toBeTruthy();
+        for (const status of ['draft', 'pending_approval', 'applied', 'undone', 'cancelled']) expect(en.promotion_statuses[status]).toBeTruthy();
+    });
+
+    it('counts the decisions of a promotion list', () => {
+        expect(decisionTotals([{ decision: 'promote' }, { decision: 'promote' }, { decision: 'leave' }, { decision: 'other' }])).toEqual({ promote: 2, repeat: 0, leave: 1, graduate: 0 });
+        expect(decisionTotals(null)).toEqual({ promote: 0, repeat: 0, leave: 0, graduate: 0 });
+    });
+
+    it('sends guardians the way the server takes them, national ids only when allowed', () => {
+        const fields = [{ key: 'income', type: 'number' }];
+        const guardian = { ...emptyGuardian('mother'), name: ' Rafia ', phone: '01911000000', national_id: '123', is_primary: true, extra: { income: '5000' } };
+        expect(guardianToApi(guardian, fields)).toEqual({ relation: 'mother', name: 'Rafia', phone: '01911000000', email: null, occupation: null, is_primary: true, can_pick_up: true, receives_notices: true, extra: { income: '5000' } });
+        expect(guardianToApi(guardian, fields, { sensitive: true, links: false })).toMatchObject({ national_id: '123' });
+        expect(guardianToApi(guardian, fields, { links: false })).not.toHaveProperty('can_pick_up');
+        expect(guardianToForm({ name: 'Rafiq', relation: 'father', extra: { income: 10 } }, fields)).toMatchObject({ name: 'Rafiq', relation: 'father', phone: '', extra: { income: 10 } });
+    });
+
+    it('reads a spreadsheet and keeps only the columns that may be imported', () => {
+        expect(crmReadCsv).toBe(readCsv);
+        const fields = [{ key: 'blood_group', is_sensitive: false }, { key: 'religion', is_sensitive: true }];
+        expect(importColumns(fields, false)).not.toContain('birth_registration_no');
+        expect(importColumns(fields, false)).toContain('blood_group');
+        expect(importColumns(fields, false)).not.toContain('religion');
+        expect(importColumns(fields, true)).toEqual(expect.arrayContaining(['date_of_birth', 'religion']));
+
+        const rows = readCsv('﻿Name;Guardian Phone;Blood_group;Hobby;Birth_registration_no\r\nRahim;01711000000;B+;chess;2014\r\nKarim;;;;\n');
+        const prepared = prepareImport(rows, importColumns(fields, false));
+        expect(prepared.hasName).toBe(true);
+        expect(prepared.unknown).toEqual(['hobby', 'birth_registration_no']);
+        expect(prepared.rows).toEqual([{ name: 'Rahim', guardian_phone: '01711000000', blood_group: 'B+' }, { name: 'Karim' }]);
+        expect(prepareImport(readCsv('student,class\nX,6'), ['name']).hasName).toBe(false);
     });
 });

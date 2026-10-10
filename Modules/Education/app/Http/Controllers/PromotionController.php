@@ -3,6 +3,7 @@
 namespace Modules\Education\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
@@ -146,6 +147,8 @@ class PromotionController extends Controller
             'approved_by' => $batch->approved_by,
             'applied_at' => $batch->applied_at?->toIso8601String(),
             'undo_until' => $batch->undo_until?->toDateString(),
+            // Names of the people who made, handed in and approved it (people of this workplace, shown to its staff).
+            'people' => (object) User::query()->whereKey(array_filter([$batch->created_by, $batch->submitted_by, $batch->approved_by]))->pluck('name', 'id')->all(),
             'version' => $batch->version,
         ];
     }

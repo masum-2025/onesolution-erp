@@ -145,3 +145,92 @@ export function stepOfError(keys, steps) {
 export function newOpId() {
     return globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
+
+/** Decisions an application can take next, as the server allows them (admitting is its own step). */
+export const ADMISSION_NEXT = {
+    applied: ['test', 'offered', 'rejected', 'withdrawn'],
+    test: ['offered', 'rejected', 'withdrawn'],
+    offered: ['rejected', 'withdrawn'],
+};
+
+/** An application still waiting for a decision can be admitted. */
+export function canAdmit(status) {
+    return ['applied', 'test', 'offered'].includes(status);
+}
+
+/** Status of an application -> badge tone. */
+export function admissionTone(status) {
+    return { applied: 'brand', test: 'warn', offered: 'ok', admitted: 'ok', rejected: 'bad', withdrawn: 'neutral' }[status] ?? 'neutral';
+}
+
+/** Status of a promotion list -> badge tone. */
+export function promotionTone(status) {
+    return { draft: 'neutral', pending_approval: 'warn', applied: 'ok', undone: 'neutral', cancelled: 'outline' }[status] ?? 'neutral';
+}
+
+/** How many students of a promotion list get each decision. */
+export function decisionTotals(lines) {
+    const totals = { promote: 0, repeat: 0, leave: 0, graduate: 0 };
+    for (const line of lines ?? []) if (line.decision in totals) totals[line.decision]++;
+    return totals;
+}
+
+/** Spreadsheet columns the importer knows (the same list as the server's). */
+export const IMPORT_COLUMNS = [
+    'name', 'name_local', 'gender', 'date_of_birth', 'birth_registration_no', 'phone', 'email', 'admitted_on', 'section',
+    'guardian_name', 'guardian_phone', 'guardian_relation', 'guardian2_name', 'guardian2_phone', 'guardian2_relation',
+];
+
+/** Columns only people allowed to see private details may bring. */
+export const PRIVATE_COLUMNS = ['date_of_birth', 'birth_registration_no'];
+
+/**
+ * The columns a reader may import: the known ones (private ones only when
+ * allowed) and the institution's own student fields by their key.
+ */
+export function importColumns(fields, sensitive) {
+    const known = IMPORT_COLUMNS.filter((key) => sensitive || !PRIVATE_COLUMNS.includes(key));
+    return [...known, ...fields.filter((field) => sensitive || !field.is_sensitive).map((field) => field.key).filter((key) => !known.includes(key))];
+}
+
+/**
+ * Rows read from a file, kept to the columns that may be imported (empty
+ * cells left out), with the headings that were not used, so the screen can
+ * say which columns it ignores.
+ */
+export function prepareImport(rows, columns) {
+    const allowed = new Set(columns);
+    const headings = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+    const unknown = headings.filter((heading) => !allowed.has(heading));
+    const kept = rows.map((row) => Object.fromEntries(Object.entries(row).filter(([key, value]) => allowed.has(key) && value !== '')));
+    return { rows: kept, unknown, hasName: headings.includes('name') };
+}
+
+/** A guardian form, with the student-link switches on. */
+export function emptyGuardian(relation = 'father') {
+    return { relation, name: '', phone: '', email: '', occupation: '', national_id: '', is_primary: false, can_pick_up: true, receives_notices: true, extra: {} };
+}
+
+/**
+ * A guardian form to the API: trimmed, empty as null, the national id only
+ * from people allowed to send it, own fields as API values.
+ */
+export function guardianToApi(guardian, fields, { sensitive = false, links = true } = {}) {
+    const clean = (value) => String(value ?? '').trim() || null;
+    return {
+        relation: guardian.relation,
+        name: clean(guardian.name),
+        phone: clean(guardian.phone),
+        email: clean(guardian.email),
+        occupation: clean(guardian.occupation),
+        ...(sensitive ? { national_id: clean(guardian.national_id) } : {}),
+        is_primary: Boolean(guardian.is_primary),
+        ...(links ? { can_pick_up: Boolean(guardian.can_pick_up), receives_notices: Boolean(guardian.receives_notices) } : {}),
+        extra: fieldsToApi(fields, guardian.extra),
+    };
+}
+
+/** A guardian kept on an application back into a form. */
+export function guardianToForm(guardian, fields) {
+    return { ...emptyGuardian(guardian.relation ?? 'guardian'), ...Object.fromEntries(['name', 'phone', 'email', 'occupation', 'national_id'].map((key) => [key, guardian[key] ?? ''])), is_primary: Boolean(guardian.is_primary), extra: fieldsToForm(fields, guardian.extra) };
+}

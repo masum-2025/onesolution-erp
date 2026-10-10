@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ChevronLeft, ChevronRight, GraduationCap, Search, UserPlus, X } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, FileUp, GraduationCap, Search, UserPlus, X } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -133,6 +133,7 @@ function rowPlace(student) {
     <div>
         <PageHeader :title="t('education.students.title')" :description="t('education.students.text')">
             <template #actions>
+                <AppButton v-if="setup.can('admit')" :icon="FileUp" :to="{ name: 'education-import' }" :disabled="!setup.ready.value">{{ t('education.students_import') }}</AppButton>
                 <AppButton v-if="setup.can('admit')" variant="primary" :icon="UserPlus" :disabled="!setup.ready.value" @click="adding = true">{{ t('education.students.new') }}</AppButton>
             </template>
         </PageHeader>

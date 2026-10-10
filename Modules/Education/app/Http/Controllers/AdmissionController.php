@@ -39,17 +39,24 @@ class AdmissionController extends Controller
             'session_id' => ['nullable', 'string', 'size:26'], 'q' => ['nullable', 'string', 'max:100'], 'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
-        $page = $this->education->query(Admission::class, $company)->whereIn('unit_id', $this->unitIds($unit))
-            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+        $filtered = fn () => $this->education->query(Admission::class, $company)->whereIn('unit_id', $this->unitIds($unit))
             ->when($filters['program_id'] ?? null, fn ($query, $program) => $query->where('program_id', $program))
             ->when($filters['session_id'] ?? null, fn ($query, $session) => $query->where('session_id', $session))
-            ->when($filters['q'] ?? null, fn ($query, $term) => $query->where('number', 'like', "%{$term}%"))
+            // By number, the applicant's name, or a phone of the applicant or a guardian.
+            ->when($filters['q'] ?? null, function ($query, $term) {
+                $digits = Admission::digits($term);
+                $query->where(fn ($inner) => $inner->where('number', 'like', '%'.$term.'%')->orWhere('search_text', 'like', '%'.mb_strtolower($term).'%')
+                    ->when(strlen($digits) >= 5, fn ($or) => $or->orWhere('search_text', 'like', "%{$digits}%")));
+            });
+        $page = $filtered()->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->orderByDesc('created_at')->paginate(PerPage::from($request, 50));
+        // How many in each status with the other filters, for the status tabs.
+        $counts = $filtered()->get(['status'])->countBy('status')->all();
         $sensitive = Gate::allows('education.view_sensitive', $unit);
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Admission $admission) => $this->presenter->admission($company, $admission, $sensitive))->values(),
-            'meta' => ['total' => $page->total(), 'page' => $page->currentPage(), 'last_page' => $page->lastPage()],
+            'meta' => ['total' => $page->total(), 'page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'counts' => (object) $counts],
         ]);
     }
 
