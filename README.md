@@ -3078,7 +3078,23 @@ Menu "Course registration" (`.view`): **Offered subjects** (`/course-registratio
   on, subjects, rules, window, what the user can do), `GET students?q=` and `GET sections?session_id=`;
   Education data reaches them only through `AcademicDirectory`.
 
-Next: EDU-4c the student's portal screen.
+### The student's portal screen (EDU-4c)
+
+`/portal/course-registration/{record}` (page `PortalRegistrationPage.vue`), opened from the
+student's record in the portal (manifest `portal_pages`; `{record}` in a portal page route now
+becomes the member's link id, so a parent with two children opens the right one).
+
+- **The student** (portal link "self"): credits against the rules, their subjects (place on a waiting
+  list, drop, or withdraw with a reason after add/drop), hand in (with how many credits are still
+  missing), and the subjects they can take. Before the tap each offered subject says what happens
+  (add, join the waiting list) or why not (already chosen, complete CSE101 first, full, over the
+  credit limit): `GET /api/portal/course-registration` returns `reason`, `waitlist`, `can.add`,
+  `can.drop`, `own` and the waiting-list `position`.
+- When nothing can change, one line says why: self-registration off, no dates, opens on…, closed,
+  only dropping until…
+- **A parent** (any other relation) opens it with `?record=` and only looks (`own: false`); every
+  change stays the student's own (`/items`, `/drop`, `/submit` use the "self" link only).
+- The seat-offered mail/SMS now links to `/portal/course-registration`.
 
 ## Browser app (frontend foundation)
 

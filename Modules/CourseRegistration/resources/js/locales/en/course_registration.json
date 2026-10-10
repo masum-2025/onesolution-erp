@@ -215,5 +215,44 @@
         },
         "no_subjects": "No subjects yet.",
         "outcome": "Outcome"
+    },
+    "portal": {
+        "title": "My course registration",
+        "title_of": "Course registration of {name}",
+        "not_found": "No student record is linked to your login for course registration. Ask the office to link it.",
+        "block": {
+            "look_only": "You can see this registration; only the student can change it.",
+            "self_off": "Your institution registers subjects through the office. Contact the office to change your subjects.",
+            "none": "Registration dates for this session are not set yet. Check back later.",
+            "upcoming": "Registration opens on {date}. You can choose subjects from then.",
+            "closed": "Registration is closed for this session. Contact the office to change your subjects.",
+            "add_drop": "New subjects are closed; you can still drop until {date}."
+        },
+        "mine": "My subjects",
+        "none_yet": "You have not chosen any subjects yet. Pick them from the list below.",
+        "none_yet_other": "No subjects chosen yet.",
+        "place": "No. {place} on the waiting list",
+        "offered": "Subjects you can take",
+        "offered_text": "Offered this session for your class and campus.",
+        "none_offered": "No subjects are offered to your class this session yet.",
+        "all_chosen": "You have chosen every subject offered to you.",
+        "add": "Add",
+        "join_waitlist": "Join waiting list",
+        "why": {
+            "taken": "Already chosen",
+            "prerequisites": "Complete {codes} first",
+            "full": "Full",
+            "credits": "More than your credit limit"
+        },
+        "added": "{subject} added.",
+        "waitlisted": "{subject} is full: you are no. {place} on the waiting list. We will tell you when a seat is free.",
+        "dropped": "{subject} dropped.",
+        "submit": "Hand in",
+        "submit_text": "When your subjects are ready, hand them in.",
+        "submit_more": "Choose {count} more credits to hand in.",
+        "submitted": "Handed in.",
+        "waiting": "Handed in on {date}. Waiting for approval.",
+        "approved": "Approved on {date}.",
+        "changed_after": "Changing a subject now needs approval again."
     }
 }

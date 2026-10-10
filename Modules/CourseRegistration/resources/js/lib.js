@@ -83,3 +83,24 @@ export function byLevel(offerings, rank = () => 0) {
 export function newOpId() {
     return globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
+
+/**
+ * Why a student cannot change their registration in the portal now (null:
+ * they can): a parent only looks, self-registration is off, no window, not
+ * open yet, or closed (dropping may still be allowed).
+ */
+export function portalBlock(view) {
+    if (!view) return null;
+    if (!view.own) return 'look_only';
+    if (view.can?.add) return null;
+    if (!view.rules?.self_registration) return 'self_off';
+    const state = windowState(view.window, view.today);
+    return state === 'open' ? 'closed' : state;
+}
+
+/** What tapping an offered subject does in the portal: add, join the waiting list, or nothing (with why). */
+export function offeringAction(offering, canAdd) {
+    if (offering.reason) return { kind: 'blocked', reason: offering.reason };
+    if (!canAdd) return { kind: 'blocked', reason: null };
+    return { kind: offering.waitlist ? 'waitlist' : 'add', reason: null };
+}

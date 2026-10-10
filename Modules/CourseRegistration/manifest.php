@@ -121,8 +121,12 @@ return [
             'channels' => ['mail', 'sms'],
             'placeholders' => ['product', 'organization', 'subject', 'session', 'link'],
             'audience' => 'person',
-            'path' => '/portal',
+            'path' => '/portal/course-registration',
         ],
+    ],
+    // The student's own registration (and a parent's view of it) from their record in the portal.
+    'portal_pages' => [
+        ['subject' => 'education.student', 'label' => 'course_registration::module.portal_page', 'route' => '/portal/course-registration/{record}'],
     ],
     'is_core' => false,
     'requires_consent' => false,

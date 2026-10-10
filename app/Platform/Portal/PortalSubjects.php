@@ -76,16 +76,18 @@ class PortalSubjects
     /**
      * Portal screens other modules offer for a record kind (an employee's
      * payslips, their attendance), from modules on in this organization.
+     * "{record}" in a route becomes the member's record (link) id, so a
+     * parent with two children opens the page of the right one.
      *
      * @return list<array{label: string, to: string}>
      */
-    public function pages(string $key, Organization $organization): array
+    public function pages(string $key, Organization $organization, ?string $record = null): array
     {
         $pages = [];
         foreach ($this->modules->all() as $module) {
             foreach ($module->portalPages as $page) {
                 if ($page['subject'] === $key && $this->resolver->resolve($module->key, $organization)->enabled) {
-                    $pages[] = ['label' => __($page['label']), 'to' => $page['route']];
+                    $pages[] = ['label' => __($page['label']), 'to' => str_replace('{record}', (string) $record, $page['route'])];
                 }
             }
         }

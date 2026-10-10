@@ -260,12 +260,40 @@ it('lets a student register themselves in the portal, only in the window and whe
     $after = $this->asToken($rahimToken)->postJson('/api/portal/course-registration/items', ['offering_id' => $cse['id'], 'op_id' => 'tap-1'])->assertOk()->json('data');
     $this->asToken($rahimToken)->postJson('/api/portal/course-registration/items', ['offering_id' => $cse['id'], 'op_id' => 'tap-1'])->assertOk();
     expect($after['registration']['items'])->toHaveCount(1)->and($after['registration']['items'][0]['source'])->toBe('student');
+    expect($after)->toMatchArray(['own' => true, 'can' => ['add' => true, 'drop' => true]])
+        ->and(($this->byCode)($after['offerings'], 'CSE101')['reason'])->toBe('taken')
+        ->and(($this->byCode)($after['offerings'], 'MAT101'))->toMatchArray(['reason' => null, 'waitlist' => false]);
+
+    // The screen says before the tap why a subject cannot be chosen, and where one waits.
+    $karimRegistration = ($this->open)($karim)->json('data');
+    $english = ($this->as)()->postJson(($this->api)('offerings'), ['session_id' => $this->spring['id'], 'subject_id' => $this->subject['ENG101']['id'], 'group_name' => 'B', 'capacity' => 1, 'unit_id' => $this->w->b1->id])->assertCreated()->json('data');
+    ($this->add)($karimRegistration, $english)->assertCreated();
+    $groupB = fn (array $view) => collect($view['offerings'])->firstWhere('id', $english['id']);
+    expect($groupB($this->asToken($rahimToken)->getJson('/api/portal/course-registration')->json('data')))->toMatchArray(['reason' => null, 'waitlist' => true]);
+    $waiting = $this->asToken($rahimToken)->postJson('/api/portal/course-registration/items', ['offering_id' => $english['id']])->assertOk()->json('data');
+    expect(collect($waiting['registration']['items'])->firstWhere('offering_id', $english['id']))->toMatchArray(['status' => 'waitlisted', 'position' => 1]);
+    orgRule($this->w->c1, 'course_registration.waitlist', false);
+    orgRule($this->w->c1, 'course_registration.max_credits', 3);
+    orgRule($this->w->c1, 'course_registration.overload_credits', 0);
+    $limited = $this->asToken($rahimToken)->getJson('/api/portal/course-registration')->json('data');
+    expect($groupB($limited)['reason'])->toBe('taken')->and(($this->byCode)($limited['offerings'], 'MAT101')['reason'])->toBe('credits');
+    orgRule($this->w->c1, 'course_registration.waitlist', true);
+    orgRule($this->w->c1, 'course_registration.max_credits', 24);
     $this->asToken($rahimToken)->postJson('/api/portal/course-registration/submit')->assertOk()->assertJsonPath('data.registration.status', 'submitted');
 
-    // A guardian does not register for the student; nobody touches another student's subjects.
+    // A guardian looks at their child's registration from the child's record, and changes nothing.
     $this->asToken($parentToken)->getJson('/api/portal/course-registration')->assertNotFound();
-    $karimRegistration = ($this->open)($karim)->json('data');
-    $karimItem = ($this->add)($karimRegistration, $cse)->json('data.items.0');
+    $karimLink = PortalLink::query()->where('subject_id', $karim['id'])->sole();
+    $rahimLink = PortalLink::query()->where('subject_id', $rahim['id'])->sole();
+    $look = $this->asToken($parentToken)->getJson("/api/portal/course-registration?record={$karimLink->id}")->assertOk()->json('data');
+    expect($look)->toMatchArray(['own' => false, 'can' => ['add' => false, 'drop' => false]])
+        ->and($look['student']['name'])->toBe('Karim')->and($look['registration']['items'])->toHaveCount(1);
+    $this->asToken($parentToken)->getJson("/api/portal/course-registration?record={$rahimLink->id}")->assertNotFound();
+    $this->asToken($parentToken)->postJson('/api/portal/course-registration/items', ['offering_id' => $cse['id']])->assertNotFound();
+    // The record page leads to the registration of that record.
+    $this->asToken($parentToken)->getJson("/api/portal/records/{$karimLink->id}")->assertOk()
+        ->assertJsonFragment(['to' => "/portal/course-registration/{$karimLink->id}"]);
+    $karimItem = ($this->add)($karimRegistration, $cse)->json('data.items.1');
     $this->asToken($rahimToken)->postJson("/api/portal/course-registration/items/{$karimItem['id']}/drop")->assertNotFound();
     // Staff screens stay closed to portal members.
     $this->asToken($rahimToken)->getJson(($this->api)("registrations?session_id={$this->spring['id']}"))->assertForbidden();

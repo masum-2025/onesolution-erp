@@ -32,3 +32,15 @@ export function registrationApi(organizationId) {
         registerSection: (sectionId) => api(`${base}/sections/${sectionId}/register`, { method: 'POST', body: {} }),
     };
 }
+
+/**
+ * A student's own registration in the client's portal (B2B2C). With a
+ * record (their portal link) a parent looks at their child's; changes are
+ * always the signed-in student's own.
+ */
+export const portalRegistrationApi = {
+    show: (record) => api('/api/portal/course-registration', { query: record ? { record } : {} }),
+    add: (body) => api('/api/portal/course-registration/items', { method: 'POST', body }),
+    drop: (itemId, body = {}) => api(`/api/portal/course-registration/items/${itemId}/drop`, { method: 'POST', body }),
+    submit: () => api('/api/portal/course-registration/submit', { method: 'POST', body: {} }),
+};

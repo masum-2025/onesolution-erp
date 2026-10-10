@@ -425,6 +425,18 @@ class Registrations
         }
     }
 
+    /** Whether a student may change their registration today (to add, or to drop when $forDrop). */
+    public function windowOpen(Organization $company, string $sessionId, bool $forDrop = false): bool
+    {
+        try {
+            $this->assertWindowOpen($company, $sessionId, $forDrop);
+
+            return true;
+        } catch (RegistrationException) {
+            return false;
+        }
+    }
+
     private function locked(Organization $company, Registration $registration, ?int $baseVersion = null): Registration
     {
         /** @var Registration $fresh */
