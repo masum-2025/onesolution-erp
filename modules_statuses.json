@@ -20,5 +20,6 @@
     "ClientPortal": true,
     "OnlinePayments": true,
     "Pos": true,
-    "Education": true
+    "Education": true,
+    "CourseRegistration": true
 }

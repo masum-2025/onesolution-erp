@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/course-registration",
+    "description": "Subjects offered each session and students registering for them.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\CourseRegistration\\": "app/"
+        }
+    }
+}

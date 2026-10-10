@@ -42,7 +42,7 @@ return [
     // (Education > presets); the school chart of accounts fits them (fees, salaries).
     [
         'key' => 'college',
-        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
@@ -51,7 +51,7 @@ return [
     ],
     [
         'key' => 'university',
-        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],

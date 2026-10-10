@@ -3019,9 +3019,45 @@ waiting lists from the overview tile). Header "New" menu: New application.
 
 ### Future expansion (Education)
 
-- EDU-4 course registration; then fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.
+- Fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.
 - A new country, a new kind of institution, own terms: a preset file, lists, own fields and
   wording (LANG-1). No code change.
+- Other modules read Education through `Modules\Education\Directory\AcademicDirectory`
+  (students, enrollments, sessions, levels, subjects, the curriculum in force, prerequisites),
+  never its tables.
+
+## Course registration module (EDU-4a backend)
+
+Code: `Modules/CourseRegistration` (module `course_registration`, requires `education`, sectors
+university, college, school, madrasa). Tables in the client's database: `crs_windows`,
+`crs_offerings`, `crs_registrations`, `crs_registration_items` (never deleted). Credits are
+hundredths (300 = 3 credits), like Education's subjects.
+
+- **Offerings** (`/course-registration/offerings`, `.manage`): a subject in a session at a campus,
+  in a group, with seats, credits (the subject's by default) and a teacher (HRM). A level's
+  curriculum is offered at once (`offerings/from-curriculum`); nothing twice; seats never below
+  the students holding one; cancelled only when nobody holds or waits for a seat.
+- **Window** per session (`PUT sessions/{session}/window`): opens, closes, add/drop until.
+- **Registrations** (`.register`): one per student and session, at their campus. A subject is added
+  when offered in their session at their campus (or the institution), open, not already taken,
+  prerequisites completed (`prerequisites_enforced`), credits within `max_credits` +
+  `overload_credits`. A full group puts them on the waiting list (`waitlist`); a freed seat goes to
+  the first who fits (event `SeatOffered`, mail/SMS `course_registration.seat_offered`). Dropped
+  until the add/drop date, withdrawn after it with a reason. Hand in: at least `min_credits`;
+  approved at once unless `approval_required` (an overload always needs approval). **Approve /
+  send back** (`.approve`): never by the student, nor by whoever handed it in. A change after
+  approval asks for it again. **A whole section** for its compulsory subjects
+  (`sections/{section}/register`). **Outcomes** (`.record_outcome`): completed, failed,
+  incomplete; prerequisites check them.
+- **Teachers** (`.view` only) see the offerings they teach (their login linked to an HRM employee).
+- **Portal** (`/api/portal/course-registration`): the student linked as "self" (never a guardian)
+  registers themselves, only with `self_registration` and while the window is open; the same
+  checks; 20 writes a minute.
+- Limits: staff registration writes 120 a minute per person; offerings, window, approval: the
+  sensitive limit. Events `CourseRegistered`, `CourseDropped`, `RegistrationApproved`,
+  `SeatOffered` (ids only) for fees and exams. Client export includes all four tables.
+- A new country or institution: the rules (credits, approval, prerequisites, waiting list,
+  self-registration). No code change. Next: EDU-4b screens, EDU-4c the student's portal screen.
 
 ## Browser app (frontend foundation)
 

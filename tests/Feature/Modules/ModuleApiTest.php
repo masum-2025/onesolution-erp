@@ -16,7 +16,7 @@ it('lists every module with its state and where it comes from', function () {
     $response = $this->asToken($this->token)->getJson("/api/organizations/{$this->w->b1->id}/modules")->assertOk();
     $crm = collect($response->json('data'))->firstWhere('key', 'crm');
 
-    expect($response->json('data'))->toHaveCount(22)
+    expect($response->json('data'))->toHaveCount(23)
         ->and($crm['enabled'])->toBeTrue()
         ->and($crm['source'])->toBe('inherited')
         ->and($crm['source_organization'])->toBe(['id' => $this->w->c1->id, 'name' => 'C1'])

@@ -86,18 +86,19 @@ return [
         'permissions' => [
             '*.view', 'hrm.manage', 'attendance.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
             'education.manage', 'education.view_sensitive', 'education.approve_promotion', 'education.issue_documents',
+            'course_registration.manage', 'course_registration.approve', 'course_registration.record_outcome',
         ],
     ],
     [
         'key' => 'teacher',
         'sector' => 'school',
         // Students of their own sections only (rule education.teacher_scope).
-        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view'],
+        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view'],
     ],
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register'],
     ],
 
     // ── University ───────────────────────────────────────────────────────
@@ -107,6 +108,7 @@ return [
         'permissions' => [
             '*.view', 'members.manage', 'education.manage', 'education.admit', 'education.edit_students',
             'education.view_sensitive', 'education.promote', 'education.issue_documents', 'crm.manage',
+            'course_registration.manage', 'course_registration.register', 'course_registration.approve', 'course_registration.record_outcome',
         ],
     ],
 

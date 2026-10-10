@@ -1,0 +1,11 @@
+{
+    "name": "CourseRegistration",
+    "alias": "course_registration",
+    "description": "Subjects offered each session and students registering for them.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\CourseRegistration\\Providers\\CourseRegistrationServiceProvider"
+    ],
+    "files": []
+}
