@@ -41,12 +41,12 @@ return [
     [
         'key' => 'accountant',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'accounting.reconcile', 'payroll.view', 'payroll.run', 'custom_reports.view'],
+        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'accounting.reconcile', 'payroll.view', 'payroll.run', 'custom_reports.view', 'education_fees.view', 'education_fees.bill', 'education_fees.collect'],
     ],
     [
         'key' => 'finance_approver',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.approve', 'accounting.close', 'payroll.view', 'payroll.approve', 'inventory.view', 'inventory.approve', 'rules.approve', 'custom_reports.view'],
+        'permissions' => ['accounting.view', 'accounting.approve', 'accounting.close', 'payroll.view', 'payroll.approve', 'inventory.view', 'inventory.approve', 'rules.approve', 'custom_reports.view', 'education_fees.view', 'education_fees.approve', 'education_fees.void'],
     ],
     [
         'key' => 'hr_officer',
@@ -87,6 +87,7 @@ return [
             '*.view', 'hrm.manage', 'attendance.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
             'education.manage', 'education.view_sensitive', 'education.approve_promotion', 'education.issue_documents',
             'course_registration.manage', 'course_registration.approve', 'course_registration.record_outcome',
+            'education_fees.configure', 'education_fees.approve',
         ],
     ],
     [
@@ -98,7 +99,7 @@ return [
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect'],
     ],
 
     // ── University ───────────────────────────────────────────────────────
@@ -109,6 +110,7 @@ return [
             '*.view', 'members.manage', 'education.manage', 'education.admit', 'education.edit_students',
             'education.view_sensitive', 'education.promote', 'education.issue_documents', 'crm.manage',
             'course_registration.manage', 'course_registration.register', 'course_registration.approve', 'course_registration.record_outcome',
+            'education_fees.configure', 'education_fees.bill', 'education_fees.concede',
         ],
     ],
 

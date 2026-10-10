@@ -22,7 +22,7 @@ function manifest(string $key, array $overrides = []): array
 
 it('loads every installed module from its manifest', function () {
     expect(app(ModuleRegistry::class)->keys())->toEqualCanonicalizing([
-        'hrm', 'attendance', 'payroll', 'accounting', 'inventory', 'pos', 'crm', 'factory_erp', 'education', 'course_registration',
+        'hrm', 'attendance', 'payroll', 'accounting', 'inventory', 'pos', 'crm', 'factory_erp', 'education', 'course_registration', 'education_fees',
         'offline_mode', 'multi_currency', 'multi_language', 'api_integration', 'external_integrations',
         'document_ai', 'ai_assistant', 'energy_monitoring', 'carbon_management', 'advanced_audit', 'custom_reports', 'client_portal', 'online_payments',
     ]);

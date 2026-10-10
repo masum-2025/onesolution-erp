@@ -29,7 +29,7 @@ return [
     ],
     [
         'key' => 'school',
-        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_fees', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             // School days start early and buses run late: a short grace period.
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
@@ -42,7 +42,7 @@ return [
     // (Education > presets); the school chart of accounts fits them (fees, salaries).
     [
         'key' => 'college',
-        'modules' => ['education', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_fees', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
@@ -51,7 +51,7 @@ return [
     ],
     [
         'key' => 'university',
-        'modules' => ['education', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_fees', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
@@ -62,7 +62,7 @@ return [
     ],
     [
         'key' => 'madrasa',
-        'modules' => ['education', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_fees', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
@@ -71,7 +71,7 @@ return [
     ],
     [
         'key' => 'coaching',
-        'modules' => ['education', 'hrm', 'attendance', 'accounting'],
+        'modules' => ['education', 'education_fees', 'hrm', 'attendance', 'accounting'],
         'rules' => [
             ['key' => 'accounting.chart_template', 'value' => 'school'],
             ['key' => 'education.teacher_scope', 'value' => 'all'],

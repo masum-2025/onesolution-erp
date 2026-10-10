@@ -21,5 +21,6 @@
     "OnlinePayments": true,
     "Pos": true,
     "Education": true,
-    "CourseRegistration": true
+    "CourseRegistration": true,
+    "EducationFees": true
 }

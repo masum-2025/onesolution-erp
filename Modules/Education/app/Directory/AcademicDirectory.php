@@ -15,6 +15,7 @@ use Modules\Education\Models\Program;
 use Modules\Education\Models\Section;
 use Modules\Education\Models\Session;
 use Modules\Education\Models\Student;
+use Modules\Education\Models\StudentGuardian;
 use Modules\Education\Models\Subject;
 use Modules\Education\Services\Education;
 
@@ -45,7 +46,7 @@ class AcademicDirectory
 
     /**
      * @param  list<string>  $ids
-     * @return array<string, array<string, mixed>>  By id; unknown ids are left out.
+     * @return array<string, array<string, mixed>> By id; unknown ids are left out.
      */
     public function students(Organization $company, array $ids): array
     {
@@ -248,6 +249,65 @@ class AcademicDirectory
         return $sections->map(fn (Section $section) => [...$section->only(['id', 'unit_id', 'session_id', 'level_id', 'name']), 'students' => (int) ($counts[$section->getKey()] ?? 0)])->values()->all();
     }
 
+    /**
+     * Students studying now in a session at the given campuses (narrowed to
+     * a class or a section), each with where they study, by code.
+     *
+     * @param  list<string>  $unitIds
+     * @return list<array{student: array<string, mixed>, enrollment: array<string, mixed>}>
+     */
+    public function enrolledStudents(Organization $company, string $sessionId, array $unitIds, ?string $levelId = null, ?string $sectionId = null): array
+    {
+        $enrollments = $this->education->query(Enrollment::class, $company)->where('session_id', $sessionId)->where('status', 'active')->whereIn('unit_id', $unitIds)
+            ->when($levelId !== null, fn ($query) => $query->where('level_id', $levelId))
+            ->when($sectionId !== null, fn ($query) => $query->where('section_id', $sectionId))
+            ->get();
+        $students = $this->students($company, $enrollments->pluck('student_id')->unique()->values()->all());
+
+        return $enrollments->filter(fn (Enrollment $enrollment) => isset($students[$enrollment->student_id]))
+            ->map(fn (Enrollment $enrollment) => [
+                'student' => $students[$enrollment->student_id],
+                'enrollment' => $enrollment->only(['id', 'unit_id', 'session_id', 'level_id', 'section_id', 'status']),
+            ])->sortBy(fn (array $row) => $row['student']['code'])->values()->all();
+    }
+
+    /**
+     * Each student's place among the brothers and sisters studying here
+     * (students sharing a guardian, active or suspended), the first admitted
+     * first: 1 for the eldest, 2 for the next… A student with no sibling here is 1.
+     *
+     * @param  list<string>  $studentIds
+     * @return array<string, int>
+     */
+    public function siblingPlaces(Organization $company, array $studentIds): array
+    {
+        if ($studentIds === []) {
+            return [];
+        }
+        $links = $this->education->query(StudentGuardian::class, $company);
+        $guardians = (clone $links)->whereIn('student_id', $studentIds)->get(['student_id', 'guardian_id']);
+        $family = (clone $links)->whereIn('guardian_id', $guardians->pluck('guardian_id')->unique())->get(['student_id', 'guardian_id']);
+        $current = $this->education->query(Student::class, $company)->whereKey($family->pluck('student_id')->unique())->whereIn('status', ['active', 'suspended'])
+            ->get(['id', 'code', 'admitted_on'])->keyBy('id');
+        $order = fn (string $id) => [$current[$id]->admitted_on?->toDateString() ?? '9999-12-31', $current[$id]->code];
+
+        $places = [];
+        foreach ($studentIds as $studentId) {
+            $mine = $guardians->where('student_id', $studentId)->pluck('guardian_id');
+            $siblings = $family->whereIn('guardian_id', $mine)->pluck('student_id')->push($studentId)->unique()
+                ->filter(fn (string $id) => isset($current[$id]) || $id === $studentId)->values();
+            if (! isset($current[$studentId])) {
+                $places[$studentId] = 1;
+
+                continue;
+            }
+            $sorted = $siblings->filter(fn (string $id) => isset($current[$id]))->sortBy($order)->values();
+            $places[$studentId] = $sorted->search($studentId) + 1;
+        }
+
+        return $places;
+    }
+
     /** @return array<string, mixed>|null */
     public function program(Organization $company, string $id): ?array
     {
@@ -261,7 +321,7 @@ class AcademicDirectory
     {
         return [
             'id' => $student->getKey(), 'unit_id' => $student->unit_id, 'code' => $student->code, 'name' => $student->name,
-            'name_local' => $student->name_local, 'program_id' => $student->program_id, 'batch_id' => $student->batch_id,
+            'name_local' => $student->name_local, 'program_id' => $student->program_id, 'batch_id' => $student->batch_id, 'category_id' => $student->category_id,
             'status' => $student->status, 'user_id' => $student->user_id,
         ];
     }

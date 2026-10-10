@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/education-fees",
+    "description": "Student fees: heads, structures, discounts, billing and late fines.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\EducationFees\\": "app/"
+        }
+    }
+}

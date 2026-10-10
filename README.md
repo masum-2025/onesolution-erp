@@ -3096,6 +3096,50 @@ becomes the member's link id, so a parent with two children opens the right one)
   change stays the student's own (`/items`, `/drop`, `/submit` use the "self" link only).
 - The seat-offered mail/SMS now links to `/portal/course-registration`.
 
+## Student fees module (FEE-1 backend)
+
+Code: `Modules/EducationFees` (module `education_fees`, requires `education`; sectors school,
+college, university, madrasa, coaching; on in their sector packages and the starter plan). Tables
+in the client's database: `fee_heads`, `fee_structures`, `fee_structure_lines`, `fee_concessions`,
+`fee_runs`, `fee_bills`, `fee_bill_lines`, `fee_fines`, `fee_sequences`. Money is integer minor
+units in the institution's currency; percents are basis points.
+
+- **Heads** (`/fees/heads`, `.configure`): code, name per language, how often (monthly, session,
+  admission, per_credit, other), the income posting key (manifest `ledger_accounts`; school chart
+  4110–4140, general 4200/4900), optional sales tax code, sibling discount and late fines on/off.
+  A head used in a structure or bill keeps its frequency.
+- **Structures** (`/fees/structures`): amounts per head for a session, narrowed by campus,
+  programme, class and student category; draft -> active -> archived; one active structure per
+  exact narrowing. For each head the most specific fitting structure wins (class > category >
+  programme > campus). A monthly line may name the months it is billed in.
+- **Concessions** (`/fees/concessions`, `.concede`; `.approve` decides): percent or fixed, one head
+  or all, with a reason and dates. Above rule `concession_approval_above_percent` (default 0: every
+  one; empty: never), and any fixed amount, another person approves. Ended, never edited.
+- **Runs** (`/fees/runs`, `.bill`): monthly (`period`), session, or other (chosen "other" heads) for
+  the campus in the address, a class or a section; draft bills -> refresh -> final (numbered by rule
+  `bill_number_format`, open; nothing owed = paid) or cancelled. One bill per student and key
+  (`monthly:2026-03`, `session:<id>`, `admission`, `other:<run>`); a cancelled bill frees its key.
+  Due date of a month: rule `due_day`. Discounts: concessions of the issue day (percent ones add up,
+  fixed ones after, line by line) plus rule `sibling_discount_percent` for the second and later
+  siblings (students sharing a guardian, by admission date). Tax only for heads with a tax code
+  while Accounting is on (rule `fees_include_tax`).
+- **Admission**: listener on Education's `StudentAdmitted` bills the "admission" heads at once (rule
+  `bill_on_admission`).
+- **Bills** (`/fees/bills`, `/fees/students/{id}`): filters by student, run, status, overdue; a
+  student's bills with what is owed and overdue. Cancel (`.bill`) only with nothing paid and a reason.
+- **Late fines** (rule `late_fine`, off by default: once / per_day / per_month after grace days, up
+  to a most): `education-fees:apply-fines` daily 02:50 adds rows to `fee_fines` (append-only) on
+  open bills with a head that takes fines; `.approve` waives with a reason (negative row, no more
+  fines on that bill).
+- **Auto billing** (rule `auto_monthly_billing` {enabled, day}, off by default):
+  `education-fees:auto-bill` daily 02:30 bills and finalizes the month for open sessions.
+- Events `BillIssued`, `BillCancelled` (ids only). Education's `AcademicDirectory` gained
+  `enrolledStudents` and `siblingPlaces` (and student `category_id`). Client export has all tables.
+- Not yet: per-credit billing (head kind exists; billed from course registration in FEE-2),
+  collections, receipts, posting to the books and online payment (FEE-2), screens (FEE-3), portal
+  and reminders (FEE-4).
+- A new country, sector or partner: heads, structures and the rules. No code change.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

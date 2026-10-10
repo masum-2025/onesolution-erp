@@ -93,5 +93,10 @@ return [
         'pos.tax_output' => '2130',
         'pos.cash_variance' => '5900',
         'crm.sales' => '4100',
+        'education_fees.tuition_income' => '4200',
+        'education_fees.admission_income' => '4200',
+        'education_fees.exam_income' => '4200',
+        'education_fees.transport_income' => '4200',
+        'education_fees.other_income' => '4900',
     ],
 ];

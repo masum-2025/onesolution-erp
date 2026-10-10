@@ -1,0 +1,38 @@
+<?php
+
+// Fee messages (API errors, checks) and posting key names.
+return [
+    'errors' => [
+        'not_company_unit' => 'Open an institution or one of its campuses: a group has no students of its own.',
+        'student_not_found' => 'That student does not exist here.',
+        'session_not_found' => 'That session does not exist here.',
+        'head_not_found' => 'That fee head does not exist here.',
+        'structure_not_found' => 'That fee structure does not exist here.',
+        'concession_not_found' => 'That discount does not exist here.',
+        'run_not_found' => 'That billing run does not exist here.',
+        'bill_not_found' => 'That bill does not exist here.',
+        'version_conflict' => 'Someone else changed this a moment ago. Reload to see their change, then try again.',
+        'wrong_status' => 'This cannot be done while it is ":status".',
+        'head_not_for_run' => ':head is not an "other" head: monthly and session heads are billed by their own runs.',
+        'period_outside_session' => ':period is outside the session. Choose a month of the session.',
+        'structure_overlaps' => 'The structure ":name" already covers the same session, campus, programme, class and category. Archive it first, or narrow this one.',
+        'structure_empty' => 'Add at least one fee head with an amount.',
+        'own_approval' => 'You asked for this discount, so someone else approves it.',
+        'bill_paid' => 'Money was paid on this bill. Refund it first, then cancel the bill.',
+        'no_fine' => 'This bill carries no late fine to waive.',
+        'head_in_use' => 'This head is used in structures or bills, so how often it is billed cannot change. Add a new head instead.',
+        'invalid_income_key' => 'Choose where the income of this head goes from the list.',
+        'nothing_to_bill' => 'Nobody was billed: no student studies there, all are billed already, or no active fee structure has amounts for them.',
+        'no_currency' => 'Set the institution\'s country and currency in Settings first.',
+    ],
+    'validation' => [
+        'code_taken' => 'Another fee head has this code.',
+    ],
+    'posting_keys' => [
+        'tuition_income' => 'Tuition fee income',
+        'admission_income' => 'Admission fee income',
+        'exam_income' => 'Examination fee income',
+        'transport_income' => 'Transport fee income',
+        'other_income' => 'Other fee income',
+    ],
+];

@@ -1,0 +1,11 @@
+{
+    "name": "EducationFees",
+    "alias": "education_fees",
+    "description": "Student fees: heads, structures, discounts, billing and late fines.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EducationFees\\Providers\\EducationFeesServiceProvider"
+    ],
+    "files": []
+}
