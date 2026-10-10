@@ -2,7 +2,7 @@ import { reactive } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import { loadNamespaces } from './lib/i18n';
 import { loadMe, session } from './lib/session';
-import { moduleRoutes } from './modules';
+import { moduleOutsideRoutes, moduleRoutes } from './modules';
 
 /*
  * Every screen is its own lazy chunk; its translations load with it (meta.ns).
@@ -22,6 +22,8 @@ const routes = [
     { path: '/welcome', name: 'welcome', component: () => import('./pages/auth/WelcomePage.vue'), meta: { ns: ['identity'] } },
     { path: '/choose', name: 'choose', component: () => import('./pages/auth/ChooseContextPage.vue'), meta: { ns: ['auth'] } },
     // Joining a client's portal with an invitation link or code (Phase 5C-4), signed in or not.
+    // Module pages without the app shell (public ones, like checking a document's QR code).
+    ...moduleOutsideRoutes,
     { path: '/portal/join/:key?', name: 'portal-join', component: () => import('./pages/portal/JoinPage.vue'), meta: { public: true, ns: ['auth', 'identity', 'portal'] } },
     {
         path: '/',

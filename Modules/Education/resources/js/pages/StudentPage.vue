@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, ArrowRightLeft, Camera, DoorOpen, Mail, PenLine, Phone, Plus, Trash2, UserX, UsersRound } from 'lucide-vue-next';
+import { ArrowLeft, ArrowRightLeft, Camera, DoorOpen, FileBadge, Mail, PenLine, Phone, Plus, Printer, Trash2, UserX, UsersRound } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -24,6 +24,7 @@ import StudentDialog from '../components/StudentDialog.vue';
 import GuardianDialog from '../components/GuardianDialog.vue';
 import LeaveDialog from '../components/LeaveDialog.vue';
 import PlaceDialog from '../components/PlaceDialog.vue';
+import IssueDialog from '../components/IssueDialog.vue';
 
 /**
  * One student: their details and where they study now, their guardians and
@@ -47,6 +48,7 @@ const tabs = computed(() => [
     { key: 'overview', label: t('education.student.tabs.overview') },
     { key: 'guardians', label: t('education.student.tabs.guardians'), count: student.value?.guardians?.length },
     { key: 'history', label: t('education.student.tabs.history') },
+    ...(setup.can('issue_documents') ? [{ key: 'documents', label: t('education.student_documents.tab') }] : []),
 ]);
 const tab = computed({
     get: () => (tabs.value.some((item) => item.key === route.query.tab) ? route.query.tab : 'overview'),
@@ -89,6 +91,15 @@ const details = computed(() => {
     return rows.filter(Boolean);
 });
 const ownFields = computed(() => setup.fields('student').filter((field) => student.value?.extra?.[field.key] !== undefined));
+
+// Documents issued to the student (people who issue them only).
+const docs = useResource(() => education.documents({ student_id: route.params.id, per_page: 100 }), { immediate: false });
+watch(tab, (value) => value === 'documents' && !docs.data.value && docs.reload(), { immediate: true });
+const issuing = ref(false);
+function issued(made) {
+    issuing.value = false;
+    router.push({ name: 'education-print', query: { ids: made.map((item) => item.id).join(',') } });
+}
 
 // Dialogs.
 const editing = ref(false);
@@ -279,6 +290,26 @@ async function uploadPhoto(event) {
                 </ul>
             </section>
 
+            <section v-else-if="tab === 'documents'" class="space-y-3">
+                <div class="flex justify-end">
+                    <AppButton size="sm" variant="primary" :icon="FileBadge" @click="issuing = true">{{ t('education.documents.issue') }}</AppButton>
+                </div>
+                <div class="card">
+                    <p v-if="docs.loading.value && !docs.data.value" class="px-5 py-6 text-[13px] text-muted">…</p>
+                    <p v-else-if="!(docs.data.value?.data ?? []).length" class="px-5 py-6 text-[13px] text-muted">{{ t('education.student_documents.empty') }}</p>
+                    <ul v-else class="divide-y divide-line">
+                        <li v-for="item in docs.data.value.data" :key="item.id" class="flex flex-wrap items-center gap-3 px-5 py-3">
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-[14px] font-medium text-fg">{{ item.title_text }}</span>
+                                <span class="block text-[12.5px] text-muted"><span class="font-mono" dir="ltr">{{ item.number }}</span> · {{ t('education.documents.issued_on', { date: formatDate(item.issued_on) }) }}<template v-if="item.valid_until"> · {{ t('education.documents.valid_until', { date: formatDate(item.valid_until) }) }}</template></span>
+                            </span>
+                            <AppBadge :tone="{ valid: 'ok', revoked: 'bad', expired: 'warn' }[item.status]" dot>{{ t(`education.document_statuses.${item.status}`) }}</AppBadge>
+                            <AppButton size="sm" variant="ghost" :icon="Printer" :to="{ name: 'education-print', query: { ids: item.id } }">{{ t('education.documents.print') }}</AppButton>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
             <section v-else class="card">
                 <p v-if="!student.enrollments.length" class="px-5 py-6 text-[13px] text-muted">{{ t('education.student.history_empty') }}</p>
                 <ol v-else class="divide-y divide-line">
@@ -298,6 +329,7 @@ async function uploadPhoto(event) {
             <StudentDialog :open="editing" :student="student" @close="editing = false" @saved="(data) => { editing = false; replaced(data); }" @conflict="reload" />
             <LeaveDialog :open="leaving" :student="student" :education="education" @close="leaving = false" @done="reload" @conflict="reload" />
             <PlaceDialog :open="moving" :name="student.name" :enrollment="student.enrollment" :education="education" @close="moving = false" @done="reload" @conflict="reload" />
+            <IssueDialog :open="issuing" :students="[{ id: student.id, name: student.name }]" :education="education" @close="issuing = false" @issued="issued" />
             <GuardianDialog :open="guardianOpen" :student-id="student.id" :guardian="guardian" :education="education" @close="guardianOpen = false" @saved="reload" @conflict="reload" />
         </template>
     </div>

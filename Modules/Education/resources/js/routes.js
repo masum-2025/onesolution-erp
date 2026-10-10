@@ -15,6 +15,12 @@ export default [
     { path: 'education/admissions/:id', name: 'education-admission', component: () => import('./pages/AdmissionPage.vue'), meta },
     { path: 'education/promotions', name: 'education-promotions', component: () => import('./pages/PromotionsPage.vue'), meta },
     { path: 'education/promotions/:id', name: 'education-promotion', component: () => import('./pages/PromotionPage.vue'), meta },
+    { path: 'education/documents', name: 'education-documents', component: () => import('./pages/DocumentsPage.vue'), meta },
+    { path: 'education/documents/designs', name: 'education-designs', component: () => import('./pages/DesignsPage.vue'), meta },
+    { path: 'education/documents/designs/:id', name: 'education-designer', component: () => import('./pages/DesignerPage.vue'), meta: { ...meta, focus: true } },
+    { path: 'education/documents/print', name: 'education-print', component: () => import('./pages/PrintPage.vue'), meta },
     { path: 'education/structure', name: 'education-structure', component: () => import('./pages/StructurePage.vue'), meta },
     { path: 'education/fields', name: 'education-fields', component: () => import('./pages/FieldsPage.vue'), meta },
+    // Checking a document's QR code: public, without the app shell (anyone, signed in or not).
+    { path: '/verify/:organization/:code', name: 'education-verify', component: () => import('./pages/VerifyPage.vue'), meta: { public: true, outside: true, ns: ['education'], module: 'education' } },
 ];

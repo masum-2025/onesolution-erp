@@ -13,6 +13,8 @@ return [
     'menu_structure' => 'Programs, classes and sessions',
     'menu_fields' => 'Own fields',
     'menu_import' => 'Import students',
+    'menu_documents' => 'ID cards and certificates',
+    'menu_designs' => 'Document designs',
     'new_admission' => 'New admission',
     'new_student' => 'New student',
 ];

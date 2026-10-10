@@ -54,5 +54,25 @@ export function educationApi(organizationId) {
         promotionStep: (id, step, body) => api(`${base}/promotions/${id}/${step}`, { method: 'POST', body }),
 
         importStudents: (body) => api(`${base}/students/import`, { method: 'POST', body }),
+
+        templates: (query = {}) => api(`${base}/document-templates`, { query }),
+        template: (id) => api(`${base}/document-templates/${id}`),
+        createTemplate: (body) => api(`${base}/document-templates`, { method: 'POST', body }),
+        updateTemplate: (id, body) => api(`${base}/document-templates/${id}`, { method: 'PATCH', body }),
+        applyDocumentPreset: (key) => api(`${base}/document-templates/presets/${key}/apply`, { method: 'POST', body: {} }),
+        previewTemplate: (id, body) => api(`${base}/document-templates/${id}/preview`, { method: 'POST', body }),
+        assets: (query = {}) => api(`${base}/document-assets`, { query }),
+        addAsset: (kind, name, file) => {
+            const form = new FormData();
+            form.append('kind', kind);
+            form.append('name', name);
+            form.append('file', file);
+            return api(`${base}/document-assets`, { method: 'POST', body: form });
+        },
+        updateAsset: (id, body) => api(`${base}/document-assets/${id}`, { method: 'PATCH', body }),
+        documents: (query = {}) => api(`${base}/documents`, { query }),
+        document: (id) => api(`${base}/documents/${id}`),
+        issue: (body) => api(`${base}/documents`, { method: 'POST', body }),
+        revoke: (id, body) => api(`${base}/documents/${id}/revoke`, { method: 'POST', body }),
     };
 }

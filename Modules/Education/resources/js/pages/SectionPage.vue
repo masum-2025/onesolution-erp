@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { ArrowLeft, ArrowRightLeft, ListOrdered, PenLine, SearchX, Users } from 'lucide-vue-next';
+import { useRoute, useRouter } from 'vue-router';
+import { ArrowLeft, ArrowRightLeft, IdCard, ListOrdered, PenLine, SearchX, Users } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -19,6 +19,7 @@ import { useEducationSetup } from '../setup';
 import CapacityMeter from '../components/CapacityMeter.vue';
 import PlaceDialog from '../components/PlaceDialog.vue';
 import StructureDialog from '../components/StructureDialog.vue';
+import IssueDialog from '../components/IssueDialog.vue';
 import StudentAvatar from '../components/StudentAvatar.vue';
 
 /**
@@ -30,6 +31,14 @@ const org = currentOrganization();
 const education = educationApi(org.id);
 const setup = useEducationSetup();
 const route = useRoute();
+const router = useRouter();
+
+// ID cards for everyone in the section, then straight to printing.
+const issuing = ref(false);
+function issued(made) {
+    issuing.value = false;
+    router.push({ name: 'education-print', query: { ids: made.map((item) => item.id).join(',') } });
+}
 
 const roster = useResource(() => education.roster(route.params.id));
 const data = computed(() => roster.data.value?.data ?? null);
@@ -76,6 +85,7 @@ const listNames = computed(() => (section.value ? ['shift', 'medium', 'stream'].
         <template v-else-if="section">
             <PageHeader :title="`${setup.levelText(section.level_id)} · ${section.name}`" :description="setup.sessionText(section.session_id)">
                 <template #actions>
+                    <AppButton v-if="setup.can('issue_documents') && data.students.length" size="sm" :icon="IdCard" @click="issuing = true">{{ t('education.section_documents.issue') }}</AppButton>
                     <AppButton v-if="setup.can('manage')" size="sm" :icon="PenLine" @click="editing = true">{{ t('education.edit') }}</AppButton>
                     <AppButton v-if="canEdit && data.students.length" size="sm" variant="primary" :icon="ListOrdered" :loading="numbering" @click="numberRolls">{{ t('education.section.number_rolls') }}</AppButton>
                 </template>
@@ -117,6 +127,7 @@ const listNames = computed(() => (section.value ? ['shift', 'medium', 'stream'].
             </section>
 
             <PlaceDialog :open="moving !== null" :name="moving?.name ?? ''" :enrollment="moving" :education="education" @close="moving = null" @done="done" @conflict="done" />
+            <IssueDialog :open="issuing" :students="data.students.map((item) => ({ id: item.student_id, name: item.name }))" kind="id_card" :education="education" @close="issuing = false" @issued="issued" />
             <StructureDialog :open="editing" kind="sections" :record="section" @close="editing = false" @saved="done" @conflict="done" />
         </template>
     </div>

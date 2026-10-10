@@ -64,6 +64,7 @@ class SetupController extends Controller
                 'view_sensitive' => Gate::allows('education.view_sensitive', $unit),
                 'promote' => Gate::allows('education.promote', $unit),
                 'approve_promotion' => Gate::allows('education.approve_promotion', $unit),
+                'issue_documents' => Gate::allows('education.issue_documents', $unit),
             ],
         ]]);
     }

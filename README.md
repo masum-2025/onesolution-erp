@@ -2997,10 +2997,29 @@ waiting lists from the overview tile). Header "New" menu: New application.
   another institution or Education switched off get the same 404. `GET documents/{id}` gives the
   QR (SVG) for `/verify/{organization}/{code}` on the address it was opened at.
 
+### ID card and certificate screens (EDU-3b)
+
+- **ID cards and certificates** (menu, `education.issue_documents`): the register by kind,
+  status and number; print one or many again; revoke with a reason.
+- **Document designs** (settings, `education.manage`): ready-made designs to add, the designs here,
+  images (upload, switch off). **Designer** (full screen, wide screens only; smaller ones show the
+  design): add text, image, photo, QR, line, box; drag to move, the corner to resize, arrow keys for
+  1 mm (Shift: 0.1 mm); properties in mm and pt; values inserted from a list (private ones marked);
+  questions asked when issuing; preview with a real student; save with the version read; make
+  active or retire.
+- **Issuing**: from a student's Documents tab (any active design) or a section ("Issue ID cards" for
+  everyone); a student with a valid card is asked about once (replace revokes the old one); then
+  straight to printing.
+- **Printing** (`/education/documents/print?ids=…`): real size in millimetres (`DocumentCanvas`);
+  ID cards 10 to an A4 sheet (5 mm margin, 3 mm gap, dashed cut lines), certificates one to a page;
+  revoked ones marked. The browser prints or saves a PDF (choose "Actual size", no margins).
+- **QR check page** `/verify/{organization}/{code}`: public, outside the app shell (module routes
+  with `meta.outside`), the institution's name and logo, valid / revoked / expired in words, icon
+  and colour.
+
 ### Future expansion (Education)
 
-- EDU-3b screens (designer, issue and print, register, public check page).
-  EDU-4 course registration; then fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.
+- EDU-4 course registration; then fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.
 - A new country, a new kind of institution, own terms: a preset file, lists, own fields and
   wording (LANG-1). No code change.
 

@@ -13,6 +13,8 @@ return [
     'menu_structure' => 'প্রোগ্রাম, শ্রেণি ও সেশন',
     'menu_fields' => 'নিজের ঘর',
     'menu_import' => 'শিক্ষার্থী ইমপোর্ট',
+    'menu_documents' => 'আইডি কার্ড ও সনদ',
+    'menu_designs' => 'ডকুমেন্টের নকশা',
     'new_admission' => 'নতুন ভর্তি',
     'new_student' => 'নতুন শিক্ষার্থী',
 ];

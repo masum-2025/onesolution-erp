@@ -176,6 +176,7 @@ return [
                 ['key' => 'admissions', 'label' => 'education::module.menu_admissions', 'route' => '/education/admissions', 'permission' => 'education.admit'],
                 // Approvers (who may not make lists) reach waiting lists from the overview.
                 ['key' => 'promotions', 'label' => 'education::module.menu_promotions', 'route' => '/education/promotions', 'permission' => 'education.promote'],
+                ['key' => 'documents', 'label' => 'education::module.menu_documents', 'route' => '/education/documents', 'permission' => 'education.issue_documents'],
             ],
         ],
     ],
@@ -196,5 +197,6 @@ return [
     'settings' => ['pages' => [
         ['key' => 'structure', 'label' => 'education::module.menu_structure', 'route' => '/education/structure', 'permission' => 'education.manage'],
         ['key' => 'fields', 'label' => 'education::module.menu_fields', 'route' => '/education/fields', 'permission' => 'education.manage'],
+        ['key' => 'designs', 'label' => 'education::module.menu_designs', 'route' => '/education/documents/designs', 'permission' => 'education.manage'],
     ]],
 ];

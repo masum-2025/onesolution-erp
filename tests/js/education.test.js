@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
     ADMISSION_NEXT,
+    chunk,
+    clampElement,
+    fillText,
+    mm,
+    newElement,
+    placeholderGroups,
+    pt,
+    sheetLayout,
     admissionTone,
     byLevel,
     canAdmit,
@@ -24,7 +32,7 @@ import {
     stepOfError,
     suggestSessions,
 } from '../../Modules/Education/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleOutsideRoutes, moduleRoutes } from '../../resources/js/modules.js';
 import { readCsv } from '../../resources/js/lib/csv.js';
 import { readCsv as crmReadCsv } from '../../Modules/Crm/resources/js/lib.js';
 import en from '../../Modules/Education/resources/js/locales/en/education.json';
@@ -38,7 +46,7 @@ describe('education screens', () => {
     it('registers its screens behind the education module', () => {
         const routes = moduleRoutes.filter((route) => route.meta.module === 'education');
         expect(routes.map((route) => route.name)).toEqual(
-            expect.arrayContaining(['education', 'education-students', 'education-student', 'education-sections', 'education-section', 'education-structure', 'education-fields', 'education-admissions', 'education-admission', 'education-promotions', 'education-promotion', 'education-import']),
+            expect.arrayContaining(['education', 'education-students', 'education-student', 'education-sections', 'education-section', 'education-structure', 'education-fields', 'education-admissions', 'education-admission', 'education-promotions', 'education-promotion', 'education-import', 'education-documents', 'education-designs', 'education-designer', 'education-print']),
         );
         expect(routes.every((route) => route.meta.ns.includes('education'))).toBe(true);
     });
@@ -182,5 +190,43 @@ describe('education screens', () => {
         expect(prepared.unknown).toEqual(['hobby', 'birth_registration_no']);
         expect(prepared.rows).toEqual([{ name: 'Rahim', guardian_phone: '01711000000', blood_group: 'B+' }, { name: 'Karim' }]);
         expect(prepareImport(readCsv('student,class\nX,6'), ['name']).hasName).toBe(false);
+    });
+
+    it('opens the QR check without the app shell, to anyone', () => {
+        const verify = moduleOutsideRoutes.find((route) => route.name === 'education-verify');
+        expect(verify.path).toBe('/verify/:organization/:code');
+        expect(verify.meta).toMatchObject({ public: true, outside: true });
+        expect(moduleRoutes.some((route) => route.name === 'education-verify')).toBe(false);
+    });
+
+    it('draws designs in true millimetres and points from whole tenths', () => {
+        expect(mm(856)).toBe('85.6mm');
+        expect(mm(2100)).toBe('210mm');
+        expect(mm(0)).toBe('0mm');
+        expect(pt(95)).toBe('9.5pt');
+        expect(fillText('রোল: {roll}, {student.name}{missing}', { roll: '১', 'student.name': 'Rahim' })).toBe('রোল: ১, Rahim');
+        expect(fillText('Hi {student.name}', null)).toBe('Hi {student.name}');
+    });
+
+    it('fits ID cards on an A4 sheet with room to cut', () => {
+        expect(sheetLayout([856, 540])).toEqual({ columns: 2, rows: 5, perSheet: 10 });
+        expect(sheetLayout([540, 856])).toEqual({ columns: 3, rows: 3, perSheet: 9 });
+        expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
+    });
+
+    it('adds items in the middle of the page and keeps them inside it', () => {
+        const text = newElement('text', [856, 540], ['text1']);
+        expect(text).toMatchObject({ id: 'text2', type: 'text', size: 100, line_height: 130 });
+        expect(text.x + text.w).toBeLessThanOrEqual(856);
+        expect(clampElement({ ...text, x: 900, y: -20 }, [856, 540])).toMatchObject({ x: 856 - text.w, y: 0 });
+        expect(clampElement({ type: 'box', x: 0, y: 0, w: 2, h: 3000 }, [856, 540])).toMatchObject({ w: 10, h: 540 });
+        expect(clampElement({ type: 'line', x: 10, y: 10, w: 300, h: 0 }, [856, 540]).h).toBe(0);
+        expect(newElement('line', [2100, 2970]).h).toBe(0);
+    });
+
+    it('groups the values a design may print for the picker', () => {
+        const groups = placeholderGroups(['student.name', 'guardian.father', 'level', 'document.number', 'institution.name', 'field.blood_group', 'input.conduct']);
+        expect(groups.map((group) => group.name)).toEqual(['student', 'guardian', 'class', 'document', 'fields', 'inputs']);
+        expect(groups.find((group) => group.name === 'document').keys).toEqual(['document.number', 'institution.name']);
     });
 });

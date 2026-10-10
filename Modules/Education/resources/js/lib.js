@@ -234,3 +234,78 @@ export function guardianToApi(guardian, fields, { sensitive = false, links = tru
 export function guardianToForm(guardian, fields) {
     return { ...emptyGuardian(guardian.relation ?? 'guardian'), ...Object.fromEntries(['name', 'phone', 'email', 'occupation', 'national_id'].map((key) => [key, guardian[key] ?? ''])), is_primary: Boolean(guardian.is_primary), extra: fieldsToForm(fields, guardian.extra) };
 }
+
+/** A length in tenths of a millimetre as CSS ("856" -> "85.6mm"). */
+export function mm(tenths) {
+    const whole = Math.trunc(tenths / 10);
+    const rest = Math.abs(tenths % 10);
+    return `${whole}${rest ? `.${rest}` : ''}mm`;
+}
+
+/** A text size in tenths of a point as CSS ("95" -> "9.5pt"). */
+export function pt(tenths) {
+    return mm(tenths).replace('mm', 'pt');
+}
+
+/**
+ * A design's text with its {placeholders} filled from values (unknown or
+ * empty ones print nothing). Without values (designing) the text is shown
+ * as written.
+ */
+export function fillText(text, values) {
+    if (!values) return String(text ?? '');
+    return String(text ?? '').replace(/\{([a-z_]+(?:\.[a-z0-9_]+)?)\}/g, (_, key) => values[key] ?? '');
+}
+
+/**
+ * How many cards of a size fit on a sheet (all in tenths of a millimetre),
+ * with a margin around the sheet and a gap between cards for cutting.
+ */
+export function sheetLayout(card, sheet = [2100, 2970], margin = 50, gap = 30) {
+    const fit = (space, size) => Math.max(1, Math.floor((space - 2 * margin + gap) / (size + gap)));
+    const columns = fit(sheet[0], card[0]);
+    const rows = fit(sheet[1], card[1]);
+    return { columns, rows, perSheet: columns * rows };
+}
+
+/** A list in pieces of a size. */
+export function chunk(items, size) {
+    const pieces = [];
+    for (let index = 0; index < items.length; index += size) pieces.push(items.slice(index, index + size));
+    return pieces;
+}
+
+/** Placeholders grouped for the designer's picker (the ones a design may use come from the server). */
+export function placeholderGroups(keys) {
+    const group = (key) => (key.startsWith('student.') ? 'student' : key.startsWith('guardian.') ? 'guardian' : key.startsWith('document.') || key.startsWith('institution.') ? 'document'
+        : key.startsWith('field.') ? 'fields' : key.startsWith('input.') ? 'inputs' : 'class');
+    const groups = {};
+    for (const key of keys) (groups[group(key)] ??= []).push(key);
+    return ['student', 'guardian', 'class', 'document', 'fields', 'inputs'].filter((name) => groups[name]).map((name) => ({ name, keys: groups[name] }));
+}
+
+/** A new item of a kind in the middle of a page (tenths of a millimetre), with a fresh id. */
+export function newElement(type, page, taken = []) {
+    const [width, height] = page;
+    const size = { text: [Math.min(600, width - 40), 80], image: [200, 200], photo: [200, 240], qr: [200, 200], line: [Math.min(600, width - 40), 0], box: [400, 300] }[type];
+    let index = 1;
+    while (taken.includes(`${type}${index}`)) index++;
+    const base = { id: `${type}${index}`, type, x: Math.round((width - size[0]) / 2), y: Math.round((height - size[1]) / 2), w: size[0], h: size[1] };
+    return {
+        text: { ...base, text: '{student.name}', size: 100, weight: 'normal', style: 'normal', align: 'start', font: 'sans', line_height: 130, color: '#000000' },
+        image: { ...base, asset_id: '', fit: 'contain' },
+        photo: { ...base, fit: 'cover', radius: 0 },
+        qr: { ...base, color: '#000000' },
+        line: { ...base, color: '#000000', thickness: 3 },
+        box: { ...base, color: '#000000', thickness: 3, fill: null, radius: 0 },
+    }[type];
+}
+
+/** An item kept inside its page after a move or resize (tenths of a millimetre). */
+export function clampElement(element, page) {
+    const [width, height] = page;
+    const minimum = element.type === 'line' ? 0 : 10;
+    const w = Math.max(element.type === 'line' && element.h > 0 ? 0 : minimum, Math.min(Math.round(element.w), width));
+    const h = Math.max(element.type === 'line' && element.w > 0 ? 0 : minimum, Math.min(Math.round(element.h), height));
+    return { ...element, w, h, x: Math.max(0, Math.min(Math.round(element.x), width - w)), y: Math.max(0, Math.min(Math.round(element.y), height - h)) };
+}
