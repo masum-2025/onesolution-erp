@@ -3057,7 +3057,28 @@ hundredths (300 = 3 credits), like Education's subjects.
   sensitive limit. Events `CourseRegistered`, `CourseDropped`, `RegistrationApproved`,
   `SeatOffered` (ids only) for fees and exams. Client export includes all four tables.
 - A new country or institution: the rules (credits, approval, prerequisites, waiting list,
-  self-registration). No code change. Next: EDU-4b screens, EDU-4c the student's portal screen.
+  self-registration). No code change.
+
+### Course registration screens (EDU-4b)
+
+Menu "Course registration" (`.view`): **Offered subjects** (`/course-registration`) and
+**Registrations** (`/course-registration/registrations`). Code in
+`Modules/CourseRegistration/resources/js`, texts in `locales/{en,bn}/course_registration.json`.
+
+- A session bar on both screens: the session (remembered per browser), the window in words (not
+  open yet, open, add/drop only, closed), the rules in one line; `.manage` sets or changes the window.
+- **Offered subjects**: cards by class with seats used/left, waiting list, teacher, kind and credits;
+  offer one subject or a class's whole curriculum. A card opens its **roster** (seat holders with
+  their outcome for `.record_outcome`, then the waiting list in order), printable.
+- **Registrations**: tabs by status, search by name, code or phone (Bangla digits too); register one
+  student (search) or a whole section (with what could not be done and why). A registration shows
+  its credits against min/max/overload, its subjects with status, add (seats shown, full → waiting
+  list), drop or withdraw (with a reason after add/drop), hand in, approve or send back.
+- The screens take their choices from `GET setup` (sessions, classes, campuses, teachers when HRM is
+  on, subjects, rules, window, what the user can do), `GET students?q=` and `GET sections?session_id=`;
+  Education data reaches them only through `AcademicDirectory`.
+
+Next: EDU-4c the student's portal screen.
 
 ## Browser app (frontend foundation)
 

@@ -99,8 +99,20 @@ return [
             'sort_order' => 70,
         ],
     ],
-    // Screens come with EDU-4b.
-    'menu' => [],
+    'menu' => [
+        [
+            'key' => 'course_registration',
+            'label' => 'course_registration::module.menu',
+            'route' => '/course-registration',
+            'icon' => 'clipboard',
+            'order' => 41,
+            'section' => 'business',
+            'children' => [
+                ['key' => 'offerings', 'label' => 'course_registration::module.menu_offerings', 'route' => '/course-registration', 'permission' => 'course_registration.view'],
+                ['key' => 'registrations', 'label' => 'course_registration::module.menu_registrations', 'route' => '/course-registration/registrations', 'permission' => 'course_registration.view'],
+            ],
+        ],
+    ],
     // Fees (per credit) and exams (rosters) listen to these; payloads carry ids only.
     'events' => ['course_registration.course_registered', 'course_registration.course_dropped', 'course_registration.registration_approved', 'course_registration.seat_offered'],
     // A student who moved up from a waiting list (wording in course_registration::notifications).

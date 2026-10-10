@@ -16,6 +16,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:course_reg
     ->prefix('organizations/{organization}/course-registration')
     ->group(function () {
         Route::get('setup', [OfferingController::class, 'setup']);
+        Route::get('students', [OfferingController::class, 'findStudents']);
+        Route::get('sections', [OfferingController::class, 'sections']);
         Route::get('offerings', [OfferingController::class, 'index']);
         Route::get('offerings/{offering}/students', [OfferingController::class, 'students']);
         Route::get('registrations', [RegistrationController::class, 'index']);

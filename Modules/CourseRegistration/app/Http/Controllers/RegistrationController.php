@@ -36,9 +36,12 @@ class RegistrationController extends Controller
         Gate::authorize('course_registration.view', $unit);
         $filters = $request->validate([
             'session_id' => ['required', 'string', 'size:26'], 'status' => ['nullable', 'in:'.implode(',', Registration::STATUSES)],
-            'overload' => ['nullable', 'boolean'], 'page' => ['nullable', 'integer', 'min:1'], 'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'overload' => ['nullable', 'boolean'], 'q' => ['nullable', 'string', 'max:100'], 'page' => ['nullable', 'integer', 'min:1'], 'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
-        $base = fn () => $this->campus->query(Registration::class, $company)->where('session_id', $filters['session_id'])->whereIn('unit_id', $this->unitIds($unit));
+        // By the student's name, code or phone.
+        $found = ($filters['q'] ?? '') === '' ? null : array_column($this->academic->search($company, $filters['q'], $this->unitIds($unit), 200), 'id');
+        $base = fn () => $this->campus->query(Registration::class, $company)->where('session_id', $filters['session_id'])->whereIn('unit_id', $this->unitIds($unit))
+            ->when($found !== null, fn ($query) => $query->whereIn('student_id', $found));
         $page = $base()->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when(isset($filters['overload']), fn ($query) => $query->where('overload', filter_var($filters['overload'], FILTER_VALIDATE_BOOL)))
             ->orderByDesc('submitted_at')->orderBy('id')->paginate(PerPage::from($request, 50));

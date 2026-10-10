@@ -171,6 +171,83 @@ class AcademicDirectory
             ->groupBy('subject_id')->map(fn (Collection $rows) => $rows->pluck('requires_subject_id')->all())->all();
     }
 
+    /**
+     * Students found by name (English or own script), code or phone, studying
+     * at the given campuses, by name (a few at a time, for pickers).
+     *
+     * @param  list<string>  $unitIds
+     * @return list<array<string, mixed>>
+     */
+    public function search(Organization $company, string $term, array $unitIds, int $limit = 20): array
+    {
+        $term = trim($term);
+        if (mb_strlen($term) < 2) {
+            return [];
+        }
+        $digits = (string) preg_replace('/\D/', '', strtr($term, ['০' => '0', '১' => '1', '২' => '2', '৩' => '3', '৪' => '4', '৫' => '5', '৬' => '6', '৭' => '7', '৮' => '8', '৯' => '9']));
+
+        return $this->education->query(Student::class, $company)->whereIn('unit_id', $unitIds)->whereIn('status', ['active', 'suspended'])
+            ->where(fn ($query) => $query->where('name', 'like', "%{$term}%")->orWhere('name_local', 'like', "%{$term}%")->orWhere('code', 'like', "%{$term}%")
+                ->when(strlen($digits) >= 5, fn ($or) => $or->orWhere('phone', 'like', "%{$digits}%")))
+            ->orderBy('name')->limit($limit)->get()->map(fn (Student $student) => $this->studentRecord($student))->values()->all();
+    }
+
+    /**
+     * Subjects in use, by code (for pickers).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function allSubjects(Organization $company): array
+    {
+        $ids = $this->education->query(Subject::class, $company)->where('is_active', true)->orderBy('code')->limit(2000)->pluck('id')->all();
+
+        return collect($this->subjects($company, $ids))->sortBy('code')->values()->all();
+    }
+
+    /**
+     * Sessions, newest first (for pickers).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function sessions(Organization $company): array
+    {
+        return $this->education->query(Session::class, $company)->orderByDesc('starts_on')->orderBy('sequence')->limit(200)->get()
+            ->map(fn (Session $session) => $this->session($company, $session->getKey()))->values()->all();
+    }
+
+    /**
+     * Levels in use with their program, in program order (for pickers).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function levels(Organization $company): array
+    {
+        $programs = $this->education->query(Program::class, $company)->where('is_active', true)->orderBy('sort_order')->orderBy('code')->get()->keyBy('id');
+
+        return $this->education->query(Level::class, $company)->where('is_active', true)->whereIn('program_id', $programs->keys())->get()
+            ->sortBy(fn (Level $level) => [$programs->keys()->search($level->program_id), $level->sequence])
+            ->map(fn (Level $level) => [
+                'id' => $level->getKey(), 'program_id' => $level->program_id, 'sequence' => $level->sequence, 'code' => $level->code, 'name' => $level->texts('name'),
+                'program' => ['id' => $level->program_id, 'code' => $programs[$level->program_id]->code, 'progression' => $programs[$level->program_id]->progression, 'name' => $programs[$level->program_id]->texts('name')],
+            ])->values()->all();
+    }
+
+    /**
+     * Sections of a session at the given campuses, with how many study in each.
+     *
+     * @param  list<string>  $unitIds
+     * @return list<array<string, mixed>>
+     */
+    public function sessionSections(Organization $company, string $sessionId, array $unitIds): array
+    {
+        $sections = $this->education->query(Section::class, $company)->where('session_id', $sessionId)->whereIn('unit_id', $unitIds)->where('is_active', true)
+            ->orderBy('level_id')->orderBy('name')->get();
+        $counts = $this->education->query(Enrollment::class, $company)->whereIn('section_id', $sections->pluck('id'))->where('status', 'active')
+            ->get(['section_id'])->countBy('section_id');
+
+        return $sections->map(fn (Section $section) => [...$section->only(['id', 'unit_id', 'session_id', 'level_id', 'name']), 'students' => (int) ($counts[$section->getKey()] ?? 0)])->values()->all();
+    }
+
     /** @return array<string, mixed>|null */
     public function program(Organization $company, string $id): ?array
     {

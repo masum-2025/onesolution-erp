@@ -310,3 +310,29 @@ it('keeps institutions, partners and campuses apart, and answers 403 while the m
     ($this->as)()->getJson(($this->api)("registrations/{$registration['id']}"))->assertForbidden();
     expect(Registration::count())->toBe(1);
 });
+
+// ── What the screens read ──
+
+it('gives the screens sessions, classes, campuses, students and sections to choose from', function () {
+    $rahim = ($this->student)('Rahim Uddin');
+    ($this->student)('Karim Ahmed');
+    $setup = ($this->as)()->getJson(($this->api)("setup?session_id={$this->spring['id']}"))->assertOk()->json('data');
+    expect(collect($setup['sessions'])->pluck('id'))->toContain($this->spring['id'])
+        ->and(collect($setup['levels'])->firstWhere('id', $this->s1['id'])['program']['code'])->toBe('BSCSE')
+        ->and(collect($setup['campuses'])->pluck('id'))->toContain($this->w->b1->id)
+        ->and($setup['teachers'])->toBe([])
+        ->and($setup['rules'])->toMatchArray(['approval_required' => true, 'waitlist' => true]);
+
+    expect(collect(($this->as)()->getJson(($this->api)('students?q=rahim'))->assertOk()->json('data'))->pluck('id')->all())->toBe([$rahim['id']]);
+    ($this->as)()->getJson(($this->api)('students?q=r'))->assertUnprocessable();
+    expect(($this->as)()->getJson(($this->api)("sections?session_id={$this->spring['id']}"))->assertOk()->json('data.0'))->toMatchArray(['id' => $this->section['id'], 'students' => 2]);
+
+    ($this->open)($rahim)->assertCreated();
+    ($this->open)(($this->student)('Nusrat'))->assertCreated();
+    ($this->as)()->getJson(($this->api)("registrations?session_id={$this->spring['id']}&q=rahim"))->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.student.name', 'Rahim Uddin');
+
+    // Finding students and sections is for people who register.
+    $teacher = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['course_registration.view'], 'Viewer'));
+    $this->asToken(orgToken($teacher, $this->w->c1))->getJson(($this->api)('students?q=rahim'))->assertForbidden();
+    $this->asToken(orgToken($teacher, $this->w->c1))->getJson(($this->api)("sections?session_id={$this->spring['id']}"))->assertForbidden();
+});

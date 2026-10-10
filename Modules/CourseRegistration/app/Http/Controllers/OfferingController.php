@@ -41,12 +41,49 @@ class OfferingController extends Controller
         Gate::authorize('course_registration.view', $unit);
         $sessionId = $request->validate(['session_id' => ['nullable', 'string', 'size:26']])['session_id'] ?? null;
 
+        $academic = app(AcademicDirectory::class);
+        $units = $this->unitIds($unit);
+        $hrm = class_exists(EmployeeDirectory::class) && app(ModuleResolver::class)->isEnabled('hrm', $company);
+
         return response()->json(['data' => [
             'rules' => $this->registrations->limits($company),
             'window' => $sessionId === null ? null : $this->presenter->window($this->registrations->window($company, $sessionId)),
             'today' => $this->campus->today($company)->toDateString(),
+            'sessions' => $academic->sessions($company),
+            'levels' => $academic->levels($company),
+            // The campuses here (offerings and registrations belong to one).
+            'campuses' => Organization::query()->whereKey($units)->whereNot('type', OrganizationType::Department->value)->orderBy('depth')->get()
+                ->map(fn (Organization $campus) => ['id' => $campus->getKey(), 'name' => $campus->displayName()])->values(),
+            // Teachers to choose from (people who offer subjects, with HRM on).
+            'teachers' => $hrm && Gate::allows('course_registration.manage', $unit)
+                ? array_map(fn ($record) => ['id' => $record->id, 'name' => $record->name, 'code' => $record->code], app(EmployeeDirectory::class)->inUnits($company, $units, $this->campus->today($company), 500))
+                : [],
+            'hrm' => $hrm,
+            // Subjects to offer (people who offer them).
+            'subjects' => Gate::allows('course_registration.manage', $unit) ? $academic->allSubjects($company) : [],
             'can' => array_combine(['manage', 'register', 'approve', 'record_outcome'], array_map(fn (string $permission) => Gate::allows($permission, $unit), self::STAFF)),
         ]]);
+    }
+
+    /** Students to register, found by name, code or phone (people who register them). */
+    public function findStudents(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('course_registration.register', $unit);
+        $term = $request->validate(['q' => ['required', 'string', 'min:2', 'max:100']])['q'];
+        $found = app(AcademicDirectory::class)->search($company, $term, $this->unitIds($unit), 20);
+
+        return response()->json(['data' => array_map(fn (array $student) => array_intersect_key($student, array_flip(['id', 'code', 'name', 'name_local', 'unit_id', 'status'])), $found)]);
+    }
+
+    /** Sections of a session here, to register a whole one at once. */
+    public function sections(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('course_registration.register', $unit);
+        $sessionId = $request->validate(['session_id' => ['required', 'string', 'size:26']])['session_id'];
+
+        return response()->json(['data' => app(AcademicDirectory::class)->sessionSections($company, $sessionId, $this->unitIds($unit))]);
     }
 
     public function saveWindow(Request $request, string $organization, string $session): JsonResponse
