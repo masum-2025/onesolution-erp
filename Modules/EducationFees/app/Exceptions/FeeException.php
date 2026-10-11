@@ -64,12 +64,6 @@ class FeeException extends TenancyException
         return new self('own_approval', 403);
     }
 
-    /** A bill with money paid against it is not cancelled (refund it first). */
-    public static function billPaid(): self
-    {
-        return new self('bill_paid', 409);
-    }
-
     public static function noFineToWaive(): self
     {
         return new self('no_fine', 409);
@@ -96,5 +90,43 @@ class FeeException extends TenancyException
     public static function noCurrency(): self
     {
         return new self('no_currency', 422);
+    }
+
+    /** The method is not one the institution takes (rule education_fees.payment_methods). */
+    public static function methodNotAllowed(string $method): self
+    {
+        return new self('method_not_allowed', 422, ['method' => $method], ['field' => 'method']);
+    }
+
+    /** Part payments are off: a bill is paid in full. */
+    public static function partialNotAllowed(string $bill): self
+    {
+        return new self('partial_not_allowed', 422, ['bill' => $bill], ['field' => 'amount_minor']);
+    }
+
+    public static function moreThanOwed(string $bill): self
+    {
+        return new self('more_than_owed', 422, ['bill' => $bill], ['field' => 'allocations']);
+    }
+
+    public static function allocationsExceedAmount(): self
+    {
+        return new self('allocations_exceed_amount', 422, extra: ['field' => 'allocations']);
+    }
+
+    public static function voidPending(): self
+    {
+        return new self('void_pending', 409);
+    }
+
+    /** The receipt left money as an advance that later bills already used: void those first. */
+    public static function advanceAlreadyUsed(): self
+    {
+        return new self('advance_used', 409);
+    }
+
+    public static function advanceTooSmall(int $available): self
+    {
+        return new self('advance_too_small', 422, ['available' => (string) $available], ['field' => 'amount_minor', 'available_minor' => $available]);
     }
 }

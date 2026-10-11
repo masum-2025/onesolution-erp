@@ -50,6 +50,7 @@ class Billing
         private RuleResolver $rules,
         private RuleContextFactory $contexts,
         private ModuleResolver $modules,
+        private Allocations $allocations,
         private OrganizationSettingsResolver $settings,
         private AuditLogger $audit,
     ) {}
@@ -168,7 +169,7 @@ class Billing
         });
     }
 
-    /** An open bill with nothing paid on it, cancelled with a reason; its key may be billed again. */
+    /** An open or paid bill cancelled with a reason (what was paid on it waits as an advance); its key may be billed again. */
     public function cancelBill(Organization $company, Bill $bill, string $reason, int $baseVersion, User $actor): Bill
     {
         return $this->office->transaction($company, function () use ($company, $bill, $reason, $baseVersion, $actor) {
@@ -180,13 +181,73 @@ class Billing
             if (! in_array($bill->status, ['open', 'paid'], true)) {
                 throw FeeException::wrongStatus($bill->status);
             }
-            if ($bill->paid_minor > 0) {
-                throw FeeException::billPaid();
-            }
             $old = $bill->status;
+            $freed = 0;
+            foreach ($this->allocations->standing($company, billId: $bill->getKey()) as $row) {
+                $this->allocations->undo($company, $bill, $row['allocation'], $row['standing'], $actor->getKey());
+                $freed += $row['standing'];
+            }
+            if ($freed > 0) {
+                $this->allocations->moveAdvance($company, $bill->unit_id, $bill->student_id, 'bill_cancelled', $freed, ['bill_id' => $bill->getKey()], $reason, $actor->getKey());
+            }
             $bill->forceFill(['status' => 'cancelled', 'active_key' => null, 'cancel_reason' => $reason, 'version' => $bill->version + 1])->save();
-            $this->audit->record('education_fees.bill_cancelled', $bill, old: ['status' => $old], new: ['status' => 'cancelled', 'total_minor' => $bill->total_minor], reason: $reason, actor: $actor, organizationId: $company->getKey());
+            $this->audit->record('education_fees.bill_cancelled', $bill, old: ['status' => $old], new: ['status' => 'cancelled', 'total_minor' => $bill->total_minor, 'to_advance_minor' => $freed], reason: $reason, actor: $actor, organizationId: $company->getKey());
             DB::afterCommit(fn () => event(new BillCancelled($company->getKey(), $bill->getKey(), $bill->student_id)));
+
+            return $bill;
+        });
+    }
+
+    /**
+     * Per-credit fees of a student's approved registration: each per-credit
+     * head's rate (from the structures) times the credits, less what earlier
+     * credit bills of the session already billed. More credits: a new bill for
+     * the difference, issued at once. Fewer: the difference after today's
+     * percent discounts waits as an advance.
+     */
+    public function billCredits(Organization $company, string $studentId, string $sessionId, int $creditsCenti): ?Bill
+    {
+        $heads = $this->office->query(FeeHead::class, $company)->where('frequency', 'per_credit')->where('is_active', true)->orderBy('sort_order')->orderBy('code')->get();
+        $student = $this->academic->student($company, $studentId);
+        $enrollment = $student === null ? null : ($this->academic->enrollment($company, $studentId, $sessionId) ?? $this->academic->enrollment($company, $studentId));
+        if ($heads->isEmpty() || $enrollment === null) {
+            return null;
+        }
+        $today = $this->today($company);
+        $unit = Organization::query()->find($enrollment['unit_id']) ?? $company;
+        $rates = FeeMath::amountsFor($this->setup->activeStructures($company, $sessionId), [
+            'unit_id' => $enrollment['unit_id'], 'program_id' => $student['program_id'], 'level_id' => $enrollment['level_id'], 'category_id' => $student['category_id'] ?? null,
+        ]);
+
+        return $this->office->transaction($company, function () use ($company, $student, $enrollment, $heads, $sessionId, $creditsCenti, $today, $unit, $rates) {
+            $earlier = $this->office->query(Bill::class, $company)->where('student_id', $student['id'])->where('billing_key', 'like', "credits:{$sessionId}:%")->lockForUpdate()->get();
+            $billed = $this->office->query(BillLine::class, $company)->whereIn('bill_id', $earlier->where('status', '!=', 'cancelled')->pluck('id'))->get()
+                ->groupBy('head_id')->map(fn ($lines) => (int) $lines->sum('amount_minor'));
+            $more = [];
+            $fewer = 0;
+            foreach ($heads as $head) {
+                $target = FeeMath::perCredits($rates[$head->getKey()]['amount_minor'] ?? 0, $creditsCenti);
+                $difference = $target - ($billed[$head->getKey()] ?? 0);
+                if ($difference > 0) {
+                    $more[$head->getKey()] = $difference;
+                } elseif ($difference < 0) {
+                    $fewer += FeeMath::line(-$difference, $this->percentFor($company, $student['id'], $head->getKey(), $today), 0)['due_minor'];
+                }
+            }
+            if ($fewer > 0) {
+                $this->allocations->moveAdvance($company, $enrollment['unit_id'], $student['id'], 'credits_reduced', $fewer, [], null, null);
+            }
+            if ($more === []) {
+                return null;
+            }
+            $due = FeeMath::dueInMonth(substr($today, 0, 7), (int) $this->rules->get('education_fees.due_day', $this->contexts->forOrganization($unit)));
+            $key = "credits:{$sessionId}:".($earlier->count() + 1);
+            $bill = $this->billFor($company, null, $student, $enrollment, $heads->whereIn('id', array_keys($more))->values(), $key, $today, max($due, $today), 'credits', null, null, $more);
+            if ($bill === null) {
+                return null;
+            }
+            $this->issue($company, $bill);
+            $this->audit->record('education_fees.bill_issued', $bill, new: $bill->only(['number', 'student_id', 'total_minor', 'source']), organizationId: $company->getKey());
 
             return $bill;
         });
@@ -261,7 +322,7 @@ class Billing
      * @param  array<string, mixed>  $enrollment
      * @param  Collection<int, FeeHead>  $heads
      */
-    private function billFor(Organization $company, ?FeeRun $run, array $student, array $enrollment, Collection $heads, string $key, string $issueDate, string $dueDate, string $source, ?User $actor, ?BillingContext $context = null): ?Bill
+    private function billFor(Organization $company, ?FeeRun $run, array $student, array $enrollment, Collection $heads, string $key, string $issueDate, string $dueDate, string $source, ?User $actor, ?BillingContext $context = null, array $override = []): ?Bill
     {
         $context ??= new BillingContext(
             structures: $this->setup->activeStructures($company, $enrollment['session_id']),
@@ -284,6 +345,9 @@ class Billing
         $lines = [];
         foreach ($heads as $head) {
             $amount = $amounts[$head->getKey()] ?? null;
+            if ($override !== []) {
+                $amount = isset($override[$head->getKey()]) ? ['amount_minor' => $override[$head->getKey()], 'months' => null, 'structure_id' => $amount['structure_id'] ?? null] : null;
+            }
             if ($amount === null || $amount['amount_minor'] <= 0 || ($context->month !== null && $amount['months'] !== null && ! in_array($context->month, array_map('intval', $amount['months']), true))) {
                 continue;
             }
@@ -335,7 +399,24 @@ class Billing
             'status' => $bill->total_minor > 0 ? 'open' : 'paid',
             'version' => $bill->version + 1,
         ])->save();
+        $unit = Organization::query()->find($bill->unit_id) ?? $company;
+        if ($bill->status === 'open' && $this->rules->get('education_fees.apply_advance_automatically', $this->contexts->forOrganization($unit))) {
+            $this->allocations->applyAdvance($company, $bill, null);
+        }
         DB::afterCommit(fn () => event(new BillIssued($company->getKey(), $bill->getKey(), $bill->student_id)));
+    }
+
+    /** Today's percent discounts of a student on a head (concessions; the sibling discount when the head allows it). */
+    private function percentFor(Organization $company, string $studentId, string $headId, string $day): int
+    {
+        $percent = (int) collect($this->concessions->on($company, [$studentId], $day)[$studentId] ?? [])
+            ->filter(fn (Concession $concession) => $concession->mode === 'percent' && ($concession->head_id === null || $concession->head_id === $headId))->sum('percent_bp');
+        $head = $this->office->query(FeeHead::class, $company)->find($headId);
+        if ($head?->sibling_discount && ($this->academic->siblingPlaces($company, [$studentId])[$studentId] ?? 1) >= 2) {
+            $percent += 100 * (int) $this->rules->get('education_fees.sibling_discount_percent', $this->contexts->forOrganization($company));
+        }
+
+        return $percent;
     }
 
     /** @return Collection<int, FeeHead> */

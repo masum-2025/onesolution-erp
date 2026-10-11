@@ -6,6 +6,8 @@ use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
+use Modules\EducationFees\Models\Advance;
+use Modules\EducationFees\Models\Allocation;
 use Modules\EducationFees\Models\Bill;
 use Modules\EducationFees\Models\BillLine;
 use Modules\EducationFees\Models\Concession;
@@ -14,10 +16,14 @@ use Modules\EducationFees\Models\FeeRun;
 use Modules\EducationFees\Models\FeeStructure;
 use Modules\EducationFees\Models\FeeStructureLine;
 use Modules\EducationFees\Models\Fine;
+use Modules\EducationFees\Models\Receipt;
+use Modules\EducationFees\Models\ReceiptVoid;
+use Modules\EducationFees\Models\Refund;
 
 /**
  * Student fees in the client's data export: heads, structures, concessions,
- * runs, every bill with its lines, and fines.
+ * runs, every bill with its lines, fines, receipts, what they paid, advances,
+ * voids and refunds.
  */
 class EducationFeesExporter implements ExportsModuleData
 {
@@ -39,6 +45,11 @@ class EducationFeesExporter implements ExportsModuleData
             'bills' => $this->rows(Bill::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'session_id', 'run_id', 'billing_key', 'number', 'issue_date', 'due_date', 'status', 'currency', 'gross_minor', 'discount_minor', 'tax_minor', 'fine_minor', 'total_minor', 'paid_minor', 'source', 'cancel_reason'])),
             'bill_lines' => $this->rows(BillLine::class, $organization, $organizationIds, fn ($row) => $plain($row, ['bill_id', 'head_id', 'amount_minor', 'discount_minor', 'tax_minor', 'due_minor', 'tax_code_id', 'basis'])),
             'fines' => $this->rows(Fine::class, $organization, $organizationIds, fn ($row) => $plain($row, ['bill_id', 'kind', 'amount_minor', 'applied_on', 'reason'])),
+            'receipts' => $this->rows(Receipt::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'number', 'received_on', 'method', 'reference', 'amount_minor', 'currency', 'status', 'note', 'collected_by', 'payment_id'])),
+            'allocations' => $this->rows(Allocation::class, $organization, $organizationIds, fn ($row) => $plain($row, ['bill_id', 'kind', 'receipt_id', 'advance_id', 'reverses_id', 'amount_minor', 'created_at'])),
+            'advances' => $this->rows(Advance::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'kind', 'amount_minor', 'receipt_id', 'bill_id', 'refund_id', 'note', 'created_at'])),
+            'voids' => $this->rows(ReceiptVoid::class, $organization, $organizationIds, fn ($row) => $plain($row, ['receipt_id', 'reason', 'status', 'decided_at', 'decision_note'])),
+            'refunds' => $this->rows(Refund::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'amount_minor', 'currency', 'method', 'reference', 'reason', 'status', 'decided_at'])),
         ];
     }
 

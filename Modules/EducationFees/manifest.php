@@ -130,6 +130,64 @@ return [
             'category' => 'fines',
             'sort_order' => 80,
         ],
+        [
+            'key' => 'education_fees.payment_methods',
+            'type' => 'multi_enum',
+            // How the counter takes fees (mobile: bKash, Nagad… recorded with their reference; online payments come from the portal).
+            'schema' => ['items' => ['enum' => ['cash', 'bank', 'mobile']], 'minItems' => 1],
+            'default' => ['cash', 'bank', 'mobile'],
+            'label' => 'education_fees::rules.payment_methods.label',
+            'description' => 'education_fees::rules.payment_methods.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'collection',
+            'sort_order' => 90,
+        ],
+        [
+            'key' => 'education_fees.allow_partial_payment',
+            'type' => 'boolean',
+            // Off: a bill is paid in full or not at all.
+            'default' => true,
+            'label' => 'education_fees::rules.allow_partial_payment.label',
+            'description' => 'education_fees::rules.allow_partial_payment.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'collection',
+            'sort_order' => 100,
+        ],
+        [
+            'key' => 'education_fees.receipt_number_format',
+            'type' => 'string',
+            // Placeholders: {YYYY} {YY} {SEQ:n}; counted per year.
+            'schema' => ['minLength' => 3, 'maxLength' => 40, 'pattern' => '^[A-Za-z0-9{}:_/-]*\{SEQ(:\d+)?\}[A-Za-z0-9{}:_/-]*$'],
+            'default' => 'RCT-{YYYY}-{SEQ:6}',
+            'label' => 'education_fees::rules.receipt_number_format.label',
+            'description' => 'education_fees::rules.receipt_number_format.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'collection',
+            'sort_order' => 110,
+        ],
+        [
+            'key' => 'education_fees.void_needs_second_person',
+            'type' => 'boolean',
+            // Voiding a receipt or paying an advance back waits for someone other than who took or asked.
+            'default' => true,
+            'label' => 'education_fees::rules.void_needs_second_person.label',
+            'description' => 'education_fees::rules.void_needs_second_person.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'sensitive' => true,
+            'category' => 'collection',
+            'sort_order' => 120,
+        ],
+        [
+            'key' => 'education_fees.apply_advance_automatically',
+            'type' => 'boolean',
+            // A new bill is met from the student's advance as soon as it is issued.
+            'default' => true,
+            'label' => 'education_fees::rules.apply_advance_automatically.label',
+            'description' => 'education_fees::rules.apply_advance_automatically.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'collection',
+            'sort_order' => 130,
+        ],
     ],
     // Screens come with FEE-3.
     'menu' => [],
@@ -142,7 +200,7 @@ return [
         'education_fees.other_income' => ['label' => 'education_fees::fees.posting_keys.other_income', 'type' => 'income'],
     ],
     // Collections (FEE-2) and the portal listen to these; payloads carry ids only.
-    'events' => ['education_fees.bill_issued', 'education_fees.bill_cancelled'],
+    'events' => ['education_fees.bill_issued', 'education_fees.bill_cancelled', 'education_fees.fee_paid', 'education_fees.receipt_voided'],
     'is_core' => false,
     'requires_consent' => false,
     'dashboard' => ['widgets' => []],

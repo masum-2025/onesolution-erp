@@ -38,5 +38,26 @@ return [
         'billing' => 'Billing',
         'discounts' => 'Discounts',
         'fines' => 'Late fines',
+        'collection' => 'Collecting',
+    ],
+    'payment_methods' => [
+        'label' => 'Ways the counter takes fees',
+        'description' => 'Cash, bank, mobile money (bKash, Nagad… with their reference). Online payments come from the portal.',
+    ],
+    'allow_partial_payment' => [
+        'label' => 'Part payments',
+        'description' => 'On: a bill may be paid in parts. Off: a bill is paid in full or not at all.',
+    ],
+    'receipt_number_format' => [
+        'label' => 'Receipt number format',
+        'description' => 'Placeholders: {YYYY} {YY} {SEQ:n}. Counted per year.',
+    ],
+    'void_needs_second_person' => [
+        'label' => 'Voids and refunds need a second person',
+        'description' => 'On: voiding a receipt or paying an advance back waits for someone other than who took the money or asked.',
+    ],
+    'apply_advance_automatically' => [
+        'label' => 'Use advances on new bills',
+        'description' => 'On: a new bill is met from the student\'s advance as soon as it is issued.',
     ],
 ];

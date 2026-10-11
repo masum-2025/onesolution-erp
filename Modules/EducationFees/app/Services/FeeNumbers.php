@@ -18,8 +18,19 @@ class FeeNumbers
 
     public function bill(Organization $company, int $year): string
     {
-        $format = (string) $this->rules->get('education_fees.bill_number_format', $this->contexts->forOrganization($company));
-        $number = $this->next($company, 'bill', $year);
+        return $this->format($company, 'education_fees.bill_number_format', 'bill', $year);
+    }
+
+    /** Receipt numbers from rule education_fees.receipt_number_format, counted per year. */
+    public function receipt(Organization $company, int $year): string
+    {
+        return $this->format($company, 'education_fees.receipt_number_format', 'receipt', $year);
+    }
+
+    private function format(Organization $company, string $rule, string $kind, int $year): string
+    {
+        $format = (string) $this->rules->get($rule, $this->contexts->forOrganization($company));
+        $number = $this->next($company, $kind, $year);
 
         return preg_replace_callback('/\{(YYYY|YY|SEQ(?::(\d))?)\}/', fn (array $match) => match (true) {
             $match[1] === 'YYYY' => (string) $year,

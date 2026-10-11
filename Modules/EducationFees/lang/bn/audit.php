@@ -19,4 +19,11 @@ return [
     'bill_cancelled' => 'বিল বাতিল',
     'fine_added' => 'বিলম্ব জরিমানা যোগ',
     'fine_waived' => 'বিলম্ব জরিমানা মাফ',
+    'receipt_taken' => 'ফি জমা',
+    'void_requested' => 'রসিদ বাতিলের অনুরোধ',
+    'void_rejected' => 'রসিদ বাতিল নাকচ',
+    'receipt_voided' => 'রসিদ বাতিল',
+    'refund_requested' => 'ফেরতের অনুরোধ',
+    'refund_rejected' => 'ফেরত নাকচ',
+    'refund_paid' => 'টাকা ফেরত',
 ];

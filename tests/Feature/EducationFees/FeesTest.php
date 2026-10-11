@@ -236,11 +236,7 @@ it('cancels an unpaid bill with a reason, so the month can be billed again', fun
     $again = ($this->monthRun)('2026-01')->assertCreated()->json('data');
     expect($again['bills_count'])->toBe(1);
 
-    // Paid money keeps a bill (refunds come with collections).
-    $paid = Bill::query()->withoutGlobalScopes()->where('student_id', $rahim['id'])->where('status', 'draft')->first();
-    ($this->finalize)($again);
-    $paid->refresh()->forceFill(['paid_minor' => 1000])->save();
-    ($this->as)()->postJson(($this->fees)("bills/{$paid->id}/cancel"), ['reason' => 'Wrong', 'base_version' => $paid->version])->assertStatus(409)->assertJsonPath('code', 'bill_paid');
+    expect($again['total_minor'])->toBe(150000);
 });
 
 it('adds late fines each night under the rule and stops them when waived', function () {

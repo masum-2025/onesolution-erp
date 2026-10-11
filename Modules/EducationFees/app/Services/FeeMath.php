@@ -16,6 +16,12 @@ final class FeeMath
     /** How much a structure's narrowing counts when two fit: class, then category, programme, campus. */
     private const WEIGHTS = ['level_id' => 8, 'category_id' => 4, 'program_id' => 2, 'unit_id' => 1];
 
+    /** A rate per credit times credits kept in hundredths: 250 000 for 15 credits (1 500) -> 3 750 000, half up. */
+    public static function perCredits(int $rateMinor, int $creditsCenti): int
+    {
+        return intdiv($rateMinor * $creditsCenti + 50, 100);
+    }
+
     /** A part of an amount: 1 250 000 at 1 500 bp (15 %) -> 187 500, half up. */
     public static function percentOf(int $amountMinor, int $basisPoints): int
     {

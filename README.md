@@ -3135,10 +3135,34 @@ units in the institution's currency; percents are basis points.
   `education-fees:auto-bill` daily 02:30 bills and finalizes the month for open sessions.
 - Events `BillIssued`, `BillCancelled` (ids only). Education's `AcademicDirectory` gained
   `enrolledStudents` and `siblingPlaces` (and student `category_id`). Client export has all tables.
-- Not yet: per-credit billing (head kind exists; billed from course registration in FEE-2),
-  collections, receipts, posting to the books and online payment (FEE-2), screens (FEE-3), portal
-  and reminders (FEE-4).
 - A new country, sector or partner: heads, structures and the rules. No code change.
+
+### Collecting fees (FEE-2a)
+
+Tables `fee_receipts`, `fee_allocations`, `fee_advances`, `fee_voids`, `fee_refunds`; every money row
+is append-only (undoing adds negative rows pointing at what they undo; a bill's `paid_minor` is the
+sum of its allocations).
+
+- **Receipts** (`POST /fees/receipts`, `.collect`, limit `education-fees-counter` 120/min): a
+  student, amount, method (rule `payment_methods`: cash, bank, mobile; bank and mobile need a
+  reference), day (not in the future), `op_id`. The money meets open bills oldest due first, or the
+  `allocations` the office names; more than owed waits as the student's **advance**. Rule
+  `allow_partial_payment` off: a bill is paid in full only. Numbers from rule `receipt_number_format`.
+- **Advance**: used at once on each new bill when rule `apply_advance_automatically` is on; filled by
+  overpayment, a cancelled paid bill, fewer credits.
+- **Void** (`POST receipts/{id}/void` with a reason; `voids/{id}/approve|reject`, `.void`): with rule
+  `void_needs_second_person` (default on) someone other than who took the money or asked decides.
+  What it paid is owed again; refused while its advance was already used.
+- **Refunds** (`POST refunds`, decided like voids): pay part of the advance back.
+- **Cancelling a paid bill** now moves what was paid on it to the advance.
+- **Per-credit fees**: listener on course registration's `RegistrationApproved` (via its new public
+  `RegistrationDirectory`) bills rate × credits of each `per_credit` head (rate from the structures),
+  less what earlier credit bills of the session billed (`credits:<session>:<n>`); fewer credits:
+  the difference after today's percent discounts goes to the advance.
+- **Takings** (`GET /fees/takings?from&to&collected_by`): totals by method and by person, voided apart.
+- A student's statement (`GET /fees/students/{id}`) shows `advance_minor`. Events `FeePaid`,
+  `ReceiptVoided`.
+- Next: posting to the books and online payment (FEE-2b), screens (FEE-3), portal and reminders (FEE-4).
 
 ## Browser app (frontend foundation)
 

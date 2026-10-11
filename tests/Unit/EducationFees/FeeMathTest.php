@@ -58,3 +58,9 @@ it('puts a month\'s due day inside the month', function () {
         ->and(FeeMath::dueInMonth('2026-02', 28))->toBe('2026-02-28')
         ->and(FeeMath::dueInMonth('2027-02', 31))->toBe('2027-02-28');
 });
+
+it('prices credits kept in hundredths', function () {
+    expect(FeeMath::perCredits(250000, 1500))->toBe(3750000)
+        ->and(FeeMath::perCredits(250000, 150))->toBe(375000)
+        ->and(FeeMath::perCredits(333, 150))->toBe(500);
+});

@@ -19,4 +19,11 @@ return [
     'bill_cancelled' => 'Bill cancelled',
     'fine_added' => 'Late fine added',
     'fine_waived' => 'Late fine waived',
+    'receipt_taken' => 'Fee received',
+    'void_requested' => 'Receipt void asked',
+    'void_rejected' => 'Receipt void refused',
+    'receipt_voided' => 'Receipt voided',
+    'refund_requested' => 'Refund asked',
+    'refund_rejected' => 'Refund refused',
+    'refund_paid' => 'Refund paid',
 ];

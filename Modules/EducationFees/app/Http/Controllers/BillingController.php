@@ -15,6 +15,7 @@ use Modules\EducationFees\Models\Bill;
 use Modules\EducationFees\Models\FeeHead;
 use Modules\EducationFees\Models\FeeRun;
 use Modules\EducationFees\Models\Fine;
+use Modules\EducationFees\Services\Allocations;
 use Modules\EducationFees\Services\Billing;
 use Modules\EducationFees\Services\FeeOffice;
 use Modules\EducationFees\Services\Fines;
@@ -175,6 +176,7 @@ class BillingController extends Controller
         return response()->json(['data' => [
             'student' => array_intersect_key($record, array_flip(['id', 'code', 'name', 'name_local', 'unit_id', 'status'])),
             'owed_minor' => (int) $bills->whereIn('status', ['open'])->sum(fn (Bill $bill) => $bill->balanceMinor()),
+            'advance_minor' => app(Allocations::class)->advanceBalance($company, $student),
             'overdue_minor' => (int) $bills->filter(fn (Bill $bill) => $bill->status === 'open' && $bill->due_date->toDateString() < $today)->sum(fn (Bill $bill) => $bill->balanceMinor()),
             'bills' => $bills->map(fn (Bill $bill) => $this->presenter->bill($bill, today: $today))->values(),
         ]]);

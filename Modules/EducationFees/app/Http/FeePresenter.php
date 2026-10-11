@@ -11,6 +11,9 @@ use Modules\EducationFees\Models\FeeRun;
 use Modules\EducationFees\Models\FeeStructure;
 use Modules\EducationFees\Models\FeeStructureLine;
 use Modules\EducationFees\Models\Fine;
+use Modules\EducationFees\Models\Receipt;
+use Modules\EducationFees\Models\ReceiptVoid;
+use Modules\EducationFees\Models\Refund;
 
 /**
  * What the fee API shows: money as integer minor units with the currency,
@@ -91,6 +94,50 @@ class FeePresenter
             'student' => $this->student($student),
             ...($lines === null ? [] : ['lines' => $lines->map(fn (BillLine $line) => $line->only(['id', 'head_id', 'amount_minor', 'discount_minor', 'tax_minor', 'due_minor', 'tax_code_id', 'basis']))->values()]),
             ...($fines === null ? [] : ['fines' => $fines->map(fn (Fine $fine) => [...$fine->only(['id', 'kind', 'amount_minor', 'reason']), 'applied_on' => $fine->applied_on->toDateString()])->values()]),
+        ];
+    }
+
+    /**
+     * @param  list<array{bill_id: string, number: ?string, amount_minor: int}>|null  $paid  What the receipt paid, bill by bill (still standing).
+     * @param  array<string, mixed>|null  $student
+     * @return array<string, mixed>
+     */
+    public function receipt(Receipt $receipt, ?array $paid = null, ?int $advanceMinor = null, ?array $student = null): array
+    {
+        return [
+            'id' => $receipt->getKey(),
+            ...$receipt->only(['unit_id', 'student_id', 'number', 'method', 'reference', 'amount_minor', 'currency', 'status', 'note', 'collected_by', 'payment_id', 'version']),
+            'received_on' => $receipt->received_on->toDateString(),
+            'created_at' => $receipt->created_at?->toIso8601String(),
+            'student' => $this->student($student),
+            ...($paid === null ? [] : ['bills' => $paid, 'advance_minor' => $advanceMinor]),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function receiptVoid(ReceiptVoid $void, ?Receipt $receipt = null): array
+    {
+        return [
+            'id' => $void->getKey(),
+            ...$void->only(['receipt_id', 'reason', 'status', 'requested_by', 'decided_by', 'decision_note', 'version']),
+            'decided_at' => $void->decided_at?->toIso8601String(),
+            'created_at' => $void->created_at?->toIso8601String(),
+            'receipt' => $receipt === null ? null : $receipt->only(['number', 'student_id', 'amount_minor', 'method', 'collected_by']) + ['received_on' => $receipt->received_on->toDateString()],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $student
+     * @return array<string, mixed>
+     */
+    public function refund(Refund $refund, ?array $student = null): array
+    {
+        return [
+            'id' => $refund->getKey(),
+            ...$refund->only(['unit_id', 'student_id', 'amount_minor', 'currency', 'method', 'reference', 'reason', 'status', 'requested_by', 'decided_by', 'decision_note', 'version']),
+            'decided_at' => $refund->decided_at?->toIso8601String(),
+            'created_at' => $refund->created_at?->toIso8601String(),
+            'student' => $this->student($student),
         ];
     }
 

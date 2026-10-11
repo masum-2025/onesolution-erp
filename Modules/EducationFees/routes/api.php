@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\EducationFees\Http\Controllers\BillingController;
+use Modules\EducationFees\Http\Controllers\CollectionController;
 use Modules\EducationFees\Http\Controllers\ConcessionController;
 use Modules\EducationFees\Http\Controllers\FeeSetupController;
 
@@ -24,6 +25,14 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
         Route::get('bills', [BillingController::class, 'bills']);
         Route::get('bills/{bill}', [BillingController::class, 'showBill']);
         Route::get('students/{student}', [BillingController::class, 'student']);
+        Route::get('receipts', [CollectionController::class, 'receipts']);
+        Route::get('receipts/{receipt}', [CollectionController::class, 'showReceipt']);
+        Route::get('voids', [CollectionController::class, 'voids']);
+        Route::get('refunds', [CollectionController::class, 'refunds']);
+        Route::get('takings', [CollectionController::class, 'summary']);
+
+        // The counter: many parents at the start of a month, its own larger limit per person.
+        Route::middleware('throttle:education-fees-counter')->post('receipts', [CollectionController::class, 'collect']);
 
         Route::middleware('throttle:tenancy-sensitive')->group(function () {
             Route::post('heads', [FeeSetupController::class, 'storeHead']);
@@ -44,5 +53,12 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
             Route::post('runs/{run}/cancel', [BillingController::class, 'cancelRun']);
             Route::post('bills/{bill}/cancel', [BillingController::class, 'cancelBill']);
             Route::post('bills/{bill}/waive-fine', [BillingController::class, 'waiveFine']);
+
+            Route::post('receipts/{receipt}/void', [CollectionController::class, 'requestVoid']);
+            Route::post('voids/{void}/approve', [CollectionController::class, 'approveVoid']);
+            Route::post('voids/{void}/reject', [CollectionController::class, 'rejectVoid']);
+            Route::post('refunds', [CollectionController::class, 'requestRefund']);
+            Route::post('refunds/{refund}/approve', [CollectionController::class, 'approveRefund']);
+            Route::post('refunds/{refund}/reject', [CollectionController::class, 'rejectRefund']);
         });
     });
