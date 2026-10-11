@@ -9,6 +9,7 @@ use Modules\Education\Models\Batch;
 use Modules\Education\Models\Curriculum;
 use Modules\Education\Models\CurriculumItem;
 use Modules\Education\Models\Enrollment;
+use Modules\Education\Models\Guardian;
 use Modules\Education\Models\Level;
 use Modules\Education\Models\Prerequisite;
 use Modules\Education\Models\Program;
@@ -306,6 +307,31 @@ class AcademicDirectory
         }
 
         return $places;
+    }
+
+    /**
+     * Guardians who receive notices about each student (fee reminders,
+     * school notices): name, phone, email and their login if they have one.
+     *
+     * @param  list<string>  $studentIds
+     * @return array<string, list<array{name: string, phone: ?string, email: ?string, user_id: ?string}>> By student id.
+     */
+    public function noticeContacts(Organization $company, array $studentIds): array
+    {
+        if ($studentIds === []) {
+            return [];
+        }
+        $links = $this->education->query(StudentGuardian::class, $company)->whereIn('student_id', $studentIds)->where('receives_notices', true)->get(['student_id', 'guardian_id']);
+        $guardians = $this->education->query(Guardian::class, $company)->whereKey($links->pluck('guardian_id')->unique())->get(['id', 'name', 'phone', 'email', 'user_id'])->keyBy('id');
+        $contacts = [];
+        foreach ($links as $link) {
+            $guardian = $guardians[$link->guardian_id] ?? null;
+            if ($guardian !== null) {
+                $contacts[$link->student_id][] = ['name' => $guardian->name, 'phone' => $guardian->phone, 'email' => $guardian->email, 'user_id' => $guardian->user_id];
+            }
+        }
+
+        return $contacts;
     }
 
     /** @return array<string, mixed>|null */

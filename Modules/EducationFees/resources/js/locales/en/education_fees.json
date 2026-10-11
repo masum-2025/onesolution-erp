@@ -317,7 +317,11 @@
             "overdue": "Overdue",
             "oldest": "Oldest due",
             "days": "Days late"
-        }
+        },
+        "remind": "Send reminder",
+        "remind_title": "Remind {count} families?",
+        "remind_text": "Each listed student's family gets one SMS or mail with what they owe, by their portal login or the guardian's phone. A family reminded today is skipped.",
+        "reminded": "{reminded} reminded, {skipped} skipped."
     },
     "heads": {
         "title": "Fee heads",

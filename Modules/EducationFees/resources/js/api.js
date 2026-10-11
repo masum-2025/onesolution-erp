@@ -43,6 +43,7 @@ export function feesApi(organizationId) {
         cancelRun: (id, version) => api(`${base}/runs/${id}/cancel`, { method: 'POST', body: { base_version: version } }),
         waiveFine: (id, body) => api(`${base}/bills/${id}/waive-fine`, { method: 'POST', body }),
         dues: (query) => api(`${base}/dues`, { query }),
+        remind: (studentIds) => api(`${base}/reminders`, { method: 'POST', body: { student_ids: studentIds } }),
         postings: (status) => api(`${base}/postings`, { query: status ? { status } : {} }),
         retryPostings: () => api(`${base}/postings/retry`, { method: 'POST', body: {} }),
 

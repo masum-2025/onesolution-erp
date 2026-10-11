@@ -38,8 +38,10 @@ class DeliverNotification implements ShouldQueue
             return;
         }
 
-        $user = User::query()->find($delivery->user_id);
-        if ($user === null) {
+        // A person without a login carries their own address (encrypted until sent).
+        $user = $delivery->user_id === null ? null : User::query()->find($delivery->user_id);
+        $contact = $delivery->user_id === null ? $delivery->address : null;
+        if ($user === null && ($contact === null || $contact === '')) {
             $this->finish($delivery, NotificationDelivery::FAILED, error: 'Recipient no longer exists.');
 
             return;
@@ -49,14 +51,14 @@ class DeliverNotification implements ShouldQueue
         $values = (array) $delivery->data;
 
         if ($delivery->channel === 'sms') {
-            if ($user->phone === null || $user->phone_verified_at === null) {
+            if ($user !== null && ($user->phone === null || $user->phone_verified_at === null)) {
                 $this->finish($delivery, NotificationDelivery::FAILED, error: 'Recipient has no verified phone.');
 
                 return;
             }
 
             $wording = $templates->wording($partner, $delivery->notification_key, 'sms', $delivery->locale);
-            $sender = $sms->send($partner, $user->phone, (string) $templates->fill($wording['body'], $values));
+            $sender = $sms->send($partner, $user?->phone ?? $contact, (string) $templates->fill($wording['body'], $values));
             $this->finish($delivery, NotificationDelivery::SENT, $sender);
 
             return;
@@ -67,7 +69,7 @@ class DeliverNotification implements ShouldQueue
 
         $sender = $mail->send(
             $partner,
-            $user->email,
+            $user?->email ?? $contact,
             (string) $templates->fill($wording['subject'], $values),
             (string) $templates->fill($wording['body'], $values),
             ['label' => $action, 'url' => $values['link'] ?? ''],
@@ -95,6 +97,7 @@ class DeliverNotification implements ShouldQueue
             'sender' => $sender,
             'error' => $error,
             'data' => null,
+            'address' => null,
             'sent_at' => $status === NotificationDelivery::SENT ? now() : null,
         ])->save();
     }

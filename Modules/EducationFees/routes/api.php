@@ -58,6 +58,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
             Route::post('bills/{bill}/cancel', [BillingController::class, 'cancelBill']);
             Route::post('bills/{bill}/waive-fine', [BillingController::class, 'waiveFine']);
             Route::post('postings/retry', [BillingController::class, 'retryPostings']);
+            Route::post('reminders', [BillingController::class, 'remind']);
 
             Route::post('receipts/{receipt}/void', [CollectionController::class, 'requestVoid']);
             Route::post('voids/{void}/approve', [CollectionController::class, 'approveVoid']);

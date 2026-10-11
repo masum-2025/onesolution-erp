@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { Download, PartyPopper } from 'lucide-vue-next';
+import { BellRing, Download, PartyPopper } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -10,6 +10,8 @@ import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { downloadText, toCsv } from '@/lib/csv';
+import { confirmAction } from '@/lib/dialogs';
+import { toast } from '@/lib/toast';
 import { currentOrganization } from '@/lib/session';
 import { textIn } from '@/lib/texts';
 import { t } from '@/lib/i18n';
@@ -41,9 +43,29 @@ const levelName = (id) => {
 
 function download() {
     const currency = setup.currency.value;
-    const header = ['code', 'name', 'class', 'bills', 'owed', 'overdue', 'oldest', 'days'].map((key) => t(`education_fees.dues.csv_columns.`));
+    const header = ['code', 'name', 'class', 'bills', 'owed', 'overdue', 'oldest', 'days'].map((key) => t(`education_fees.dues.csv_columns.${key}`));
     const lines = rows.value.map((row) => [row.student.code, row.student.name, levelName(row.level_id), row.bills, amountText(row.owed_minor, currency) || '0', amountText(row.overdue_minor, currency) || '0', row.oldest_due ?? '', row.days_overdue]);
     downloadText(`dues-${new Date().toISOString().slice(0, 10)}.csv`, toCsv([header, ...lines]));
+}
+
+// Reminding everyone listed (once a day each; the server skips the rest).
+const reminding = ref(false);
+async function remind() {
+    const confirmed = await confirmAction({
+        title: t('education_fees.dues.remind_title', { count: rows.value.length }),
+        message: t('education_fees.dues.remind_text'),
+        confirmLabel: t('education_fees.dues.remind'),
+    });
+    if (!confirmed) return;
+    reminding.value = true;
+    try {
+        const { data } = await api.remind(rows.value.map((row) => row.student.id));
+        toast.success(t('education_fees.dues.reminded', data));
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        reminding.value = false;
+    }
 }
 </script>
 
@@ -51,6 +73,7 @@ function download() {
     <div>
         <PageHeader :title="t('education_fees.dues.title')" :description="t('education_fees.dues.text')">
             <template #actions>
+                <AppButton v-if="setup.can('bill')" :icon="BellRing" :loading="reminding" :disabled="!rows.length" @click="remind">{{ t('education_fees.dues.remind') }}</AppButton>
                 <AppButton :icon="Download" :disabled="!rows.length" @click="download">{{ t('education_fees.dues.csv') }}</AppButton>
             </template>
         </PageHeader>

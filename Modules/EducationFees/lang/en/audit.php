@@ -26,4 +26,5 @@ return [
     'refund_requested' => 'Refund asked',
     'refund_rejected' => 'Refund refused',
     'refund_paid' => 'Refund paid',
+    'reminders_sent' => 'Fee reminders sent',
 ];

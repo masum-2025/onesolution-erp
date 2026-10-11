@@ -193,6 +193,38 @@ return [
             'category' => 'collection',
             'sort_order' => 130,
         ],
+        [
+            'key' => 'education_fees.reminders',
+            'type' => 'json',
+            // Off by default. Days before and after a bill's due date, the local hour, and how (SMS, mail).
+            'schema' => [
+                'type' => 'object', 'required' => ['enabled', 'before_days', 'after_days', 'hour', 'channels'], 'additionalProperties' => false,
+                'properties' => [
+                    'enabled' => ['type' => 'boolean'],
+                    'before_days' => ['type' => 'array', 'items' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 60], 'maxItems' => 5, 'uniqueItems' => true],
+                    'after_days' => ['type' => 'array', 'items' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 180], 'maxItems' => 5, 'uniqueItems' => true],
+                    'hour' => ['type' => 'integer', 'minimum' => 6, 'maximum' => 21],
+                    'channels' => ['type' => 'array', 'items' => ['enum' => ['sms', 'mail']], 'minItems' => 1, 'uniqueItems' => true],
+                ],
+            ],
+            'default' => ['enabled' => false, 'before_days' => [3], 'after_days' => [1, 7], 'hour' => 10, 'channels' => ['sms', 'mail']],
+            'label' => 'education_fees::rules.reminders.label',
+            'description' => 'education_fees::rules.reminders.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'reminders',
+            'sort_order' => 140,
+        ],
+        [
+            'key' => 'education_fees.notify_payment',
+            'type' => 'boolean',
+            // Tell the family when money is received (SMS or mail, on the reminders' channels).
+            'default' => false,
+            'label' => 'education_fees::rules.notify_payment.label',
+            'description' => 'education_fees::rules.notify_payment.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'reminders',
+            'sort_order' => 150,
+        ],
     ],
     'menu' => [
         [
@@ -237,6 +269,13 @@ return [
         ['subject' => 'education.student', 'label' => 'education_fees::module.portal_page', 'route' => '/portal/fees/{record}'],
     ],
     // Collections (FEE-2) and the portal listen to these; payloads carry ids only.
+    // To families (wording in education_fees::notifications); the link opens the portal.
+    'notifications' => [
+        'education_fees.due_soon' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'amount', 'number', 'due', 'link'], 'audience' => 'person', 'path' => '/portal'],
+        'education_fees.overdue' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'amount', 'number', 'due', 'link'], 'audience' => 'person', 'path' => '/portal'],
+        'education_fees.dues_reminder' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'amount', 'bills', 'due', 'link'], 'audience' => 'person', 'path' => '/portal'],
+        'education_fees.payment_received' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'amount', 'number', 'link'], 'audience' => 'person', 'path' => '/portal'],
+    ],
     'events' => ['education_fees.bill_issued', 'education_fees.bill_cancelled', 'education_fees.fee_paid', 'education_fees.receipt_voided'],
     'is_core' => false,
     'requires_consent' => false,

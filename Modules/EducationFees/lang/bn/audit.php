@@ -26,4 +26,5 @@ return [
     'refund_requested' => 'ফেরতের অনুরোধ',
     'refund_rejected' => 'ফেরত নাকচ',
     'refund_paid' => 'টাকা ফেরত',
+    'reminders_sent' => 'ফির রিমাইন্ডার পাঠানো',
 ];

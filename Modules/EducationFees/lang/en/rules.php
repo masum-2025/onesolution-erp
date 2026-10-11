@@ -39,6 +39,7 @@ return [
         'discounts' => 'Discounts',
         'fines' => 'Late fines',
         'collection' => 'Collecting',
+        'reminders' => 'Reminders',
     ],
     'payment_methods' => [
         'label' => 'Ways the counter takes fees',
@@ -59,5 +60,13 @@ return [
     'apply_advance_automatically' => [
         'label' => 'Use advances on new bills',
         'description' => 'On: a new bill is met from the student\'s advance as soon as it is issued.',
+    ],
+    'reminders' => [
+        'label' => 'Fee reminders',
+        'description' => 'Off by default. Families get an SMS or mail some days before a bill is due and some days after, at this hour in the institution\'s time. Each bill\'s reminder goes once; paid bills get none.',
+    ],
+    'notify_payment' => [
+        'label' => 'Tell families when money is received',
+        'description' => 'An SMS or mail with the amount and receipt number after each payment.',
     ],
 ];

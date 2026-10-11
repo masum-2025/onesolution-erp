@@ -22,6 +22,7 @@ use Modules\EducationFees\Services\Allocations;
 use Modules\EducationFees\Services\Billing;
 use Modules\EducationFees\Services\FeeOffice;
 use Modules\EducationFees\Services\FeePostings;
+use Modules\EducationFees\Services\FeeReminders;
 use Modules\EducationFees\Services\Fines;
 
 /**
@@ -205,6 +206,17 @@ class BillingController extends Controller
         return response()->json(['data' => $dues, 'meta' => [
             'students' => count($dues), 'owed_minor' => array_sum(array_column($dues, 'owed_minor')), 'overdue_minor' => array_sum(array_column($dues, 'overdue_minor')),
         ]]);
+    }
+
+    /** The office reminds students (or everyone listed) of what they owe, once a day each. */
+    public function remind(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('education_fees.bill', $unit);
+        $ids = $request->validate(['student_ids' => ['required', 'array', 'min:1', 'max:500'], 'student_ids.*' => ['string', 'size:26', 'distinct']])['student_ids'];
+        $here = array_keys(array_filter(app(AcademicDirectory::class)->students($company, $ids), fn (array $student) => in_array($student['unit_id'], $this->unitIds($unit), true)));
+
+        return response()->json(['data' => app(FeeReminders::class)->remindStudents($company, array_values($here), $request->user())]);
     }
 
     /** Fee events and whether they reached the books (failed ones with their reason first). */

@@ -84,6 +84,66 @@ class Notifier
     }
 
     /**
+     * The same to people without a login: contacts a module keeps (a
+     * guardian's phone or email on a student's record), each in the given
+     * language, on every channel asked for that they have and the
+     * notification allows (SMS only where the partner has SMS on).
+     *
+     * @param  iterable<array{name?: string, phone?: ?string, email?: ?string, locale?: ?string}>  $contacts
+     * @param  array<string, string>|callable(string $locale): array<string, string>  $values
+     * @param  list<string>  $channels  mail, sms
+     * @return list<NotificationDelivery>
+     */
+    public function notifyContacts(
+        string $key,
+        iterable $contacts,
+        array|callable $values,
+        ?Partner $partner,
+        ?Organization $organization,
+        array $channels = ['mail', 'sms'],
+        ?string $path = null,
+    ): array {
+        $definition = $this->catalog->get($key);
+        $supported = LanguageRegistry::codes();
+        $organizationLocale = $this->locale($organization);
+        $common = [
+            'product' => $this->brands->for($partner, $organization)['name'],
+            'link' => $this->links->to($path ?? $definition['path'], $partner, $organization),
+        ];
+        $allowed = array_values(array_intersect($channels, $definition['channels']));
+        $byLocale = [];
+        $deliveries = [];
+        foreach ($contacts as $contact) {
+            $locale = in_array($contact['locale'] ?? null, $supported, true) ? $contact['locale'] : $organizationLocale;
+            $filled = $byLocale[$locale] ??= [...(is_callable($values) ? $values($locale) : $values), ...$common];
+            $addresses = array_filter([
+                'mail' => in_array('mail', $allowed, true) && filter_var($contact['email'] ?? '', FILTER_VALIDATE_EMAIL) ? $contact['email'] : null,
+                'sms' => in_array('sms', $allowed, true) && ($contact['phone'] ?? '') !== '' && $this->sms->enabled($partner) ? $contact['phone'] : null,
+            ]);
+            foreach ($addresses as $channel => $address) {
+                $delivery = new NotificationDelivery;
+                $delivery->forceFill([
+                    'partner_id' => $partner?->getKey(),
+                    'organization_id' => $organization?->getKey(),
+                    'user_id' => null,
+                    'notification_key' => $key,
+                    'channel' => $channel,
+                    'locale' => $locale,
+                    'recipient' => $channel === 'sms' ? Mask::phone($address) : Mask::email($address),
+                    'address' => $address,
+                    'status' => NotificationDelivery::QUEUED,
+                    'data' => $filled,
+                ])->save();
+
+                DeliverNotification::dispatch($delivery->getKey())->afterCommit();
+                $deliveries[] = $delivery;
+            }
+        }
+
+        return $deliveries;
+    }
+
+    /**
      * Email when the person has one; else SMS to a verified phone, where the
      * notification and the partner allow SMS. Security notices go to both.
      *

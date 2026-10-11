@@ -3237,7 +3237,23 @@ record in the portal (manifest `portal_pages`, `{record}` = the member's link). 
   comes from the request; sensitive limit); after the gateway the family lands back on
   `/portal/fees/{record}?paid=…` (`FeeBillCollectable::returnPath`).
 - Another child's bill or receipt, or a stranger's record: the same 404; the staff API stays closed.
-- Next: FEE-4b reminders (SMS/mail before and after due dates).
+### Fee reminders (FEE-4b)
+
+- Rule `education_fees.reminders` {enabled, before_days, after_days, hour, channels} (off by
+  default; when on: 3 days before, 1 and 7 days after, 10:00 local, SMS and mail):
+  `education-fees:remind` runs hourly and sends at each institution's own hour; once per bill and
+  step (`fee_reminders.once_key`); paid or cancelled bills get none.
+- The office reminds families from **Who owes** (`POST /fees/reminders` {student_ids}, `.bill`,
+  sensitive limit): one message with what each student owes, once a day each.
+- Rule `education_fees.notify_payment` (off): a message after each receipt (listener on `FeePaid`).
+- Recipients: people linked to the student in the portal and guardians who receive notices
+  (Education `AcademicDirectory::noticeContacts`), by login when they have one, else on the phone
+  or email kept on the student's record.
+- **Platform**: `Notifier::notifyContacts()` sends to people without a login; their delivery has no
+  user and keeps the address encrypted (`notification_deliveries.address`, new column) until the
+  message is sent, then removes it (the masked recipient stays). SMS only where the partner has it on.
+- Messages (manifest `notifications`, wording in `education_fees::notifications`, partners may
+  reword): `due_soon`, `overdue`, `dues_reminder`, `payment_received`.
 
 ## Browser app (frontend foundation)
 

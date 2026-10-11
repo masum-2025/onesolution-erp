@@ -14,9 +14,12 @@ use Modules\Education\Events\StudentAdmitted;
 use Modules\EducationFees\Console\ApplyLateFines;
 use Modules\EducationFees\Console\BillMonthAutomatically;
 use Modules\EducationFees\Console\PostPendingFees;
+use Modules\EducationFees\Console\SendFeeReminders;
+use Modules\EducationFees\Events\FeePaid;
 use Modules\EducationFees\Export\EducationFeesExporter;
 use Modules\EducationFees\Listeners\BillCredits;
 use Modules\EducationFees\Listeners\BillOnAdmission;
+use Modules\EducationFees\Listeners\TellPaymentReceived;
 
 /**
  * Student fees: heads, structures, concessions, billing runs, bills and late
@@ -39,6 +42,7 @@ class EducationFeesServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom($root.'/lang', 'education_fees');
 
         Event::listen(StudentAdmitted::class, BillOnAdmission::class);
+        Event::listen(FeePaid::class, TellPaymentReceived::class);
         // Per-credit fees follow approved course registrations (when that module is installed).
         if (class_exists(RegistrationApproved::class)) {
             Event::listen(RegistrationApproved::class, BillCredits::class);
@@ -48,7 +52,7 @@ class EducationFeesServiceProvider extends ServiceProvider
             ->by('education-fees-counter:'.($request->user()?->getKey() ?? $request->ip())));
 
         if ($this->app->runningInConsole()) {
-            $this->commands([ApplyLateFines::class, BillMonthAutomatically::class, PostPendingFees::class]);
+            $this->commands([ApplyLateFines::class, BillMonthAutomatically::class, PostPendingFees::class, SendFeeReminders::class]);
         }
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             // Each institution's own "today"; running twice the same day adds nothing.
@@ -56,6 +60,8 @@ class EducationFeesServiceProvider extends ServiceProvider
             $schedule->command('education-fees:apply-fines')->dailyAt('02:50')->withoutOverlapping()->onOneServer();
             // Fee events the queue could not post (a closed period, a missing account) are tried again.
             $schedule->command('education-fees:post-pending')->hourly()->withoutOverlapping()->onOneServer();
+            // Each institution at its own hour (rule education_fees.reminders).
+            $schedule->command('education-fees:remind')->hourlyAt(5)->withoutOverlapping()->onOneServer();
         });
 
         if (! $this->app->routesAreCached()) {
