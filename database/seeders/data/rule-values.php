@@ -19,6 +19,12 @@ return [
 
     // ── Bangladesh ───────────────────────────────────────────────────────
     [
+        'key' => 'education_exams.default_grading_scheme',
+        'country' => 'BD',
+        'value' => 'bd_school_gpa5',
+        'reason' => 'SSC/HSC letter grades (GPA 5); universities choose the UGC scale (bd_university_ugc) per exam.',
+    ],
+    [
         'key' => 'payroll.overtime_multiplier',
         'country' => 'BD',
         'value' => '2.0',

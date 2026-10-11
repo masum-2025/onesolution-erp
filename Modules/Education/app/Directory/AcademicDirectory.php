@@ -19,6 +19,7 @@ use Modules\Education\Models\Student;
 use Modules\Education\Models\StudentGuardian;
 use Modules\Education\Models\Subject;
 use Modules\Education\Services\Education;
+use Modules\Education\Services\Teachers;
 
 /**
  * Education's public service for other modules (course registration,
@@ -97,7 +98,7 @@ class AcademicDirectory
     {
         $section = $this->education->query(Section::class, $company)->whereKey($id)->first();
 
-        return $section === null ? null : $section->only(['id', 'unit_id', 'session_id', 'level_id', 'name', 'is_active']);
+        return $section === null ? null : $section->only(['id', 'unit_id', 'session_id', 'level_id', 'name', 'is_active', 'class_teacher_id']);
     }
 
     /** @return array<string, mixed>|null */
@@ -247,7 +248,7 @@ class AcademicDirectory
         $counts = $this->education->query(Enrollment::class, $company)->whereIn('section_id', $sections->pluck('id'))->where('status', 'active')
             ->get(['section_id'])->countBy('section_id');
 
-        return $sections->map(fn (Section $section) => [...$section->only(['id', 'unit_id', 'session_id', 'level_id', 'name']), 'students' => (int) ($counts[$section->getKey()] ?? 0)])->values()->all();
+        return $sections->map(fn (Section $section) => [...$section->only(['id', 'unit_id', 'session_id', 'level_id', 'name', 'class_teacher_id']), 'students' => (int) ($counts[$section->getKey()] ?? 0)])->values()->all();
     }
 
     /**
@@ -332,6 +333,18 @@ class AcademicDirectory
         }
 
         return $contacts;
+    }
+
+    /** The HRM employee a login is (a teacher), when HRM is on; null otherwise. */
+    public function employeeOf(Organization $company, User $user): ?string
+    {
+        return app(Teachers::class)->employeeOf($company, $user);
+    }
+
+    /** Teachers' names by HRM employee id (unknown ids left out). */
+    public function teacherNames(Organization $company, array $employeeIds): array
+    {
+        return app(Teachers::class)->names($company, $employeeIds);
     }
 
     /** @return array<string, mixed>|null */

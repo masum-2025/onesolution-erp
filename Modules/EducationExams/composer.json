@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/education-exams",
+    "description": "Exams, papers, marks, grading and results.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\EducationExams\\": "app/"
+        }
+    }
+}

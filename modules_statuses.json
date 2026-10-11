@@ -22,5 +22,6 @@
     "Pos": true,
     "Education": true,
     "CourseRegistration": true,
-    "EducationFees": true
+    "EducationFees": true,
+    "EducationExams": true
 }

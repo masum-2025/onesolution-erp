@@ -3255,6 +3255,34 @@ record in the portal (manifest `portal_pages`, `{record}` = the member's link). 
 - Messages (manifest `notifications`, wording in `education_fees::notifications`, partners may
   reword): `due_soon`, `overdue`, `dues_reminder`, `payment_received`.
 
+## Exams module (EXM-1 backend)
+
+Code: `Modules/EducationExams` (module `education_exams`, requires `education`; sectors school,
+college, university, madrasa, coaching; on in their sector packages and the starter plan). Tables
+in the client's database: `exm_grading_schemes`, `exm_grading_bands`, `exm_exams`, `exm_papers`,
+`exm_paper_parts`, `exm_mark_sheets`, `exm_marks`. Marks are hundredths (82.5 → 8250),
+percentages basis points, grade points hundredths (5.00 → 500).
+
+- **Grading** (`/exams/schemes`, `.manage`): presets `database/data/grading/*.php` (BD schools GPA 5,
+  BD universities UGC 4, percentage) are copied into an institution the first time it opens exams;
+  bands from a percentage up (a band at 0 % required). Rule `default_grading_scheme` (country value
+  for BD in `rule-values.php`) preselects a scheme for new exams.
+- **Exams** (`/exams`): term, final, test, assignment; draft → marking → closed (reopens); published
+  in EXM-2. **Papers**: a subject for a class with full and pass marks, parts adding up to the full
+  marks (one "TOTAL" part otherwise), routine (day, time, minutes, room); a class's curriculum
+  becomes papers at once (`papers/from-curriculum`); a paper with marks keeps its marks layout.
+- **Mark sheets**: opening an exam for marks makes a sheet per paper and active section of its class
+  (at the exam's campus and below). Who enters: the HRM employee named on the sheet (`assign`,
+  `.manage`), else the section's class teacher (`.enter_marks`); exam managers enter any. Marks never
+  above a part's full marks; absent counts. Handed in when every student has every part or is
+  absent; rule `moderation_required` (on): someone else (`.moderate`, never who handed in) approves or
+  sends back with a note; off: handing in approves. Teachers save marks under their own limit
+  (`education-exams-marks`, 120/min).
+- Education's `AcademicDirectory` gained `employeeOf`, `teacherNames` and the class teacher on
+  section records. Client export has all tables.
+- Next: EXM-2 results (grades, GPA, combined exams, publishing, corrections, course registration
+  outcomes, CGPA), EXM-3 screens, EXM-4 marksheets and portal.
+
 ## Browser app (frontend foundation)
 
 Vue 3 + vue-router + Tailwind 4, built by Vite. Code: `resources/js`, page shell:

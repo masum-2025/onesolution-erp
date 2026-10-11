@@ -1,0 +1,11 @@
+{
+    "name": "EducationExams",
+    "alias": "education_exams",
+    "description": "Exams, papers, marks, grading and results.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EducationExams\\Providers\\EducationExamsServiceProvider"
+    ],
+    "files": []
+}
