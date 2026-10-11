@@ -31,6 +31,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
         Route::get('refunds', [CollectionController::class, 'refunds']);
         Route::get('takings', [CollectionController::class, 'summary']);
         Route::get('students', [CollectionController::class, 'findStudents']);
+        Route::get('dues', [BillingController::class, 'dues']);
+        Route::get('postings', [BillingController::class, 'postings']);
 
         // The counter: many parents at the start of a month, its own larger limit per person.
         Route::middleware('throttle:education-fees-counter')->post('receipts', [CollectionController::class, 'collect']);
@@ -54,6 +56,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
             Route::post('runs/{run}/cancel', [BillingController::class, 'cancelRun']);
             Route::post('bills/{bill}/cancel', [BillingController::class, 'cancelBill']);
             Route::post('bills/{bill}/waive-fine', [BillingController::class, 'waiveFine']);
+            Route::post('postings/retry', [BillingController::class, 'retryPostings']);
 
             Route::post('receipts/{receipt}/void', [CollectionController::class, 'requestVoid']);
             Route::post('voids/{void}/approve', [CollectionController::class, 'approveVoid']);

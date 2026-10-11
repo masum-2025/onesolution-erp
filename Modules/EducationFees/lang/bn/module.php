@@ -8,4 +8,10 @@ return [
     'menu_counter' => 'ফি কাউন্টার',
     'menu_takings' => 'আদায়',
     'menu_approvals' => 'অনুমোদন',
+    'menu_runs' => 'বিল তৈরি',
+    'menu_bills' => 'বিল',
+    'menu_dues' => 'বকেয়া',
+    'menu_heads' => 'ফির খাত',
+    'menu_structures' => 'ফির কাঠামো',
+    'menu_books' => 'হিসাবে ফি',
 ];

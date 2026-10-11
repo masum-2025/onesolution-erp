@@ -3,6 +3,7 @@
 namespace Modules\EducationFees\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -15,9 +16,12 @@ use Modules\EducationFees\Models\Bill;
 use Modules\EducationFees\Models\FeeHead;
 use Modules\EducationFees\Models\FeeRun;
 use Modules\EducationFees\Models\Fine;
+use Modules\EducationFees\Models\Posting;
+use Modules\EducationFees\Models\Receipt;
 use Modules\EducationFees\Services\Allocations;
 use Modules\EducationFees\Services\Billing;
 use Modules\EducationFees\Services\FeeOffice;
+use Modules\EducationFees\Services\FeePostings;
 use Modules\EducationFees\Services\Fines;
 
 /**
@@ -161,6 +165,75 @@ class BillingController extends Controller
         return response()->json(['data' => $this->billView($company, $saved)]);
     }
 
+    /**
+     * Who owes, in a session at the unit and below (a class or a section):
+     * each student with what they owe, what is overdue and since when, most
+     * overdue first. Only students who owe something.
+     */
+    public function dues(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('education_fees.view', $unit);
+        $filters = $request->validate([
+            'session_id' => ['required', 'string', 'size:26'], 'level_id' => ['nullable', 'string', 'size:26'], 'section_id' => ['nullable', 'string', 'size:26'],
+            'overdue_only' => ['nullable', 'boolean'],
+        ]);
+        $rows = app(AcademicDirectory::class)->enrolledStudents($company, $filters['session_id'], $this->unitIds($unit), $filters['level_id'] ?? null, $filters['section_id'] ?? null);
+        $today = $this->billing->today($company);
+        $bills = $this->office->query(Bill::class, $company)->whereIn('student_id', array_map(fn (array $row) => $row['student']['id'], $rows))->where('status', 'open')
+            ->get(['student_id', 'due_date', 'total_minor', 'paid_minor'])->groupBy('student_id');
+        $dues = [];
+        foreach ($rows as $row) {
+            $open = collect($bills[$row['student']['id']] ?? [])->filter(fn (Bill $bill) => $bill->balanceMinor() > 0);
+            $late = $open->filter(fn (Bill $bill) => $bill->due_date->toDateString() < $today);
+            if ($open->isEmpty() || (($filters['overdue_only'] ?? false) && $late->isEmpty())) {
+                continue;
+            }
+            $oldest = $late->min(fn (Bill $bill) => $bill->due_date->toDateString());
+            $dues[] = [
+                'student' => array_intersect_key($row['student'], array_flip(['id', 'code', 'name', 'name_local'])),
+                'level_id' => $row['enrollment']['level_id'], 'section_id' => $row['enrollment']['section_id'],
+                'bills' => $open->count(),
+                'owed_minor' => (int) $open->sum(fn (Bill $bill) => $bill->balanceMinor()),
+                'overdue_minor' => (int) $late->sum(fn (Bill $bill) => $bill->balanceMinor()),
+                'oldest_due' => $oldest,
+                'days_overdue' => $oldest === null ? 0 : (int) CarbonImmutable::parse($oldest)->diffInDays(CarbonImmutable::parse($today)),
+            ];
+        }
+        usort($dues, fn (array $a, array $b) => $b['days_overdue'] <=> $a['days_overdue'] ?: $b['owed_minor'] <=> $a['owed_minor']);
+
+        return response()->json(['data' => $dues, 'meta' => [
+            'students' => count($dues), 'owed_minor' => array_sum(array_column($dues, 'owed_minor')), 'overdue_minor' => array_sum(array_column($dues, 'overdue_minor')),
+        ]]);
+    }
+
+    /** Fee events and whether they reached the books (failed ones with their reason first). */
+    public function postings(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('education_fees.view', $company);
+        $status = $request->validate(['status' => ['nullable', 'in:pending,posted,failed']])['status'] ?? null;
+        $rows = $this->office->query(Posting::class, $company)->when($status, fn ($query) => $query->where('status', $status))
+            ->orderByDesc('created_at')->limit(300)->get()
+            // Failed first, then waiting, then posted; newest first in each.
+            ->sortBy(fn (Posting $row) => ['failed' => 0, 'pending' => 1][$row->status] ?? 2)->values();
+        $counts = $this->office->query(Posting::class, $company)->get(['status'])->countBy('status');
+
+        return response()->json(['data' => $rows->map(fn (Posting $row) => [
+            ...$row->only(['id', 'kind', 'source_id', 'status', 'journal_id', 'attempts', 'error']),
+            'posted_at' => $row->posted_at?->toIso8601String(), 'created_at' => $row->created_at?->toIso8601String(),
+        ])->values(), 'meta' => ['counts' => ['pending' => $counts['pending'] ?? 0, 'posted' => $counts['posted'] ?? 0, 'failed' => $counts['failed'] ?? 0]]]);
+    }
+
+    /** Try again what the books refused (after the period was opened or the account mapped). */
+    public function retryPostings(string $organization): JsonResponse
+    {
+        [, $company] = $this->workplace($organization);
+        Gate::authorize('education_fees.configure', $company);
+
+        return response()->json(['data' => ['posted' => app(FeePostings::class)->run($company, retryFailed: true)]]);
+    }
+
     /** A student's bills with what they still owe in all. */
     public function student(string $organization, string $student): JsonResponse
     {
@@ -189,10 +262,18 @@ class BillingController extends Controller
         $fines = $this->office->query(Fine::class, $company)->where('bill_id', $bill->getKey())->orderBy('applied_on')->orderBy('created_at')->get();
         $lines = $this->billing->lines($company, $bill);
         $heads = $this->office->query(FeeHead::class, $company)->whereKey($lines->pluck('head_id')->unique())->get()->keyBy('id');
+        $standing = app(Allocations::class)->standing($company, billId: $bill->getKey());
+        $receipts = $this->office->query(Receipt::class, $company)->whereKey($standing->pluck('allocation.receipt_id')->filter())->get()->keyBy('id');
 
         return [
             ...$this->presenter->bill($bill, $lines, $fines, $student, $this->billing->today($company)),
             'heads' => $heads->map(fn (FeeHead $head) => ['id' => $head->getKey(), 'code' => $head->code, 'name' => $head->texts('name')])->values(),
+            // What met it: receipts (number, day, how) and the advance.
+            'payments' => $standing->map(fn (array $row) => [
+                'kind' => $row['allocation']->kind, 'amount_minor' => $row['standing'], 'receipt_id' => $row['allocation']->receipt_id,
+                'number' => $receipts[$row['allocation']->receipt_id ?? '']->number ?? null, 'method' => $receipts[$row['allocation']->receipt_id ?? '']->method ?? null,
+                'day' => ($receipts[$row['allocation']->receipt_id ?? '']->received_on ?? $row['allocation']->created_at)?->toDateString(),
+            ])->values(),
         ];
     }
 

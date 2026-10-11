@@ -8,4 +8,10 @@ return [
     'menu_counter' => 'Fee counter',
     'menu_takings' => 'Takings',
     'menu_approvals' => 'Approvals',
+    'menu_runs' => 'Billing',
+    'menu_bills' => 'Bills',
+    'menu_dues' => 'Who owes',
+    'menu_heads' => 'Fee heads',
+    'menu_structures' => 'Fee structures',
+    'menu_books' => 'Fees in the books',
 ];

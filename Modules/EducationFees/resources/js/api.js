@@ -34,5 +34,23 @@ export function feesApi(organizationId) {
         endConcession: (id, body) => api(`${base}/concessions/${id}/end`, { method: 'POST', body }),
 
         takings: (query) => api(`${base}/takings`, { query }),
+
+        runs: (query) => api(`${base}/runs`, { query }),
+        run: (id) => api(`${base}/runs/${id}`),
+        createRun: (body) => api(`${base}/runs`, { method: 'POST', body }),
+        refreshRun: (id, version) => api(`${base}/runs/${id}/refresh`, { method: 'POST', body: { base_version: version } }),
+        finalizeRun: (id, version) => api(`${base}/runs/${id}/finalize`, { method: 'POST', body: { base_version: version } }),
+        cancelRun: (id, version) => api(`${base}/runs/${id}/cancel`, { method: 'POST', body: { base_version: version } }),
+        waiveFine: (id, body) => api(`${base}/bills/${id}/waive-fine`, { method: 'POST', body }),
+        dues: (query) => api(`${base}/dues`, { query }),
+        postings: (status) => api(`${base}/postings`, { query: status ? { status } : {} }),
+        retryPostings: () => api(`${base}/postings/retry`, { method: 'POST', body: {} }),
+
+        createHead: (body) => api(`${base}/heads`, { method: 'POST', body }),
+        updateHead: (id, body) => api(`${base}/heads/${id}`, { method: 'PATCH', body }),
+        structures: (query) => api(`${base}/structures`, { query }),
+        createStructure: (body) => api(`${base}/structures`, { method: 'POST', body }),
+        updateStructure: (id, body) => api(`${base}/structures/${id}`, { method: 'PATCH', body }),
+        structureStatus: (id, status, version) => api(`${base}/structures/${id}/${status === 'active' ? 'activate' : 'archive'}`, { method: 'POST', body: { base_version: version } }),
     };
 }

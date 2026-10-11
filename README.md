@@ -3203,7 +3203,28 @@ texts in `locales/{en,bn}/education_fees.json`.
 - API additions for the screens: `people` (names by id) on receipts, takings, voids, refunds and
   discounts; receipts carry `institution`, `campus`, `collector`, `void_pending` and each bill's
   `billing_key`; setup carries `currency` and the counter rules.
-- Next: FEE-3b (billing runs, bills, overdue list, heads and structures, dashboard).
+### Fee screens, part 2 (FEE-3b)
+
+Menu adds **Billing** (`/fees/runs`), **Bills** (`/fees/bills`), **Who owes** (`/fees/dues`); module
+settings pages **Fee heads**, **Fee structures**, **Fees in the books** (`/fees/heads`,
+`/fees/structures`, `/fees/books`); dashboard `/m/education_fees`.
+
+- **Billing**: runs of a session; `RunDialog` drafts a month, the session's fees or chosen "other"
+  heads (all or one class); the run page lists each student's draft bill, says who was left out
+  (already billed, no amount), recalculates, makes final (confirm) or drops the draft.
+- **Bill**: printable; each head with fee, discount and where it came from (percent, sibling,
+  fixed), tax, late fines and waivers, what paid it (receipts, advance) and what is still owed;
+  waive the fine (`.approve`) or cancel (`.bill`). On phones the lines stack.
+- **Who owes** (`GET /fees/dues?session_id&level_id&overdue_only`): students owing in a session,
+  most overdue first, totals, CSV download (formula-safe).
+- **Fee heads** and **Fee structures** editors (amounts typed as text, months a monthly head is
+  billed in as toggles); make a structure active or archive it.
+- **Fees in the books** (`GET /fees/postings`, `POST /fees/postings/retry` with `.configure`):
+  counts and what waits or was refused, with the books' reason.
+- **Dashboard** widgets: fees taken today (seven-day trend), fees owed (with what is overdue),
+  approvals waiting. **Bell**: discounts to approve (`.approve`), voids and refunds to decide
+  (`.void`, never one's own), fee entries the books refused (`.configure`).
+- Next: FEE-4 (portal bills and payment, reminders).
 
 ## Browser app (frontend foundation)
 

@@ -222,3 +222,38 @@ it('gives the screens students with what they owe, names instead of ids, and rec
     $setup = ($this->as)()->getJson(($this->fees)('setup'))->json('data');
     expect($setup['currency'])->toBe('BDT')->and($setup['rules'])->toMatchArray(['payment_methods' => ['cash', 'bank', 'mobile'], 'allow_partial_payment' => true]);
 });
+
+it('lists who owes, what paid a bill, and rings the bell for approvers', function () {
+    $january = ($this->month)('2026-01');
+    ($this->month)('2026-02');
+    ($this->pay)(100000)->assertCreated();
+    $karim = newStudent($this, $this->school, [
+        'name' => 'Karim', 'guardians' => [['name' => 'Rafiq', 'phone' => '01711-000009', 'relation' => 'father']],
+        'enrollment' => ['session_id' => $this->school->session['id'], 'level_id' => $this->school->class6['id'], 'section_id' => $this->sectionB['id']],
+    ])->assertCreated()->json('data');
+
+    // Who owes: Rahim (overdue since 10 January once the day passes); Karim owes nothing.
+    $this->travelTo(CarbonImmutable::parse('2026-02-20 04:00:00', 'UTC'));
+    $this->token = orgToken($this->owner, $this->w->c1);
+    $this->checkerToken = orgToken($this->checker, $this->w->c1);
+    $dues = ($this->as)()->getJson(($this->fees)("dues?session_id={$this->school->session['id']}"))->assertOk()->json();
+    expect($dues['data'])->toHaveCount(1)->and($dues['data'][0])->toMatchArray([
+        'owed_minor' => 200000, 'overdue_minor' => 200000, 'oldest_due' => '2026-01-10', 'days_overdue' => 41, 'bills' => 2,
+    ])->and($dues['meta'])->toMatchArray(['students' => 1, 'owed_minor' => 200000]);
+    expect($karim['name'])->toBe('Karim');
+
+    // A bill shows what paid it.
+    $bill = ($this->as)()->getJson(($this->fees)("bills/{$january['id']}"))->json('data');
+    expect($bill['payments'])->toHaveCount(1)->and($bill['payments'][0])->toMatchArray(['kind' => 'receipt', 'amount_minor' => 100000, 'method' => 'cash', 'day' => '2026-01-05']);
+
+    // The bell: a discount asked by the owner rings for the checker, not for the owner.
+    ($this->as)()->postJson(($this->fees)('concessions'), ['student_id' => $this->rahim['id'], 'mode' => 'percent', 'percent_bp' => 1000, 'reason' => 'Merit', 'starts_on' => '2026-02-01'])->assertCreated();
+    $bell = fn (string $token) => collect($this->asToken($token)->getJson('/api/attention')->assertOk()->json('data'))->firstWhere('key', 'education_fees.discounts_waiting');
+    expect($bell($this->checkerToken)['count'] ?? null)->toBe(1)->and($bell($this->token))->toBeNull();
+    $widget = fn (string $key) => ($this->as)()->getJson("/api/modules/education_fees/dashboard/{$key}")->assertOk()->json('data');
+    expect($widget('waiting')['value'])->toBe(1)->and($widget('owed'))->toMatchArray(['value' => 200000, 'format' => 'money', 'currency' => 'BDT']);
+
+    // No books here: nothing waits for them.
+    ($this->as)()->getJson(($this->fees)('postings'))->assertOk()->assertJsonPath('meta.counts', ['pending' => 0, 'posted' => 0, 'failed' => 0]);
+    ($this->as)()->postJson(($this->fees)('postings/retry'))->assertOk()->assertJsonPath('data.posted', 0);
+});

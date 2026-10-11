@@ -1,5 +1,8 @@
 <?php
 
+use Modules\EducationFees\Dashboard\FeesOwed;
+use Modules\EducationFees\Dashboard\FeeTakings;
+use Modules\EducationFees\Dashboard\FeeWidgets;
 use Modules\EducationFees\Payments\FeeBillCollectable;
 
 /*
@@ -201,6 +204,9 @@ return [
             'section' => 'business',
             'children' => [
                 ['key' => 'counter', 'label' => 'education_fees::module.menu_counter', 'route' => '/fees', 'permission' => 'education_fees.view'],
+                ['key' => 'runs', 'label' => 'education_fees::module.menu_runs', 'route' => '/fees/runs', 'permission' => 'education_fees.view'],
+                ['key' => 'bills', 'label' => 'education_fees::module.menu_bills', 'route' => '/fees/bills', 'permission' => 'education_fees.view'],
+                ['key' => 'dues', 'label' => 'education_fees::module.menu_dues', 'route' => '/fees/dues', 'permission' => 'education_fees.view'],
                 ['key' => 'takings', 'label' => 'education_fees::module.menu_takings', 'route' => '/fees/takings', 'permission' => 'education_fees.view'],
                 ['key' => 'approvals', 'label' => 'education_fees::module.menu_approvals', 'route' => '/fees/approvals', 'permission' => 'education_fees.view'],
             ],
@@ -230,6 +236,15 @@ return [
     'events' => ['education_fees.bill_issued', 'education_fees.bill_cancelled', 'education_fees.fee_paid', 'education_fees.receipt_voided'],
     'is_core' => false,
     'requires_consent' => false,
-    'dashboard' => ['widgets' => []],
-    'settings' => ['pages' => []],
+    'dashboard' => ['widgets' => [
+        ['key' => 'takings', 'label' => 'education_fees::dashboard.takings', 'type' => 'stat', 'provider' => FeeTakings::class, 'permission' => 'education_fees.view', 'overview' => true],
+        ['key' => 'owed', 'label' => 'education_fees::dashboard.owed', 'type' => 'stat', 'provider' => FeesOwed::class, 'permission' => 'education_fees.view', 'overview' => true],
+        ['key' => 'waiting', 'label' => 'education_fees::dashboard.waiting', 'type' => 'stat', 'provider' => FeeWidgets::class, 'permission' => 'education_fees.view'],
+    ]],
+    'attention' => [FeeWidgets::class],
+    'settings' => ['pages' => [
+        ['key' => 'heads', 'label' => 'education_fees::module.menu_heads', 'route' => '/fees/heads', 'permission' => 'education_fees.view'],
+        ['key' => 'structures', 'label' => 'education_fees::module.menu_structures', 'route' => '/fees/structures', 'permission' => 'education_fees.view'],
+        ['key' => 'books', 'label' => 'education_fees::module.menu_books', 'route' => '/fees/books', 'permission' => 'education_fees.view'],
+    ]],
 ];

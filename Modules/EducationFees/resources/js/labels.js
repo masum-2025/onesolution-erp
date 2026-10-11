@@ -15,3 +15,11 @@ export function billTitle(bill) {
 export function day(date) {
     return date ? formatDate(`${date}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' }) : '—';
 }
+
+/** What a billing run bills: "March 2026", "Session fees", "Other heads". */
+export function runTitle(run) {
+    if (run?.kind === 'monthly' && run.period) {
+        return formatDate(`${run.period}-01T00:00:00Z`, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    }
+    return t(`education_fees.run_kinds.${run?.kind ?? 'other'}`);
+}
