@@ -87,6 +87,12 @@ class FeeOffice
             : DB::connection($connection)->transaction(fn () => DB::transaction($callback));
     }
 
+    /** The institution's currency (from its settings: country and currency). */
+    public function currency(Organization $company): string
+    {
+        return $this->settings->values($company)['currency_code'] ?? throw FeeException::noCurrency();
+    }
+
     /** Today at the institution, as a date. */
     public function today(Organization $company): CarbonImmutable
     {

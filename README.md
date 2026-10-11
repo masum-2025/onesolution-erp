@@ -3162,7 +3162,27 @@ sum of its allocations).
 - **Takings** (`GET /fees/takings?from&to&collected_by`): totals by method and by person, voided apart.
 - A student's statement (`GET /fees/students/{id}`) shows `advance_minor`. Events `FeePaid`,
   `ReceiptVoided`.
-- Next: posting to the books and online payment (FEE-2b), screens (FEE-3), portal and reminders (FEE-4).
+### Fees in the books and online payment (FEE-2b)
+
+- Where Accounting is on, each money event writes a `fee_postings` row in its own transaction; the
+  queued job `PostFees` posts it through Accounting's `Ledger` (op id `fee-<kind>-<id>`: twice is
+  once). The counter never waits for the books: a closed period or missing account leaves the row
+  `failed` with its reason; `education-fees:post-pending` (hourly) tries again.
+- Entries: bill Dr receivable + Dr discounts / Cr income per head + Cr tax; fine Dr receivable / Cr
+  fine income (waiver back); receipt Dr cash|bank|mobile|online / Cr receivable (+ Cr advance);
+  advance used Dr advance / Cr receivable; fewer credits Dr the head's income / Cr advance (new
+  `fee_advances.head_id`); void undoes what the receipt still paid; cancel undoes the bill and its
+  fines and moves what was paid to the advance; refund Dr advance / Cr method.
+- Posting keys (manifest `ledger_accounts`): receivable (school 1145, general 1140), advance 2150
+  (new in the general chart), discounts 4190 (new contra income), fine income (school 4150 new,
+  general 4900), tax 2130, cash 1110, bank 1120, mobile 1130, online 1130. Old books get the
+  accounts with `accounting:map-postings`.
+- **Online**: `FeeBillCollectable` (`education_fees.bill`, manifest `payment_collectables`): the
+  bill's whole balance, only for a portal member linked to the bill's student (any relation),
+  while `client_portal.allow_online_payment` is on. The confirmed payment becomes a receipt
+  (method online, op id `payment-<id>`); if the counter took money meanwhile, the rest waits as the
+  advance. The portal pay button comes with FEE-4.
+- Next: screens (FEE-3), portal and reminders (FEE-4).
 
 ## Browser app (frontend foundation)
 

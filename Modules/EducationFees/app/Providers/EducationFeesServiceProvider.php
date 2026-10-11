@@ -13,6 +13,7 @@ use Modules\CourseRegistration\Events\RegistrationApproved;
 use Modules\Education\Events\StudentAdmitted;
 use Modules\EducationFees\Console\ApplyLateFines;
 use Modules\EducationFees\Console\BillMonthAutomatically;
+use Modules\EducationFees\Console\PostPendingFees;
 use Modules\EducationFees\Export\EducationFeesExporter;
 use Modules\EducationFees\Listeners\BillCredits;
 use Modules\EducationFees\Listeners\BillOnAdmission;
@@ -47,12 +48,14 @@ class EducationFeesServiceProvider extends ServiceProvider
             ->by('education-fees-counter:'.($request->user()?->getKey() ?? $request->ip())));
 
         if ($this->app->runningInConsole()) {
-            $this->commands([ApplyLateFines::class, BillMonthAutomatically::class]);
+            $this->commands([ApplyLateFines::class, BillMonthAutomatically::class, PostPendingFees::class]);
         }
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             // Each institution's own "today"; running twice the same day adds nothing.
             $schedule->command('education-fees:auto-bill')->dailyAt('02:30')->withoutOverlapping()->onOneServer();
             $schedule->command('education-fees:apply-fines')->dailyAt('02:50')->withoutOverlapping()->onOneServer();
+            // Fee events the queue could not post (a closed period, a missing account) are tried again.
+            $schedule->command('education-fees:post-pending')->hourly()->withoutOverlapping()->onOneServer();
         });
 
         if (! $this->app->routesAreCached()) {

@@ -16,7 +16,7 @@ use Modules\EducationFees\Models\Bill;
  */
 class Allocations
 {
-    public function __construct(private FeeOffice $office) {}
+    public function __construct(private FeeOffice $office, private FeePostings $postings) {}
 
     /** @param  array{receipt_id?: ?string, advance_id?: ?string, reverses_id?: ?string}  $refs */
     public function add(Organization $company, Bill $bill, string $kind, int $amountMinor, array $refs, ?string $actorId): Allocation
@@ -79,14 +79,14 @@ class Allocations
         return (int) $query->get(['amount_minor'])->sum('amount_minor');
     }
 
-    /** @param  array{receipt_id?: ?string, bill_id?: ?string, refund_id?: ?string}  $refs */
+    /** @param  array{receipt_id?: ?string, bill_id?: ?string, refund_id?: ?string, head_id?: ?string}  $refs */
     public function moveAdvance(Organization $company, string $unitId, string $studentId, string $kind, int $amountMinor, array $refs, ?string $note, ?string $actorId): Advance
     {
         $advance = new Advance;
         $advance->fill([
             'organization_id' => $company->getKey(), 'unit_id' => $unitId, 'student_id' => $studentId, 'kind' => $kind, 'amount_minor' => $amountMinor,
             'receipt_id' => $refs['receipt_id'] ?? null, 'bill_id' => $refs['bill_id'] ?? null, 'refund_id' => $refs['refund_id'] ?? null,
-            'note' => $note, 'created_by' => $actorId,
+            'head_id' => $refs['head_id'] ?? null, 'note' => $note, 'created_by' => $actorId,
         ]);
         $advance->save();
 
@@ -103,6 +103,7 @@ class Allocations
         }
         $advance = $this->moveAdvance($company, $bill->unit_id, $bill->student_id, 'applied', -$use, ['bill_id' => $bill->getKey()], null, $actorId);
         $this->add($company, $bill, 'advance', $use, ['advance_id' => $advance->getKey()], $actorId);
+        $this->postings->queue($company, 'advance', $advance->getKey());
 
         return $use;
     }

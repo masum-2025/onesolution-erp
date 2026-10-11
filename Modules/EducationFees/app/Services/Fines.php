@@ -23,7 +23,7 @@ use Modules\EducationFees\Models\Fine;
  */
 class Fines
 {
-    public function __construct(private FeeOffice $office, private RuleResolver $rules, private RuleContextFactory $contexts, private AuditLogger $audit) {}
+    public function __construct(private FeeOffice $office, private RuleResolver $rules, private RuleContextFactory $contexts, private AuditLogger $audit, private FeePostings $postings) {}
 
     /** Fines due today on the institution's open bills; how many bills got one. */
     public function apply(Organization $company): int
@@ -62,10 +62,12 @@ class Fines
                 throw FeeException::noFineToWaive();
             }
             $waived = $bill->fine_minor;
-            (new Fine)->fill([
+            $waiver = (new Fine)->fill([
                 'organization_id' => $company->getKey(), 'bill_id' => $bill->getKey(), 'kind' => 'waiver', 'amount_minor' => -$waived,
                 'applied_on' => $this->office->today($company)->toDateString(), 'reason' => $reason, 'created_by' => $actor->getKey(),
-            ])->save();
+            ]);
+            $waiver->save();
+            $this->postings->queue($company, 'fine', $waiver->getKey());
             $bill->forceFill([
                 'fine_minor' => 0, 'total_minor' => $bill->total_minor - $waived, 'fines_stopped_at' => now(), 'version' => $bill->version + 1,
                 'status' => $bill->paid_minor >= $bill->total_minor - $waived ? 'paid' : $bill->status,
@@ -88,7 +90,9 @@ class Fines
             if ($more <= 0 || $this->office->query(Fine::class, $company)->where('bill_id', $bill->getKey())->where('kind', 'fine')->where('applied_on', $today)->exists()) {
                 return false;
             }
-            (new Fine)->fill(['organization_id' => $company->getKey(), 'bill_id' => $bill->getKey(), 'kind' => 'fine', 'amount_minor' => $more, 'applied_on' => $today])->save();
+            $fine = (new Fine)->fill(['organization_id' => $company->getKey(), 'bill_id' => $bill->getKey(), 'kind' => 'fine', 'amount_minor' => $more, 'applied_on' => $today]);
+            $fine->save();
+            $this->postings->queue($company, 'fine', $fine->getKey());
             $bill->forceFill(['fine_minor' => $bill->fine_minor + $more, 'total_minor' => $bill->total_minor + $more, 'version' => $bill->version + 1])->save();
             $this->audit->record('education_fees.fine_added', $bill, new: ['fine_minor' => $bill->fine_minor, 'added_minor' => $more], organizationId: $company->getKey());
 

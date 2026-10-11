@@ -43,6 +43,7 @@ class Collections
         private RuleContextFactory $contexts,
         private OrganizationSettingsResolver $settings,
         private AuditLogger $audit,
+        private FeePostings $postings,
     ) {}
 
     /**
@@ -82,6 +83,7 @@ class Collections
             if ($receipt->amount_minor > $used) {
                 $this->allocations->moveAdvance($company, $receipt->unit_id, $receipt->student_id, 'overpaid', $receipt->amount_minor - $used, ['receipt_id' => $receipt->getKey()], null, $actor?->getKey());
             }
+            $this->postings->queue($company, 'receipt', $receipt->getKey());
             $this->audit->record('education_fees.receipt_taken', $receipt, new: [
                 ...$receipt->only(['number', 'student_id', 'method', 'amount_minor', 'received_on']), 'bills' => $plan, 'advance_minor' => $receipt->amount_minor - $used,
             ], actor: $actor, organizationId: $company->getKey());
@@ -269,6 +271,7 @@ class Collections
             $this->allocations->moveAdvance($company, $receipt->unit_id, $receipt->student_id, 'voided', -$held, ['receipt_id' => $receipt->getKey()], $void->reason, $actor->getKey());
         }
         $receipt->forceFill(['status' => 'voided', 'version' => $receipt->version + 1])->save();
+        $this->postings->queue($company, 'void', $void->getKey());
         $void->forceFill(['status' => 'approved', 'decided_by' => $actor->getKey(), 'decided_at' => now(), 'decision_note' => $note, 'version' => $void->version + 1])->save();
         $this->audit->record('education_fees.receipt_voided', $receipt, old: ['status' => 'valid'], new: ['status' => 'voided', 'amount_minor' => $receipt->amount_minor], reason: $void->reason, actor: $actor, organizationId: $company->getKey());
         DB::afterCommit(fn () => event(new ReceiptVoided($company->getKey(), $receipt->getKey(), $receipt->student_id)));
@@ -282,6 +285,7 @@ class Collections
         }
         $this->allocations->moveAdvance($company, $refund->unit_id, $refund->student_id, 'refunded', -$refund->amount_minor, ['refund_id' => $refund->getKey()], $refund->reason, $actor->getKey());
         $refund->forceFill(['status' => 'approved', 'decided_by' => $actor->getKey(), 'decided_at' => now(), 'decision_note' => $note, 'version' => $refund->version + 1])->save();
+        $this->postings->queue($company, 'refund', $refund->getKey());
         $this->audit->record('education_fees.refund_paid', $refund, new: $refund->only(['student_id', 'amount_minor', 'method']), reason: $refund->reason, actor: $actor, organizationId: $company->getKey());
     }
 

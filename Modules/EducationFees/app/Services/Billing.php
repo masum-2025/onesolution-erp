@@ -51,6 +51,7 @@ class Billing
         private RuleContextFactory $contexts,
         private ModuleResolver $modules,
         private Allocations $allocations,
+        private FeePostings $postings,
         private OrganizationSettingsResolver $settings,
         private AuditLogger $audit,
     ) {}
@@ -190,6 +191,7 @@ class Billing
             if ($freed > 0) {
                 $this->allocations->moveAdvance($company, $bill->unit_id, $bill->student_id, 'bill_cancelled', $freed, ['bill_id' => $bill->getKey()], $reason, $actor->getKey());
             }
+            $this->postings->queue($company, 'cancel', $bill->getKey());
             $bill->forceFill(['status' => 'cancelled', 'active_key' => null, 'cancel_reason' => $reason, 'version' => $bill->version + 1])->save();
             $this->audit->record('education_fees.bill_cancelled', $bill, old: ['status' => $old], new: ['status' => 'cancelled', 'total_minor' => $bill->total_minor, 'to_advance_minor' => $freed], reason: $reason, actor: $actor, organizationId: $company->getKey());
             DB::afterCommit(fn () => event(new BillCancelled($company->getKey(), $bill->getKey(), $bill->student_id)));
@@ -224,18 +226,19 @@ class Billing
             $billed = $this->office->query(BillLine::class, $company)->whereIn('bill_id', $earlier->where('status', '!=', 'cancelled')->pluck('id'))->get()
                 ->groupBy('head_id')->map(fn ($lines) => (int) $lines->sum('amount_minor'));
             $more = [];
-            $fewer = 0;
+            $fewer = [];
             foreach ($heads as $head) {
                 $target = FeeMath::perCredits($rates[$head->getKey()]['amount_minor'] ?? 0, $creditsCenti);
                 $difference = $target - ($billed[$head->getKey()] ?? 0);
                 if ($difference > 0) {
                     $more[$head->getKey()] = $difference;
                 } elseif ($difference < 0) {
-                    $fewer += FeeMath::line(-$difference, $this->percentFor($company, $student['id'], $head->getKey(), $today), 0)['due_minor'];
+                    $fewer[$head->getKey()] = FeeMath::line(-$difference, $this->percentFor($company, $student['id'], $head->getKey(), $today), 0)['due_minor'];
                 }
             }
-            if ($fewer > 0) {
-                $this->allocations->moveAdvance($company, $enrollment['unit_id'], $student['id'], 'credits_reduced', $fewer, [], null, null);
+            foreach (array_filter($fewer) as $headId => $amount) {
+                $advance = $this->allocations->moveAdvance($company, $enrollment['unit_id'], $student['id'], 'credits_reduced', $amount, ['head_id' => $headId], null, null);
+                $this->postings->queue($company, 'advance', $advance->getKey());
             }
             if ($more === []) {
                 return null;
@@ -399,6 +402,7 @@ class Billing
             'status' => $bill->total_minor > 0 ? 'open' : 'paid',
             'version' => $bill->version + 1,
         ])->save();
+        $this->postings->queue($company, 'bill', $bill->getKey());
         $unit = Organization::query()->find($bill->unit_id) ?? $company;
         if ($bill->status === 'open' && $this->rules->get('education_fees.apply_advance_automatically', $this->contexts->forOrganization($unit))) {
             $this->allocations->applyAdvance($company, $bill, null);

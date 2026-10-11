@@ -16,6 +16,7 @@ use Modules\EducationFees\Models\FeeRun;
 use Modules\EducationFees\Models\FeeStructure;
 use Modules\EducationFees\Models\FeeStructureLine;
 use Modules\EducationFees\Models\Fine;
+use Modules\EducationFees\Models\Posting;
 use Modules\EducationFees\Models\Receipt;
 use Modules\EducationFees\Models\ReceiptVoid;
 use Modules\EducationFees\Models\Refund;
@@ -47,7 +48,8 @@ class EducationFeesExporter implements ExportsModuleData
             'fines' => $this->rows(Fine::class, $organization, $organizationIds, fn ($row) => $plain($row, ['bill_id', 'kind', 'amount_minor', 'applied_on', 'reason'])),
             'receipts' => $this->rows(Receipt::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'number', 'received_on', 'method', 'reference', 'amount_minor', 'currency', 'status', 'note', 'collected_by', 'payment_id'])),
             'allocations' => $this->rows(Allocation::class, $organization, $organizationIds, fn ($row) => $plain($row, ['bill_id', 'kind', 'receipt_id', 'advance_id', 'reverses_id', 'amount_minor', 'created_at'])),
-            'advances' => $this->rows(Advance::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'kind', 'amount_minor', 'receipt_id', 'bill_id', 'refund_id', 'note', 'created_at'])),
+            'advances' => $this->rows(Advance::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'kind', 'amount_minor', 'receipt_id', 'bill_id', 'refund_id', 'head_id', 'note', 'created_at'])),
+            'postings' => $this->rows(Posting::class, $organization, $organizationIds, fn ($row) => $plain($row, ['kind', 'source_id', 'status', 'journal_id', 'attempts', 'posted_at'])),
             'voids' => $this->rows(ReceiptVoid::class, $organization, $organizationIds, fn ($row) => $plain($row, ['receipt_id', 'reason', 'status', 'decided_at', 'decision_note'])),
             'refunds' => $this->rows(Refund::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'student_id', 'amount_minor', 'currency', 'method', 'reference', 'reason', 'status', 'decided_at'])),
         ];

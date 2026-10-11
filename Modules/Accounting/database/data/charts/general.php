@@ -38,6 +38,7 @@ return [
         ['code' => '2120', 'name' => ['en' => 'Salaries payable', 'bn' => 'প্রদেয় বেতন'], 'parent' => '2100'],
         ['code' => '2130', 'name' => ['en' => 'Taxes payable', 'bn' => 'প্রদেয় কর'], 'parent' => '2100'],
         ['code' => '2140', 'name' => ['en' => 'Accrued expenses', 'bn' => 'বকেয়া খরচ'], 'parent' => '2100'],
+        ['code' => '2150', 'name' => ['en' => 'Received in advance', 'bn' => 'অগ্রিম প্রাপ্তি'], 'parent' => '2100'],
         ['code' => '2160', 'name' => ['en' => 'Provident fund payable', 'bn' => 'প্রদেয় ভবিষ্য তহবিল'], 'parent' => '2100'],
         ['code' => '2200', 'name' => ['en' => 'Long-term liabilities', 'bn' => 'দীর্ঘমেয়াদি দায়'], 'parent' => '2000', 'group' => true],
         ['code' => '2210', 'name' => ['en' => 'Loans', 'bn' => 'ঋণ'], 'parent' => '2200'],
@@ -51,6 +52,8 @@ return [
         ['code' => '4000', 'name' => ['en' => 'Income', 'bn' => 'আয়'], 'type' => 'income', 'group' => true],
         ['code' => '4100', 'name' => ['en' => 'Sales', 'bn' => 'বিক্রয়'], 'parent' => '4000'],
         ['code' => '4200', 'name' => ['en' => 'Service income', 'bn' => 'সেবা থেকে আয়'], 'parent' => '4000'],
+        // Contra income: discounts and scholarships given, seen apart from what was earned.
+        ['code' => '4190', 'name' => ['en' => 'Discounts given', 'bn' => 'প্রদত্ত ছাড়'], 'parent' => '4000'],
         ['code' => '4900', 'name' => ['en' => 'Other income', 'bn' => 'অন্যান্য আয়'], 'parent' => '4000'],
 
         ['code' => '5000', 'name' => ['en' => 'Expenses', 'bn' => 'ব্যয়'], 'type' => 'expense', 'group' => true],
@@ -98,5 +101,14 @@ return [
         'education_fees.exam_income' => '4200',
         'education_fees.transport_income' => '4200',
         'education_fees.other_income' => '4900',
+        'education_fees.receivable' => '1140',
+        'education_fees.advance' => '2150',
+        'education_fees.discounts' => '4190',
+        'education_fees.fine_income' => '4900',
+        'education_fees.tax_output' => '2130',
+        'education_fees.cash' => '1110',
+        'education_fees.bank' => '1120',
+        'education_fees.mobile' => '1130',
+        'education_fees.online' => '1130',
     ],
 ];

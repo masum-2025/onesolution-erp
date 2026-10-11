@@ -1,5 +1,7 @@
 <?php
 
+use Modules\EducationFees\Payments\FeeBillCollectable;
+
 /*
 | Module manifest: read by App\Platform\Modules\ModuleRegistry.
 | Business numbers never live here; they are rules.
@@ -191,14 +193,26 @@ return [
     ],
     // Screens come with FEE-3.
     'menu' => [],
-    // Income each fee head may go to (a head names one); receivable, advance and fines come with collections.
+    // Where fees reach the books (Accounting on): the income each head names, and the accounts of owing, paying and holding.
     'ledger_accounts' => [
         'education_fees.tuition_income' => ['label' => 'education_fees::fees.posting_keys.tuition_income', 'type' => 'income'],
         'education_fees.admission_income' => ['label' => 'education_fees::fees.posting_keys.admission_income', 'type' => 'income'],
         'education_fees.exam_income' => ['label' => 'education_fees::fees.posting_keys.exam_income', 'type' => 'income'],
         'education_fees.transport_income' => ['label' => 'education_fees::fees.posting_keys.transport_income', 'type' => 'income'],
         'education_fees.other_income' => ['label' => 'education_fees::fees.posting_keys.other_income', 'type' => 'income'],
+        'education_fees.receivable' => ['label' => 'education_fees::fees.posting_keys.receivable', 'type' => 'asset'],
+        'education_fees.advance' => ['label' => 'education_fees::fees.posting_keys.advance', 'type' => 'liability'],
+        // A contra income (a debit balance under income): what was given away is seen apart.
+        'education_fees.discounts' => ['label' => 'education_fees::fees.posting_keys.discounts', 'type' => 'income'],
+        'education_fees.fine_income' => ['label' => 'education_fees::fees.posting_keys.fine_income', 'type' => 'income'],
+        'education_fees.tax_output' => ['label' => 'education_fees::fees.posting_keys.tax_output', 'type' => 'liability'],
+        'education_fees.cash' => ['label' => 'education_fees::fees.posting_keys.cash', 'type' => 'asset'],
+        'education_fees.bank' => ['label' => 'education_fees::fees.posting_keys.bank', 'type' => 'asset'],
+        'education_fees.mobile' => ['label' => 'education_fees::fees.posting_keys.mobile', 'type' => 'asset'],
+        'education_fees.online' => ['label' => 'education_fees::fees.posting_keys.online', 'type' => 'asset'],
     ],
+    // Families pay a bill online from the portal (online_payments, the institution's merchant account).
+    'payment_collectables' => [FeeBillCollectable::class],
     // Collections (FEE-2) and the portal listen to these; payloads carry ids only.
     'events' => ['education_fees.bill_issued', 'education_fees.bill_cancelled', 'education_fees.fee_paid', 'education_fees.receipt_voided'],
     'is_core' => false,
