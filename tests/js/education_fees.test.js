@@ -13,7 +13,8 @@ const bill = (id, due, balance, extra = {}) => ({ id, number: `FEE-${id}`, due_d
 describe('fee screens', () => {
     it('registers its screens behind the module', () => {
         const routes = moduleRoutes.filter((route) => route.meta.module === 'education_fees');
-        expect(routes.map((route) => route.name)).toEqual(['fees-counter', 'fees-student', 'fees-receipt', 'fees-takings', 'fees-approvals', 'fees-runs', 'fees-run', 'fees-bills', 'fees-bill', 'fees-dues', 'fees-heads', 'fees-structures', 'fees-books']);
+        expect(routes.map((route) => route.name)).toEqual(['fees-counter', 'fees-student', 'fees-receipt', 'fees-takings', 'fees-approvals', 'fees-runs', 'fees-run', 'fees-bills', 'fees-bill', 'fees-dues', 'fees-heads', 'fees-structures', 'fees-books', 'fees-portal', 'fees-portal-receipt']);
+        expect(routes.filter((route) => route.meta.portal).map((route) => route.name)).toEqual(['fees-portal', 'fees-portal-receipt']);
         expect(routes.every((route) => route.meta.ns.includes('education_fees'))).toBe(true);
     });
 

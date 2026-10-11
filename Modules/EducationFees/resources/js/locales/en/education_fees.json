@@ -380,5 +380,29 @@
             "refund": "Refund"
         },
         "attempts": "{count} tries"
+    },
+    "portal": {
+        "title": "Fees",
+        "title_of": "Fees of {name}",
+        "not_found": "No student is linked to your login here. Ask the institution to link you.",
+        "owed": "Owes",
+        "overdue": "Overdue",
+        "advance": "Advance",
+        "bills": "Bills",
+        "receipts": "Receipts",
+        "no_bills": "No bills yet.",
+        "no_receipts": "No payments yet.",
+        "pay": "Pay {amount} online",
+        "paying": "Opening the payment page…",
+        "paid_back": "Thank you. Your payment is being confirmed; the receipt appears here in a moment.",
+        "details": "Details",
+        "lines": "What it is for",
+        "fines": "Late fine",
+        "waived": "Late fine waived",
+        "payments": "Paid",
+        "pay_off": "Online payment is not available for this bill. Pay at the institution's counter.",
+        "receipt": "Receipt",
+        "back": "Fees",
+        "view": "Open"
     }
 }

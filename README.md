@@ -3224,7 +3224,20 @@ settings pages **Fee heads**, **Fee structures**, **Fees in the books** (`/fees/
 - **Dashboard** widgets: fees taken today (seven-day trend), fees owed (with what is overdue),
   approvals waiting. **Bell**: discounts to approve (`.approve`), voids and refunds to decide
   (`.void`, never one's own), fee entries the books refused (`.configure`).
-- Next: FEE-4 (portal bills and payment, reminders).
+### Fees in the portal (FEE-4a)
+
+`/portal/fees/{record}` (pages `PortalFeesPage`, `PortalReceiptPage`), opened from the student's
+record in the portal (manifest `portal_pages`, `{record}` = the member's link). Any linked member
+(the student, a parent) sees and pays; each record is one child.
+
+- `GET /api/portal/fees?record=`: owed, overdue, advance, bills (unpaid first, `can_pay` when the
+  institution allows online payment), receipts. `GET bills/{id}?record=` (lines, fines, what paid
+  it; no discount basis), `GET receipts/{id}?record=` (printable, without who took it).
+- `POST bills/{id}/pay?record=` starts the payment for the bill's whole balance (the amount never
+  comes from the request; sensitive limit); after the gateway the family lands back on
+  `/portal/fees/{record}?paid=…` (`FeeBillCollectable::returnPath`).
+- Another child's bill or receipt, or a stranger's record: the same 404; the staff API stays closed.
+- Next: FEE-4b reminders (SMS/mail before and after due dates).
 
 ## Browser app (frontend foundation)
 

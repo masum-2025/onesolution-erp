@@ -5,6 +5,7 @@ use Modules\EducationFees\Http\Controllers\BillingController;
 use Modules\EducationFees\Http\Controllers\CollectionController;
 use Modules\EducationFees\Http\Controllers\ConcessionController;
 use Modules\EducationFees\Http\Controllers\FeeSetupController;
+use Modules\EducationFees\Http\Controllers\PortalFeesController;
 
 /*
 | Student fees API (loaded by EducationFeesServiceProvider under /api, group
@@ -65,4 +66,18 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
             Route::post('refunds/{refund}/approve', [CollectionController::class, 'approveRefund']);
             Route::post('refunds/{refund}/reject', [CollectionController::class, 'rejectRefund']);
         });
+    });
+
+/*
+| A family's fees in the client's portal (B2B2C): portal members only (the
+| API refuses them everything else), with the portal, Education and fees on.
+| Starting an online payment: a few a minute.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:education', 'module:education_fees'])
+    ->prefix('portal/fees')
+    ->group(function () {
+        Route::get('/', [PortalFeesController::class, 'show']);
+        Route::get('bills/{bill}', [PortalFeesController::class, 'showBill']);
+        Route::get('receipts/{receipt}', [PortalFeesController::class, 'showReceipt']);
+        Route::middleware('throttle:tenancy-sensitive')->post('bills/{bill}/pay', [PortalFeesController::class, 'pay']);
     });

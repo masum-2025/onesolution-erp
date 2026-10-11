@@ -54,3 +54,14 @@ export function feesApi(organizationId) {
         structureStatus: (id, status, version) => api(`${base}/structures/${id}/${status === 'active' ? 'activate' : 'archive'}`, { method: 'POST', body: { base_version: version } }),
     };
 }
+
+/**
+ * A family's fees in the client's portal (B2B2C), for the student of a
+ * portal record. Paying online starts at the gateway; the amount is the bill's.
+ */
+export const portalFeesApi = {
+    show: (record) => api('/api/portal/fees', { query: { record } }),
+    bill: (record, id) => api(`/api/portal/fees/bills/${id}`, { query: { record } }),
+    receipt: (record, id) => api(`/api/portal/fees/receipts/${id}`, { query: { record } }),
+    pay: (record, id, opId) => api(`/api/portal/fees/bills/${id}/pay`, { method: 'POST', query: { record }, body: { op_id: opId } }),
+};

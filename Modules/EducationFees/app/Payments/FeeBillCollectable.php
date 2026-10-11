@@ -80,7 +80,13 @@ class FeeBillCollectable implements CollectableProvider
 
     public function returnPath(Payment $payment): string
     {
-        return '/portal';
+        $organization = Organization::query()->find($payment->organization_id);
+        $bill = $organization === null ? null : $this->office->query(Bill::class, $this->office->companyOf($organization))->find($payment->subject_id);
+        $membership = $bill === null ? null : OrganizationMembership::query()->where('organization_id', $organization->getKey())->where('user_id', $payment->user_id)->first();
+        $link = $membership === null ? null : PortalLink::query()->where('membership_id', $membership->getKey())->where('subject_type', 'education.student')
+            ->where('subject_id', $bill->student_id)->where('status', PortalLink::ACTIVE)->value('id');
+
+        return $link === null ? '/portal' : "/portal/fees/{$link}?paid={$payment->getKey()}";
     }
 
     /** The payer's own portal membership here is linked to the bill's student (any relation). */

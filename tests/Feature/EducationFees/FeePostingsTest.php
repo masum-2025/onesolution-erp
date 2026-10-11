@@ -209,3 +209,52 @@ it('lets a linked parent pay a bill online, which becomes a receipt in the books
     $next = ($this->month)('2026-09');
     expect(fn () => $collect->start($this->w->c1, $parent, 'education_fees.bill', $next['id'], (string) Str::ulid()))->toThrow(Exception::class);
 });
+
+it('shows a family their own child\'s fees in the portal, pays a bill and comes back to it', function () {
+    platformRule('online_payments.gateways', ['sslcommerz'], 'BD');
+    app()->forgetInstance(GatewayRegistry::class);
+    orgRule($this->w->c1, 'client_portal.allow_online_payment', true);
+    feeStore($this);
+    $karim = newStudent($this, $this->school, ['name' => 'Karim', 'guardians' => [['name' => 'Other', 'phone' => '01711-999999', 'relation' => 'father']]])->assertCreated()->json('data');
+    ($this->month)('2026-08');
+    $august = ($this->as)()->getJson(($this->fees)("bills?student_id={$this->rahim['id']}"))->json('data.0');
+    $karimBill = ($this->as)()->getJson(($this->fees)("bills?student_id={$karim['id']}"))->json('data.0');
+    ($this->pay)(50000)->assertCreated();
+
+    $parent = User::factory()->create(['email_verified_at' => now()]);
+    app(AddMember::class)->handle($this->w->c1, $parent, MembershipType::Portal, AccessScope::Own);
+    $membership = OrganizationMembership::query()->where('user_id', $parent->id)->where('organization_id', $this->w->c1->id)->sole();
+    $link = new PortalLink;
+    $link->forceFill([
+        'organization_id' => $this->w->c1->id, 'membership_id' => $membership->id, 'user_id' => $parent->id,
+        'subject_type' => 'education.student', 'subject_id' => $this->rahim['id'], 'relation' => 'mother', 'status' => PortalLink::ACTIVE, 'linked_via' => 'invitation',
+    ])->save();
+    $portal = orgToken($parent, $this->w->c1);
+
+    // From the child's record to the fees page.
+    $this->asToken($portal)->getJson("/api/portal/records/{$link->id}")->assertOk()->assertJsonFragment(['to' => "/portal/fees/{$link->id}"]);
+    $view = $this->asToken($portal)->getJson("/api/portal/fees?record={$link->id}")->assertOk()->json('data');
+    expect($view)->toMatchArray(['owed_minor' => 150000, 'advance_minor' => 0, 'currency' => 'BDT'])
+        ->and($view['bills'][0])->toMatchArray(['id' => $august['id'], 'balance_minor' => 150000, 'can_pay' => true])
+        ->and($view['receipts'])->toHaveCount(1);
+    $bill = $this->asToken($portal)->getJson("/api/portal/fees/bills/{$august['id']}?record={$link->id}")->assertOk()->json('data');
+    expect($bill['lines'])->toHaveCount(2)->and($bill['payments'][0]['amount_minor'])->toBe(50000)->and(json_encode($bill))->not->toContain('basis');
+    $receipt = $this->asToken($portal)->getJson("/api/portal/fees/receipts/{$view['receipts'][0]['id']}?record={$link->id}")->assertOk()->json('data');
+    expect($receipt)->toMatchArray(['amount_minor' => 50000, 'collector' => null]);
+
+    // Another child's bill, without or with a stranger's record: the same not found; staff API stays closed.
+    $this->asToken($portal)->getJson("/api/portal/fees/bills/{$karimBill['id']}?record={$link->id}")->assertNotFound();
+    $this->asToken($portal)->postJson("/api/portal/fees/bills/{$karimBill['id']}/pay?record={$link->id}", ['op_id' => 'x1'])->assertNotFound();
+    $this->asToken($portal)->getJson('/api/portal/fees?record='.Str::ulid())->assertNotFound();
+    $this->asToken($portal)->getJson(($this->fees)('bills'))->assertForbidden();
+
+    // Paying online: the amount comes from the bill; back to the child's fees after the gateway.
+    $start = $this->asToken($portal)->postJson("/api/portal/fees/bills/{$august['id']}/pay?record={$link->id}", ['op_id' => 'tap-1', 'amount_minor' => 1])->assertCreated()->json('data');
+    expect($start['amount_minor'])->toBe(150000);
+    $payment = Payment::query()->findOrFail($start['payment_id']);
+    $this->withHeader('Origin', config('app.url'));
+    $this->post('/payments/sslcommerz/notify', sslNotice($payment, password: FEE_STORE_PASSWORD))->assertOk();
+    $this->post('/payments/sslcommerz/return/success', sslNotice($payment, password: FEE_STORE_PASSWORD))->assertRedirect("/portal/fees/{$link->id}?paid={$payment->id}");
+    $after = $this->asToken($portal)->getJson("/api/portal/fees?record={$link->id}")->json('data');
+    expect($after['owed_minor'])->toBe(0)->and($after['bills'][0])->toMatchArray(['status' => 'paid', 'can_pay' => false]);
+});

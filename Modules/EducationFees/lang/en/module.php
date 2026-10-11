@@ -14,4 +14,5 @@ return [
     'menu_heads' => 'Fee heads',
     'menu_structures' => 'Fee structures',
     'menu_books' => 'Fees in the books',
+    'portal_page' => 'Fees',
 ];

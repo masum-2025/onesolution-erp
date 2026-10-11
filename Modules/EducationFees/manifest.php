@@ -232,6 +232,10 @@ return [
     ],
     // Families pay a bill online from the portal (online_payments, the institution's merchant account).
     'payment_collectables' => [FeeBillCollectable::class],
+    // A family opens the student's fees from the student's record in the portal.
+    'portal_pages' => [
+        ['subject' => 'education.student', 'label' => 'education_fees::module.portal_page', 'route' => '/portal/fees/{record}'],
+    ],
     // Collections (FEE-2) and the portal listen to these; payloads carry ids only.
     'events' => ['education_fees.bill_issued', 'education_fees.bill_cancelled', 'education_fees.fee_paid', 'education_fees.receipt_voided'],
     'is_core' => false,

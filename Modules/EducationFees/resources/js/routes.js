@@ -18,4 +18,7 @@ export default [
     { path: 'fees/heads', name: 'fees-heads', component: () => import('./pages/HeadsPage.vue'), meta },
     { path: 'fees/structures', name: 'fees-structures', component: () => import('./pages/StructuresPage.vue'), meta },
     { path: 'fees/books', name: 'fees-books', component: () => import('./pages/BooksPage.vue'), meta },
+    // A family's fees in the client's portal (B2B2C): portal members may open these.
+    { path: 'portal/fees/:record', name: 'fees-portal', component: () => import('./pages/PortalFeesPage.vue'), meta: { ...meta, portal: true } },
+    { path: 'portal/fees/:record/receipts/:id', name: 'fees-portal-receipt', component: () => import('./pages/PortalReceiptPage.vue'), meta: { ...meta, portal: true } },
 ];

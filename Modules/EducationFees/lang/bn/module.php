@@ -14,4 +14,5 @@ return [
     'menu_heads' => 'ফির খাত',
     'menu_structures' => 'ফির কাঠামো',
     'menu_books' => 'হিসাবে ফি',
+    'portal_page' => 'ফি',
 ];
