@@ -3,6 +3,7 @@
 namespace Modules\EducationFees\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -10,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Modules\Education\Directory\AcademicDirectory;
 use Modules\EducationFees\Exceptions\FeeException;
 use Modules\EducationFees\Http\Controllers\Concerns\FindsFeeUnit;
+use Modules\EducationFees\Http\Controllers\Concerns\NamesPeople;
 use Modules\EducationFees\Http\FeePresenter;
 use Modules\EducationFees\Models\Advance;
 use Modules\EducationFees\Models\Bill;
@@ -28,7 +30,7 @@ use Modules\EducationFees\Services\FeeOffice;
  */
 class CollectionController extends Controller
 {
-    use FindsFeeUnit;
+    use FindsFeeUnit, NamesPeople;
 
     public function __construct(private FeeOffice $office, private Collections $collections, private Allocations $allocations, private FeePresenter $presenter) {}
 
@@ -49,7 +51,10 @@ class CollectionController extends Controller
             ->orderByDesc('received_on')->orderByDesc('number')->limit(500)->get();
         $students = app(AcademicDirectory::class)->students($company, $receipts->pluck('student_id')->unique()->values()->all());
 
-        return response()->json(['data' => $receipts->map(fn (Receipt $receipt) => $this->presenter->receipt($receipt, student: $students[$receipt->student_id] ?? null))->values()]);
+        return response()->json([
+            'data' => $receipts->map(fn (Receipt $receipt) => $this->presenter->receipt($receipt, student: $students[$receipt->student_id] ?? null))->values(),
+            'people' => $this->people($receipts->pluck('collected_by')),
+        ]);
     }
 
     public function showReceipt(string $organization, string $receipt): JsonResponse
@@ -103,7 +108,15 @@ class CollectionController extends Controller
             ->when($status, fn ($query) => $query->where('status', $status))->orderByDesc('created_at')->limit(200)->get();
         $receipts = $this->office->query(Receipt::class, $company)->whereKey($voids->pluck('receipt_id'))->get()->keyBy('id');
 
-        return response()->json(['data' => $voids->map(fn (ReceiptVoid $void) => $this->presenter->receiptVoid($void, $receipts[$void->receipt_id] ?? null))->values()]);
+        $students = app(AcademicDirectory::class)->students($company, $receipts->pluck('student_id')->unique()->values()->all());
+
+        return response()->json([
+            'data' => $voids->map(fn (ReceiptVoid $void) => [
+                ...$this->presenter->receiptVoid($void, $receipts[$void->receipt_id] ?? null),
+                'student' => isset($receipts[$void->receipt_id]) ? array_intersect_key($students[$receipts[$void->receipt_id]->student_id] ?? [], array_flip(['id', 'code', 'name'])) : null,
+            ])->values(),
+            'people' => $this->people([...$voids->pluck('requested_by'), ...$voids->pluck('decided_by'), ...$receipts->pluck('collected_by')]),
+        ]);
     }
 
     public function approveVoid(Request $request, string $organization, string $void): JsonResponse
@@ -127,7 +140,10 @@ class CollectionController extends Controller
             ->orderByDesc('created_at')->limit(200)->get();
         $students = app(AcademicDirectory::class)->students($company, $refunds->pluck('student_id')->unique()->values()->all());
 
-        return response()->json(['data' => $refunds->map(fn (Refund $refund) => $this->presenter->refund($refund, $students[$refund->student_id] ?? null))->values()]);
+        return response()->json([
+            'data' => $refunds->map(fn (Refund $refund) => $this->presenter->refund($refund, $students[$refund->student_id] ?? null))->values(),
+            'people' => $this->people([...$refunds->pluck('requested_by'), ...$refunds->pluck('decided_by')]),
+        ]);
     }
 
     public function requestRefund(Request $request, string $organization): JsonResponse
@@ -157,6 +173,26 @@ class CollectionController extends Controller
         return $this->decideRefund($request, $organization, $refund, false);
     }
 
+    /** Students to take fees from, found by name, code or phone, with what they owe and hold. */
+    public function findStudents(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('education_fees.view', $unit);
+        $term = $request->validate(['q' => ['required', 'string', 'min:2', 'max:100']])['q'];
+        $found = app(AcademicDirectory::class)->search($company, $term, $this->unitIds($unit), 20);
+        $ids = array_column($found, 'id');
+        $owed = $this->office->query(Bill::class, $company)->whereIn('student_id', $ids)->where('status', 'open')->get(['student_id', 'total_minor', 'paid_minor'])
+            ->groupBy('student_id')->map(fn ($bills) => (int) $bills->sum(fn (Bill $bill) => $bill->balanceMinor()));
+        $held = $this->office->query(Advance::class, $company)->whereIn('student_id', $ids)->get(['student_id', 'amount_minor'])
+            ->groupBy('student_id')->map(fn ($rows) => (int) $rows->sum('amount_minor'));
+
+        return response()->json(['data' => array_map(fn (array $student) => [
+            ...array_intersect_key($student, array_flip(['id', 'code', 'name', 'name_local', 'unit_id', 'status'])),
+            'owed_minor' => $owed[$student['id']] ?? 0,
+            'advance_minor' => $held[$student['id']] ?? 0,
+        ], $found)]);
+    }
+
     /** The takings of a day (or days): by method and by person, for closing the counter. */
     public function summary(Request $request, string $organization): JsonResponse
     {
@@ -172,6 +208,7 @@ class CollectionController extends Controller
             'from' => $data['from'] ?? $today,
             'to' => $data['to'] ?? $data['from'] ?? $today,
             'receipts' => $summary['receipts']->map(fn (Receipt $receipt) => $this->presenter->receipt($receipt, student: $students[$receipt->student_id] ?? null))->values(),
+            'people' => $this->people($summary['receipts']->pluck('collected_by')),
         ]]);
     }
 
@@ -212,14 +249,19 @@ class CollectionController extends Controller
     private function receiptView($company, Receipt $receipt): array
     {
         $standing = $this->allocations->standing($company, receiptId: $receipt->getKey());
-        $numbers = $this->office->query(Bill::class, $company)->whereKey($standing->pluck('allocation.bill_id'))->pluck('number', 'id');
+        $bills = $this->office->query(Bill::class, $company)->whereKey($standing->pluck('allocation.bill_id'))->get(['id', 'number', 'billing_key'])->keyBy('id');
         $held = (int) $this->office->query(Advance::class, $company)->where('receipt_id', $receipt->getKey())->sum('amount_minor');
 
-        return $this->presenter->receipt(
+        return [...$this->presenter->receipt(
             $receipt,
-            $standing->map(fn (array $row) => ['bill_id' => $row['allocation']->bill_id, 'number' => $numbers[$row['allocation']->bill_id] ?? null, 'amount_minor' => $row['standing']])->values()->all(),
+            $standing->map(fn (array $row) => ['bill_id' => $row['allocation']->bill_id, 'number' => $bills[$row['allocation']->bill_id]->number ?? null, 'billing_key' => $bills[$row['allocation']->bill_id]->billing_key ?? null, 'amount_minor' => $row['standing']])->values()->all(),
             $held,
             app(AcademicDirectory::class)->student($company, $receipt->student_id),
-        );
+        ),
+            'institution' => $company->displayName(),
+            'void_pending' => $this->office->query(ReceiptVoid::class, $company)->where('receipt_id', $receipt->getKey())->where('status', 'pending')->exists(),
+            'campus' => $receipt->unit_id === $company->getKey() ? null : Organization::query()->find($receipt->unit_id)?->displayName(),
+            'collector' => $this->people([$receipt->collected_by])[$receipt->collected_by ?? ''] ?? null,
+        ];
     }
 }

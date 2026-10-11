@@ -23,6 +23,7 @@ import {
     Sparkles,
     UserPlus,
     Users,
+    Wallet,
     WifiOff,
     Zap,
 } from 'lucide-vue-next';
@@ -55,6 +56,7 @@ const ICONS = {
     sparkles: Sparkles,
     'user-plus': UserPlus,
     users: Users,
+    wallet: Wallet,
     'wifi-off': WifiOff,
     zap: Zap,
 };

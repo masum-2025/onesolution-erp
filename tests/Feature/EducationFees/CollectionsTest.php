@@ -62,8 +62,8 @@ it('meets the oldest bill first, keeps what is left as an advance and uses it on
     $receipt = ($this->pay)(200000, ['op_id' => 'counter-1'])->assertCreated()->json('data');
     expect($receipt)->toMatchArray(['number' => 'RCT-2026-000001', 'amount_minor' => 200000, 'status' => 'valid', 'advance_minor' => 0])
         ->and($receipt['bills'])->toBe([
-            ['bill_id' => $january['id'], 'number' => $january['number'], 'amount_minor' => 150000],
-            ['bill_id' => $february['id'], 'number' => $february['number'], 'amount_minor' => 50000],
+            ['bill_id' => $january['id'], 'number' => $january['number'], 'billing_key' => 'monthly:2026-01', 'amount_minor' => 150000],
+            ['bill_id' => $february['id'], 'number' => $february['number'], 'billing_key' => 'monthly:2026-02', 'amount_minor' => 50000],
         ]);
     // The same tap twice is one receipt.
     ($this->pay)(200000, ['op_id' => 'counter-1'])->assertCreated()->assertJsonPath('data.id', $receipt['id']);
@@ -200,4 +200,25 @@ it('keeps the counter to the people allowed and inside the institution', functio
         $this->asToken($stranger)->getJson(($this->fees)("receipts/{$receipt['id']}", $other))->assertNotFound();
         $this->asToken($stranger)->postJson(($this->fees)('receipts', $other), ['student_id' => $this->rahim['id'], 'amount_minor' => 100, 'method' => 'cash', 'received_on' => '2026-01-05'])->assertNotFound();
     }
+});
+
+it('gives the screens students with what they owe, names instead of ids, and receipts ready to print', function () {
+    ($this->month)('2026-01');
+    ($this->pay)(160000)->assertCreated();
+
+    $found = ($this->as)()->getJson(($this->fees)('students?q=Rah'))->assertOk()->json('data');
+    expect($found)->toHaveCount(1)->and($found[0])->toMatchArray(['id' => $this->rahim['id'], 'owed_minor' => 0, 'advance_minor' => 10000]);
+    ($this->as)()->getJson(($this->fees)('students?q=R'))->assertUnprocessable();
+
+    $list = ($this->as)()->getJson(($this->fees)('receipts'))->assertOk()->json();
+    expect($list['people'])->toBe([$this->owner->id => $this->owner->name]);
+    $receipt = ($this->as)()->getJson(($this->fees)("receipts/{$list['data'][0]['id']}"))->assertOk()->json('data');
+    expect($receipt)->toMatchArray(['institution' => 'C1', 'campus' => 'B1', 'collector' => $this->owner->name, 'void_pending' => false]);
+    ($this->as)()->postJson(($this->fees)("receipts/{$receipt['id']}/void"), ['reason' => 'Wrong'])->assertCreated();
+    expect(($this->as)()->getJson(($this->fees)("receipts/{$receipt['id']}"))->json('data.void_pending'))->toBeTrue();
+    expect(($this->as)()->getJson(($this->fees)('voids?status=pending'))->json())->toMatchArray(['people' => [$this->owner->id => $this->owner->name]])
+        ->and(($this->as)()->getJson(($this->fees)('voids?status=pending'))->json('data.0.student.name'))->toBe('Rahim');
+
+    $setup = ($this->as)()->getJson(($this->fees)('setup'))->json('data');
+    expect($setup['currency'])->toBe('BDT')->and($setup['rules'])->toMatchArray(['payment_methods' => ['cash', 'bank', 'mobile'], 'allow_partial_payment' => true]);
 });

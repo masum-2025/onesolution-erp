@@ -60,7 +60,13 @@ class FeeSetupController extends Controller
                 'auto_monthly_billing' => $rules->get('education_fees.auto_monthly_billing', $context),
                 'bill_on_admission' => (bool) $rules->get('education_fees.bill_on_admission', $context),
                 'fees_include_tax' => (bool) $rules->get('education_fees.fees_include_tax', $context),
+                'payment_methods' => array_values((array) $rules->get('education_fees.payment_methods', $context)),
+                'allow_partial_payment' => (bool) $rules->get('education_fees.allow_partial_payment', $context),
+                'void_needs_second_person' => (bool) $rules->get('education_fees.void_needs_second_person', $context),
+                'apply_advance_automatically' => (bool) $rules->get('education_fees.apply_advance_automatically', $context),
             ],
+            // Empty until the institution sets its country and currency (the counter says so).
+            'currency' => rescue(fn () => $this->office->currency($company), null, false),
             'today' => $this->office->today($company)->toDateString(),
             'can' => array_combine(self::CAN, array_map(fn (string $can) => Gate::allows("education_fees.{$can}", $unit), self::CAN)),
         ]]);

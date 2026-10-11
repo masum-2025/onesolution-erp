@@ -3182,7 +3182,28 @@ sum of its allocations).
   while `client_portal.allow_online_payment` is on. The confirmed payment becomes a receipt
   (method online, op id `payment-<id>`); if the counter took money meanwhile, the rest waits as the
   advance. The portal pay button comes with FEE-4.
-- Next: screens (FEE-3), portal and reminders (FEE-4).
+### Fee screens, part 1 (FEE-3a)
+
+Menu "Fees" (`education_fees.view`; icon `wallet`): **Fee counter** (`/fees`), **Takings**
+(`/fees/takings`), **Approvals** (`/fees/approvals`). Code in `Modules/EducationFees/resources/js`,
+texts in `locales/{en,bn}/education_fees.json`.
+
+- **Counter**: find a student by name, ID or phone (`GET /fees/students?q=`, with what each owes
+  and holds); their unpaid bills and advance; the amount (Bangla digits too, never floats), how
+  (rule `payment_methods`), reference, day; before saving it shows which bills the money meets and
+  what waits as an advance (`lib.js` `plan`, the server's own order and part-payment rule). Then
+  print the receipt or go to the next student.
+- **Student's fees** (`/fees/students/:id`): owed, overdue, advance; bills (cancel with a reason),
+  receipts, discounts (give with `DiscountDialog`, end); ask to pay the advance back.
+- **Receipt** (`/fees/receipts/:id`): A5 or 80 mm roll (kept per browser), the institution's name,
+  logo and campus, who took it, what each bill was for; `?print=1` prints at once; ask to void it.
+- **Takings**: a day or days, totals by method and by person, voided apart, every receipt; printable.
+- **Approvals**: discounts (`.approve`), receipt voids and refunds (`.void`); one's own requests or
+  receipts are marked, the server refuses them.
+- API additions for the screens: `people` (names by id) on receipts, takings, voids, refunds and
+  discounts; receipts carry `institution`, `campus`, `collector`, `void_pending` and each bill's
+  `billing_key`; setup carries `currency` and the counter rules.
+- Next: FEE-3b (billing runs, bills, overdue list, heads and structures, dashboard).
 
 ## Browser app (frontend foundation)
 

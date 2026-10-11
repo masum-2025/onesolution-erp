@@ -98,7 +98,7 @@ class FeePresenter
     }
 
     /**
-     * @param  list<array{bill_id: string, number: ?string, amount_minor: int}>|null  $paid  What the receipt paid, bill by bill (still standing).
+     * @param  list<array{bill_id: string, number: ?string, billing_key: ?string, amount_minor: int}>|null  $paid  What the receipt paid, bill by bill (still standing).
      * @param  array<string, mixed>|null  $student
      * @return array<string, mixed>
      */

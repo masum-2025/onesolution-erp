@@ -191,8 +191,21 @@ return [
             'sort_order' => 130,
         ],
     ],
-    // Screens come with FEE-3.
-    'menu' => [],
+    'menu' => [
+        [
+            'key' => 'education_fees',
+            'label' => 'education_fees::module.menu',
+            'route' => '/fees',
+            'icon' => 'wallet',
+            'order' => 42,
+            'section' => 'business',
+            'children' => [
+                ['key' => 'counter', 'label' => 'education_fees::module.menu_counter', 'route' => '/fees', 'permission' => 'education_fees.view'],
+                ['key' => 'takings', 'label' => 'education_fees::module.menu_takings', 'route' => '/fees/takings', 'permission' => 'education_fees.view'],
+                ['key' => 'approvals', 'label' => 'education_fees::module.menu_approvals', 'route' => '/fees/approvals', 'permission' => 'education_fees.view'],
+            ],
+        ],
+    ],
     // Where fees reach the books (Accounting on): the income each head names, and the accounts of owing, paying and holding.
     'ledger_accounts' => [
         'education_fees.tuition_income' => ['label' => 'education_fees::fees.posting_keys.tuition_income', 'type' => 'income'],

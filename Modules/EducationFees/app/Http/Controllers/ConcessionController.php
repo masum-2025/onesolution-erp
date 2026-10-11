@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Modules\Education\Directory\AcademicDirectory;
 use Modules\EducationFees\Exceptions\FeeException;
 use Modules\EducationFees\Http\Controllers\Concerns\FindsFeeUnit;
+use Modules\EducationFees\Http\Controllers\Concerns\NamesPeople;
 use Modules\EducationFees\Http\FeePresenter;
 use Modules\EducationFees\Models\Concession;
 use Modules\EducationFees\Models\FeeHead;
@@ -23,7 +24,7 @@ use Modules\EducationFees\Services\FeeOffice;
  */
 class ConcessionController extends Controller
 {
-    use FindsFeeUnit;
+    use FindsFeeUnit, NamesPeople;
 
     public function __construct(private FeeOffice $office, private Concessions $concessions, private FeePresenter $presenter) {}
 
@@ -38,7 +39,10 @@ class ConcessionController extends Controller
             ->orderByDesc('created_at')->limit(500)->get();
         $students = app(AcademicDirectory::class)->students($company, $rows->pluck('student_id')->unique()->values()->all());
 
-        return response()->json(['data' => $rows->map(fn (Concession $row) => $this->presenter->concession($row, $students[$row->student_id] ?? null))->values()]);
+        return response()->json([
+            'data' => $rows->map(fn (Concession $row) => $this->presenter->concession($row, $students[$row->student_id] ?? null))->values(),
+            'people' => $this->people([...$rows->pluck('requested_by'), ...$rows->pluck('decided_by')]),
+        ]);
     }
 
     public function store(Request $request, string $organization): JsonResponse

@@ -30,6 +30,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
         Route::get('voids', [CollectionController::class, 'voids']);
         Route::get('refunds', [CollectionController::class, 'refunds']);
         Route::get('takings', [CollectionController::class, 'summary']);
+        Route::get('students', [CollectionController::class, 'findStudents']);
 
         // The counter: many parents at the start of a month, its own larger limit per person.
         Route::middleware('throttle:education-fees-counter')->post('receipts', [CollectionController::class, 'collect']);
