@@ -42,7 +42,7 @@ class ResultController extends Controller
     {
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('education_exams.view', $unit);
-        $found = $this->recordIn(Exam::class, $unit, $company, $exam, 'exam');
+        $found = $this->examIn($unit, $company, $exam);
 
         return response()->json($this->list($company, $unit, 'exam', $found->getKey()));
     }
@@ -116,7 +116,7 @@ class ResultController extends Controller
     {
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('education_exams.view', $unit);
-        $found = $this->recordIn(Exam::class, $unit, $company, $exam, 'exam');
+        $found = $this->examIn($unit, $company, $exam);
         $rows = $this->office->query(Correction::class, $company)->where('exam_id', $found->getKey())->whereIn('unit_id', $this->unitIds($unit))->orderByDesc('created_at')->get();
         $students = app(AcademicDirectory::class)->students($company, $rows->pluck('student_id')->unique()->values()->all());
 

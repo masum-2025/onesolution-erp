@@ -13,6 +13,7 @@ use Modules\EducationExams\Http\ExamPresenter;
 use Modules\EducationExams\Models\Exam;
 use Modules\EducationExams\Models\Mark;
 use Modules\EducationExams\Models\MarkSheet;
+use Modules\EducationExams\Models\Paper;
 use Modules\EducationExams\Models\PaperPart;
 use Modules\EducationExams\Services\ExamOffice;
 use Modules\EducationExams\Services\MarkSheets;
@@ -21,7 +22,8 @@ use Modules\EducationExams\Services\MarkSheets;
  * An exam's mark sheets (a paper for a section): listed with
  * education_exams.view (a teacher: theirs only, ?mine=1), entered and
  * handed in by whoever may enter that sheet, approved or returned with
- * .moderate, assigned to a teacher with .manage.
+ * .moderate, assigned to a teacher with .manage. A teacher's own sheets
+ * across the exams open for marks: /exams/sheets.
  */
 class MarkSheetController extends Controller
 {
@@ -29,11 +31,29 @@ class MarkSheetController extends Controller
 
     public function __construct(private ExamOffice $office, private MarkSheets $sheets, private ExamPresenter $presenter) {}
 
+    /** A teacher's own sheets in every exam open for marks here, with the exam, paper and section named. */
+    public function mine(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('education_exams.view', $unit);
+        $sheets = $this->sheets->forTeacher($company, $this->unitIds($unit), $request->user());
+        $exams = $this->office->query(Exam::class, $company)->whereKey($sheets->pluck('exam_id')->unique()->values())->get()->keyBy('id');
+        $papers = $this->office->query(Paper::class, $company)->whereKey($sheets->pluck('paper_id')->unique()->values())->get()->keyBy('id');
+        $academic = app(AcademicDirectory::class);
+        $subjects = $academic->subjects($company, $papers->pluck('subject_id')->unique()->values()->all());
+        $sections = $exams->pluck('session_id')->unique()->flatMap(fn (string $session) => $academic->sessionSections($company, $session, $this->unitIds($unit)))->keyBy('id');
+
+        return response()->json(['data' => $sheets->map(fn (MarkSheet $sheet) => [
+            ...$this->presenter->sheet($sheet, true),
+            ...$this->context($exams[$sheet->exam_id], $papers[$sheet->paper_id], $subjects, $sections[$sheet->section_id] ?? null),
+        ])->sortBy(fn (array $row) => [$row['exam']['starts_on'] ?? '', $row['section']['name'] ?? ''])->values()]);
+    }
+
     public function index(Request $request, string $organization, string $exam): JsonResponse
     {
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('education_exams.view', $unit);
-        $found = $this->recordIn(Exam::class, $unit, $company, $exam, 'exam');
+        $found = $this->examIn($unit, $company, $exam);
         $filters = $request->validate(['mine' => ['nullable', 'boolean'], 'status' => ['nullable', 'in:open,submitted,approved,returned']]);
         $sheets = $this->office->query(MarkSheet::class, $company)->where('exam_id', $found->getKey())->whereIn('unit_id', $this->unitIds($unit))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))->get();
@@ -124,14 +144,41 @@ class MarkSheetController extends Controller
     private function sheetView($company, MarkSheet $sheet, Request $request): array
     {
         $entries = $this->sheets->entries($company, $sheet);
+        $exam = $this->office->query(Exam::class, $company)->findOrFail($sheet->exam_id);
+        $paper = $this->office->query(Paper::class, $company)->findOrFail($sheet->paper_id);
+        $academic = app(AcademicDirectory::class);
 
         return [
             ...$this->presenter->sheet($sheet, $this->sheets->mayEnter($company, $sheet, $request->user())),
+            ...$this->context($exam, $paper, $academic->subjects($company, [$paper->subject_id]), $academic->section($company, $sheet->section_id)),
             'parts' => $entries['parts']->map(fn (PaperPart $part) => [...$part->only(['id', 'code', 'full_marks_centi', 'pass_marks_centi']), 'name' => $part->texts('name')])->values(),
             'students' => array_map(fn (array $student) => [
                 ...array_intersect_key($student, array_flip(['id', 'code', 'name', 'name_local'])),
                 'marks' => collect($entries['marks'][$student['id']] ?? [])->map(fn (Mark $mark) => ['marks_centi' => $mark->marks_centi, 'absent' => $mark->absent])->all(),
             ], $entries['students']),
+        ];
+    }
+
+    /**
+     * What a sheet is for: the exam (status, grading scheme), the paper
+     * (subject, pass marks) and the section, so a screen can show and grade it.
+     *
+     * @param  array<string, array<string, mixed>>  $subjects
+     * @param  array<string, mixed>|null  $section
+     * @return array<string, mixed>
+     */
+    private function context(Exam $exam, Paper $paper, array $subjects, ?array $section): array
+    {
+        $subject = $subjects[$paper->subject_id] ?? null;
+
+        return [
+            'exam' => array_intersect_key($this->presenter->exam($exam), array_flip(['id', 'name', 'status', 'session_id', 'grading_scheme_id', 'starts_on', 'ends_on'])),
+            'paper' => [
+                ...$paper->only(['id', 'level_id', 'subject_id', 'kind', 'full_marks_centi', 'pass_marks_centi']),
+                'sits_on' => $paper->sits_on?->toDateString(),
+                'subject' => $subject === null ? null : array_intersect_key($subject, array_flip(['id', 'code', 'name'])),
+            ],
+            'section' => $section === null ? null : array_intersect_key($section, array_flip(['id', 'level_id', 'name'])),
         ];
     }
 

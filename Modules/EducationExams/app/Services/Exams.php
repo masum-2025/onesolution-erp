@@ -107,7 +107,12 @@ class Exams
             $paper->version++;
             $paper->save();
 
-            if (isset($data['parts']) || ! $this->office->query(PaperPart::class, $company)->where('paper_id', $paper->getKey())->exists()) {
+            // A paper of one part keeps that part at the paper's full marks (no marks yet, or the change was refused above).
+            $own = $this->office->query(PaperPart::class, $company)->where('paper_id', $paper->getKey())->get();
+            if (! isset($data['parts']) && $own->count() === 1 && $own[0]->full_marks_centi !== $paper->full_marks_centi) {
+                $own[0]->forceFill(['full_marks_centi' => $paper->full_marks_centi])->save();
+            }
+            if (isset($data['parts']) || $own->isEmpty()) {
                 $parts = ($data['parts'] ?? []) ?: [['code' => 'TOTAL', 'name' => ['en' => 'Total', 'bn' => 'মোট'], 'full_marks_centi' => $paper->full_marks_centi, 'pass_marks_centi' => null]];
                 if (array_sum(array_map(fn (array $part) => (int) $part['full_marks_centi'], $parts)) !== $paper->full_marks_centi) {
                     throw ExamException::partsMismatch(ExamMath::centiText($paper->full_marks_centi));

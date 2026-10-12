@@ -3308,7 +3308,42 @@ Tables `exm_combinations`, `exm_results`, `exm_result_subjects`, `exm_correction
 - Public `ResultDirectory` (`subjectOutcomes`, `transcript`). **Course registration** listens to
   `ResultPublished` and sets each registered subject's outcome (completed or failed);
   `Registrations::recordOutcome` now takes no person for such system outcomes.
-- Next: EXM-3 screens, EXM-4 marksheets, portal results and SMS.
+
+### Exam screens (EXM-3a)
+
+Code: `Modules/EducationExams/resources/js` (pages, components, `lib.js` for the marks arithmetic as
+the server does it, texts in `locales/{bn,en}/education_exams.json`). Menu "Exams": Exams
+(`.view`), My mark sheets (`.enter_marks`), Grading (`.manage`).
+
+- **Exams** (`/exams`): a session's exams by status, each with how far its sheets are (approved,
+  waiting, being entered, sent back; numbers written, never colour alone). New exam: name in every
+  language, session, campus, kind, dates, grading (starts as rule `default_grading_scheme`).
+- **One exam** (`/exams/{id}`): papers by class (by hand, split into parts that must add up, or all
+  of a class's curriculum at once); open for marks, close, open again (each confirmed); mark sheets
+  by section with who enters each, approve or send back with a note (never one's own), choose a
+  teacher (HRM on).
+- **Mark entry** (`/exams/sheets/{id}`): a grid per student and part; Enter or the arrows move
+  down and up, "a" is absent, Bangla digits work; above full marks shows at once and is not sent.
+  Marks save by themselves shortly after typing and try again when the network comes back; leaving
+  with unsaved marks asks first. The grade and pass or fail show as `ExamMath` works them out
+  (bands of the exam's scheme, part and paper pass marks). Hand in needs every student done.
+  Moderators approve or send back from the same page. Read-only with the reason when it is not
+  the reader's sheet, or not open.
+- **My mark sheets** (`/exams/my-sheets`, `GET /exams/sheets`): a teacher's sheets in every exam
+  open for marks (named on the sheet, or class teacher of a sheet naming nobody), sent back first.
+- **Grading** (`/exams/grading`): schemes with their bands; add or change one (bands must start at
+  0 %, no two at the same start). Published results keep their grades.
+- API additions: `setup` gives every rule a screen follows (`show_rank`, `gpa_by_credits`,
+  `correction_needs_approval`), `hrm` and the teachers to pick (managers only); a sheet comes with
+  its exam, paper and section. An institution's exam is read from its campuses (exam list, exam,
+  its sheets and results there, counting that campus's sheets only); changing it stays with the
+  unit it was set at. A paper of one part keeps that part at the paper's full marks.
+- Not offline yet: marks wait in memory while the network is down (no `op_id`/`base_version` on
+  saving marks); offline entry would add both to `PUT sheets/{sheet}/marks`.
+- New sector, country or partner: grading schemes, moderation and ranks are data and rules; texts
+  come from the language files or the language editor. No code change.
+- Next: EXM-3b screens (results, publish, combinations, corrections, transcript), EXM-4
+  marksheets, portal results and SMS.
 
 ## Browser app (frontend foundation)
 

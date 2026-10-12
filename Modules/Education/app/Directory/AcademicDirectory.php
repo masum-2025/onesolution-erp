@@ -347,6 +347,23 @@ class AcademicDirectory
         return app(Teachers::class)->names($company, $employeeIds);
     }
 
+    /** Whether teachers can be named at all (HRM on for the institution). */
+    public function teachersAvailable(Organization $company): bool
+    {
+        return app(Teachers::class)->available($company);
+    }
+
+    /**
+     * Teachers to pick for these campuses, each {id, name, code} (empty with HRM off).
+     *
+     * @param  list<string>  $unitIds
+     * @return list<array{id: string, name: string, code: ?string}>
+     */
+    public function teachers(Organization $company, array $unitIds): array
+    {
+        return app(Teachers::class)->in($company, $unitIds);
+    }
+
     /** @return array<string, mixed>|null */
     public function program(Organization $company, string $id): ?array
     {

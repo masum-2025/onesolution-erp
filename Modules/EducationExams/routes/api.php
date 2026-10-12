@@ -17,6 +17,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
     ->group(function () {
         Route::get('setup', [ExamController::class, 'setup']);
         Route::get('/', [ExamController::class, 'index']);
+        Route::get('sheets', [MarkSheetController::class, 'mine']);
         Route::get('sheets/{sheet}', [MarkSheetController::class, 'show']);
         Route::get('combinations', [ResultController::class, 'combinations']);
         Route::get('combinations/{combination}/results', [ResultController::class, 'combinationResults']);

@@ -1,6 +1,8 @@
 <?php
 
 use App\Platform\Audit\AuditLog;
+use App\Platform\Tenancy\Enums\MembershipType;
+use App\Platform\Tenancy\Enums\OrganizationType;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Modules\EducationExams\Models\Mark;
@@ -49,7 +51,7 @@ beforeEach(function () {
     $this->teacher = function (string $name, bool $classTeacher = false) {
         toggles()->enable($this->w->g1, 'hrm', 'Test setup');
         $user = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['education.view', 'education_exams.view', 'education_exams.enter_marks'], "Teacher {$name}"));
-        $employee = hireVia($this, $this->token, $this->w->c1, ['full_name' => $name])->assertCreated()->json('data.id');
+        $employee = hireVia($this, $this->token, $this->w->c1, ['full_name' => $name, 'joined_on' => '2026-01-01'])->assertCreated()->json('data.id');
         DB::table('hrm_employees')->where('id', $employee)->update(['user_id' => $user->id]);
         if ($classTeacher) {
             $section = ($this->as)()->getJson(($this->api)("structure/sections?session_id={$this->school->session['id']}"))->json('data.0');
@@ -181,4 +183,104 @@ it('keeps exams to the people allowed, inside their institution, and answers 403
     }
     toggles()->disable($this->w->g1, 'education_exams', 'Test');
     ($this->as)()->getJson(($this->exams)())->assertForbidden();
+});
+
+it('lists a teacher\'s own sheets across exams open for marks, named, and gives teachers to pick to managers only', function () {
+    $exam = ($this->exam)();
+    ($this->as)()->postJson(($this->exams)("{$exam['id']}/papers/from-curriculum"), ['level_id' => $this->school->class6['id'], 'full_marks_centi' => 10000, 'pass_marks_centi' => 3300])->assertCreated();
+    $draft = ($this->exam)(['name' => ['en' => 'Annual 2026']]);
+    ($this->as)()->postJson(($this->exams)("{$draft['id']}/papers"), ['level_id' => $this->school->class6['id'], 'subject_id' => $this->subjects['BAN1']['id'], 'full_marks_centi' => 10000])->assertCreated();
+    ($this->as)()->postJson(($this->exams)("{$exam['id']}/status"), ['status' => 'marking', 'base_version' => $exam['version']])->assertOk();
+    $classTeacher = ($this->teacher)('Class Teacher', true);
+    $other = ($this->teacher)('Other Teacher');
+
+    // The class teacher's three sheets of the exam open for marks (none of the draft), with what each is for.
+    $mine = ($this->as)($classTeacher->token)->getJson(($this->exams)('sheets'))->assertOk()->json('data');
+    expect($mine)->toHaveCount(3)
+        ->and(collect($mine)->pluck('exam.id')->unique()->all())->toBe([$exam['id']])
+        ->and(collect($mine)->pluck('paper.subject.code')->sort()->values()->all())->toBe(['BAN1', 'ENG1', 'MATH'])
+        ->and($mine[0]['section']['name'])->toBe($this->school->section['name'])
+        ->and($mine[0]['mine'])->toBeTrue();
+    expect(($this->as)($other->token)->getJson(($this->exams)('sheets'))->json('data'))->toBe([]);
+    // The owner manages exams but is no teacher (no HRM employee): no sheets of their own.
+    expect(($this->as)()->getJson(($this->exams)('sheets'))->json('data'))->toBe([]);
+
+    // Named on a sheet: it moves to that teacher's list.
+    ($this->as)()->postJson(($this->exams)("sheets/{$mine[0]['id']}/assign"), ['teacher_id' => $other->employee, 'base_version' => $mine[0]['version']])->assertOk();
+    expect(collect(($this->as)($other->token)->getJson(($this->exams)('sheets'))->json('data'))->pluck('id')->all())->toBe([$mine[0]['id']])
+        ->and(($this->as)($classTeacher->token)->getJson(($this->exams)('sheets'))->json('data'))->toHaveCount(2);
+
+    // One sheet tells what grades it: the exam's scheme and the paper's pass marks.
+    $sheet = ($this->as)($classTeacher->token)->getJson(($this->exams)("sheets/{$mine[1]['id']}"))->assertOk()->json('data');
+    expect($sheet['exam'])->toMatchArray(['id' => $exam['id'], 'status' => 'marking', 'grading_scheme_id' => $exam['grading_scheme_id']])
+        ->and($sheet['paper'])->toMatchArray(['full_marks_centi' => 10000, 'pass_marks_centi' => 3300])
+        ->and($sheet['section']['id'])->toBe($this->school->section['id']);
+
+    // Managers get the teachers to pick and every rule a screen follows; a teacher gets no list of staff.
+    $setup = ($this->setup)();
+    expect(collect($setup['teachers'])->pluck('id')->all())->toContain($classTeacher->employee, $other->employee)
+        ->and($setup['hrm'])->toBeTrue()
+        ->and($setup['rules'])->toHaveKeys(['moderation_required', 'show_rank', 'gpa_by_credits', 'correction_needs_approval']);
+    expect(($this->as)($classTeacher->token)->getJson(($this->exams)('setup'))->json('data.teachers'))->toBe([]);
+
+    // Another institution sees none of them; exams off answers 403.
+    foreach ([$this->w->c2, $this->w->c4] as $place) {
+        expect($this->asToken(orgToken(createMember($place), $place))->getJson(($this->exams)('sheets', $place))->json('data'))->toBe([]);
+    }
+    toggles()->disable($this->w->g1, 'education_exams', 'Test');
+    ($this->as)($classTeacher->token)->getJson(($this->exams)('sheets'))->assertForbidden();
+});
+
+it('keeps a paper of one part at the paper\'s full marks when they change', function () {
+    $exam = ($this->exam)();
+    $paper = ($this->as)()->postJson(($this->exams)("{$exam['id']}/papers"), ['level_id' => $this->school->class6['id'], 'subject_id' => $this->subjects['BAN1']['id'], 'full_marks_centi' => 10000])->assertCreated()->json('data');
+    expect($paper['parts'])->toHaveCount(1)->and($paper['parts'][0]['full_marks_centi'])->toBe(10000);
+
+    $half = ($this->as)()->patchJson(($this->exams)("{$exam['id']}/papers/{$paper['id']}"), ['full_marks_centi' => 5000, 'base_version' => $paper['version']])->assertOk()->json('data');
+    expect($half['full_marks_centi'])->toBe(5000)->and($half['parts'][0]['full_marks_centi'])->toBe(5000);
+
+    // Split and back to one part again.
+    $split = ($this->as)()->patchJson(($this->exams)("{$exam['id']}/papers/{$paper['id']}"), ['parts' => [['code' => 'CQ', 'full_marks_centi' => 3500], ['code' => 'MCQ', 'full_marks_centi' => 1500]], 'base_version' => $half['version']])->assertOk()->json('data');
+    $whole = ($this->as)()->patchJson(($this->exams)("{$exam['id']}/papers/{$paper['id']}"), ['parts' => [['code' => 'TOTAL', 'name' => null, 'full_marks_centi' => 5000]], 'base_version' => $split['version']])->assertOk()->json('data');
+    expect(collect($whole['parts'])->pluck('code')->all())->toBe(['TOTAL']);
+});
+
+it('shows the institution\'s exam to a campus teacher, counting that campus only, and leaves changing it to the institution', function () {
+    $exam = ($this->exam)();
+    ($this->as)()->postJson(($this->exams)("{$exam['id']}/papers"), ['level_id' => $this->school->class6['id'], 'subject_id' => $this->subjects['BAN1']['id'], 'full_marks_centi' => 10000])->assertCreated();
+    $exam = ($this->as)()->postJson(($this->exams)("{$exam['id']}/status"), ['status' => 'marking', 'base_version' => $exam['version']])->assertOk()->json('data');
+
+    // A teacher who works at the campus (B1), class teacher of section A there.
+    $campus = $this->w->b1;
+    toggles()->enable($this->w->g1, 'hrm', 'Test setup');
+    $user = createMember($campus, MembershipType::Staff);
+    giveRoles($user, $campus, makeRole($this->w->c1, ['education.view', 'education_exams.view', 'education_exams.enter_marks'], 'Campus teacher'));
+    $employee = hireVia($this, $this->token, $this->w->c1, ['full_name' => 'Campus Teacher', 'joined_on' => '2026-01-01'])->assertCreated()->json('data.id');
+    DB::table('hrm_employees')->where('id', $employee)->update(['user_id' => $user->id]);
+    $section = ($this->as)()->getJson(($this->api)("structure/sections?session_id={$this->school->session['id']}"))->json('data.0');
+    ($this->as)()->patchJson(($this->api)("structure/sections/{$this->school->section['id']}"), ['base_version' => $section['version'], 'class_teacher_id' => $employee])->assertOk();
+    $teacher = orgToken($user, $campus);
+
+    $mine = ($this->as)($teacher)->getJson(($this->exams)('sheets', $campus))->assertOk()->json('data');
+    expect($mine)->toHaveCount(1)->and($mine[0]['exam']['id'])->toBe($exam['id']);
+    expect(collect(($this->as)($teacher)->getJson(($this->exams)('', $campus))->json('data'))->pluck('id')->all())->toBe([$exam['id']]);
+    expect(($this->as)($teacher)->getJson(($this->exams)($exam['id'], $campus))->assertOk()->json('data.counts'))->toBe(['open' => 1]);
+    ($this->as)($teacher)->getJson(($this->exams)("{$exam['id']}/sheets", $campus))->assertOk()->assertJsonCount(1, 'data');
+    ($this->as)($teacher)->getJson(($this->exams)("sheets/{$mine[0]['id']}", $campus))->assertOk()->assertJsonPath('data.mine', true);
+
+    // A campus manager reads it but cannot change the institution's exam (it looks unknown there).
+    $manager = createMember($campus, MembershipType::Staff);
+    giveRoles($manager, $campus, makeRole($this->w->c1, ['education.view', 'education_exams.view', 'education_exams.manage'], 'Campus exams'));
+    $managerToken = orgToken($manager, $campus);
+    ($this->as)($managerToken)->getJson(($this->exams)($exam['id'], $campus))->assertOk();
+    ($this->as)($managerToken)->patchJson(($this->exams)($exam['id'], $campus), ['kind' => 'final', 'base_version' => $exam['version']])->assertNotFound();
+    ($this->as)($managerToken)->postJson(($this->exams)("{$exam['id']}/status", $campus), ['status' => 'closed', 'base_version' => $exam['version']])->assertNotFound();
+
+    // Another campus of the institution sees the exam with none of B1's sheets.
+    $campus2 = createChild($this->w->c1, OrganizationType::Branch, 'B1 North');
+    $other = createMember($campus2, MembershipType::Staff);
+    giveRoles($other, $campus2, makeRole($this->w->c1, ['education.view', 'education_exams.view'], 'Other campus'));
+    $otherToken = orgToken($other, $campus2);
+    expect(($this->as)($otherToken)->getJson(($this->exams)($exam['id'], $campus2))->json('data.counts'))->toBe([])
+        ->and(($this->as)($otherToken)->getJson(($this->exams)("{$exam['id']}/sheets", $campus2))->json('data'))->toBe([]);
 });

@@ -7,6 +7,7 @@ use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Notifications\Models\NotificationTemplate;
 use App\Platform\Notifications\Models\PartnerMailDomain;
 use App\Platform\Notifications\Services\MailDomainService;
+use App\Platform\Packaging\Services\SubscriptionService;
 use App\Platform\SupportAccess\Enums\Severity;
 use App\Platform\SupportAccess\Services\SupportAccessService;
 use App\Platform\Tenancy\Enums\BillingMode;
@@ -182,6 +183,10 @@ it('sends invoices to clients who see billing and wholesale invoices to partner 
     $this->travelTo(CarbonImmutable::parse('2026-09-15 10:00:00', 'UTC'));
     $this->w->partnerB->forceFill(['billing_mode' => BillingMode::RevenueShare])->save();
     setPlan($this->w->g3, 'business');
+    // Subscriptions start when the clients were made (the real date); start them on the test date so October is billed whatever today is.
+    foreach ([$this->w->g1, $this->w->g2, $this->w->g3] as $client) {
+        app(SubscriptionService::class)->for($client)->forceFill(['started_on' => '2026-09-15'])->save();
+    }
     $clientOwner = createMember($this->w->g3);
     $partnerOwner = createPartnerStaff($this->w->partnerA, PartnerUserRole::Owner);
     $partnerBilling = createPartnerStaff($this->w->partnerA, PartnerUserRole::Billing);

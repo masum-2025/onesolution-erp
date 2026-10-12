@@ -46,6 +46,8 @@ class ExamController extends Controller
         $schemes = $this->grading->schemes($company);
         $bands = $this->grading->bands($company, $schemes->pluck('id')->all());
         $context = app(RuleContextFactory::class)->forOrganization($unit);
+        $rule = fn (string $key) => app(RuleResolver::class)->get("education_exams.{$key}", $context);
+        $manage = Gate::allows('education_exams.manage', $unit);
 
         return response()->json(['data' => [
             'schemes' => $schemes->map(fn (GradingScheme $scheme) => $this->presenter->scheme($scheme, $bands[$scheme->getKey()] ?? []))->values(),
@@ -55,9 +57,15 @@ class ExamController extends Controller
             'campuses' => Organization::query()->whereKey($this->unitIds($unit))->whereNot('type', OrganizationType::Department->value)->orderBy('depth')->get()
                 ->map(fn (Organization $campus) => ['id' => $campus->getKey(), 'name' => $campus->displayName()])->values(),
             'rules' => [
-                'default_grading_scheme' => app(RuleResolver::class)->get('education_exams.default_grading_scheme', $context),
-                'moderation_required' => (bool) app(RuleResolver::class)->get('education_exams.moderation_required', $context),
+                'default_grading_scheme' => $rule('default_grading_scheme'),
+                'moderation_required' => (bool) $rule('moderation_required'),
+                'show_rank' => (bool) $rule('show_rank'),
+                'gpa_by_credits' => (bool) $rule('gpa_by_credits'),
+                'correction_needs_approval' => (bool) $rule('correction_needs_approval'),
             ],
+            // Who a sheet can be given to (people who manage exams only); without HRM, the class teacher enters.
+            'hrm' => $academic->teachersAvailable($company),
+            'teachers' => $manage ? $academic->teachers($company, $this->unitIds($unit)) : [],
             'today' => $this->office->today($company)->toDateString(),
             'can' => array_combine(self::CAN, array_map(fn (string $can) => Gate::allows("education_exams.{$can}", $unit), self::CAN)),
         ]]);
@@ -88,9 +96,9 @@ class ExamController extends Controller
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('education_exams.view', $unit);
         $sessionId = $request->validate(['session_id' => ['nullable', 'string', 'size:26']])['session_id'] ?? null;
-        $exams = $this->office->query(Exam::class, $company)->whereIn('unit_id', $this->unitIds($unit))
+        $exams = $this->office->query(Exam::class, $company)->whereIn('unit_id', $this->examUnitIds($unit))
             ->when($sessionId, fn ($query) => $query->where('session_id', $sessionId))->orderByDesc('starts_on')->orderByDesc('created_at')->limit(200)->get();
-        $sheets = $this->office->query(MarkSheet::class, $company)->whereIn('exam_id', $exams->pluck('id'))->get(['exam_id', 'status'])->groupBy('exam_id');
+        $sheets = $this->office->query(MarkSheet::class, $company)->whereIn('exam_id', $exams->pluck('id'))->whereIn('unit_id', $this->unitIds($unit))->get(['exam_id', 'status'])->groupBy('exam_id');
 
         return response()->json(['data' => $exams->map(fn (Exam $exam) => $this->presenter->exam($exam, collect($sheets[$exam->getKey()] ?? [])->countBy('status')->all()))->values()]);
     }
@@ -99,9 +107,9 @@ class ExamController extends Controller
     {
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('education_exams.view', $unit);
-        $found = $this->recordIn(Exam::class, $unit, $company, $exam, 'exam');
+        $found = $this->examIn($unit, $company, $exam);
 
-        return response()->json(['data' => $this->examView($company, $found)]);
+        return response()->json(['data' => $this->examView($unit, $company, $found)]);
     }
 
     public function store(Request $request, string $organization): JsonResponse
@@ -111,7 +119,7 @@ class ExamController extends Controller
         $data = $request->validate($this->examRules($company, $unit, true));
         $exam = $this->exams->save($company, null, [...$data, 'unit_id' => $data['unit_id'] ?? $unit->getKey()], $request->user());
 
-        return response()->json(['data' => $this->examView($company, $exam)], 201);
+        return response()->json(['data' => $this->examView($unit, $company, $exam)], 201);
     }
 
     public function update(Request $request, string $organization, string $exam): JsonResponse
@@ -121,7 +129,7 @@ class ExamController extends Controller
         $found = $this->recordIn(Exam::class, $unit, $company, $exam, 'exam');
         $data = $request->validate([...$this->examRules($company, $unit, false), 'base_version' => ['required', 'integer']]);
 
-        return response()->json(['data' => $this->examView($company, $this->exams->save($company, $found, $data, $request->user()))]);
+        return response()->json(['data' => $this->examView($unit, $company, $this->exams->save($company, $found, $data, $request->user()))]);
     }
 
     public function status(Request $request, string $organization, string $exam): JsonResponse
@@ -132,7 +140,7 @@ class ExamController extends Controller
         $data = $request->validate(['status' => ['required', 'in:marking,closed'], 'base_version' => ['required', 'integer']]);
         $saved = $this->exams->setStatus($company, $found, $data['status'], (int) $data['base_version'], $request->user(), app(MarkSheets::class));
 
-        return response()->json(['data' => $this->examView($company, $saved)]);
+        return response()->json(['data' => $this->examView($unit, $company, $saved)]);
     }
 
     public function storePaper(Request $request, string $organization, string $exam): JsonResponse
@@ -182,13 +190,13 @@ class ExamController extends Controller
         return response()->json(['data' => $made->map(fn (Paper $paper) => $this->paperView($company, $paper))->values()], 201);
     }
 
-    /** @return array<string, mixed> */
-    private function examView($company, Exam $exam): array
+    /** @return array<string, mixed> The exam with its papers; its sheets counted at the unit and below. */
+    private function examView(Organization $unit, $company, Exam $exam): array
     {
         $papers = $this->office->query(Paper::class, $company)->where('exam_id', $exam->getKey())->orderBy('level_id')->orderBy('sits_on')->get();
         $parts = $this->exams->parts($company, $papers->pluck('id')->all())->groupBy('paper_id');
         $subjects = app(AcademicDirectory::class)->subjects($company, $papers->pluck('subject_id')->unique()->values()->all());
-        $sheets = $this->office->query(MarkSheet::class, $company)->where('exam_id', $exam->getKey())->get(['status'])->countBy('status')->all();
+        $sheets = $this->office->query(MarkSheet::class, $company)->where('exam_id', $exam->getKey())->whereIn('unit_id', $this->unitIds($unit))->get(['status'])->countBy('status')->all();
 
         return [
             ...$this->presenter->exam($exam, $sheets),

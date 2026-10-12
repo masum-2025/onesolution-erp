@@ -87,6 +87,34 @@ class MarkSheets
     }
 
     /**
+     * A teacher's own sheets in exams open for marks at these units: named
+     * on the sheet, or the class teacher of a sheet that names nobody. By
+     * the HRM employee the login belongs to; none linked, none.
+     *
+     * @param  list<string>  $unitIds
+     * @return Collection<int, MarkSheet>
+     */
+    public function forTeacher(Organization $company, array $unitIds, User $user): Collection
+    {
+        $employee = $this->academic->employeeOf($company, $user);
+        if ($employee === null) {
+            return collect();
+        }
+        // Exams open for marks with sheets here, wherever they were set (an institution's exam covers every campus).
+        $exams = $this->office->query(Exam::class, $company)->where('status', 'marking')
+            ->whereIn('id', $this->office->query(MarkSheet::class, $company)->whereIn('unit_id', $unitIds)->select('exam_id'))->get(['id', 'session_id']);
+        $classSections = $exams->pluck('session_id')->unique()
+            ->flatMap(fn (string $session) => $this->academic->sessionSections($company, $session, $unitIds))
+            ->where('class_teacher_id', $employee)->pluck('id')->all();
+
+        return $this->office->query(MarkSheet::class, $company)->whereIn('exam_id', $exams->pluck('id'))->whereIn('unit_id', $unitIds)
+            ->where(fn ($query) => $query->where('teacher_id', $employee)
+                ->orWhere(fn ($query) => $query->whereNull('teacher_id')->whereIn('section_id', $classSections)))
+            ->limit(500)->get()
+            ->filter(fn (MarkSheet $sheet) => $this->mayEnter($company, $sheet, $user))->values();
+    }
+
+    /**
      * The sheet's students (by name) with their marks per part.
      *
      * @return array{students: list<array<string, mixed>>, parts: Collection<int, PaperPart>, marks: array<string, array<string, Mark>>}
