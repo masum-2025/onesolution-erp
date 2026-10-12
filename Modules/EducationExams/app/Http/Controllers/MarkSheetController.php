@@ -10,6 +10,7 @@ use Modules\Education\Directory\AcademicDirectory;
 use Modules\EducationExams\Exceptions\ExamException;
 use Modules\EducationExams\Http\Controllers\Concerns\FindsExamUnit;
 use Modules\EducationExams\Http\ExamPresenter;
+use Modules\EducationExams\Models\Correction;
 use Modules\EducationExams\Models\Exam;
 use Modules\EducationExams\Models\Mark;
 use Modules\EducationExams\Models\MarkSheet;
@@ -17,6 +18,7 @@ use Modules\EducationExams\Models\Paper;
 use Modules\EducationExams\Models\PaperPart;
 use Modules\EducationExams\Services\ExamOffice;
 use Modules\EducationExams\Services\MarkSheets;
+use Modules\EducationExams\Services\ResultAccess;
 
 /**
  * An exam's mark sheets (a paper for a section): listed with
@@ -75,8 +77,15 @@ class MarkSheetController extends Controller
     {
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('education_exams.view', $unit);
+        $found = $this->recordIn(MarkSheet::class, $unit, $company, $sheet, 'sheet');
+        // Who enters it, or who may see that section's subject (ResultAccess); anyone else: the same 404.
+        $subject = (string) $this->office->query(Paper::class, $company)->whereKey($found->paper_id)->value('subject_id');
+        $access = app(ResultAccess::class);
+        if (! $this->sheets->mayEnter($company, $found, $request->user()) && ! $access->seesSubject($access->scope($company, $unit, $request->user()), $found->section_id, $subject)) {
+            throw ExamException::notFound('sheet');
+        }
 
-        return response()->json(['data' => $this->sheetView($company, $this->recordIn(MarkSheet::class, $unit, $company, $sheet, 'sheet'), $request)]);
+        return response()->json(['data' => $this->sheetView($company, $found, $request)]);
     }
 
     public function save(Request $request, string $organization, string $sheet): JsonResponse
@@ -156,6 +165,9 @@ class MarkSheetController extends Controller
                 ...array_intersect_key($student, array_flip(['id', 'code', 'name', 'name_local'])),
                 'marks' => collect($entries['marks'][$student['id']] ?? [])->map(fn (Mark $mark) => ['marks_centi' => $mark->marks_centi, 'absent' => $mark->absent])->all(),
             ], $entries['students']),
+            // Changes asked for after publishing (EXM-2), newest first.
+            'corrections' => $this->office->query(Correction::class, $company)->where('sheet_id', $sheet->getKey())->orderByDesc('created_at')->get()
+                ->map(fn (Correction $row) => ['id' => $row->getKey(), ...$row->only(['student_id', 'part_id', 'old_marks_centi', 'old_absent', 'new_marks_centi', 'new_absent', 'reason', 'status', 'requested_by', 'decision_note', 'version'])])->values(),
         ];
     }
 

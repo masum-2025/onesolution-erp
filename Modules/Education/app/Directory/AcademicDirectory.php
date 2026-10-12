@@ -18,6 +18,7 @@ use Modules\Education\Models\Session;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\StudentGuardian;
 use Modules\Education\Models\Subject;
+use Modules\Education\Services\Access;
 use Modules\Education\Services\Education;
 use Modules\Education\Services\Teachers;
 
@@ -345,6 +346,27 @@ class AcademicDirectory
     public function teacherNames(Organization $company, array $employeeIds): array
     {
         return app(Teachers::class)->names($company, $employeeIds);
+    }
+
+    /**
+     * Sections at these campuses whose class teacher is this HRM employee.
+     *
+     * @param  list<string>  $unitIds
+     * @return list<string>
+     */
+    public function classTeacherSections(Organization $company, string $employeeId, array $unitIds): array
+    {
+        return $this->education->query(Section::class, $company)->where('class_teacher_id', $employeeId)->whereIn('unit_id', $unitIds)->pluck('id')->map(fn ($id) => (string) $id)->all();
+    }
+
+    /**
+     * Whether a student studies now in one of these sections (null: any).
+     *
+     * @param  list<string>|null  $sections
+     */
+    public function studentInSections(Organization $company, ?array $sections, string $studentId): bool
+    {
+        return app(Access::class)->canSeeStudent($company, $sections, $studentId);
     }
 
     /** Whether teachers can be named at all (HRM on for the institution). */

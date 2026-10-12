@@ -14,6 +14,7 @@ return [
         'grading' => 'Grading',
         'marks' => 'Marks',
         'results' => 'Results',
+        'access' => 'Who sees results',
     ],
     'fail_any_subject' => [
         'label' => 'Failing a subject fails the result',
@@ -34,5 +35,13 @@ return [
     'correction_needs_approval' => [
         'label' => 'Corrections need a second person',
         'description' => 'On: changing a published mark waits for someone other than who asked.',
+    ],
+    'class_teacher_sees_section_results' => [
+        'label' => 'Class teachers see their whole section\x27s results',
+        'description' => 'On: a class teacher sees every subject, the GPA and positions of their section. Off: only the subjects they enter marks for. Exam office, head and moderators always see all.',
+    ],
+    'subject_teacher_sees_section_results' => [
+        'label' => 'Subject teachers see the whole section\x27s results',
+        'description' => 'On: a teacher sees every subject, the GPA and positions of the sections they teach. Off: only their own subject\x27s marks and grades.',
     ],
 ];

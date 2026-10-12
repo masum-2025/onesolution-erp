@@ -92,6 +92,28 @@ return [
             'sort_order' => 60,
         ],
         [
+            'key' => 'education_exams.class_teacher_sees_section_results',
+            'type' => 'boolean',
+            // A class teacher sees the whole result of their section (every subject, GPA, position); off: only the subjects they enter.
+            'default' => true,
+            'label' => 'education_exams::rules.class_teacher_sees_section_results.label',
+            'description' => 'education_exams::rules.class_teacher_sees_section_results.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'access',
+            'sort_order' => 80,
+        ],
+        [
+            'key' => 'education_exams.subject_teacher_sees_section_results',
+            'type' => 'boolean',
+            // A subject teacher sees the whole result of the sections they teach; off: only their own subject's marks.
+            'default' => false,
+            'label' => 'education_exams::rules.subject_teacher_sees_section_results.label',
+            'description' => 'education_exams::rules.subject_teacher_sees_section_results.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'access',
+            'sort_order' => 90,
+        ],
+        [
             'key' => 'education_exams.correction_needs_approval',
             'type' => 'boolean',
             // Changing a published mark waits for someone other than who asked.
@@ -104,7 +126,7 @@ return [
             'sort_order' => 70,
         ],
     ],
-    // Results, combinations and corrections join with EXM-3b.
+    // Each screen shows to those holding its permission; results inside follow ResultAccess (rules above).
     'menu' => [
         [
             'key' => 'education_exams',
@@ -116,6 +138,9 @@ return [
             'children' => [
                 ['key' => 'exams', 'label' => 'education_exams::module.menu_exams', 'route' => '/exams', 'permission' => 'education_exams.view'],
                 ['key' => 'my_sheets', 'label' => 'education_exams::module.menu_my_sheets', 'route' => '/exams/my-sheets', 'permission' => 'education_exams.enter_marks'],
+                ['key' => 'combinations', 'label' => 'education_exams::module.menu_combinations', 'route' => '/exams/combinations', 'permission' => 'education_exams.view'],
+                ['key' => 'corrections', 'label' => 'education_exams::module.menu_corrections', 'route' => '/exams/corrections', 'permission' => 'education_exams.publish'],
+                ['key' => 'transcripts', 'label' => 'education_exams::module.menu_transcripts', 'route' => '/exams/students', 'permission' => 'education_exams.view'],
                 ['key' => 'grading', 'label' => 'education_exams::module.menu_grading', 'route' => '/exams/grading', 'permission' => 'education_exams.manage'],
             ],
         ],

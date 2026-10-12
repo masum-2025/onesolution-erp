@@ -10,5 +10,10 @@ export default [
     { path: 'exams/my-sheets', name: 'exams-my-sheets', component: () => import('./pages/MySheetsPage.vue'), meta },
     { path: 'exams/grading', name: 'exams-grading', component: () => import('./pages/GradingPage.vue'), meta },
     { path: 'exams/sheets/:id', name: 'exams-sheet', component: () => import('./pages/MarkSheetPage.vue'), meta },
+    { path: 'exams/combinations', name: 'exams-combinations', component: () => import('./pages/CombinationsPage.vue'), meta },
+    { path: 'exams/combinations/:id', name: 'exams-combination', component: () => import('./pages/CombinationPage.vue'), meta },
+    { path: 'exams/corrections', name: 'exams-corrections', component: () => import('./pages/CorrectionsPage.vue'), meta },
+    { path: 'exams/students', name: 'exams-students', component: () => import('./pages/TranscriptPage.vue'), meta },
+    { path: 'exams/students/:id', name: 'exams-transcript', component: () => import('./pages/TranscriptPage.vue'), meta },
     { path: 'exams/:id', name: 'exams-exam', component: () => import('./pages/ExamPage.vue'), meta },
 ];

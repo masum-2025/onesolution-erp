@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use Modules\CourseRegistration\Models\Registration;
@@ -48,9 +49,13 @@ beforeEach(function () {
         foreach (($this->as)()->getJson(($this->exams)("{$exam['id']}/sheets"))->json('data') as $sheet) {
             $code = $papers->firstWhere('id', $sheet['paper_id'])['subject']['code'];
             $part = $papers[$code]['parts'][0]['id'];
+            // Each sheet takes the marks of its own section's students.
+            $here = collect(($this->as)()->getJson(($this->exams)("sheets/{$sheet['id']}"))->json('data.students'))->pluck('id')->all();
             $rows = [];
             foreach ($marks as $studentId => $byCode) {
-                $rows[] = ['student_id' => $studentId, 'part_id' => $part, 'marks_centi' => $byCode[$code] * 100];
+                if (in_array($studentId, $here, true)) {
+                    $rows[] = ['student_id' => $studentId, 'part_id' => $part, 'marks_centi' => $byCode[$code] * 100];
+                }
             }
             $saved = ($this->as)()->putJson(($this->exams)("sheets/{$sheet['id']}/marks"), ['marks' => $rows])->assertOk()->json('data');
             ($this->as)()->postJson(($this->exams)("sheets/{$sheet['id']}/submit"), ['base_version' => $saved['version']])->assertOk();
@@ -127,6 +132,8 @@ it('combines exams by weight, publishes the final result and keeps a transcript'
 
     $transcript = ($this->as)()->getJson(($this->exams)("students/{$this->rahim['id']}/results"))->assertOk()->json('data');
     expect($transcript['results'])->toHaveCount(3)->and($transcript['cgpa_centi'])->toBe(417);
+    orgRule($this->w->c1, 'education_exams.show_rank', false);
+    expect(collect(($this->as)()->getJson(($this->exams)("students/{$this->rahim['id']}/results"))->json('data.results'))->pluck('rank')->filter()->all())->toBe([]);
 });
 
 it('sets course registration outcomes from published results', function () {
@@ -141,4 +148,98 @@ it('sets course registration outcomes from published results', function () {
 
     expect(RegistrationItem::query()->withoutGlobalScopes()->get()->pluck('outcome', 'subject_id')->all())
         ->toBe([$this->subjects['BAN1']['id'] => 'completed', $this->subjects['ENG1']['id'] => 'failed']);
+});
+
+it('shows results to teachers by the rules: class teacher the whole section, subject teacher their subject, others nothing', function () {
+    // Section B with Jamal, taught by nobody below.
+    $sectionB = ($this->as)()->postJson(($this->api)('structure/sections'), ['unit_id' => $this->w->b1->id, 'session_id' => $this->school->session['id'], 'level_id' => $this->school->class6['id'], 'name' => 'B', 'capacity' => 10])->assertCreated()->json('data');
+    $jamal = newStudent($this, $this->school, ['name' => 'Jamal', 'guardians' => [], 'enrollment' => ['session_id' => $this->school->session['id'], 'level_id' => $this->school->class6['id'], 'section_id' => $sectionB['id']]])->assertCreated()->json('data');
+    [$exam, $papers] = ($this->run)('term', [
+        $this->rahim['id'] => ['BAN1' => 85, 'ENG1' => 72, 'MATH' => 64], $this->karim['id'] => ['BAN1' => 90, 'ENG1' => 40, 'MATH' => 50], $jamal['id'] => ['BAN1' => 70, 'ENG1' => 70, 'MATH' => 70],
+    ]);
+
+    // Teachers linked to HRM: Tania class teacher of A, Sami named on A's Maths sheet.
+    toggles()->enable($this->w->g1, 'hrm', 'Test setup');
+    $teacher = function (string $name) {
+        $user = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['education.view', 'education_exams.view', 'education_exams.enter_marks'], "Teacher {$name}"));
+        $employee = hireVia($this, $this->token, $this->w->c1, ['full_name' => $name, 'joined_on' => '2026-01-01'])->assertCreated()->json('data.id');
+        DB::table('hrm_employees')->where('id', $employee)->update(['user_id' => $user->id]);
+
+        return (object) ['token' => orgToken($user, $this->w->c1), 'employee' => $employee];
+    };
+    $tania = $teacher('Tania');
+    $sami = $teacher('Sami');
+    $sectionA = collect(($this->as)()->getJson(($this->api)("structure/sections?session_id={$this->school->session['id']}"))->json('data'))->firstWhere('id', $this->school->section['id']);
+    ($this->as)()->patchJson(($this->api)("structure/sections/{$sectionA['id']}"), ['base_version' => $sectionA['version'], 'class_teacher_id' => $tania->employee])->assertOk();
+    $sheets = collect(($this->as)()->getJson(($this->exams)("{$exam['id']}/sheets"))->json('data'));
+    $sheetOf = fn (string $section, string $code) => $sheets->first(fn ($sheet) => $sheet['section_id'] === $section && $sheet['paper_id'] === $papers[$code]['id']);
+    $mathA = $sheetOf($sectionA['id'], 'MATH');
+    $banglaA = $sheetOf($sectionA['id'], 'BAN1');
+    $banglaB = $sheetOf($sectionB['id'], 'BAN1');
+    ($this->as)()->postJson(($this->exams)("sheets/{$mathA['id']}/assign"), ['teacher_id' => $sami->employee, 'base_version' => $mathA['version']])->assertOk();
+    $results = fn (string $token) => collect(($this->as)($token)->getJson(($this->exams)("{$exam['id']}/results"))->assertOk()->json('data'))->keyBy('student_id');
+    $codes = fn (array $row) => collect($row['subjects'])->map(fn ($subject) => collect($this->subjects)->firstWhere('id', $subject['subject_id'])['code'])->sort()->values()->all();
+    $ids = fn (array $students) => collect($students)->pluck('id')->sort()->values()->all();
+
+    // Managers see everyone.
+    expect($results($this->token))->toHaveCount(3);
+
+    // Class teacher (rule on by default): section A whole, never B.
+    $seen = $results($tania->token);
+    expect($seen->keys()->sort()->values()->all())->toBe($ids([$this->rahim, $this->karim]))
+        ->and($seen[$this->rahim['id']])->toMatchArray(['gpa_centi' => 417, 'partial' => false, 'rank' => 1])
+        ->and($codes($seen[$this->rahim['id']]))->toBe(['BAN1', 'ENG1', 'MATH']);
+    ($this->as)($tania->token)->getJson(($this->exams)("students/{$this->rahim['id']}/results"))->assertOk();
+    ($this->as)($tania->token)->getJson(($this->exams)("students/{$jamal['id']}/results"))->assertNotFound();
+    ($this->as)($tania->token)->getJson(($this->exams)("sheets/{$banglaA['id']}"))->assertOk();
+    ($this->as)($tania->token)->getJson(($this->exams)("sheets/{$banglaB['id']}"))->assertNotFound();
+    ($this->as)($tania->token)->getJson(($this->exams)('students?q=a'))->assertUnprocessable()->assertJsonValidationErrors(['q']);
+    expect(($this->as)($tania->token)->getJson(($this->exams)('students?q=Jamal'))->json('data'))->toBe([])
+        ->and(collect(($this->as)($tania->token)->getJson(($this->exams)('students?q=Rahim'))->json('data'))->pluck('id')->all())->toBe([$this->rahim['id']])
+        ->and(collect(($this->as)()->getJson(($this->exams)('students?q=Jamal'))->json('data'))->pluck('id')->all())->toBe([$jamal['id']]);
+
+    // Class teacher with the rule off: only the subjects she enters (Bangla and English; Maths is Sami's), no GPA or position.
+    orgRule($this->w->c1, 'education_exams.class_teacher_sees_section_results', false);
+    $seen = $results($tania->token);
+    expect($seen[$this->rahim['id']])->toMatchArray(['partial' => true, 'gpa_centi' => null, 'letter' => null, 'rank' => null])
+        ->and($codes($seen[$this->rahim['id']]))->toBe(['BAN1', 'ENG1']);
+    ($this->as)($tania->token)->getJson(($this->exams)("students/{$this->rahim['id']}/results"))->assertNotFound();
+
+    // Subject teacher (rule off by default): Maths of section A only; with the rule on, section A whole.
+    $seen = $results($sami->token);
+    expect($seen)->toHaveCount(2)->and($codes($seen[$this->karim['id']]))->toBe(['MATH'])->and($seen[$this->karim['id']]['partial'])->toBeTrue();
+    ($this->as)($sami->token)->getJson(($this->exams)("sheets/{$mathA['id']}"))->assertOk();
+    ($this->as)($sami->token)->getJson(($this->exams)("sheets/{$banglaA['id']}"))->assertNotFound();
+    orgRule($this->w->c1, 'education_exams.subject_teacher_sees_section_results', true);
+    expect($results($sami->token)[$this->karim['id']])->toMatchArray(['partial' => false, 'rank' => 3, 'section_rank' => 2]);
+
+    // Someone who only may view exams and teaches nothing sees no student's marks.
+    $viewer = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['education_exams.view'], 'Viewer')), $this->w->c1);
+    expect($results($viewer))->toHaveCount(0);
+    ($this->as)($viewer)->getJson(($this->exams)("students/{$this->rahim['id']}/results"))->assertNotFound();
+    ($this->as)($viewer)->getJson(($this->exams)("sheets/{$banglaA['id']}"))->assertNotFound();
+});
+
+it('lists corrections waiting for approval across exams, named, to those who see them', function () {
+    [$exam, $papers] = ($this->run)('term', [$this->rahim['id'] => ['BAN1' => 85, 'ENG1' => 72, 'MATH' => 64], $this->karim['id'] => ['BAN1' => 90, 'ENG1' => 40, 'MATH' => 50]]);
+    $sheet = collect(($this->as)()->getJson(($this->exams)("{$exam['id']}/sheets"))->json('data'))->firstWhere('paper_id', $papers['MATH']['id']);
+    ($this->as)()->postJson(($this->exams)("sheets/{$sheet['id']}/corrections"), ['student_id' => $this->karim['id'], 'part_id' => $papers['MATH']['parts'][0]['id'], 'marks_centi' => 5500, 'reason' => 'Added wrongly'])->assertCreated();
+
+    $list = ($this->as)($this->checker)->getJson(($this->exams)('corrections?status=pending'))->assertOk()->json();
+    expect($list['data'])->toHaveCount(1)
+        ->and($list['data'][0])->toMatchArray(['old_marks_centi' => 5000, 'new_marks_centi' => 5500, 'reason' => 'Added wrongly', 'status' => 'pending'])
+        ->and($list['data'][0]['subject']['code'])->toBe('MATH')
+        ->and($list['data'][0]['student']['name'])->toBe('Karim')
+        ->and($list['data'][0]['exam']['name']['en'])->toBe('Term')
+        ->and($list['people'][$list['data'][0]['requested_by']])->toBe($this->owner->name);
+    expect(($this->as)()->getJson(($this->exams)('corrections?status=applied'))->json('data'))->toBe([]);
+    ($this->as)()->getJson(($this->exams)('corrections?status=maybe'))->assertUnprocessable();
+    // The sheet shows what waits on it.
+    expect(($this->as)()->getJson(($this->exams)("sheets/{$sheet['id']}"))->json('data.corrections.0'))->toMatchArray(['status' => 'pending', 'new_marks_centi' => 5500]);
+
+    // Another institution sees none; exams off: 403.
+    $other = orgToken(createMember($this->w->c2), $this->w->c2);
+    expect($this->asToken($other)->getJson("/api/organizations/{$this->w->c2->id}/exams/corrections")->json('data'))->toBe([]);
+    toggles()->disable($this->w->g1, 'education_exams', 'Test');
+    ($this->as)()->getJson(($this->exams)('corrections'))->assertForbidden();
 });

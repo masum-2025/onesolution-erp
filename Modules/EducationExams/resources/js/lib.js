@@ -144,3 +144,22 @@ export function sheetCounts(counts) {
     const total = get('open') + get('returned') + get('submitted') + get('approved');
     return { total, approved: get('approved'), submitted: get('submitted'), open: get('open'), returned: get('returned') };
 }
+
+/** Typed weights ("30", "70") as basis points with their total; a weight not valid is null. */
+export function readWeights(texts) {
+    const weights = texts.map((text) => {
+        const bp = parsePercent(text);
+        return bp === null || bp === 0 ? null : bp;
+    });
+    return { weights, total: weights.reduce((sum, bp) => sum + (bp ?? 0), 0), valid: weights.length > 0 && weights.every((bp) => bp !== null) };
+}
+
+/**
+ * A results list in short: how many, passing and failing (of those whose
+ * whole result shows) and the pass rate in basis points.
+ */
+export function resultSummary(rows) {
+    const whole = rows.filter((row) => !row.partial);
+    const passed = whole.filter((row) => row.passed).length;
+    return { students: rows.length, passed, failed: whole.length - passed, rate_bp: whole.length ? Math.floor((passed * 10000 + Math.floor(whole.length / 2)) / whole.length) : null };
+}

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
-import { ArrowLeft, Check, CircleAlert, CloudOff, LoaderCircle, Search, Send, Undo2, UserX } from 'lucide-vue-next';
+import { ArrowLeft, Check, CircleAlert, CloudOff, LoaderCircle, Pencil, Search, Send, Undo2, UserX } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -18,6 +18,7 @@ import { examsApi } from '../api';
 import { useExamsSetup } from '../setup';
 import { cellText, gradePaper, normalizeNumberText, readCell, sheetProgress, sheetTone } from '../lib';
 import { marksShown, partName, pointShown, subjectName } from '../labels';
+import CorrectionDialog from '../components/CorrectionDialog.vue';
 
 /**
  * Entering a paper's marks for one section. Each cell takes marks up to the
@@ -251,9 +252,19 @@ async function sendBack() {
 }
 watch(() => route.params.id, (id, old) => id && id !== old && load());
 
+// After publishing, a mark changes only by a correction with a reason (.correct), decided on the corrections screen.
+const canCorrect = computed(() => sheet.value?.exam?.status === 'published' && setup.can('correct'));
+const pendingFor = (studentId, partId) => (sheet.value?.corrections ?? []).find((row) => row.status === 'pending' && row.student_id === studentId && row.part_id === partId) ?? null;
+const correcting = ref(null);
+function corrected() {
+    correcting.value = null;
+    load();
+}
+
 const why = computed(() => {
     const value = sheet.value;
     if (!value || editable.value) return '';
+    if (value.exam?.status === 'published') return t(canCorrect.value ? 'education_exams.entry.published_correct' : 'education_exams.entry.published');
     if (value.exam?.status !== 'marking') return t('education_exams.entry.exam_not_marking');
     if (!value.mine) return t('education_exams.entry.not_yours');
     return t(`education_exams.entry.status_${value.status}`);
@@ -339,6 +350,12 @@ const why = computed(() => {
                                     </template>
                                     <span v-else-if="cells[student.id][part.id].absent" class="text-[12.5px] text-warn">{{ t('education_exams.entry.absent') }}</span>
                                     <span v-else class="tabular">{{ cells[student.id][part.id].kind === 'marks' ? marksShown(cells[student.id][part.id].centi) : '—' }}</span>
+                                    <span v-if="!editable && pendingFor(student.id, part.id)" class="block text-[11px] text-warn">
+                                        {{ t('education_exams.corrections.pending_to', { marks: pendingFor(student.id, part.id).new_absent ? t('education_exams.entry.absent') : marksShown(pendingFor(student.id, part.id).new_marks_centi) }) }}
+                                    </span>
+                                    <AppButton v-else-if="canCorrect" size="icon-sm" variant="ghost" :icon="Pencil" class="ms-1 align-middle"
+                                        :aria-label="t('education_exams.corrections.ask_for', { name: student.name, part: partName(part) })" :title="t('education_exams.corrections.ask_title')"
+                                        @click="correcting = { student, part, current: { marks_centi: cells[student.id][part.id].centi, absent: cells[student.id][part.id].absent } }" />
                                 </td>
                                 <td v-if="parts.length > 1" class="tabular px-3 py-1.5 text-end">{{ grade(student) ? marksShown(grade(student).marks_centi) : '' }}</td>
                                 <td class="px-3 py-1.5 text-center">
@@ -360,6 +377,8 @@ const why = computed(() => {
                     <p v-if="!shown.length" class="px-5 py-6 text-[13px] text-muted">{{ t('education_exams.entry.no_match') }}</p>
                 </div>
             </section>
+
+            <CorrectionDialog :open="correcting !== null" :sheet-id="sheet.id" :student="correcting?.student" :part="correcting?.part" :current="correcting?.current" @close="correcting = null" @done="corrected" />
         </template>
     </div>
 </template>

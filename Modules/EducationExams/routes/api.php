@@ -21,7 +21,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
         Route::get('sheets/{sheet}', [MarkSheetController::class, 'show']);
         Route::get('combinations', [ResultController::class, 'combinations']);
         Route::get('combinations/{combination}/results', [ResultController::class, 'combinationResults']);
+        Route::get('students', [ResultController::class, 'students'])->middleware('throttle:education-exams-search');
         Route::get('students/{student}/results', [ResultController::class, 'transcript']);
+        Route::get('corrections', [ResultController::class, 'allCorrections']);
         Route::get('{exam}', [ExamController::class, 'show']);
         Route::get('{exam}/sheets', [MarkSheetController::class, 'index']);
         Route::get('{exam}/results', [ResultController::class, 'exam']);

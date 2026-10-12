@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { bandFor, bandsComplete, cellText, centiText, gradePaper, nextStatuses, parseCenti, parsePercent, percentBp, pointText, readCell, sheetCounts, sheetProgress } from '../../Modules/EducationExams/resources/js/lib.js';
+import { bandFor, bandsComplete, cellText, centiText, gradePaper, nextStatuses, parseCenti, parsePercent, percentBp, pointText, readCell, readWeights, resultSummary, sheetCounts, sheetProgress } from '../../Modules/EducationExams/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/EducationExams/resources/js/locales/en/education_exams.json';
 import bn from '../../Modules/EducationExams/resources/js/locales/bn/education_exams.json';
@@ -24,7 +24,8 @@ const gpa5 = [
 describe('exam screens', () => {
     it('registers its screens behind the module, fixed paths before an exam id', () => {
         const routes = moduleRoutes.filter((route) => route.meta.module === 'education_exams');
-        expect(routes.map((route) => route.name)).toEqual(['exams-list', 'exams-my-sheets', 'exams-grading', 'exams-sheet', 'exams-exam']);
+        expect(routes.map((route) => route.name)).toEqual(['exams-list', 'exams-my-sheets', 'exams-grading', 'exams-sheet', 'exams-combinations', 'exams-combination', 'exams-corrections', 'exams-students', 'exams-transcript', 'exams-exam']);
+        expect(routes.at(-1).path).toBe('exams/:id');
         expect(routes.every((route) => route.meta.ns.includes('education_exams') && !route.meta.portal)).toBe(true);
     });
 
@@ -109,5 +110,19 @@ describe('exam screens', () => {
         expect(nextStatuses('published')).toEqual([]);
         expect(sheetCounts({ open: 2, approved: 3, submitted: 1 })).toEqual({ total: 6, approved: 3, submitted: 1, open: 2, returned: 0 });
         expect(sheetCounts(undefined).total).toBe(0);
+    });
+
+    it('reads combination weights as basis points that must add up to 100 %', () => {
+        expect(readWeights(['30', '70'])).toEqual({ weights: [3000, 7000], total: 10000, valid: true });
+        expect(readWeights(['৩০', '৬৫.৫'])).toEqual({ weights: [3000, 6550], total: 9550, valid: true });
+        expect(readWeights(['30', ''])).toMatchObject({ valid: false, total: 3000 });
+        expect(readWeights(['0'])).toMatchObject({ valid: false });
+        expect(readWeights([])).toMatchObject({ valid: false, total: 0 });
+    });
+
+    it('sums results up, leaving out rows seen in part', () => {
+        const rows = [{ passed: true }, { passed: true }, { passed: false }, { passed: null, partial: true }];
+        expect(resultSummary(rows)).toEqual({ students: 4, passed: 2, failed: 1, rate_bp: 6667 });
+        expect(resultSummary([])).toEqual({ students: 0, passed: 0, failed: 0, rate_bp: null });
     });
 });

@@ -3342,8 +3342,35 @@ the server does it, texts in `locales/{bn,en}/education_exams.json`). Menu "Exam
   saving marks); offline entry would add both to `PUT sheets/{sheet}/marks`.
 - New sector, country or partner: grading schemes, moderation and ranks are data and rules; texts
   come from the language files or the language editor. No code change.
-- Next: EXM-3b screens (results, publish, combinations, corrections, transcript), EXM-4
-  marksheets, portal results and SMS.
+
+### Result screens and who sees results (EXM-3b)
+
+- **Results** (exam page, Results tab, once closed): work out (`.manage`), check by class,
+  section or name, positions when rule `show_rank`, each student's subjects on opening a row,
+  publish (`.publish`, confirmed; refused while a sheet waits for approval, with the count).
+- **Final results** (`/exams/combinations`): weigh a session's exams for a class (weights must
+  add up to 100 %), see the worked-out results, publish once every exam in it is published.
+- **Mark corrections** (`/exams/corrections`, `GET /exams/corrections?status=`): what waits for
+  approval across exams, with old and new marks, reason and who asked; approve or refuse with a
+  reason (`.publish`, never one's own). On a published mark sheet, `.correct` asks for a
+  correction next to each mark; a waiting one shows on its cell.
+- **Student results** (`/exams/students`, search `GET /exams/students?q=` limited by
+  `education-exams-search` 60/min): every published result with subjects and the cumulative GPA.
+- **Who sees students' marks** (`Services/ResultAccess`), applied to result lists, final results,
+  transcripts, student search, mark sheets and corrections:
+  - exam office, heads and moderators (`education_exams.manage`, `.publish`, `.moderate`,
+    `.correct`) and people who run students (`education.manage`, `.admit`, `.edit_students`):
+    everything at the unit and below;
+  - a teacher (login linked to an HRM employee): rule
+    `education_exams.class_teacher_sees_section_results` (default on) gives a class teacher their
+    section's whole result; rule `education_exams.subject_teacher_sees_section_results` (default
+    off) gives a teacher the whole result of every section they enter a sheet in; otherwise only
+    the subjects they enter there (marks and grades, no total, GPA or position);
+  - anyone else: no student's marks (other sections and students answer 404).
+  Both rules can be set or locked from platform down to branch.
+- Transcripts follow `show_rank` too. Education's own `education.teacher_scope` still decides the
+  student directory; results follow the two rules above.
+- Next: EXM-4 marksheets (print), results in the portal and SMS.
 
 ## Browser app (frontend foundation)
 

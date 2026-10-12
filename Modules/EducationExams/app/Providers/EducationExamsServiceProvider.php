@@ -31,6 +31,10 @@ class EducationExamsServiceProvider extends ServiceProvider
         RateLimiter::for('education-exams-marks', fn (Request $request) => Limit::perMinute(self::MARK_WRITES_PER_MINUTE)
             ->by('education-exams-marks:'.($request->user()?->getKey() ?? $request->ip())));
 
+        // Looking students up for a transcript: a person, not a scraper.
+        RateLimiter::for('education-exams-search', fn (Request $request) => Limit::perMinute(60)
+            ->by('education-exams-search:'.($request->user()?->getKey() ?? $request->ip())));
+
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');
         }

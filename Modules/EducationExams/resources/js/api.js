@@ -34,5 +34,21 @@ export function examsApi(organizationId) {
         approveSheet: (id, version) => api(`${base}/sheets/${id}/approve`, { method: 'POST', body: { base_version: version } }),
         sendBackSheet: (id, note, version) => api(`${base}/sheets/${id}/send-back`, { method: 'POST', body: { note, base_version: version } }),
         assignSheet: (id, teacherId, version) => api(`${base}/sheets/${id}/assign`, { method: 'POST', body: { teacher_id: teacherId, base_version: version } }),
+
+        results: (examId) => api(`${base}/${examId}/results`),
+        computeResults: (examId) => api(`${base}/${examId}/results/compute`, { method: 'POST' }),
+        publish: (examId, version) => api(`${base}/${examId}/publish`, { method: 'POST', body: { base_version: version } }),
+
+        combinations: (query) => api(`${base}/combinations`, { query }),
+        createCombination: (body) => api(`${base}/combinations`, { method: 'POST', body }),
+        combinationResults: (id) => api(`${base}/combinations/${id}/results`),
+        publishCombination: (id, version) => api(`${base}/combinations/${id}/publish`, { method: 'POST', body: { base_version: version } }),
+
+        corrections: (query) => api(`${base}/corrections`, { query }),
+        requestCorrection: (sheetId, body) => api(`${base}/sheets/${sheetId}/corrections`, { method: 'POST', body }),
+        decideCorrection: (id, approve, body) => api(`${base}/corrections/${id}/${approve ? 'approve' : 'reject'}`, { method: 'POST', body }),
+
+        findStudents: (q) => api(`${base}/students`, { query: { q } }),
+        transcript: (studentId) => api(`${base}/students/${studentId}/results`),
     };
 }

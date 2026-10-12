@@ -7,5 +7,8 @@ return [
     'menu' => 'Exams',
     'menu_exams' => 'Exams',
     'menu_my_sheets' => 'My mark sheets',
+    'menu_combinations' => 'Final results',
+    'menu_corrections' => 'Mark corrections',
+    'menu_transcripts' => 'Student results',
     'menu_grading' => 'Grading',
 ];

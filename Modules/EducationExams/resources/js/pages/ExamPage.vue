@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, Check, ClipboardList, FileText, ListPlus, Lock, LockOpen, Pencil, Play, Plus, Trash2, Undo2, UserRoundCog } from 'lucide-vue-next';
+import { ArrowLeft, Calculator, Check, ClipboardList, FileText, ListPlus, Lock, LockOpen, Megaphone, Pencil, Play, Plus, Trash2, Undo2, UserRoundCog } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -25,11 +25,13 @@ import { dateRange, day, marksShown, partName, subjectName } from '../labels';
 import ExamDialog from '../components/ExamDialog.vue';
 import PaperDialog from '../components/PaperDialog.vue';
 import SheetBar from '../components/SheetBar.vue';
+import ResultsTable from '../components/ResultsTable.vue';
 
 /**
  * One exam: its papers by class (made by hand or from the curriculum), and
  * once open for marks its mark sheets (a paper for a section): who enters
- * each, how far it is, approving or sending back what was handed in.
+ * each, how far it is, approving or sending back what was handed in; once
+ * closed, its results worked out and published.
  */
 const route = useRoute();
 const api = examsApi(currentOrganization().id);
@@ -40,10 +42,12 @@ const record = useResource(() => api.exam(route.params.id));
 const exam = computed(() => record.data.value?.data ?? null);
 const manage = computed(() => setup.can('manage') && exam.value && exam.value.status !== 'published');
 
-const tab = ref(route.query.tab === 'sheets' ? 'sheets' : 'papers');
+const tab = ref(['sheets', 'results'].includes(route.query.tab) ? route.query.tab : 'papers');
+const hasResults = computed(() => ['closed', 'published'].includes(exam.value?.status));
 const tabs = computed(() => [
     { key: 'papers', label: t('education_exams.exam.papers'), count: exam.value?.papers.length || undefined },
     { key: 'sheets', label: t('education_exams.exam.sheets'), count: sheetCounts(exam.value?.counts).total || undefined },
+    ...(hasResults.value ? [{ key: 'results', label: t('education_exams.results.title') }] : []),
 ]);
 
 // Papers, by class.
@@ -127,6 +131,52 @@ async function move(status) {
         if (error.code === 'version_conflict') record.reload();
     } finally {
         moving.value = false;
+    }
+}
+
+// Results: worked out while closed (people who manage exams), published once (.publish).
+const results = useResource(() => api.results(route.params.id), { immediate: false });
+watch(tab, (key) => key === 'results' && !results.data.value && results.reload(), { immediate: true });
+const computing = ref(false);
+async function compute() {
+    computing.value = true;
+    try {
+        results.data.value = await api.computeResults(exam.value.id);
+        toast.success(t('education_exams.results.computed', { count: formatNumber(results.data.value.data.length) }));
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        computing.value = false;
+    }
+}
+const publishing = ref(false);
+async function publish() {
+    const counts = sheetCounts(exam.value.counts);
+    const waiting = counts.total - counts.approved;
+    if (waiting > 0) {
+        toast.error(t('education_exams.results.waiting_sheets', { count: formatNumber(waiting) }));
+        tab.value = 'sheets';
+        return;
+    }
+    const rows = results.data.value?.data ?? [];
+    const confirmed = await confirmAction({
+        title: t('education_exams.results.publish_title'),
+        message: t('education_exams.results.publish_text'),
+        details: rows.length ? [t('education_exams.results.summary', { students: formatNumber(rows.length), passed: formatNumber(rows.filter((row) => row.passed).length), failed: formatNumber(rows.filter((row) => !row.passed).length) })] : null,
+        confirmLabel: t('education_exams.results.publish'),
+    });
+    if (!confirmed) return;
+    publishing.value = true;
+    try {
+        await api.publish(exam.value.id, exam.value.version);
+        toast.success(t('education_exams.results.published'));
+        await record.reload();
+        results.reload();
+    } catch (error) {
+        toast.error(error.message);
+        if (error.code === 'version_conflict') record.reload();
+    } finally {
+        publishing.value = false;
     }
 }
 
@@ -282,6 +332,22 @@ async function assign() {
                         </li>
                     </ul>
                 </div>
+            </section>
+
+            <!-- Results -->
+            <section v-else-if="tab === 'results'" class="space-y-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <p class="me-auto text-[13px] text-muted">{{ t(exam.status === 'published' ? 'education_exams.results.published_text' : 'education_exams.results.closed_text') }}</p>
+                    <AppButton v-if="exam.status === 'closed' && setup.can('manage')" :icon="Calculator" :loading="computing" @click="compute">{{ t('education_exams.results.compute') }}</AppButton>
+                    <AppButton v-if="exam.status === 'closed' && setup.can('publish')" variant="primary" :icon="Megaphone" :loading="publishing" :disabled="!results.data.value?.data.length" @click="publish">{{ t('education_exams.results.publish') }}</AppButton>
+                    <AppButton v-if="exam.status === 'published' && setup.can('publish')" size="sm" variant="ghost" :to="{ name: 'exams-corrections' }">{{ t('education_exams.corrections.title') }}</AppButton>
+                </div>
+                <SkeletonRows v-if="results.loading.value && !results.data.value" :rows="6" />
+                <ErrorState v-else-if="results.error.value" :error="results.error.value" @retry="results.reload()" />
+                <div v-else-if="!results.data.value?.data.length" class="card">
+                    <EmptyState :icon="Calculator" compact :title="t('education_exams.results.empty')" :text="setup.can('manage') && exam.status === 'closed' ? t('education_exams.results.empty_text') : ''" />
+                </div>
+                <ResultsTable v-else :rows="results.data.value.data" :meta="results.data.value.meta" />
             </section>
 
             <!-- Mark sheets -->
