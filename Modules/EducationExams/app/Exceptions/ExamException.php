@@ -94,6 +94,24 @@ class ExamException extends TenancyException
         return new self('student_not_in_section', 422, extra: ['field' => 'student_id']);
     }
 
+    /** Results are published when every mark sheet is approved. */
+    public static function sheetsNotApproved(int $count): self
+    {
+        return new self('sheets_not_approved', 409, ['count' => (string) $count], ['waiting' => $count]);
+    }
+
+    /** A combination's exam weights add up to 100 %. */
+    public static function weightsNotWhole(): self
+    {
+        return new self('weights_not_whole', 422, extra: ['field' => 'exams']);
+    }
+
+    /** A combination is published once all its exams are. */
+    public static function examsNotPublished(int $count): self
+    {
+        return new self('exams_not_published', 409, ['count' => (string) $count]);
+    }
+
     /** The class already has a paper of this subject in the exam. */
     public static function paperExists(): self
     {

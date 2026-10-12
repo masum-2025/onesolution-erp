@@ -36,3 +36,38 @@ it('writes hundredths as plain text', function () {
         ->and(ExamMath::centiText(10000))->toBe('100')
         ->and(ExamMath::centiText(5))->toBe('0.05');
 });
+
+it('works out a subject: parts with their own pass marks, absent, the failing band', function () use ($gpa5) {
+    $parts = fn (int $cq, int $mcq, bool $absent = false) => [
+        ['full_marks_centi' => 7000, 'pass_marks_centi' => 2300, 'marks_centi' => $absent ? null : $cq, 'absent' => $absent],
+        ['full_marks_centi' => 3000, 'pass_marks_centi' => 1000, 'marks_centi' => $absent ? null : $mcq, 'absent' => $absent],
+    ];
+    expect(ExamMath::subject($parts(6000, 2500), 3300, $gpa5))->toMatchArray(['marks_centi' => 8500, 'percent_bp' => 8500, 'letter' => 'A+', 'point_centi' => 500, 'passed' => true])
+        // 65 % overall, but MCQ below its pass mark: F.
+        ->and(ExamMath::subject($parts(6000, 500), 3300, $gpa5))->toMatchArray(['marks_centi' => 6500, 'letter' => 'F', 'point_centi' => 0, 'passed' => false])
+        ->and(ExamMath::subject($parts(0, 0, true), 3300, $gpa5))->toMatchArray(['absent' => true, 'passed' => false, 'letter' => 'F']);
+});
+
+it('works out the grade point: average, 4th subject bonus above 2, fail on any subject, credits', function () {
+    $subject = fn (string $kind, int $point, bool $passed = true, int $credits = 300) => ['kind' => $kind, 'point_centi' => $point, 'credits_centi' => $credits, 'passed' => $passed];
+    // (5 + 4 + 3.5) / 3 = 4.17; an optional A (4.00) adds 2.00 / 3 -> 4.83.
+    expect(ExamMath::gpa([$subject('compulsory', 500), $subject('compulsory', 400), $subject('compulsory', 350)], 500, 200, false))->toBe(['gpa_centi' => 417, 'passed' => true, 'failed' => 0])
+        ->and(ExamMath::gpa([$subject('compulsory', 500), $subject('compulsory', 400), $subject('compulsory', 350), $subject('optional', 400)], 500, 200, false)['gpa_centi'])->toBe(483)
+        // Never above the top.
+        ->and(ExamMath::gpa([$subject('compulsory', 500), $subject('optional', 500)], 500, 200, false)['gpa_centi'])->toBe(500)
+        ->and(ExamMath::gpa([$subject('compulsory', 500), $subject('compulsory', 0, false)], 500, 200, false))->toBe(['gpa_centi' => 0, 'passed' => false, 'failed' => 1])
+        // Credits: (4.00 × 3 + 3.00 × 1.5) / 4.5 = 3.67.
+        ->and(ExamMath::gpa([$subject('compulsory', 400), $subject('compulsory', 300, true, 150)], 400, null, true)['gpa_centi'])->toBe(367);
+    expect(ExamMath::letterFor((require dirname(__DIR__, 3).'/Modules/EducationExams/database/data/grading/bd_school_gpa5.php')['bands'], 417, true))->toBe('A');
+});
+
+it('weighs exams and gives shared merit positions', function () {
+    expect(ExamMath::weightedPercent([['percent_bp' => 6000, 'weight_bp' => 3000], ['percent_bp' => 8000, 'weight_bp' => 7000]]))->toBe(7400)
+        ->and(ExamMath::weightedPercent([]))->toBe(0);
+    expect(ExamMath::ranks([
+        'a' => ['passed' => true, 'gpa_centi' => 450, 'marks_centi' => 400],
+        'b' => ['passed' => true, 'gpa_centi' => 500, 'marks_centi' => 450],
+        'c' => ['passed' => true, 'gpa_centi' => 450, 'marks_centi' => 400],
+        'd' => ['passed' => false, 'gpa_centi' => 0, 'marks_centi' => 500],
+    ]))->toBe(['b' => 1, 'a' => 2, 'c' => 2, 'd' => 4]);
+});

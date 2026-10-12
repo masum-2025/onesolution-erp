@@ -46,3 +46,38 @@ export function permissionsOfRoles(roles, ids) {
     const chosen = new Set(ids);
     return [...new Set(roles.filter((role) => chosen.has(role.id)).flatMap((role) => role.permissions))].sort();
 }
+
+/** A permission that only lets one look (crm.view, payroll.view_own, …). */
+export function isViewPermission(key) {
+    return /^view(_[a-z_]+)?$/.test(String(key).split('.').pop());
+}
+
+/**
+ * Where a role stands on a module: off (none of its permissions), view
+ * (only its looking permissions), full (every one), or custom.
+ */
+export function moduleLevel(selected, group) {
+    const held = new Set(selected);
+    const keys = group.permissions.map((permission) => permission.key);
+    const on = keys.filter((key) => held.has(key));
+    if (!on.length) return 'off';
+    if (on.length === keys.length) return 'full';
+    const views = keys.filter(isViewPermission);
+    if (views.length && on.length === views.length && on.every(isViewPermission)) return 'view';
+    return 'custom';
+}
+
+/**
+ * Sets a role's level on a module: off, view (looking only; all of them when
+ * the module has no looking permission) or full. Permissions this person
+ * cannot change stay exactly as they are.
+ */
+export function setModuleLevel(selected, group, level) {
+    const changeable = group.permissions.filter((permission) => !permission.blocked_by).map((permission) => permission.key);
+    const views = changeable.filter(isViewPermission);
+    const wanted = level === 'full' ? changeable : level === 'view' ? (views.length ? views : changeable) : [];
+    const set = new Set(selected);
+    changeable.forEach((key) => set.delete(key));
+    wanted.forEach((key) => set.add(key));
+    return [...set].sort();
+}

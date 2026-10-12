@@ -12,4 +12,10 @@ return [
     'sheet_approved' => 'Marks approved',
     'sheet_returned' => 'Marks sent back',
     'sheet_assigned' => 'Mark sheet assigned',
+    'exam_published' => 'Exam results published',
+    'combination_saved' => 'Combined result saved',
+    'combination_published' => 'Combined result published',
+    'correction_requested' => 'Mark correction asked',
+    'correction_applied' => 'Mark corrected',
+    'correction_rejected' => 'Mark correction refused',
 ];

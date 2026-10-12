@@ -6,6 +6,8 @@ use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
+use Modules\EducationExams\Models\Combination;
+use Modules\EducationExams\Models\Correction;
 use Modules\EducationExams\Models\Exam;
 use Modules\EducationExams\Models\GradingBand;
 use Modules\EducationExams\Models\GradingScheme;
@@ -13,6 +15,8 @@ use Modules\EducationExams\Models\Mark;
 use Modules\EducationExams\Models\MarkSheet;
 use Modules\EducationExams\Models\Paper;
 use Modules\EducationExams\Models\PaperPart;
+use Modules\EducationExams\Models\Result;
+use Modules\EducationExams\Models\ResultSubject;
 
 /**
  * Exams in the client's data export: grading schemes and bands, exams,
@@ -37,6 +41,10 @@ class EducationExamsExporter implements ExportsModuleData
             'paper_parts' => $this->rows(PaperPart::class, $organization, $organizationIds, fn ($row) => [...$plain($row, ['paper_id', 'code', 'full_marks_centi', 'pass_marks_centi']), 'name' => $row->texts('name')]),
             'mark_sheets' => $this->rows(MarkSheet::class, $organization, $organizationIds, fn ($row) => $plain($row, ['unit_id', 'exam_id', 'paper_id', 'section_id', 'teacher_id', 'status', 'submitted_at', 'approved_at', 'note'])),
             'marks' => $this->rows(Mark::class, $organization, $organizationIds, fn ($row) => $plain($row, ['sheet_id', 'paper_id', 'part_id', 'student_id', 'marks_centi', 'absent'])),
+            'combinations' => $this->rows(Combination::class, $organization, $organizationIds, fn ($row) => [...$plain($row, ['unit_id', 'session_id', 'level_id', 'exams', 'grading_scheme_id', 'status']), 'name' => $row->texts('name')]),
+            'results' => $this->rows(Result::class, $organization, $organizationIds, fn ($row) => $plain($row, ['source_type', 'source_id', 'unit_id', 'session_id', 'level_id', 'section_id', 'student_id', 'marks_centi', 'full_marks_centi', 'percent_bp', 'gpa_centi', 'letter', 'passed', 'failed_subjects', 'credits_centi', 'rank', 'section_rank', 'status', 'published_at'])),
+            'result_subjects' => $this->rows(ResultSubject::class, $organization, $organizationIds, fn ($row) => $plain($row, ['result_id', 'subject_id', 'paper_id', 'kind', 'marks_centi', 'full_marks_centi', 'percent_bp', 'letter', 'point_centi', 'credits_centi', 'passed', 'absent'])),
+            'corrections' => $this->rows(Correction::class, $organization, $organizationIds, fn ($row) => $plain($row, ['exam_id', 'sheet_id', 'part_id', 'student_id', 'old_marks_centi', 'old_absent', 'new_marks_centi', 'new_absent', 'reason', 'status', 'decided_at'])),
         ];
     }
 

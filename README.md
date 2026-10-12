@@ -3280,8 +3280,35 @@ percentages basis points, grade points hundredths (5.00 → 500).
   (`education-exams-marks`, 120/min).
 - Education's `AcademicDirectory` gained `employeeOf`, `teacherNames` and the class teacher on
   section records. Client export has all tables.
-- Next: EXM-2 results (grades, GPA, combined exams, publishing, corrections, course registration
-  outcomes, CGPA), EXM-3 screens, EXM-4 marksheets and portal.
+
+### Results (EXM-2)
+
+Tables `exm_combinations`, `exm_results`, `exm_result_subjects`, `exm_corrections`.
+
+- **An exam's results** (`GET /exams/{exam}/results`; `POST results/compute` while closed, `.manage`):
+  per subject the marks of its parts (a part's own pass mark, the paper's pass mark, a passing band;
+  absent from all parts fails), the letter and point; then the overall grade point
+  (`ExamMath::gpa`): counted subjects averaged, or weighted by credits (rule `gpa_by_credits`, on for
+  universities in their sector package); an optional (4th) subject adds what it earns above rule
+  `optional_bonus_above` (200 = 2.00, BD SSC style); failing a counted subject fails all (rule
+  `fail_any_subject`); never above the scale's top. Merit positions in the class and the section
+  (equal results share one); shown when rule `show_rank` (off for universities).
+- **Publish** (`POST /exams/{exam}/publish`, `.publish`): the exam closed, every sheet approved;
+  results become published; event `ResultPublished` (ids).
+- **Combinations** (`/exams/combinations`, `.manage`; publish `.publish` once its exams are): several
+  exams of a session for a class with weights adding up to 100 % (term 30 % + final 70 %); each
+  subject's weighted percentage graded again.
+- **Corrections** after publishing (`POST /exams/sheets/{sheet}/corrections`, `.correct`, with a
+  reason; `corrections/{id}/approve|reject`, `.publish`, never who asked; rule
+  `correction_needs_approval`): the mark changes, the exam's results and its combinations are worked
+  out again (still published), event `MarksCorrected`.
+- **Transcript** (`GET /exams/students/{id}/results`): published results with subjects, and the
+  cumulative grade point (per session its combination, else its final exams; credit-weighted when
+  subjects have credits).
+- Public `ResultDirectory` (`subjectOutcomes`, `transcript`). **Course registration** listens to
+  `ResultPublished` and sets each registered subject's outcome (completed or failed);
+  `Registrations::recordOutcome` now takes no person for such system outcomes.
+- Next: EXM-3 screens, EXM-4 marksheets, portal results and SMS.
 
 ## Browser app (frontend foundation)
 

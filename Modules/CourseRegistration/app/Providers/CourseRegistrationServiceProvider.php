@@ -11,6 +11,8 @@ use Illuminate\Support\ServiceProvider;
 use Modules\CourseRegistration\Events\SeatOffered;
 use Modules\CourseRegistration\Export\CourseRegistrationExporter;
 use Modules\CourseRegistration\Listeners\NotifySeatOffered;
+use Modules\CourseRegistration\Listeners\OutcomesFromResults;
+use Modules\EducationExams\Events\ResultPublished;
 
 /**
  * Course registration: subjects offered each session, the registration
@@ -42,6 +44,10 @@ class CourseRegistrationServiceProvider extends ServiceProvider
             ->by('course-registration-staff:'.($request->user()?->getKey() ?? $request->ip())));
 
         Event::listen(SeatOffered::class, NotifySeatOffered::class);
+        // Published exam results set subjects' outcomes (when the exams module is installed).
+        if (class_exists(ResultPublished::class)) {
+            Event::listen(ResultPublished::class, OutcomesFromResults::class);
+        }
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');

@@ -13,5 +13,26 @@ return [
     'categories' => [
         'grading' => 'Grading',
         'marks' => 'Marks',
+        'results' => 'Results',
+    ],
+    'fail_any_subject' => [
+        'label' => 'Failing a subject fails the result',
+        'description' => 'On: a student who fails any counted subject fails overall (grade point 0), as in SSC and HSC.',
+    ],
+    'optional_bonus_above' => [
+        'label' => 'Optional (4th) subject bonus above',
+        'description' => 'Grade points an optional subject earns above this are added (in hundredths: 200 = 2.00). Empty: no bonus.',
+    ],
+    'gpa_by_credits' => [
+        'label' => 'Weigh grade points by credits',
+        'description' => 'On: subjects count by their credits (universities). Off: each subject counts once.',
+    ],
+    'show_rank' => [
+        'label' => 'Show merit positions',
+        'description' => 'Positions in the class and the section on results and marksheets.',
+    ],
+    'correction_needs_approval' => [
+        'label' => 'Corrections need a second person',
+        'description' => 'On: changing a published mark waits for someone other than who asked.',
     ],
 ];

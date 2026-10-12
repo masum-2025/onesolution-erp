@@ -12,4 +12,10 @@ return [
     'sheet_approved' => 'নম্বর অনুমোদিত',
     'sheet_returned' => 'নম্বর ফেরত',
     'sheet_assigned' => 'নম্বরপত্রের দায়িত্ব',
+    'exam_published' => 'পরীক্ষার ফল প্রকাশ',
+    'combination_saved' => 'সম্মিলিত ফল সংরক্ষণ',
+    'combination_published' => 'সম্মিলিত ফল প্রকাশ',
+    'correction_requested' => 'নম্বর সংশোধনের অনুরোধ',
+    'correction_applied' => 'নম্বর সংশোধিত',
+    'correction_rejected' => 'নম্বর সংশোধন নাকচ',
 ];

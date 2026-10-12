@@ -57,6 +57,9 @@ return [
             ['key' => 'accounting.chart_template', 'value' => 'school'],
             // Lecturers see every student of their campus; there are no class teachers.
             ['key' => 'education.teacher_scope', 'value' => 'all'],
+            // Credit-weighted grade points, no merit positions.
+            ['key' => 'education_exams.gpa_by_credits', 'value' => true],
+            ['key' => 'education_exams.show_rank', 'value' => false],
         ],
         'role_templates' => ['registrar', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
     ],

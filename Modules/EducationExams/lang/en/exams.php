@@ -23,5 +23,11 @@ return [
         'exam_not_marking' => 'The exam does not take marks now.',
         'student_not_in_section' => 'That student is not in this section.',
         'paper_exists' => 'This class already has a paper of that subject in the exam.',
+        'sheets_not_approved' => ':count mark sheets are not approved yet. Approve them before publishing.',
+        'weights_not_whole' => 'The exams\' weights must add up to 100 %.',
+        'exams_not_published' => ':count of its exams are not published yet. Publish them first.',
+        'combination_not_found' => 'That combined result does not exist here.',
+        'correction_not_found' => 'That correction does not exist here.',
+        'student_not_found' => 'That student does not exist here.',
     ],
 ];

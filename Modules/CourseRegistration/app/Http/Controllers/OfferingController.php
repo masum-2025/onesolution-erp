@@ -8,6 +8,7 @@ use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Modules\CourseRegistration\Exceptions\RegistrationException;
 use Modules\CourseRegistration\Http\Controllers\Concerns\FindsCampus;
@@ -235,7 +236,7 @@ class OfferingController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Offering>  $offerings
+     * @param  Collection<int, Offering>  $offerings
      * @return list<array<string, mixed>>
      */
     private function present(Organization $company, $offerings): array

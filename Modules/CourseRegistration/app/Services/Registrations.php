@@ -7,7 +7,7 @@ use App\Platform\Audit\AuditLogger;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
-use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\CourseRegistration\Events\CourseDropped;
 use Modules\CourseRegistration\Events\CourseRegistered;
@@ -282,7 +282,7 @@ class Registrations
     }
 
     /** The result of a subject: completed, failed, incomplete (or withdrawn). */
-    public function recordOutcome(Organization $company, RegistrationItem $item, string $outcome, User $actor): RegistrationItem
+    public function recordOutcome(Organization $company, RegistrationItem $item, string $outcome, ?User $actor): RegistrationItem
     {
         return $this->campus->transaction($company, function () use ($company, $item, $outcome, $actor) {
             /** @var RegistrationItem $item */
@@ -291,7 +291,7 @@ class Registrations
                 throw RegistrationException::wrongStatus($item->status);
             }
             $old = $item->outcome;
-            $item->fill(['outcome' => $outcome, 'outcome_by' => $actor->getKey(), 'outcome_at' => now()])->save();
+            $item->fill(['outcome' => $outcome, 'outcome_by' => $actor?->getKey(), 'outcome_at' => now()])->save();
             $this->audit->record('course_registration.outcome_recorded', $item, old: ['outcome' => $old], new: ['outcome' => $outcome, 'student_id' => $item->student_id, 'subject_id' => $item->subject_id],
                 actor: $actor, organizationId: $company->getKey());
 
@@ -308,9 +308,9 @@ class Registrations
     /**
      * Items of a registration, oldest first.
      *
-     * @return \Illuminate\Support\Collection<int, RegistrationItem>
+     * @return Collection<int, RegistrationItem>
      */
-    public function items(Organization $company, Registration $registration): \Illuminate\Support\Collection
+    public function items(Organization $company, Registration $registration): Collection
     {
         return $this->campus->query(RegistrationItem::class, $company)->where('registration_id', $registration->getKey())->orderBy('created_at')->orderBy('id')->get();
     }
