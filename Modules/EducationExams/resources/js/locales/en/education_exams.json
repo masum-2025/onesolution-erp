@@ -350,5 +350,56 @@
         "final": "Final result",
         "position": "Position {rank}",
         "published_on": "published {date}"
+    },
+    "cards": {
+        "button": "Report cards",
+        "one": "Report card",
+        "title": "Report card",
+        "tabulation": "Tabulation sheet",
+        "cards": "Report cards",
+        "layout": "What to print",
+        "print": "Print",
+        "print_hint": "Print on A4 paper; each report card takes one page.",
+        "count": "{count} students",
+        "empty": "No report cards to print",
+        "empty_text": "Work the results out first, or choose another section. Only students whose whole result you may see are shown.",
+        "draft": "DRAFT",
+        "name": "Name",
+        "id": "Student ID",
+        "roll": "Roll",
+        "class": "Class",
+        "section": "Section",
+        "obtained": "Obtained",
+        "absent_short": "Ab",
+        "gpa": "GPA",
+        "result": "Result",
+        "passed": "Passed",
+        "failed": "Failed",
+        "position": "Position",
+        "attendance": "Days present",
+        "grading": "Grading",
+        "signs": {
+            "class_teacher": "Class teacher",
+            "exam_controller": "Exam controller",
+            "head": "Head of institution",
+            "guardian": "Guardian"
+        }
+    },
+    "send": {
+        "button": "Send to families",
+        "title": "Send these results to families?",
+        "text": "Each family gets the student's GPA and a link to the portal by SMS or mail, once a day at most. Results held for fees owed go without grades.",
+        "confirm": "Send",
+        "done": "Sent to {sent} families. Already sent today: {already}. No phone or email: {none}."
+    },
+    "portal": {
+        "title_of": "Results of {name}",
+        "back": "All results",
+        "report_card": "Report card",
+        "empty": "No published results yet",
+        "empty_text": "Results appear here once the institution publishes them.",
+        "held": "Results are not shown here yet",
+        "held_text": "Please contact the office to see this student's results.",
+        "not_found": "This page is not available. Open it again from the student's record."
     }
 }

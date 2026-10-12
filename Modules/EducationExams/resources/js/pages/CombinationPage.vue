@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, Layers, Megaphone } from 'lucide-vue-next';
+import { ArrowLeft, Layers, Megaphone, Printer, Send } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -36,6 +36,26 @@ const results = useResource(() => api.combinationResults(route.params.id));
 const exams = useResource(() => api.exams());
 const examName = (id) => textIn(exams.data.value?.data.find((exam) => exam.id === id)?.name) || '—';
 const missing = computed(() => record.data.value && !combination.value);
+
+// Published results told to families again (.publish), once a day per student.
+const sending = ref(false);
+async function sendToFamilies() {
+    const confirmed = await confirmAction({
+        title: t('education_exams.send.title'),
+        message: t('education_exams.send.text'),
+        confirmLabel: t('education_exams.send.confirm'),
+    });
+    if (!confirmed) return;
+    sending.value = true;
+    try {
+        const { data } = await api.sendCombinationResults(combination.value.id);
+        toast.success(t('education_exams.send.done', { sent: formatNumber(data.sent), already: formatNumber(data.already), none: formatNumber(data.no_contact) }));
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        sending.value = false;
+    }
+}
 
 const publishing = ref(false);
 async function publish() {
@@ -75,6 +95,8 @@ async function publish() {
             <PageHeader :title="textIn(combination.name)" :description="`${setup.sessionName(combination.session_id)} · ${setup.levelName(combination.level_id)} · ${setup.schemeName(combination.grading_scheme_id)}`">
                 <template #actions>
                     <AppBadge :tone="combination.status === 'published' ? 'ok' : 'neutral'" dot>{{ t(`education_exams.combinations.statuses.${combination.status}`) }}</AppBadge>
+                    <AppButton v-if="results.data.value?.data.length" :icon="Printer" :to="{ name: 'exams-report-cards', params: { type: 'combination', id: combination.id } }">{{ t('education_exams.cards.button') }}</AppButton>
+                    <AppButton v-if="combination.status === 'published' && setup.can('publish')" :icon="Send" :loading="sending" @click="sendToFamilies">{{ t('education_exams.send.button') }}</AppButton>
                     <AppButton v-if="combination.status !== 'published' && setup.can('publish')" variant="primary" :icon="Megaphone" :loading="publishing" :disabled="!results.data.value?.data.length" @click="publish">{{ t('education_exams.results.publish') }}</AppButton>
                 </template>
             </PageHeader>
@@ -89,7 +111,7 @@ async function publish() {
             <div v-else-if="!results.data.value?.data.length" class="card">
                 <EmptyState :icon="Layers" compact :title="t('education_exams.combinations.no_results')" :text="t('education_exams.combinations.no_results_text')" />
             </div>
-            <ResultsTable v-else :rows="results.data.value.data" :meta="results.data.value.meta" />
+            <ResultsTable v-else :rows="results.data.value.data" :meta="results.data.value.meta" :source="{ type: 'combination', id: combination.id }" />
         </template>
     </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { ChevronDown, CircleAlert, ScrollText, Trophy } from 'lucide-vue-next';
+import { ChevronDown, CircleAlert, FileText, ScrollText, Trophy } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import { formatNumber } from '@/lib/format';
 import { textIn } from '@/lib/texts';
@@ -18,6 +18,7 @@ import { marksShown, pointShown } from '../labels';
 const props = defineProps({
     rows: { type: Array, default: () => [] },
     meta: { type: Object, default: () => ({}) },
+    source: { type: Object, default: null }, // { type: 'exam'|'combination', id }: each row links its report card
 });
 const setup = useExamsSetup();
 
@@ -117,6 +118,9 @@ function toggle(id) {
                         </ul>
                         <RouterLink v-if="!row.partial" :to="{ name: 'exams-transcript', params: { id: row.student_id } }" class="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-brand-text hover:underline">
                             <ScrollText class="size-3.5" aria-hidden="true" />{{ t('education_exams.results.open_transcript') }}
+                        </RouterLink>
+                        <RouterLink v-if="!row.partial && source" :to="{ name: 'exams-report-cards', params: { type: source.type, id: source.id }, query: { student: row.student_id } }" class="mt-2 ms-4 inline-flex items-center gap-1.5 text-[12.5px] font-medium text-brand-text hover:underline">
+                            <FileText class="size-3.5" aria-hidden="true" />{{ t('education_exams.cards.one') }}
                         </RouterLink>
                     </div>
                 </li>

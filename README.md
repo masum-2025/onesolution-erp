@@ -3370,7 +3370,35 @@ the server does it, texts in `locales/{bn,en}/education_exams.json`). Menu "Exam
   Both rules can be set or locked from platform down to branch.
 - Transcripts follow `show_rank` too. Education's own `education.teacher_scope` still decides the
   student directory; results follow the two rules above.
-- Next: EXM-4 marksheets (print), results in the portal and SMS.
+
+### Report cards, results for families (EXM-4)
+
+- **Report cards** (`/exams/report-cards/{exam|combination}/{id}`, data from
+  `GET /exams/{exam}/report-cards` and `GET /exams/combinations/{id}/report-cards`,
+  `?section_id=` or `?student_id=`, at most 300 at once): one A4 page per student with the
+  institution's logo and name, the student, roll, every subject (an exam's parts too), total, GPA,
+  letter, result, positions (rule `show_rank`), days attended when a module binds the
+  `Contracts\StudentAttendance` contract (none keeps students' attendance yet), the grading bands
+  and the signature lines of rule `education_exams.marksheet_signatures` (default class teacher,
+  head, guardian). A **tabulation sheet** of a section prints on A4 landscape. Unpublished results
+  print as a draft. Only students whose whole result the reader may see (ResultAccess).
+- **Families told** (`Services/ResultNotices`, queued listener `TellResultPublished` on
+  `ResultPublished`): with rule `education_exams.notify_results` (off by default; channels SMS,
+  mail) each family gets the student's GPA, letter and a link to the portal once per published
+  result, to portal-linked members by login and to guardians' own phone or email. The office sends
+  again from the Results tab or a final result (`POST …/send-results`, `.publish`, once a day per
+  student). `exm_notices` counts messages, never addresses. Templates
+  `education_exams.result_published` and `education_exams.result_held` (bn, en).
+- **Portal** (`/portal/results/{record}`, `GET /api/portal/results?record=`,
+  `GET /api/portal/results/{result}/report-card?record=`): a family sees only the published results
+  of the student they are linked to, each subject, the cumulative GPA, and prints a report card;
+  drafts, other students and staff details stay out (the same 404).
+- **Held for fees owed**: rule `education_exams.withhold_results_with_dues` (off by default) with
+  fees on: a student who owes (Fees' public `Directory\FeeDirectory::owing`) sees no result in the
+  portal, the report card answers `result_held`, and the message to the family has no grades.
+- New sector, country or partner: signatures, holding, messages and their channels are rules;
+  wording is in the language files; branding comes from the partner. No code change.
+- Next: QR verification on report cards (Education's document check), admit cards and seat plans.
 
 ## Browser app (frontend foundation)
 

@@ -117,4 +117,16 @@ class ExamException extends TenancyException
     {
         return new self('paper_exists', 422, extra: ['field' => 'subject_id']);
     }
+
+    /** Too many report cards at once: print a section at a time. */
+    public static function tooManyCards(int $max): self
+    {
+        return new self('too_many_cards', 422, ['max' => (string) $max]);
+    }
+
+    /** The family may not see this result now (fees owed, rule education_exams.withhold_results_with_dues). */
+    public static function resultHeld(): self
+    {
+        return new self('result_held', 403);
+    }
 }

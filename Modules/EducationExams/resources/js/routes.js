@@ -15,5 +15,9 @@ export default [
     { path: 'exams/corrections', name: 'exams-corrections', component: () => import('./pages/CorrectionsPage.vue'), meta },
     { path: 'exams/students', name: 'exams-students', component: () => import('./pages/TranscriptPage.vue'), meta },
     { path: 'exams/students/:id', name: 'exams-transcript', component: () => import('./pages/TranscriptPage.vue'), meta },
+    { path: 'exams/report-cards/:type(exam|combination)/:id', name: 'exams-report-cards', component: () => import('./pages/ReportCardsPage.vue'), meta },
     { path: 'exams/:id', name: 'exams-exam', component: () => import('./pages/ExamPage.vue'), meta },
+    // A family's results in the client's portal (B2B2C): portal members may open these.
+    { path: 'portal/results/:record', name: 'exams-portal', component: () => import('./pages/PortalResultsPage.vue'), meta: { ...meta, portal: true } },
+    { path: 'portal/results/:record/cards/:id', name: 'exams-portal-card', component: () => import('./pages/PortalReportCardPage.vue'), meta: { ...meta, portal: true } },
 ];

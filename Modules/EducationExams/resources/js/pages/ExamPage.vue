@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, Calculator, Check, ClipboardList, FileText, ListPlus, Lock, LockOpen, Megaphone, Pencil, Play, Plus, Trash2, Undo2, UserRoundCog } from 'lucide-vue-next';
+import { ArrowLeft, Calculator, Check, ClipboardList, FileText, ListPlus, Lock, LockOpen, Megaphone, Pencil, Play, Plus, Printer, Send, Trash2, Undo2, UserRoundCog } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -180,6 +180,26 @@ async function publish() {
     }
 }
 
+// Published results told to families again (.publish), once a day per student.
+const sending = ref(false);
+async function sendToFamilies() {
+    const confirmed = await confirmAction({
+        title: t('education_exams.send.title'),
+        message: t('education_exams.send.text'),
+        confirmLabel: t('education_exams.send.confirm'),
+    });
+    if (!confirmed) return;
+    sending.value = true;
+    try {
+        const { data } = await api.sendResults(exam.value.id);
+        toast.success(t('education_exams.send.done', { sent: formatNumber(data.sent), already: formatNumber(data.already), none: formatNumber(data.no_contact) }));
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        sending.value = false;
+    }
+}
+
 // Mark sheets.
 const sheets = useResource(() => api.sheets(route.params.id), { immediate: false });
 watch(tab, (key) => key === 'sheets' && !sheets.data.value && sheets.reload(), { immediate: true });
@@ -340,6 +360,8 @@ async function assign() {
                     <p class="me-auto text-[13px] text-muted">{{ t(exam.status === 'published' ? 'education_exams.results.published_text' : 'education_exams.results.closed_text') }}</p>
                     <AppButton v-if="exam.status === 'closed' && setup.can('manage')" :icon="Calculator" :loading="computing" @click="compute">{{ t('education_exams.results.compute') }}</AppButton>
                     <AppButton v-if="exam.status === 'closed' && setup.can('publish')" variant="primary" :icon="Megaphone" :loading="publishing" :disabled="!results.data.value?.data.length" @click="publish">{{ t('education_exams.results.publish') }}</AppButton>
+                    <AppButton v-if="results.data.value?.data.length" :icon="Printer" :to="{ name: 'exams-report-cards', params: { type: 'exam', id: exam.id } }">{{ t('education_exams.cards.button') }}</AppButton>
+                    <AppButton v-if="exam.status === 'published' && setup.can('publish')" :icon="Send" :loading="sending" @click="sendToFamilies">{{ t('education_exams.send.button') }}</AppButton>
                     <AppButton v-if="exam.status === 'published' && setup.can('publish')" size="sm" variant="ghost" :to="{ name: 'exams-corrections' }">{{ t('education_exams.corrections.title') }}</AppButton>
                 </div>
                 <SkeletonRows v-if="results.loading.value && !results.data.value" :rows="6" />
@@ -347,7 +369,7 @@ async function assign() {
                 <div v-else-if="!results.data.value?.data.length" class="card">
                     <EmptyState :icon="Calculator" compact :title="t('education_exams.results.empty')" :text="setup.can('manage') && exam.status === 'closed' ? t('education_exams.results.empty_text') : ''" />
                 </div>
-                <ResultsTable v-else :rows="results.data.value.data" :meta="results.data.value.meta" />
+                <ResultsTable v-else :rows="results.data.value.data" :meta="results.data.value.meta" :source="{ type: 'exam', id: exam.id }" />
             </section>
 
             <!-- Mark sheets -->

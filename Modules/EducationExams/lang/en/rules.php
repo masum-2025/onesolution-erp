@@ -15,6 +15,7 @@ return [
         'marks' => 'Marks',
         'results' => 'Results',
         'access' => 'Who sees results',
+        'families' => 'Families',
     ],
     'fail_any_subject' => [
         'label' => 'Failing a subject fails the result',
@@ -37,11 +38,23 @@ return [
         'description' => 'On: changing a published mark waits for someone other than who asked.',
     ],
     'class_teacher_sees_section_results' => [
-        'label' => 'Class teachers see their whole section\x27s results',
+        'label' => 'Class teachers see their whole section\\x27s results',
         'description' => 'On: a class teacher sees every subject, the GPA and positions of their section. Off: only the subjects they enter marks for. Exam office, head and moderators always see all.',
     ],
     'subject_teacher_sees_section_results' => [
-        'label' => 'Subject teachers see the whole section\x27s results',
-        'description' => 'On: a teacher sees every subject, the GPA and positions of the sections they teach. Off: only their own subject\x27s marks and grades.',
+        'label' => 'Subject teachers see the whole section\\x27s results',
+        'description' => 'On: a teacher sees every subject, the GPA and positions of the sections they teach. Off: only their own subject\\x27s marks and grades.',
+    ],
+    'notify_results' => [
+        'label' => 'Tell families when results are published',
+        'description' => 'On: families get the student\'s GPA and a link to the portal by SMS or mail when an exam or a final result is published. SMS costs money; off by default.',
+    ],
+    'withhold_results_with_dues' => [
+        'label' => 'Hold results of students who owe fees',
+        'description' => 'On (with fees on): a student who owes fees sees no result in the portal and the message asks the family to contact the office. Staff still see every result.',
+    ],
+    'marksheet_signatures' => [
+        'label' => 'Who signs a printed marksheet',
+        'description' => 'The signature lines at the bottom of a marksheet, in order: class teacher, exam controller, head, guardian.',
     ],
 ];

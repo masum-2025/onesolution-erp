@@ -23,6 +23,8 @@ return [
         'exam_not_marking' => 'The exam does not take marks now.',
         'student_not_in_section' => 'That student is not in this section.',
         'paper_exists' => 'This class already has a paper of that subject in the exam.',
+        'too_many_cards' => 'That is more than :max report cards. Choose a section and print them a section at a time.',
+        'result_held' => 'This result is not shown here yet. Please contact the office.',
         'sheets_not_approved' => ':count mark sheets are not approved yet. Approve them before publishing.',
         'weights_not_whole' => 'The exams\' weights must add up to 100 %.',
         'exams_not_published' => ':count of its exams are not published yet. Publish them first.',

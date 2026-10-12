@@ -24,9 +24,10 @@ const gpa5 = [
 describe('exam screens', () => {
     it('registers its screens behind the module, fixed paths before an exam id', () => {
         const routes = moduleRoutes.filter((route) => route.meta.module === 'education_exams');
-        expect(routes.map((route) => route.name)).toEqual(['exams-list', 'exams-my-sheets', 'exams-grading', 'exams-sheet', 'exams-combinations', 'exams-combination', 'exams-corrections', 'exams-students', 'exams-transcript', 'exams-exam']);
-        expect(routes.at(-1).path).toBe('exams/:id');
-        expect(routes.every((route) => route.meta.ns.includes('education_exams') && !route.meta.portal)).toBe(true);
+        expect(routes.map((route) => route.name)).toEqual(['exams-list', 'exams-my-sheets', 'exams-grading', 'exams-sheet', 'exams-combinations', 'exams-combination', 'exams-corrections', 'exams-students', 'exams-transcript', 'exams-report-cards', 'exams-exam', 'exams-portal', 'exams-portal-card']);
+        expect(routes.find((route) => route.name === 'exams-exam').path).toBe('exams/:id');
+        expect(routes.filter((route) => route.meta.portal).map((route) => route.name)).toEqual(['exams-portal', 'exams-portal-card']);
+        expect(routes.every((route) => route.meta.ns.includes('education_exams'))).toBe(true);
     });
 
     it('speaks Bangla and English with the same keys, and has every key the screens use', () => {

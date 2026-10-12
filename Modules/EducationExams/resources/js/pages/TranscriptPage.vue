@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { GraduationCap, ScrollText, Search } from 'lucide-vue-next';
+import { FileText, GraduationCap, ScrollText, Search } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -122,6 +122,9 @@ const published = (iso) => (iso ? formatDate(iso, { dateStyle: 'medium' }) : '')
                             <span class="text-[17px] font-bold" :class="result.passed ? 'text-fg' : 'text-bad'">{{ result.letter ?? '—' }}</span>
                             <span class="tabular text-[13px] text-muted">{{ pointShown(result.gpa_centi) }}</span>
                         </span>
+                        <RouterLink :to="{ name: 'exams-report-cards', params: { type: result.source_type, id: result.source_id }, query: { student: data.student.id } }" class="inline-flex items-center gap-1 text-[12.5px] font-medium text-brand-text hover:underline print:hidden">
+                            <FileText class="size-3.5" aria-hidden="true" />{{ t('education_exams.cards.one') }}
+                        </RouterLink>
                     </header>
                     <table class="w-full text-[13px]">
                         <thead class="bg-subtle/60 text-[11.5px] text-muted">

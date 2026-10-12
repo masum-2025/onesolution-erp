@@ -50,5 +50,21 @@ export function examsApi(organizationId) {
 
         findStudents: (q) => api(`${base}/students`, { query: { q } }),
         transcript: (studentId) => api(`${base}/students/${studentId}/results`),
+
+        reportCards: (examId, query) => api(`${base}/${examId}/report-cards`, { query }),
+        combinationReportCards: (id, query) => api(`${base}/combinations/${id}/report-cards`, { query }),
+        sendResults: (examId, body = {}) => api(`${base}/${examId}/send-results`, { method: 'POST', body }),
+        sendCombinationResults: (id, body = {}) => api(`${base}/combinations/${id}/send-results`, { method: 'POST', body }),
+    };
+}
+
+/**
+ * A family's results in the client's portal (B2B2C): the student is the
+ * portal record the member is linked to; the server checks the link again.
+ */
+export function portalResultsApi(record) {
+    return {
+        show: () => api('/api/portal/results', { query: { record } }),
+        reportCard: (resultId) => api(`/api/portal/results/${resultId}/report-card`, { query: { record } }),
     };
 }

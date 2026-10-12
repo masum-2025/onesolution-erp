@@ -114,6 +114,47 @@ return [
             'sort_order' => 90,
         ],
         [
+            'key' => 'education_exams.notify_results',
+            'type' => 'json',
+            // Off by default (SMS costs money). On publishing, families get the student's GPA and a link, by these channels.
+            'schema' => [
+                'type' => 'object', 'required' => ['enabled', 'channels'], 'additionalProperties' => false,
+                'properties' => [
+                    'enabled' => ['type' => 'boolean'],
+                    'channels' => ['type' => 'array', 'items' => ['enum' => ['sms', 'mail']], 'minItems' => 1, 'uniqueItems' => true],
+                ],
+            ],
+            'default' => ['enabled' => false, 'channels' => ['sms', 'mail']],
+            'label' => 'education_exams::rules.notify_results.label',
+            'description' => 'education_exams::rules.notify_results.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'families',
+            'sort_order' => 100,
+        ],
+        [
+            'key' => 'education_exams.withhold_results_with_dues',
+            'type' => 'boolean',
+            // With fees on: a student who owes fees sees no result in the portal (and the message says to contact the office).
+            'default' => false,
+            'label' => 'education_exams::rules.withhold_results_with_dues.label',
+            'description' => 'education_exams::rules.withhold_results_with_dues.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'families',
+            'sort_order' => 110,
+        ],
+        [
+            'key' => 'education_exams.marksheet_signatures',
+            'type' => 'json',
+            // Who signs a printed marksheet, in order.
+            'schema' => ['type' => 'array', 'items' => ['enum' => ['class_teacher', 'exam_controller', 'head', 'guardian']], 'maxItems' => 4, 'uniqueItems' => true],
+            'default' => ['class_teacher', 'head', 'guardian'],
+            'label' => 'education_exams::rules.marksheet_signatures.label',
+            'description' => 'education_exams::rules.marksheet_signatures.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'results',
+            'sort_order' => 120,
+        ],
+        [
             'key' => 'education_exams.correction_needs_approval',
             'type' => 'boolean',
             // Changing a published mark waits for someone other than who asked.
@@ -147,6 +188,15 @@ return [
     ],
     // Results (EXM-2) and course registration outcomes listen to these; payloads carry ids only.
     'events' => ['education_exams.result_published', 'education_exams.marks_corrected'],
+    // To families (wording in education_exams::notifications); the link opens the portal.
+    'notifications' => [
+        'education_exams.result_published' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'exam', 'gpa', 'letter', 'link'], 'audience' => 'person', 'path' => '/portal'],
+        'education_exams.result_held' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'exam', 'link'], 'audience' => 'person', 'path' => '/portal'],
+    ],
+    // A family opens the student's results from the student's record in the portal.
+    'portal_pages' => [
+        ['subject' => 'education.student', 'label' => 'education_exams::module.portal_page', 'route' => '/portal/results/{record}'],
+    ],
     'is_core' => false,
     'requires_consent' => false,
     'dashboard' => ['widgets' => []],

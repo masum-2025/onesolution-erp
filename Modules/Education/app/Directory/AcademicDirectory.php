@@ -83,6 +83,22 @@ class AcademicDirectory
     }
 
     /**
+     * Roll numbers of students in a session (students without one are left out).
+     *
+     * @param  list<string>  $studentIds
+     * @return array<string, string>
+     */
+    public function rollNumbers(Organization $company, string $sessionId, array $studentIds): array
+    {
+        if ($studentIds === []) {
+            return [];
+        }
+
+        return $this->education->query(Enrollment::class, $company)->where('session_id', $sessionId)->whereIn('student_id', array_values(array_unique($studentIds)))
+            ->whereNotNull('roll_no')->orderBy('started_on')->pluck('roll_no', 'student_id')->map(fn ($roll) => (string) $roll)->all();
+    }
+
+    /**
      * Students studying in a section now, by name.
      *
      * @return list<array<string, mixed>>

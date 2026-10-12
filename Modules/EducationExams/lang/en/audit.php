@@ -3,6 +3,7 @@
 // Audit log labels of exam actions (education_exams.*).
 return [
     'scheme_saved' => 'Grading scheme saved',
+    'results_sent' => 'Results sent to families again',
     'exam_saved' => 'Exam saved',
     'exam_marking' => 'Exam opened for marks',
     'exam_closed' => 'Exam closed for marks',

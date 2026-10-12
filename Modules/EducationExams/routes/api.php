@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Modules\EducationExams\Http\Controllers\ExamController;
 use Modules\EducationExams\Http\Controllers\MarkSheetController;
+use Modules\EducationExams\Http\Controllers\PortalResultController;
+use Modules\EducationExams\Http\Controllers\ReportCardController;
 use Modules\EducationExams\Http\Controllers\ResultController;
 
 /*
@@ -21,12 +23,14 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
         Route::get('sheets/{sheet}', [MarkSheetController::class, 'show']);
         Route::get('combinations', [ResultController::class, 'combinations']);
         Route::get('combinations/{combination}/results', [ResultController::class, 'combinationResults']);
+        Route::get('combinations/{combination}/report-cards', [ReportCardController::class, 'combination']);
         Route::get('students', [ResultController::class, 'students'])->middleware('throttle:education-exams-search');
         Route::get('students/{student}/results', [ResultController::class, 'transcript']);
         Route::get('corrections', [ResultController::class, 'allCorrections']);
         Route::get('{exam}', [ExamController::class, 'show']);
         Route::get('{exam}/sheets', [MarkSheetController::class, 'index']);
         Route::get('{exam}/results', [ResultController::class, 'exam']);
+        Route::get('{exam}/report-cards', [ReportCardController::class, 'exam']);
         Route::get('{exam}/corrections', [ResultController::class, 'corrections']);
 
         Route::middleware('throttle:education-exams-marks')->group(function () {
@@ -51,8 +55,21 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:education_
             Route::post('{exam}/publish', [ResultController::class, 'publish']);
             Route::post('combinations', [ResultController::class, 'storeCombination']);
             Route::post('combinations/{combination}/publish', [ResultController::class, 'publishCombination']);
+            Route::post('combinations/{combination}/send-results', [ReportCardController::class, 'sendCombination']);
+            Route::post('{exam}/send-results', [ReportCardController::class, 'sendExam']);
             Route::post('sheets/{sheet}/corrections', [ResultController::class, 'requestCorrection']);
             Route::post('corrections/{correction}/approve', [ResultController::class, 'approveCorrection']);
             Route::post('corrections/{correction}/reject', [ResultController::class, 'rejectCorrection']);
         });
+    });
+
+/*
+| A family's results in the client's portal (B2B2C): portal members only (the
+| API refuses them everything else), with the portal, Education and exams on.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:education', 'module:education_exams'])
+    ->prefix('portal/results')
+    ->group(function () {
+        Route::get('/', [PortalResultController::class, 'show']);
+        Route::get('{result}/report-card', [PortalResultController::class, 'reportCard']);
     });
