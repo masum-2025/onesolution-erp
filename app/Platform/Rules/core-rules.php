@@ -760,6 +760,18 @@ return [
         'sort_order' => 170,
     ],
     [
+        'key' => 'ui.dialog_style',
+        'type' => 'enum',
+        // How windows open: centred box, a side panel from the end edge, or the premium centred card.
+        'schema' => ['enum' => ['center', 'panel', 'premium']],
+        'default' => 'center',
+        'label' => 'rules.core.ui_dialog_style.label',
+        'description' => 'rules.core.ui_dialog_style.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
+        'category' => 'appearance',
+        'sort_order' => 172,
+    ],
+    [
         'key' => 'ui.accent',
         'type' => 'enum',
         // "brand" = the partner's brand color; the others are fixed, contrast-checked colors.

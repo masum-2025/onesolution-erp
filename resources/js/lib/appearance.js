@@ -5,7 +5,7 @@ import { writePref } from './storage';
 
 /**
  * How the app looks for this person here: template (sidebar style), highlight
- * color and readability. The server decides (an organization may lock the
+ * color, window style and readability. The server decides (an organization may lock the
  * template and color; readability is always the person's own) and sends it
  * with /api/me. Applied as data-* attributes on <html>; the CSS does the rest.
  */
@@ -25,9 +25,13 @@ export const ACCENTS = {
 
 export const TEMPLATES = ['classic', 'light'];
 
+/** How windows (AppDialog) open: a centred box, a side panel, or the premium card. Confirmations stay centred. */
+export const DIALOGS = ['center', 'panel', 'premium'];
+
 export const appearance = reactive({
     template: 'classic',
     accent: 'brand',
+    dialog: 'center',
     color_vision: 'standard',
     contrast: 'standard',
     // Full answer from the server: value, source, lock and allowed choices per setting.
@@ -51,6 +55,7 @@ export function applyAppearance(next) {
     appearance.details = next.template && typeof next.template === 'object' ? next : appearance.details;
     appearance.template = TEMPLATES.includes(value('template')) ? value('template') : 'classic';
     appearance.accent = value('accent', 'brand');
+    appearance.dialog = DIALOGS.includes(value('dialog')) ? value('dialog') : 'center';
     appearance.color_vision = value('color_vision', 'standard');
     appearance.contrast = value('contrast', 'standard');
 
@@ -77,7 +82,8 @@ export function isLocked(setting) {
 
 /** Choices this person may pick for a setting here. */
 export function allowedChoices(setting) {
-    return appearance.details?.[setting]?.allowed ?? (setting === 'template' ? TEMPLATES : ['brand', ...Object.keys(ACCENTS)]);
+    const all = { template: TEMPLATES, dialog: DIALOGS };
+    return appearance.details?.[setting]?.allowed ?? all[setting] ?? ['brand', ...Object.keys(ACCENTS)];
 }
 
 /**

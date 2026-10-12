@@ -10,7 +10,7 @@ use App\Platform\Rules\RuleCatalog;
 /**
  * How the app looks for one person in the current context.
  *
- * Template and highlight color: a level that LOCKS the rule decides for
+ * Template, highlight color and window style: a level that LOCKS the rule decides for
  * everyone below; otherwise the person's own choice wins when it is inside
  * what the levels above allow, else the organization's value applies.
  * Readability (colour vision, contrast) is never decided by an organization:
@@ -19,7 +19,7 @@ use App\Platform\Rules\RuleCatalog;
 final class AppearanceResolver
 {
     /** Rule keys of the choices an organization may lock, by preference name. */
-    public const RULES = ['template' => 'ui.shell_template', 'accent' => 'ui.accent'];
+    public const RULES = ['template' => 'ui.shell_template', 'accent' => 'ui.accent', 'dialog' => 'ui.dialog_style'];
 
     public const COLOR_VISION = ['standard', 'blue_orange'];
 

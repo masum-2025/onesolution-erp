@@ -42,7 +42,7 @@ function submit() {
 </script>
 
 <template>
-    <AppDialog
+    <AppDialog confirm
         :open="dialog.open"
         layer="z-[60]"
         :title="dialog.options.title ?? ''"

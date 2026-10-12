@@ -51,7 +51,7 @@ async function withPasskey() {
 </script>
 
 <template>
-    <AppDialog
+    <AppDialog confirm
         :open="stepUp.open"
         layer="z-[65]"
         :title="t('core.second_step.confirm_title')"

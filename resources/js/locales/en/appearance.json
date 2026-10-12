@@ -47,5 +47,22 @@
     "theme": {
         "title": "Light or dark",
         "device": "Saved on this device only."
+    },
+    "dialog": {
+        "title": "Window style",
+        "text": "How forms and details open.",
+        "try": "Try it",
+        "center": "Center box",
+        "center_text": "A box in the middle; quick for short forms.",
+        "panel": "Side panel",
+        "panel_text": "A large panel from the side; room for long forms.",
+        "premium": "Premium",
+        "premium_text": "A modern card in your highlight colour.",
+        "confirm_note": "Confirmations (yes or no, give a reason) always open in the middle.",
+        "sample_title": "A sample window",
+        "sample_text": "This is how forms will open for you.",
+        "sample_name": "Name",
+        "sample_name_hint": "For example: Half-yearly exam",
+        "sample_date": "Date"
     }
 }

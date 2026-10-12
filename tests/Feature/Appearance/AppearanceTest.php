@@ -145,3 +145,20 @@ it('changes only the person\'s own look', function () {
 it('needs a signed-in person', function () {
     $this->putJson('/api/me/appearance', ['template' => 'light'])->assertUnauthorized();
 });
+
+it('lets each person pick a window style, or the company lock one for everyone', function () {
+    // Default: the centred box, all three styles open.
+    expect(myLook($this, $this->token)['dialog'])->toMatchArray(['value' => 'center', 'source' => 'default', 'locked' => false, 'allowed' => ['center', 'panel', 'premium']]);
+
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog' => 'panel'])->assertOk()->assertJsonPath('data.dialog', 'panel');
+    expect(myLook($this, $this->token)['dialog'])->toMatchArray(['value' => 'panel', 'source' => 'user', 'own' => 'panel']);
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog' => 'sideways'])->assertUnprocessable()->assertJsonValidationErrors(['dialog']);
+
+    // A company lock wins over the person's own choice, and says where it comes from.
+    orgRule($this->w->c1, 'ui.dialog_style', 'premium', RuleMode::Lock);
+    expect(myLook($this, $this->token)['dialog'])->toMatchArray(['value' => 'premium', 'locked' => true, 'allowed' => ['premium'], 'name' => 'C1', 'own' => 'panel']);
+
+    // Cleared, it follows the organization again.
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog' => null])->assertOk();
+    expect(myLook($this, $this->token)['dialog']['own'])->toBeNull();
+});

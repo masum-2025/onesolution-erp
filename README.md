@@ -3538,6 +3538,23 @@ and words as well as a color.
 
 "My look" screen: `/account/appearance` (from the person menu).
 
+### Window styles (UI-2)
+
+Rule `ui.dialog_style` (same levels, locks and own choice as the template; preference key
+`dialog`): how every window (`AppDialog`, used by every screen) opens.
+
+- `center` (default): a box in the middle, a sheet from the bottom on phones.
+- `panel`: a large panel from the end edge (Worksuit-like), a round close button on its edge,
+  the content on a card over the page colour, actions fixed at the bottom; full screen on
+  phones; from the left in right-to-left languages.
+- `premium`: a centred card with a soft brand-colour glow, a gradient icon tile, a frosted
+  footer and a springy entrance (fade only with reduced motion); a sheet on phones.
+
+Every form window opens to one width per style (centre and premium 672 px, panel 88 % of the
+screen up to 1120 px), whatever the form. Confirmations (`confirm` prop, `tone` warn or bad,
+the shared confirm and step-up dialogs) always open in the middle at their own small size. "My look" shows the three with a miniature each and a sample window
+("Try it"). No screen changed: the style lives in `AppDialog` alone.
+
 ### Future expansion (UI-1)
 
 - New template (e.g. icon rail, top navigation): add its value to `ui.shell_template`, the

@@ -1,12 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Check, CircleAlert, CircleCheck, Lock, Monitor, Moon, RotateCcw, Sun, TriangleAlert } from 'lucide-vue-next';
+import { AppWindow, Check, CircleAlert, CircleCheck, Lock, Monitor, Moon, RotateCcw, Sun, TriangleAlert } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
+import AppDialog from '@/components/AppDialog.vue';
+import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import SourceBadge from '@/components/SourceBadge.vue';
-import { ACCENTS, accentColor, allowedChoices, appearance, applyAppearance, isLocked, saveAppearance, TEMPLATES } from '@/lib/appearance';
+import { ACCENTS, accentColor, allowedChoices, appearance, applyAppearance, DIALOGS, isLocked, saveAppearance, TEMPLATES } from '@/lib/appearance';
 import { readableOn } from '@/lib/brand';
 import { loadMe } from '@/lib/session';
 import { setTheme, theme } from '@/lib/theme';
@@ -14,8 +16,8 @@ import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 
 /**
- * "My look": the person's own template, highlight color and readability.
- * Template and color may be locked by the organization (shown with where the
+ * "My look": the person's own template, window style, highlight color and
+ * readability. Template, window style and color may be locked by the organization (shown with where the
  * lock comes from); colour vision and contrast are always the person's.
  * A choice shows at once and is saved; the server's answer then applies.
  */
@@ -57,12 +59,15 @@ async function choose(setting, value) {
     }
 }
 
-const hasOwnChoice = computed(() => !!(details.value?.template?.own || details.value?.accent?.own));
+const hasOwnChoice = computed(() => !!(details.value?.template?.own || details.value?.accent?.own || details.value?.dialog?.own));
+
+// A sample window in the chosen style.
+const trying = ref(false);
 
 async function reset() {
     saving.value = 'reset';
     try {
-        const message = await saveAppearance({ template: null, accent: null });
+        const message = await saveAppearance({ template: null, accent: null, dialog: null });
         await loadMe();
         toast.success(message);
     } catch (error) {
@@ -156,6 +161,82 @@ const themeOptions = computed(() => [
                 </button>
             </div>
             <p v-if="isLocked('template')" class="mt-3 text-[13px] text-muted">{{ t('appearance.locked_help') }}</p>
+        </section>
+
+        <!-- Window style -->
+        <section class="card p-5 sm:p-6" aria-labelledby="look-dialog">
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 id="look-dialog" class="text-[15px] font-semibold text-fg">{{ t('appearance.dialog.title') }}</h2>
+                    <p class="mt-1 text-[13px] text-muted">{{ t('appearance.dialog.text') }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <AppBadge v-if="isLocked('dialog')" tone="neutral" :icon="Lock">{{ lockText('dialog') }}</AppBadge>
+                    <SourceBadge v-else-if="source('dialog')" v-bind="source('dialog')" />
+                    <AppButton size="sm" :icon="AppWindow" @click="trying = true">{{ t('appearance.dialog.try') }}</AppButton>
+                </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-3" role="radiogroup" aria-labelledby="look-dialog">
+                <button
+                    v-for="style in DIALOGS"
+                    :key="style"
+                    type="button"
+                    role="radio"
+                    :aria-checked="appearance.dialog === style"
+                    :disabled="!canPick('dialog', style) || !!saving"
+                    class="group relative rounded-2xl border p-3 text-start transition disabled:cursor-not-allowed disabled:opacity-55"
+                    :class="appearance.dialog === style ? 'border-brand ring-4 ring-brand/15' : 'border-line hover:border-line-strong hover:shadow-pop'"
+                    @click="choose('dialog', style)"
+                >
+                    <!-- Miniature of a window in this style over a dimmed page -->
+                    <div class="relative h-32 overflow-hidden rounded-xl border border-line bg-canvas" aria-hidden="true">
+                        <div class="absolute inset-0 bg-[rgb(10_10_14/0.18)]" />
+                        <div v-if="style === 'center'" class="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-lg border border-line bg-raised p-2 shadow-pop">
+                            <span class="block h-1.5 w-14 rounded-full bg-fg/60" />
+                            <span class="mt-2 block h-4 rounded border border-line bg-surface" />
+                            <span class="mt-2 flex justify-end gap-1"><span class="h-3 w-7 rounded bg-subtle" /><span class="h-3 w-7 rounded bg-brand" /></span>
+                        </div>
+                        <div v-else-if="style === 'panel'" class="absolute inset-y-0 end-0 w-[70%] bg-canvas p-2 shadow-pop">
+                            <span class="absolute -start-2 top-2 size-4 rounded-full bg-brand ring-2 ring-canvas" />
+                            <span class="block h-2 w-16 rounded-full bg-fg/60" />
+                            <span class="mt-2 block h-14 rounded-md border border-line bg-surface" />
+                            <span class="mt-2 flex justify-end gap-1"><span class="h-3 w-7 rounded bg-subtle" /><span class="h-3 w-7 rounded bg-brand" /></span>
+                        </div>
+                        <div v-else class="absolute inset-x-5 top-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-raised p-2 shadow-pop ring-1 ring-brand/30">
+                            <span class="absolute inset-x-0 top-0 h-8 bg-[radial-gradient(120%_100%_at_0%_0%,color-mix(in_oklab,var(--brand)_35%,transparent),transparent_70%)]" />
+                            <span class="relative flex items-center gap-1.5"><span class="size-4 rounded-md bg-brand" /><span class="h-1.5 w-12 rounded-full bg-fg/60" /></span>
+                            <span class="relative mt-2 block h-4 rounded border border-line bg-surface" />
+                            <span class="relative mt-2 flex justify-end gap-1"><span class="h-3 w-7 rounded bg-subtle" /><span class="h-3 w-7 rounded bg-brand" /></span>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2 px-1">
+                        <span class="min-w-0">
+                            <span class="block text-[14px] font-semibold text-fg">{{ t(`appearance.dialog.${style}`) }}</span>
+                            <span class="block text-[12.5px] text-muted">{{ t(`appearance.dialog.${style}_text`) }}</span>
+                        </span>
+                        <span v-if="appearance.dialog === style" class="ms-auto grid size-6 shrink-0 place-items-center rounded-full bg-brand text-brand-fg" aria-hidden="true">
+                            <Check class="size-3.5" />
+                        </span>
+                    </div>
+                </button>
+            </div>
+            <p class="mt-3 text-[13px] text-muted">{{ t(isLocked('dialog') ? 'appearance.locked_help' : 'appearance.dialog.confirm_note') }}</p>
+
+            <AppDialog :open="trying" :title="t('appearance.dialog.sample_title')" :description="t('appearance.dialog.sample_text')" :icon="AppWindow" @close="trying = false">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <AppField v-slot="{ id }" :label="t('appearance.dialog.sample_name')">
+                        <input :id="id" class="field-input" :placeholder="t('appearance.dialog.sample_name_hint')" />
+                    </AppField>
+                    <AppField v-slot="{ id }" :label="t('appearance.dialog.sample_date')" optional>
+                        <input :id="id" type="date" class="field-input" />
+                    </AppField>
+                </div>
+                <template #footer>
+                    <AppButton variant="ghost" @click="trying = false">{{ t('core.actions.cancel') }}</AppButton>
+                    <AppButton variant="primary" :icon="Check" @click="trying = false">{{ t('core.actions.save') }}</AppButton>
+                </template>
+            </AppDialog>
         </section>
 
         <!-- Highlight color -->

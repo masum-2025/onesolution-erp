@@ -45,6 +45,11 @@ return [
             'description' => 'classic = dark sidebar, light = light sidebar. Lock it to give everyone below the same look; otherwise each person can choose their own.',
             'options' => ['classic' => 'Classic (dark sidebar)', 'light' => 'Light (light sidebar)'],
         ],
+        'ui_dialog_style' => [
+            'label' => 'Window style',
+            'description' => 'How forms and details open: center = a box in the middle, panel = a large panel from the side (for long forms), premium = a modern card in the brand colour. Confirmations always open in the middle. Lock it to give everyone below the same style.',
+            'options' => ['center' => 'Center box', 'panel' => 'Side panel', 'premium' => 'Premium'],
+        ],
         'ui_accent' => [
             'label' => 'Highlight color',
             'description' => 'Color of buttons and the selected page. brand = your brand color. Lock it to keep it the same for everyone below.',
