@@ -175,6 +175,8 @@ it('ends what belonged to the old partner and keeps its past invoices there', fu
         'prices' => [['currency' => 'BDT', 'period' => 'monthly', 'amount_minor' => 700000]],
     ], createPartnerStaff($this->w->partnerA, PartnerUserRole::Owner));
     app(ChangePlan::class)->handle($this->w->g1->fresh(), new PlanChoice('business', $plan), 'Offer', $this->clientOwner);
+    // The subscription was made in beforeEach on the real date; start it on the test date so October is billed whatever today is.
+    Subscription::query()->where('organization_id', $this->w->g1->id)->update(['started_on' => '2026-09-15']);
     app(BillingRun::class)->run(CarbonImmutable::parse('2026-10-01', 'UTC'), $this->w->partnerA);
     $domain = activeDomain($this->w->partnerA, 'g1.partner-a.test', $this->w->g1);
     $grant = app(SupportAccessService::class)->request($this->w->partnerA, $this->w->c1, createPartnerStaff($this->w->partnerA), 'Checking the fee report', Severity::Normal, 60);
