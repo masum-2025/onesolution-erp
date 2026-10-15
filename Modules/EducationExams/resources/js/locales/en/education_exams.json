@@ -349,7 +349,10 @@
         "empty": "No published results yet",
         "final": "Final result",
         "position": "Position {rank}",
-        "published_on": "published {date}"
+        "published_on": "published {date}",
+        "not_yours": "You cannot see this student's results",
+        "not_yours_text": "Only people allowed to see this student's whole result see it here. Ask the head teacher if you need it.",
+        "count": "{count} published results"
     },
     "cards": {
         "button": "Report cards",
@@ -401,5 +404,9 @@
         "held": "Results are not shown here yet",
         "held_text": "Please contact the office to see this student's results.",
         "not_found": "This page is not available. Open it again from the student's record."
+    },
+    "student_tab": {
+        "title": "Results",
+        "none": "No result published yet"
     }
 }

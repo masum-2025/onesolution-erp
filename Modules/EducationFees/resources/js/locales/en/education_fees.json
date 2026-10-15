@@ -408,5 +408,12 @@
         "receipt": "Receipt",
         "back": "Fees",
         "view": "Open"
+    },
+    "student_tab": {
+        "title": "Fees",
+        "owed": "Owed, not yet due",
+        "overdue": "{amount} overdue",
+        "advance": "Nothing owed · {amount} in advance",
+        "clear": "Nothing owed"
     }
 }

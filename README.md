@@ -3034,6 +3034,25 @@ counted.
   to set things up; the steps and their links need `education.manage`. Counts stay inside the
   caller's company and units.
 
+### A student's one page (module tabs)
+
+The student's page (`/education/students/:id`) shows what other modules know about the student
+in tabs between Education's own: Fees (bills, receipts, discounts, "Take fee"), Results
+(published results, report cards, CGPA), Courses (subject registrations of every session). Above
+the tabs, one card per module: what is owed, the latest result, this session's credits; a click
+opens the tab. `?tab=fees` opens a tab directly.
+
+- **How a module adds a tab**: it ships `resources/js/studentTabs.js` exporting
+  `[{ key, module, ns, order, label, component, summary? }]` (Education's own tabs use order 10,
+  20, 60, 70). Education finds them with `import.meta.glob` (`moduleTabs.js`) and knows none by
+  name. The same panels serve the module's own pages (`StudentFeesPanel`, `StudentResults`).
+- **Who sees what**: a tab shows only when its module is in the person's menu (on at the unit
+  and one of its permissions held). Each tab and card calls its module's own endpoint, which
+  checks again; a card the person may not see is left out (e.g. a teacher who may not see this
+  student's whole result), the tab says so.
+- **Course registration**: `GET /course-registration/registrations?student_id=` lists one
+  student's registrations; the session is then optional.
+
 ### Future expansion (Education)
 
 - Fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.

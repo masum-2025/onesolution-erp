@@ -25,6 +25,8 @@ import GuardianDialog from '../components/GuardianDialog.vue';
 import LeaveDialog from '../components/LeaveDialog.vue';
 import PlaceDialog from '../components/PlaceDialog.vue';
 import IssueDialog from '../components/IssueDialog.vue';
+import ModuleSummaryCards from '../components/ModuleSummaryCards.vue';
+import { useModuleTabs } from '../moduleTabs';
 
 /**
  * One student: their details and where they study now, their guardians and
@@ -44,16 +46,20 @@ const student = computed(() => record.data.value?.data ?? null);
 const canEdit = computed(() => setup.can('edit_students'));
 const sensitive = computed(() => setup.can('view_sensitive'));
 
+// Education's own tabs, with the tabs of other modules (fees, results, courses) between them by order.
+const moduleTabs = useModuleTabs();
 const tabs = computed(() => [
-    { key: 'overview', label: t('education.student.tabs.overview') },
-    { key: 'guardians', label: t('education.student.tabs.guardians'), count: student.value?.guardians?.length },
-    { key: 'history', label: t('education.student.tabs.history') },
-    ...(setup.can('issue_documents') ? [{ key: 'documents', label: t('education.student_documents.tab') }] : []),
-]);
+    { key: 'overview', order: 10, label: t('education.student.tabs.overview') },
+    { key: 'guardians', order: 20, label: t('education.student.tabs.guardians'), count: student.value?.guardians?.length },
+    ...moduleTabs.value.map((item) => ({ key: item.key, order: item.order, label: item.label() })),
+    { key: 'history', order: 60, label: t('education.student.tabs.history') },
+    ...(setup.can('issue_documents') ? [{ key: 'documents', order: 70, label: t('education.student_documents.tab') }] : []),
+].sort((a, b) => a.order - b.order));
 const tab = computed({
     get: () => (tabs.value.some((item) => item.key === route.query.tab) ? route.query.tab : 'overview'),
     set: (value) => router.replace({ query: value === 'overview' ? {} : { tab: value } }),
 });
+const moduleTab = computed(() => moduleTabs.value.find((item) => item.key === tab.value) ?? null);
 
 // Section names of the sessions this student studied in.
 const sectionNames = ref({});
@@ -204,11 +210,15 @@ async function uploadPhoto(event) {
                 </template>
             </PageHeader>
 
-            <div class="mb-5">
+            <ModuleSummaryCards :tabs="moduleTabs" :student-id="student.id" @open="(key) => (tab = key)" />
+
+            <div class="mb-5 overflow-x-auto">
                 <AppTabs v-model="tab" :tabs="tabs" :label="student.name" />
             </div>
 
-            <div v-if="tab === 'overview'" class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <component :is="moduleTab.component" v-if="moduleTab" :key="moduleTab.key" :student-id="student.id" />
+
+            <div v-else-if="tab === 'overview'" class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <section class="card p-5 sm:p-6">
                     <dl class="grid grid-cols-1 gap-x-6 gap-y-4 text-[13.5px] sm:grid-cols-2">
                         <div v-for="row in details" :key="row.label">

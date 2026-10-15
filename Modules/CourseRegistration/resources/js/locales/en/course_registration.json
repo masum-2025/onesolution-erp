@@ -254,5 +254,12 @@
         "waiting": "Handed in on {date}. Waiting for approval.",
         "approved": "Approved on {date}.",
         "changed_after": "Changing a subject now needs approval again."
+    },
+    "student_tab": {
+        "title": "Courses",
+        "start": "Register for {session}",
+        "none": "Not registered for {session} yet",
+        "empty_title": "No subject registration yet",
+        "empty_text": "Subjects this student registers for, each session, show here."
     }
 }

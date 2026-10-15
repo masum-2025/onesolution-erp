@@ -35,12 +35,15 @@ class RegistrationController extends Controller
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('course_registration.view', $unit);
         $filters = $request->validate([
-            'session_id' => ['required', 'string', 'size:26'], 'status' => ['nullable', 'in:'.implode(',', Registration::STATUSES)],
+            // One student's registrations (every session unless one is given), e.g. for their page in Education.
+            'session_id' => ['required_without:student_id', 'nullable', 'string', 'size:26'], 'student_id' => ['nullable', 'string', 'size:26'], 'status' => ['nullable', 'in:'.implode(',', Registration::STATUSES)],
             'overload' => ['nullable', 'boolean'], 'q' => ['nullable', 'string', 'max:100'], 'page' => ['nullable', 'integer', 'min:1'], 'per_page' => ['nullable', 'integer', 'min:1', 'max:200'],
         ]);
         // By the student's name, code or phone.
         $found = ($filters['q'] ?? '') === '' ? null : array_column($this->academic->search($company, $filters['q'], $this->unitIds($unit), 200), 'id');
-        $base = fn () => $this->campus->query(Registration::class, $company)->where('session_id', $filters['session_id'])->whereIn('unit_id', $this->unitIds($unit))
+        $base = fn () => $this->campus->query(Registration::class, $company)->whereIn('unit_id', $this->unitIds($unit))
+            ->when($filters['session_id'] ?? null, fn ($query, $session) => $query->where('session_id', $session))
+            ->when($filters['student_id'] ?? null, fn ($query, $student) => $query->where('student_id', $student))
             ->when($found !== null, fn ($query) => $query->whereIn('student_id', $found));
         $page = $base()->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when(isset($filters['overload']), fn ($query) => $query->where('overload', filter_var($filters['overload'], FILTER_VALIDATE_BOOL)))

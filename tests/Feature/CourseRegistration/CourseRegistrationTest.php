@@ -364,3 +364,27 @@ it('gives the screens sessions, classes, campuses, students and sections to choo
     $this->asToken(orgToken($teacher, $this->w->c1))->getJson(($this->api)('students?q=rahim'))->assertForbidden();
     $this->asToken(orgToken($teacher, $this->w->c1))->getJson(($this->api)("sections?session_id={$this->spring['id']}"))->assertForbidden();
 });
+
+it('lists one student\'s registrations of every session for their page, only inside the institution', function () {
+    $rahim = ($this->student)('Rahim Uddin');
+    $karim = ($this->student)('Karim Ahmed');
+    $mine = ($this->open)($rahim)->assertCreated()->json('data');
+    ($this->open)($karim)->assertCreated();
+
+    // No session needed with a student; one or the other is.
+    ($this->as)()->getJson(($this->api)("registrations?student_id={$rahim['id']}"))->assertOk()
+        ->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.id', $mine['id'])->assertJsonPath('data.0.session_id', $this->spring['id']);
+    ($this->as)()->getJson(($this->api)("registrations?student_id={$rahim['id']}&session_id={$this->spring['id']}"))->assertOk()->assertJsonPath('meta.total', 1);
+    ($this->as)()->getJson(($this->api)('registrations'))->assertUnprocessable()->assertJsonValidationErrors('session_id');
+    ($this->as)()->getJson(($this->api)('registrations?student_id=nope'))->assertUnprocessable()->assertJsonValidationErrors('student_id');
+
+    // Another company asking for this student finds nothing of theirs.
+    $other = createMember($this->w->c2);
+    $this->asToken(orgToken($other, $this->w->c2))->getJson(($this->api)("registrations?student_id={$rahim['id']}", $this->w->c2))->assertOk()->assertJsonPath('meta.total', 0);
+
+    // Someone without course registration's permission, and the module off, are refused.
+    $clerk = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['education.view'], 'Clerk'));
+    $this->asToken(orgToken($clerk, $this->w->c1))->getJson(($this->api)("registrations?student_id={$rahim['id']}"))->assertForbidden();
+    toggles()->disable($this->w->g1, 'course_registration', 'Test', confirm: true);
+    ($this->as)()->getJson(($this->api)("registrations?student_id={$rahim['id']}"))->assertForbidden();
+});
