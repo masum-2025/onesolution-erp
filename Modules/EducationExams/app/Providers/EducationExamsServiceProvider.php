@@ -11,6 +11,7 @@ use Illuminate\Support\ServiceProvider;
 use Modules\EducationExams\Events\ResultPublished;
 use Modules\EducationExams\Export\EducationExamsExporter;
 use Modules\EducationExams\Listeners\TellResultPublished;
+use Modules\EducationExams\Setup\ExamSetupSteps;
 
 /**
  * Exams: grading schemes, exams and papers, mark sheets entered by teachers
@@ -25,6 +26,8 @@ class EducationExamsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->tag([EducationExamsExporter::class], 'module.exporters');
+        // Exams' steps on Education's setup checklist.
+        $this->app->tag([ExamSetupSteps::class], 'education.setup_steps');
     }
 
     public function boot(): void

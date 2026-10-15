@@ -11,6 +11,7 @@ export function educationApi(organizationId) {
     return {
         setup: () => api(`${base}/setup`),
         overview: (query = {}) => api(`${base}/overview`, { query }),
+        setupSteps: () => api(`${base}/setup-steps`),
         applyPreset: (key) => api(`${base}/presets/${key}/apply`, { method: 'POST', body: {} }),
 
         list: (kind, query = {}) => api(`${base}/structure/${kind}`, { query }),

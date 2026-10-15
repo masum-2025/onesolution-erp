@@ -12,6 +12,7 @@ use Modules\CourseRegistration\Events\SeatOffered;
 use Modules\CourseRegistration\Export\CourseRegistrationExporter;
 use Modules\CourseRegistration\Listeners\NotifySeatOffered;
 use Modules\CourseRegistration\Listeners\OutcomesFromResults;
+use Modules\CourseRegistration\Setup\CourseSetupSteps;
 use Modules\EducationExams\Events\ResultPublished;
 
 /**
@@ -30,6 +31,8 @@ class CourseRegistrationServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->tag([CourseRegistrationExporter::class], 'module.exporters');
+        // Course registration's steps on Education's setup checklist.
+        $this->app->tag([CourseSetupSteps::class], 'education.setup_steps');
     }
 
     public function boot(): void

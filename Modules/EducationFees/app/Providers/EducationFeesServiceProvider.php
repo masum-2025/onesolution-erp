@@ -20,6 +20,7 @@ use Modules\EducationFees\Export\EducationFeesExporter;
 use Modules\EducationFees\Listeners\BillCredits;
 use Modules\EducationFees\Listeners\BillOnAdmission;
 use Modules\EducationFees\Listeners\TellPaymentReceived;
+use Modules\EducationFees\Setup\FeeSetupSteps;
 
 /**
  * Student fees: heads, structures, concessions, billing runs, bills and late
@@ -34,6 +35,8 @@ class EducationFeesServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->tag([EducationFeesExporter::class], 'module.exporters');
+        // Fees' steps on Education's setup checklist.
+        $this->app->tag([FeeSetupSteps::class], 'education.setup_steps');
     }
 
     public function boot(): void

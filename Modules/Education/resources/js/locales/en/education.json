@@ -845,5 +845,16 @@
         "valid_until": "Valid until",
         "try_again": "Try again",
         "footer": "Checked against the institution's own register."
+    },
+    "checklist": {
+        "title": "Set up your institution",
+        "text": "{done} of {total} steps done. Each step says what is missing and takes you there.",
+        "next": "Next: {step}",
+        "fold": "Hide steps",
+        "unfold": "Show steps",
+        "do": "Do it",
+        "optional": "(optional)",
+        "done": "done",
+        "todo": "still to do"
     }
 }

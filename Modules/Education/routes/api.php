@@ -9,6 +9,7 @@ use Modules\Education\Http\Controllers\FieldController;
 use Modules\Education\Http\Controllers\OverviewController;
 use Modules\Education\Http\Controllers\PromotionController;
 use Modules\Education\Http\Controllers\SetupController;
+use Modules\Education\Http\Controllers\SetupStepsController;
 use Modules\Education\Http\Controllers\StructureController;
 use Modules\Education\Http\Controllers\StudentController;
 use Modules\Education\Http\Controllers\VerifyController;
@@ -26,6 +27,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:education'])
     ->group(function () {
         Route::get('setup', [SetupController::class, 'show']);
         Route::get('overview', OverviewController::class);
+        Route::get('setup-steps', SetupStepsController::class);
         Route::get('structure/{kind}', [StructureController::class, 'index']);
         Route::get('fields', [FieldController::class, 'index']);
         Route::get('students', [StudentController::class, 'index']);

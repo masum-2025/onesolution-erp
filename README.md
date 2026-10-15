@@ -3017,6 +3017,23 @@ waiting lists from the overview tile). Header "New" menu: New application.
   with `meta.outside`), the institution's name and logo, valid / revoked / expired in words, icon
   and colour.
 
+### Setup checklist (`GET /education/setup-steps`)
+
+On the education home, people with `education.manage` see what the institution still has to set
+up, step by step, until every required step is done. Each step says in words what is missing
+(numbers in the reader's digits) and links to where it is done. Optional steps are shown but not
+counted.
+
+- **Steps from every module that is on**: Education's own steps (programs, session, curriculum,
+  sections, class teachers when HRM is on, students), then each module's in menu order. A module
+  adds its steps by implementing `Modules\Education\Contracts\SetupStepProvider` and tagging the
+  class `education.setup_steps` in its service provider (Fees: heads, structure, first bill;
+  Exams: grading, first exam; Course registration: offerings, window). Steps of a module turned
+  off at the unit are left out.
+- **Who sees what**: `education.view` gets only ready / done / total, so others can be told who has
+  to set things up; the steps and their links need `education.manage`. Counts stay inside the
+  caller's company and units.
+
 ### Future expansion (Education)
 
 - Fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.

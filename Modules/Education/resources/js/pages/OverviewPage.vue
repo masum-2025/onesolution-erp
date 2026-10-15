@@ -17,6 +17,7 @@ import { useEducationSetup } from '../setup';
 import { byLevel } from '../lib';
 import CapacityMeter from '../components/CapacityMeter.vue';
 import SetupWizard from '../components/SetupWizard.vue';
+import SetupChecklist from '../components/SetupChecklist.vue';
 import StudentDialog from '../components/StudentDialog.vue';
 import StructureDialog from '../components/StructureDialog.vue';
 
@@ -46,6 +47,13 @@ watch(data, (value) => {
     if (value?.session_id && !sessionId.value) sessionId.value = value.session_id;
 });
 
+// What is still to set up (every module that is on); shown to people who set it up until it is all done.
+const steps = useResource(() => education.setupSteps());
+const checklist = computed(() => {
+    const list = steps.data.value?.data;
+    return list?.can_set_up && !list.ready ? list : null;
+});
+
 const sessions = computed(() => setup.data.value?.sessions ?? []);
 const hasSessions = computed(() => sessions.value.length > 0);
 const needsSetup = computed(() => setup.data.value && (!setup.ready.value || !hasSessions.value));
@@ -70,6 +78,7 @@ const editing = ref(null); // { kind, start }
 function setupDone() {
     sessionId.value = '';
     overview.reload();
+    steps.reload();
 }
 
 function saved(student) {
@@ -105,6 +114,8 @@ function saved(student) {
         </template>
 
         <template v-else>
+            <SetupChecklist v-if="checklist" :list="checklist" />
+
             <!-- Numbers that matter today; each one opens its list where there is one. -->
             <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
                 <template v-if="stats">
