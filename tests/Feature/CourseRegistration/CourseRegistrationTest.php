@@ -388,3 +388,44 @@ it('lists one student\'s registrations of every session for their page, only ins
     toggles()->disable($this->w->g1, 'course_registration', 'Test', confirm: true);
     ($this->as)()->getJson(($this->api)("registrations?student_id={$rahim['id']}"))->assertForbidden();
 });
+
+// ── The education home ──
+
+it('counts registrations to approve on the dashboard and in the bell of who approves, never their own', function () {
+    orgRule($this->w->c1, 'course_registration.min_credits', 1);
+    $offered = ($this->offer)();
+    $registration = ($this->open)(($this->student)('Rahim'))->assertCreated()->json('data');
+    ($this->add)($registration, ($this->byCode)($offered, 'CSE101'))->assertCreated();
+    ($this->as)()->postJson(($this->api)("registrations/{$registration['id']}/submit"))->assertOk()->assertJsonPath('data.status', 'submitted');
+
+    ($this->as)()->getJson('/api/modules/course_registration/dashboard/waiting')->assertOk()->assertJsonPath('data.value', 1);
+    // Whoever handed it in is not asked to approve it; another approver is.
+    expect(collect(($this->as)()->getJson('/api/attention')->json('data'))->firstWhere('key', 'course_registration.waiting'))->toBeNull();
+    $advisor = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['course_registration.view', 'course_registration.approve'], 'Advisor'));
+    $item = collect($this->asToken(orgToken($advisor, $this->w->c1))->getJson('/api/attention')->json('data'))->firstWhere('key', 'course_registration.waiting');
+    expect($item)->toMatchArray(['count' => 1, 'path' => '/course-registration/registrations']);
+
+    // Another institution sees none of it; nor does someone without the module's permission.
+    $other = createMember($this->w->c2);
+    $this->asToken(orgToken($other, $this->w->c2))->getJson('/api/modules/course_registration/dashboard/waiting')->assertOk()->assertJsonPath('data.value', 0);
+    $clerk = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['education.view'], 'Clerk'));
+    $this->asToken(orgToken($clerk, $this->w->c1))->getJson('/api/modules/course_registration/dashboard/waiting')->assertForbidden();
+});
+
+it('says where the open session\'s registration window stands', function () {
+    ($this->open)(($this->student)('Rahim'))->assertCreated();
+    $window = fn () => ($this->as)()->getJson('/api/modules/course_registration/dashboard/window')->assertOk()->json('data');
+    expect($window())->toMatchArray(['value' => 1, 'hint' => 'The registration dates are not set yet.']);
+
+    // Today is 10 January.
+    $set = fn (string $opens, string $closes) => ($this->as)()->putJson(($this->api)("sessions/{$this->spring['id']}/window"), ['opens_on' => $opens, 'closes_on' => $closes, 'add_drop_until' => '2026-02-07'])->assertOk();
+    $set('2026-01-15', '2026-01-31');
+    expect($window()['hint'])->toBe('Registration opens in 5 days.');
+    $set('2026-01-05', '2026-01-21');
+    expect($window()['hint'])->toBe('Registration is open for 11 more days.');
+    $set('2026-01-01', '2026-01-09');
+    expect($window()['hint'])->toBe('Registration is closed.');
+
+    toggles()->disable($this->w->g1, 'course_registration', 'Test', confirm: true);
+    ($this->as)()->getJson('/api/modules/course_registration/dashboard/window')->assertForbidden();
+});

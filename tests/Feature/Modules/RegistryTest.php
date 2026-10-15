@@ -81,6 +81,9 @@ it('rejects invalid manifests', function (array $manifests, string $problem) {
         ['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'children' => [['key' => 'b', 'label' => 'y']]],
     ]])], 'menu child is missing route'],
     'bad section' => [[manifest('alpha', ['menu' => [['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'section' => 'Money Movement']]])], 'section'],
+    'menu sector the module is not for' => [[manifest('alpha', ['sectors' => ['school'], 'menu' => [['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'sectors' => ['factory']]]])], 'sectors must be a list of the module'],
+    'empty menu sectors' => [[manifest('alpha', ['menu' => [['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'sectors' => []]]])], 'sectors must be a list of the module'],
+    'menu child sector name for a stranger' => [[manifest('alpha', ['sectors' => ['school'], 'menu' => [['key' => 'a', 'label' => 'x', 'route' => '/a', 'order' => 1, 'children' => [['key' => 'b', 'label' => 'y', 'route' => '/b', 'sector_labels' => ['retail' => 'alpha::m.b']]]]]])], 'sector_labels must map'],
     'quick action without permission' => [[manifest('alpha', ['permissions' => ['alpha.view'], 'quick_actions' => [
         ['key' => 'new', 'label' => 'x', 'route' => '/a/new'],
     ]])], 'quick action permission'],

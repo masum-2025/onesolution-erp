@@ -34,7 +34,7 @@ class DocumentValues
      * @param  array<string, mixed>  $template  kind, locale, layout, inputs
      * @param  array<string, string|null>  $inputs  What was asked when issuing.
      * @param  array{number?: string, date?: CarbonImmutable, valid_until?: CarbonImmutable|null}  $document
-     * @return array<string, string>  placeholder => text, only for the placeholders the design uses.
+     * @return array<string, string> placeholder => text, only for the placeholders the design uses.
      */
     public function for(Organization $company, Student $student, array $template, array $inputs, array $document): array
     {

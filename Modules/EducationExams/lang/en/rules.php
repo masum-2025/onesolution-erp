@@ -2,6 +2,10 @@
 
 // Rule labels (manifest "rules"), key = part after "education_exams.".
 return [
+    'upcoming_days' => [
+        'label' => 'Days ahead the home shows exams',
+        'description' => 'The education home lists the papers to be sat in this many coming days.',
+    ],
     'default_grading_scheme' => [
         'label' => 'Grading a new exam starts with',
         'description' => 'The code of one of the institution\'s grading schemes (e.g. bd_school_gpa5, bd_university_ugc, percentage). Each exam may pick another.',

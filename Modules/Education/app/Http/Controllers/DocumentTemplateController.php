@@ -8,7 +8,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Modules\Education\Exceptions\EducationException;
 use Modules\Education\Http\Controllers\Concerns\FindsEducation;
 use Modules\Education\Http\EducationPresenter;
 use Modules\Education\Http\Requests\DocumentTemplateRequest;

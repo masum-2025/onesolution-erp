@@ -126,7 +126,7 @@ class DocumentLayout
                 }
                 $box[$key] = $value;
             }
-            if ($box['x'] + $box['w'] > $width || $box['y'] + $box['h'] > $height) {
+            if ($width < $box['x'] + $box['w'] || $height < $box['y'] + $box['h']) {
                 $errors["{$at}.w"] = __('education::education.validation.document_outside');
             }
             if (in_array($type, ['text', 'image', 'photo', 'qr', 'box'], true) && ($box['w'] < 10 || $box['h'] < 10)) {

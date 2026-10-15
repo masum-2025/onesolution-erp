@@ -4,6 +4,7 @@ namespace App\Platform\Modules\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Platform\Access\AccessResolver;
+use App\Platform\Access\Services\RoleService;
 use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Tenancy\Context\CurrentContext;
@@ -16,14 +17,20 @@ use Illuminate\Support\Str;
  * holds at least one permission of appear, grouped in sections, with the
  * sub-pages and "New" actions their permissions allow. (Hiding a menu entry
  * is never the protection: routes use module:{key} and permission checks.)
+ *
+ * Entries fit the organization's sector: one may show only in some sectors
+ * and take the sector's own name (a university's "Semesters and sections").
  */
 class MenuController extends Controller
 {
-    public function __invoke(CurrentContext $context, ModuleRegistry $registry, ModuleResolver $resolver, AccessResolver $access): JsonResponse
+    public function __invoke(CurrentContext $context, ModuleRegistry $registry, ModuleResolver $resolver, AccessResolver $access, RoleService $roles): JsonResponse
     {
         $resolved = $resolver->resolveAll($context->organization());
         $held = $access->held();
-        $allows = fn (array $entry) => ! isset($entry['permission']) || in_array($entry['permission'], $held, true);
+        $sector = $roles->sectorOf($context->organization());
+        $allows = fn (array $entry) => (! isset($entry['permission']) || in_array($entry['permission'], $held, true))
+            && (! isset($entry['sectors']) || ($sector !== null && in_array($sector, $entry['sectors'], true)));
+        $label = fn (array $entry) => __($sector !== null && isset($entry['sector_labels'][$sector]) ? $entry['sector_labels'][$sector] : $entry['label']);
         // Read-only and export-only organizations create nothing.
         $canCreate = $context->mode() === CurrentContext::MODE_NORMAL;
         $items = [];
@@ -48,7 +55,7 @@ class MenuController extends Controller
                 $items[] = [
                     'module' => $key,
                     'key' => $item['key'],
-                    'label' => __($item['label']),
+                    'label' => $label($item),
                     'route' => $item['route'],
                     'icon' => $item['icon'] ?? null,
                     'order' => $item['order'],
@@ -58,7 +65,7 @@ class MenuController extends Controller
                         ...($withEnds ? [['key' => 'dashboard', 'label' => __('modules.menu.dashboard'), 'route' => "/m/{$key}"]] : []),
                         ...array_map(fn (array $child) => [
                             'key' => $child['key'],
-                            'label' => __($child['label']),
+                            'label' => $label($child),
                             'route' => $child['route'],
                         ], array_values(array_filter($item['children'] ?? [], $allows))),
                         ...($withEnds ? [['key' => 'settings', 'label' => __('modules.menu.settings'), 'route' => "/m/{$key}/settings"]] : []),
@@ -71,7 +78,7 @@ class MenuController extends Controller
                     $actions[] = [
                         'module' => $key,
                         'key' => $action['key'],
-                        'label' => __($action['label']),
+                        'label' => $label($action),
                         'route' => $action['route'],
                         'icon' => $action['icon'] ?? null,
                     ];

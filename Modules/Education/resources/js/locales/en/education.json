@@ -856,5 +856,8 @@
         "optional": "(optional)",
         "done": "done",
         "todo": "still to do"
+    },
+    "home": {
+        "work_text": "Waiting for you in education, fees, exams and courses."
     }
 }

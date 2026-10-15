@@ -5,6 +5,9 @@
 | Business numbers never live here; they are rules.
 */
 
+use Modules\CourseRegistration\Dashboard\CourseWidgets;
+use Modules\CourseRegistration\Dashboard\RegistrationWindow;
+
 return [
     'key' => 'course_registration',
     'name' => 'course_registration::module.name',
@@ -130,6 +133,10 @@ return [
     ],
     'is_core' => false,
     'requires_consent' => false,
-    'dashboard' => ['widgets' => []],
+    'dashboard' => ['widgets' => [
+        ['key' => 'waiting', 'label' => 'course_registration::dashboard.waiting', 'type' => 'stat', 'provider' => CourseWidgets::class, 'permission' => 'course_registration.view'],
+        ['key' => 'window', 'label' => 'course_registration::dashboard.window', 'type' => 'stat', 'provider' => RegistrationWindow::class, 'permission' => 'course_registration.view'],
+    ]],
+    'attention' => [CourseWidgets::class],
     'settings' => ['pages' => []],
 ];

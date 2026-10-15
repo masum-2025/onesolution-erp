@@ -8,6 +8,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { loadMenu } from '@/lib/menu';
 import { formatNumber } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { textIn } from '@/lib/texts';
@@ -18,12 +19,14 @@ import { byLevel } from '../lib';
 import CapacityMeter from '../components/CapacityMeter.vue';
 import SetupWizard from '../components/SetupWizard.vue';
 import SetupChecklist from '../components/SetupChecklist.vue';
+import FamilyBoard from '../components/FamilyBoard.vue';
 import StudentDialog from '../components/StudentDialog.vue';
 import StructureDialog from '../components/StructureDialog.vue';
 
 /**
  * The education home: a session (the open one by default), numbers that
- * matter today, how full each class is, and what needs doing. Until the
+ * matter today, the work waiting in Education and the modules made on it
+ * with their widgets, how full each class is, and what needs doing. Until the
  * institution is set up, people who manage it see the set-up steps; others
  * are told who has to do it.
  */
@@ -53,6 +56,15 @@ const checklist = computed(() => {
     const list = steps.data.value?.data;
     return list?.can_set_up && !list.ready ? list : null;
 });
+
+// The quick links say what the menu says (the institution's own words: "Classes and sections", "Semesters and sections").
+const menuWords = ref({});
+loadMenu()
+    .then(({ data: items }) => {
+        const children = items.find((item) => item.module === 'education')?.children ?? [];
+        menuWords.value = Object.fromEntries(children.filter((child) => ['students', 'sections'].includes(child.key)).map((child) => [child.key, child.label]));
+    })
+    .catch(() => {});
 
 const sessions = computed(() => setup.data.value?.sessions ?? []);
 const hasSessions = computed(() => sessions.value.length > 0);
@@ -139,6 +151,9 @@ function saved(student) {
                 <div v-else v-for="index in 4" :key="index" class="card h-[86px] animate-pulse bg-subtle/60" />
             </div>
 
+            <!-- The family's work and widgets: fees, exams, courses, as far as they are on here. -->
+            <FamilyBoard v-if="data?.modules" :modules="data.modules" />
+
             <!-- Students without a section. -->
             <div v-if="stats?.unplaced" class="mb-6 flex flex-col gap-3 rounded-2xl border border-warn/30 bg-warn-soft px-4 py-3.5 sm:flex-row sm:items-center">
                 <TriangleAlert class="size-5 shrink-0 text-warn" aria-hidden="true" />
@@ -197,7 +212,7 @@ function saved(student) {
                         ] : []),
                     ]" :key="link.key" :to="link.to" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] text-fg-2 transition hover:bg-subtle hover:text-fg">
                         <component :is="link.icon" class="size-4 text-muted" aria-hidden="true" />
-                        <span class="flex-1">{{ t(`education.overview.quick.${link.key}`) }}</span>
+                        <span class="flex-1">{{ menuWords[link.key] ?? t(`education.overview.quick.${link.key}`) }}</span>
                         <ArrowRight class="size-3.5 text-faint rtl:rotate-180" aria-hidden="true" />
                     </RouterLink>
                     <button v-if="setup.can('manage')" type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-[13.5px] text-fg-2 transition hover:bg-subtle hover:text-fg" @click="editing = { kind: 'years', start: {} }">

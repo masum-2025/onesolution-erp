@@ -3,6 +3,9 @@
 namespace Modules\Education\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Modules\ModuleDefinition;
+use App\Platform\Modules\ModuleRegistry;
+use App\Platform\Modules\ModuleResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -57,8 +60,16 @@ class OverviewController extends Controller
 
         $presented = $sections->map(fn (Section $section) => [...$this->presenter->structure('sections', $section), 'taken' => (int) ($taken[$section->getKey()] ?? 0)])->values();
 
+        // The education family on here: Education and the modules made on it (fees, exams, courses, …), for the home's widgets and work.
+        $family = collect(app(ModuleRegistry::class)->all())
+            ->filter(fn (ModuleDefinition $module, string $key) => $key === 'education' || (in_array('education', $module->requires, true) && app(ModuleResolver::class)->isEnabled($key, $unit)))
+            // In menu order, Education first.
+            ->sortBy(fn (ModuleDefinition $module, string $key) => $key === 'education' ? -1 : (collect($module->menu)->min('order') ?? PHP_INT_MAX))
+            ->keys()->values();
+
         return response()->json(['data' => [
             'session_id' => $session?->getKey(),
+            'modules' => $family,
             'sections' => $presented,
             'stats' => [
                 'students' => $students->count(),

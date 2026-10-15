@@ -17,4 +17,12 @@ return [
     'menu_designs' => 'Document designs',
     'new_admission' => 'New admission',
     'new_student' => 'New student',
+    // Menu words of each kind of institution (manifest "sector_labels").
+    'sector' => [
+        'school' => ['menu_sections' => 'Classes and sections', 'menu_promotions' => 'Move up a class'],
+        'madrasa' => ['menu_sections' => 'Classes and sections', 'menu_promotions' => 'Move up a class'],
+        'college' => ['menu_sections' => 'Years and groups', 'menu_promotions' => 'Move up a year'],
+        'university' => ['menu_sections' => 'Semesters and sections', 'menu_promotions' => 'Move up a semester', 'menu_admissions' => 'Admissions (applications)'],
+        'coaching' => ['menu_sections' => 'Courses and batches'],
+    ],
 ];

@@ -180,6 +180,7 @@ final class ModuleRegistry
             }
 
             self::validatePermission($manifest, $item['permission'] ?? null, 'menu item', required: false);
+            self::validateSectorFit($manifest, $item, 'menu item');
 
             if (isset($item['children']) && ! array_is_list($item['children'])) {
                 throw InvalidModuleManifest::because($key, 'menu children must be a list');
@@ -192,6 +193,7 @@ final class ModuleRegistry
                     }
                 }
                 self::validatePermission($manifest, $child['permission'] ?? null, 'menu child', required: false);
+                self::validateSectorFit($manifest, $child, 'menu child');
             }
         }
 
@@ -203,6 +205,7 @@ final class ModuleRegistry
                 }
             }
             self::validatePermission($manifest, $action['permission'] ?? null, 'quick action', required: true);
+            self::validateSectorFit($manifest, $action, 'quick action');
         }
 
         foreach ($manifest['attention'] ?? [] as $class) {
@@ -349,6 +352,33 @@ final class ModuleRegistry
 
         if (! is_string($permission) || ! in_array($permission, $manifest['permissions'] ?? [], true)) {
             throw InvalidModuleManifest::because($key, "{$what} permission [".(is_string($permission) ? $permission : '?')."] is not one of the module's permissions");
+        }
+    }
+
+    /**
+     * An entry may show only in some sectors ("sectors") and take another
+     * name in some ("sector_labels": sector => translation key, e.g. a
+     * university's "Semesters and sections"). Each sector named must be one
+     * the module is made for (when it names any), so a typo cannot hide an
+     * entry everywhere.
+     *
+     * @param  array<string, mixed>  $manifest
+     * @param  array<string, mixed>  $entry
+     */
+    private static function validateSectorFit(array $manifest, array $entry, string $what): void
+    {
+        $key = $manifest['key'];
+        $known = $manifest['sectors'] ?? [];
+        $fits = fn (mixed $sector) => is_string($sector) && preg_match('/^[a-z][a-z0-9_]{1,49}$/', $sector) && ($known === [] || in_array('*', $known, true) || in_array($sector, $known, true));
+
+        if (isset($entry['sectors']) && (! is_array($entry['sectors']) || ! array_is_list($entry['sectors']) || $entry['sectors'] === [] || array_filter($entry['sectors'], fn ($sector) => ! $fits($sector)) !== [])) {
+            throw InvalidModuleManifest::because($key, "{$what} [{$entry['key']}] sectors must be a list of the module's sectors");
+        }
+
+        foreach ($entry['sector_labels'] ?? [] as $sector => $label) {
+            if (! $fits($sector) || ! is_string($label) || $label === '') {
+                throw InvalidModuleManifest::because($key, "{$what} [{$entry['key']}] sector_labels must map the module's sectors to translation keys");
+            }
         }
     }
 

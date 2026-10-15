@@ -8,6 +8,11 @@
 use Modules\Education\Dashboard\EducationWidgets;
 use Modules\Education\Portal\StudentSubjects;
 
+// Menu words of each kind of institution ("education::module.sector.university.menu_sections").
+$sectorWords = fn (string $word, array $sectors) => array_combine($sectors, array_map(fn (string $sector) => "education::module.sector.{$sector}.{$word}", $sectors));
+// A coaching centre moves no one up a class and issues no ID cards or certificates.
+$withoutCoaching = ['school', 'college', 'university', 'madrasa'];
+
 return [
     'key' => 'education',
     'name' => 'education::module.name',
@@ -172,11 +177,11 @@ return [
             'children' => [
                 ['key' => 'overview', 'label' => 'education::module.menu_overview', 'route' => '/education', 'permission' => 'education.view'],
                 ['key' => 'students', 'label' => 'education::module.menu_students', 'route' => '/education/students', 'permission' => 'education.view'],
-                ['key' => 'sections', 'label' => 'education::module.menu_sections', 'route' => '/education/sections', 'permission' => 'education.view'],
-                ['key' => 'admissions', 'label' => 'education::module.menu_admissions', 'route' => '/education/admissions', 'permission' => 'education.admit'],
+                ['key' => 'sections', 'label' => 'education::module.menu_sections', 'sector_labels' => $sectorWords('menu_sections', ['school', 'madrasa', 'college', 'university', 'coaching']), 'route' => '/education/sections', 'permission' => 'education.view'],
+                ['key' => 'admissions', 'label' => 'education::module.menu_admissions', 'sector_labels' => $sectorWords('menu_admissions', ['university']), 'route' => '/education/admissions', 'permission' => 'education.admit'],
                 // Approvers (who may not make lists) reach waiting lists from the overview.
-                ['key' => 'promotions', 'label' => 'education::module.menu_promotions', 'route' => '/education/promotions', 'permission' => 'education.promote'],
-                ['key' => 'documents', 'label' => 'education::module.menu_documents', 'route' => '/education/documents', 'permission' => 'education.issue_documents'],
+                ['key' => 'promotions', 'label' => 'education::module.menu_promotions', 'sectors' => $withoutCoaching, 'sector_labels' => $sectorWords('menu_promotions', ['school', 'madrasa', 'college', 'university']), 'route' => '/education/promotions', 'permission' => 'education.promote'],
+                ['key' => 'documents', 'label' => 'education::module.menu_documents', 'sectors' => $withoutCoaching, 'route' => '/education/documents', 'permission' => 'education.issue_documents'],
             ],
         ],
     ],

@@ -5,6 +5,9 @@
 | Business numbers never live here; they are rules.
 */
 
+use Modules\EducationExams\Dashboard\ExamWidgets;
+use Modules\EducationExams\Dashboard\UpcomingPapers;
+
 return [
     'key' => 'education_exams',
     'name' => 'education_exams::module.name',
@@ -20,6 +23,19 @@ return [
         'education_exams.publish', 'education_exams.correct',
     ],
     'rules' => [
+        [
+            'key' => 'education_exams.upcoming_days',
+            'type' => 'integer',
+            // How many days ahead the home shows the papers to be sat.
+            'schema' => ['minimum' => 1, 'maximum' => 90],
+            'default' => 14,
+            'label' => 'education_exams::rules.upcoming_days.label',
+            'description' => 'education_exams::rules.upcoming_days.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'country_specific' => false,
+            'category' => 'marks',
+            'sort_order' => 90,
+        ],
         [
             'key' => 'education_exams.default_grading_scheme',
             'type' => 'string',
@@ -199,6 +215,10 @@ return [
     ],
     'is_core' => false,
     'requires_consent' => false,
-    'dashboard' => ['widgets' => []],
+    'dashboard' => ['widgets' => [
+        ['key' => 'upcoming', 'label' => 'education_exams::dashboard.upcoming', 'type' => 'list', 'size' => 2, 'provider' => UpcomingPapers::class, 'permission' => 'education_exams.view'],
+        ['key' => 'marks_due', 'label' => 'education_exams::dashboard.marks_due', 'type' => 'stat', 'provider' => ExamWidgets::class, 'permission' => 'education_exams.view'],
+    ]],
+    'attention' => [ExamWidgets::class],
     'settings' => ['pages' => []],
 ];

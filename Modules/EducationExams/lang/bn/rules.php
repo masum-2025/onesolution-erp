@@ -2,6 +2,10 @@
 
 // Rule labels (manifest "rules"), key = part after "education_exams.".
 return [
+    'upcoming_days' => [
+        'label' => 'হোমে সামনের কত দিনের পরীক্ষা দেখাবে',
+        'description' => 'শিক্ষার হোম পাতায় সামনের এত দিনের মধ্যে যেসব পরীক্ষা, সেগুলো দেখায়।',
+    ],
     'default_grading_scheme' => [
         'label' => 'নতুন পরীক্ষার গ্রেডিং',
         'description' => 'প্রতিষ্ঠানের একটি গ্রেডিং পদ্ধতির কোড (যেমন bd_school_gpa5, bd_university_ugc, percentage)। প্রতিটি পরীক্ষা অন্যটি বেছে নিতে পারে।',

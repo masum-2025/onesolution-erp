@@ -17,4 +17,12 @@ return [
     'menu_designs' => 'ডকুমেন্টের নকশা',
     'new_admission' => 'নতুন ভর্তি',
     'new_student' => 'নতুন শিক্ষার্থী',
+    // প্রতিটি ধরনের প্রতিষ্ঠানের menu-র শব্দ (manifest-এর "sector_labels")।
+    'sector' => [
+        'school' => ['menu_sections' => 'শ্রেণি ও শাখা', 'menu_promotions' => 'পরের শ্রেণিতে তোলা'],
+        'madrasa' => ['menu_sections' => 'শ্রেণি ও শাখা', 'menu_promotions' => 'পরের শ্রেণিতে তোলা'],
+        'college' => ['menu_sections' => 'বর্ষ ও গ্রুপ', 'menu_promotions' => 'পরের বর্ষে তোলা'],
+        'university' => ['menu_sections' => 'সেমিস্টার ও সেকশন', 'menu_promotions' => 'পরের সেমিস্টারে তোলা', 'menu_admissions' => 'ভর্তি (আবেদন)'],
+        'coaching' => ['menu_sections' => 'কোর্স ও ব্যাচ'],
+    ],
 ];

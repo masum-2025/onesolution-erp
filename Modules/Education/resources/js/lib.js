@@ -309,3 +309,8 @@ export function clampElement(element, page) {
     const h = Math.max(element.type === 'line' && element.w > 0 ? 0 : minimum, Math.min(Math.round(element.h), height));
     return { ...element, w, h, x: Math.max(0, Math.min(Math.round(element.x), width - w)), y: Math.max(0, Math.min(Math.round(element.y), height - h)) };
 }
+
+/** Work of the education family only (items keyed "{module}.{what}", as the bell has them). */
+export function familyWork(items, modules) {
+    return items.filter((item) => modules.some((module) => item.key.startsWith(`${module}.`)));
+}

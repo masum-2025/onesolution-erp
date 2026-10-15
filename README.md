@@ -3034,6 +3034,28 @@ counted.
   to set things up; the steps and their links need `education.manage`. Counts stay inside the
   caller's company and units.
 
+### The education home and menus by kind of institution (UX-3)
+
+The education home (`/education`) shows, under the setup checklist and Education's numbers, the
+work waiting for this person in the education family (the bell's items of those modules) and the
+family's dashboard widgets: fees taken today, owed, waiting; coming exams, marks not handed in;
+registrations to approve, registered this session with where the window stands.
+
+- **The family**: Education and the modules on here whose manifest requires it, in menu order;
+  `GET /education/overview` returns them as `modules`. A new education module (e.g. student
+  attendance) shows on the home by declaring widgets and attention items; no change here.
+- **New widgets**: Exams `upcoming` (papers sat in the next `education_exams.upcoming_days`
+  days, default 14) and `marks_due` (sheets of exams open for marks, paper already sat, not
+  handed in); a teacher sees their own sheets only. Course registration `waiting` and `window`.
+  Bell: own marks due, sheets handed in to check (never one's own), results ready to publish,
+  registrations to approve (never one's own hand-in).
+- **Menus by sector**: a manifest's menu entries, children and quick actions may carry
+  `sectors` (shown only there) and `sector_labels` (sector => translation key). Education's
+  menu says "Classes and sections" in a school or madrasa, "Years and groups" in a college,
+  "Semesters and sections" in a university, "Courses and batches" in a coaching centre, and
+  leaves promotions and ID cards out of a coaching centre. The sector is the company's, else
+  its group's. The wording editor (LANG-1) still overrides any of these words per organization.
+
 ### A student's one page (module tabs)
 
 The student's page (`/education/students/:id`) shows what other modules know about the student
