@@ -43,7 +43,7 @@ it('knows the declared dependencies', function () {
     $registry = app(ModuleRegistry::class);
 
     expect($registry->dependenciesOf('payroll'))->toEqualCanonicalizing(['hrm', 'attendance'])
-        ->and($registry->dependenciesOf('factory_erp'))->toEqualCanonicalizing(['inventory', 'accounting'])
+        ->and($registry->dependenciesOf('factory_erp'))->toEqualCanonicalizing(['inventory', 'accounting', 'crm'])
         ->and($registry->dependenciesOf('multi_currency'))->toBe(['accounting'])
         ->and($registry->dependenciesOf('carbon_management'))->toBe(['energy_monitoring'])
         ->and($registry->dependenciesOf('external_integrations'))->toBe(['api_integration'])

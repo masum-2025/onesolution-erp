@@ -98,6 +98,25 @@ class Stock
     }
 
     /**
+     * Quantity on hand per item across the company's warehouses in use (a
+     * factory checking materials for an order). Items without stock are left out.
+     *
+     * @param  list<string>  $itemIds
+     * @return array<string, int>
+     */
+    public function onHandAll(Organization $company, array $itemIds): array
+    {
+        if ($itemIds === []) {
+            return [];
+        }
+        $warehouses = $this->inventories->query(Warehouse::class, $company)->where('is_active', true)->pluck('id');
+
+        return $this->inventories->query(Balance::class, $company)->whereIn('warehouse_id', $warehouses)->whereIn('item_id', $itemIds)
+            ->get(['item_id', 'quantity_milli'])->groupBy('item_id')
+            ->map(fn ($rows) => (int) $rows->sum('quantity_milli'))->all();
+    }
+
+    /**
      * Stock leaves (quantities positive) or comes back (negative quantities) for another module's record.
      * Lines of non-stock items are passed over (cost 0). Returns the cost per line and in all.
      *

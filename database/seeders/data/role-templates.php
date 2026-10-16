@@ -58,6 +58,18 @@ return [
         'sector' => null,
         'permissions' => ['inventory.view', 'inventory.manage'],
     ],
+    // ── Factory ──────────────────────────────────────────────────────────
+    [
+        'key' => 'merchandiser',
+        'sector' => 'factory',
+        // Buyers live in CRM; styles, bills of materials and orders in Factory ERP.
+        'permissions' => ['factory_erp.view', 'factory_erp.merchandise', 'crm.view', 'crm.manage', 'inventory.view'],
+    ],
+    [
+        'key' => 'production_manager',
+        'sector' => 'factory',
+        'permissions' => ['factory_erp.view', 'inventory.view', 'hrm.view', 'attendance.view'],
+    ],
     [
         'key' => 'cashier',
         'sector' => null,

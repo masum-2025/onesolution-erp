@@ -84,6 +84,14 @@ return [
             'name' => 'Store keeper',
             'description' => 'Keeps the item list, receives, issues, transfers and counts stock.',
         ],
+        'merchandiser' => [
+            'name' => 'Merchandiser',
+            'description' => 'Keeps buyers (CRM), styles with their bills of materials, and buyers\' orders.',
+        ],
+        'production_manager' => [
+            'name' => 'Production manager',
+            'description' => 'Follows orders, materials and the floor.',
+        ],
         'cashier' => [
             'name' => 'Cashier',
             'description' => 'Opens and closes a till shift and sells at the counter.',

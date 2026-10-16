@@ -1,0 +1,129 @@
+import { currencyDigits, decimalStringToMinor, formatDecimal, minorToDecimalString } from '@/lib/format';
+
+/**
+ * Factory helpers for the screens: typed numbers (Bangla digits understood)
+ * to integer thousandths and minor units without floats, order sheet
+ * totals, the same need rule the server uses (to preview), and own-field
+ * values to and from inputs.
+ */
+
+const BANGLA = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+
+/** "১,২৫০.৫" -> "1250.5" */
+export function cleanNumber(text) {
+    return String(text ?? '').trim().replace(/[০-৯]/g, (digit) => BANGLA[digit]).replace(/[,\s]/g, '');
+}
+
+/** "2.5" -> 2500; null when not a quantity above zero with at most 3 decimals. */
+export function quantityToMilli(text) {
+    const match = /^(\d{1,9})(?:\.(\d{1,3}))?$/.exec(cleanNumber(text));
+    if (!match) return null;
+    const milli = Number(match[1]) * 1000 + Number((match[2] ?? '').padEnd(3, '0'));
+    return milli > 0 ? milli : null;
+}
+
+/** 2500 -> "2.5" */
+export function milliToText(milli) {
+    if (milli === null || milli === undefined) return '';
+    const whole = Math.trunc(milli / 1000);
+    const rest = String(Math.abs(milli) % 1000).padStart(3, '0').replace(/0+$/, '');
+    return rest ? `${whole}.${rest}` : String(whole);
+}
+
+/** Thousandths for reading: the reader's digits and thousands separators ("১৩,৮৬৬.৮"). */
+export function formatMilli(milli) {
+    return milli === null || milli === undefined ? '—' : formatDecimal(milliToText(milli));
+}
+
+/** "5" -> 500 basis points; "2.5" -> 250; null when not 0-100 with two decimals at most. */
+export function percentToBp(text) {
+    const match = /^(\d{1,3})(?:\.(\d{1,2}))?$/.exec(cleanNumber(text));
+    if (!match) return null;
+    const bp = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));
+    return bp <= 10000 ? bp : null;
+}
+
+export function bpToPercent(bp) {
+    return bp === null || bp === undefined ? '' : String(bp / 100);
+}
+
+/** Typed money -> minor units; null when not an amount at or above zero. */
+export function amountToMinor(text, currency) {
+    const clean = cleanNumber(text);
+    if (clean === '' || !/^\d+(\.\d+)?$/.test(clean)) return null;
+    return decimalStringToMinor(clean, currencyDigits(currency));
+}
+
+export function minorToText(minor, currency) {
+    return minor === null || minor === undefined ? '' : minorToDecimalString(minor, currencyDigits(currency));
+}
+
+/** Pieces as whole numbers (empty is 0); null when not a whole number. */
+export function piecesOf(text) {
+    const clean = cleanNumber(text);
+    if (clean === '') return 0;
+    return /^\d{1,8}$/.test(clean) ? Number(clean) : null;
+}
+
+/**
+ * An order sheet's totals: per size, per colour and in all.
+ * cells: {"size|color": pieces}
+ */
+export function sheetTotals(sizes, colors, cells) {
+    const bySize = Object.fromEntries(sizes.map((size) => [size, colors.reduce((sum, color) => sum + (cells[`${size}|${color}`] ?? 0), 0)]));
+    const byColor = Object.fromEntries(colors.map((color) => [color, sizes.reduce((sum, size) => sum + (cells[`${size}|${color}`] ?? 0), 0)]));
+    return { bySize, byColor, total: Object.values(bySize).reduce((sum, value) => sum + value, 0) };
+}
+
+/** The server's rule: ceil(pieces × consumption × (10000 + wastage) / (per × 10000)), per = 12 for a dozen. */
+export function need(pieces, consumptionMilli, wastageBp, basis) {
+    const bottom = (basis === 'dozen' ? 12 : 1) * 10000;
+    return Math.floor((pieces * consumptionMilli * (10000 + wastageBp) + bottom - 1) / bottom);
+}
+
+/** An own field's stored value as the text of its input. */
+export function fieldToInput(field, value, currency) {
+    if (value === null || value === undefined) return '';
+    if (field.type === 'money') return minorToText(value, currency);
+    if (field.type === 'yes_no') return value ? 'yes' : 'no';
+    return String(value);
+}
+
+/** Inputs of own fields -> what the API takes ({key: value}); money as minor units; empty clears. */
+export function fieldsToApi(fields, inputs, currency) {
+    const values = {};
+    const errors = {};
+    for (const field of fields) {
+        if (!(field.key in inputs)) continue;
+        const raw = inputs[field.key];
+        const text = typeof raw === 'string' ? raw.trim() : raw;
+        if (text === '' || text === null || text === undefined) {
+            values[field.key] = null;
+        } else if (field.type === 'money') {
+            const minor = amountToMinor(text, currency);
+            if (minor === null) errors[field.key] = true;
+            else values[field.key] = minor;
+        } else if (field.type === 'yes_no') {
+            values[field.key] = text === 'yes' || text === true;
+        } else if (field.type === 'number') {
+            values[field.key] = cleanNumber(text);
+        } else {
+            values[field.key] = text;
+        }
+    }
+    return { values, errors };
+}
+
+/** An own field's value as text to read (choices by their label). */
+export function fieldText(field, value, money) {
+    if (value === null || value === undefined || value === '') return '—';
+    if (field.type === 'money') return money(value);
+    if (field.type === 'choice') return field.options.find((option) => option.value === value)?.label ?? value;
+    if (field.type === 'yes_no') return value ? '✓' : '✗';
+    return String(value);
+}
+
+/** Order status -> badge tone. */
+export function orderTone(status) {
+    return { draft: 'neutral', confirmed: 'brand', in_production: 'warn', shipped: 'ok', cancelled: 'bad' }[status] ?? 'neutral';
+}

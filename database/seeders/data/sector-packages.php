@@ -86,12 +86,12 @@ return [
     ],
     [
         'key' => 'factory',
-        'modules' => ['hrm', 'attendance', 'payroll', 'inventory', 'factory_erp', 'accounting'],
+        'modules' => ['hrm', 'attendance', 'payroll', 'inventory', 'crm', 'factory_erp', 'accounting'],
         'rules' => [
             ['key' => 'attendance.late_grace_minutes', 'value' => 5],
             ['key' => 'accounting.chart_template', 'value' => 'factory'],
         ],
-        'role_templates' => ['administrator', 'manager', 'hr_officer', 'accountant', 'finance_approver', 'staff'],
+        'role_templates' => ['administrator', 'manager', 'hr_officer', 'accountant', 'finance_approver', 'staff', 'merchandiser', 'production_manager', 'store_keeper'],
     ],
     [
         'key' => 'retail',

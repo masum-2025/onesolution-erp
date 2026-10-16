@@ -2781,6 +2781,46 @@ difference to review) and a shift open today. Logins `shop.owner@`, `store@`, `c
   number prefixes are data and rules. CRM customers and loyalty, gift cards, card terminals and
   bKash APIs are later steps behind the same payment methods.
 
+## Factory ERP for garments (FAC-1: buyers, styles, BOM, orders)
+
+Module `factory_erp` (factory sector, every plan) now **requires Inventory, Accounting and CRM**
+(CRM is in the factory sector package). It reads them only through their public services:
+`Crm\Services\Organizations` (new: organization contacts with a tag; search, many, has, add) and
+`Inventory\Services\Stock` (`items`, `units`, and the new `onHandAll` across the company's
+warehouses in use).
+
+- **Buyers** are CRM organization contacts tagged `buyer`, added from the factory screens too
+  (`GET/POST …/factory/buyers`); calls, meetings and deals with them stay in CRM.
+- **Styles** (`fac_styles`): buyer, style number (unique per company), name, product, sizes and
+  colours in order (one an order still uses cannot be taken out), consumption basis fixed from the
+  rule when made. **BOM** (`fac_bom_lines`, `PUT …/styles/{id}/bom`, replaced as a whole): Inventory
+  item, use per dozen or piece in thousandths of its unit, wastage in basis points, maybe one size
+  and/or colour.
+- **Orders** (`fac_orders` + `fac_order_lines`): one style, buyer's PO number, ship date, currency
+  and price per piece (minor units), pieces per size and colour; numbered `FO-2026-00001`
+  (`fac_sequences`); `op_id` on making. Draft and confirmed orders change (buyers amend); then
+  `confirm` (needs pieces) → `start` (in production) → `ship`, or `cancel` with a reason from draft
+  or confirmed. Each step is its own route.
+- **Materials needed** (`GET …/orders/{id}/requirements`): per BOM item,
+  `ceil(pieces × use × (10000 + wastage) / (per × 10000))` (per = 12 for a dozen), integers only,
+  against what all the company's stores hold, and what is short; the screen downloads it as CSV.
+- **Own fields** (`fac_fields`, values in `extra` of styles and orders; `…/factory/fields`,
+  `factory_erp.manage` at the company): text, long text, number, money, date, choice, yes/no; key
+  and kind fixed, switched off rather than removed; required ones asked when making. Settings page
+  "Own fields" (module settings) beside the rules.
+- **Dashboard**: pieces in open orders (also on the overview), orders shipping within
+  `ship_warning_days`; bell: confirmed orders shipping soon not in production yet.
+- Permissions `factory_erp.view|merchandise|manage`; role templates Merchandiser and Production
+  manager (factory). Rules: `consumption_basis` (dozen), `default_wastage_bp` (500),
+  `order_currency` (USD), `order_number_prefix` (FO), `ship_warning_days` (30).
+- After deploy: migrate, `rules:sync`, `access:sync`, `packaging:sync`.
+
+### Future expansion (Factory ERP)
+
+- FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,
+  finished goods in, WIP to Accounting), FAC-3 SMV and efficiency, QC, piece rates to Payroll,
+  FAC-4 shipments. Another kind of factory changes only rules, own fields and data.
+
 ## CRM module (business module 7: CRM-1 backend, CRM-2 screens, CRM-3 POS and demo)
 
 Works alone (`requires: []`); uses Inventory items, Accounting VAT codes and invoices, and POS sales

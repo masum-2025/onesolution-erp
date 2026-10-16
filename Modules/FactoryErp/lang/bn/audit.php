@@ -1,0 +1,16 @@
+<?php
+
+// অডিট লগে কারখানার কাজের নাম (factory_erp.*)।
+return [
+    'style_created' => 'Style তৈরি',
+    'style_updated' => 'Style বদল',
+    'bom_saved' => 'উপকরণ-তালিকা রাখা হয়েছে',
+    'order_created' => 'অর্ডার তৈরি',
+    'order_updated' => 'অর্ডার বদল',
+    'order_confirmed' => 'অর্ডার নিশ্চিত',
+    'order_in_production' => 'অর্ডার উৎপাদনে',
+    'order_shipped' => 'অর্ডার শিপ হয়েছে',
+    'order_cancelled' => 'অর্ডার বাতিল',
+    'field_created' => 'নিজের ঘর তৈরি',
+    'field_updated' => 'নিজের ঘর বদল',
+];

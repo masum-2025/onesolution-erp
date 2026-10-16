@@ -1,8 +1,8 @@
 <?php
 
-// Permission labels (manifest "permissions"), key = part after "factory_erp.".
-
+// অনুমতির নাম, key = "factory_erp."-এর পরের অংশ।
 return [
-    'view' => 'কারখানা ব্যবস্থাপনা দেখা',
-    'manage' => 'কারখানা ব্যবস্থাপনা পরিচালনা',
+    'view' => 'অর্ডার, style আর কী লাগবে তা দেখা',
+    'merchandise' => 'Style, উপকরণ-তালিকা আর buyer-এর অর্ডার তৈরি ও বদল',
+    'manage' => 'কারখানা সাজানো: style আর অর্ডারে নিজের ঘর',
 ];
