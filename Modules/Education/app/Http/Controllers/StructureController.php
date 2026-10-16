@@ -10,6 +10,7 @@ use Modules\Education\Exceptions\EducationException;
 use Modules\Education\Http\Controllers\Concerns\FindsEducation;
 use Modules\Education\Http\EducationPresenter;
 use Modules\Education\Http\Requests\StructureRequest;
+use Modules\Education\Models\Section;
 use Modules\Education\Services\Education;
 use Modules\Education\Services\Structure;
 
@@ -31,7 +32,7 @@ class StructureController extends Controller
         [$unit, $company] = $this->workplace($organization);
         Structure::definition($kind);
         Gate::authorize('education.view', $unit);
-        $filters = $request->validate(array_fill_keys(['kind', 'program_id', 'academic_year_id', 'session_id', 'level_id', 'unit_id', 'curriculum_id', 'subject_id', 'status', 'is_active', 'parent_id'], ['nullable', 'string', 'max:40']));
+        $filters = $request->validate(array_fill_keys(['kind', 'program_id', 'academic_year_id', 'session_id', 'level_id', 'unit_id', 'curriculum_id', 'subject_id', 'section_id', 'teacher_id', 'status', 'is_active', 'parent_id'], ['nullable', 'string', 'max:40']));
 
         return response()->json(['data' => $this->structure->list($company, $kind, $filters, $this->unitIds($unit))->map(fn ($record) => $this->presenter->structure($kind, $record))->values()]);
     }
@@ -44,6 +45,10 @@ class StructureController extends Controller
         $data = $request->validated();
         if ($kind === 'sections') {
             $data['unit_id'] = $this->unitFor($unit, $data['unit_id']);
+        }
+        // A subject teacher only for a section at this campus or below.
+        if ($kind === 'subject_teachers') {
+            $this->record($unit, $company, 'sections', $data['section_id']);
         }
         $record = $this->structure->save($company, $kind, null, null, $data, $request->user());
 
@@ -75,7 +80,8 @@ class StructureController extends Controller
         $definition = Structure::definition($kind);
         $record = $this->education->query($definition['model'], $company)->whereKey($id)->first();
         // A section of another campus looks unknown.
-        if ($record === null || ($kind === 'sections' && ! in_array($record->unit_id, $this->unitIds($unit), true))) {
+        if ($record === null || ($kind === 'sections' && ! in_array($record->unit_id, $this->unitIds($unit), true))
+            || ($kind === 'subject_teachers' && ! $this->education->query(Section::class, $company)->whereKey($record->section_id)->whereIn('unit_id', $this->unitIds($unit))->exists())) {
             throw EducationException::notFound('record');
         }
 

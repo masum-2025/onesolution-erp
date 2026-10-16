@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Modules\Education\Directory\AcademicDirectory;
 use Modules\Education\Exceptions\EducationException;
 use Modules\Education\Http\Controllers\Concerns\FindsEducation;
 use Modules\Education\Http\EducationPresenter;
 use Modules\Education\Models\Enrollment;
 use Modules\Education\Models\Section;
 use Modules\Education\Models\Student;
+use Modules\Education\Models\SubjectTeacher;
 use Modules\Education\Services\Access;
 use Modules\Education\Services\Education;
 use Modules\Education\Services\Enrollments;
@@ -43,8 +45,23 @@ class EnrollmentController extends Controller
             ->sortBy(fn (Enrollment $enrollment) => $enrollment->roll_no ?? PHP_INT_MAX)->values();
         $students = $this->education->query(Student::class, $company)->whereKey($enrollments->pluck('student_id'))->get()->keyBy('id');
 
+        // Its subjects by the curriculum in force (in that order), and who teaches each.
+        $directory = app(AcademicDirectory::class);
+        $subjects = collect($directory->curriculum($company, $found->level_id, $found->session_id))
+            ->filter(fn (array $item) => $item['stream_id'] === null || $item['stream_id'] === $found->stream_id)->unique('subject_id');
+        $names = $directory->subjects($company, $subjects->pluck('subject_id')->all());
+        $teachers = $this->education->query(SubjectTeacher::class, $company)->where('section_id', $found->getKey())->get()->keyBy('subject_id');
+        $teacherNames = $directory->teacherNames($company, $teachers->pluck('teacher_id')->unique()->values()->all());
+
         return response()->json(['data' => [
             'section' => $this->presenter->structure('sections', $found),
+            'subjects' => $subjects->filter(fn (array $item) => isset($names[$item['subject_id']]))->map(fn (array $item) => [
+                'subject_id' => $item['subject_id'], 'code' => $names[$item['subject_id']]['code'], 'name' => $names[$item['subject_id']]['name'], 'kind' => $item['kind'],
+                'assignment' => isset($teachers[$item['subject_id']]) ? [
+                    ...$this->presenter->structure('subject_teachers', $teachers[$item['subject_id']]),
+                    'teacher_name' => $teacherNames[$teachers[$item['subject_id']]->teacher_id] ?? null,
+                ] : null,
+            ])->values(),
             'taken' => $enrollments->count(),
             'students' => $enrollments->map(fn (Enrollment $enrollment) => [
                 ...$this->presenter->enrollment($enrollment),

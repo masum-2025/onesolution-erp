@@ -68,11 +68,16 @@ class StructureRequest extends StrictFormRequest
                 'kind' => ['sometimes', 'in:'.implode(',', CurriculumItem::KINDS)], 'stream_id' => $ulid(), 'sort_order' => ['sometimes', 'integer', 'min:0', 'max:1000'],
             ],
             'prerequisites' => ['subject_id' => ['required', 'string', 'size:26'], 'requires_subject_id' => ['required', 'string', 'size:26']],
+            // The section and subject stay what they were made for; another pair is another row.
+            'subject_teachers' => [
+                'section_id' => [$creating ? 'required' : 'prohibited', 'string', 'size:26'], 'subject_id' => [$creating ? 'required' : 'prohibited', 'string', 'size:26'],
+                'teacher_id' => ['required', 'string', 'size:26'],
+            ],
             default => [],
         };
 
         // Most kinds are switched off instead of removed.
-        if (! $creating && ! in_array($this->route('kind'), ['years', 'sessions', 'curricula', 'curriculum_items', 'prerequisites'], true)) {
+        if (! $creating && ! in_array($this->route('kind'), ['years', 'sessions', 'curricula', 'curriculum_items', 'prerequisites', 'subject_teachers'], true)) {
             $rules['is_active'] = ['sometimes', 'boolean'];
         }
         // Rows with a history carry the version they were read at.

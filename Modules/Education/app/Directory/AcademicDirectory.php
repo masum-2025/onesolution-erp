@@ -18,6 +18,7 @@ use Modules\Education\Models\Session;
 use Modules\Education\Models\Student;
 use Modules\Education\Models\StudentGuardian;
 use Modules\Education\Models\Subject;
+use Modules\Education\Models\SubjectTeacher;
 use Modules\Education\Services\Access;
 use Modules\Education\Services\Education;
 use Modules\Education\Services\Teachers;
@@ -373,6 +374,33 @@ class AcademicDirectory
     public function classTeacherSections(Organization $company, string $employeeId, array $unitIds): array
     {
         return $this->education->query(Section::class, $company)->where('class_teacher_id', $employeeId)->whereIn('unit_id', $unitIds)->pluck('id')->map(fn ($id) => (string) $id)->all();
+    }
+
+    /**
+     * Who teaches which subject in these sections.
+     *
+     * @param  list<string>  $sectionIds
+     * @return list<array{section_id: string, subject_id: string, teacher_id: string}>
+     */
+    public function subjectTeachers(Organization $company, array $sectionIds): array
+    {
+        return $sectionIds === [] ? [] : $this->education->query(SubjectTeacher::class, $company)->whereIn('section_id', $sectionIds)->get()
+            ->map(fn (SubjectTeacher $row) => ['section_id' => $row->section_id, 'subject_id' => $row->subject_id, 'teacher_id' => $row->teacher_id])
+            ->values()->all();
+    }
+
+    /**
+     * What this HRM employee teaches at these campuses: each section and subject.
+     *
+     * @param  list<string>  $unitIds
+     * @return list<array{section_id: string, subject_id: string}>
+     */
+    public function teaching(Organization $company, string $employeeId, array $unitIds): array
+    {
+        return $this->education->query(SubjectTeacher::class, $company)->where('teacher_id', $employeeId)
+            ->whereIn('section_id', $this->education->query(Section::class, $company)->whereIn('unit_id', $unitIds)->select('id'))->get()
+            ->map(fn (SubjectTeacher $row) => ['section_id' => $row->section_id, 'subject_id' => $row->subject_id])
+            ->values()->all();
     }
 
     /**

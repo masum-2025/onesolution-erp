@@ -3100,6 +3100,23 @@ opens the tab. `?tab=fees` opens a tab directly.
 - **Course registration**: `GET /course-registration/registrations?student_id=` lists one
   student's registrations; the session is then optional.
 
+### Subject teachers (EDU-5a)
+
+Who teaches which subject in a section ("Class 6 A, Maths: Mr Rahim"), one teacher (an HRM
+employee) per subject and section. Set on the section's page, where its subjects (the curriculum
+in force for its class and session, by stream) are listed with their teachers; people with
+`education.manage` pick, change (with `base_version`) or take out a teacher there.
+
+- API: the structure kind `subject_teachers` (`GET/POST /education/structure/subject_teachers`,
+  `PATCH/DELETE …/{id}`; filters `section_id`, `teacher_id`). The section must be at the campus
+  in the address or below; section and subject are fixed once made; the teacher must be an HRM
+  employee of the institution. `GET /education/sections/{id}/students` now also returns
+  `subjects`, each with its `assignment` (and `teacher_name`).
+- Access: with `education.teacher_scope` "own", a teacher sees the sections they are class
+  teacher of **or teach a subject in**.
+- Other modules read it through `AcademicDirectory::subjectTeachers()` and `teaching()` (class
+  lectures and teacher feedback are next).
+
 ### Future expansion (Education)
 
 - Fees, exams, attendance; staff ID cards (HRM); a server PDF to send by email.

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Modules\Education\Models\Enrollment;
 use Modules\Education\Models\Section;
+use Modules\Education\Models\SubjectTeacher;
 
 /**
  * Which students someone may see at a unit. People who admit, edit or set
@@ -48,7 +49,11 @@ class Access
             return [];
         }
 
-        return $this->education->query(Section::class, $company)->where('class_teacher_id', $employee)
+        // Their sections: where they are the class teacher, or teach a subject.
+        $taught = $this->education->query(SubjectTeacher::class, $company)->where('teacher_id', $employee)->select('section_id');
+
+        return $this->education->query(Section::class, $company)
+            ->where(fn ($query) => $query->where('class_teacher_id', $employee)->orWhereIn('id', $taught))
             ->whereIn('unit_id', $this->education->subtreeIds($unit))->pluck('id')->all();
     }
 

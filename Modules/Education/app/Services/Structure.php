@@ -25,6 +25,7 @@ use Modules\Education\Models\Program;
 use Modules\Education\Models\Section;
 use Modules\Education\Models\Session;
 use Modules\Education\Models\Subject;
+use Modules\Education\Models\SubjectTeacher;
 
 /**
  * The institution's structure, the same way for every kind: faculties and
@@ -57,13 +58,15 @@ class Structure
         'curricula' => ['model' => Curriculum::class, 'fields' => ['program_id', 'name', 'effective_from_year', 'status'], 'texts' => [], 'refs' => ['program_id' => Program::class], 'unique' => []],
         'curriculum_items' => ['model' => CurriculumItem::class, 'fields' => ['curriculum_id', 'level_id', 'subject_id', 'kind', 'stream_id', 'sort_order'], 'texts' => [], 'refs' => ['curriculum_id' => Curriculum::class, 'level_id' => Level::class, 'subject_id' => Subject::class, 'stream_id' => ListItem::class], 'unique' => [], 'removable' => true],
         'prerequisites' => ['model' => Prerequisite::class, 'fields' => ['subject_id', 'requires_subject_id'], 'texts' => [], 'refs' => ['subject_id' => Subject::class, 'requires_subject_id' => Subject::class], 'unique' => [], 'removable' => true],
+        // Who teaches a subject in a section (an HRM employee); taken out when no longer taught.
+        'subject_teachers' => ['model' => SubjectTeacher::class, 'fields' => ['section_id', 'subject_id', 'teacher_id'], 'texts' => [], 'refs' => ['section_id' => Section::class, 'subject_id' => Subject::class], 'unique' => [], 'removable' => true],
     ];
 
     /** Which list kind a section's or item's reference must be. */
     private const LIST_KINDS = ['stream_id' => 'stream', 'shift_id' => 'shift', 'medium_id' => 'medium'];
 
     /** Filters a listing may use (exact match on these columns). */
-    private const FILTERS = ['kind', 'program_id', 'academic_year_id', 'session_id', 'level_id', 'unit_id', 'curriculum_id', 'subject_id', 'status', 'is_active', 'parent_id'];
+    private const FILTERS = ['kind', 'program_id', 'academic_year_id', 'session_id', 'level_id', 'unit_id', 'curriculum_id', 'subject_id', 'section_id', 'teacher_id', 'status', 'is_active', 'parent_id'];
 
     public function __construct(
         private Education $education,
@@ -94,6 +97,10 @@ class Structure
         }
         if ($kind === 'sections' && $unitIds !== null) {
             $query->whereIn('unit_id', $unitIds);
+        }
+        // Subject teachers of the sections at these campuses only.
+        if ($kind === 'subject_teachers' && $unitIds !== null) {
+            $query->whereIn('section_id', $this->education->query(Section::class, $company)->whereIn('unit_id', $unitIds)->select('id'));
         }
 
         return $this->ordered($query, $kind)->limit(2000)->get();
@@ -199,6 +206,7 @@ class Structure
             'batches', 'curricula' => [['program_id', 'name']],
             'curriculum_items' => [['curriculum_id', 'level_id', 'subject_id', 'stream_id']],
             'prerequisites' => [['subject_id', 'requires_subject_id']],
+            'subject_teachers' => [['section_id', 'subject_id']],
             default => array_map(fn (string $field) => [$field], $definition['unique']),
         };
 
@@ -234,6 +242,7 @@ class Structure
             'curriculum_items' => $find(Level::class, $record->level_id)?->program_id !== $find(Curriculum::class, $record->curriculum_id)?->program_id
                 ? throw EducationException::mismatch('level_id') : null,
             'prerequisites' => $this->checkPrerequisite($company, $record),
+            'subject_teachers' => $this->checkSubjectTeacher($company, $record),
             'lists' => $record->exists && $record->isDirty('kind') ? throw EducationException::inUse('list') : null,
             default => null,
         };
@@ -280,6 +289,13 @@ class Structure
         }
         if ($section->class_teacher_id !== null && $section->isDirty('class_teacher_id') && ! app(Teachers::class)->exists($company, $section->class_teacher_id)) {
             throw ValidationException::withMessages(['class_teacher_id' => __('education::education.validation.reference')]);
+        }
+    }
+
+    private function checkSubjectTeacher(Organization $company, SubjectTeacher $assignment): void
+    {
+        if ($assignment->isDirty('teacher_id') && ! app(Teachers::class)->exists($company, $assignment->teacher_id)) {
+            throw ValidationException::withMessages(['teacher_id' => __('education::education.validation.reference')]);
         }
     }
 

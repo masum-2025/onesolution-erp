@@ -859,5 +859,20 @@
     },
     "home": {
         "work_text": "Waiting for you in education, fees, exams and courses."
+    },
+    "subject_teachers": {
+        "title": "Subjects and teachers",
+        "count": "{done} of {total} have a teacher",
+        "empty_title": "No subjects for this class yet",
+        "empty_text": "Subjects come from the curriculum in force for this class and session. Add them on the structure page.",
+        "hrm_off": "Turn on Human resources to pick teachers: teachers are its employees.",
+        "nobody": "No teacher yet",
+        "pick_for": "Teacher for {subject}",
+        "saved": "Teacher saved.",
+        "conflict": "Someone changed this a moment ago. The list is fresh now; pick again.",
+        "kinds": {
+            "elective": "Elective",
+            "optional": "Optional"
+        }
     }
 }

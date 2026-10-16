@@ -21,10 +21,11 @@ import PlaceDialog from '../components/PlaceDialog.vue';
 import StructureDialog from '../components/StructureDialog.vue';
 import IssueDialog from '../components/IssueDialog.vue';
 import StudentAvatar from '../components/StudentAvatar.vue';
+import SubjectTeachers from '../components/SubjectTeachers.vue';
 
 /**
  * One section's students in roll order (those without a roll at the end),
- * how full it is and who teaches it. Rolls are numbered by the
+ * how full it is, who teaches it and each subject. Rolls are numbered by the
  * institution's rule; students are moved one by one.
  */
 const org = currentOrganization();
@@ -105,6 +106,8 @@ const listNames = computed(() => (section.value ? ['shift', 'medium', 'stream'].
                     <span v-if="!listNames.length && section.is_active" class="text-[12.5px] text-faint">{{ setup.sectionWord(programId, t('education.word.section')) }}</span>
                 </div>
             </div>
+
+            <SubjectTeachers :section-id="section.id" :subjects="data.subjects ?? []" :education="education" @changed="roster.reload()" />
 
             <section class="card">
                 <header class="border-b border-line px-5 py-3 text-[13.5px] font-semibold text-fg">{{ t('education.section.roster') }}</header>
