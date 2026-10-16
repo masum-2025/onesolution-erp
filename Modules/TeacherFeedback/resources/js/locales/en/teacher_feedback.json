@@ -1,0 +1,108 @@
+{
+    "rounds": {
+        "title": "Teacher feedback",
+        "text": "Rounds in which students or guardians rate the teachers who teach them, and what they found.",
+        "new": "New round",
+        "back": "Rounds",
+        "privacy": "Ratings are kept without names. A teacher's averages and comments show only once {count} people rated them.",
+        "empty_title": "No feedback rounds yet",
+        "empty_text": "Open a round for a term: families rate each subject teacher in the portal, and you see the averages here.",
+        "dates": "{from} to {to}",
+        "questions_one": "{count} question",
+        "questions_other": "{count} questions",
+        "responses_one": "{count} rating",
+        "responses_other": "{count} ratings",
+        "waiting_one": "{count} comment to decide",
+        "waiting_other": "{count} comments to decide",
+        "results": "See results",
+        "edit": "Change",
+        "open": "Open round",
+        "open_title": "Open \"{name}\"?",
+        "open_text": "{who} can rate from its first day. Once open, the questions and name stay as they are; only the last day can move.",
+        "opened": "Round opened.",
+        "close": "Close round",
+        "close_title": "Close \"{name}\"?",
+        "close_text": "Nobody can rate after this. The results stay.",
+        "closed": "Round closed."
+    },
+    "who": {
+        "students": "Students",
+        "guardians": "Guardians",
+        "both": "Students and guardians"
+    },
+    "statuses": {
+        "draft": "Draft",
+        "open": "Open",
+        "closed": "Closed"
+    },
+    "comment_statuses": {
+        "pending": "To decide",
+        "approved": "Approved",
+        "hidden": "Hidden"
+    },
+    "dialog": {
+        "title": "New feedback round",
+        "edit_title": "Change round",
+        "text": "Saved as a draft. Open it when families should start rating.",
+        "open_text": "This round is open: only its last day can move.",
+        "save": "Save",
+        "saved": "Round saved."
+    },
+    "fields": {
+        "name": "Name",
+        "name_hint": "e.g. Term 1 feedback",
+        "session": "Session",
+        "opens_on": "First day",
+        "closes_on": "Last day",
+        "dates": "The last day must be on or after the first day.",
+        "questions": "Questions (1 to 5 stars each)",
+        "in_bn": "In Bangla",
+        "in_en": "In English",
+        "question_bn": "Question {number} in Bangla",
+        "question_en": "Question {number} in English",
+        "add_question": "Add a question",
+        "remove_question": "Remove question {number}"
+    },
+    "results": {
+        "responses_one": "{count} rating",
+        "responses_other": "{count} ratings",
+        "not_enough": "{count} rated so far. Results show from {min} ratings, so nobody can be picked out.",
+        "comments": "Comments",
+        "approve": "Approve",
+        "hide": "Hide",
+        "approved": "Comment approved: the teacher sees it now.",
+        "hidden": "Comment hidden.",
+        "empty_title": "No ratings yet",
+        "empty_text": "Ratings show here as families send them in the portal.",
+        "not_found": "That round does not exist here."
+    },
+    "mine": {
+        "title": "My feedback",
+        "text": "What students or guardians said about your teaching, round by round.",
+        "privacy": "You never see who rated you. Averages and comments show once {count} people rated you for a subject.",
+        "off": "Not shown here",
+        "not_teacher": "You are not a teacher here",
+        "not_teacher_text": "Your login is not linked to a teacher (an employee in Human resources). Ask the office.",
+        "empty_title": "No feedback yet",
+        "empty_text": "When a round opens and families rate you, your results show here."
+    },
+    "portal": {
+        "title": "Rate the teachers",
+        "text": "Teachers of {name}, in the rounds open now.",
+        "anonymous": "Your rating is kept without your name. Teachers see only averages from many people.",
+        "until": "Open until {date}",
+        "rate": "Rate",
+        "done": "Rated",
+        "comment": "Comment",
+        "comment_hint": "What goes well, what could be better. Do not write names or phone numbers.",
+        "send": "Send rating",
+        "thanks": "Thank you. Your rating is kept without your name.",
+        "no_student": "Nothing to rate",
+        "none_title": "No round is open",
+        "none_text": "When the school opens a feedback round, the teachers to rate show here."
+    },
+    "stars_one": "{count} star",
+    "stars_other": "{count} stars",
+    "cancel": "Cancel",
+    "conflict": "Someone changed this round a moment ago. It is fresh now; try again."
+}

@@ -24,5 +24,6 @@
     "CourseRegistration": true,
     "EducationFees": true,
     "EducationExams": true,
-    "EducationLectures": true
+    "EducationLectures": true,
+    "TeacherFeedback": true
 }

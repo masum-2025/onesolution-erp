@@ -1,0 +1,11 @@
+{
+    "name": "TeacherFeedback",
+    "alias": "teacher_feedback",
+    "description": "Teacher feedback: students or guardians rate the teachers who teach them, anonymously, in rounds.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\TeacherFeedback\\Providers\\TeacherFeedbackServiceProvider"
+    ],
+    "files": []
+}

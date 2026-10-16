@@ -3173,6 +3173,48 @@ Rules: `approval_required` (false), `max_file_kb` (10240), `max_files` (5), `vid
   kind of institution gets lectures by naming the module in its sector package. No code change.
 - Later: lectures linked to curriculum topics, students marking a lecture read, offline reading.
 
+## Teacher feedback module (TFB-1)
+
+Module `teacher_feedback` (`Modules/TeacherFeedback`, requires Education; rating needs the client
+portal on too; school, college, university, madrasa, coaching; every plan). Students or guardians
+rate the teachers who teach them, anonymously, in rounds the institution opens.
+
+- **Rounds**: made as a draft at a campus for a session (name, first and last day, questions in
+  Bangla and English; the five ready-made ones to start with), opened (who rates is taken from
+  the rule then and kept), closed. Once open only the last day can move. `teacher_feedback.manage`.
+- **Rating (portal)**: `GET/POST /api/portal/teacher-feedback` (`record` = a guardian's linked
+  child). Open rounds of the student's section; one card per subject teacher (EDU-5a); stars
+  (1–5) for every question and maybe a comment; once per round, teacher and subject (a resent tap
+  with the same `op_id` is answered as done); only inside the dates; students or guardians as the
+  round says. Rate-limited.
+- **Anonymity**: `tfb_raters` keeps only a keyed hash (HMAC of round, student and login with the
+  app key) to stop a second rating. `tfb_answers` and `tfb_comments` carry no rater, no time and
+  ids whose time part is fixed with fresh random bits (`HasUntimedUlids`), written in random
+  order. Averages (hundredths, no floats) and comments show only from
+  `teacher_feedback.min_responses` ratings (default 5). Ratings are never audit-logged; round
+  changes and comment decisions are.
+- **Results**: `teacher_feedback.view_results` sees every teacher; who manages approves or hides
+  comments (pending ones in the bell). A teacher (`view_own`) sees their own averages and approved
+  comments at `/teacher-feedback/mine` when `teachers_see_own` is on.
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/organizations/{id}/teacher-feedback/setup | can, rules, sessions, ready-made questions |
+| GET/POST | …/teacher-feedback/rounds | list (with ratings and comments waiting), make |
+| GET/PATCH | …/teacher-feedback/rounds/{round} | results (rows, questions, names), change (`base_version`) |
+| POST | …/rounds/{round}/open, /close | `base_version` |
+| POST | …/rounds/{round}/comments/{comment}/approve\|hide | who manages |
+| GET | …/teacher-feedback/mine | a teacher's own results |
+
+Rules: `who_rates` (students; the school and madrasa packages set guardians), `min_responses` (5,
+at least 3), `allow_comments` (true), `teachers_see_own` (true).
+
+### Future expansion (teacher feedback)
+
+- A new sector or country changes only rules and wording (who rates, the threshold, questions per
+  round); no code change. Later: feedback on a course offering in universities, trends across
+  rounds, telling families when a round opens.
+
 ## Course registration module (EDU-4a backend)
 
 Code: `Modules/CourseRegistration` (module `course_registration`, requires `education`, sectors

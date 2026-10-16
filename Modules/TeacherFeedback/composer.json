@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/teacher-feedback",
+    "description": "Teacher feedback: students or guardians rate the teachers who teach them, anonymously, in rounds.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\TeacherFeedback\\": "app/"
+        }
+    }
+}

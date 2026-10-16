@@ -35,6 +35,8 @@ return [
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
+            // Children are young: their guardians rate the teachers.
+            ['key' => 'teacher_feedback.who_rates', 'value' => 'guardians'],
         ],
         'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
     ],
@@ -69,6 +71,7 @@ return [
         'rules' => [
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
+            ['key' => 'teacher_feedback.who_rates', 'value' => 'guardians'],
         ],
         'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
     ],

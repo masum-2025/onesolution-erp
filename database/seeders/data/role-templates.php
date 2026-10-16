@@ -89,14 +89,14 @@ return [
             'course_registration.manage', 'course_registration.approve', 'course_registration.record_outcome',
             'education_fees.configure', 'education_fees.approve',
             'education_exams.manage', 'education_exams.moderate', 'education_exams.publish', 'education_exams.correct',
-            'education_lectures.manage',
+            'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results',
         ],
     ],
     [
         'key' => 'teacher',
         'sector' => 'school',
         // Students of their own sections only (rule education.teacher_scope).
-        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post'],
+        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post', 'teacher_feedback.view_own'],
     ],
     [
         'key' => 'office_staff',
@@ -113,7 +113,7 @@ return [
             'education.view_sensitive', 'education.promote', 'education.issue_documents', 'crm.manage',
             'course_registration.manage', 'course_registration.register', 'course_registration.approve', 'course_registration.record_outcome',
             'education_fees.configure', 'education_fees.bill', 'education_fees.concede',
-            'education_exams.manage', 'education_exams.publish', 'education_lectures.manage',
+            'education_exams.manage', 'education_exams.publish', 'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results',
         ],
     ],
 
