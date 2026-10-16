@@ -22,8 +22,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET brand-assets/{partner}/{kind}', 'GET client-brand-assets/{organization}/logo', 'GET manifest.webmanifest',
     // Signed, expiring download links. (Laravel's generic storage/{path} route is off, Phase 11.)
     'GET exports/{export}/download', 'GET audit-exports/{export}/download',
-    // Module files (files/…): the HRM employee documents.
+    // Module files (files/…): the HRM employee documents; class lecture files (signed, ten minutes).
     'GET files/hrm/{organization}/{document}',
+    'GET files/lectures/{organization}/{file}',
     // A student's photo (Education): signed, five minutes.
     'GET files/education/{organization}/{student}/photo',
     // Images of document designs and the photo on an issued document (Education): signed, thirty minutes.

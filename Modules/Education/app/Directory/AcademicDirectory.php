@@ -377,6 +377,19 @@ class AcademicDirectory
     }
 
     /**
+     * The sections whose students a person may see from a unit, as Education
+     * decides it (its permissions and rule education.teacher_scope): null for
+     * every section of the unit, otherwise the class teacher's and subject
+     * teacher's own.
+     *
+     * @return list<string>|null
+     */
+    public function visibleSections(Organization $company, Organization $unit, User $user): ?array
+    {
+        return app(Access::class)->sections($company, $unit, $user);
+    }
+
+    /**
      * Who teaches which subject in these sections.
      *
      * @param  list<string>  $sectionIds

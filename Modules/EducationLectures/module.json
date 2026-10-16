@@ -1,0 +1,11 @@
+{
+    "name": "EducationLectures",
+    "alias": "education_lectures",
+    "description": "Class lectures: notes, files and video links teachers post for their sections.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EducationLectures\\Providers\\EducationLecturesServiceProvider"
+    ],
+    "files": []
+}

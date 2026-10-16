@@ -1,0 +1,110 @@
+{
+    "page": {
+        "title": "Class lectures",
+        "text": "Notes, files and videos for the subjects taught in each section.",
+        "new": "New lecture",
+        "empty_title": "No lectures here yet",
+        "empty_text": "Lectures teachers post for your sections show here.",
+        "empty_text_post": "Post the first lecture for a subject you teach: a title, notes, a file or a video link.",
+        "pages": "Pages",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {page} of {pages}"
+    },
+    "tabs": {
+        "all": "All",
+        "published": "Published",
+        "draft": "Drafts",
+        "waiting": "Waiting for approval",
+        "withdrawn": "Withdrawn"
+    },
+    "statuses": {
+        "draft": "Draft",
+        "waiting": "Waiting for approval",
+        "published": "Published",
+        "withdrawn": "Withdrawn"
+    },
+    "filters": {
+        "all_sections": "All sections",
+        "all_subjects": "All subjects"
+    },
+    "fields": {
+        "section": "Section",
+        "subject": "Subject",
+        "subject_pick": "Choose a subject",
+        "lesson_on": "Class day",
+        "title": "Title",
+        "title_hint": "e.g. Fractions, part 1",
+        "body": "Notes",
+        "body_hint": "Plain text: what was taught, homework, pages to read.",
+        "video_url": "Video link",
+        "video_hint": "An https link on {sites}.",
+        "video_off": "Your institution does not take video links.",
+        "video_https": "Give a full link starting with https://."
+    },
+    "sites": {
+        "youtube": "YouTube",
+        "google_drive": "Google Drive",
+        "vimeo": "Vimeo",
+        "facebook": "Facebook"
+    },
+    "dialog": {
+        "title": "New lecture",
+        "edit_title": "Change lecture",
+        "text": "It is saved as a draft; students see it once you publish it. Add files on the lecture after saving.",
+        "nothing_to_post": "You are not named as the teacher of any subject in a section yet. Ask the head teacher to name you on the section's page.",
+        "save": "Save draft",
+        "change": "Save changes",
+        "saved": "Lecture saved as a draft.",
+        "changed": "Lecture changed."
+    },
+    "actions": {
+        "publish": "Publish",
+        "send": "Send for approval",
+        "published": "Lecture published: the section can see it now.",
+        "sent": "Lecture sent for approval.",
+        "approve": "Approve and publish",
+        "approved": "Lecture approved and published.",
+        "edit": "Change",
+        "withdraw": "Withdraw",
+        "withdraw_title": "Withdraw this lecture?",
+        "withdraw_text": "Students and guardians will no longer see it or its files. It stays on this list with your reason.",
+        "reason": "Reason",
+        "reason_hint": "e.g. Wrong chapter",
+        "withdrawn": "Lecture withdrawn.",
+        "delete": "Delete draft",
+        "delete_title": "Delete this draft?",
+        "delete_text": "\"{title}\" and its files will be deleted. Nobody has seen it yet.",
+        "deleted": "Draft deleted."
+    },
+    "files": {
+        "add": "Add file",
+        "added": "File added.",
+        "too_big": "This file is too big: lecture files may be up to {mb} MB.",
+        "remove": "Remove file",
+        "remove_title": "Remove this file?",
+        "remove_text": "{name} will be taken off the lecture.",
+        "remove_named": "Remove {name}",
+        "removed": "File removed."
+    },
+    "card": {
+        "more": "Show more",
+        "less": "Show less",
+        "video": "Video on {site}",
+        "download": "Download {name}",
+        "withdrawn": "Withdrawn: {reason}"
+    },
+    "portal": {
+        "title": "Lectures",
+        "text": "Lectures of {name}'s section, newest first.",
+        "no_student": "No lectures to show",
+        "empty_title": "No lectures yet",
+        "empty_text": "When a teacher posts a lecture for this section, it shows here."
+    },
+    "student_tab": {
+        "title": "Lectures",
+        "empty": "No lectures for this student's section yet."
+    },
+    "cancel": "Cancel",
+    "conflict": "Someone changed this lecture a moment ago. The list is fresh now; try again."
+}

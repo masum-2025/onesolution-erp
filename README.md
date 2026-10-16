@@ -3126,6 +3126,53 @@ in force for its class and session, by stream) are listed with their teachers; p
   (students, enrollments, sessions, levels, subjects, the curriculum in force, prerequisites),
   never its tables.
 
+## Class lectures module (LEC-1)
+
+Module `education_lectures` (`Modules/EducationLectures`, requires Education; school, college,
+university, madrasa and coaching; every plan, on in the education sector packages). Teachers post
+notes, files and video links for the subjects they teach; students and guardians read them in
+the portal.
+
+- **Who**: `education_lectures.view` reads (who manages: every lecture at the unit; others: the
+  published lectures of the sections Education lets them see, and everything they posted).
+  `.post` posts only for a subject one teaches in that section (EDU-5a subject teachers); `.manage`
+  posts for any section, approves and withdraws any lecture. Role templates: principal and
+  registrar manage, teacher views and posts.
+- **A lecture**: section, subject (in the class's curriculum), class day, title, plain text
+  (shown escaped), a video link (https, on a site the rule allows), files. Draft → published (or
+  waiting → published by someone who manages, never the poster, with
+  `education_lectures.approval_required`) → withdrawn with a reason. Published lectures are never
+  deleted; a draft is. `op_id` makes a resent post harmless; changes carry `base_version`.
+- **Files**: PDF, JPG, PNG, WebP, Word (.docx) and PowerPoint (.pptx), recognised by their
+  content (Office files by the parts inside the zip), up to `max_file_kb` and `max_files`, on the
+  private disk under the institution; opened through a signed link that lasts ten minutes
+  (`files/lectures/{organization}/{file}`); a withdrawn lecture's files no longer open.
+- **Portal**: `GET /api/portal/lectures` (`?record=` a guardian's linked child), the published
+  lectures of the section the student is in now. A new lecture is told by mail (not SMS: a
+  lecture a day would be many paid messages) to the section's portal logins and guardians with a
+  login, when `notify_on_publish` is on (queued listener).
+- **Home and student page**: widgets "Lectures this week" (with the week before) and "Subjects
+  without lectures" (taught subjects quiet for `quiet_days`); waiting lectures in the bell of who
+  manages; a "Lectures" tab on the student's page.
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/organizations/{id}/lectures/setup | can, rules, file types, open session's sections and subjects (`may_post`) |
+| GET | /api/organizations/{id}/lectures | filters `section_id`, `subject_id`, `status`, `mine`, `student_id`; names in `meta` |
+| POST/PATCH/DELETE | /api/organizations/{id}/lectures[/{lecture}] | post, change (`base_version`), delete a draft |
+| POST | …/lectures/{lecture}/publish, /approve, /withdraw | `base_version`; withdraw needs a `reason` |
+| POST/DELETE | …/lectures/{lecture}/files[/{file}] | upload (`file`), remove |
+| GET | /api/portal/lectures | the student's (or child's) section, published only |
+
+Rules: `approval_required` (false), `max_file_kb` (10240), `max_files` (5), `video_hosts`
+(youtube, google_drive; also vimeo, facebook), `notify_on_publish` (true), `quiet_days` (14).
+
+### Future expansion (class lectures)
+
+- A new country or partner changes only the rules (sizes, sites, approval) and the wording; a new
+  kind of institution gets lectures by naming the module in its sector package. No code change.
+- Later: lectures linked to curriculum topics, students marking a lecture read, offline reading.
+
 ## Course registration module (EDU-4a backend)
 
 Code: `Modules/CourseRegistration` (module `course_registration`, requires `education`, sectors

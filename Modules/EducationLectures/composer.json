@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/education-lectures",
+    "description": "Class lectures: notes, files and video links teachers post for their sections.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\EducationLectures\\": "app/"
+        }
+    }
+}
