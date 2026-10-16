@@ -44,7 +44,7 @@ return [
     ],
     'verify_shows' => [
         'label' => 'QR যাচাইয়ে যা দেখাবে',
-        'description' => 'প্রতিষ্ঠান, ডকুমেন্ট আর বৈধ কিনা ছাড়াও: student_name, level, issued_on, valid_until-এর যেকোনোটি। ব্যক্তিগত তথ্য কখনো দেখানো হয় না।',
+        'description' => 'প্রতিষ্ঠান, কাগজের নাম আর বৈধ কিনা ছাড়াও: student_name, level, issued_on, valid_until-এর যেকোনোটি। ব্যক্তিগত তথ্য কখনো দেখানো হয় না।',
     ],
     'categories' => [
         'admissions' => 'ভর্তি',

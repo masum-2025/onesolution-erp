@@ -184,7 +184,7 @@ return [
                 ['key' => 'sections', 'label' => 'education::module.menu_sections', 'sector_labels' => $sectorWords('menu_sections', ['school', 'madrasa', 'college', 'university', 'coaching']), 'route' => '/education/sections', 'permission' => 'education.view'],
                 ['key' => 'admissions', 'label' => 'education::module.menu_admissions', 'sector_labels' => $sectorWords('menu_admissions', ['university']), 'route' => '/education/admissions', 'permission' => 'education.admit'],
                 // Approvers (who may not make lists) reach waiting lists from the overview.
-                ['key' => 'promotions', 'label' => 'education::module.menu_promotions', 'sectors' => $withoutCoaching, 'sector_labels' => $sectorWords('menu_promotions', ['school', 'madrasa', 'college', 'university']), 'route' => '/education/promotions', 'permission' => 'education.promote'],
+                ['key' => 'promotions', 'label' => 'education::module.menu_promotions', 'sectors' => $withoutCoaching, 'route' => '/education/promotions', 'permission' => 'education.promote'],
                 ['key' => 'documents', 'label' => 'education::module.menu_documents', 'sectors' => $withoutCoaching, 'route' => '/education/documents', 'permission' => 'education.issue_documents'],
             ],
         ],

@@ -30,11 +30,11 @@ it('names the education menu in each kind of institution\'s own words and leaves
     $sector = fn (?string $key) => $this->w->c1->forceFill(['sector_key' => $key])->save();
 
     $sector('university');
-    expect(($this->children)())->toMatchArray(['sections' => 'Semesters and sections', 'promotions' => 'Move up a semester', 'admissions' => 'Admissions (applications)'])
+    expect(($this->children)())->toMatchArray(['sections' => 'Semesters and sections', 'admissions' => 'Admissions (applications)'])
         ->and(($this->children)())->toHaveKey('documents');
 
     $sector('school');
-    expect(($this->children)())->toMatchArray(['sections' => 'Classes and sections', 'promotions' => 'Move up a class', 'admissions' => 'Admissions']);
+    expect(($this->children)())->toMatchArray(['sections' => 'Classes and sections', 'admissions' => 'Admissions']);
 
     // A coaching centre moves no one up and issues no cards or certificates.
     $sector('coaching');
@@ -46,7 +46,7 @@ it('names the education menu in each kind of institution\'s own words and leaves
     $sector(null);
     $this->w->g1->forceFill(['sector_key' => 'college'])->save();
     $bn = collect(collect(($this->as)()->withHeader('X-Locale', 'bn')->getJson('/api/menu')->json('data'))->firstWhere('module', 'education')['children'])->pluck('label', 'key');
-    expect($bn['sections'])->toBe('বর্ষ ও গ্রুপ')->and($bn['promotions'])->toBe('পরের বর্ষে তোলা');
+    expect($bn['sections'])->toBe('বর্ষ ও গ্রুপ')->and($bn['promotions'])->toBe('প্রমোশন');
 });
 
 it('puts the education family first, in one Education section, its home the only dashboard', function () {

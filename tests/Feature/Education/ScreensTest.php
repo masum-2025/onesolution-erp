@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 

@@ -26,6 +26,6 @@ final class FeesOwed implements DashboardWidget
         $overdue = (int) $bills->filter(fn (Bill $bill) => $bill->due_date->toDateString() < $today)->sum(fn (Bill $bill) => $bill->balanceMinor());
         $currency = rescue(fn () => $office->currency($company), null, false);
 
-        return WidgetData::stat($owed, hint: __('education_fees::dashboard.owed_hint', ['overdue' => $currency === null ? (string) $overdue : MoneyText::format($overdue, $currency, app()->getLocale())]), format: 'money', currency: $currency);
+        return WidgetData::stat($owed, hint: __('education_fees::dashboard.owed_hint', ['overdue' => $currency === null ? (string) $overdue : MoneyText::shown($overdue, $currency, app()->getLocale())]), format: 'money', currency: $currency);
     }
 }

@@ -251,7 +251,7 @@ it('lists who owes, what paid a bill, and rings the bell for approvers', functio
     $bell = fn (string $token) => collect($this->asToken($token)->getJson('/api/attention')->assertOk()->json('data'))->firstWhere('key', 'education_fees.discounts_waiting');
     expect($bell($this->checkerToken)['count'] ?? null)->toBe(1)->and($bell($this->token))->toBeNull();
     $widget = fn (string $key) => ($this->as)()->getJson("/api/modules/education_fees/dashboard/{$key}")->assertOk()->json('data');
-    expect($widget('waiting')['value'])->toBe(1)->and($widget('owed'))->toMatchArray(['value' => 200000, 'format' => 'money', 'currency' => 'BDT']);
+    expect($widget('waiting')['value'])->toBe(1)->and($widget('owed'))->toMatchArray(['value' => 200000, 'format' => 'money', 'currency' => 'BDT', 'hint' => "BDT\u{00A0}2,000.00 of it is overdue."]);
 
     // No books here: nothing waits for them.
     ($this->as)()->getJson(($this->fees)('postings'))->assertOk()->assertJsonPath('meta.counts', ['pending' => 0, 'posted' => 0, 'failed' => 0]);

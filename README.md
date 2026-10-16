@@ -3056,6 +3056,19 @@ registrations to approve, registered this session with where the window stands.
   leaves promotions and ID cards out of a coaching centre. The sector is the company's, else
   its group's. The wording editor (LANG-1) still overrides any of these words per organization.
 
+### Plainer words in Bangla (UX-5)
+
+The education modules' Bangla texts use one word for one thing, as the menu does, and plain
+words for technical ones: রেজিস্ট্রেশন → নিবন্ধন, ডকুমেন্ট → কার্ড ও সনদ (কাগজ for one),
+কারিকুলাম → পাঠ্যক্রম, প্রিসেট → তৈরি কাঠামো, ইমপোর্ট → ফাইল থেকে আনা, এন্ট্রি → plain
+wording, নম্বরপত্র → নম্বর তোলার পাতা (so it is not mistaken for a student's মার্কশিট),
+কি (key) → কোড-নাম (key). Words people know stay (ক্যাম্পাস, ক্রেডিট, ব্যাচ, মার্কশিট,
+প্রমোশন). English texts are unchanged; an organization's own words (wording editor) still win.
+
+- Money on screens: `MoneyText::shown()` writes amounts the way the app does ("১,২৩৪.৫০৳");
+  `MoneyText::format()` keeps the currency code for messages and documents ("BDT ১,২৩৪.৫০").
+  Both work from integer minor units, never floats.
+
 ### One Education section in the sidebar (UX-4)
 
 Education, Course registration, Fees and Exams sit together in an "Education" sidebar section

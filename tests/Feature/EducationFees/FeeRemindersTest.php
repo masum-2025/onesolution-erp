@@ -1,12 +1,12 @@
 <?php
 
+use App\Models\User;
 use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Portal\Models\PortalLink;
 use App\Platform\Tenancy\Actions\AddMember;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\OrganizationMembership;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Modules\EducationFees\Models\Reminder;
 

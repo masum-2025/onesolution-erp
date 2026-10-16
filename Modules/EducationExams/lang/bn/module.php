@@ -7,7 +7,7 @@ return [
     'menu' => 'পরীক্ষা ও ফলাফল',
     'portal_page' => 'ফলাফল',
     'menu_exams' => 'পরীক্ষাসমূহ',
-    'menu_my_sheets' => 'আমার নম্বরপত্র',
+    'menu_my_sheets' => 'আমার নম্বর তোলার পাতা',
     'menu_combinations' => 'চূড়ান্ত ফলাফল',
     'menu_corrections' => 'নম্বর সংশোধন',
     'menu_transcripts' => 'শিক্ষার্থীর ফলাফল',

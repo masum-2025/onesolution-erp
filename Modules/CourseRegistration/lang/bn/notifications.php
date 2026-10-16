@@ -5,9 +5,9 @@ return [
     'templates' => [
         'course_registration_seat_offered' => [
             'subject' => '{{ subject }}-এ আপনি আসন পেয়েছেন',
-            'body' => '{{ organization }}-এ {{ subject }} ({{ session }})-এর একটি আসন খালি হয়েছে, এখন সেটি আপনার। আপনার রেজিস্ট্রেশন দেখুন।',
+            'body' => '{{ organization }}-এ {{ subject }} ({{ session }})-এর একটি আসন খালি হয়েছে, এখন সেটি আপনার। আপনার নিবন্ধন দেখুন।',
             'sms' => '{{ organization }}: {{ subject }} ({{ session }})-এ আপনি আসন পেয়েছেন।',
-            'action' => 'আমার রেজিস্ট্রেশন খুলুন',
+            'action' => 'আমার নিবন্ধন খুলুন',
         ],
     ],
     'catalog' => [

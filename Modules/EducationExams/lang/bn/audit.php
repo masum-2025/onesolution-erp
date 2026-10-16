@@ -12,7 +12,7 @@ return [
     'sheet_submitted' => 'নম্বর জমা',
     'sheet_approved' => 'নম্বর অনুমোদিত',
     'sheet_returned' => 'নম্বর ফেরত',
-    'sheet_assigned' => 'নম্বরপত্রের দায়িত্ব',
+    'sheet_assigned' => 'নম্বর তোলার পাতার দায়িত্ব',
     'exam_published' => 'পরীক্ষার ফল প্রকাশ',
     'combination_saved' => 'সম্মিলিত ফল সংরক্ষণ',
     'combination_published' => 'সম্মিলিত ফল প্রকাশ',

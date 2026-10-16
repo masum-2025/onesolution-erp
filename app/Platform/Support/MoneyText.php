@@ -12,11 +12,33 @@ final class MoneyText
 {
     public static function format(int $minor, string $currency, string $locale): string
     {
+        return ($minor < 0 ? '-' : '')."{$currency} ".self::number(abs($minor), $currency, $locale);
+    }
+
+    /**
+     * Money as the app shows it on screen, in the reader's language's own
+     * way ("৭,০০০.০০৳" in Bangla, "BDT 7,000.00" in English): the language's
+     * currency pattern, taken from zero, around the exact number.
+     */
+    public static function shown(int $minor, string $currency, string $locale): string
+    {
+        $pattern = (new NumberFormatter($locale, NumberFormatter::CURRENCY))->formatCurrency(0, $currency);
+        $zero = self::number(0, $currency, $locale);
+        if ($pattern === false || ! str_contains($pattern, $zero)) {
+            return self::format($minor, $currency, $locale);
+        }
+
+        return ($minor < 0 ? '-' : '').str_replace($zero, self::number(abs($minor), $currency, $locale), $pattern);
+    }
+
+    /** The amount's digits in the language, from minor units without floats. */
+    private static function number(int $minor, string $currency, string $locale): string
+    {
         $digits = self::fractionDigits($currency);
 
         $scale = 10 ** $digits;
-        $whole = intdiv(abs($minor), $scale);
-        $fraction = str_pad((string) (abs($minor) % $scale), $digits, '0', STR_PAD_LEFT);
+        $whole = intdiv($minor, $scale);
+        $fraction = str_pad((string) ($minor % $scale), $digits, '0', STR_PAD_LEFT);
 
         $numbers = new NumberFormatter($locale, NumberFormatter::DECIMAL);
         $text = $numbers->format($whole);
@@ -26,7 +48,7 @@ final class MoneyText
             $text .= $numbers->getSymbol(NumberFormatter::DECIMAL_SEPARATOR_SYMBOL).$localDigits;
         }
 
-        return ($minor < 0 ? '-' : '')."{$currency} {$text}";
+        return $text;
     }
 
     public static function fractionDigits(string $currency): int

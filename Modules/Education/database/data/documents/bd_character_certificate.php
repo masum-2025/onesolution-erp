@@ -26,7 +26,7 @@ return [
             ['id' => 'meta', 'type' => 'text', 'x' => 150, 'y' => 400, 'w' => 1800, 'h' => 60, 'text' => 'ক্রমিক নং: {document.number}     তারিখ: {document.date}', 'size' => 100, 'align' => 'center', 'color' => '#334155'],
             [
                 'id' => 'body', 'type' => 'text', 'x' => 180, 'y' => 520, 'w' => 1740, 'h' => 500, 'size' => 120, 'line_height' => 180, 'align' => 'justify', 'color' => '#0f172a',
-                'text' => "এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, {student.name}, পিতা: {guardian.father}, অত্র প্রতিষ্ঠানের {level} শ্রেণির শিক্ষার্থী (আইডি {student.code})। আমার জানামতে তার চরিত্র ও আচরণ {input.conduct}। আমি তার উত্তরোত্তর সাফল্য কামনা করি।",
+                'text' => 'এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, {student.name}, পিতা: {guardian.father}, অত্র প্রতিষ্ঠানের {level} শ্রেণির শিক্ষার্থী (আইডি {student.code})। আমার জানামতে তার চরিত্র ও আচরণ {input.conduct}। আমি তার উত্তরোত্তর সাফল্য কামনা করি।',
             ],
             ['id' => 'qr', 'type' => 'qr', 'x' => 180, 'y' => 1080, 'w' => 240, 'h' => 240, 'color' => '#0f172a'],
             ['id' => 'sign', 'type' => 'line', 'x' => 1400, 'y' => 1250, 'w' => 520, 'h' => 0, 'color' => '#334155', 'thickness' => 3],
