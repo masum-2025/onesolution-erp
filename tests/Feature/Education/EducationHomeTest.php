@@ -49,6 +49,36 @@ it('names the education menu in each kind of institution\'s own words and leaves
     expect($bn['sections'])->toBe('বর্ষ ও গ্রুপ')->and($bn['promotions'])->toBe('পরের বর্ষে তোলা');
 });
 
+it('puts the education family first, in one Education section, its home the only dashboard', function () {
+    foreach (['education_fees', 'education_exams', 'course_registration'] as $module) {
+        toggles()->enable($this->w->g1, $module, 'Test setup');
+    }
+    $this->w->c1->forceFill(['sector_key' => 'university'])->save();
+    $menu = collect(($this->as)()->getJson('/api/menu')->assertOk()->json('data'))->keyBy('module');
+
+    foreach (['education', 'education_fees', 'education_exams', 'course_registration'] as $module) {
+        expect($menu[$module])->toMatchArray(['section' => 'education', 'section_label' => 'Education']);
+    }
+    expect($menu['education']['label'])->toBe('Students and semesters')
+        ->and(collect($menu['education']['children'])->pluck('key')->first())->toBe('overview')
+        ->and($menu['education_exams']['label'])->toBe('Exams and results')
+        // Their main work comes first: the section leads the sidebar.
+        ->and($menu->first()['section'])->toBe('education');
+    foreach (['education', 'education_fees', 'education_exams', 'course_registration'] as $module) {
+        $keys = collect($menu[$module]['children'])->pluck('key');
+        expect($keys)->not->toContain('dashboard')->and($keys->last())->toBe('settings');
+    }
+    // Off the menu, a module's own dashboard still opens.
+    ($this->as)()->getJson('/api/modules/education_fees/dashboard')->assertOk();
+
+    // In Bangla; a company of another kind keeps its menu as it was.
+    $bn = collect(($this->as)()->withHeader('X-Locale', 'bn')->getJson('/api/menu')->json('data'))->keyBy('module');
+    expect($bn['education']['section_label'])->toBe('শিক্ষা')->and($bn['course_registration']['label'])->toBe('কোর্স নিবন্ধন');
+    toggles()->enable($this->w->c2, 'hrm', 'Test setup');
+    $other = createMember($this->w->c2);
+    expect(collect($this->asToken(orgToken($other, $this->w->c2))->getJson('/api/menu')->json('data'))->firstWhere('module', 'hrm')['section'])->toBe('people');
+});
+
 it('tells the home which modules of the education family are on here', function () {
     eduSchool($this);
     expect(($this->as)()->getJson(($this->api)('overview'))->assertOk()->json('data.modules'))->toBe(['education']);

@@ -232,8 +232,10 @@ return [
             'label' => 'education_fees::module.menu',
             'route' => '/fees',
             'icon' => 'wallet',
-            'order' => 42,
-            'section' => 'business',
+            'order' => 7,
+            'section' => 'education',
+            // Its widgets are on the education home; the menu keeps only its settings.
+            'dashboard' => false,
             'children' => [
                 ['key' => 'counter', 'label' => 'education_fees::module.menu_counter', 'route' => '/fees', 'permission' => 'education_fees.view'],
                 ['key' => 'runs', 'label' => 'education_fees::module.menu_runs', 'route' => '/fees/runs', 'permission' => 'education_fees.view'],

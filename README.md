@@ -3056,6 +3056,18 @@ registrations to approve, registered this session with where the window stands.
   leaves promotions and ID cards out of a coaching centre. The sector is the company's, else
   its group's. The wording editor (LANG-1) still overrides any of these words per organization.
 
+### One Education section in the sidebar (UX-4)
+
+Education, Course registration, Fees and Exams sit together in an "Education" sidebar section
+(manifest `section => 'education'`), first among the modules (order 5–8; only education
+institutions have them on). Education's entry is named by sector ("Students and classes",
+"Students and semesters", …). None of the four shows a "Dashboard" line: Education's home is its
+Overview, which carries the family's widgets; a module's own dashboard (`/m/{module}`) still opens.
+
+- Platform: a menu entry may say `'dashboard' => false` (validated: true or false) to leave out
+  the Dashboard line the menu adds to a module's first entry.
+- A new education module joins the section by naming it in its manifest; nothing else changes.
+
 ### A student's one page (module tabs)
 
 The student's page (`/education/students/:id`) shows what other modules know about the student

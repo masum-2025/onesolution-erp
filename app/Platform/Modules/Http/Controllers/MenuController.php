@@ -62,7 +62,7 @@ class MenuController extends Controller
                     'section' => $section,
                     'section_label' => $this->sectionLabel($section),
                     'children' => [
-                        ...($withEnds ? [['key' => 'dashboard', 'label' => __('modules.menu.dashboard'), 'route' => "/m/{$key}"]] : []),
+                        ...($withEnds && ($item['dashboard'] ?? true) ? [['key' => 'dashboard', 'label' => __('modules.menu.dashboard'), 'route' => "/m/{$key}"]] : []),
                         ...array_map(fn (array $child) => [
                             'key' => $child['key'],
                             'label' => $label($child),

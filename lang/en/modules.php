@@ -48,6 +48,7 @@ return [
         'people' => 'People',
         'finance' => 'Finance',
         'business' => 'Business',
+        'education' => 'Education',
         'governance' => 'Governance',
         'ai' => 'AI',
         'platform' => 'Platform',

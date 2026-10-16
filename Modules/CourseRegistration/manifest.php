@@ -108,8 +108,10 @@ return [
             'label' => 'course_registration::module.menu',
             'route' => '/course-registration',
             'icon' => 'clipboard',
-            'order' => 41,
-            'section' => 'business',
+            'order' => 6,
+            'section' => 'education',
+            // Its widgets are on the education home; the menu keeps only its settings.
+            'dashboard' => false,
             'children' => [
                 ['key' => 'offerings', 'label' => 'course_registration::module.menu_offerings', 'route' => '/course-registration', 'permission' => 'course_registration.view'],
                 ['key' => 'registrations', 'label' => 'course_registration::module.menu_registrations', 'route' => '/course-registration/registrations', 'permission' => 'course_registration.view'],

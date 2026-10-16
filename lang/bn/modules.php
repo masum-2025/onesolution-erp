@@ -47,6 +47,7 @@ return [
         'people' => 'মানুষ',
         'finance' => 'অর্থ',
         'business' => 'ব্যবসা',
+        'education' => 'শিক্ষা',
         'governance' => 'গভর্ন্যান্স',
         'ai' => 'এআই',
         'platform' => 'প্ল্যাটফর্ম',

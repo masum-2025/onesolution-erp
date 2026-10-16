@@ -4,7 +4,7 @@
 return [
     'name' => 'Exams and results',
     'description' => 'Exams, papers and routines, marks entered by teachers and approved, grading and results.',
-    'menu' => 'Exams',
+    'menu' => 'Exams and results',
     'portal_page' => 'Results',
     'menu_exams' => 'Exams',
     'menu_my_sheets' => 'My mark sheets',

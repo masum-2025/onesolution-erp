@@ -190,8 +190,10 @@ return [
             'label' => 'education_exams::module.menu',
             'route' => '/exams',
             'icon' => 'clipboard',
-            'order' => 43,
-            'section' => 'business',
+            'order' => 8,
+            'section' => 'education',
+            // Its widgets are on the education home; the menu keeps only its settings.
+            'dashboard' => false,
             'children' => [
                 ['key' => 'exams', 'label' => 'education_exams::module.menu_exams', 'route' => '/exams', 'permission' => 'education_exams.view'],
                 ['key' => 'my_sheets', 'label' => 'education_exams::module.menu_my_sheets', 'route' => '/exams/my-sheets', 'permission' => 'education_exams.enter_marks'],

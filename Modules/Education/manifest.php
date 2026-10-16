@@ -170,10 +170,14 @@ return [
         [
             'key' => 'education',
             'label' => 'education::module.menu',
+            'sector_labels' => $sectorWords('menu_top', ['school', 'madrasa', 'college', 'university', 'coaching']),
             'route' => '/education',
             'icon' => 'graduation-cap',
-            'order' => 40,
-            'section' => 'business',
+            // Only education institutions have it on: their main work comes first.
+            'order' => 5,
+            'section' => 'education',
+            // Its home is the "Overview" line (with the family's widgets).
+            'dashboard' => false,
             'children' => [
                 ['key' => 'overview', 'label' => 'education::module.menu_overview', 'route' => '/education', 'permission' => 'education.view'],
                 ['key' => 'students', 'label' => 'education::module.menu_students', 'route' => '/education/students', 'permission' => 'education.view'],

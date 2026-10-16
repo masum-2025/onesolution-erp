@@ -181,6 +181,10 @@ final class ModuleRegistry
 
             self::validatePermission($manifest, $item['permission'] ?? null, 'menu item', required: false);
             self::validateSectorFit($manifest, $item, 'menu item');
+            // false: no "Dashboard" line (e.g. a module whose widgets show on another module's home).
+            if (isset($item['dashboard']) && ! is_bool($item['dashboard'])) {
+                throw InvalidModuleManifest::because($key, 'menu item dashboard must be true or false');
+            }
 
             if (isset($item['children']) && ! array_is_list($item['children'])) {
                 throw InvalidModuleManifest::because($key, 'menu children must be a list');
