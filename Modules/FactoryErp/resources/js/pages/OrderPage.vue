@@ -1,42 +1,51 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { ArrowLeft, CheckCheck, Download, Factory, PackageCheck, Save, SearchX, Ship, XCircle } from 'lucide-vue-next';
+import { useRoute, useRouter } from 'vue-router';
+import { ArrowLeft, CheckCheck, Factory, Save, SearchX, Ship, XCircle } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
+import AppTabs from '@/components/AppTabs.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { confirmAction } from '@/lib/dialogs';
-import { downloadText, toCsv } from '@/lib/csv';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { factoryApi } from '../api';
 import { useFactorySetup } from '../setup';
-import { fieldText, formatMilli, milliToText, orderTone, piecesOf } from '../lib';
+import { fieldText, orderTone, piecesOf } from '../lib';
 import SizeColorSheet from '../components/SizeColorSheet.vue';
+import MaterialsPanel from '../components/MaterialsPanel.vue';
+import CuttingPanel from '../components/CuttingPanel.vue';
 
 /**
  * One buyer's order: buyer and style, ship date and price, own fields; the
  * size × colour sheet (typed while draft or confirmed, then read-only);
- * the steps (confirm, into production, shipped, cancel with a reason); and
- * what it needs from the store against what is there, to download as CSV.
+ * the steps (confirm, into production, shipped, cancel with a reason); in
+ * tabs, the materials (needed, given to the floor, taken back) and the
+ * cutting table. The tab is kept in the address (?tab=).
  */
 const api = factoryApi(currentOrganization().id);
 const setup = useFactorySetup();
 const route = useRoute();
+const router = useRouter();
+const TABS = ['sheet', 'materials', 'cutting'];
+const tab = computed({
+    get: () => (TABS.includes(route.query.tab) ? route.query.tab : 'sheet'),
+    set: (value) => router.replace({ query: { ...route.query, tab: value } }),
+});
+const tabs = computed(() => TABS.map((key) => ({ key, label: t(`factory_erp.order_tabs.${key}`) })));
 const view = useResource(() => api.order(route.params.id));
 const order = computed(() => view.data.value?.data ?? null);
 const style = computed(() => view.data.value?.meta?.style ?? null);
 const buyer = computed(() => view.data.value?.meta?.buyer ?? null);
 const open = computed(() => order.value && ['draft', 'confirmed'].includes(order.value.status) && setup.can('merchandise'));
-const needs = useResource(() => api.requirements(route.params.id));
 const day = (date) => formatDate(`${date}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' });
 const money = (minor) => formatMoney({ amount: minor, currency: order.value?.currency });
 
@@ -62,7 +71,6 @@ async function saveSheet() {
         await api.updateOrder(order.value.id, { lines, base_version: order.value.version });
         toast.success(t('factory_erp.orders.sheet_saved'));
         view.reload();
-        needs.reload();
     } catch (error) {
         toast.error(error.code === 'version_conflict' ? t('factory_erp.conflict') : error.message);
         if (error.code === 'version_conflict') view.reload();
@@ -93,10 +101,6 @@ const cancelling = ref(false);
 const reason = ref('');
 
 const fields = computed(() => setup.fields('order').filter((field) => order.value?.extra?.[field.key] !== undefined));
-function downloadNeeds() {
-    const rows = (needs.data.value?.data ?? []).map((row) => [row.sku, row.name, setup.unitCode(row.item_id), milliToText(row.need_milli), milliToText(row.on_hand_milli), milliToText(row.short_milli)]);
-    downloadText(`${order.value.number}-materials.csv`, toCsv([[t('factory_erp.needs.sku'), t('factory_erp.needs.item'), t('factory_erp.needs.unit'), t('factory_erp.needs.need'), t('factory_erp.needs.on_hand'), t('factory_erp.needs.short')], ...rows]));
-}
 </script>
 
 <template>
@@ -131,7 +135,8 @@ function downloadNeeds() {
                 <div v-for="field in fields" :key="field.key"><dt class="text-muted">{{ field.label }}</dt><dd class="font-medium">{{ fieldText(field, order.extra[field.key], money) }}</dd></div>
             </dl>
 
-            <section v-if="style" class="card mb-5">
+            <AppTabs v-model="tab" :tabs="tabs" :label="order.number" class="mb-4" />
+            <section v-if="tab === 'sheet' && style" class="card">
                 <header class="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3">
                     <div class="min-w-0 flex-1">
                         <h2 class="text-[14px] font-semibold text-fg">{{ t('factory_erp.sheet.title') }}</h2>
@@ -143,41 +148,8 @@ function downloadNeeds() {
                     <SizeColorSheet v-model="sheet" :sizes="style.sizes" :colors="style.colors" :readonly="!open" />
                 </div>
             </section>
-
-            <section class="card">
-                <header class="flex flex-wrap items-center gap-3 border-b border-line px-5 py-3">
-                    <div class="min-w-0 flex-1">
-                        <h2 class="text-[14px] font-semibold text-fg">{{ t('factory_erp.needs.title') }}</h2>
-                        <p class="text-[12.5px] text-muted">{{ t('factory_erp.needs.text') }}</p>
-                    </div>
-                    <AppButton v-if="(needs.data.value?.data ?? []).length" size="sm" :icon="Download" @click="downloadNeeds">{{ t('factory_erp.needs.csv') }}</AppButton>
-                </header>
-                <SkeletonRows v-if="needs.loading.value && !needs.data.value" :rows="3" />
-                <ErrorState v-else-if="needs.error.value" compact :error="needs.error.value" @retry="needs.reload()" />
-                <EmptyState v-else-if="!(needs.data.value?.data ?? []).length" compact :icon="PackageCheck" :title="t('factory_erp.needs.empty_title')" :text="t('factory_erp.needs.empty_text')" />
-                <div v-else class="overflow-x-auto">
-                    <table class="w-full min-w-[560px] text-[13px]">
-                        <thead class="bg-subtle/60 text-[11.5px] text-muted">
-                            <tr>
-                                <th scope="col" class="px-5 py-2 text-start font-medium">{{ t('factory_erp.needs.item') }}</th>
-                                <th scope="col" class="px-3 py-2 text-end font-medium">{{ t('factory_erp.needs.need') }}</th>
-                                <th scope="col" class="px-3 py-2 text-end font-medium">{{ t('factory_erp.needs.on_hand') }}</th>
-                                <th scope="col" class="px-5 py-2 text-end font-medium">{{ t('factory_erp.needs.short') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-line">
-                            <tr v-for="row in needs.data.value.data" :key="row.item_id">
-                                <td class="px-5 py-2"><span class="font-medium text-fg">{{ row.name }}</span> <span class="font-mono text-[12px] text-muted" dir="ltr">{{ row.sku }}</span></td>
-                                <td class="tabular px-3 py-2 text-end">{{ formatMilli(row.need_milli) }} <span class="text-[11.5px] text-muted">{{ setup.unitCode(row.item_id) }}</span></td>
-                                <td class="tabular px-3 py-2 text-end">{{ formatMilli(row.on_hand_milli) }}</td>
-                                <td class="tabular px-5 py-2 text-end font-semibold" :class="row.short_milli > 0 ? 'text-bad' : 'text-ok'">
-                                    {{ row.short_milli > 0 ? formatMilli(row.short_milli) : t('factory_erp.needs.enough') }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+            <MaterialsPanel v-else-if="tab === 'materials'" :order="order" />
+            <CuttingPanel v-else-if="tab === 'cutting' && style" :order="order" :style="style" @changed="view.reload()" />
 
             <AppDialog :open="cancelling" tone="bad" :icon="XCircle" :title="t('factory_erp.steps.cancel_title', { number: order.number })" :description="t('factory_erp.steps.cancel_text')" @close="cancelling = false">
                 <AppField v-slot="{ id }" :label="t('factory_erp.steps.reason')">

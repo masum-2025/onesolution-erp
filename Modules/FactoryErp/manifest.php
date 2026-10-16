@@ -12,14 +12,15 @@ return [
     'key' => 'factory_erp',
     'name' => 'factory_erp::module.name',
     'description' => 'factory_erp::module.description',
-    'version' => '1.0.0',
+    'version' => '1.1.0',
     'category' => 'business',
     // Materials come from Inventory (its Stock service), buyers are CRM organization
-    // contacts (its Organizations service); costs will post to Accounting.
+    // contacts (its Organizations service); materials on the floor post to Accounting
+    // as work in progress (its Ledger).
     'requires' => ['inventory', 'accounting', 'crm'],
     'sectors' => ['factory'],
     'plans' => ['*'],
-    'permissions' => ['factory_erp.view', 'factory_erp.merchandise', 'factory_erp.manage'],
+    'permissions' => ['factory_erp.view', 'factory_erp.merchandise', 'factory_erp.issue', 'factory_erp.produce', 'factory_erp.manage'],
     'rules' => [
         [
             'key' => 'factory_erp.consumption_basis',
@@ -81,6 +82,30 @@ return [
             'category' => 'orders',
             'sort_order' => 50,
         ],
+        [
+            'key' => 'factory_erp.over_issue',
+            'type' => 'enum',
+            // More material to an order than its bill of materials needs: asked again (warn) or refused (block).
+            'schema' => ['enum' => ['warn', 'block']],
+            'default' => 'warn',
+            'label' => 'factory_erp::rules.over_issue.label',
+            'description' => 'factory_erp::rules.over_issue.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'floor',
+            'sort_order' => 60,
+        ],
+        [
+            'key' => 'factory_erp.over_cut_bp',
+            'type' => 'integer',
+            // Pieces cut above the order per size and colour, in basis points (300 = 3%).
+            'schema' => ['minimum' => 0, 'maximum' => 2000],
+            'default' => 300,
+            'label' => 'factory_erp::rules.over_cut_bp.label',
+            'description' => 'factory_erp::rules.over_cut_bp.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'floor',
+            'sort_order' => 70,
+        ],
     ],
     'menu' => [
         [
@@ -99,6 +124,10 @@ return [
         ['key' => 'order', 'label' => 'factory_erp::module.new_order', 'route' => '/factory?new=1', 'permission' => 'factory_erp.merchandise', 'icon' => 'factory'],
     ],
     'events' => [],
+    // Materials on the floor until finished goods come in (Accounting maps it to an account).
+    'ledger_accounts' => [
+        'factory_erp.wip' => ['label' => 'factory_erp::factory.posting_keys.wip', 'type' => 'asset'],
+    ],
     'attention' => [FactoryWidgets::class],
     'is_core' => false,
     'requires_consent' => false,

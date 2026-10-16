@@ -26,5 +26,10 @@ export function factoryApi(organizationId) {
         createOrder: (body) => api(`${base}/orders`, { method: 'POST', body }),
         updateOrder: (id, body) => api(`${base}/orders/${id}`, { method: 'PATCH', body }),
         step: (id, step, body) => api(`${base}/orders/${id}/${step}`, { method: 'POST', body }),
+        issues: (id) => api(`${base}/orders/${id}/issues`),
+        issue: (id, body) => api(`${base}/orders/${id}/issues`, { method: 'POST', body }),
+        cuttings: (id) => api(`${base}/orders/${id}/cuttings`),
+        cut: (id, body) => api(`${base}/orders/${id}/cuttings`, { method: 'POST', body }),
+        voidCutting: (id, cuttingId, body) => api(`${base}/orders/${id}/cuttings/${cuttingId}/void`, { method: 'POST', body }),
     };
 }

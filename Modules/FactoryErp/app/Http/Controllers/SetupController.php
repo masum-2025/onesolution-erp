@@ -49,6 +49,8 @@ class SetupController extends Controller
         return response()->json(['data' => [
             'can' => [
                 'merchandise' => Gate::allows('factory_erp.merchandise', $unit),
+                'issue' => Gate::allows('factory_erp.issue', $unit),
+                'produce' => Gate::allows('factory_erp.produce', $unit),
                 'manage' => Gate::allows('factory_erp.manage', $company),
                 'crm' => Gate::allows('crm.view', $company),
             ],
@@ -56,7 +58,12 @@ class SetupController extends Controller
                 'consumption_basis' => (string) $this->rules->get('factory_erp.consumption_basis', $context),
                 'default_wastage_bp' => (int) $this->rules->get('factory_erp.default_wastage_bp', $context),
                 'order_currency' => (string) $this->rules->get('factory_erp.order_currency', $context),
+                'over_issue' => (string) $this->rules->get('factory_erp.over_issue', $context),
+                'over_cut_bp' => (int) $this->rules->get('factory_erp.over_cut_bp', $context),
             ],
+            // The company's own (costs of materials); none set yet is not an error here.
+            'currency' => rescue(fn () => $this->floor->currency($company), null, false),
+            'warehouses' => $this->stock->warehouses($company),
             'today' => $this->floor->today($company)->toDateString(),
             'items' => array_map(fn (array $item) => ['id' => $item['id'], 'sku' => $item['sku'], 'name' => $item['name'], 'unit_id' => $item['unit_id']], $this->stock->items($company)),
             'units' => $this->stock->units($company),

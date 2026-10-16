@@ -13,4 +13,8 @@ return [
     'order_cancelled' => 'Order cancelled',
     'field_created' => 'Own field made',
     'field_updated' => 'Own field changed',
+    'materials_issued' => 'Materials to the floor',
+    'materials_returned' => 'Materials back from the floor',
+    'cutting_recorded' => 'Lay cut',
+    'cutting_voided' => 'Lay voided',
 ];

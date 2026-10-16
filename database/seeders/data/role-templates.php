@@ -56,7 +56,8 @@ return [
     [
         'key' => 'store_keeper',
         'sector' => null,
-        'permissions' => ['inventory.view', 'inventory.manage'],
+        // In a factory the store keeper also gives materials to orders on the floor (nothing where Factory ERP is off).
+        'permissions' => ['inventory.view', 'inventory.manage', 'factory_erp.view', 'factory_erp.issue'],
     ],
     // ── Factory ──────────────────────────────────────────────────────────
     [
@@ -68,7 +69,7 @@ return [
     [
         'key' => 'production_manager',
         'sector' => 'factory',
-        'permissions' => ['factory_erp.view', 'inventory.view', 'hrm.view', 'attendance.view'],
+        'permissions' => ['factory_erp.view', 'factory_erp.produce', 'inventory.view', 'hrm.view', 'attendance.view'],
     ],
     [
         'key' => 'cashier',

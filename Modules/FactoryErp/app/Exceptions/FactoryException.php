@@ -3,6 +3,7 @@
 namespace Modules\FactoryErp\Exceptions;
 
 use App\Platform\Tenancy\Exceptions\TenancyException;
+use Illuminate\Support\Number;
 
 /**
  * Factory errors: a translated message (factory_erp::factory.errors.*) that
@@ -63,6 +64,41 @@ class FactoryException extends TenancyException
     public static function noPieces(): self
     {
         return new self('no_pieces', 422, [], ['field' => 'lines']);
+    }
+
+    /** Materials go to an order only if its style's bill of materials has them. */
+    public static function notInBom(): self
+    {
+        return new self('not_in_bom', 422, [], ['field' => 'lines']);
+    }
+
+    /**
+     * More than the order needs: refused (rule factory_erp.over_issue = block),
+     * or asked again (warn) until the person says so (allow_over).
+     *
+     * @param  list<array{item_id: string, need_milli: int, issued_milli: int, quantity_milli: int}>  $items
+     */
+    public static function overIssue(array $items, bool $blocked): self
+    {
+        return new self($blocked ? 'over_issue_blocked' : 'over_issue', 422, [], ['items' => $items]);
+    }
+
+    /** A return of more than the order still holds of an item. */
+    public static function tooMuchBack(): self
+    {
+        return new self('too_much_back', 422, [], ['field' => 'lines']);
+    }
+
+    /** More pieces cut of a size and colour than ordered plus the allowance (rule factory_erp.over_cut_bp). */
+    public static function overCut(string $size, string $color, int $allowed): self
+    {
+        return new self('over_cut', 422, ['size' => $size, 'color' => $color, 'allowed' => Number::format($allowed, locale: app()->getLocale())], ['field' => 'lines', 'allowed' => $allowed]);
+    }
+
+    /** A day after today at the company. */
+    public static function futureDate(string $field): self
+    {
+        return new self('future_date', 422, [], ['field' => $field]);
     }
 
     /** A BOM line names something that is not an active Inventory item. */

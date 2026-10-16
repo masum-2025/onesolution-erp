@@ -13,4 +13,8 @@ return [
     'order_cancelled' => 'অর্ডার বাতিল',
     'field_created' => 'নিজের ঘর তৈরি',
     'field_updated' => 'নিজের ঘর বদল',
+    'materials_issued' => 'ফ্লোরে মাল দেওয়া',
+    'materials_returned' => 'ফ্লোর থেকে মাল ফেরত',
+    'cutting_recorded' => 'কাটিং লেখা',
+    'cutting_voided' => 'কাটিং বাতিল',
 ];

@@ -2815,6 +2815,29 @@ warehouses in use).
   `order_currency` (USD), `order_number_prefix` (FO), `ship_warning_days` (30).
 - After deploy: migrate, `rules:sync`, `access:sync`, `packaging:sync`.
 
+### FAC-2a: materials to the floor and cutting
+
+- **Issues** (`fac_issues` + `fac_issue_lines`, `GET/POST …/orders/{id}/issues`, `factory_erp.issue`):
+  materials from a store to a confirmed or running order (`kind` issue) or back (`return`), through
+  `Stock::take` at Inventory's cost; only items of the style's BOM. More than the order needs:
+  rule `factory_erp.over_issue` = `warn` (422 `over_issue` with the items until `allow_over: true`)
+  or `block`. A return is at most what is on the floor, at its share of the cost (new optional
+  `value_minor` on `Stock::take` lines), so returning everything leaves nothing in work in progress.
+  Each posts Dr `factory_erp.wip` / Cr `inventory.stock` (or back) through Accounting's Ledger; the
+  factory chart maps `factory_erp.wip` to 1152. Append-only; `op_id` once per tap.
+- **Requirements** now also give `issued_milli`, `issued_cost_minor` and `to_issue_milli`; `short` is
+  what is still to give less what the stores hold.
+- **Cutting** (`fac_cuttings` + `fac_cutting_lines`, `GET/POST …/orders/{id}/cuttings`,
+  `POST …/cuttings/{id}/void`, `factory_erp.produce`): lays numbered within the order, pieces per size
+  and colour up to ordered + `factory_erp.over_cut_bp` (300 = 3%, rounded down); the first lay
+  puts a confirmed order into production; a wrong lay is voided with a reason (`base_version`) and
+  stops counting.
+- Screens: the order page has tabs Pieces / Materials / Cutting (`?tab=`). Store keeper template
+  gains `factory_erp.view|issue`, production manager `factory_erp.produce`. `Stock::warehouses` lists
+  stores for the issue dialog.
+- After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings` (maps the new key on
+  companies already using the factory chart).
+
 ### Future expansion (Factory ERP)
 
 - FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,

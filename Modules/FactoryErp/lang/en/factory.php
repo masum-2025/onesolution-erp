@@ -15,7 +15,15 @@ return [
         'not_a_buyer' => 'Choose a buyer from CRM (an organization tagged "buyer"). CRM must be on.',
         'not_in_style' => '":value" is not a size or colour of this style. Add it to the style first.',
         'not_an_item' => 'Each material must be an active Inventory item.',
-        'no_pieces' => 'Put pieces in at least one size and colour before confirming.',
+        'no_pieces' => 'Put pieces in at least one size and colour first.',
+        'warehouse_not_found' => 'Choose a store that is in use.',
+        'cutting_not_found' => 'That lay does not exist here. Reload the page.',
+        'not_in_bom' => 'Only materials in the style\'s bill of materials go to this order. Add the item to the bill of materials first.',
+        'over_issue' => 'This is more than the order needs. Check the quantities, or say yes to give more.',
+        'over_issue_blocked' => 'This is more than the order needs, and the company does not allow that. Lower the quantities, or change the order or its bill of materials.',
+        'too_much_back' => 'More is coming back than this order has on the floor. Lower the quantity.',
+        'over_cut' => 'Too many :size / :color pieces: at most :allowed more can be cut for this order.',
+        'future_date' => 'The day cannot be after today.',
     ],
     'validation' => [
         'list_empty' => 'Give at least one.',
@@ -31,5 +39,12 @@ return [
         'field_date' => 'Write a date, like 2026-11-30.',
         'field_choice' => 'Choose one of the choices.',
         'field_yes_no' => 'Choose yes or no.',
+    ],
+    'narration' => [
+        'issue' => 'Materials to the floor for order :number',
+        'return' => 'Materials back from the floor, order :number',
+    ],
+    'posting_keys' => [
+        'wip' => 'Work in progress (factory)',
     ],
 ];

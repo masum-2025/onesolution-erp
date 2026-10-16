@@ -4,12 +4,16 @@ namespace Modules\FactoryErp\Http;
 
 use Illuminate\Support\Collection;
 use Modules\FactoryErp\Models\BomLine;
+use Modules\FactoryErp\Models\Cutting;
+use Modules\FactoryErp\Models\CuttingLine;
 use Modules\FactoryErp\Models\Field;
+use Modules\FactoryErp\Models\Issue;
+use Modules\FactoryErp\Models\IssueLine;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\OrderLine;
 use Modules\FactoryErp\Models\Style;
 
-/** Styles, orders and own fields as the screens read them. */
+/** Styles, orders, materials issued, lays cut and own fields as the screens read them. */
 class FactoryPresenter
 {
     /**
@@ -46,6 +50,36 @@ class FactoryPresenter
                 'value_minor' => (int) $lines->sum('quantity') * (int) $order->unit_price_minor,
             ]),
             ...$extra,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, IssueLine>  $lines
+     * @return array<string, mixed>
+     */
+    public function issue(Issue $issue, Collection $lines): array
+    {
+        return [
+            'id' => $issue->getKey(),
+            ...$issue->only(['order_id', 'warehouse_id', 'kind', 'cost_minor', 'currency', 'journal_id', 'note', 'created_by']),
+            'issued_on' => $issue->issued_on->toDateString(),
+            'created_at' => $issue->created_at?->toIso8601String(),
+            'lines' => $lines->map(fn (IssueLine $line) => $line->only(['item_id', 'quantity_milli', 'cost_minor']))->values(),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, CuttingLine>  $lines
+     * @return array<string, mixed>
+     */
+    public function cutting(Cutting $cutting, Collection $lines): array
+    {
+        return [
+            'id' => $cutting->getKey(),
+            ...$cutting->only(['order_id', 'lay_number', 'pieces', 'note', 'created_by', 'void_reason', 'version']),
+            'cut_on' => $cutting->cut_on->toDateString(),
+            'voided_at' => $cutting->voided_at?->toIso8601String(),
+            'lines' => $lines->map(fn (CuttingLine $line) => $line->only(['size', 'color', 'quantity']))->values(),
         ];
     }
 

@@ -75,6 +75,31 @@ export function sheetTotals(sizes, colors, cells) {
     return { bySize, byColor, total: Object.values(bySize).reduce((sum, value) => sum + value, 0) };
 }
 
+/**
+ * What "fill in what is left" gives for a material: still to give, at most
+ * what the stores hold, in whole steps of its unit (decimals 0: whole
+ * pieces). Up to the next step while the stores have it, else down.
+ */
+export function fillQuantity(toIssueMilli, onHandMilli, decimals = 3) {
+    const step = 10 ** Math.max(0, 3 - Math.min(3, decimals));
+    const up = Math.ceil(toIssueMilli / step) * step;
+    if (up <= onHandMilli) return up;
+    return Math.floor(Math.min(toIssueMilli, onHandMilli) / step) * step;
+}
+
+/** A typed sheet ({"size|color": text}) -> lines for the API; blanks are 0. */
+export function sheetToLines(sheet) {
+    return Object.entries(sheet).map(([key, text]) => {
+        const [size, color] = key.split('|');
+        return { size, color, quantity: piecesOf(text) ?? 0 };
+    });
+}
+
+/** Most pieces of a size and colour that may be cut: ordered plus the allowance (basis points), rounded down as the server does. */
+export function cutAllowed(ordered, allowanceBp) {
+    return Math.floor((ordered * (10000 + allowanceBp)) / 10000);
+}
+
 /** The server's rule: ceil(pieces × consumption × (10000 + wastage) / (per × 10000)), per = 12 for a dozen. */
 export function need(pieces, consumptionMilli, wastageBp, basis) {
     const bottom = (basis === 'dozen' ? 12 : 1) * 10000;

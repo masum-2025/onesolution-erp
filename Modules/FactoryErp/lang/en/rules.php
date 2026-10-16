@@ -22,8 +22,17 @@ return [
         'label' => 'Days ahead to watch ship dates',
         'description' => 'Orders shipping within this many days show on the home; confirmed ones not in production yet ring the bell.',
     ],
+    'over_issue' => [
+        'label' => 'More material than an order needs',
+        'description' => 'Warn: the store keeper is asked again and may say yes. Block: never more than the bill of materials works out.',
+    ],
+    'over_cut_bp' => [
+        'label' => 'Extra pieces that may be cut',
+        'description' => 'Above the order, per size and colour, in hundredths of a per cent: 300 = 3%.',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',
+        'floor' => 'Floor',
     ],
 ];

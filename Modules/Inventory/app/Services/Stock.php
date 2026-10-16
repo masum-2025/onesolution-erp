@@ -64,6 +64,17 @@ class Stock
     }
 
     /**
+     * The company's warehouses in use (a factory issues materials from them).
+     *
+     * @return list<array{id: string, unit_id: string, code: string, name: string}>
+     */
+    public function warehouses(Organization $company): array
+    {
+        return $this->inventories->query(Warehouse::class, $company)->where('is_active', true)->orderBy('code')->get()
+            ->map(fn (Warehouse $warehouse) => ['id' => $warehouse->getKey(), 'unit_id' => $warehouse->unit_id, 'code' => $warehouse->code, 'name' => $warehouse->name])->values()->all();
+    }
+
+    /**
      * Item categories in use: name in the reader's language (a counter groups its buttons by them).
      *
      * @return array<string, string>
@@ -120,10 +131,11 @@ class Stock
      * Stock leaves (quantities positive) or comes back (negative quantities) for another module's record.
      * Lines of non-stock items are passed over (cost 0). Returns the cost per line and in all.
      *
-     * A line coming back may give the cost of one (what it left at); $force
+     * A line coming back may give the cost of one (what it left at), or its
+     * exact value (value_minor: a factory returning part of what it took); $force
      * lets stock go below zero for something already done (an offline sale).
      *
-     * @param  list<array{item_id: string, quantity_milli: int, batch_number?: string|null, unit_cost_minor?: int|null}>  $lines
+     * @param  list<array{item_id: string, quantity_milli: int, batch_number?: string|null, unit_cost_minor?: int|null, value_minor?: int|null}>  $lines
      * @param  array{module: string, type: string, id: string, actor_id?: string|null}  $source
      * @return array{lines: list<int>, cost_minor: int, moved: bool}
      */
@@ -152,7 +164,7 @@ class Stock
                 $cost = $quantity < 0 ? ($line['unit_cost_minor'] ?? $this->ledger->unitCost($company, $item, $warehouse)) : null;
                 $moves = $this->ledger->move($company, $item, $warehouse, $kind, -$quantity, $cost,
                     ['source_module' => $source['module'], 'source_type' => $source['type'], 'source_id' => $source['id'], 'actor_id' => $source['actor_id'] ?? null],
-                    $on, ['number' => $line['batch_number'] ?? null], null, $force);
+                    $on, ['number' => $line['batch_number'] ?? null], $quantity < 0 ? ($line['value_minor'] ?? null) : null, $force);
                 $costs[] = -array_sum(array_map(fn (Move $move) => $move->value_minor, $moves));
             }
 

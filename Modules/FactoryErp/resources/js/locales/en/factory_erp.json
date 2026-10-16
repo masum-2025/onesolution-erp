@@ -74,7 +74,10 @@
         "enough": "Enough",
         "csv": "Download CSV",
         "empty_title": "Nothing to work out yet",
-        "empty_text": "Add the style's bill of materials and the pieces of the order."
+        "empty_text": "Add the style's bill of materials and the pieces of the order.",
+        "issued": "Given",
+        "to_issue": "Still to give",
+        "all_given": "All given"
     },
     "styles": {
         "title": "Styles and BOM",
@@ -186,5 +189,70 @@
     "delete": "Delete",
     "active": "In use",
     "off": "Off",
-    "conflict": "Someone changed this a moment ago. It is fresh now; make your change again."
+    "conflict": "Someone changed this a moment ago. It is fresh now; make your change again.",
+    "order_tabs": {
+        "sheet": "Pieces",
+        "materials": "Materials",
+        "cutting": "Cutting"
+    },
+    "issues": {
+        "title": "Given to the floor and taken back",
+        "text": "Every issue and return for this order, at what the store valued it.",
+        "give": "Give materials",
+        "take_back": "Take back",
+        "give_title": "Materials to the floor for {number}",
+        "back_title": "Materials back from the floor, {number}",
+        "give_text": "Stock leaves the store at its cost and counts as work in progress.",
+        "back_text": "What comes back goes into the store again at its share of what it cost.",
+        "store": "Store",
+        "day": "Day",
+        "materials": "Materials",
+        "note": "Note",
+        "note_hint": "e.g. for cutting table 2",
+        "fill_left": "Fill in what is left",
+        "fill_all": "Take back everything",
+        "left_hint": "Still to give: {quantity} {unit}",
+        "floor_hint": "On the floor: {quantity} {unit}",
+        "quantity_of": "Quantity of {item}",
+        "nothing_needed": "This order needs no materials yet: add the style's bill of materials.",
+        "nothing_out": "Nothing of this order is on the floor.",
+        "no_store": "There is no store in use. Add one in Inventory first.",
+        "issued": "Materials given.",
+        "returned": "Materials taken back.",
+        "over_title": "More than the order needs?",
+        "over_text": "These go above what the bill of materials works out:",
+        "over_line": "{item}: needs {need} {unit}, would be {after} {unit}",
+        "over_yes": "Yes, give more",
+        "confirm_first": "Materials go to the floor once the order is confirmed.",
+        "empty_title": "Nothing given yet",
+        "empty_text": "Give materials once the order is confirmed.",
+        "kinds": {
+            "issue": "Given",
+            "return": "Back"
+        }
+    },
+    "cutting": {
+        "title": "Cutting",
+        "text": "{cut} of {ordered} pieces cut ({percent}%).",
+        "new": "New lay",
+        "new_title": "New lay for {number}",
+        "new_text": "Type the pieces cut in this lay. At most {percent}% above the order per size and colour.",
+        "day": "Day cut",
+        "note_hint": "e.g. marker, table, cutter",
+        "too_many": "Too many for: {cells}. Keep them to what is left (with the allowance).",
+        "save": "Save lay ({pieces} pcs)",
+        "saved": "Lay {lay} saved.",
+        "lays": "Lays",
+        "lay_pieces": "Lay {lay}: {pieces} pcs",
+        "empty_title": "No lay cut yet",
+        "empty_text": "Cutting starts production: the first lay puts a confirmed order into production.",
+        "confirm_first": "Confirm the order first; then lays can be cut.",
+        "void": "Void",
+        "void_title": "Void lay {lay}?",
+        "void_text": "Its pieces stop counting and can be cut again. The lay stays in the list.",
+        "void_hint": "e.g. wrong marker",
+        "voided": "Lay {lay} voided.",
+        "void_badge": "Voided",
+        "voided_because": "Voided: {reason}"
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\FactoryErp\Http\Controllers\FloorController;
 use Modules\FactoryErp\Http\Controllers\OrderController;
 use Modules\FactoryErp\Http\Controllers\SetupController;
 use Modules\FactoryErp\Http\Controllers\StyleController;
@@ -23,6 +24,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{order}', [OrderController::class, 'show']);
         Route::get('orders/{order}/requirements', [OrderController::class, 'requirements']);
+        Route::get('orders/{order}/issues', [FloorController::class, 'issues']);
+        Route::get('orders/{order}/cuttings', [FloorController::class, 'cuttings']);
 
         Route::middleware('throttle:factory-writes')->group(function () {
             Route::post('buyers', [SetupController::class, 'addBuyer']);
@@ -37,5 +40,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
             Route::post('orders/{order}/start', [OrderController::class, 'start']);
             Route::post('orders/{order}/ship', [OrderController::class, 'ship']);
             Route::post('orders/{order}/cancel', [OrderController::class, 'cancel']);
+            Route::post('orders/{order}/issues', [FloorController::class, 'issue']);
+            Route::post('orders/{order}/cuttings', [FloorController::class, 'cut']);
+            Route::post('orders/{order}/cuttings/{cutting}/void', [FloorController::class, 'voidCutting']);
         });
     });
