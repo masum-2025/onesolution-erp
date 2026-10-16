@@ -18,7 +18,7 @@ import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { factoryApi } from '../api';
 import { useFactorySetup } from '../setup';
-import { currentHour, piecesOf, sewLeft } from '../lib';
+import { currentHour, hourTarget, piecesOf, sewLeft } from '../lib';
 
 /**
  * A sewing line's output, made for a phone on the floor: choose the line
@@ -37,13 +37,16 @@ const hours = Array.from({ length: 24 }, (_, hour) => hour);
 const hourText = (hour) => `${formatNumber(hour).padStart(2, formatNumber(0))}:${formatNumber(0)}${formatNumber(0)}`;
 
 // The day: its entries, lines and orders in production (or, offline, what the phone keeps).
-const day = reactive({ loading: true, error: null, entries: [], lines: [], orders: [], offline: false, date: '' });
+const day = reactive({ loading: true, error: null, entries: [], lines: [], orders: [], days: [], efficiency: {}, offline: false, date: '' });
 async function load() {
     day.loading = true;
     day.error = null;
     try {
         const { data, meta } = await api.outputs(day.date ? { date: day.date } : {});
-        Object.assign(day, { entries: data, lines: meta.lines.filter((line) => line.is_active), orders: meta.orders.filter((order) => order.status === 'in_production'), offline: false, date: meta.date });
+        Object.assign(day, {
+            entries: data, lines: meta.lines.filter((line) => line.is_active), orders: meta.orders.filter((order) => order.status === 'in_production'),
+            days: meta.days ?? [], efficiency: meta.efficiency ?? {}, offline: false, date: meta.date,
+        });
     } catch (error) {
         const kept = error.code === 'network' && offline.enabled ? await offlineRecords('factory_erp.output') : [];
         if (kept.length) {
@@ -66,6 +69,39 @@ watch(() => day.orders, (orders) => {
     if (!orders.some((order) => order.id === form.orderId)) form.orderId = orders[0]?.id ?? '';
 });
 const order = computed(() => day.orders.find((item) => item.id === form.orderId) ?? null);
+
+// Who works on the chosen line today, and the hour's target from it.
+const lineDay = computed(() => day.days.find((item) => item.line_id === form.lineId) ?? null);
+const people = reactive({ operators: '', helpers: '', minutes: '' });
+watch(lineDay, (value) => {
+    Object.assign(people, { operators: value ? String(value.operators) : '', helpers: value ? String(value.helpers) : '', minutes: String(value?.minutes ?? setup.rules.value.shift_minutes ?? 480) });
+}, { immediate: true });
+const peopleBad = computed(() => piecesOf(people.operators) === null || people.operators.trim() === '' || piecesOf(people.helpers) === null || !(piecesOf(people.minutes) > 0));
+const savingDay = ref(false);
+async function saveDay() {
+    savingDay.value = true;
+    try {
+        await api.saveLineDay({
+            line_id: form.lineId, ...(day.date ? { worked_on: day.date } : {}), operators: piecesOf(people.operators), helpers: piecesOf(people.helpers) ?? 0,
+            minutes: piecesOf(people.minutes), ...(lineDay.value ? { base_version: lineDay.value.version } : {}),
+        });
+        toast.success(t('factory_erp.output.day_saved'));
+        await load();
+    } catch (error) {
+        toast.error(error.code === 'version_conflict' ? t('factory_erp.conflict') : error.message);
+        if (error.code === 'version_conflict') await load();
+    } finally {
+        savingDay.value = false;
+    }
+}
+const target = computed(() => {
+    if (!lineDay.value || !order.value?.smv_milli) return null;
+    const count = lineDay.value.operators + (setup.rules.value.efficiency_counts_helpers ? lineDay.value.helpers : 0);
+    return hourTarget(count, order.value.smv_milli, setup.rules.value.target_efficiency_bp ?? 6000);
+});
+const thisHour = computed(() => day.entries
+    .filter((entry) => !entry.voided_at && entry.line_id === form.lineId && entry.order_id === form.orderId && (!byHour.value || entry.hour === form.hour))
+    .reduce((sum, entry) => sum + entry.good, 0));
 
 // What each size and colour of the order can still take (online only).
 const cells = ref({});
@@ -192,6 +228,31 @@ async function voidEntry() {
                     </AppField>
                 </div>
 
+                <div v-if="!day.offline" class="mt-4 rounded-xl border border-line p-3">
+                    <p class="mb-2 text-[13px] font-semibold text-fg">{{ t('factory_erp.output.people_title') }}</p>
+                    <div class="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-2">
+                        <label class="block">
+                            <span class="mb-1 block text-[12px] text-muted">{{ t('factory_erp.output.operators') }}</span>
+                            <input v-model="people.operators" inputmode="numeric" class="field-input tabular h-11 text-center" />
+                        </label>
+                        <label class="block">
+                            <span class="mb-1 block text-[12px] text-muted">{{ t('factory_erp.output.helpers') }}</span>
+                            <input v-model="people.helpers" inputmode="numeric" class="field-input tabular h-11 text-center" />
+                        </label>
+                        <label class="block">
+                            <span class="mb-1 block text-[12px] text-muted">{{ t('factory_erp.output.minutes') }}</span>
+                            <input v-model="people.minutes" inputmode="numeric" class="field-input tabular h-11 text-center" />
+                        </label>
+                        <AppButton class="h-11" :loading="savingDay" :disabled="peopleBad" @click="saveDay">{{ t('factory_erp.save') }}</AppButton>
+                    </div>
+                    <p v-if="target !== null" class="mt-2 text-[13px]">
+                        {{ t('factory_erp.output.target', { target: formatNumber(target) }) }}
+                        <span class="tabular ms-1 font-semibold" :class="thisHour >= target ? 'text-ok' : 'text-warn'">{{ t('factory_erp.output.done_now', { count: formatNumber(thisHour) }) }}</span>
+                    </p>
+                    <p v-else-if="order && !order.smv_milli" class="mt-2 text-[12px] text-muted">{{ t('factory_erp.output.no_smv') }}</p>
+                    <p v-else-if="!lineDay" class="mt-2 text-[12px] text-muted">{{ t('factory_erp.output.people_hint') }}</p>
+                </div>
+
                 <SkeletonRows v-if="cellsLoading" :rows="3" class="mt-4" />
                 <p v-else-if="!rows.length" class="mt-4 rounded-xl bg-subtle px-3 py-3 text-center text-[13px] text-muted">{{ t('factory_erp.output.nothing_cut') }}</p>
                 <ul v-else class="mt-4 space-y-2">
@@ -228,6 +289,9 @@ async function voidEntry() {
                         <span class="font-semibold text-fg">{{ lineCode(line.id) }}</span>
                         <span class="tabular ms-2">{{ formatNumber(line.good) }}</span>
                         <span class="tabular ms-2" :class="line.rate >= warnRate ? 'font-semibold text-bad' : 'text-muted'">{{ t('factory_erp.output.rate', { rate: formatNumber(line.rate) }) }}</span>
+                        <span v-if="day.efficiency[line.id]?.efficiency_bp != null" class="tabular ms-2 font-semibold" :class="day.efficiency[line.id].efficiency_bp >= (setup.rules.value.target_efficiency_bp ?? 6000) ? 'text-ok' : 'text-warn'">
+                            {{ t('factory_erp.output.efficiency', { value: formatNumber(Math.floor(day.efficiency[line.id].efficiency_bp / 100)) }) }}
+                        </span>
                     </li>
                 </ul>
                 <EmptyState v-if="!day.entries.length" compact :icon="Gauge" :title="t('factory_erp.output.empty_title')" :text="t('factory_erp.output.empty_text')" />

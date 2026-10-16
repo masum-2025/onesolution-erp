@@ -10,7 +10,9 @@ use Modules\Crm\Services\Organizations;
 use Modules\FactoryErp\Http\Controllers\Concerns\FindsFactory;
 use Modules\FactoryErp\Http\FactoryPresenter;
 use Modules\FactoryErp\Http\Requests\BomRequest;
+use Modules\FactoryErp\Http\Requests\OperationsRequest;
 use Modules\FactoryErp\Http\Requests\StyleRequest;
+use Modules\FactoryErp\Models\Operation;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\Style;
 use Modules\FactoryErp\Services\Floor;
@@ -79,11 +81,29 @@ class StyleController extends Controller
         return $this->answer($company, $this->styles->saveBom($company, $found, (int) $data['base_version'], $data['lines'], $request->user()));
     }
 
+    /** The operation bulletin; setting or changing a piece rate (pay) also needs factory_erp.manage at the company. */
+    public function saveOperations(OperationsRequest $request, string $organization, string $style): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        $found = $this->styleOf($company, $style);
+        Gate::authorize('factory_erp.merchandise', $unit);
+        $data = $request->validated();
+        if ($this->styles->ratesChange($company, $found, $data['lines'])) {
+            Gate::authorize('factory_erp.manage', $company);
+        }
+
+        return $this->answer($company, $this->styles->saveOperations($company, $found, (int) $data['base_version'], $data['lines'], $request->user()));
+    }
+
     private function answer($company, Style $style, int $status = 200): JsonResponse
     {
+        $operations = $this->styles->operations($company, $style);
+
         return response()->json([
             'data' => [
                 ...$this->presenter->style($style, $this->styles->bom($company, $style)),
+                'operations' => $operations->map(fn (Operation $operation) => $operation->only(['id', 'name', 'machine', 'smv_milli', 'piece_rate_minor']))->values(),
+                'smv_milli' => (int) $operations->sum('smv_milli'),
                 'orders' => $this->floor->query(Order::class, $company)->where('style_id', $style->getKey())->count(),
             ],
             'meta' => ['buyer' => $this->buyers->many($company, [$style->buyer_id])[$style->buyer_id] ?? null],

@@ -14,4 +14,6 @@ return [
     'wip' => 'Work in progress',
     'wip_hint' => '{0} No order is open.|{1} In the one open order.|[2,*] In :count open orders.',
     'attention_rejects' => 'Lines with many rejects today',
+    'efficiency' => 'Line efficiency today (%)',
+    'efficiency_hint' => 'Target :target%',
 ];

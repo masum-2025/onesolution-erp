@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cutAllowed, fillQuantity, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
+import { cutAllowed, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
 
 describe('factory', () => {
     it('works out a need exactly as the server does, rounded up', () => {
@@ -46,6 +46,15 @@ describe('factory', () => {
         expect(stagePercent(415, 840)).toBe(49);
         expect(stagePercent(900, 840)).toBe(100);
         expect(stagePercent(5, 0)).toBe(0);
+    });
+
+    it('works out the hour\'s target and efficiency as the server does', () => {
+        // 20 people × 60 ÷ 12.5 minutes × 60% = 57.6 -> 57.
+        expect(hourTarget(20, 12500, 6000)).toBe(57);
+        expect(hourTarget(20, 0, 6000)).toBe(0);
+        // 3,750 earned minutes over 9,600: 39.06%.
+        expect(efficiencyBp(3750000, 9600)).toBe(3906);
+        expect(efficiencyBp(10, 0)).toBeNull();
     });
 
     it('reads typed numbers, Bangla digits too, without floats', () => {

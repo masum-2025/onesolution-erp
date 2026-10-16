@@ -21,4 +21,5 @@ return [
     'line_updated' => 'সেলাই লাইন বদল',
     'output_voided' => 'লাইনের উৎপাদন বাতিল',
     'goods_received' => 'তৈরি মাল স্টোরে',
+    'operations_saved' => 'অপারেশন বুলেটিন রাখা',
 ];

@@ -52,6 +52,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
             Route::post('lines', [SewingController::class, 'storeLine']);
             Route::patch('lines/{line}', [SewingController::class, 'updateLine']);
             Route::post('outputs', [SewingController::class, 'storeOutput']);
+            Route::post('line-days', [SewingController::class, 'saveDay']);
+            Route::put('styles/{style}/operations', [StyleController::class, 'saveOperations']);
             Route::post('outputs/{output}/void', [SewingController::class, 'voidOutput']);
         });
     });

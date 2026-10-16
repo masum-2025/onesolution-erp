@@ -325,7 +325,17 @@
         "void_title": "Void this entry?",
         "void_text": "Its pieces stop counting and can be written again. The entry stays in the list.",
         "void_hint": "e.g. counted twice",
-        "voided": "Entry voided."
+        "voided": "Entry voided.",
+        "people_title": "On this line today",
+        "operators": "Operators",
+        "helpers": "Helpers",
+        "minutes": "Minutes",
+        "day_saved": "Today's people saved.",
+        "target": "Target this hour: {target} pcs.",
+        "done_now": "Written: {count}",
+        "no_smv": "This style has no operation bulletin yet: no target.",
+        "people_hint": "Write who works on the line today to see the hour's target and efficiency.",
+        "efficiency": "{value}% efficiency"
     },
     "lines": {
         "title": "Sewing lines",
@@ -344,5 +354,20 @@
         "saved": "Line saved.",
         "empty_title": "No sewing line yet",
         "empty_text": "Add a line for each group of machines that sews together."
+    },
+    "operations": {
+        "title": "Operation bulletin",
+        "text": "Each sewing job with its standard minutes (SMV) and piece rate. This style: {smv} minutes a piece.",
+        "add": "Add operation",
+        "name": "Operation",
+        "name_hint": "e.g. Collar join",
+        "machine": "Machine",
+        "smv": "SMV (minutes)",
+        "rate": "Piece rate ({currency})",
+        "remove": "Remove operation",
+        "saved": "Operation bulletin saved.",
+        "rates_need_manager": "Only a factory manager can set or change piece rates. Keep the rates as they were, or ask a manager.",
+        "empty_title": "No operation yet",
+        "empty_text": "Add the style's sewing jobs and their minutes: the line's target and efficiency come from them."
     }
 }

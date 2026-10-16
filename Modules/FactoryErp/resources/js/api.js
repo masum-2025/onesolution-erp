@@ -20,6 +20,8 @@ export function factoryApi(organizationId) {
         createStyle: (body) => api(`${base}/styles`, { method: 'POST', body }),
         updateStyle: (id, body) => api(`${base}/styles/${id}`, { method: 'PATCH', body }),
         saveBom: (id, body) => api(`${base}/styles/${id}/bom`, { method: 'PUT', body }),
+        saveOperations: (id, body) => api(`${base}/styles/${id}/operations`, { method: 'PUT', body }),
+        saveLineDay: (body) => api(`${base}/line-days`, { method: 'POST', body }),
         orders: (query = {}) => api(`${base}/orders`, { query }),
         order: (id) => api(`${base}/orders/${id}`),
         requirements: (id) => api(`${base}/orders/${id}/requirements`),

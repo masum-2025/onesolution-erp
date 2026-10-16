@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Modules\Crm\Services\Organizations;
 use Modules\FactoryErp\Exceptions\FactoryException;
 use Modules\FactoryErp\Models\BomLine;
+use Modules\FactoryErp\Models\Operation;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\OrderLine;
 use Modules\FactoryErp\Models\Style;
@@ -43,6 +44,78 @@ class Styles
     public function bom(Organization $company, Style $style): Collection
     {
         return $this->floor->query(BomLine::class, $company)->where('style_id', $style->getKey())->orderBy('sort_order')->orderBy('created_at')->get();
+    }
+
+    /** @return Collection<int, Operation> */
+    public function operations(Organization $company, Style $style): Collection
+    {
+        return $this->floor->query(Operation::class, $company)->where('style_id', $style->getKey())->orderBy('sort_order')->orderBy('created_at')->get();
+    }
+
+    /**
+     * Standard minutes of one piece of each style (thousandths): the sum of its operations.
+     *
+     * @param  list<string>  $styleIds
+     * @return array<string, int>
+     */
+    public function smv(Organization $company, array $styleIds): array
+    {
+        return $this->floor->query(Operation::class, $company)->whereIn('style_id', $styleIds)->get(['style_id', 'smv_milli'])
+            ->groupBy('style_id')->map(fn ($operations) => (int) $operations->sum('smv_milli'))->all();
+    }
+
+    /**
+     * Whether new lines change what an operator is paid: a rate set or changed for an operation (by name).
+     *
+     * @param  list<array{name: string, piece_rate_minor?: int|null}>  $lines
+     */
+    public function ratesChange(Organization $company, Style $style, array $lines): bool
+    {
+        $now = $this->operations($company, $style)->mapWithKeys(fn (Operation $operation) => [mb_strtolower($operation->name) => $operation->piece_rate_minor])->all();
+        foreach ($lines as $line) {
+            $rate = isset($line['piece_rate_minor']) ? (int) $line['piece_rate_minor'] : null;
+            if ($rate !== ($now[mb_strtolower(trim($line['name']))] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Replace a style's operation bulletin.
+     *
+     * @param  list<array{name: string, machine?: ?string, smv_milli: int, piece_rate_minor?: int|null}>  $lines
+     */
+    public function saveOperations(Organization $company, Style $style, int $baseVersion, array $lines, User $actor): Style
+    {
+        $names = array_map(fn (array $line) => mb_strtolower(trim($line['name'])), $lines);
+        if (count($names) !== count(array_unique($names))) {
+            throw ValidationException::withMessages(['lines' => __('factory_erp::factory.validation.operation_twice')]);
+        }
+
+        return $this->floor->transaction($company, function () use ($company, $style, $baseVersion, $lines, $actor) {
+            $style = $this->floor->query(Style::class, $company)->whereKey($style->getKey())->lockForUpdate()->firstOrFail();
+            if ($style->version !== $baseVersion) {
+                throw FactoryException::versionConflict(['version' => $style->version]);
+            }
+            $old = $this->operations($company, $style)->map(fn (Operation $operation) => $operation->only(['name', 'smv_milli', 'piece_rate_minor']))->values()->all();
+            $this->floor->query(Operation::class, $company)->where('style_id', $style->getKey())->delete();
+            foreach (array_values($lines) as $order => $line) {
+                $this->floor->query(Operation::class, $company)->create([
+                    'organization_id' => $company->getKey(), 'style_id' => $style->getKey(), 'name' => trim($line['name']), 'machine' => $line['machine'] ?? null,
+                    'smv_milli' => (int) $line['smv_milli'], 'piece_rate_minor' => isset($line['piece_rate_minor']) ? (int) $line['piece_rate_minor'] : null, 'sort_order' => $order,
+                ]);
+            }
+            $style->version++;
+            $style->save();
+            // Piece rates are pay: the old and new ones are kept in the audit log.
+            $this->audit->record('factory_erp.operations_saved', $style, old: ['operations' => $old],
+                new: ['operations' => array_map(fn (array $line) => ['name' => trim($line['name']), 'smv_milli' => (int) $line['smv_milli'], 'piece_rate_minor' => $line['piece_rate_minor'] ?? null], array_values($lines))],
+                actor: $actor, organizationId: $company->getKey());
+
+            return $style;
+        });
     }
 
     /**

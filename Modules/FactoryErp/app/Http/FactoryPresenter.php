@@ -10,6 +10,7 @@ use Modules\FactoryErp\Models\Field;
 use Modules\FactoryErp\Models\Issue;
 use Modules\FactoryErp\Models\IssueLine;
 use Modules\FactoryErp\Models\Line;
+use Modules\FactoryErp\Models\LineDay;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\OrderLine;
 use Modules\FactoryErp\Models\Output;
@@ -86,6 +87,12 @@ class FactoryPresenter
             'voided_at' => $cutting->voided_at?->toIso8601String(),
             'lines' => $lines->map(fn (CuttingLine $line) => $line->only(['size', 'color', 'quantity']))->values(),
         ];
+    }
+
+    /** @return array<string, mixed> */
+    public function lineDay(LineDay $day): array
+    {
+        return ['id' => $day->getKey(), ...$day->only(['line_id', 'operators', 'helpers', 'minutes', 'note', 'version']), 'worked_on' => $day->worked_on->toDateString()];
     }
 
     /** @return array<string, mixed> */

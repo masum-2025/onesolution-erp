@@ -100,6 +100,16 @@ export function sewLeft(cell) {
     return Math.max(0, (cell?.cut ?? 0) - (cell?.good ?? 0) - (cell?.rejects ?? 0));
 }
 
+/** Pieces an hour at the target, as the server works it out: people × 60 ÷ SMV × target, rounded down. */
+export function hourTarget(people, smvMilli, targetBp) {
+    return smvMilli > 0 ? Math.floor((people * 60 * 1000 * targetBp) / (smvMilli * 10000)) : 0;
+}
+
+/** Efficiency in basis points: earned (thousandths of a minute) over available minutes; null when none available. */
+export function efficiencyBp(earnedMilli, availableMinutes) {
+    return availableMinutes > 0 ? Math.floor((earnedMilli * 10) / availableMinutes) : null;
+}
+
 /** The hour a phone is in (0-23), for a new entry. */
 export function currentHour(now = new Date()) {
     return now.getHours();

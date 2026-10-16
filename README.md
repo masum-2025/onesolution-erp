@@ -2866,6 +2866,22 @@ warehouses in use).
   until Inventory keeps stock accounts per category.
 - After deploy: migrate, `rules:sync`, `access:sync`, `packaging:sync`.
 
+### FAC-3a: SMV and line efficiency
+
+- **Operation bulletin** (`fac_operations`, `PUT …/styles/{id}/operations`, replaced as a whole with
+  `base_version`): each sewing job's name (once), machine, SMV in thousandths of a minute, and piece rate
+  (minor units of the company's currency; paid from FAC-3c). The style's SMV is their sum. Setting or
+  changing a piece rate also needs `factory_erp.manage` at the company; old and new rates are audited
+  (`factory_erp.operations_saved`).
+- **Line days** (`fac_line_days`, `POST …/factory/line-days`, `factory_erp.produce`): operators, helpers and
+  minutes (default rule `factory_erp.shift_minutes`, 480) of a line on a day; changed with its version.
+- **Efficiency** (integers): earned = good pieces × style SMV; available = people × minutes (helpers only
+  with `factory_erp.efficiency_counts_helpers`); efficiency = earned ÷ available (basis points); target an
+  hour = people × 60 ÷ SMV × `factory_erp.target_efficiency_bp` (6000 = 60%). `GET …/outputs` meta now has
+  `days`, `efficiency` per line and each order's `smv_milli`.
+- Screens: operation bulletin on the style page; "On this line today" with the hour's target on the
+  output page; dashboard bars "Line efficiency today".
+
 ### Future expansion (Factory ERP)
 
 - FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,

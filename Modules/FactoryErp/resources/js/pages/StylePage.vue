@@ -16,10 +16,11 @@ import { factoryApi } from '../api';
 import { useFactorySetup } from '../setup';
 import { fieldText } from '../lib';
 import BomEditor from '../components/BomEditor.vue';
+import OperationsEditor from '../components/OperationsEditor.vue';
 import OrderDialog from '../components/OrderDialog.vue';
 import StyleDialog from '../components/StyleDialog.vue';
 
-/** One style: buyer, sizes, colours, own fields, its bill of materials (edited here), and its orders. */
+/** One style: buyer, sizes, colours, own fields, its bill of materials and operation bulletin (edited here), and its orders. */
 const api = factoryApi(currentOrganization().id);
 const setup = useFactorySetup();
 const route = useRoute();
@@ -60,6 +61,7 @@ function bomSaved(data) {
             </div>
 
             <BomEditor :style-record="style" :editable="setup.can('merchandise')" @saved="bomSaved" />
+            <OperationsEditor class="mt-5" :style-record="style" :editable="setup.can('merchandise')" @saved="bomSaved" />
 
             <StyleDialog :open="editing" :style="style" @close="editing = false" @saved="editing = false; view.reload()" @conflict="editing = false; view.reload()" />
             <OrderDialog :open="ordering" :style-id="style.id" @close="ordering = false" />

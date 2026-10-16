@@ -10,15 +10,19 @@ use Illuminate\Support\Facades\Gate;
 use Modules\FactoryErp\Exceptions\FactoryException;
 use Modules\FactoryErp\Http\Controllers\Concerns\FindsFactory;
 use Modules\FactoryErp\Http\FactoryPresenter;
+use Modules\FactoryErp\Http\Requests\LineDayRequest;
 use Modules\FactoryErp\Http\Requests\LineRequest;
 use Modules\FactoryErp\Http\Requests\OutputRequest;
 use Modules\FactoryErp\Models\Line;
+use Modules\FactoryErp\Models\LineDay;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\Output;
 use Modules\FactoryErp\Models\Style;
+use Modules\FactoryErp\Services\Efficiency;
 use Modules\FactoryErp\Services\Floor;
 use Modules\FactoryErp\Services\Lines;
 use Modules\FactoryErp\Services\Outputs;
+use Modules\FactoryErp\Services\Styles;
 
 /**
  * Sewing lines of the unit and the units below it (set up with
@@ -30,7 +34,14 @@ class SewingController extends Controller
 {
     use FindsFactory;
 
-    public function __construct(private Floor $floor, private Lines $lines, private Outputs $outputs, private FactoryPresenter $presenter) {}
+    public function __construct(
+        private Floor $floor,
+        private Lines $lines,
+        private Outputs $outputs,
+        private Efficiency $efficiency,
+        private Styles $styles,
+        private FactoryPresenter $presenter,
+    ) {}
 
     public function lines(Request $request, string $organization): JsonResponse
     {
@@ -71,6 +82,7 @@ class SewingController extends Controller
         $orders = $this->floor->query(Order::class, $company)->whereIn('unit_id', $this->floor->subtreeIds($unit))
             ->where(fn ($query) => $query->where('status', 'in_production')->orWhereIn('id', $entries->pluck('order_id')))->orderBy('ship_on')->get();
         $styles = $this->floor->query(Style::class, $company)->whereKey($orders->pluck('style_id')->unique())->get()->keyBy('id');
+        $smv = $this->styles->smv($company, $styles->keys()->all());
 
         return response()->json([
             'data' => $entries->map(fn (Output $output) => $this->presenter->output($output, $lines[$output->getKey()] ?? collect()))->values(),
@@ -81,9 +93,22 @@ class SewingController extends Controller
                     'id' => $order->getKey(), 'number' => $order->number, 'status' => $order->status, 'ship_on' => $order->ship_on->toDateString(),
                     'style_code' => $styles[$order->style_id]?->code, 'style_name' => $styles[$order->style_id]?->name,
                     'sizes' => $styles[$order->style_id]?->sizes ?? [], 'colors' => $styles[$order->style_id]?->colors ?? [],
+                    'smv_milli' => $smv[$order->style_id] ?? 0,
                 ])->values(),
+                'days' => $this->efficiency->days($company, $this->floor->subtreeIds($unit), $day)->map(fn (LineDay $lineDay) => $this->presenter->lineDay($lineDay))->values(),
+                'efficiency' => (object) $this->efficiency->ofDay($company, $unit, $day),
             ],
         ]);
+    }
+
+    /** Who worked on a line on a day, and how long. */
+    public function saveDay(LineDayRequest $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->workplace($organization);
+        Gate::authorize('factory_erp.produce', $unit);
+        $day = $this->efficiency->saveDay($company, $unit, $request->validated(), $request->user());
+
+        return response()->json(['data' => $this->presenter->lineDay($day)], $day->version === 1 ? 201 : 200);
     }
 
     public function storeOutput(OutputRequest $request, string $organization): JsonResponse

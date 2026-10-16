@@ -38,9 +38,22 @@ return [
         'label' => 'Rejects that ring the bell',
         'description' => 'A line\'s rejects today at or above this share of what it made, in hundredths of a per cent: 500 = 5%.',
     ],
+    'shift_minutes' => [
+        'label' => 'Minutes a line works in a day',
+        'description' => 'Used when the supervisor does not write the day\'s minutes. 480 = 8 hours.',
+    ],
+    'target_efficiency_bp' => [
+        'label' => 'Target efficiency',
+        'description' => 'An hour\'s target is set at this efficiency, in hundredths of a per cent: 6000 = 60%.',
+    ],
+    'efficiency_counts_helpers' => [
+        'label' => 'Count helpers in efficiency',
+        'description' => 'On: helpers\' minutes are available minutes too. Off: operators only.',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',
         'floor' => 'Floor',
+        'efficiency' => 'Efficiency',
     ],
 ];

@@ -48,6 +48,7 @@ return [
         'field_date' => 'Write a date, like 2026-11-30.',
         'field_choice' => 'Choose one of the choices.',
         'field_yes_no' => 'Choose yes or no.',
+        'operation_twice' => 'Each operation once: two have the same name.',
     ],
     'narration' => [
         'issue' => 'Materials to the floor for order :number',

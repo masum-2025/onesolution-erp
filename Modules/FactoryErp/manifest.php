@@ -6,6 +6,7 @@
 */
 
 use Modules\FactoryErp\Dashboard\FactoryWidgets;
+use Modules\FactoryErp\Dashboard\LineEfficiency;
 use Modules\FactoryErp\Dashboard\LineOutput;
 use Modules\FactoryErp\Dashboard\ShippingSoon;
 use Modules\FactoryErp\Dashboard\TodayOutput;
@@ -16,7 +17,7 @@ return [
     'key' => 'factory_erp',
     'name' => 'factory_erp::module.name',
     'description' => 'factory_erp::module.description',
-    'version' => '1.2.0',
+    'version' => '1.3.0',
     'category' => 'business',
     // Materials come from Inventory (its Stock service), buyers are CRM organization
     // contacts (its Organizations service); materials on the floor post to Accounting
@@ -134,6 +135,42 @@ return [
             'category' => 'floor',
             'sort_order' => 90,
         ],
+        [
+            'key' => 'factory_erp.shift_minutes',
+            'type' => 'integer',
+            // Minutes a line works in a day unless its supervisor writes otherwise.
+            'schema' => ['minimum' => 60, 'maximum' => 1440],
+            'default' => 480,
+            'label' => 'factory_erp::rules.shift_minutes.label',
+            'description' => 'factory_erp::rules.shift_minutes.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'country_specific' => true,
+            'category' => 'efficiency',
+            'sort_order' => 100,
+        ],
+        [
+            'key' => 'factory_erp.target_efficiency_bp',
+            'type' => 'integer',
+            // The efficiency an hour's target is set at (6000 = 60%).
+            'schema' => ['minimum' => 1000, 'maximum' => 10000],
+            'default' => 6000,
+            'label' => 'factory_erp::rules.target_efficiency_bp.label',
+            'description' => 'factory_erp::rules.target_efficiency_bp.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'efficiency',
+            'sort_order' => 110,
+        ],
+        [
+            'key' => 'factory_erp.efficiency_counts_helpers',
+            'type' => 'boolean',
+            // Whether helpers' minutes count as available minutes besides operators'.
+            'default' => false,
+            'label' => 'factory_erp::rules.efficiency_counts_helpers.label',
+            'description' => 'factory_erp::rules.efficiency_counts_helpers.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'efficiency',
+            'sort_order' => 120,
+        ],
     ],
     'menu' => [
         [
@@ -168,6 +205,7 @@ return [
         ['key' => 'today', 'label' => 'factory_erp::dashboard.today', 'type' => 'stat', 'provider' => TodayOutput::class, 'permission' => 'factory_erp.view', 'overview' => true],
         ['key' => 'lines', 'label' => 'factory_erp::dashboard.lines', 'type' => 'bars', 'size' => 2, 'provider' => LineOutput::class, 'permission' => 'factory_erp.view'],
         ['key' => 'wip', 'label' => 'factory_erp::dashboard.wip', 'type' => 'stat', 'provider' => WorkInProgress::class, 'permission' => 'factory_erp.view'],
+        ['key' => 'efficiency', 'label' => 'factory_erp::dashboard.efficiency', 'type' => 'bars', 'size' => 2, 'provider' => LineEfficiency::class, 'permission' => 'factory_erp.view'],
     ]],
     'settings' => ['pages' => [
         ['key' => 'lines', 'label' => 'factory_erp::module.menu_lines', 'route' => '/factory/lines', 'permission' => 'factory_erp.manage'],

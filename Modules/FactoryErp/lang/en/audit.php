@@ -21,4 +21,5 @@ return [
     'line_updated' => 'Sewing line changed',
     'output_voided' => 'Line output voided',
     'goods_received' => 'Finished goods into the store',
+    'operations_saved' => 'Operation bulletin saved',
 ];

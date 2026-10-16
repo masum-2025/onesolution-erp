@@ -62,6 +62,9 @@ class SetupController extends Controller
                 'over_cut_bp' => (int) $this->rules->get('factory_erp.over_cut_bp', $context),
                 'output_by' => (string) $this->rules->get('factory_erp.output_by', $context),
                 'reject_warn_bp' => (int) $this->rules->get('factory_erp.reject_warn_bp', $context),
+                'shift_minutes' => (int) $this->rules->get('factory_erp.shift_minutes', $context),
+                'target_efficiency_bp' => (int) $this->rules->get('factory_erp.target_efficiency_bp', $context),
+                'efficiency_counts_helpers' => (bool) $this->rules->get('factory_erp.efficiency_counts_helpers', $context),
             ],
             // The company's own (costs of materials); none set yet is not an error here.
             'currency' => rescue(fn () => $this->floor->currency($company), null, false),
