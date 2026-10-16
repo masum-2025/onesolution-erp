@@ -195,7 +195,10 @@ advanced_audit, custom_reports (AI, sustainability and governance: business/ente
 
 `GET /api/organizations/{id}/modules` shows each module's state, reason, source
 organization and who locked it. Resolved maps are cached per organization; any change in
-a tree bumps that tree's cache version (works on every cache store).
+a tree bumps that tree's cache version (works on every cache store). The cache keys also
+carry a fingerprint of the installed modules, so a release that adds or removes a module
+never serves a map cached before it (such a map lacked the new module and every page
+failed until it expired).
 
 ### Changing modules (`modules.manage` permission)
 

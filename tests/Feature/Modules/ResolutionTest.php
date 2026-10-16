@@ -4,9 +4,13 @@ use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Modules\Enums\ResolutionReason;
 use App\Platform\Modules\Exceptions\ModuleException;
+use App\Platform\Modules\ManifestLoader;
 use App\Platform\Modules\Models\OrganizationModule;
+use App\Platform\Modules\ModuleCache;
+use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Modules\Services\ModuleConsentService;
+use App\Platform\Packaging\PlanCatalog;
 
 beforeEach(function () {
     $this->w = tenancyWorld();
@@ -172,6 +176,27 @@ it('invalidates cached results when a parent changes', function () {
     setPlan($this->w->g1, 'starter');
     toggles()->disable($this->w->g1, 'crm', 'Rollback', lock: true);
     expect($resolver->isEnabled('crm', $this->w->d1))->toBeFalse();
+});
+
+it('never serves a map cached before a module was installed', function () {
+    // Before a release: the installed modules without teacher_feedback; a map is cached.
+    $installed = app(ModuleRegistry::class);
+    $manifests = array_values(array_filter(app(ManifestLoader::class)->load(), fn (array $manifest) => $manifest['key'] !== 'teacher_feedback'));
+    $before = ModuleRegistry::fromManifests($manifests, app(PlanCatalog::class)->keys());
+    $swap = function (ModuleRegistry $registry) {
+        app()->instance(ModuleRegistry::class, $registry);
+        app()->forgetInstance(ModuleCache::class);
+        app()->forgetInstance(ModuleResolver::class);
+    };
+    $swap($before);
+    expect(app(ModuleResolver::class)->resolveAll($this->w->c1))->not->toHaveKey('teacher_feedback');
+
+    // After the release the new module resolves (off), the old map is not used, and the menu works.
+    $swap($installed);
+    expect(app(ModuleResolver::class)->isEnabled('teacher_feedback', $this->w->c1))->toBeFalse()
+        ->and(app(ModuleResolver::class)->resolveAll($this->w->c1))->toHaveKey('teacher_feedback');
+    $owner = createMember($this->w->c1);
+    $this->asToken(orgToken($owner, $this->w->c1))->getJson('/api/menu')->assertOk();
 });
 
 it('never deletes settings or data when a module is turned off', function () {

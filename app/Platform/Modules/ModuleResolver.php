@@ -68,7 +68,7 @@ class ModuleResolver
      */
     public function resolveAll(Organization $organization): array
     {
-        $memoKey = $organization->getKey().':'.$this->cache->version($organization->root_id);
+        $memoKey = $organization->getKey().':'.$this->cache->version($organization->root_id).':'.$this->cache->fingerprint();
 
         return $this->memo[$memoKey] ??= array_map(
             fn (array $data) => ResolvedModule::fromArray($data),
