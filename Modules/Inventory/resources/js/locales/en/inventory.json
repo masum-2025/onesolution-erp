@@ -36,7 +36,8 @@
         "adjustment": "Adjusted",
         "count": "Count difference",
         "sale": "Sold",
-        "return": "Returned"
+        "return": "Returned",
+        "production": "Made in the factory"
     },
     "stock": {
         "title": "Stock",
@@ -334,7 +335,8 @@
             "adjustment": "Adjusted",
             "count": "Counted",
             "sale": "Sold",
-            "return": "Returned"
+            "return": "Returned",
+            "production": "Made"
         }
     },
     "labels": {

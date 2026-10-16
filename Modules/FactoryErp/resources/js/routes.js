@@ -10,4 +10,6 @@ export default [
     { path: 'factory/styles', name: 'fac-styles', component: () => import('./pages/StylesPage.vue'), meta },
     { path: 'factory/styles/:id', name: 'fac-style', component: () => import('./pages/StylePage.vue'), meta },
     { path: 'factory/fields', name: 'fac-fields', component: () => import('./pages/FieldsPage.vue'), meta },
+    { path: 'factory/output', name: 'fac-output', component: () => import('./pages/OutputPage.vue'), meta },
+    { path: 'factory/lines', name: 'fac-lines', component: () => import('./pages/LinesPage.vue'), meta },
 ];

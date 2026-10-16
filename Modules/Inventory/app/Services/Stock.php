@@ -171,4 +171,29 @@ class Stock
             return ['lines' => $costs, 'cost_minor' => array_sum($costs), 'moved' => true];
         });
     }
+
+    /**
+     * Goods made by another module's record come into a warehouse at their
+     * exact value (a factory's finished pieces at what they cost to make).
+     * Once per record, like take(): asking again moves nothing.
+     *
+     * @param  array{module: string, type: string, id: string, actor_id?: string|null}  $source
+     * @return array{value_minor: int, moved: bool}
+     */
+    public function produce(Organization $company, string $warehouseId, string $itemId, int $quantityMilli, int $valueMinor, array $source, CarbonImmutable $on): array
+    {
+        return $this->inventories->transaction($company, function () use ($company, $warehouseId, $itemId, $quantityMilli, $valueMinor, $source, $on) {
+            $done = $this->inventories->query(Move::class, $company)->where('source_module', $source['module'])->where('source_type', $source['type'])->where('source_id', $source['id'])->get();
+            if ($done->isNotEmpty()) {
+                return ['value_minor' => (int) $done->sum('value_minor'), 'moved' => false];
+            }
+            $warehouse = $this->inventories->query(Warehouse::class, $company)->whereKey($warehouseId)->first() ?? throw InventoryException::notFound('warehouse');
+            $item = $this->inventories->query(Item::class, $company)->whereKey($itemId)->first() ?? throw InventoryException::notFound('item');
+            $this->ledger->move($company, $item, $warehouse, 'production', $quantityMilli, null,
+                ['source_module' => $source['module'], 'source_type' => $source['type'], 'source_id' => $source['id'], 'actor_id' => $source['actor_id'] ?? null],
+                $on, [], $valueMinor);
+
+            return ['value_minor' => $valueMinor, 'moved' => true];
+        });
+    }
 }

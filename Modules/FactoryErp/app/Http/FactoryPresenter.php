@@ -9,8 +9,13 @@ use Modules\FactoryErp\Models\CuttingLine;
 use Modules\FactoryErp\Models\Field;
 use Modules\FactoryErp\Models\Issue;
 use Modules\FactoryErp\Models\IssueLine;
+use Modules\FactoryErp\Models\Line;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\OrderLine;
+use Modules\FactoryErp\Models\Output;
+use Modules\FactoryErp\Models\OutputLine;
+use Modules\FactoryErp\Models\Receipt;
+use Modules\FactoryErp\Models\ReceiptLine;
 use Modules\FactoryErp\Models\Style;
 
 /** Styles, orders, materials issued, lays cut and own fields as the screens read them. */
@@ -24,7 +29,7 @@ class FactoryPresenter
     {
         return [
             'id' => $style->getKey(),
-            ...$style->only(['buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'consumption_basis', 'note', 'is_active', 'version']),
+            ...$style->only(['buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'consumption_basis', 'finished_item_id', 'note', 'is_active', 'version']),
             'extra' => (object) ($style->extra ?? []),
             ...($bom === null ? [] : ['bom' => $bom->map(fn (BomLine $line) => $line->only(['id', 'item_id', 'consumption_milli', 'wastage_bp', 'size', 'color', 'note']))->values()]),
         ];
@@ -80,6 +85,42 @@ class FactoryPresenter
             'cut_on' => $cutting->cut_on->toDateString(),
             'voided_at' => $cutting->voided_at?->toIso8601String(),
             'lines' => $lines->map(fn (CuttingLine $line) => $line->only(['size', 'color', 'quantity']))->values(),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function line(Line $line): array
+    {
+        return ['id' => $line->getKey(), ...$line->only(['unit_id', 'code', 'name', 'machines', 'is_active', 'version'])];
+    }
+
+    /**
+     * @param  Collection<int, OutputLine>  $lines
+     * @return array<string, mixed>
+     */
+    public function output(Output $output, Collection $lines): array
+    {
+        return [
+            'id' => $output->getKey(),
+            ...$output->only(['unit_id', 'line_id', 'order_id', 'hour', 'good', 'rejects', 'created_by', 'void_reason', 'version']),
+            'worked_on' => $output->worked_on->toDateString(),
+            'created_at' => $output->created_at?->toIso8601String(),
+            'voided_at' => $output->voided_at?->toIso8601String(),
+            'lines' => $lines->map(fn (OutputLine $line) => $line->only(['size', 'color', 'good', 'rejects']))->values(),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, ReceiptLine>  $lines
+     * @return array<string, mixed>
+     */
+    public function receipt(Receipt $receipt, Collection $lines): array
+    {
+        return [
+            'id' => $receipt->getKey(),
+            ...$receipt->only(['order_id', 'warehouse_id', 'item_id', 'pieces', 'is_last', 'cost_minor', 'currency', 'journal_id', 'note', 'created_by']),
+            'received_on' => $receipt->received_on->toDateString(),
+            'lines' => $lines->map(fn (ReceiptLine $line) => $line->only(['size', 'color', 'quantity']))->values(),
         ];
     }
 

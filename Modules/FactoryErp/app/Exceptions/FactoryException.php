@@ -102,8 +102,32 @@ class FactoryException extends TenancyException
     }
 
     /** A BOM line names something that is not an active Inventory item. */
-    public static function notAnItem(): self
+    public static function notAnItem(string $field = 'lines'): self
     {
-        return new self('not_an_item', 422, [], ['field' => 'lines']);
+        return new self('not_an_item', 422, [], ['field' => $field]);
+    }
+
+    /** Finished pieces need the style's finished item (an Inventory item that keeps stock). */
+    public static function noFinishedItem(): self
+    {
+        return new self('no_finished_item', 422, [], ['field' => 'finished_item_id']);
+    }
+
+    /** More good pieces sewn than cut, or received than sewn, of a size and colour. */
+    public static function overStage(string $stage, string $size, string $color, int $left): self
+    {
+        return new self("over_{$stage}", 422, ['size' => $size, 'color' => $color, 'left' => Number::format(max(0, $left), locale: app()->getLocale())], ['field' => 'lines', 'left' => max(0, $left)]);
+    }
+
+    /** A sewing line that is not this factory's, or switched off. */
+    public static function lineOff(): self
+    {
+        return new self('line_off', 422, [], ['field' => 'line_id']);
+    }
+
+    /** An hour is given where the company writes output a day at a time, or none where it writes by the hour. */
+    public static function hourRule(bool $needed): self
+    {
+        return new self($needed ? 'hour_needed' : 'hour_not_used', 422, [], ['field' => 'hour']);
     }
 }

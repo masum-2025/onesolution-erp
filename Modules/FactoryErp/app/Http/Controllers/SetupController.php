@@ -60,6 +60,8 @@ class SetupController extends Controller
                 'order_currency' => (string) $this->rules->get('factory_erp.order_currency', $context),
                 'over_issue' => (string) $this->rules->get('factory_erp.over_issue', $context),
                 'over_cut_bp' => (int) $this->rules->get('factory_erp.over_cut_bp', $context),
+                'output_by' => (string) $this->rules->get('factory_erp.output_by', $context),
+                'reject_warn_bp' => (int) $this->rules->get('factory_erp.reject_warn_bp', $context),
             ],
             // The company's own (costs of materials); none set yet is not an error here.
             'currency' => rescue(fn () => $this->floor->currency($company), null, false),

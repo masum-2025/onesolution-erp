@@ -33,6 +33,23 @@ class FactoryPostings
             ? [LedgerLine::debit(self::WIP, $value, $costCentre), LedgerLine::credit('inventory.stock', $value, $costCentre)]
             : [LedgerLine::debit('inventory.stock', -$value, $costCentre), LedgerLine::credit(self::WIP, -$value, $costCentre)];
 
+        return $this->post($company, $opId, $date, $narration, $sourceType, $sourceId, $currency, $lines);
+    }
+
+    /** Finished pieces into the store: stock up, work in progress down, by what they cost. */
+    public function finished(Organization $company, string $opId, CarbonImmutable $date, string $narration, string $sourceId, string $currency, int $value, ?string $costCentre): ?string
+    {
+        if ($value <= 0 || ! $this->modules->isEnabled('accounting', $company)) {
+            return null;
+        }
+
+        return $this->post($company, $opId, $date, $narration, 'receipt', $sourceId, $currency,
+            [LedgerLine::debit('inventory.stock', $value, $costCentre), LedgerLine::credit(self::WIP, $value, $costCentre)]);
+    }
+
+    /** @param  list<LedgerLine>  $lines */
+    private function post(Organization $company, string $opId, CarbonImmutable $date, string $narration, string $sourceType, string $sourceId, string $currency, array $lines): string
+    {
         return app(Ledger::class)->post($company, new LedgerEntry(
             opId: $opId,
             entryDate: $date->toDateString(),

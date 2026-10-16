@@ -24,7 +24,9 @@ const emit = defineEmits(['close', 'saved', 'conflict']);
 const api = factoryApi(currentOrganization().id);
 const setup = useFactorySetup();
 
-const form = reactive({ buyer_id: '', code: '', name: '', product_type: '', sizes: '', colors: '', note: '', extra: {} });
+const form = reactive({ buyer_id: '', code: '', name: '', product_type: '', sizes: '', colors: '', finished_item_id: '', note: '', extra: {} });
+// Finished pieces go into the store as one of the company's Inventory items.
+const finishedItems = computed(() => Object.values(setup.items.value).sort((a, b) => a.sku.localeCompare(b.sku)));
 const errors = ref({});
 const busy = ref(false);
 const fields = computed(() => setup.fields('style'));
@@ -37,6 +39,7 @@ watch(() => props.open, (open) => {
     Object.assign(form, {
         buyer_id: style?.buyer_id ?? '', code: style?.code ?? '', name: style?.name ?? '', product_type: style?.product_type ?? '',
         sizes: (style?.sizes ?? ['S', 'M', 'L', 'XL']).join(', '), colors: (style?.colors ?? []).join(', '), note: style?.note ?? '',
+        finished_item_id: style?.finished_item_id ?? '',
         extra: Object.fromEntries(fields.value.map((field) => [field.key, fieldToInput(field, style?.extra?.[field.key], setup.rules.value.order_currency)])),
     });
 });
@@ -50,7 +53,7 @@ async function save() {
     }
     busy.value = true;
     errors.value = {};
-    const body = { buyer_id: form.buyer_id, code: form.code.trim(), name: form.name.trim(), product_type: form.product_type.trim() || null, sizes: list(form.sizes), colors: list(form.colors), note: form.note.trim() || null, extra: values };
+    const body = { buyer_id: form.buyer_id, code: form.code.trim(), name: form.name.trim(), product_type: form.product_type.trim() || null, sizes: list(form.sizes), colors: list(form.colors), finished_item_id: form.finished_item_id || null, note: form.note.trim() || null, extra: values };
     try {
         const { data } = props.style ? await api.updateStyle(props.style.id, { ...body, base_version: props.style.version }) : await api.createStyle(body);
         toast.success(t('factory_erp.styles.saved'));
@@ -89,6 +92,12 @@ async function save() {
             </AppField>
             <AppField v-slot="{ id, describedby }" :label="t('factory_erp.fields_.colors')" :hint="t('factory_erp.fields_.list_hint')" :error="errors.colors?.[0] ?? null">
                 <input :id="id" v-model="form.colors" class="field-input" :aria-describedby="describedby" placeholder="Navy, Red" />
+            </AppField>
+            <AppField v-slot="{ id, describedby }" class="sm:col-span-2" :label="t('factory_erp.fields_.finished_item')" :hint="t('factory_erp.fields_.finished_item_hint')" :error="errors.finished_item_id?.[0] ?? null" optional>
+                <select :id="id" v-model="form.finished_item_id" class="field-input" :aria-describedby="describedby">
+                    <option value="">{{ t('factory_erp.fields_.finished_item_none') }}</option>
+                    <option v-for="item in finishedItems" :key="item.id" :value="item.id">{{ item.sku }} · {{ item.name }}</option>
+                </select>
             </AppField>
             <AppField v-slot="{ id }" class="sm:col-span-2" :label="t('factory_erp.fields_.note')" optional>
                 <textarea :id="id" v-model="form.note" class="field-input min-h-16" maxlength="2000" />

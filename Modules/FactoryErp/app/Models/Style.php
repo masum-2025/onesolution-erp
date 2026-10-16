@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * A buyer's style: its sizes and colours in order, and whether consumption is written per piece or per dozen.
  */
-#[Fillable(['organization_id', 'buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'consumption_basis', 'note', 'extra', 'is_active', 'version'])]
+#[Fillable(['organization_id', 'buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'consumption_basis', 'finished_item_id', 'note', 'extra', 'is_active', 'version'])]
 class Style extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;

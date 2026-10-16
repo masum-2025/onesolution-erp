@@ -9,4 +9,6 @@ return [
     'menu_styles' => 'Style ও BOM',
     'menu_fields' => 'নিজের ঘর',
     'new_order' => 'নতুন অর্ডার',
+    'menu_output' => 'লাইনের উৎপাদন',
+    'menu_lines' => 'সেলাই লাইন',
 ];

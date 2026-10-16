@@ -7,4 +7,11 @@ return [
     'shipping' => 'Shipping soon',
     'pieces' => ':count pcs',
     'attention_ship_soon' => 'Orders shipping soon, not in production yet',
+    'today' => 'Sewn today',
+    'today_hint' => ':rate% rejects',
+    'lines' => 'Lines today',
+    'line_bar' => ':line (:rate% rejects)',
+    'wip' => 'Work in progress',
+    'wip_hint' => '{0} No order is open.|{1} In the one open order.|[2,*] In :count open orders.',
+    'attention_rejects' => 'Lines with many rejects today',
 ];

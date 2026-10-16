@@ -36,7 +36,8 @@
         "adjustment": "সমন্বয়",
         "count": "গণনার পার্থক্য",
         "sale": "বিক্রি",
-        "return": "ফেরত"
+        "return": "ফেরত",
+        "production": "কারখানায় তৈরি"
     },
     "stock": {
         "title": "মজুদ",
@@ -334,7 +335,8 @@
             "adjustment": "সমন্বয়",
             "count": "গণনা",
             "sale": "বিক্রি",
-            "return": "ফেরত"
+            "return": "ফেরত",
+            "production": "তৈরি"
         }
     },
     "labels": {

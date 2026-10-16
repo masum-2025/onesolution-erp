@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cutAllowed, fillQuantity, need, percentToBp, piecesOf, quantityToMilli, sheetToLines, sheetTotals, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
+import { cutAllowed, fillQuantity, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
 
 describe('factory', () => {
     it('works out a need exactly as the server does, rounded up', () => {
@@ -36,6 +36,16 @@ describe('factory', () => {
         expect(fillQuantity(812898, 52500, 3)).toBe(52500);
         expect(fillQuantity(812898, 900000, 3)).toBe(812898);
         expect(fillQuantity(5, 0, 0)).toBe(0);
+    });
+
+    it('works out what a line can still write and how far a stage has got', () => {
+        // 600 cut, 120 good and 4 rejected: 476 left; never below nothing.
+        expect(sewLeft({ cut: 600, good: 120, rejects: 4 })).toBe(476);
+        expect(sewLeft({ cut: 10, good: 12, rejects: 0 })).toBe(0);
+        expect(sewLeft(undefined)).toBe(0);
+        expect(stagePercent(415, 840)).toBe(49);
+        expect(stagePercent(900, 840)).toBe(100);
+        expect(stagePercent(5, 0)).toBe(0);
     });
 
     it('reads typed numbers, Bangla digits too, without floats', () => {

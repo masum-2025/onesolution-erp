@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\FactoryErp\Http\Controllers\FloorController;
 use Modules\FactoryErp\Http\Controllers\OrderController;
 use Modules\FactoryErp\Http\Controllers\SetupController;
+use Modules\FactoryErp\Http\Controllers\SewingController;
 use Modules\FactoryErp\Http\Controllers\StyleController;
 
 /*
@@ -26,6 +27,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
         Route::get('orders/{order}/requirements', [OrderController::class, 'requirements']);
         Route::get('orders/{order}/issues', [FloorController::class, 'issues']);
         Route::get('orders/{order}/cuttings', [FloorController::class, 'cuttings']);
+        Route::get('orders/{order}/progress', [FloorController::class, 'progress']);
+        Route::get('orders/{order}/receipts', [FloorController::class, 'receipts']);
+        Route::get('lines', [SewingController::class, 'lines']);
+        Route::get('outputs', [SewingController::class, 'outputs']);
 
         Route::middleware('throttle:factory-writes')->group(function () {
             Route::post('buyers', [SetupController::class, 'addBuyer']);
@@ -43,5 +48,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
             Route::post('orders/{order}/issues', [FloorController::class, 'issue']);
             Route::post('orders/{order}/cuttings', [FloorController::class, 'cut']);
             Route::post('orders/{order}/cuttings/{cutting}/void', [FloorController::class, 'voidCutting']);
+            Route::post('orders/{order}/receipts', [FloorController::class, 'receive']);
+            Route::post('lines', [SewingController::class, 'storeLine']);
+            Route::patch('lines/{line}', [SewingController::class, 'updateLine']);
+            Route::post('outputs', [SewingController::class, 'storeOutput']);
+            Route::post('outputs/{output}/void', [SewingController::class, 'voidOutput']);
         });
     });

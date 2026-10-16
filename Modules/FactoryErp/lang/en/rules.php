@@ -30,6 +30,14 @@ return [
         'label' => 'Extra pieces that may be cut',
         'description' => 'Above the order, per size and colour, in hundredths of a per cent: 300 = 3%.',
     ],
+    'output_by' => [
+        'label' => 'Lines write output',
+        'description' => 'Hour: every hour (the hour is chosen). Day: once a day.',
+    ],
+    'reject_warn_bp' => [
+        'label' => 'Rejects that ring the bell',
+        'description' => 'A line\'s rejects today at or above this share of what it made, in hundredths of a per cent: 500 = 5%.',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',

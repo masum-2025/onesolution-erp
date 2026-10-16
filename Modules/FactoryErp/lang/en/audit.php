@@ -17,4 +17,8 @@ return [
     'materials_returned' => 'Materials back from the floor',
     'cutting_recorded' => 'Lay cut',
     'cutting_voided' => 'Lay voided',
+    'line_created' => 'Sewing line made',
+    'line_updated' => 'Sewing line changed',
+    'output_voided' => 'Line output voided',
+    'goods_received' => 'Finished goods into the store',
 ];

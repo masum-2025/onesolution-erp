@@ -27,6 +27,7 @@ class StyleRequest extends StrictFormRequest
             'sizes.*' => ['required', 'string', 'max:20'],
             'colors' => [$creating ? 'required' : 'sometimes', 'array', 'min:1', 'max:40'],
             'colors.*' => ['required', 'string', 'max:40'],
+            'finished_item_id' => ['sometimes', 'nullable', 'string', 'size:26'],
             'note' => ['sometimes', 'nullable', 'string', 'max:2000'],
             'extra' => ['sometimes', 'array'],
             'is_active' => [$creating ? 'prohibited' : 'sometimes', 'boolean'],

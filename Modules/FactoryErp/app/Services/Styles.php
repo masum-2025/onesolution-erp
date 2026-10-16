@@ -63,6 +63,13 @@ class Styles
                 }
             }
         }
+        // Finished pieces go into the store as an Inventory item that keeps stock.
+        if (($data['finished_item_id'] ?? null) !== null) {
+            $item = $this->stock->items($company, [$data['finished_item_id']])[0] ?? null;
+            if ($item === null || $item['kind'] !== 'stock') {
+                throw FactoryException::notAnItem('finished_item_id');
+            }
+        }
         $extra = array_key_exists('extra', $data)
             ? $this->fields->apply($company, 'style', (array) $data['extra'], $style?->extra ?? [], $style === null)
             : ($style === null ? $this->fields->apply($company, 'style', [], [], true) : null);
@@ -85,13 +92,14 @@ class Styles
                     }
                 }
                 $old = $style->only(['buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'is_active']);
-                $style->fill(array_intersect_key($data, array_flip(['buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'note', 'is_active'])));
+                $style->fill(array_intersect_key($data, array_flip(['buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'finished_item_id', 'note', 'is_active'])));
                 $style->version++;
             } else {
                 $old = null;
                 $style = new Style([
                     'organization_id' => $company->getKey(), 'buyer_id' => $data['buyer_id'], 'code' => $data['code'], 'name' => $data['name'],
                     'product_type' => $data['product_type'] ?? null, 'sizes' => $data['sizes'], 'colors' => $data['colors'], 'note' => $data['note'] ?? null,
+                    'finished_item_id' => $data['finished_item_id'] ?? null,
                     'consumption_basis' => (string) $this->rules->get('factory_erp.consumption_basis', $this->contexts->forOrganization($company)),
                 ]);
             }
@@ -103,7 +111,7 @@ class Styles
             }
             $style->save();
             $this->audit->record($old === null ? 'factory_erp.style_created' : 'factory_erp.style_updated', $style, old: $old ?? [],
-                new: $style->only(['buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'is_active']), actor: $actor, organizationId: $company->getKey());
+                new: $style->only(['buyer_id', 'code', 'name', 'product_type', 'sizes', 'colors', 'finished_item_id', 'is_active']), actor: $actor, organizationId: $company->getKey());
 
             return $style;
         });

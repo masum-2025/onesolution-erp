@@ -24,6 +24,15 @@ return [
         'too_much_back' => 'More is coming back than this order has on the floor. Lower the quantity.',
         'over_cut' => 'Too many :size / :color pieces: at most :allowed more can be cut for this order.',
         'future_date' => 'The day cannot be after today.',
+        'line_not_found' => 'That sewing line does not exist here. Reload the page.',
+        'output_not_found' => 'That entry does not exist here. Reload the page.',
+        'line_off' => 'Choose a sewing line of this factory that is in use.',
+        'hour_needed' => 'Choose the hour: this company writes output by the hour.',
+        'hour_not_used' => 'This company writes output once a day: leave the hour out.',
+        'over_sewn' => 'Too many :size / :color pieces: only :left more were cut and not sewn yet.',
+        'over_received' => 'Too many :size / :color pieces: only :left good pieces are sewn and not in the store yet.',
+        'no_finished_item' => 'Choose the style\'s finished item (an Inventory item kept in stock) first.',
+        'cut_in_use' => 'Pieces of this lay are already sewn. Void that output first.',
     ],
     'validation' => [
         'list_empty' => 'Give at least one.',
@@ -43,6 +52,7 @@ return [
     'narration' => [
         'issue' => 'Materials to the floor for order :number',
         'return' => 'Materials back from the floor, order :number',
+        'receipt' => 'Finished goods of order :number into the store',
     ],
     'posting_keys' => [
         'wip' => 'Work in progress (factory)',

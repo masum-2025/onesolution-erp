@@ -9,4 +9,6 @@ return [
     'menu_styles' => 'Styles and BOM',
     'menu_fields' => 'Own fields',
     'new_order' => 'New order',
+    'menu_output' => 'Line output',
+    'menu_lines' => 'Sewing lines',
 ];

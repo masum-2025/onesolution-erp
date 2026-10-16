@@ -92,6 +92,10 @@ return [
             'name' => 'Production manager',
             'description' => 'Follows orders, materials and the floor.',
         ],
+        'line_supervisor' => [
+            'name' => 'Line supervisor',
+            'description' => 'Writes what a sewing line makes every hour.',
+        ],
         'cashier' => [
             'name' => 'Cashier',
             'description' => 'Opens and closes a till shift and sells at the counter.',

@@ -6,13 +6,17 @@
 */
 
 use Modules\FactoryErp\Dashboard\FactoryWidgets;
+use Modules\FactoryErp\Dashboard\LineOutput;
 use Modules\FactoryErp\Dashboard\ShippingSoon;
+use Modules\FactoryErp\Dashboard\TodayOutput;
+use Modules\FactoryErp\Dashboard\WorkInProgress;
+use Modules\FactoryErp\Offline\OutputSync;
 
 return [
     'key' => 'factory_erp',
     'name' => 'factory_erp::module.name',
     'description' => 'factory_erp::module.description',
-    'version' => '1.1.0',
+    'version' => '1.2.0',
     'category' => 'business',
     // Materials come from Inventory (its Stock service), buyers are CRM organization
     // contacts (its Organizations service); materials on the floor post to Accounting
@@ -106,6 +110,30 @@ return [
             'category' => 'floor',
             'sort_order' => 70,
         ],
+        [
+            'key' => 'factory_erp.output_by',
+            'type' => 'enum',
+            // Sewing lines write what they made every hour, or once a day.
+            'schema' => ['enum' => ['hour', 'day']],
+            'default' => 'hour',
+            'label' => 'factory_erp::rules.output_by.label',
+            'description' => 'factory_erp::rules.output_by.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'floor',
+            'sort_order' => 80,
+        ],
+        [
+            'key' => 'factory_erp.reject_warn_bp',
+            'type' => 'integer',
+            // A line's rejects today at or above this share of what it made ring the bell (500 = 5%).
+            'schema' => ['minimum' => 1, 'maximum' => 10000],
+            'default' => 500,
+            'label' => 'factory_erp::rules.reject_warn_bp.label',
+            'description' => 'factory_erp::rules.reject_warn_bp.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'floor',
+            'sort_order' => 90,
+        ],
     ],
     'menu' => [
         [
@@ -117,6 +145,7 @@ return [
             'children' => [
                 ['key' => 'orders', 'label' => 'factory_erp::module.menu_orders', 'route' => '/factory', 'permission' => 'factory_erp.view'],
                 ['key' => 'styles', 'label' => 'factory_erp::module.menu_styles', 'route' => '/factory/styles', 'permission' => 'factory_erp.view'],
+                ['key' => 'output', 'label' => 'factory_erp::module.menu_output', 'route' => '/factory/output', 'permission' => 'factory_erp.view'],
             ],
         ],
     ],
@@ -128,14 +157,20 @@ return [
     'ledger_accounts' => [
         'factory_erp.wip' => ['label' => 'factory_erp::factory.posting_keys.wip', 'type' => 'asset'],
     ],
-    'attention' => [FactoryWidgets::class],
+    'attention' => [FactoryWidgets::class, TodayOutput::class],
+    // Sewing output written on a phone without a network (not money).
+    'sync_records' => [OutputSync::class],
     'is_core' => false,
     'requires_consent' => false,
     'dashboard' => ['widgets' => [
         ['key' => 'open', 'label' => 'factory_erp::dashboard.open', 'type' => 'stat', 'provider' => FactoryWidgets::class, 'permission' => 'factory_erp.view', 'overview' => true],
         ['key' => 'shipping', 'label' => 'factory_erp::dashboard.shipping', 'type' => 'list', 'size' => 2, 'provider' => ShippingSoon::class, 'permission' => 'factory_erp.view'],
+        ['key' => 'today', 'label' => 'factory_erp::dashboard.today', 'type' => 'stat', 'provider' => TodayOutput::class, 'permission' => 'factory_erp.view', 'overview' => true],
+        ['key' => 'lines', 'label' => 'factory_erp::dashboard.lines', 'type' => 'bars', 'size' => 2, 'provider' => LineOutput::class, 'permission' => 'factory_erp.view'],
+        ['key' => 'wip', 'label' => 'factory_erp::dashboard.wip', 'type' => 'stat', 'provider' => WorkInProgress::class, 'permission' => 'factory_erp.view'],
     ]],
     'settings' => ['pages' => [
+        ['key' => 'lines', 'label' => 'factory_erp::module.menu_lines', 'route' => '/factory/lines', 'permission' => 'factory_erp.manage'],
         ['key' => 'fields', 'label' => 'factory_erp::module.menu_fields', 'route' => '/factory/fields', 'permission' => 'factory_erp.manage'],
     ]],
 ];

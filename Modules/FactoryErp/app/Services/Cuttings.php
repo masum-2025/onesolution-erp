@@ -14,6 +14,7 @@ use Modules\FactoryErp\Models\Cutting;
 use Modules\FactoryErp\Models\CuttingLine;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\OrderLine;
+use Modules\FactoryErp\Models\OutputLine;
 
 /**
  * The cutting table: each lay cut for a confirmed or running order, pieces
@@ -144,6 +145,18 @@ class Cuttings
             $order = $this->floor->query(Order::class, $company)->whereKey($cutting->order_id)->firstOrFail();
             if ($cutting->voided_at !== null || ! in_array($order->status, ['confirmed', 'in_production'], true)) {
                 throw FactoryException::wrongStatus();
+            }
+            // Pieces already sewn stay covered by what was cut.
+            $cut = $this->cut($company, $order);
+            $sewn = $this->floor->query(OutputLine::class, $company)->where('fac_output_lines.order_id', $order->getKey())
+                ->join('fac_outputs', 'fac_outputs.id', '=', 'fac_output_lines.output_id')->whereNull('fac_outputs.voided_at')
+                ->get(['fac_output_lines.size', 'fac_output_lines.color', 'fac_output_lines.good', 'fac_output_lines.rejects'])
+                ->groupBy(fn (OutputLine $line) => "{$line->size}|{$line->color}")->map(fn ($lines) => (int) $lines->sum('good') + (int) $lines->sum('rejects'));
+            foreach ($this->lines($company, [$cutting->getKey()])[$cutting->getKey()] ?? [] as $line) {
+                $key = "{$line->size}|{$line->color}";
+                if (($cut[$key] ?? 0) - $line->quantity < ($sewn[$key] ?? 0)) {
+                    throw FactoryException::inUse('cut');
+                }
             }
             $cutting->forceFill(['voided_at' => now(), 'voided_by' => $actor->getKey(), 'void_reason' => $reason, 'version' => $cutting->version + 1])->save();
             $this->audit->record('factory_erp.cutting_voided', $cutting, old: ['pieces' => $cutting->pieces], new: ['voided' => true],

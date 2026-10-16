@@ -17,4 +17,8 @@ return [
     'materials_returned' => 'ফ্লোর থেকে মাল ফেরত',
     'cutting_recorded' => 'কাটিং লেখা',
     'cutting_voided' => 'কাটিং বাতিল',
+    'line_created' => 'সেলাই লাইন তৈরি',
+    'line_updated' => 'সেলাই লাইন বদল',
+    'output_voided' => 'লাইনের উৎপাদন বাতিল',
+    'goods_received' => 'তৈরি মাল স্টোরে',
 ];

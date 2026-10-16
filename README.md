@@ -2838,6 +2838,34 @@ warehouses in use).
 - After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings` (maps the new key on
   companies already using the factory chart).
 
+### FAC-2b: sewing lines, output, finished goods
+
+- **Lines** (`fac_lines`, `GET/POST/PATCH …/factory/lines`, set up with `factory_erp.manage`): code
+  (capitals, unique in the company), name, machines; switched off, never removed. Settings page
+  "Sewing lines".
+- **Output** (`fac_outputs` + `fac_output_lines`, `GET/POST …/factory/outputs`, `POST …/outputs/{id}/void`,
+  `factory_erp.produce`): a line's good pieces and rejects per size and colour for an order in
+  production, by the hour (rule `factory_erp.output_by` = `hour`, 0-23) or by the day. Good + rejects
+  never above what was cut; a wrong entry is voided with a reason (not while the store holds the
+  pieces); a lay with sewn pieces cannot be voided (`cut_in_use`). `op_id` once per tap.
+  **Offline**: sync kind `factory_erp.output` (not money); the phone keeps lines and orders in
+  production; entries are checked again when they arrive. Screen `/factory/output`, phone first.
+- **Finished goods** (`fac_receipts` + `fac_receipt_lines`, `GET/POST …/orders/{id}/receipts`,
+  `factory_erp.issue`): good pieces not in the store yet, as the style's `finished_item_id`
+  (Inventory item kept in stock; sizes and colours stay in the factory), through the new
+  `Stock::produce` (kind `production`, exact value). Cost = work in progress × pieces ÷ (cut − rejects −
+  received before), integers; the last one (`is_last`, or every piece still to come) takes all that is
+  left. Posts Dr `inventory.stock` / Cr `factory_erp.wip`. Append-only.
+- `GET …/orders/{id}/progress`: per size and colour ordered / cut / good / rejects / received, totals
+  and work in progress. Order page tab "Sewing and finished".
+- **Dashboard**: sewn today (overview, with reject rate), lines today (bars), work in progress (money);
+  bell when a line's rejects today reach `factory_erp.reject_warn_bp` (500 = 5%).
+- Role template Line supervisor (`factory_erp.view|produce`, `offline_mode.use`); production manager
+  gains `factory_erp.manage` (lines).
+- Finished goods use the same stock account as materials (`inventory.stock`, 1151 in the factory chart)
+  until Inventory keeps stock accounts per category.
+- After deploy: migrate, `rules:sync`, `access:sync`, `packaging:sync`.
+
 ### Future expansion (Factory ERP)
 
 - FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,

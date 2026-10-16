@@ -69,7 +69,13 @@ return [
     [
         'key' => 'production_manager',
         'sector' => 'factory',
-        'permissions' => ['factory_erp.view', 'factory_erp.produce', 'inventory.view', 'hrm.view', 'attendance.view'],
+        'permissions' => ['factory_erp.view', 'factory_erp.produce', 'factory_erp.manage', 'inventory.view', 'hrm.view', 'attendance.view'],
+    ],
+    [
+        'key' => 'line_supervisor',
+        'sector' => 'factory',
+        // Writes a sewing line's output from a phone on the floor, without a network too.
+        'permissions' => ['factory_erp.view', 'factory_erp.produce', 'offline_mode.use'],
     ],
     [
         'key' => 'cashier',

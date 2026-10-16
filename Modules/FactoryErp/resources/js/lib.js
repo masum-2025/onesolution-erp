@@ -87,6 +87,24 @@ export function fillQuantity(toIssueMilli, onHandMilli, decimals = 3) {
     return Math.floor(Math.min(toIssueMilli, onHandMilli) / step) * step;
 }
 
+/** A stage's share of the order, whole per cent, 0-100. */
+export function stagePercent(value, ordered) {
+    return ordered > 0 ? Math.min(100, Math.round((value * 100) / ordered)) : 0;
+}
+
+/**
+ * Pieces of a size and colour a line can still write: cut, less good and
+ * rejected already (what the server checks). cell: {cut, good, rejects}.
+ */
+export function sewLeft(cell) {
+    return Math.max(0, (cell?.cut ?? 0) - (cell?.good ?? 0) - (cell?.rejects ?? 0));
+}
+
+/** The hour a phone is in (0-23), for a new entry. */
+export function currentHour(now = new Date()) {
+    return now.getHours();
+}
+
 /** A typed sheet ({"size|color": text}) -> lines for the API; blanks are 0. */
 export function sheetToLines(sheet) {
     return Object.entries(sheet).map(([key, text]) => {

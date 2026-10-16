@@ -139,7 +139,10 @@
         "ship_on": "Ship date",
         "currency": "Currency",
         "unit_price": "Price a piece ({currency})",
-        "price_bad": "Write an amount, like 4.25."
+        "price_bad": "Write an amount, like 4.25.",
+        "finished_item": "Finished item in the store",
+        "finished_item_hint": "Finished pieces of this style go into the store as this Inventory item (sizes and colours stay here).",
+        "finished_item_none": "Not chosen yet"
     },
     "fields": {
         "title": "Own fields",
@@ -193,7 +196,8 @@
     "order_tabs": {
         "sheet": "Pieces",
         "materials": "Materials",
-        "cutting": "Cutting"
+        "cutting": "Cutting",
+        "sewing": "Sewing and finished"
     },
     "issues": {
         "title": "Given to the floor and taken back",
@@ -254,5 +258,91 @@
         "voided": "Lay {lay} voided.",
         "void_badge": "Voided",
         "voided_because": "Voided: {reason}"
+    },
+    "sewing": {
+        "title": "From cutting to the store",
+        "text": "Each size and colour: cut, sewn good, rejected, and in the store as finished goods.",
+        "steps": {
+            "cut": "Cut",
+            "good": "Sewn good",
+            "received": "In the store"
+        },
+        "cols": {
+            "ordered": "Ordered",
+            "cut": "Cut",
+            "good": "Good",
+            "rejects": "Rejects",
+            "received": "In store"
+        },
+        "cell": "Size / colour",
+        "summary": "{rejects} rejected · work in progress {wip}",
+        "take": "Into the store",
+        "take_title": "Finished goods of {number} into the store",
+        "take_text": "Good pieces sewn and not in the store yet. They come in at their share of the work in progress.",
+        "pieces": "Pieces",
+        "fill_ready": "Fill in all that is ready",
+        "too_many": "More than is sewn and ready for: {cells}.",
+        "last": "This is the last",
+        "last_hint": "Takes all the work in progress left into the cost, so nothing stays behind.",
+        "note_hint": "e.g. carton numbers",
+        "take_save": "Into the store ({pieces} pcs)",
+        "taken": "{pieces} pcs in the store.",
+        "no_item": "Choose the style's finished item first (Styles → edit).",
+        "receipts": "In the store",
+        "receipt_line": "{pieces} pcs to {store}",
+        "last_badge": "Last",
+        "empty_title": "Nothing in the store yet",
+        "empty_text": "Good pieces go into the store once sewn."
+    },
+    "output": {
+        "title": "Line output",
+        "text": "What each sewing line makes, every hour. Works without a network too.",
+        "line": "Line",
+        "hour": "Hour",
+        "order": "Order",
+        "good": "Good",
+        "rejects": "Rejects",
+        "left": "{count} left",
+        "good_of": "Good pieces of {cell}",
+        "rejects_of": "Rejects of {cell}",
+        "add_ten": "Ten more good pieces of {cell}",
+        "too_many": "More than was cut and is still to sew.",
+        "nothing_cut": "Nothing of this order is cut yet.",
+        "save": "Save ({good} good, {rejects} rejects)",
+        "saved": "Saved: {good} good, {rejects} rejects.",
+        "kept_offline": "No network: kept on this phone, it goes when the network is back.",
+        "offline_off": "No network, and Offline mode is not on for this phone. Try again when the network is back.",
+        "offline_note": "No network: lines and orders as this phone last kept them. What you save goes later.",
+        "today": "Today",
+        "rate": "{rate}% rejects",
+        "entry": "{good} good, {rejects} rejects",
+        "empty_title": "Nothing written today",
+        "empty_text": "Entries appear here as lines write them.",
+        "no_lines_title": "No sewing line yet",
+        "no_lines_text": "Add the factory's lines in Settings → Sewing lines.",
+        "no_orders_title": "No order in production",
+        "no_orders_text": "An order goes into production when its first lay is cut.",
+        "void_title": "Void this entry?",
+        "void_text": "Its pieces stop counting and can be written again. The entry stays in the list.",
+        "void_hint": "e.g. counted twice",
+        "voided": "Entry voided."
+    },
+    "lines": {
+        "title": "Sewing lines",
+        "text": "The factory's lines: output is written for each of them.",
+        "new": "New line",
+        "edit": "Change line",
+        "edit_of": "Change {code}",
+        "dialog_text": "A short code (L-01) and a name. A line no longer used is switched off; its output stays.",
+        "code": "Code",
+        "name": "Name",
+        "name_hint": "e.g. Line 1, ground floor",
+        "machines": "Machines",
+        "machines_count": "{count} machines",
+        "in_use": "In use",
+        "in_use_hint": "Off: no new output for it; what it made stays.",
+        "saved": "Line saved.",
+        "empty_title": "No sewing line yet",
+        "empty_text": "Add a line for each group of machines that sews together."
     }
 }

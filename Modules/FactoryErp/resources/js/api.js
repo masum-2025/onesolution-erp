@@ -31,5 +31,14 @@ export function factoryApi(organizationId) {
         cuttings: (id) => api(`${base}/orders/${id}/cuttings`),
         cut: (id, body) => api(`${base}/orders/${id}/cuttings`, { method: 'POST', body }),
         voidCutting: (id, cuttingId, body) => api(`${base}/orders/${id}/cuttings/${cuttingId}/void`, { method: 'POST', body }),
+        progress: (id) => api(`${base}/orders/${id}/progress`),
+        receipts: (id) => api(`${base}/orders/${id}/receipts`),
+        receive: (id, body) => api(`${base}/orders/${id}/receipts`, { method: 'POST', body }),
+        lines: (query = {}) => api(`${base}/lines`, { query }),
+        createLine: (body) => api(`${base}/lines`, { method: 'POST', body }),
+        updateLine: (id, body) => api(`${base}/lines/${id}`, { method: 'PATCH', body }),
+        outputs: (query = {}) => api(`${base}/outputs`, { query }),
+        createOutput: (body) => api(`${base}/outputs`, { method: 'POST', body }),
+        voidOutput: (id, body) => api(`${base}/outputs/${id}/void`, { method: 'POST', body }),
     };
 }
