@@ -14,4 +14,5 @@ return [
     'menu_qc' => 'মান যাচাই (QC)',
     'menu_defects' => 'ত্রুটির ধরন',
     'menu_tickets' => 'পিস টিকিট',
+    'menu_lcs' => 'এলসি (L/C)',
 ];

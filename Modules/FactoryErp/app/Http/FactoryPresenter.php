@@ -12,6 +12,7 @@ use Modules\FactoryErp\Models\Inspection;
 use Modules\FactoryErp\Models\InspectionDefect;
 use Modules\FactoryErp\Models\Issue;
 use Modules\FactoryErp\Models\IssueLine;
+use Modules\FactoryErp\Models\LetterOfCredit;
 use Modules\FactoryErp\Models\Line;
 use Modules\FactoryErp\Models\LineDay;
 use Modules\FactoryErp\Models\Order;
@@ -98,6 +99,23 @@ class FactoryPresenter
     }
 
     /**
+     * @param  array{shipped: int, drafts: int, ceiling: int, left: int}|null  $usage
+     * @return array<string, mixed>
+     */
+    public function lc(LetterOfCredit $lc, ?array $usage = null): array
+    {
+        return [
+            'id' => $lc->getKey(),
+            ...$lc->only(['unit_id', 'buyer_id', 'number', 'issuing_bank', 'advising_bank', 'currency', 'amount_minor', 'tolerance_bp', 'partial_allowed', 'transshipment_allowed',
+                'port_loading', 'port_discharge', 'payment_days', 'status', 'note', 'version']),
+            'documents' => $lc->documents ?? [],
+            'issued_on' => $lc->issued_on->toDateString(), 'latest_ship_on' => $lc->latest_ship_on->toDateString(), 'expires_on' => $lc->expires_on->toDateString(),
+            'ceiling_minor' => $lc->ceiling(),
+            ...($usage === null ? [] : ['usage' => $usage]),
+        ];
+    }
+
+    /**
      * @param  Collection<int, ShipmentCarton>|null  $cartons
      * @return array<string, mixed>
      */
@@ -105,10 +123,12 @@ class FactoryPresenter
     {
         return [
             'id' => $shipment->getKey(),
-            ...$shipment->only(['unit_id', 'order_id', 'number', 'mode', 'carrier', 'transport_ref', 'destination', 'warehouse_id', 'currency', 'rate_micro', 'is_last',
+            ...$shipment->only(['unit_id', 'order_id', 'lc_id', 'number', 'mode', 'carrier', 'transport_ref', 'destination', 'export_permit_no', 'warehouse_id', 'currency', 'rate_micro', 'is_last',
                 'status', 'pieces', 'value_minor', 'cost_minor', 'invoice_id', 'journal_id', 'note', 'created_by', 'version']),
             'ship_on' => $shipment->ship_on->toDateString(),
             'shipped_at' => $shipment->shipped_at?->toIso8601String(),
+            'export_permit_on' => $shipment->export_permit_on?->toDateString(),
+            'discrepancies' => $shipment->discrepancies ?? [],
             'exchange_rate' => Shipments::rateText($shipment->rate_micro),
             ...($cartons === null ? [] : ['cartons' => $cartons->map(fn (ShipmentCarton $carton) => [
                 ...$carton->only(['from_no', 'to_no', 'size', 'color', 'pieces_each', 'net_grams_each', 'gross_grams_each', 'length_mm', 'width_mm', 'height_mm']),

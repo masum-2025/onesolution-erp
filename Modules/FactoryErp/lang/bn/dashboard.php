@@ -19,4 +19,5 @@ return [
     'quality' => 'আজ পাওয়া ত্রুটি',
     'quality_hint' => 'DHU :dhu · :checked পিস দেখা হয়েছে',
     'attention_dhu' => 'আজ DHU বেশি এমন লাইন',
+    'attention_lc_expiring' => 'মেয়াদ শেষ হতে আসা এলসি',
 ];

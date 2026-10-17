@@ -3,6 +3,8 @@
 namespace Modules\FactoryErp\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Rules\RuleContextFactory;
+use App\Platform\Rules\RuleResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -11,10 +13,12 @@ use Modules\FactoryErp\Exceptions\FactoryException;
 use Modules\FactoryErp\Http\Controllers\Concerns\FindsFactory;
 use Modules\FactoryErp\Http\FactoryPresenter;
 use Modules\FactoryErp\Http\Requests\ShipmentRequest;
+use Modules\FactoryErp\Models\LetterOfCredit;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\Shipment;
 use Modules\FactoryErp\Models\Style;
 use Modules\FactoryErp\Services\Floor;
+use Modules\FactoryErp\Services\LettersOfCredit;
 use Modules\FactoryErp\Services\Progress;
 use Modules\FactoryErp\Services\Shipments;
 use Modules\Inventory\Services\Stock;
@@ -36,6 +40,9 @@ class ShipmentController extends Controller
         private Organizations $buyers,
         private Stock $stock,
         private FactoryPresenter $presenter,
+        private LettersOfCredit $lcs,
+        private RuleResolver $rules,
+        private RuleContextFactory $contexts,
     ) {}
 
     public function index(string $organization, string $order): JsonResponse
@@ -83,9 +90,9 @@ class ShipmentController extends Controller
         [$unit, $company] = $this->workplace($organization);
         $found = $this->shipmentIn($unit, $company, $shipment);
         Gate::authorize('factory_erp.issue', $unit);
-        $data = $request->validate(['base_version' => ['required', 'integer', 'min:1']]);
+        $data = $request->validate(['base_version' => ['required', 'integer', 'min:1'], 'accept_discrepancy' => ['sometimes', 'boolean']]);
 
-        return $this->answer($company, $this->shipments->ship($company, $found, (int) $data['base_version'], $request->user()));
+        return $this->answer($company, $this->shipments->ship($company, $found, (int) $data['base_version'], $request->user(), (bool) ($data['accept_discrepancy'] ?? false)));
     }
 
     private function shipmentIn($unit, $company, string $id): Shipment
@@ -108,6 +115,13 @@ class ShipmentController extends Controller
                 'buyer' => $this->buyers->many($company, [$order->buyer_id])[$order->buyer_id] ?? null,
                 'warehouse' => $this->stock->warehouse($company, $shipment->warehouse_id),
                 'seller' => ['name' => $company->displayName()],
+                'lc' => $shipment->lc_id === null ? null : $this->presenter->lc($this->floor->query(LetterOfCredit::class, $company)->findOrFail($shipment->lc_id)),
+                'lcs' => $this->lcs->of($company, $company, 'open')->where('buyer_id', $order->buyer_id)->where('currency', $order->currency)
+                    ->map(fn (LetterOfCredit $lc) => ['id' => $lc->getKey(), 'number' => $lc->number])->values(),
+                'export_permit' => [
+                    'required' => (bool) $this->rules->get('factory_erp.export_permit_required', $this->contexts->forOrganization($company)),
+                    'label' => (string) $this->rules->get('factory_erp.export_permit_label', $this->contexts->forOrganization($company)),
+                ],
                 'company_currency' => rescue(fn () => $this->floor->currency($company), null, false),
             ],
         ], $status);

@@ -78,6 +78,22 @@ return [
         'label' => 'Language of shipping papers',
         'description' => 'Packing lists and commercial invoices print in this language (a code such as en), whatever the screen\'s. The person printing can still choose another.',
     ],
+    'lc_strict' => [
+        'label' => 'Refuse shipments that break the L/C',
+        'description' => 'On: a shipment that breaks its letter of credit\'s terms (late, over the amount, part shipment not allowed, expired) is refused. Off: it ships once the person accepts the discrepancies.',
+    ],
+    'lc_expiry_warn_days' => [
+        'label' => 'Days ahead to warn of an L/C\'s expiry',
+        'description' => 'Open letters of credit expiring within this many days ring the bell.',
+    ],
+    'export_permit_required' => [
+        'label' => 'Shipments need an export permit',
+        'description' => 'On: a shipment is not shipped without its export permit number (EXP in Bangladesh).',
+    ],
+    'export_permit_label' => [
+        'label' => 'Name of the export permit',
+        'description' => 'What the country calls it, shown on the shipment and its papers (EXP in Bangladesh).',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',
@@ -85,5 +101,6 @@ return [
         'efficiency' => 'Efficiency',
         'quality' => 'Quality',
         'pay' => 'Pay',
+        'export' => 'Export',
     ],
 ];

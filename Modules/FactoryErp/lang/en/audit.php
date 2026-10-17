@@ -29,4 +29,6 @@ return [
     'shipment_created' => 'Shipment made',
     'shipment_updated' => 'Shipment changed',
     'shipment_shipped' => 'Shipment shipped',
+    'lc_created' => 'Letter of credit made',
+    'lc_updated' => 'Letter of credit changed',
 ];

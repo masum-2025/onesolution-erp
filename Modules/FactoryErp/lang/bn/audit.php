@@ -29,4 +29,6 @@ return [
     'shipment_created' => 'শিপমেন্ট তৈরি',
     'shipment_updated' => 'শিপমেন্ট বদল',
     'shipment_shipped' => 'শিপমেন্ট পাঠানো',
+    'lc_created' => 'এলসি তৈরি',
+    'lc_updated' => 'এলসি বদল',
 ];

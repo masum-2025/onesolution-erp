@@ -13,6 +13,7 @@ use Illuminate\Support\Collection;
 use Modules\Accounting\Services\Customers;
 use Modules\Crm\Services\Organizations;
 use Modules\FactoryErp\Exceptions\FactoryException;
+use Modules\FactoryErp\Models\LetterOfCredit;
 use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\Sequence;
 use Modules\FactoryErp\Models\Shipment;
@@ -48,7 +49,11 @@ class Shipments
         private AuditLogger $audit,
         private RuleResolver $rules,
         private RuleContextFactory $contexts,
+        private LettersOfCredit $lcs,
     ) {}
+
+    /** What a shipment's form may set (the order, currency and number are fixed on making). */
+    private const FIELDS = ['lc_id', 'ship_on', 'mode', 'carrier', 'transport_ref', 'destination', 'export_permit_no', 'export_permit_on', 'warehouse_id', 'is_last', 'note'];
 
     /** @return Collection<int, Shipment> */
     public function of(Organization $company, Order $order): Collection
@@ -135,18 +140,26 @@ class Shipments
                 if ($shipment->status !== 'draft') {
                     throw FactoryException::wrongStatus();
                 }
-                $shipment->fill(array_intersect_key($data, array_flip(['ship_on', 'mode', 'carrier', 'transport_ref', 'destination', 'warehouse_id', 'is_last', 'note'])));
+                $shipment->fill(array_intersect_key($data, array_flip(self::FIELDS)));
                 $shipment->version++;
             } else {
                 $shipment = new Shipment([
                     'organization_id' => $company->getKey(), 'unit_id' => $unit->getKey(), 'order_id' => $order->getKey(), 'currency' => $order->currency,
                     'created_by' => $actor->getKey(), 'op_id' => $data['op_id'] ?? null,
-                    ...array_intersect_key($data, array_flip(['ship_on', 'mode', 'carrier', 'transport_ref', 'destination', 'warehouse_id', 'is_last', 'note'])),
+                    ...array_intersect_key($data, array_flip(self::FIELDS)),
                 ]);
+                // Under the order's L/C unless another is named.
+                if (! array_key_exists('lc_id', $data)) {
+                    $shipment->lc_id = $this->lcs->forOrder($company, $order)?->getKey();
+                }
                 $shipment->number = $this->number($company, $context, CarbonImmutable::parse($data['ship_on'], 'UTC'));
             }
             if ($rate !== null) {
                 $shipment->rate_micro = $rate;
+            }
+            // An L/C the order is paid under (the buyer's, in the order's currency).
+            if ($shipment->lc_id !== null && ! in_array($order->getKey(), $this->lcs->orderIds($company, $this->floor->query(LetterOfCredit::class, $company)->findOrFail($shipment->lc_id)), true)) {
+                throw FactoryException::lcNotForOrder($order->number);
             }
             if ($cartons !== null) {
                 $this->assertAvailable($company, $order, $cartons);
@@ -169,12 +182,15 @@ class Shipments
         });
     }
 
-    /** Ship: stock out at cost, cost of sales, a draft invoice to the buyer, and the order shipped with its last shipment. */
-    public function ship(Organization $company, Shipment $shipment, int $baseVersion, User $actor): Shipment
+    /**
+     * Ship: stock out at cost, cost of sales, a draft invoice to the buyer, and the order shipped with its last shipment.
+     * The country's export permit must be written where it needs one; an L/C's discrepancies are refused or accepted.
+     */
+    public function ship(Organization $company, Shipment $shipment, int $baseVersion, User $actor, bool $acceptDiscrepancy = false): Shipment
     {
         $own = $this->floor->currency($company);
 
-        return $this->floor->transaction($company, function () use ($company, $shipment, $baseVersion, $own, $actor) {
+        return $this->floor->transaction($company, function () use ($company, $shipment, $baseVersion, $own, $actor, $acceptDiscrepancy) {
             $shipment = $this->floor->query(Shipment::class, $company)->whereKey($shipment->getKey())->lockForUpdate()->firstOrFail();
             if ($shipment->version !== $baseVersion) {
                 throw FactoryException::versionConflict(['version' => $shipment->version]);
@@ -203,6 +219,21 @@ class Shipments
             if ($style->finished_item_id === null) {
                 throw FactoryException::noFinishedItem();
             }
+            $unitContext = $this->contexts->forOrganization(Organization::query()->find($shipment->unit_id) ?? $company);
+            if ($this->rules->get('factory_erp.export_permit_required', $unitContext) && trim((string) $shipment->export_permit_no) === '') {
+                throw FactoryException::exportPermitNeeded((string) $this->rules->get('factory_erp.export_permit_label', $unitContext));
+            }
+            $discrepancies = [];
+            if ($shipment->lc_id !== null) {
+                $lc = $this->floor->query(LetterOfCredit::class, $company)->findOrFail($shipment->lc_id);
+                $discrepancies = $this->lcs->discrepancies($company, $lc, $shipment, $this->floor->today($company));
+                if ($discrepancies !== []) {
+                    $strict = (bool) $this->rules->get('factory_erp.lc_strict', $unitContext);
+                    if ($strict || ! $acceptDiscrepancy) {
+                        throw FactoryException::lcDiscrepancy($discrepancies, $strict);
+                    }
+                }
+            }
             $on = $shipment->ship_on;
             $moved = $this->stock->take($company, $shipment->warehouse_id, [['item_id' => $style->finished_item_id, 'quantity_milli' => $shipment->pieces * 1000]],
                 ['module' => 'factory_erp', 'type' => 'shipment', 'id' => $shipment->getKey(), 'actor_id' => $actor->getKey()], $on);
@@ -211,10 +242,11 @@ class Shipments
                 __('factory_erp::factory.narration.shipment', ['number' => $shipment->number, 'order' => $order->number]), $shipment->getKey(), $own, $cost, $order->unit_id);
             $invoice = $this->invoice($company, $shipment, $order, $style, $cells, $own, $actor);
 
-            $shipment->forceFill(['status' => 'shipped', 'shipped_at' => now(), 'cost_minor' => $cost, 'journal_id' => $journal, 'invoice_id' => $invoice, 'version' => $shipment->version + 1])->save();
+            $shipment->forceFill(['status' => 'shipped', 'shipped_at' => now(), 'cost_minor' => $cost, 'journal_id' => $journal, 'invoice_id' => $invoice,
+                'discrepancies' => $discrepancies ?: null, 'version' => $shipment->version + 1])->save();
             $this->audit->record('factory_erp.shipment_shipped', $shipment,
                 new: ['number' => $shipment->number, 'order' => $order->number, 'pieces' => $shipment->pieces, 'value_minor' => $shipment->value_minor, 'currency' => $shipment->currency,
-                    'cost_minor' => $cost, 'invoice_id' => $invoice], actor: $actor, organizationId: $company->getKey());
+                    'cost_minor' => $cost, 'invoice_id' => $invoice, 'lc_id' => $shipment->lc_id, 'discrepancies_accepted' => $discrepancies], actor: $actor, organizationId: $company->getKey());
             if ($shipment->is_last) {
                 $order->forceFill(['status' => 'shipped', 'version' => $order->version + 1])->save();
                 $this->audit->record('factory_erp.order_shipped', $order, old: ['status' => 'in_production'], new: ['status' => 'shipped'], actor: $actor, organizationId: $company->getKey());

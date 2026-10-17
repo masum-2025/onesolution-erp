@@ -2937,6 +2937,25 @@ warehouses in use).
   name and brand. The papers print in the screen's language.
 - After deploy: migrate, `rules:sync`, `accounting:map-postings`.
 
+### FAC-5: letters of credit, export permit, bank papers
+
+- **Papers in the paper's language**: shipping papers print in rule `factory_erp.paper_language` (default `en`; the
+  person printing may choose another) whatever the screen's. Platform: `tIn(locale, key)` in `lib/i18n.js` and an
+  optional locale on `formatNumber`/`formatDate` (`options.locale`), `formatDecimal(text, locale)`, `formatMoney(money, locale)`.
+- **Letters of credit** (`fac_lcs` + `fac_lc_orders`, `GET/POST …/factory/lcs`, `GET/PATCH …/lcs/{id}`, `factory_erp.merchandise`
+  to write): buyer, number, banks, currency and amount (minor units) ± tolerance (bp), issued / last day to ship / expiry,
+  part shipments, transshipment, ports, payment days (0 = at sight), the documents the bank wants; the buyer's orders in
+  its currency (one L/C per order); what it has paid for (shipped shipments) and what is left. Audited; version on change.
+- **Shipments under an L/C** (the order's by default, `lc_id`): shipping checks closed / expired / late / over the amount
+  with tolerance / part shipment not allowed. Rule `factory_erp.lc_strict` on: refused (`lc_discrepancy_blocked`); off
+  (default): 422 `lc_discrepancy` with the codes until `accept_discrepancy: true`; accepted ones are kept on the shipment.
+- **Export permit** (country rules): `factory_erp.export_permit_required` and `factory_erp.export_permit_label` — Bangladesh
+  `true` / `EXP` in `database/seeders/data/rule-values.php`; shipments keep `export_permit_no` and `_on` and do not ship without
+  the number where required.
+- **Bank papers** (print, paper language): bill of exchange (at sight or N days), beneficiary certificate, checklist of the
+  L/C's documents plus the export permit. Bell: open L/Cs expiring within `factory_erp.lc_expiry_warn_days` (15).
+- After deploy: migrate, `rules:sync`, `db:seed --class=RulesSeeder` (country values).
+
 ### Future expansion (Factory ERP)
 
 - FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,

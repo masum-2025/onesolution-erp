@@ -15,5 +15,7 @@ export default [
     { path: 'factory/qc', name: 'fac-qc', component: () => import('./pages/QcPage.vue'), meta },
     { path: 'factory/tickets', name: 'fac-tickets', component: () => import('./pages/TicketsPage.vue'), meta },
     { path: 'factory/shipments/:id', name: 'fac-shipment', component: () => import('./pages/ShipmentPage.vue'), meta },
+    { path: 'factory/lcs', name: 'fac-lcs', component: () => import('./pages/LcsPage.vue'), meta },
+    { path: 'factory/lcs/:id', name: 'fac-lc', component: () => import('./pages/LcPage.vue'), meta },
     { path: 'factory/defects', name: 'fac-defects', component: () => import('./pages/DefectTypesPage.vue'), meta },
 ];

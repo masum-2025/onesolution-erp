@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aqlSample, cbmText, cutAllowed, nextCartonRun, packingTotals, dhuBp, dhuText, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, ticketAmount, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
+import { aqlSample, cbmText, cutAllowed, lcFormToApi, lcToForm, nextCartonRun, packingTotals, dhuBp, dhuText, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, ticketAmount, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
 
 describe('factory', () => {
     it('works out a need exactly as the server does, rounded up', () => {
@@ -87,6 +87,15 @@ describe('factory', () => {
         expect(cbmText(21 * 72000000)).toBe('1.512');
         expect(nextCartonRun(rows, 10)).toMatchObject({ from_no: 22, to_no: 31, pieces_each: 4 });
         expect(nextCartonRun([], 1)).toMatchObject({ from_no: 1, to_no: 1 });
+    });
+
+    it('turns a letter of credit form into what the API takes, and back', () => {
+        const form = { ...lcToForm(), number: ' LC-42 ', issued_on: '2026-10-20', issuing_bank: 'SEB', amount: '২,০০০.৫০', tolerance: '5', payment_days: '60', latest_ship_on: '2026-11-30', expires_on: '2026-12-15' };
+        const body = lcFormToApi(form);
+        expect(body).toMatchObject({ number: 'LC-42', amount_minor: 200050, tolerance_bp: 500, payment_days: 60, currency: 'USD', partial_allowed: true });
+        expect(lcFormToApi({ ...form, amount: 'abc' })).toBeNull();
+        expect(lcFormToApi({ ...form, currency: 'US' })).toBeNull();
+        expect(lcToForm({ ...body, buyer_id: 'b', amount_minor: 200050 })).toMatchObject({ amount: '2000.50', tolerance: '5' });
     });
 
     it('reads typed numbers, Bangla digits too, without floats', () => {

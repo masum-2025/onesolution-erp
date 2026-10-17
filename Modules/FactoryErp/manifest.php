@@ -6,6 +6,7 @@
 */
 
 use Modules\FactoryErp\Dashboard\FactoryWidgets;
+use Modules\FactoryErp\Dashboard\LcWidgets;
 use Modules\FactoryErp\Dashboard\LineEfficiency;
 use Modules\FactoryErp\Dashboard\LineOutput;
 use Modules\FactoryErp\Dashboard\QualityToday;
@@ -18,7 +19,7 @@ return [
     'key' => 'factory_erp',
     'name' => 'factory_erp::module.name',
     'description' => 'factory_erp::module.description',
-    'version' => '1.6.0',
+    'version' => '1.7.0',
     'category' => 'business',
     // Materials come from Inventory (its Stock service), buyers are CRM organization
     // contacts (its Organizations service); materials on the floor post to Accounting
@@ -253,6 +254,53 @@ return [
             'category' => 'orders',
             'sort_order' => 46,
         ],
+        [
+            'key' => 'factory_erp.lc_strict',
+            'type' => 'boolean',
+            // On: a shipment that breaks its L/C's terms is refused. Off: shipped once the person accepts the discrepancies.
+            'default' => false,
+            'label' => 'factory_erp::rules.lc_strict.label',
+            'description' => 'factory_erp::rules.lc_strict.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'export',
+            'sort_order' => 180,
+        ],
+        [
+            'key' => 'factory_erp.lc_expiry_warn_days',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 120],
+            'default' => 15,
+            'label' => 'factory_erp::rules.lc_expiry_warn_days.label',
+            'description' => 'factory_erp::rules.lc_expiry_warn_days.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'export',
+            'sort_order' => 190,
+        ],
+        [
+            'key' => 'factory_erp.export_permit_required',
+            'type' => 'boolean',
+            // Whether the country needs an export permit on each shipment (EXP in Bangladesh).
+            'default' => false,
+            'label' => 'factory_erp::rules.export_permit_required.label',
+            'description' => 'factory_erp::rules.export_permit_required.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'export',
+            'sort_order' => 200,
+        ],
+        [
+            'key' => 'factory_erp.export_permit_label',
+            'type' => 'string',
+            // What the country calls it ("EXP" in Bangladesh).
+            'schema' => ['minLength' => 1, 'maxLength' => 40],
+            'default' => 'Export permit',
+            'label' => 'factory_erp::rules.export_permit_label.label',
+            'description' => 'factory_erp::rules.export_permit_label.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'export',
+            'sort_order' => 210,
+        ],
     ],
     'menu' => [
         [
@@ -266,6 +314,7 @@ return [
                 ['key' => 'styles', 'label' => 'factory_erp::module.menu_styles', 'route' => '/factory/styles', 'permission' => 'factory_erp.view'],
                 ['key' => 'output', 'label' => 'factory_erp::module.menu_output', 'route' => '/factory/output', 'permission' => 'factory_erp.view'],
                 ['key' => 'qc', 'label' => 'factory_erp::module.menu_qc', 'route' => '/factory/qc', 'permission' => 'factory_erp.view'],
+                ['key' => 'lcs', 'label' => 'factory_erp::module.menu_lcs', 'route' => '/factory/lcs', 'permission' => 'factory_erp.view'],
                 ['key' => 'tickets', 'label' => 'factory_erp::module.menu_tickets', 'route' => '/factory/tickets', 'permission' => 'factory_erp.produce'],
             ],
         ],
@@ -280,7 +329,7 @@ return [
         // Goods shipped to buyers: the lines of the draft invoice a shipment makes.
         'factory_erp.export_sales' => ['label' => 'factory_erp::factory.posting_keys.export_sales', 'type' => 'income'],
     ],
-    'attention' => [FactoryWidgets::class, TodayOutput::class, QualityToday::class],
+    'attention' => [FactoryWidgets::class, TodayOutput::class, QualityToday::class, LcWidgets::class],
     // Sewing output written on a phone without a network (not money).
     'sync_records' => [OutputSync::class],
     'is_core' => false,

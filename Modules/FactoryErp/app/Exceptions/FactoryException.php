@@ -131,6 +131,28 @@ class FactoryException extends TenancyException
         return new self('carton_run', 422, ['from' => Number::format($from, locale: app()->getLocale()), 'to' => Number::format($to, locale: app()->getLocale())], ['field' => 'cartons']);
     }
 
+    /** An order not the L/C's buyer's, not in its currency, or already under another L/C. */
+    public static function lcNotForOrder(string $order): self
+    {
+        return new self('lc_not_for_order', 422, ['order' => $order], ['field' => 'order_ids']);
+    }
+
+    /**
+     * A shipment that breaks its L/C's terms: refused (strict) or asked again until the person accepts them.
+     *
+     * @param  list<string>  $codes
+     */
+    public static function lcDiscrepancy(array $codes, bool $blocked): self
+    {
+        return new self($blocked ? 'lc_discrepancy_blocked' : 'lc_discrepancy', 422, [], ['discrepancies' => $codes]);
+    }
+
+    /** The country needs an export permit (EXP in Bangladesh) on the shipment before it ships. */
+    public static function exportPermitNeeded(string $label): self
+    {
+        return new self('export_permit_needed', 422, ['permit' => $label], ['field' => 'export_permit_no']);
+    }
+
     /** The buyer's currency is not the company's: the shipment needs an exchange rate. */
     public static function rateNeeded(): self
     {

@@ -162,6 +162,31 @@ export function nextCartonRun(rows, count = 1) {
     return { ...(last ?? { size: '', color: '', pieces_each: '', net: '', gross: '', length: '', width: '', height: '' }), from_no: from, to_no: from + count - 1 };
 }
 
+/** A letter of credit as the form's texts (empty for a new one; documents the usual set). */
+export function lcToForm(lc = null) {
+    return {
+        buyer_id: lc?.buyer_id ?? '', number: lc?.number ?? '', issued_on: lc?.issued_on ?? '', issuing_bank: lc?.issuing_bank ?? '', advising_bank: lc?.advising_bank ?? '',
+        currency: lc?.currency ?? 'USD', amount: lc ? minorToText(lc.amount_minor, lc.currency) : '', tolerance: lc ? bpToPercent(lc.tolerance_bp) : '5',
+        latest_ship_on: lc?.latest_ship_on ?? '', expires_on: lc?.expires_on ?? '', partial_allowed: lc?.partial_allowed ?? true, transshipment_allowed: lc?.transshipment_allowed ?? false,
+        port_loading: lc?.port_loading ?? '', port_discharge: lc?.port_discharge ?? '', payment_days: String(lc?.payment_days ?? 0),
+        documents: [...(lc?.documents ?? ['commercial_invoice', 'packing_list', 'bill_of_lading', 'bill_of_exchange', 'beneficiary_certificate'])],
+    };
+}
+
+/** The form's texts as the API takes them; null when an amount, percent or number is not readable. */
+export function lcFormToApi(form) {
+    const amount = amountToMinor(form.amount, form.currency);
+    const tolerance = form.tolerance === '' ? 0 : percentToBp(form.tolerance);
+    const days = piecesOf(form.payment_days);
+    if (amount === null || amount <= 0 || tolerance === null || days === null || !/^[A-Z]{3}$/.test(form.currency.trim().toUpperCase())) return null;
+    return {
+        number: form.number.trim(), issued_on: form.issued_on, issuing_bank: form.issuing_bank.trim(), advising_bank: form.advising_bank.trim() || null,
+        currency: form.currency.trim().toUpperCase(), amount_minor: amount, tolerance_bp: tolerance, latest_ship_on: form.latest_ship_on, expires_on: form.expires_on,
+        partial_allowed: form.partial_allowed, transshipment_allowed: form.transshipment_allowed, port_loading: form.port_loading.trim() || null,
+        port_discharge: form.port_discharge.trim() || null, payment_days: days, documents: form.documents,
+    };
+}
+
 /** The hour a phone is in (0-23), for a new entry. */
 export function currentHour(now = new Date()) {
     return now.getHours();

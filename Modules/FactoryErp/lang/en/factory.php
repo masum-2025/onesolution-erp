@@ -49,6 +49,11 @@ return [
         'over_shipped' => 'Too many :size / :color pieces: only :left are in the store and not shipped yet. Take more finished goods in first.',
         'carton_run' => 'Cartons :from to :to are numbered backwards or overlap another row. Check the carton numbers.',
         'rate_needed' => 'The buyer pays in another currency: write the exchange rate (how much of the company\'s currency one unit buys).',
+        'lc_not_found' => 'That letter of credit does not exist here. Reload the page.',
+        'lc_not_for_order' => 'Order :order cannot go under this L/C: it must be the same buyer\'s, in the L/C\'s currency, and not under another L/C.',
+        'lc_discrepancy' => 'This shipment does not keep its L/C\'s terms. Check the discrepancies, or accept them (the bank may charge a fee).',
+        'lc_discrepancy_blocked' => 'This shipment does not keep its L/C\'s terms, and the company does not ship with discrepancies. Amend the L/C or the shipment first.',
+        'export_permit_needed' => 'Write the :permit number before shipping: this country needs it on every export shipment.',
     ],
     'validation' => [
         'list_empty' => 'Give at least one.',
@@ -65,6 +70,7 @@ return [
         'field_choice' => 'Choose one of the choices.',
         'field_yes_no' => 'Choose yes or no.',
         'operation_twice' => 'Each operation once: two have the same name.',
+        'lc_dates' => 'Dates go in order: issued, then the last day to ship, then the expiry.',
     ],
     'narration' => [
         'issue' => 'Materials to the floor for order :number',

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\FactoryErp\Http\Controllers\FloorController;
+use Modules\FactoryErp\Http\Controllers\LcController;
 use Modules\FactoryErp\Http\Controllers\OrderController;
 use Modules\FactoryErp\Http\Controllers\PieceController;
 use Modules\FactoryErp\Http\Controllers\QcController;
@@ -38,6 +39,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
         Route::get('piece-tickets', [PieceController::class, 'tickets']);
         Route::get('orders/{order}/shipments', [ShipmentController::class, 'index']);
         Route::get('shipments/{shipment}', [ShipmentController::class, 'show']);
+        Route::get('lcs', [LcController::class, 'index']);
+        Route::get('lcs/{lc}', [LcController::class, 'show']);
         Route::get('inspections', [QcController::class, 'inspections']);
         Route::get('orders/{order}/quality', [QcController::class, 'orderQuality']);
 
@@ -65,6 +68,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
             Route::post('defect-types', [QcController::class, 'storeDefectType']);
             Route::post('piece-tickets', [PieceController::class, 'store']);
             Route::post('shipments', [ShipmentController::class, 'store']);
+            Route::post('lcs', [LcController::class, 'store']);
+            Route::patch('lcs/{lc}', [LcController::class, 'update']);
             Route::patch('shipments/{shipment}', [ShipmentController::class, 'update']);
             Route::post('shipments/{shipment}/ship', [ShipmentController::class, 'ship']);
             Route::post('piece-tickets/{ticket}/void', [PieceController::class, 'void']);

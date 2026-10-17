@@ -19,6 +19,18 @@ return [
 
     // ── Bangladesh ───────────────────────────────────────────────────────
     [
+        'key' => 'factory_erp.export_permit_required',
+        'country' => 'BD',
+        'value' => true,
+        'reason' => 'Bangladesh Bank: every export shipment needs an EXP form certified by the exporter\'s bank.',
+    ],
+    [
+        'key' => 'factory_erp.export_permit_label',
+        'country' => 'BD',
+        'value' => 'EXP',
+        'reason' => 'Bangladesh Bank calls the export permit the EXP form.',
+    ],
+    [
         'key' => 'education_exams.default_grading_scheme',
         'country' => 'BD',
         'value' => 'bd_school_gpa5',

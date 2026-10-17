@@ -19,4 +19,5 @@ return [
     'quality' => 'Defects found today',
     'quality_hint' => 'DHU :dhu · :checked pieces checked',
     'attention_dhu' => 'Lines with a high DHU today',
+    'attention_lc_expiring' => 'Letters of credit expiring soon',
 ];
