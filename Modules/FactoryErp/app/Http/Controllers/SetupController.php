@@ -60,6 +60,7 @@ class SetupController extends Controller
                 'default_wastage_bp' => (int) $this->rules->get('factory_erp.default_wastage_bp', $context),
                 'order_currency' => (string) $this->rules->get('factory_erp.order_currency', $context),
                 'over_issue' => (string) $this->rules->get('factory_erp.over_issue', $context),
+                'paper_language' => (string) $this->rules->get('factory_erp.paper_language', $context),
                 'over_cut_bp' => (int) $this->rules->get('factory_erp.over_cut_bp', $context),
                 'output_by' => (string) $this->rules->get('factory_erp.output_by', $context),
                 'reject_warn_bp' => (int) $this->rules->get('factory_erp.reject_warn_bp', $context),

@@ -241,6 +241,18 @@ return [
             'category' => 'orders',
             'sort_order' => 45,
         ],
+        [
+            'key' => 'factory_erp.paper_language',
+            'type' => 'string',
+            // Packing lists and commercial invoices go to buyers abroad: printed in this language whatever the screen's.
+            'schema' => ['pattern' => '^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$'],
+            'default' => 'en',
+            'label' => 'factory_erp::rules.paper_language.label',
+            'description' => 'factory_erp::rules.paper_language.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'orders',
+            'sort_order' => 46,
+        ],
     ],
     'menu' => [
         [

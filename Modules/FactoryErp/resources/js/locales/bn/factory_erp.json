@@ -520,6 +520,7 @@
         "description": "বিবরণ",
         "unit_price": "একক দাম",
         "amount": "মোট",
-        "not_found": "এই শিপমেন্ট এখানে নেই।"
+        "not_found": "এই শিপমেন্ট এখানে নেই।",
+        "paper_language": "Print করা কাগজের ভাষা"
     }
 }

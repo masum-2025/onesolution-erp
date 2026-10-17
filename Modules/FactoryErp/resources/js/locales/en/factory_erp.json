@@ -520,6 +520,7 @@
         "description": "Description",
         "unit_price": "Unit price",
         "amount": "Amount",
-        "not_found": "That shipment does not exist here."
+        "not_found": "That shipment does not exist here.",
+        "paper_language": "Language of the printed paper"
     }
 }

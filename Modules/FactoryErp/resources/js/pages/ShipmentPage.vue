@@ -15,7 +15,7 @@ import { brand } from '@/lib/brand';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatDecimal, formatMoney, formatNumber } from '@/lib/format';
 import { toast } from '@/lib/toast';
-import { t } from '@/lib/i18n';
+import { direction, i18n, languageName, loadNamespaces, t, tIn } from '@/lib/i18n';
 import { factoryApi } from '../api';
 import { useFactorySetup } from '../setup';
 import { cbmText, milliToText, nextCartonRun, packingTotals, piecesOf, quantityToMilli } from '../lib';
@@ -107,10 +107,21 @@ async function ship() {
     }
 }
 
-// Printing: the packing list or the commercial invoice.
+// Printing: the packing list or the commercial invoice, in the paper's language
+// (the company's rule, else English; the person may choose another), not the screen's.
 const paper = ref('packing');
+const paperLocale = ref('');
+watch(() => setup.rules.value.paper_language, (value) => {
+    if (!paperLocale.value) paperLocale.value = i18n.locales.includes(value) ? value : (i18n.locales.includes('en') ? 'en' : i18n.locale);
+}, { immediate: true });
+const pt = (key, params = {}) => tIn(paperLocale.value, key, params);
+const pn = (value, options = {}) => formatNumber(value, { ...options, locale: paperLocale.value });
+const pd = (text) => formatDecimal(text, paperLocale.value);
+const pm = (minor) => formatMoney({ amount: minor, currency: shipment.value?.currency }, paperLocale.value);
+const pday = (date) => formatDate(`${date}T00:00:00Z`, { dateStyle: 'long', timeZone: 'UTC', locale: paperLocale.value });
 async function print(which) {
     paper.value = which;
+    await loadNamespaces(['factory_erp'], paperLocale.value);
     await nextTick();
     globalThis.print?.();
 }
@@ -138,6 +149,9 @@ const invoiceRows = computed(() => {
                     <AppBadge class="mb-2" :tone="shipment.status === 'shipped' ? 'ok' : 'neutral'" dot>{{ t(`factory_erp.shipments.statuses.${shipment.status}`) }}</AppBadge>
                 </template>
                 <template #actions>
+                    <select v-model="paperLocale" class="field-input w-36" :aria-label="t('factory_erp.shipments.paper_language')" :title="t('factory_erp.shipments.paper_language')">
+                        <option v-for="code in i18n.locales" :key="code" :value="code">{{ languageName(code) }}</option>
+                    </select>
                     <AppButton :icon="Printer" @click="print('packing')">{{ t('factory_erp.shipments.print_packing') }}</AppButton>
                     <AppButton :icon="Printer" @click="print('invoice')">{{ t('factory_erp.shipments.print_invoice') }}</AppButton>
                     <AppButton v-if="draft && setup.can('issue')" variant="primary" :icon="Ship" :loading="busy" :disabled="!shipment.pieces" @click="ship">{{ t('factory_erp.shipments.ship') }}</AppButton>
@@ -236,68 +250,68 @@ const invoiceRows = computed(() => {
             </section>
 
             <!-- The printed paper: hidden on screen, printed alone. -->
-            <article class="hidden text-[12px] text-black print:block">
+            <article class="hidden text-[12px] text-black print:block" :lang="paperLocale" :dir="direction(paperLocale)">
                 <header class="flex items-start justify-between border-b border-black pb-3">
                     <div class="flex items-center gap-3">
                         <img v-if="brand.logo_url" :src="brand.logo_url" alt="" class="h-10 w-auto" />
                         <div><div class="text-[16px] font-semibold">{{ meta.seller?.name ?? org.name }}</div><div>{{ brand.name }}</div></div>
                     </div>
                     <div class="text-end">
-                        <div class="text-[18px] font-bold uppercase">{{ paper === 'invoice' ? t('factory_erp.shipments.invoice_title') : t('factory_erp.shipments.packing_title') }}</div>
+                        <div class="text-[18px] font-bold uppercase">{{ paper === 'invoice' ? pt('factory_erp.shipments.invoice_title') : pt('factory_erp.shipments.packing_title') }}</div>
                         <div class="font-mono" dir="ltr">{{ shipment.number }}</div>
-                        <div>{{ day(shipment.ship_on) }}</div>
+                        <div>{{ pday(shipment.ship_on) }}</div>
                     </div>
                 </header>
                 <div class="grid grid-cols-2 gap-4 py-3">
                     <div>
-                        <div class="font-semibold uppercase">{{ t('factory_erp.shipments.buyer') }}</div>
+                        <div class="font-semibold uppercase">{{ pt('factory_erp.shipments.buyer') }}</div>
                         <div>{{ meta.buyer?.name }}</div>
                         <div v-if="meta.buyer?.address" class="whitespace-pre-line">{{ meta.buyer.address }}</div>
                     </div>
                     <dl class="grid grid-cols-2 gap-x-3">
-                        <dt>{{ t('factory_erp.fields_.po_number') }}</dt><dd class="font-mono" dir="ltr">{{ meta.order?.po_number ?? '—' }}</dd>
-                        <dt>{{ t('factory_erp.shipments.style') }}</dt><dd>{{ meta.style?.code }} · {{ meta.style?.name }}</dd>
-                        <dt>{{ t('factory_erp.shipments.mode') }}</dt><dd>{{ t(`factory_erp.shipments.modes.${shipment.mode}`) }}<template v-if="shipment.carrier"> · {{ shipment.carrier }}</template></dd>
-                        <dt>{{ t('factory_erp.shipments.transport_ref') }}</dt><dd class="font-mono" dir="ltr">{{ shipment.transport_ref ?? '—' }}</dd>
-                        <dt>{{ t('factory_erp.shipments.destination') }}</dt><dd>{{ shipment.destination ?? '—' }}</dd>
+                        <dt>{{ pt('factory_erp.fields_.po_number') }}</dt><dd class="font-mono" dir="ltr">{{ meta.order?.po_number ?? '—' }}</dd>
+                        <dt>{{ pt('factory_erp.shipments.style') }}</dt><dd>{{ meta.style?.code }} · {{ meta.style?.name }}</dd>
+                        <dt>{{ pt('factory_erp.shipments.mode') }}</dt><dd>{{ pt(`factory_erp.shipments.modes.${shipment.mode}`) }}<template v-if="shipment.carrier"> · {{ shipment.carrier }}</template></dd>
+                        <dt>{{ pt('factory_erp.shipments.transport_ref') }}</dt><dd class="font-mono" dir="ltr">{{ shipment.transport_ref ?? '—' }}</dd>
+                        <dt>{{ pt('factory_erp.shipments.destination') }}</dt><dd>{{ shipment.destination ?? '—' }}</dd>
                     </dl>
                 </div>
                 <table v-if="paper === 'packing'" class="w-full border-collapse">
                     <thead><tr class="border-y border-black">
-                        <th class="py-1 text-start">{{ t('factory_erp.shipments.cartons') }}</th><th class="text-start">{{ t('factory_erp.sewing.cell') }}</th>
-                        <th class="text-end">{{ t('factory_erp.shipments.count') }}</th><th class="text-end">{{ t('factory_erp.shipments.each') }}</th><th class="text-end">{{ t('factory_erp.tickets.pieces') }}</th>
-                        <th class="text-end">{{ t('factory_erp.shipments.net') }}</th><th class="text-end">{{ t('factory_erp.shipments.gross') }}</th><th class="text-end">{{ t('factory_erp.shipments.measure') }}</th>
+                        <th class="py-1 text-start">{{ pt('factory_erp.shipments.cartons') }}</th><th class="text-start">{{ pt('factory_erp.sewing.cell') }}</th>
+                        <th class="text-end">{{ pt('factory_erp.shipments.count') }}</th><th class="text-end">{{ pt('factory_erp.shipments.each') }}</th><th class="text-end">{{ pt('factory_erp.tickets.pieces') }}</th>
+                        <th class="text-end">{{ pt('factory_erp.shipments.net') }}</th><th class="text-end">{{ pt('factory_erp.shipments.gross') }}</th><th class="text-end">{{ pt('factory_erp.shipments.measure') }}</th>
                     </tr></thead>
                     <tbody>
                         <tr v-for="(row, index) in cartons" :key="index" class="border-b border-black/30">
-                            <td class="tabular py-1">{{ formatNumber(row.from_no) }}–{{ formatNumber(row.to_no) }}</td><td>{{ row.size }} / {{ row.color }}</td>
-                            <td class="tabular text-end">{{ formatNumber(row.to_no - row.from_no + 1) }}</td><td class="tabular text-end">{{ formatNumber(row.pieces_each) }}</td>
-                            <td class="tabular text-end">{{ formatNumber((row.to_no - row.from_no + 1) * row.pieces_each) }}</td>
-                            <td class="tabular text-end">{{ formatDecimal(milliToText((row.to_no - row.from_no + 1) * row.net_grams_each) || '0') }}</td>
-                            <td class="tabular text-end">{{ formatDecimal(milliToText((row.to_no - row.from_no + 1) * row.gross_grams_each) || '0') }}</td>
-                            <td class="tabular text-end">{{ formatNumber(row.length_mm / 10) }}×{{ formatNumber(row.width_mm / 10) }}×{{ formatNumber(row.height_mm / 10) }}</td>
+                            <td class="tabular py-1">{{ pn(row.from_no) }}–{{ pn(row.to_no) }}</td><td>{{ row.size }} / {{ row.color }}</td>
+                            <td class="tabular text-end">{{ pn(row.to_no - row.from_no + 1) }}</td><td class="tabular text-end">{{ pn(row.pieces_each) }}</td>
+                            <td class="tabular text-end">{{ pn((row.to_no - row.from_no + 1) * row.pieces_each) }}</td>
+                            <td class="tabular text-end">{{ pd(milliToText((row.to_no - row.from_no + 1) * row.net_grams_each) || '0') }}</td>
+                            <td class="tabular text-end">{{ pd(milliToText((row.to_no - row.from_no + 1) * row.gross_grams_each) || '0') }}</td>
+                            <td class="tabular text-end">{{ pn(row.length_mm / 10) }}×{{ pn(row.width_mm / 10) }}×{{ pn(row.height_mm / 10) }}</td>
                         </tr>
                     </tbody>
                     <tfoot><tr class="border-t-2 border-black font-semibold">
-                        <td class="py-1" colspan="2">{{ t('factory_erp.sheet.total') }}</td><td class="tabular text-end">{{ formatNumber(totals.cartons) }}</td><td />
-                        <td class="tabular text-end">{{ formatNumber(totals.pieces) }}</td><td class="tabular text-end">{{ formatDecimal(milliToText(totals.net) || '0') }}</td>
-                        <td class="tabular text-end">{{ formatDecimal(milliToText(totals.gross) || '0') }}</td><td class="tabular text-end">{{ formatDecimal(cbmText(totals.volume)) }} CBM</td>
+                        <td class="py-1" colspan="2">{{ pt('factory_erp.sheet.total') }}</td><td class="tabular text-end">{{ pn(totals.cartons) }}</td><td />
+                        <td class="tabular text-end">{{ pn(totals.pieces) }}</td><td class="tabular text-end">{{ pd(milliToText(totals.net) || '0') }}</td>
+                        <td class="tabular text-end">{{ pd(milliToText(totals.gross) || '0') }}</td><td class="tabular text-end">{{ pd(cbmText(totals.volume)) }} CBM</td>
                     </tr></tfoot>
                 </table>
                 <table v-else class="w-full border-collapse">
                     <thead><tr class="border-y border-black">
-                        <th class="py-1 text-start">{{ t('factory_erp.shipments.description') }}</th><th class="text-end">{{ t('factory_erp.tickets.pieces') }}</th>
-                        <th class="text-end">{{ t('factory_erp.shipments.unit_price') }}</th><th class="text-end">{{ t('factory_erp.shipments.amount') }}</th>
+                        <th class="py-1 text-start">{{ pt('factory_erp.shipments.description') }}</th><th class="text-end">{{ pt('factory_erp.tickets.pieces') }}</th>
+                        <th class="text-end">{{ pt('factory_erp.shipments.unit_price') }}</th><th class="text-end">{{ pt('factory_erp.shipments.amount') }}</th>
                     </tr></thead>
                     <tbody>
                         <tr v-for="row in invoiceRows" :key="row.key" class="border-b border-black/30">
-                            <td class="py-1">{{ meta.style?.product_type ?? '' }} {{ meta.style?.code }} · {{ row.key }}</td><td class="tabular text-end">{{ formatNumber(row.pieces) }}</td>
-                            <td class="tabular text-end">{{ money(meta.order?.unit_price_minor ?? 0) }}</td><td class="tabular text-end">{{ money(row.value) }}</td>
+                            <td class="py-1">{{ meta.style?.product_type ?? '' }} {{ meta.style?.code }} · {{ row.key }}</td><td class="tabular text-end">{{ pn(row.pieces) }}</td>
+                            <td class="tabular text-end">{{ pm(meta.order?.unit_price_minor ?? 0) }}</td><td class="tabular text-end">{{ pm(row.value) }}</td>
                         </tr>
                     </tbody>
                     <tfoot><tr class="border-t-2 border-black font-semibold">
-                        <td class="py-1">{{ t('factory_erp.sheet.total') }}</td><td class="tabular text-end">{{ formatNumber(totals.pieces) }}</td><td />
-                        <td class="tabular text-end">{{ money(invoiceRows.reduce((sum, row) => sum + row.value, 0)) }}</td>
+                        <td class="py-1">{{ pt('factory_erp.sheet.total') }}</td><td class="tabular text-end">{{ pn(totals.pieces) }}</td><td />
+                        <td class="tabular text-end">{{ pm(invoiceRows.reduce((sum, row) => sum + row.value, 0)) }}</td>
                     </tr></tfoot>
                 </table>
                 <p v-if="shipment.note" class="mt-3">{{ shipment.note }}</p>

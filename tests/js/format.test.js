@@ -1,8 +1,20 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { decimalStringToMinor, formatDuration, formatMoney, minorToDecimalString, parseDuration } from '@/lib/format';
+import { decimalStringToMinor, formatDate, formatDecimal, formatDuration, formatMoney, formatNumber, minorToDecimalString, parseDuration } from '@/lib/format';
 import { i18n, initI18n, setLocale } from '@/lib/i18n';
 
 beforeAll(() => initI18n(['en', 'bn'], 'en'));
+
+describe('another language than the screen\'s', () => {
+    it('writes numbers, money and dates in the language asked for, leaving the screen\'s alone', async () => {
+        await setLocale('bn', { remember: false });
+        expect(formatNumber(1234, { locale: 'en' })).toBe('1,234');
+        expect(formatNumber(1234)).not.toBe('1,234');
+        expect(formatMoney({ amount: 48500, currency: 'USD' }, 'en')).toBe('$485.00');
+        expect(formatDecimal('2.5', 'en')).toBe('2.5');
+        expect(formatDate('2026-11-02T00:00:00Z', { dateStyle: 'long', timeZone: 'UTC', locale: 'en' })).toBe('November 2, 2026');
+        await setLocale('en', { remember: false });
+    });
+});
 
 describe('money in minor units, without floats', () => {
     it('turns minor units into an exact decimal string', () => {

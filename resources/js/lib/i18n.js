@@ -210,7 +210,15 @@ const pluralRules = {};
  * A missing key returns the key itself, so gaps are visible, never blank.
  */
 export function t(key, params = {}) {
-    const locale = i18n.locale;
+    return tIn(i18n.locale, key, params);
+}
+
+/**
+ * Translate a key in a given language, whatever the screen's is (a paper
+ * printed for a buyer abroad). Load its namespaces first with
+ * loadNamespaces([...], locale); a missing key returns the key itself.
+ */
+export function tIn(locale, key, params = {}) {
     let text;
 
     if (typeof params.count === 'number') {

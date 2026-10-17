@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { has, i18n, initI18n, loadNamespaces, setLocale, t } from '@/lib/i18n';
+import { has, i18n, initI18n, loadNamespaces, setLocale, t, tIn } from '@/lib/i18n';
 import { on } from '@/lib/events';
 
 beforeAll(async () => {
@@ -18,6 +18,15 @@ describe('translations', () => {
 
         await setLocale('bn', { remember: false });
         expect(t('rules.preview.changes', { count: 3 })).toBe('৩টি ইউনিটে বদলাবে');
+        await setLocale('en', { remember: false });
+    });
+
+    it('writes in another language than the screen\'s for a printed paper', async () => {
+        await setLocale('bn', { remember: false });
+        await loadNamespaces([], 'en');
+        expect(tIn('en', 'core.nav.rules')).toBe('Rules');
+        expect(t('core.nav.rules')).toBe('নিয়ম');
+        expect(tIn('en', 'rules.preview.changes', { count: 3 })).toBe('3 units would change');
         await setLocale('en', { remember: false });
     });
 

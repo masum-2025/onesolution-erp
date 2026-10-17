@@ -6,9 +6,15 @@ import { session } from './session';
  * organization (language + country; the person's timezone, else the organization's). Money arrives
  * as integer minor units and is converted with string/BigInt math, never floats.
  */
-export function localeTag() {
+export function localeTag(locale = i18n.locale) {
     const country = session.me?.context?.settings?.country_code;
-    return country ? `${i18n.locale}-${country}` : i18n.locale;
+    return country ? `${locale}-${country}` : locale;
+}
+
+/** Intl options without our own `locale` choice (another language than the screen's, e.g. for a printed paper). */
+function split(options) {
+    const { locale, ...rest } = options ?? {};
+    return [localeTag(locale), rest];
 }
 
 /** The person's own timezone, else the organization's (own, inherited or its country's). */
@@ -16,19 +22,23 @@ function timeZone() {
     return session.me?.user?.timezone || session.me?.context?.settings?.timezone || undefined;
 }
 
+/** options.locale: another language than the screen's (default the screen's). */
 export function formatNumber(value, options = {}) {
     if (value === null || value === undefined || value === '') return '—';
-    return new Intl.NumberFormat(localeTag(), options).format(value);
+    const [tag, rest] = split(options);
+    return new Intl.NumberFormat(tag, rest).format(value);
 }
 
+/** options.locale: another language than the screen's (default the screen's). */
 export function formatDate(iso, options = { dateStyle: 'medium' }) {
     if (!iso) return '—';
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return '—';
+    const [tag, rest] = split(options);
     try {
-        return new Intl.DateTimeFormat(localeTag(), { timeZone: timeZone(), ...options }).format(date);
+        return new Intl.DateTimeFormat(tag, { timeZone: timeZone(), ...rest }).format(date);
     } catch {
-        return new Intl.DateTimeFormat(localeTag(), options).format(date);
+        return new Intl.DateTimeFormat(tag, rest).format(date);
     }
 }
 
@@ -89,13 +99,14 @@ export function decimalStringToMinor(text, digits) {
     return Number(signed);
 }
 
-export function formatMoney(money) {
+/** locale: another language than the screen's (default the screen's). */
+export function formatMoney(money, locale = undefined) {
     if (!money || money.amount === null || money.amount === undefined) return '—';
     const digits = currencyDigits(money.currency);
     // No currency known yet (still loading, or the module is off): the number alone, never "undefined".
-    if (!money.currency) return formatDecimal(minorToDecimalString(money.amount, digits));
+    if (!money.currency) return formatDecimal(minorToDecimalString(money.amount, digits), locale);
     try {
-        return new Intl.NumberFormat(localeTag(), { style: 'currency', currency: money.currency }).format(
+        return new Intl.NumberFormat(localeTag(locale), { style: 'currency', currency: money.currency }).format(
             minorToDecimalString(money.amount, digits),
         );
     } catch {
@@ -103,11 +114,11 @@ export function formatMoney(money) {
     }
 }
 
-/** Decimal strings ("1.5") are shown with locale digits, keeping their precision. */
-export function formatDecimal(text) {
+/** Decimal strings ("1.5") are shown with locale digits, keeping their precision (locale: another language than the screen's). */
+export function formatDecimal(text, locale = undefined) {
     if (text === null || text === undefined || text === '') return '—';
     const fraction = String(text).split('.')[1]?.length ?? 0;
-    return new Intl.NumberFormat(localeTag(), {
+    return new Intl.NumberFormat(localeTag(locale), {
         minimumFractionDigits: fraction,
         maximumFractionDigits: fraction,
     }).format(text);

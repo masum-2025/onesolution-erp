@@ -74,6 +74,10 @@ return [
         'label' => 'Shipment number prefix',
         'description' => 'Shipments are numbered PREFIX-YEAR-00001.',
     ],
+    'paper_language' => [
+        'label' => 'Language of shipping papers',
+        'description' => 'Packing lists and commercial invoices print in this language (a code such as en), whatever the screen\'s. The person printing can still choose another.',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',
