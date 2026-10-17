@@ -6,7 +6,10 @@ use Illuminate\Support\Collection;
 use Modules\FactoryErp\Models\BomLine;
 use Modules\FactoryErp\Models\Cutting;
 use Modules\FactoryErp\Models\CuttingLine;
+use Modules\FactoryErp\Models\DefectType;
 use Modules\FactoryErp\Models\Field;
+use Modules\FactoryErp\Models\Inspection;
+use Modules\FactoryErp\Models\InspectionDefect;
 use Modules\FactoryErp\Models\Issue;
 use Modules\FactoryErp\Models\IssueLine;
 use Modules\FactoryErp\Models\Line;
@@ -18,6 +21,7 @@ use Modules\FactoryErp\Models\OutputLine;
 use Modules\FactoryErp\Models\Receipt;
 use Modules\FactoryErp\Models\ReceiptLine;
 use Modules\FactoryErp\Models\Style;
+use Modules\FactoryErp\Services\Quality;
 
 /** Styles, orders, materials issued, lays cut and own fields as the screens read them. */
 class FactoryPresenter
@@ -86,6 +90,29 @@ class FactoryPresenter
             'cut_on' => $cutting->cut_on->toDateString(),
             'voided_at' => $cutting->voided_at?->toIso8601String(),
             'lines' => $lines->map(fn (CuttingLine $line) => $line->only(['size', 'color', 'quantity']))->values(),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function defectType(DefectType $type): array
+    {
+        return ['id' => $type->getKey(), 'code' => $type->code, 'name' => $type->textIn('name'), 'names' => $type->texts('name'), ...$type->only(['sort_order', 'is_active', 'version'])];
+    }
+
+    /**
+     * @param  Collection<int, InspectionDefect>  $defects
+     * @return array<string, mixed>
+     */
+    public function inspection(Inspection $inspection, Collection $defects): array
+    {
+        return [
+            'id' => $inspection->getKey(),
+            ...$inspection->only(['unit_id', 'order_id', 'line_id', 'kind', 'hour', 'checked', 'defects', 'lot_size', 'aql', 'accept', 'result', 'note', 'created_by', 'void_reason', 'version']),
+            'inspected_on' => $inspection->inspected_on->toDateString(),
+            'dhu_bp' => Quality::dhuBp($inspection->defects, $inspection->checked),
+            'created_at' => $inspection->created_at?->toIso8601String(),
+            'voided_at' => $inspection->voided_at?->toIso8601String(),
+            'by_type' => $defects->map(fn (InspectionDefect $defect) => $defect->only(['defect_type_id', 'count']))->values(),
         ];
     }
 

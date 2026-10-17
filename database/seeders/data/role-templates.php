@@ -78,6 +78,12 @@ return [
         'permissions' => ['factory_erp.view', 'factory_erp.produce', 'offline_mode.use'],
     ],
     [
+        'key' => 'qc_inspector',
+        'sector' => 'factory',
+        // Checks pieces at the end of lines and does final inspections.
+        'permissions' => ['factory_erp.view', 'factory_erp.qc'],
+    ],
+    [
         'key' => 'cashier',
         'sector' => null,
         'permissions' => ['pos.view', 'pos.sell', 'inventory.view'],

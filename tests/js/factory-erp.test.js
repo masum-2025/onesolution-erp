@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cutAllowed, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
+import { aqlSample, cutAllowed, dhuBp, dhuText, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
 
 describe('factory', () => {
     it('works out a need exactly as the server does, rounded up', () => {
@@ -55,6 +55,18 @@ describe('factory', () => {
         // 3,750 earned minutes over 9,600: 39.06%.
         expect(efficiencyBp(3750000, 9600)).toBe(3906);
         expect(efficiencyBp(10, 0)).toBeNull();
+    });
+
+    it('works out DHU and the AQL sample as the server does', () => {
+        expect(dhuBp(6, 120)).toBe(500);
+        expect(dhuBp(1, 0)).toBeNull();
+        expect(dhuText(320)).toBe('3.2');
+        expect(dhuText(null)).toBe('—');
+        const levels = [{ up_to: 8, sample: 2, accept: 0 }, { up_to: 1200, sample: 80, accept: 5 }, { up_to: null, sample: 1250, accept: 21 }];
+        expect(aqlSample(levels, 1000)).toEqual({ sample: 80, accept: 5 });
+        expect(aqlSample(levels, 2)).toEqual({ sample: 2, accept: 0 });
+        expect(aqlSample(levels, 900000)).toEqual({ sample: 1250, accept: 21 });
+        expect(aqlSample(levels, 1)).toBeNull();
     });
 
     it('reads typed numbers, Bangla digits too, without floats', () => {

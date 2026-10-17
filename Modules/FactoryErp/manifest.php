@@ -8,6 +8,7 @@
 use Modules\FactoryErp\Dashboard\FactoryWidgets;
 use Modules\FactoryErp\Dashboard\LineEfficiency;
 use Modules\FactoryErp\Dashboard\LineOutput;
+use Modules\FactoryErp\Dashboard\QualityToday;
 use Modules\FactoryErp\Dashboard\ShippingSoon;
 use Modules\FactoryErp\Dashboard\TodayOutput;
 use Modules\FactoryErp\Dashboard\WorkInProgress;
@@ -17,7 +18,7 @@ return [
     'key' => 'factory_erp',
     'name' => 'factory_erp::module.name',
     'description' => 'factory_erp::module.description',
-    'version' => '1.3.0',
+    'version' => '1.4.0',
     'category' => 'business',
     // Materials come from Inventory (its Stock service), buyers are CRM organization
     // contacts (its Organizations service); materials on the floor post to Accounting
@@ -25,7 +26,7 @@ return [
     'requires' => ['inventory', 'accounting', 'crm'],
     'sectors' => ['factory'],
     'plans' => ['*'],
-    'permissions' => ['factory_erp.view', 'factory_erp.merchandise', 'factory_erp.issue', 'factory_erp.produce', 'factory_erp.manage'],
+    'permissions' => ['factory_erp.view', 'factory_erp.merchandise', 'factory_erp.issue', 'factory_erp.produce', 'factory_erp.qc', 'factory_erp.manage'],
     'rules' => [
         [
             'key' => 'factory_erp.consumption_basis',
@@ -171,6 +172,41 @@ return [
             'category' => 'efficiency',
             'sort_order' => 120,
         ],
+        [
+            'key' => 'factory_erp.final_aql',
+            'type' => 'enum',
+            // The AQL of final inspections (columns of database/data/aql.php); buyers name it in their orders.
+            'schema' => ['enum' => ['2.5', '4.0']],
+            'default' => '2.5',
+            'label' => 'factory_erp::rules.final_aql.label',
+            'description' => 'factory_erp::rules.final_aql.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'quality',
+            'sort_order' => 130,
+        ],
+        [
+            'key' => 'factory_erp.ship_needs_final_pass',
+            'type' => 'boolean',
+            // An order ships only after its last final inspection passed.
+            'default' => true,
+            'label' => 'factory_erp::rules.ship_needs_final_pass.label',
+            'description' => 'factory_erp::rules.ship_needs_final_pass.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'quality',
+            'sort_order' => 140,
+        ],
+        [
+            'key' => 'factory_erp.dhu_warn_bp',
+            'type' => 'integer',
+            // A line's end-line DHU today at or above this rings the bell (500 = 5 defects per hundred pieces).
+            'schema' => ['minimum' => 1, 'maximum' => 100000],
+            'default' => 500,
+            'label' => 'factory_erp::rules.dhu_warn_bp.label',
+            'description' => 'factory_erp::rules.dhu_warn_bp.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'quality',
+            'sort_order' => 150,
+        ],
     ],
     'menu' => [
         [
@@ -183,6 +219,7 @@ return [
                 ['key' => 'orders', 'label' => 'factory_erp::module.menu_orders', 'route' => '/factory', 'permission' => 'factory_erp.view'],
                 ['key' => 'styles', 'label' => 'factory_erp::module.menu_styles', 'route' => '/factory/styles', 'permission' => 'factory_erp.view'],
                 ['key' => 'output', 'label' => 'factory_erp::module.menu_output', 'route' => '/factory/output', 'permission' => 'factory_erp.view'],
+                ['key' => 'qc', 'label' => 'factory_erp::module.menu_qc', 'route' => '/factory/qc', 'permission' => 'factory_erp.view'],
             ],
         ],
     ],
@@ -194,7 +231,7 @@ return [
     'ledger_accounts' => [
         'factory_erp.wip' => ['label' => 'factory_erp::factory.posting_keys.wip', 'type' => 'asset'],
     ],
-    'attention' => [FactoryWidgets::class, TodayOutput::class],
+    'attention' => [FactoryWidgets::class, TodayOutput::class, QualityToday::class],
     // Sewing output written on a phone without a network (not money).
     'sync_records' => [OutputSync::class],
     'is_core' => false,
@@ -206,8 +243,10 @@ return [
         ['key' => 'lines', 'label' => 'factory_erp::dashboard.lines', 'type' => 'bars', 'size' => 2, 'provider' => LineOutput::class, 'permission' => 'factory_erp.view'],
         ['key' => 'wip', 'label' => 'factory_erp::dashboard.wip', 'type' => 'stat', 'provider' => WorkInProgress::class, 'permission' => 'factory_erp.view'],
         ['key' => 'efficiency', 'label' => 'factory_erp::dashboard.efficiency', 'type' => 'bars', 'size' => 2, 'provider' => LineEfficiency::class, 'permission' => 'factory_erp.view'],
+        ['key' => 'quality', 'label' => 'factory_erp::dashboard.quality', 'type' => 'stat', 'provider' => QualityToday::class, 'permission' => 'factory_erp.view'],
     ]],
     'settings' => ['pages' => [
+        ['key' => 'defects', 'label' => 'factory_erp::module.menu_defects', 'route' => '/factory/defects', 'permission' => 'factory_erp.manage'],
         ['key' => 'lines', 'label' => 'factory_erp::module.menu_lines', 'route' => '/factory/lines', 'permission' => 'factory_erp.manage'],
         ['key' => 'fields', 'label' => 'factory_erp::module.menu_fields', 'route' => '/factory/fields', 'permission' => 'factory_erp.manage'],
     ]],

@@ -33,6 +33,10 @@ return [
         'over_received' => 'Too many :size / :color pieces: only :left good pieces are sewn and not in the store yet.',
         'no_finished_item' => 'Choose the style\'s finished item (an Inventory item kept in stock) first.',
         'cut_in_use' => 'Pieces of this lay are already sewn. Void that output first.',
+        'final_not_passed' => 'This order has no passed final inspection yet. Do the final inspection (Quality) before shipping.',
+        'defect_type_not_found' => 'That kind of defect is not in use here. Reload the page.',
+        'inspection_not_found' => 'That inspection does not exist here. Reload the page.',
+        'aql_not_found' => 'The AQL table has no column for the company\'s AQL. Ask the administrator to check the rule.',
     ],
     'validation' => [
         'list_empty' => 'Give at least one.',

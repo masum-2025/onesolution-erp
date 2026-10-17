@@ -11,4 +11,6 @@ return [
     'new_order' => 'নতুন অর্ডার',
     'menu_output' => 'লাইনের উৎপাদন',
     'menu_lines' => 'সেলাই লাইন',
+    'menu_qc' => 'মান যাচাই (QC)',
+    'menu_defects' => 'ত্রুটির ধরন',
 ];

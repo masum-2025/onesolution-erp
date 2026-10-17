@@ -110,6 +110,23 @@ export function efficiencyBp(earnedMilli, availableMinutes) {
     return availableMinutes > 0 ? Math.floor((earnedMilli * 10) / availableMinutes) : null;
 }
 
+/** Defects per hundred pieces in basis points of a unit (320 = 3.2), as the server works it out; null with nothing checked. */
+export function dhuBp(defects, checked) {
+    return checked > 0 ? Math.floor((defects * 10000) / checked) : null;
+}
+
+/** "3.2" from a DHU in basis points. */
+export function dhuText(bp) {
+    return bp === null || bp === undefined ? '—' : (Math.floor((bp + 5) / 10) / 10).toFixed(1);
+}
+
+/** Sample size and most defects accepted for a lot, from the AQL rows the server sends ([{up_to, sample, accept}]). */
+export function aqlSample(levels, lot) {
+    if (!(lot >= 2)) return null;
+    const row = levels.find((level) => level.up_to === null || lot <= level.up_to);
+    return row ? { sample: Math.min(row.sample, lot), accept: row.accept } : null;
+}
+
 /** The hour a phone is in (0-23), for a new entry. */
 export function currentHour(now = new Date()) {
     return now.getHours();

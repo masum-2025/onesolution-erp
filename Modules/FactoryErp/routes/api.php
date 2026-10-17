@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\FactoryErp\Http\Controllers\FloorController;
 use Modules\FactoryErp\Http\Controllers\OrderController;
+use Modules\FactoryErp\Http\Controllers\QcController;
 use Modules\FactoryErp\Http\Controllers\SetupController;
 use Modules\FactoryErp\Http\Controllers\SewingController;
 use Modules\FactoryErp\Http\Controllers\StyleController;
@@ -31,6 +32,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
         Route::get('orders/{order}/receipts', [FloorController::class, 'receipts']);
         Route::get('lines', [SewingController::class, 'lines']);
         Route::get('outputs', [SewingController::class, 'outputs']);
+        Route::get('defect-types', [QcController::class, 'defectTypes']);
+        Route::get('inspections', [QcController::class, 'inspections']);
+        Route::get('orders/{order}/quality', [QcController::class, 'orderQuality']);
 
         Route::middleware('throttle:factory-writes')->group(function () {
             Route::post('buyers', [SetupController::class, 'addBuyer']);
@@ -53,6 +57,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
             Route::patch('lines/{line}', [SewingController::class, 'updateLine']);
             Route::post('outputs', [SewingController::class, 'storeOutput']);
             Route::post('line-days', [SewingController::class, 'saveDay']);
+            Route::post('defect-types', [QcController::class, 'storeDefectType']);
+            Route::patch('defect-types/{type}', [QcController::class, 'updateDefectType']);
+            Route::post('inspections', [QcController::class, 'storeInspection']);
+            Route::post('inspections/{inspection}/void', [QcController::class, 'voidInspection']);
             Route::put('styles/{style}/operations', [StyleController::class, 'saveOperations']);
             Route::post('outputs/{output}/void', [SewingController::class, 'voidOutput']);
         });

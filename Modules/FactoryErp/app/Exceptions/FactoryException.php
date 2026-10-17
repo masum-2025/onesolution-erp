@@ -119,6 +119,12 @@ class FactoryException extends TenancyException
         return new self("over_{$stage}", 422, ['size' => $size, 'color' => $color, 'left' => Number::format(max(0, $left), locale: app()->getLocale())], ['field' => 'lines', 'left' => max(0, $left)]);
     }
 
+    /** The order's last final inspection did not pass (or there is none) where the company needs one to ship. */
+    public static function finalNotPassed(): self
+    {
+        return new self('final_not_passed', 409);
+    }
+
     /** A sewing line that is not this factory's, or switched off. */
     public static function lineOff(): self
     {

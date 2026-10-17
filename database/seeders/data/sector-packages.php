@@ -91,7 +91,7 @@ return [
             ['key' => 'attendance.late_grace_minutes', 'value' => 5],
             ['key' => 'accounting.chart_template', 'value' => 'factory'],
         ],
-        'role_templates' => ['administrator', 'manager', 'hr_officer', 'accountant', 'finance_approver', 'staff', 'merchandiser', 'production_manager', 'line_supervisor', 'store_keeper'],
+        'role_templates' => ['administrator', 'manager', 'hr_officer', 'accountant', 'finance_approver', 'staff', 'merchandiser', 'production_manager', 'line_supervisor', 'qc_inspector', 'store_keeper'],
     ],
     [
         'key' => 'retail',

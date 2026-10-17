@@ -2882,6 +2882,24 @@ warehouses in use).
 - Screens: operation bulletin on the style page; "On this line today" with the hour's target on the
   output page; dashboard bars "Line efficiency today".
 
+### FAC-3b: quality (QC)
+
+- **Kinds of defect** (`fac_defect_types`, `GET/POST/PATCH …/factory/defect-types`, set up with
+  `factory_erp.manage`): code and name per language; a starter list (`database/data/defect-types.php`)
+  the first time; switched off, never removed. Settings page "Kinds of defect".
+- **Inspections** (`fac_inspections` + `fac_inspection_defects`, `GET/POST …/factory/inspections`,
+  `POST …/inspections/{id}/void`, permission `factory_erp.qc`, template QC inspector):
+  - end-line: a line, hour, pieces checked and defects by kind; DHU = defects × 100 ÷ checked;
+  - final: the lot; sample size and accept number from `database/data/aql.php` (ISO 2859-1, normal,
+    general level II) at rule `factory_erp.final_aql` (2.5 or 4.0); pass when defects ≤ accept. Audited.
+  - Only for orders in production; a wrong one is voided with a reason.
+- **Shipping** needs the last final inspection (not voided) passed while `factory_erp.ship_needs_final_pass`
+  is on (default; 409 `final_not_passed`).
+- `GET …/orders/{id}/quality`: end-line totals, defects by kind, final inspections. Order tab "Quality";
+  phone-first page `/factory/qc`; dashboard "Defects found today" (DHU in the hint); bell when a line's DHU
+  today reaches `factory_erp.dhu_warn_bp` (500 = 5).
+- After deploy: migrate, `rules:sync`, `access:sync`, `packaging:sync`.
+
 ### Future expansion (Factory ERP)
 
 - FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,

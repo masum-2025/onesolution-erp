@@ -22,4 +22,6 @@ return [
     'output_voided' => 'লাইনের উৎপাদন বাতিল',
     'goods_received' => 'তৈরি মাল স্টোরে',
     'operations_saved' => 'অপারেশন বুলেটিন রাখা',
+    'final_inspected' => 'ফাইনাল ইন্সপেকশন',
+    'inspection_voided' => 'ইন্সপেকশন বাতিল',
 ];

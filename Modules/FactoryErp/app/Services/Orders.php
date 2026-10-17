@@ -40,6 +40,7 @@ class Orders
         private AuditLogger $audit,
         private RuleResolver $rules,
         private RuleContextFactory $contexts,
+        private Quality $quality,
     ) {}
 
     /** @return Collection<int, OrderLine> */
@@ -128,6 +129,11 @@ class Orders
             }
             if ($to === 'confirmed' && ! $this->floor->query(OrderLine::class, $company)->where('order_id', $order->getKey())->exists()) {
                 throw FactoryException::noPieces();
+            }
+            // Where the company says so, an order ships only after its last final inspection passed.
+            if ($to === 'shipped' && $this->rules->get('factory_erp.ship_needs_final_pass', $this->contexts->forOrganization($company))
+                && $this->quality->lastFinal($company, $order)?->result !== 'pass') {
+                throw FactoryException::finalNotPassed();
             }
             $old = $order->status;
             $order->status = $to;

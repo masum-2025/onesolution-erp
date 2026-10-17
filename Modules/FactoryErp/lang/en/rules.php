@@ -50,10 +50,23 @@ return [
         'label' => 'Count helpers in efficiency',
         'description' => 'On: helpers\' minutes are available minutes too. Off: operators only.',
     ],
+    'final_aql' => [
+        'label' => 'AQL of final inspections',
+        'description' => 'The sample size and the most defects a passing sample may have come from this column of the AQL table (general level II).',
+    ],
+    'ship_needs_final_pass' => [
+        'label' => 'Ship only after a passed final inspection',
+        'description' => 'On: an order cannot be marked shipped until its last final inspection passed.',
+    ],
+    'dhu_warn_bp' => [
+        'label' => 'DHU that rings the bell',
+        'description' => 'A line\'s end-line DHU today at or above this, in hundredths: 500 = 5 defects per hundred pieces.',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',
         'floor' => 'Floor',
         'efficiency' => 'Efficiency',
+        'quality' => 'Quality',
     ],
 ];

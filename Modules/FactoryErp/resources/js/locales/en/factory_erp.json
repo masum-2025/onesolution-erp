@@ -197,7 +197,8 @@
         "sheet": "Pieces",
         "materials": "Materials",
         "cutting": "Cutting",
-        "sewing": "Sewing and finished"
+        "sewing": "Sewing and finished",
+        "quality": "Quality"
     },
     "issues": {
         "title": "Given to the floor and taken back",
@@ -369,5 +370,60 @@
         "rates_need_manager": "Only a factory manager can set or change piece rates. Keep the rates as they were, or ask a manager.",
         "empty_title": "No operation yet",
         "empty_text": "Add the style's sewing jobs and their minutes: the line's target and efficiency come from them."
+    },
+    "qc": {
+        "title": "Quality checks",
+        "text": "End-line checks of each line, and final inspections of orders before they ship.",
+        "endline": "End-line",
+        "final": "Final inspection",
+        "checked": "Pieces checked",
+        "lot": "Pieces in the lot",
+        "lot_hint": "Sample and the most defects accepted come from the AQL {aql} table.",
+        "sample": "Check {sample} pieces: at most {accept} defects to pass.",
+        "defects": "Defects found (tap to count)",
+        "add_one": "One more: {defect}",
+        "remove_one": "One less: {defect}",
+        "found": "{count} defects",
+        "dhu": "DHU {dhu}",
+        "result_pass": "Passed",
+        "result_fail": "Failed",
+        "result_null": "—",
+        "save": "Save the check",
+        "saved": "Check saved: DHU {dhu}.",
+        "final_pass": "Final inspection passed.",
+        "final_fail": "Final inspection failed: re-check after rework.",
+        "endline_line": "{checked} checked, {defects} defects, DHU {dhu}",
+        "final_line": "sample {sample}, {defects} defects (accept {accept})",
+        "empty_title": "No check today",
+        "empty_text": "Checks appear here as inspectors save them.",
+        "void_title": "Void this check?",
+        "void_text": "It stops counting; a voided final inspection no longer lets the order ship.",
+        "void_hint": "e.g. wrong order",
+        "voided": "Check voided."
+    },
+    "quality": {
+        "endline": "End-line checks",
+        "endline_text": "{checked} pieces checked, {defects} defects, DHU {dhu}.",
+        "check": "Check now",
+        "no_defects": "No defect counted yet",
+        "finals": "Final inspections",
+        "no_finals": "No final inspection yet",
+        "no_finals_text": "Do it when the order is packed, before it ships.",
+        "final_line": "Lot {lot}, AQL {aql}: sample {sample}, {defects} defects (accept {accept})",
+        "can_ship": "The last final inspection passed: the order can ship.",
+        "needs_final": "The order ships only after a passed final inspection."
+    },
+    "defects": {
+        "title": "Kinds of defect",
+        "text": "What QC counts at end-line checks and final inspections.",
+        "new": "New kind",
+        "edit": "Change kind",
+        "edit_of": "Change {code}",
+        "dialog_text": "A short code and a name in each language.",
+        "code": "Code",
+        "name": "Name",
+        "in_use_hint": "Off: not counted any more; past counts keep it.",
+        "saved": "Kind of defect saved.",
+        "empty_title": "No kind of defect yet"
     }
 }

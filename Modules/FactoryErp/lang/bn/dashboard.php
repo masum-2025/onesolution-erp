@@ -16,4 +16,7 @@ return [
     'attention_rejects' => 'আজ বেশি রিজেক্ট হওয়া লাইন',
     'efficiency' => 'আজ লাইনের দক্ষতা (%)',
     'efficiency_hint' => 'লক্ষ্য :target%',
+    'quality' => 'আজ পাওয়া ত্রুটি',
+    'quality_hint' => 'DHU :dhu · :checked পিস দেখা হয়েছে',
+    'attention_dhu' => 'আজ DHU বেশি এমন লাইন',
 ];

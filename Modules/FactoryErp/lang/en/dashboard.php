@@ -16,4 +16,7 @@ return [
     'attention_rejects' => 'Lines with many rejects today',
     'efficiency' => 'Line efficiency today (%)',
     'efficiency_hint' => 'Target :target%',
+    'quality' => 'Defects found today',
+    'quality_hint' => 'DHU :dhu · :checked pieces checked',
+    'attention_dhu' => 'Lines with a high DHU today',
 ];

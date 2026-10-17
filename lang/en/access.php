@@ -96,6 +96,10 @@ return [
             'name' => 'Line supervisor',
             'description' => 'Writes what a sewing line makes every hour.',
         ],
+        'qc_inspector' => [
+            'name' => 'QC inspector',
+            'description' => 'Checks pieces at the end of lines and does final inspections.',
+        ],
         'cashier' => [
             'name' => 'Cashier',
             'description' => 'Opens and closes a till shift and sells at the counter.',

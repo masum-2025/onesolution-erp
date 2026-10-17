@@ -51,6 +51,7 @@ class SetupController extends Controller
                 'merchandise' => Gate::allows('factory_erp.merchandise', $unit),
                 'issue' => Gate::allows('factory_erp.issue', $unit),
                 'produce' => Gate::allows('factory_erp.produce', $unit),
+                'qc' => Gate::allows('factory_erp.qc', $unit),
                 'manage' => Gate::allows('factory_erp.manage', $company),
                 'crm' => Gate::allows('crm.view', $company),
             ],

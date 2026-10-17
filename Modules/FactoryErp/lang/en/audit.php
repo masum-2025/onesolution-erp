@@ -22,4 +22,6 @@ return [
     'output_voided' => 'Line output voided',
     'goods_received' => 'Finished goods into the store',
     'operations_saved' => 'Operation bulletin saved',
+    'final_inspected' => 'Final inspection',
+    'inspection_voided' => 'Inspection voided',
 ];

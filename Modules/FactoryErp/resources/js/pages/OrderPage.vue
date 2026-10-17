@@ -24,6 +24,7 @@ import SizeColorSheet from '../components/SizeColorSheet.vue';
 import MaterialsPanel from '../components/MaterialsPanel.vue';
 import CuttingPanel from '../components/CuttingPanel.vue';
 import SewingPanel from '../components/SewingPanel.vue';
+import QualityPanel from '../components/QualityPanel.vue';
 
 /**
  * One buyer's order: buyer and style, ship date and price, own fields; the
@@ -36,7 +37,7 @@ const api = factoryApi(currentOrganization().id);
 const setup = useFactorySetup();
 const route = useRoute();
 const router = useRouter();
-const TABS = ['sheet', 'materials', 'cutting', 'sewing'];
+const TABS = ['sheet', 'materials', 'cutting', 'sewing', 'quality'];
 const tab = computed({
     get: () => (TABS.includes(route.query.tab) ? route.query.tab : 'sheet'),
     set: (value) => router.replace({ query: { ...route.query, tab: value } }),
@@ -152,6 +153,7 @@ const fields = computed(() => setup.fields('order').filter((field) => order.valu
             <MaterialsPanel v-else-if="tab === 'materials'" :order="order" />
             <CuttingPanel v-else-if="tab === 'cutting' && style" :order="order" :style="style" @changed="view.reload()" />
             <SewingPanel v-else-if="tab === 'sewing' && style" :order="order" :style="style" />
+            <QualityPanel v-else-if="tab === 'quality'" :order="order" />
 
             <AppDialog :open="cancelling" tone="bad" :icon="XCircle" :title="t('factory_erp.steps.cancel_title', { number: order.number })" :description="t('factory_erp.steps.cancel_text')" @close="cancelling = false">
                 <AppField v-slot="{ id }" :label="t('factory_erp.steps.reason')">

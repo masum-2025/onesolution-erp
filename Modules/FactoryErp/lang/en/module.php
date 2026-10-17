@@ -11,4 +11,6 @@ return [
     'new_order' => 'New order',
     'menu_output' => 'Line output',
     'menu_lines' => 'Sewing lines',
+    'menu_qc' => 'Quality (QC)',
+    'menu_defects' => 'Kinds of defect',
 ];

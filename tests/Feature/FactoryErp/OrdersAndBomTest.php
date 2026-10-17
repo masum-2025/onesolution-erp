@@ -93,6 +93,8 @@ it('numbers orders, keeps pieces by size and colour, refuses a size the style la
     // In production: no more changes, no cancelling.
     ($this->as)()->patchJson(($this->fac)("orders/{$made['id']}"), ['po_number' => 'X', 'base_version' => $started['version']])->assertStatus(409)->assertJsonPath('code', 'wrong_status');
     ($this->as)()->postJson(($this->fac)("orders/{$made['id']}/cancel"), ['base_version' => $started['version'], 'reason' => 'Buyer dropped it'])->assertStatus(409);
+    // Without the final inspection rule (FAC-3b covers it), it ships.
+    orgRule($this->w->c1, 'factory_erp.ship_needs_final_pass', false);
     ($this->as)()->postJson(($this->fac)("orders/{$made['id']}/ship"), ['base_version' => $started['version']])->assertOk()->assertJsonPath('data.status', 'shipped');
 
     // An empty order is not confirmed; cancelling needs a reason.
