@@ -22,7 +22,7 @@ namespace Modules\Payroll\Services;
 final class PayCalculator
 {
     /**
-     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
+     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
      * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_deduction: bool, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
      * @return array{lines: list<array{kind: string, code: string, name: array<string, string>, amount: int, taxable: bool}>, earnings: int, deductions: int, tax: int, net: int, problem: string|null}
      */
@@ -70,6 +70,10 @@ final class PayCalculator
         // Loan instalments of the month (worked out from each loan's balance by Runs).
         foreach ($facts['loans'] ?? [] as $amount) {
             $lines[] = ['kind' => 'deduction', 'code' => 'LOAN', 'name' => ['en' => 'Loan instalment', 'bn' => 'ঋণের কিস্তি'], 'amount' => (int) $amount, 'taxable' => false];
+        }
+        // Earnings other modules work out (EarningSource: piece rates, commission).
+        foreach ($facts['earnings'] ?? [] as $earning) {
+            $lines[] = ['kind' => 'earning', 'code' => $earning['code'], 'name' => $earning['name'], 'amount' => (int) $earning['amount'], 'taxable' => (bool) $earning['taxable']];
         }
         foreach ($facts['adjustments'] as $adjustment) {
             $lines[] = [

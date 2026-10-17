@@ -13,5 +13,6 @@ export default [
     { path: 'factory/output', name: 'fac-output', component: () => import('./pages/OutputPage.vue'), meta },
     { path: 'factory/lines', name: 'fac-lines', component: () => import('./pages/LinesPage.vue'), meta },
     { path: 'factory/qc', name: 'fac-qc', component: () => import('./pages/QcPage.vue'), meta },
+    { path: 'factory/tickets', name: 'fac-tickets', component: () => import('./pages/TicketsPage.vue'), meta },
     { path: 'factory/defects', name: 'fac-defects', component: () => import('./pages/DefectTypesPage.vue'), meta },
 ];

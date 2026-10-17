@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aqlSample, cutAllowed, dhuBp, dhuText, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
+import { aqlSample, cutAllowed, dhuBp, dhuText, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, ticketAmount, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
 
 describe('factory', () => {
     it('works out a need exactly as the server does, rounded up', () => {
@@ -67,6 +67,14 @@ describe('factory', () => {
         expect(aqlSample(levels, 2)).toEqual({ sample: 2, accept: 0 });
         expect(aqlSample(levels, 900000)).toEqual({ sample: 1250, accept: 21 });
         expect(aqlSample(levels, 1)).toBeNull();
+    });
+
+    it('works out what a piece ticket pays as the server does', () => {
+        expect(ticketAmount(300, 60, 1)).toBe(18000);
+        // 25 pieces at 0.95 a dozen = 1.979 -> 1.98.
+        expect(ticketAmount(25, 95, 12)).toBe(198);
+        expect(ticketAmount(6, 1, 12)).toBe(1);
+        expect(ticketAmount(5, 1, 12)).toBe(0);
     });
 
     it('reads typed numbers, Bangla digits too, without floats', () => {

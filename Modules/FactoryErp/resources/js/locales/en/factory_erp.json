@@ -425,5 +425,31 @@
         "in_use_hint": "Off: not counted any more; past counts keep it.",
         "saved": "Kind of defect saved.",
         "empty_title": "No kind of defect yet"
+    },
+    "tickets": {
+        "title": "Piece tickets",
+        "text": "What each operator did: pieces of an operation at its rate. Payroll adds it to the month's pay.",
+        "operator": "Operator",
+        "search": "Name or code",
+        "nobody": "No one found working here that day.",
+        "pieces": "Pieces",
+        "no_rate": "no rate yet",
+        "pay": "{pieces} × {rate} = {pay}",
+        "pay_dozen": "{pieces} pcs at {rate} a dozen = {pay}",
+        "save": "Save ticket",
+        "saved": "Ticket saved: {pay}.",
+        "day": "Tickets of the day",
+        "per_dozen": " a dozen",
+        "month": "This month so far",
+        "pieces_count": "{count} pcs",
+        "empty_title": "No ticket on this day",
+        "empty_text": "Tickets appear here as they are written.",
+        "locked": "This month's payroll is approved: its tickets no longer change.",
+        "no_hrm_title": "HRM is off",
+        "no_hrm_text": "Piece tickets are for HRM's employees. Turn HRM on to pay piece rates.",
+        "void_title": "Void this ticket?",
+        "void_text": "It stops paying. It stays in the list.",
+        "void_hint": "e.g. wrong operator",
+        "voided": "Ticket voided."
     }
 }

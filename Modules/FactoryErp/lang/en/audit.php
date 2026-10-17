@@ -24,4 +24,6 @@ return [
     'operations_saved' => 'Operation bulletin saved',
     'final_inspected' => 'Final inspection',
     'inspection_voided' => 'Inspection voided',
+    'piece_ticket_written' => 'Piece ticket written',
+    'piece_ticket_voided' => 'Piece ticket voided',
 ];

@@ -125,6 +125,36 @@ class FactoryException extends TenancyException
         return new self('final_not_passed', 409);
     }
 
+    /** Piece tickets are for HRM's employees: HRM must be on. */
+    public static function needsHrm(): self
+    {
+        return new self('needs_hrm', 409);
+    }
+
+    /** The month's payroll is approved: its piece tickets no longer change. */
+    public static function monthLocked(): self
+    {
+        return new self('month_locked', 409);
+    }
+
+    /** Nobody writes their own piece ticket unless the company allows it. */
+    public static function ownTicket(): self
+    {
+        return new self('own_ticket', 403);
+    }
+
+    /** The operation has no piece rate yet (a manager sets it in the operation bulletin). */
+    public static function noRate(): self
+    {
+        return new self('no_rate', 422, [], ['field' => 'operation_id']);
+    }
+
+    /** More pieces of an operation than were cut, all operators together. */
+    public static function overOperation(string $operation, int $left): self
+    {
+        return new self('over_operation', 422, ['operation' => $operation, 'left' => Number::format(max(0, $left), locale: app()->getLocale())], ['field' => 'pieces', 'left' => max(0, $left)]);
+    }
+
     /** A sewing line that is not this factory's, or switched off. */
     public static function lineOff(): self
     {

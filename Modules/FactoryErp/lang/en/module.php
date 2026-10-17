@@ -13,4 +13,5 @@ return [
     'menu_lines' => 'Sewing lines',
     'menu_qc' => 'Quality (QC)',
     'menu_defects' => 'Kinds of defect',
+    'menu_tickets' => 'Piece tickets',
 ];

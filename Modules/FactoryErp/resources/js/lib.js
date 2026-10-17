@@ -127,6 +127,11 @@ export function aqlSample(levels, lot) {
     return row ? { sample: Math.min(row.sample, lot), accept: row.accept } : null;
 }
 
+/** What a piece ticket pays, as the server works it out: pieces × rate (÷ 12 for a dozen, half up). */
+export function ticketAmount(pieces, rateMinor, per) {
+    return Math.floor((pieces * rateMinor * 2 + per) / (2 * per));
+}
+
 /** The hour a phone is in (0-23), for a new entry. */
 export function currentHour(now = new Date()) {
     return now.getHours();

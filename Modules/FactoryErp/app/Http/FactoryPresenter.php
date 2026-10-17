@@ -18,6 +18,7 @@ use Modules\FactoryErp\Models\Order;
 use Modules\FactoryErp\Models\OrderLine;
 use Modules\FactoryErp\Models\Output;
 use Modules\FactoryErp\Models\OutputLine;
+use Modules\FactoryErp\Models\PieceTicket;
 use Modules\FactoryErp\Models\Receipt;
 use Modules\FactoryErp\Models\ReceiptLine;
 use Modules\FactoryErp\Models\Style;
@@ -90,6 +91,18 @@ class FactoryPresenter
             'cut_on' => $cutting->cut_on->toDateString(),
             'voided_at' => $cutting->voided_at?->toIso8601String(),
             'lines' => $lines->map(fn (CuttingLine $line) => $line->only(['size', 'color', 'quantity']))->values(),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function pieceTicket(PieceTicket $ticket): array
+    {
+        return [
+            'id' => $ticket->getKey(),
+            ...$ticket->only(['unit_id', 'employee_id', 'order_id', 'operation_id', 'operation_name', 'pieces', 'rate_minor', 'rate_per', 'amount_minor', 'currency', 'created_by', 'void_reason', 'version']),
+            'worked_on' => $ticket->worked_on->toDateString(),
+            'created_at' => $ticket->created_at?->toIso8601String(),
+            'voided_at' => $ticket->voided_at?->toIso8601String(),
         ];
     }
 

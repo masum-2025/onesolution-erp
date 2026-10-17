@@ -37,6 +37,14 @@ return [
         'defect_type_not_found' => 'That kind of defect is not in use here. Reload the page.',
         'inspection_not_found' => 'That inspection does not exist here. Reload the page.',
         'aql_not_found' => 'The AQL table has no column for the company\'s AQL. Ask the administrator to check the rule.',
+        'needs_hrm' => 'Piece tickets are for HRM\'s employees: turn HRM on first.',
+        'month_locked' => 'This month\'s payroll is approved: its piece tickets no longer change. Put a correction in next month\'s payroll.',
+        'own_ticket' => 'You cannot write your own piece ticket. Ask your supervisor.',
+        'no_rate' => 'This operation has no piece rate yet. A factory manager sets it in the style\'s operation bulletin.',
+        'over_operation' => 'Too many pieces of ":operation": only :left more were cut and not yet done by anyone.',
+        'employee_not_found' => 'That operator is not working at this factory on that day.',
+        'operation_not_found' => 'That operation is not in this order\'s style.',
+        'ticket_not_found' => 'That ticket does not exist here. Reload the page.',
     ],
     'validation' => [
         'list_empty' => 'Give at least one.',
@@ -62,4 +70,5 @@ return [
     'posting_keys' => [
         'wip' => 'Work in progress (factory)',
     ],
+    'piece_rate_line' => 'Piece rate',
 ];

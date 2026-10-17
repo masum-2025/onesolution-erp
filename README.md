@@ -2900,6 +2900,23 @@ warehouses in use).
   today reaches `factory_erp.dhu_warn_bp` (500 = 5).
 - After deploy: migrate, `rules:sync`, `access:sync`, `packaging:sync`.
 
+### FAC-3c: piece rates into Payroll
+
+- **Payroll contract** `Modules\Payroll\Contracts\EarningSource`: other modules tag themselves
+  `payroll.earning_sources` and return each employee's earning lines (code, name per language, minor units,
+  taxable) for the run's days; `Runs::calculate` adds them through `PayCalculator` (facts `earnings`) before
+  tax. Payroll never names the module.
+- **Piece tickets** (`fac_piece_tickets`, `GET/POST …/factory/piece-tickets`, `POST …/piece-tickets/{id}/void`,
+  `factory_erp.produce`): an HRM employee working at the unit that day, an order in production, one operation
+  of its style with a piece rate; rate and per (rule `factory_erp.piece_rate_per`: piece, or dozen ÷ 12 half
+  up) kept on the ticket; all operators together at most the pieces cut per operation; nobody writes their
+  own (rule `factory_erp.piece_ticket_self`, off). Audited; append-only, voided with a reason.
+- `Modules\FactoryErp\Payroll\PieceRateEarnings` pays them as one taxable "Piece rate" line (nothing while
+  Factory ERP is off). Payroll's `PayrollApproved` locks the month (`fac_pay_locks`): its tickets no longer
+  change. Needs HRM on (409 `needs_hrm`). Operators' names reach only people who write tickets.
+- Screen `/factory/tickets` (phone-first): operator search, order, operation with its rate, pay as typed, the
+  day's tickets, each operator's month so far.
+
 ### Future expansion (Factory ERP)
 
 - FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,

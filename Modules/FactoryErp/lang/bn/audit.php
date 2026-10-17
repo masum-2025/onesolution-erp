@@ -24,4 +24,6 @@ return [
     'operations_saved' => 'অপারেশন বুলেটিন রাখা',
     'final_inspected' => 'ফাইনাল ইন্সপেকশন',
     'inspection_voided' => 'ইন্সপেকশন বাতিল',
+    'piece_ticket_written' => 'পিস টিকিট লেখা',
+    'piece_ticket_voided' => 'পিস টিকিট বাতিল',
 ];

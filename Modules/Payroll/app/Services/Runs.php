@@ -15,6 +15,7 @@ use Modules\Accounting\Ledger\LedgerLine;
 use Modules\Attendance\Services\AttendanceSummary;
 use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Hrm\Directory\EmployeeRecord;
+use Modules\Payroll\Contracts\EarningSource;
 use Modules\Payroll\Events\PayrollApproved;
 use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Models\Adjustment;
@@ -98,8 +99,9 @@ class Runs
             );
             $adjustments = $this->payrolls->query(Adjustment::class, $company)->where('run_id', $run->getKey())->get()->groupBy('employee_id');
             $components = $this->payrolls->query(Component::class, $company)->get()->keyBy('id');
+            $earnings = $this->earnings($company, array_values(array_map(fn (EmployeeRecord $employee) => $employee->id, $employees)), $run);
             foreach ($employees as $employee) {
-                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components);
+                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components, $earnings[$employee->id] ?? []);
             }
 
             $this->totals($company, $run);
@@ -240,8 +242,9 @@ class Runs
     /**
      * @param  Collection<int, Adjustment>  $adjustments
      * @param  Collection<string, Component>  $components
+     * @param  list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>  $earnings  From other modules (EarningSource).
      */
-    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components): void
+    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components, array $earnings = []): void
     {
         $from = $run->period_from->max($employee->joinedOn);
         $to = $employee->exitsOn === null ? $run->period_to : $run->period_to->min($employee->exitsOn);
@@ -271,6 +274,7 @@ class Runs
             'absent_days' => $slip->absent_days, 'half_days' => $slip->half_days, 'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes,
             'adjustments' => $adjustments->map(fn (Adjustment $adjustment) => ['kind' => $adjustment->kind, 'label' => $adjustment->label, 'amount' => $adjustment->amount_minor, 'taxable' => $adjustment->taxable])->values()->all(),
             'loans' => $loans,
+            'earnings' => $earnings,
             ...($this->pfShares($employee) === null ? [] : ['pf' => $this->pfShares($employee)]),
         ], $this->ruleSet($employee));
 
@@ -284,6 +288,32 @@ class Runs
             $row->putTexts('name', $line['name']);
             $row->save();
         }
+    }
+
+    /**
+     * What other modules add to the month's pay (EarningSource, tagged
+     * "payroll.earning_sources"), per employee; positive amounts only.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>>
+     */
+    private function earnings(Organization $company, array $employeeIds, Run $run): array
+    {
+        $all = [];
+        foreach (app()->tagged('payroll.earning_sources') as $source) {
+            if (! $source instanceof EarningSource) {
+                continue;
+            }
+            foreach ($source->earnings($company, $employeeIds, $run->period_from, $run->period_to) as $employeeId => $lines) {
+                foreach ($lines as $line) {
+                    if (in_array($employeeId, $employeeIds, true) && (int) $line['amount'] > 0) {
+                        $all[$employeeId][] = $line;
+                    }
+                }
+            }
+        }
+
+        return $all;
     }
 
     /**

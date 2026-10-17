@@ -62,11 +62,20 @@ return [
         'label' => 'DHU that rings the bell',
         'description' => 'A line\'s end-line DHU today at or above this, in hundredths: 500 = 5 defects per hundred pieces.',
     ],
+    'piece_rate_per' => [
+        'label' => 'Piece rates are written per',
+        'description' => 'Piece: pay = pieces × rate. Dozen: pay = pieces × rate ÷ 12, half up.',
+    ],
+    'piece_ticket_self' => [
+        'label' => 'People may write their own piece tickets',
+        'description' => 'Off: a supervisor writes an operator\'s tickets (pay is checked by someone else).',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',
         'floor' => 'Floor',
         'efficiency' => 'Efficiency',
         'quality' => 'Quality',
+        'pay' => 'Pay',
     ],
 ];

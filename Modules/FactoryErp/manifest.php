@@ -18,7 +18,7 @@ return [
     'key' => 'factory_erp',
     'name' => 'factory_erp::module.name',
     'description' => 'factory_erp::module.description',
-    'version' => '1.4.0',
+    'version' => '1.5.0',
     'category' => 'business',
     // Materials come from Inventory (its Stock service), buyers are CRM organization
     // contacts (its Organizations service); materials on the floor post to Accounting
@@ -207,6 +207,29 @@ return [
             'category' => 'quality',
             'sort_order' => 150,
         ],
+        [
+            'key' => 'factory_erp.piece_rate_per',
+            'type' => 'enum',
+            // Operations' piece rates are written per piece, or per dozen (pay = pieces × rate ÷ 12, half up).
+            'schema' => ['enum' => ['piece', 'dozen']],
+            'default' => 'piece',
+            'label' => 'factory_erp::rules.piece_rate_per.label',
+            'description' => 'factory_erp::rules.piece_rate_per.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'pay',
+            'sort_order' => 160,
+        ],
+        [
+            'key' => 'factory_erp.piece_ticket_self',
+            'type' => 'boolean',
+            // Whether someone may write their own piece ticket (pay); off: another person writes it.
+            'default' => false,
+            'label' => 'factory_erp::rules.piece_ticket_self.label',
+            'description' => 'factory_erp::rules.piece_ticket_self.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'pay',
+            'sort_order' => 170,
+        ],
     ],
     'menu' => [
         [
@@ -220,6 +243,7 @@ return [
                 ['key' => 'styles', 'label' => 'factory_erp::module.menu_styles', 'route' => '/factory/styles', 'permission' => 'factory_erp.view'],
                 ['key' => 'output', 'label' => 'factory_erp::module.menu_output', 'route' => '/factory/output', 'permission' => 'factory_erp.view'],
                 ['key' => 'qc', 'label' => 'factory_erp::module.menu_qc', 'route' => '/factory/qc', 'permission' => 'factory_erp.view'],
+                ['key' => 'tickets', 'label' => 'factory_erp::module.menu_tickets', 'route' => '/factory/tickets', 'permission' => 'factory_erp.produce'],
             ],
         ],
     ],

@@ -13,4 +13,5 @@ return [
     'menu_lines' => 'সেলাই লাইন',
     'menu_qc' => 'মান যাচাই (QC)',
     'menu_defects' => 'ত্রুটির ধরন',
+    'menu_tickets' => 'পিস টিকিট',
 ];
