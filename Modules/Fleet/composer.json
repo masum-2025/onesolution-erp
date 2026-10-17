@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/fleet",
+    "description": "The company's vehicles and their trips: who drove, how far, and what the fuel cost.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Fleet\\": "app/"
+        }
+    }
+}

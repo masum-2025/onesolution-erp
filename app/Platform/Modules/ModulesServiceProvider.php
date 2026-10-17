@@ -2,6 +2,7 @@
 
 namespace App\Platform\Modules;
 
+use App\Platform\Modules\Console\MakeErpModule;
 use App\Platform\Modules\Console\PurgeDueModuleData;
 use App\Platform\Modules\Events\ModuleDisabled;
 use App\Platform\Modules\Listeners\RevokeIntegrationTokens;
@@ -40,7 +41,7 @@ class ModulesServiceProvider extends ServiceProvider
         });
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PurgeDueModuleData::class]);
+            $this->commands([PurgeDueModuleData::class, MakeErpModule::class]);
         }
     }
 }

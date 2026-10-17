@@ -3985,3 +3985,14 @@ probation (ending within 30 days), employees by position, recent changes.
   change to the platform or the app. New widget types need a component and a type name.
 - Sector, country or partner differences come from the module's rules and data, not from
   the dashboard code. Arranging or hiding widgets per person can come later.
+
+## Fleet (module `fleet`, made by make:erp-module)
+
+The company's vehicles and their trips: who drove, how far, and what the fuel cost.
+
+- Tables `fleet_vehicles`, `fleet_trips`; API under `/api/organizations/{organization}/fleet/…` (list with `q`, filters and pages, show,
+  make with `op_id`, change and remove with `base_version`), `GET …/fleet/setup` for the screens.
+- Permissions `fleet.view` (read) and `fleet.manage` (write) at the unit; the module off answers 403.
+- Screens from the shared generated list (`resources/js/components/generated`) and `resources/js/schema.js`.
+- After deploy: `composer dump-autoload`, migrate, `rules:sync`, `access:sync`.
+- A new sector, country or partner needs no code change: labels are texts, numbers are rules.

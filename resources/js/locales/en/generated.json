@@ -1,0 +1,30 @@
+{
+    "new": "New {name}",
+    "edit": "Change {name}",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Saved.",
+    "remove": "Remove",
+    "remove_title": "Remove {name}?",
+    "remove_text": "It is removed for good. Records that use it keep it from being removed.",
+    "removed": "Removed.",
+    "conflict": "Someone changed this a moment ago. It is fresh now; make your change again.",
+    "search": "Search",
+    "all": "all",
+    "yes": "Yes",
+    "no": "No",
+    "empty": "No {name} yet",
+    "nothing_found": "Nothing found. Try other words or filters.",
+    "page": "Page {page} of {pages} · {total} in all",
+    "previous": "Previous",
+    "next": "Next",
+    "errors": {
+        "required": "Fill this in.",
+        "english_needed": "Write it in English at least.",
+        "whole_number": "Write a whole number.",
+        "quantity": "Write a number with up to three decimals.",
+        "amount": "Write an amount, like 1250.50.",
+        "date": "Choose a date.",
+        "too_long": "That is too long."
+    }
+}

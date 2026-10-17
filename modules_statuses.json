@@ -25,5 +25,6 @@
     "EducationFees": true,
     "EducationExams": true,
     "EducationLectures": true,
-    "TeacherFeedback": true
+    "TeacherFeedback": true,
+    "Fleet": true
 }

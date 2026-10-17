@@ -1,0 +1,47 @@
+{
+    "module": {
+        "title": "Fleet",
+        "description": "The company's vehicles and their trips: who drove, how far, and what the fuel cost."
+    },
+    "entities": {
+        "vehicle": {
+            "label": "Vehicle",
+            "plural": "Vehicles"
+        },
+        "trip": {
+            "label": "Trip",
+            "plural": "Trips"
+        }
+    },
+    "fields": {
+        "vehicle": {
+            "registration_no": "Registration no.",
+            "model": "Make and model",
+            "kind": "Kind",
+            "capacity": "Capacity (tonnes)",
+            "bought_on": "Bought on",
+            "price": "Price",
+            "in_use": "In use",
+            "notes": "Notes"
+        },
+        "trip": {
+            "purpose": "Purpose",
+            "vehicle_id": "Vehicle",
+            "driver_id": "Driver",
+            "trip_on": "Date",
+            "destination": "Destination",
+            "distance": "Distance (km)",
+            "fuel_cost": "Fuel cost"
+        }
+    },
+    "options": {
+        "vehicle": {
+            "kind": {
+                "truck": "Truck",
+                "van": "Covered van",
+                "car": "Car",
+                "motorcycle": "Motorcycle"
+            }
+        }
+    }
+}

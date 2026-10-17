@@ -1,0 +1,47 @@
+{
+    "module": {
+        "title": "গাড়িবহর",
+        "description": "কোম্পানির গাড়ি আর তাদের ট্রিপ: কে চালালেন, কত দূর, জ্বালানিতে কত খরচ।"
+    },
+    "entities": {
+        "vehicle": {
+            "label": "গাড়ি",
+            "plural": "গাড়ি"
+        },
+        "trip": {
+            "label": "ট্রিপ",
+            "plural": "ট্রিপ"
+        }
+    },
+    "fields": {
+        "vehicle": {
+            "registration_no": "রেজিস্ট্রেশন নম্বর",
+            "model": "ব্র্যান্ড ও মডেল",
+            "kind": "ধরন",
+            "capacity": "ধারণক্ষমতা (টন)",
+            "bought_on": "কেনার তারিখ",
+            "price": "দাম",
+            "in_use": "চালু",
+            "notes": "নোট"
+        },
+        "trip": {
+            "purpose": "উদ্দেশ্য",
+            "vehicle_id": "গাড়ি",
+            "driver_id": "চালক",
+            "trip_on": "তারিখ",
+            "destination": "গন্তব্য",
+            "distance": "দূরত্ব (কিমি)",
+            "fuel_cost": "জ্বালানি খরচ"
+        }
+    },
+    "options": {
+        "vehicle": {
+            "kind": {
+                "truck": "ট্রাক",
+                "van": "কাভার্ড ভ্যান",
+                "car": "গাড়ি",
+                "motorcycle": "মোটরসাইকেল"
+            }
+        }
+    }
+}
