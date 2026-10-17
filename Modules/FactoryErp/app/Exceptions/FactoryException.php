@@ -125,6 +125,18 @@ class FactoryException extends TenancyException
         return new self('final_not_passed', 409);
     }
 
+    /** Cartons numbered backwards, or a run overlapping another of the shipment. */
+    public static function cartonRun(int $from, int $to): self
+    {
+        return new self('carton_run', 422, ['from' => Number::format($from, locale: app()->getLocale()), 'to' => Number::format($to, locale: app()->getLocale())], ['field' => 'cartons']);
+    }
+
+    /** The buyer's currency is not the company's: the shipment needs an exchange rate. */
+    public static function rateNeeded(): self
+    {
+        return new self('rate_needed', 422, [], ['field' => 'exchange_rate']);
+    }
+
     /** Piece tickets are for HRM's employees: HRM must be on. */
     public static function needsHrm(): self
     {

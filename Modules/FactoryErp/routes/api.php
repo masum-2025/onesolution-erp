@@ -7,6 +7,7 @@ use Modules\FactoryErp\Http\Controllers\PieceController;
 use Modules\FactoryErp\Http\Controllers\QcController;
 use Modules\FactoryErp\Http\Controllers\SetupController;
 use Modules\FactoryErp\Http\Controllers\SewingController;
+use Modules\FactoryErp\Http\Controllers\ShipmentController;
 use Modules\FactoryErp\Http\Controllers\StyleController;
 
 /*
@@ -35,6 +36,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
         Route::get('outputs', [SewingController::class, 'outputs']);
         Route::get('defect-types', [QcController::class, 'defectTypes']);
         Route::get('piece-tickets', [PieceController::class, 'tickets']);
+        Route::get('orders/{order}/shipments', [ShipmentController::class, 'index']);
+        Route::get('shipments/{shipment}', [ShipmentController::class, 'show']);
         Route::get('inspections', [QcController::class, 'inspections']);
         Route::get('orders/{order}/quality', [QcController::class, 'orderQuality']);
 
@@ -61,6 +64,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:factory_erp'])
             Route::post('line-days', [SewingController::class, 'saveDay']);
             Route::post('defect-types', [QcController::class, 'storeDefectType']);
             Route::post('piece-tickets', [PieceController::class, 'store']);
+            Route::post('shipments', [ShipmentController::class, 'store']);
+            Route::patch('shipments/{shipment}', [ShipmentController::class, 'update']);
+            Route::post('shipments/{shipment}/ship', [ShipmentController::class, 'ship']);
             Route::post('piece-tickets/{ticket}/void', [PieceController::class, 'void']);
             Route::patch('defect-types/{type}', [QcController::class, 'updateDefectType']);
             Route::post('inspections', [QcController::class, 'storeInspection']);

@@ -20,5 +20,5 @@ return [
     // Stock is kept by stage instead of one inventory account.
     'remove' => ['1150'],
     // Items bought in are raw materials until a production module moves them.
-    'postings' => ['inventory.stock' => '1151', 'inventory.cogs' => '5110', 'factory_erp.wip' => '1152'],
+    'postings' => ['inventory.stock' => '1151', 'inventory.cogs' => '5110', 'factory_erp.wip' => '1152', 'factory_erp.export_sales' => '4100'],
 ];

@@ -2917,6 +2917,26 @@ warehouses in use).
 - Screen `/factory/tickets` (phone-first): operator search, order, operation with its rate, pay as typed, the
   day's tickets, each operator's month so far.
 
+### FAC-4: shipments
+
+- **Shipments** (`fac_shipments` + `fac_shipment_cartons`, `GET …/orders/{id}/shipments`, `GET/PATCH …/shipments/{id}`,
+  `POST …/shipments` with `factory_erp.merchandise`): an order in production, numbered `SH-YEAR-00001` (rule
+  `factory_erp.shipment_number_prefix`), ship date, sea/air/road, carrier, B/L or AWB, destination, the store goods
+  leave from, the exchange rate (company currency per one of the buyer's, millionths; needed when they differ), "last"
+  and the packing list: runs of cartons (numbers from-to, one size and colour, pieces each, net and gross grams, mm).
+  A size and colour ships at most what the store holds of the order's finished goods and is not shipped yet. Partial
+  shipments; changed while draft with `base_version`.
+- **Shipping** (`POST …/shipments/{id}/ship`, `factory_erp.issue`): needs the last final inspection passed (while
+  `factory_erp.ship_needs_final_pass`); the pieces leave the store (`Stock::take` of the style's finished item) and
+  their cost posts Dr `inventory.cogs` / Cr `inventory.stock`; where the company keeps books, a **draft invoice** to the
+  buyer (its CRM contact made an Accounting customer through `Customers::forContact`) in the company's currency at the
+  shipment's rate, one line per size and colour on `factory_erp.export_sales` (4100 in the factory chart), for an
+  accountant to post. The last shipment marks the order shipped. A shipped shipment never changes. Audited.
+- Screens: order tab "Shipments" (what is ready per size and colour), the shipment page (packing list editor, "ten more
+  the same", ship), and printed **packing list** and **commercial invoice** in the buyer's currency with the company's
+  name and brand. The papers print in the screen's language.
+- After deploy: migrate, `rules:sync`, `accounting:map-postings`.
+
 ### Future expansion (Factory ERP)
 
 - FAC-2 cutting and sewing lines (materials issued through `Stock::take`, daily output, rejects,

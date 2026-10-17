@@ -45,6 +45,10 @@ return [
         'employee_not_found' => 'That operator is not working at this factory on that day.',
         'operation_not_found' => 'That operation is not in this order\'s style.',
         'ticket_not_found' => 'That ticket does not exist here. Reload the page.',
+        'shipment_not_found' => 'That shipment does not exist here. Reload the page.',
+        'over_shipped' => 'Too many :size / :color pieces: only :left are in the store and not shipped yet. Take more finished goods in first.',
+        'carton_run' => 'Cartons :from to :to are numbered backwards or overlap another row. Check the carton numbers.',
+        'rate_needed' => 'The buyer pays in another currency: write the exchange rate (how much of the company\'s currency one unit buys).',
     ],
     'validation' => [
         'list_empty' => 'Give at least one.',
@@ -66,9 +70,12 @@ return [
         'issue' => 'Materials to the floor for order :number',
         'return' => 'Materials back from the floor, order :number',
         'receipt' => 'Finished goods of order :number into the store',
+        'shipment' => 'Shipment :number of order :order: cost of goods shipped',
     ],
     'posting_keys' => [
         'wip' => 'Work in progress (factory)',
+        'export_sales' => 'Export sales (factory)',
     ],
     'piece_rate_line' => 'Piece rate',
+    'invoice_note' => 'Goods of order :order shipped; value in the buyer\'s currency :value.',
 ];

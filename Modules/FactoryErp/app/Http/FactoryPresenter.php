@@ -21,8 +21,11 @@ use Modules\FactoryErp\Models\OutputLine;
 use Modules\FactoryErp\Models\PieceTicket;
 use Modules\FactoryErp\Models\Receipt;
 use Modules\FactoryErp\Models\ReceiptLine;
+use Modules\FactoryErp\Models\Shipment;
+use Modules\FactoryErp\Models\ShipmentCarton;
 use Modules\FactoryErp\Models\Style;
 use Modules\FactoryErp\Services\Quality;
+use Modules\FactoryErp\Services\Shipments;
 
 /** Styles, orders, materials issued, lays cut and own fields as the screens read them. */
 class FactoryPresenter
@@ -91,6 +94,26 @@ class FactoryPresenter
             'cut_on' => $cutting->cut_on->toDateString(),
             'voided_at' => $cutting->voided_at?->toIso8601String(),
             'lines' => $lines->map(fn (CuttingLine $line) => $line->only(['size', 'color', 'quantity']))->values(),
+        ];
+    }
+
+    /**
+     * @param  Collection<int, ShipmentCarton>|null  $cartons
+     * @return array<string, mixed>
+     */
+    public function shipment(Shipment $shipment, ?Collection $cartons = null): array
+    {
+        return [
+            'id' => $shipment->getKey(),
+            ...$shipment->only(['unit_id', 'order_id', 'number', 'mode', 'carrier', 'transport_ref', 'destination', 'warehouse_id', 'currency', 'rate_micro', 'is_last',
+                'status', 'pieces', 'value_minor', 'cost_minor', 'invoice_id', 'journal_id', 'note', 'created_by', 'version']),
+            'ship_on' => $shipment->ship_on->toDateString(),
+            'shipped_at' => $shipment->shipped_at?->toIso8601String(),
+            'exchange_rate' => Shipments::rateText($shipment->rate_micro),
+            ...($cartons === null ? [] : ['cartons' => $cartons->map(fn (ShipmentCarton $carton) => [
+                ...$carton->only(['from_no', 'to_no', 'size', 'color', 'pieces_each', 'net_grams_each', 'gross_grams_each', 'length_mm', 'width_mm', 'height_mm']),
+                'cartons' => $carton->cartonCount(), 'pieces' => $carton->totalPieces(),
+            ])->values()]),
         ];
     }
 

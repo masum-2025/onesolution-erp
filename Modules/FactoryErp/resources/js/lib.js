@@ -132,6 +132,36 @@ export function ticketAmount(pieces, rateMinor, per) {
     return Math.floor((pieces * rateMinor * 2 + per) / (2 * per));
 }
 
+/**
+ * A packing list's totals from its carton runs ({from_no, to_no, pieces_each, net_grams_each, gross_grams_each, length_mm, width_mm, height_mm}):
+ * cartons, pieces, net and gross grams, and volume in cubic millimetres (integers).
+ */
+export function packingTotals(cartons) {
+    return cartons.reduce((sum, row) => {
+        const count = Math.max(0, row.to_no - row.from_no + 1);
+        return {
+            cartons: sum.cartons + count,
+            pieces: sum.pieces + count * row.pieces_each,
+            net: sum.net + count * (row.net_grams_each ?? 0),
+            gross: sum.gross + count * (row.gross_grams_each ?? 0),
+            volume: sum.volume + count * (row.length_mm ?? 0) * (row.width_mm ?? 0) * (row.height_mm ?? 0),
+        };
+    }, { cartons: 0, pieces: 0, net: 0, gross: 0, volume: 0 });
+}
+
+/** Cubic millimetres as cubic metres with three decimals ("1.234"). */
+export function cbmText(volumeMm3) {
+    const thousandths = Math.round(volumeMm3 / 1000000);
+    return milliToText(thousandths) || '0';
+}
+
+/** The next run after the last one: numbers carry on, the same carton (or an empty one). */
+export function nextCartonRun(rows, count = 1) {
+    const last = rows[rows.length - 1];
+    const from = last ? Number(last.to_no) + 1 : 1;
+    return { ...(last ?? { size: '', color: '', pieces_each: '', net: '', gross: '', length: '', width: '', height: '' }), from_no: from, to_no: from + count - 1 };
+}
+
 /** The hour a phone is in (0-23), for a new entry. */
 export function currentHour(now = new Date()) {
     return now.getHours();

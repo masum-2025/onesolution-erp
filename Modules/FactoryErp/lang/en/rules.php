@@ -70,6 +70,10 @@ return [
         'label' => 'People may write their own piece tickets',
         'description' => 'Off: a supervisor writes an operator\'s tickets (pay is checked by someone else).',
     ],
+    'shipment_number_prefix' => [
+        'label' => 'Shipment number prefix',
+        'description' => 'Shipments are numbered PREFIX-YEAR-00001.',
+    ],
     'categories' => [
         'materials' => 'Materials',
         'orders' => 'Orders',

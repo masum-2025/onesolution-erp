@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aqlSample, cutAllowed, dhuBp, dhuText, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, ticketAmount, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
+import { aqlSample, cbmText, cutAllowed, nextCartonRun, packingTotals, dhuBp, dhuText, efficiencyBp, fillQuantity, hourTarget, need, percentToBp, piecesOf, quantityToMilli, sewLeft, sheetToLines, sheetTotals, stagePercent, ticketAmount, orderTone } from '../../Modules/FactoryErp/resources/js/lib';
 
 describe('factory', () => {
     it('works out a need exactly as the server does, rounded up', () => {
@@ -75,6 +75,18 @@ describe('factory', () => {
         expect(ticketAmount(25, 95, 12)).toBe(198);
         expect(ticketAmount(6, 1, 12)).toBe(1);
         expect(ticketAmount(5, 1, 12)).toBe(0);
+    });
+
+    it('adds up a packing list and carries carton numbers on', () => {
+        const rows = [
+            { from_no: 1, to_no: 20, pieces_each: 12, net_grams_each: 4800, gross_grams_each: 5400, length_mm: 600, width_mm: 400, height_mm: 300 },
+            { from_no: 21, to_no: 21, pieces_each: 4, net_grams_each: 1600, gross_grams_each: 2000, length_mm: 600, width_mm: 400, height_mm: 300 },
+        ];
+        expect(packingTotals(rows)).toEqual({ cartons: 21, pieces: 244, net: 97600, gross: 110000, volume: 21 * 72000000 });
+        // 21 × 0.072 m³ = 1.512.
+        expect(cbmText(21 * 72000000)).toBe('1.512');
+        expect(nextCartonRun(rows, 10)).toMatchObject({ from_no: 22, to_no: 31, pieces_each: 4 });
+        expect(nextCartonRun([], 1)).toMatchObject({ from_no: 1, to_no: 1 });
     });
 
     it('reads typed numbers, Bangla digits too, without floats', () => {

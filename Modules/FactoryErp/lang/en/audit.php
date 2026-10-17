@@ -26,4 +26,7 @@ return [
     'inspection_voided' => 'Inspection voided',
     'piece_ticket_written' => 'Piece ticket written',
     'piece_ticket_voided' => 'Piece ticket voided',
+    'shipment_created' => 'Shipment made',
+    'shipment_updated' => 'Shipment changed',
+    'shipment_shipped' => 'Shipment shipped',
 ];

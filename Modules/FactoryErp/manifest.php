@@ -18,7 +18,7 @@ return [
     'key' => 'factory_erp',
     'name' => 'factory_erp::module.name',
     'description' => 'factory_erp::module.description',
-    'version' => '1.5.0',
+    'version' => '1.6.0',
     'category' => 'business',
     // Materials come from Inventory (its Stock service), buyers are CRM organization
     // contacts (its Organizations service); materials on the floor post to Accounting
@@ -230,6 +230,17 @@ return [
             'category' => 'pay',
             'sort_order' => 170,
         ],
+        [
+            'key' => 'factory_erp.shipment_number_prefix',
+            'type' => 'string',
+            'schema' => ['pattern' => '^[A-Z0-9]{1,8}$'],
+            'default' => 'SH',
+            'label' => 'factory_erp::rules.shipment_number_prefix.label',
+            'description' => 'factory_erp::rules.shipment_number_prefix.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'orders',
+            'sort_order' => 45,
+        ],
     ],
     'menu' => [
         [
@@ -254,6 +265,8 @@ return [
     // Materials on the floor until finished goods come in (Accounting maps it to an account).
     'ledger_accounts' => [
         'factory_erp.wip' => ['label' => 'factory_erp::factory.posting_keys.wip', 'type' => 'asset'],
+        // Goods shipped to buyers: the lines of the draft invoice a shipment makes.
+        'factory_erp.export_sales' => ['label' => 'factory_erp::factory.posting_keys.export_sales', 'type' => 'income'],
     ],
     'attention' => [FactoryWidgets::class, TodayOutput::class, QualityToday::class],
     // Sewing output written on a phone without a network (not money).

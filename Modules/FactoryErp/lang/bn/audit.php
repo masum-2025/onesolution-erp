@@ -26,4 +26,7 @@ return [
     'inspection_voided' => 'ইন্সপেকশন বাতিল',
     'piece_ticket_written' => 'পিস টিকিট লেখা',
     'piece_ticket_voided' => 'পিস টিকিট বাতিল',
+    'shipment_created' => 'শিপমেন্ট তৈরি',
+    'shipment_updated' => 'শিপমেন্ট বদল',
+    'shipment_shipped' => 'শিপমেন্ট পাঠানো',
 ];
