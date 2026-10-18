@@ -157,6 +157,11 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::get('organizations/{organization}/members', [MemberController::class, 'index']);
     Route::post('organizations/{organization}/members', [MemberController::class, 'store'])
         ->middleware('throttle:tenancy-sensitive');
+    // Invite by email (no sign-up for them); roles given with it need the same recent second step as changing roles.
+    Route::post('organizations/{organization}/members/invite', [MemberController::class, 'invite'])
+        ->middleware(['throttle:member-invites', 'two_factor.recent']);
+    Route::post('organizations/{organization}/members/{membership}/resend-invite', [MemberController::class, 'resendInvite'])
+        ->middleware('throttle:member-invites');
     Route::patch('organizations/{organization}/members/{membership}', [MemberController::class, 'update']);
     Route::put('organizations/{organization}/members/{membership}/roles', [MemberController::class, 'updateRoles'])
         ->middleware(['throttle:tenancy-sensitive', 'two_factor.recent']);

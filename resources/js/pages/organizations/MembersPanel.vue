@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import { KeyRound, MoreHorizontal, Search, ShieldCheck, ShieldOff, UserCheck, UserPlus, UserRound, UserX, UsersRound } from 'lucide-vue-next';
+import { KeyRound, Mail, MoreHorizontal, Search, Send, ShieldCheck, ShieldOff, UserCheck, UserPlus, UserRound, UserX, UsersRound } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -91,33 +91,59 @@ async function decide(reset, decision) {
 // Add member
 const adding = ref(false);
 const saving = ref(false);
-const form = reactive({ email: '', membership_type: 'staff', access_scope: 'own' });
+const form = reactive({ email: '', name: '', membership_type: 'staff', access_scope: 'own', role_id: '' });
 const errors = ref({});
+// Roles one may give with the invitation (those the person may hand out).
+const roles = useResource(() => api(`/api/organizations/${props.organization.id}/roles`).then((response) => response.data), { immediate: false });
+const assignable = computed(() => (roles.data.value ?? []).filter((role) => role.assignable));
 
 function openAdd() {
-    Object.assign(form, { email: '', membership_type: 'staff', access_scope: 'own' });
+    Object.assign(form, { email: '', name: '', membership_type: 'staff', access_scope: 'own', role_id: '' });
     errors.value = {};
     adding.value = true;
+    if (!roles.data.value) roles.reload();
 }
 
+/** Invite by email: someone new gets a link to set a password (no sign-up); someone with an account is just added. */
 async function add() {
     errors.value = {};
     if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) {
         errors.value.email = t('orgs.members.email_invalid');
         return;
     }
+    if (form.name.trim().length < 2) {
+        errors.value.name = t('orgs.members.name_needed');
+        return;
+    }
     saving.value = true;
     try {
-        const body = { email: form.email.trim(), membership_type: form.membership_type };
+        const body = { email: form.email.trim(), name: form.name.trim(), membership_type: form.membership_type };
         if (props.organization.type === 'group') body.access_scope = form.access_scope;
-        await api(`/api/organizations/${props.organization.id}/members`, { method: 'POST', body });
-        toast.success(t('orgs.members.added', { email: body.email }));
+        if (form.role_id && form.membership_type === 'staff') body.role_ids = [form.role_id];
+        const response = await api(`/api/organizations/${props.organization.id}/members/invite`, { method: 'POST', body });
+        toast.success(response.meta?.invited ? t('orgs.members.invited', { email: body.email }) : t('orgs.members.added', { email: body.email }));
         adding.value = false;
         members.reload();
     } catch (error) {
-        errors.value = error.status === 422 ? { email: error.field('email'), membership_type: error.field('membership_type'), form: error.field('email') ? null : error.message } : { form: error.message };
+        errors.value = error.status === 422
+            ? { email: error.field('email'), name: error.field('name'), membership_type: error.field('membership_type'), form: error.field('email') || error.field('name') ? null : error.message }
+            : { form: error.message };
     } finally {
         saving.value = false;
+    }
+}
+
+const resending = ref(null);
+async function resend(member) {
+    resending.value = member.id;
+    try {
+        await api(`/api/organizations/${props.organization.id}/members/${member.id}/resend-invite`, { method: 'POST' });
+        toast.success(t('orgs.members.invite_resent', { email: member.user?.email ?? '' }));
+        members.reload();
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        resending.value = null;
     }
 }
 
@@ -223,6 +249,13 @@ const initials = (name) =>
                         <AppBadge v-if="member.user?.two_factor" tone="ok" :icon="ShieldCheck" :title="t('orgs.members.two_factor.on_hint')">{{ t('orgs.members.two_factor.on') }}</AppBadge>
                     </p>
                     <p class="truncate text-[12.5px] text-muted">{{ member.user?.email ?? member.user?.phone }}</p>
+                    <!-- Invited, not in yet: until when the link works, and a fresh one. -->
+                    <p v-if="member.invitation" class="mt-0.5 flex flex-wrap items-center gap-2 text-[12px]">
+                        <AppBadge :tone="member.invitation.expired ? 'warn' : 'brand'" :icon="Mail">
+                            {{ member.invitation.expired ? t('orgs.members.invite_expired') : t('orgs.members.invite_until', { when: formatDateTime(member.invitation.expires_at) }) }}
+                        </AppBadge>
+                        <AppButton size="sm" variant="ghost" :icon="Send" :loading="resending === member.id" @click="resend(member)">{{ t('orgs.members.invite_resend') }}</AppButton>
+                    </p>
                 </div>
                 <div class="hidden items-center gap-2 md:flex">
                     <AppBadge :tone="member.membership_type === 'owner' ? 'brand' : 'neutral'">{{ t(`core.membership_types.${member.membership_type}`) }}</AppBadge>
@@ -252,10 +285,23 @@ const initials = (name) =>
                         <input :id="id" v-model="form.email" type="email" data-autofocus class="field-input" autocomplete="off" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
                     </template>
                 </AppField>
+                <AppField :label="t('orgs.members.name')" :hint="t('orgs.members.name_hint')" :error="errors.name">
+                    <template #default="{ id, invalid, describedby }">
+                        <input :id="id" v-model="form.name" type="text" maxlength="120" class="field-input" autocomplete="off" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
+                    </template>
+                </AppField>
                 <AppField :label="t('orgs.members.role')" :error="errors.membership_type">
                     <template #default="{ id }">
                         <select :id="id" v-model="form.membership_type" class="field-input">
                             <option v-for="type in memberTypes" :key="type" :value="type">{{ t(`core.membership_types.${type}`) }} — {{ t(`orgs.members.role_hint.${type}`) }}</option>
+                        </select>
+                    </template>
+                </AppField>
+                <AppField v-if="form.membership_type === 'staff' && assignable.length" :label="t('orgs.members.give_role')" :hint="t('orgs.members.give_role_hint')" optional>
+                    <template #default="{ id, describedby }">
+                        <select :id="id" v-model="form.role_id" class="field-input" :aria-describedby="describedby">
+                            <option value="">{{ t('orgs.members.no_role_yet') }}</option>
+                            <option v-for="role in assignable" :key="role.id" :value="role.id">{{ role.name }}</option>
                         </select>
                     </template>
                 </AppField>
@@ -270,7 +316,7 @@ const initials = (name) =>
             </form>
             <template #footer>
                 <AppButton @click="adding = false">{{ t('core.actions.cancel') }}</AppButton>
-                <AppButton type="submit" form="member-form" variant="primary" :loading="saving">{{ t('orgs.members.add') }}</AppButton>
+                <AppButton type="submit" form="member-form" variant="primary" :icon="Send" :loading="saving">{{ t('orgs.members.invite') }}</AppButton>
             </template>
         </AppDialog>
 

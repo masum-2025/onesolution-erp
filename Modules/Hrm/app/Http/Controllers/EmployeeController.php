@@ -4,18 +4,24 @@ namespace Modules\Hrm\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Platform\Access\Services\RoleService;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Invitations\Services\InvitationService;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Support\Http\PerPage;
+use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipStatus;
 use App\Platform\Tenancy\Enums\MembershipType;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\OrganizationMembership;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Modules\Hrm\Enums\EmployeeStatus;
+use Modules\Hrm\Exceptions\HrmException;
 use Modules\Hrm\Http\Controllers\Concerns\FindsHrmRecords;
 use Modules\Hrm\Http\EmployeePresenter;
 use Modules\Hrm\Http\Requests\HireEmployeeRequest;
@@ -210,6 +216,71 @@ class EmployeeController extends Controller
         $linked = $this->lifecycle->linkLogin($employee, (int) $data['base_version'], $data['user_id'], $request->user());
 
         return response()->json(['data' => $this->presenter->detail($linked->load(['position', 'manager']))]);
+    }
+
+    /**
+     * Give the employee a login in one step: an invitation to their email
+     * (no sign-up: a new account sets its password from the link), as staff
+     * of their own unit, with the roles chosen, linked to this employee.
+     * Someone already a member there is just linked. Needs hrm.manage and
+     * the right to manage members of that unit.
+     */
+    public function inviteLogin(Request $request, string $organization, string $employee, InvitationService $invitations, RoleService $roles): JsonResponse
+    {
+        $employee = $this->employeeIn($this->findVisible($organization), $employee);
+        $unit = $this->unitOf($employee);
+        Gate::authorize('hrm.manage', $unit);
+        Gate::authorize('manageMembers', $unit);
+        $data = $request->validate([
+            'base_version' => ['required', 'integer', 'min:1'],
+            'email' => ['nullable', 'string', 'email', 'max:190'],
+            'role_ids' => ['sometimes', 'array', 'max:20'],
+            'role_ids.*' => ['string', 'size:26', 'distinct'],
+        ]);
+        if ($employee->user_id !== null) {
+            throw ValidationException::withMessages(['email' => __('hrm::hrm.validation.login_already')]);
+        }
+        // Checked before any mail goes: a stale page sends no invitation.
+        if ($employee->version !== (int) $data['base_version']) {
+            throw HrmException::versionConflict(['version' => $employee->version]);
+        }
+        $email = mb_strtolower(trim((string) ($data['email'] ?? $employee->email ?? '')));
+        if ($email === '') {
+            throw ValidationException::withMessages(['email' => __('hrm::hrm.validation.login_email_needed')]);
+        }
+
+        $invited = false;
+        $linked = DB::transaction(function () use ($unit, $employee, $email, $data, $request, $invitations, $roles, &$invited) {
+            $user = User::query()->where('email', $email)->first();
+            $membership = $user === null ? null : OrganizationMembership::query()->where('organization_id', $unit->getKey())->where('user_id', $user->getKey())->first();
+            if ($membership === null) {
+                $result = $invitations->invite($unit, $email, $employee->full_name, MembershipType::Staff, AccessScope::Own, $request->user());
+                $membership = $result['membership'];
+                $invited = $result['invited'];
+            }
+            if (($data['role_ids'] ?? []) !== []) {
+                $roles->syncMembershipRoles($membership, $data['role_ids'], $request->user(), 'Given with the employee\'s login');
+            }
+
+            return $this->lifecycle->linkLogin($employee, (int) $data['base_version'], $membership->user_id, $request->user());
+        });
+
+        return response()->json(['data' => $this->presenter->detail($linked->load(['position', 'manager'])), 'meta' => ['invited' => $invited]]);
+    }
+
+    /** A new invitation link for the employee's login, when they have not set their password yet. */
+    public function resendLogin(Request $request, string $organization, string $employee, InvitationService $invitations): JsonResponse
+    {
+        $employee = $this->employeeIn($this->findVisible($organization), $employee);
+        $unit = $this->unitOf($employee);
+        Gate::authorize('hrm.manage', $unit);
+        Gate::authorize('manageMembers', $unit);
+        $user = $employee->user_id === null ? null : User::query()->find($employee->user_id);
+        if ($user === null || ! $invitations->resend($unit, $user, $request->user())) {
+            throw ValidationException::withMessages(['login' => __('tenancy.errors.invitation_not_pending')]);
+        }
+
+        return response()->json(['data' => $this->presenter->detail($employee->fresh()->load(['position', 'manager']))]);
     }
 
     public function history(string $organization, string $employee): JsonResponse

@@ -43,6 +43,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
             Route::post('employees', [EmployeeController::class, 'store']);
             Route::patch('employees/{employee}', [EmployeeController::class, 'update']);
             Route::put('employees/{employee}/login', [EmployeeController::class, 'login']);
+            // A login in one step: an invitation by email, roles, linked (mail: the platform's invite limits).
+            Route::post('employees/{employee}/invite-login', [EmployeeController::class, 'inviteLogin'])->middleware(['throttle:member-invites', 'two_factor.recent']);
+            Route::post('employees/{employee}/resend-login', [EmployeeController::class, 'resendLogin'])->middleware('throttle:member-invites');
             // Unknown steps are refused by the controller, after the organization checks.
             Route::post('employees/{employee}/steps/{step}', EmploymentStepController::class);
             Route::post('employees/{employee}/documents', [EmployeeDocumentController::class, 'store']);

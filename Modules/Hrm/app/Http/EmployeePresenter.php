@@ -3,6 +3,7 @@
 namespace Modules\Hrm\Http;
 
 use App\Models\User;
+use App\Platform\Invitations\Services\InvitationService;
 use App\Platform\Tenancy\Models\Organization;
 use Modules\Hrm\Models\CustomField;
 use Modules\Hrm\Models\Employee;
@@ -66,6 +67,9 @@ class EmployeePresenter
             'user_id' => $employee->user_id,
             // The login linked to the employee (they check in and see their own records with it).
             'login' => $employee->user_id === null ? null : User::query()->whereKey($employee->user_id)->first(['id', 'name', 'email'])?->only(['id', 'name', 'email']),
+            // Invited and not in yet: until when their link works (null: they set their password, or were never invited).
+            'login_invitation' => $employee->user_id === null ? null
+                : (app(InvitationService::class)->pending(Organization::query()->findOrFail($employee->organization_id), [$employee->user_id])[$employee->user_id] ?? null),
         ];
     }
 

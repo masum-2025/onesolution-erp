@@ -35,6 +35,8 @@ class MembershipResource extends JsonResource
             ])->sortBy('name')->values()->all()),
             'is_primary' => $this->is_primary,
             'status' => $this->status->value,
+            // Invited and not in yet: until when their link works (null: they have set their password).
+            'invitation' => $this->resource->getAttribute('pending_invitation'),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

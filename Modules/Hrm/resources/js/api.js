@@ -24,6 +24,10 @@ export function hrmApi(organizationId) {
         // Logins that can be linked to the employee, and linking one (null unlinks).
         logins: (id, search) => api(`${base}/employees/${id}/logins`, { query: { search: search || undefined } }),
         linkLogin: (id, body) => api(`${base}/employees/${id}/login`, { method: 'PUT', body }),
+        // A login in one step: an invitation by email (no sign-up), roles, linked.
+        inviteLogin: (id, body) => api(`${base}/employees/${id}/invite-login`, { method: 'POST', body }),
+        resendLogin: (id) => api(`${base}/employees/${id}/resend-login`, { method: 'POST' }),
+        roles: () => api(`/api/organizations/${organizationId}/roles`),
         step: (id, step, body) => api(`${base}/employees/${id}/steps/${step}`, { method: 'POST', body }),
 
         documents: (id) => api(`${base}/employees/${id}/documents`),

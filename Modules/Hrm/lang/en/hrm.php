@@ -61,6 +61,8 @@ return [
     'validation' => [
         'login_not_member' => 'Choose a login that is an active member of this company (staff or portal).',
         'login_taken' => 'This login already belongs to another employee of the company.',
+        'login_already' => 'This employee has a login already. Unlink it first to give another one.',
+        'login_email_needed' => 'Give the employee\'s email: the invitation to set a password is sent there. Or add it to their record first.',
         'required_by_rule' => 'This detail is required for employees here.',
         'employment_type' => 'Choose one of the kinds of employment offered here.',
         'document_type' => 'Choose one of the kinds of documents offered here.',

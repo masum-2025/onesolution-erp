@@ -38,6 +38,9 @@ return [
     'throttle' => [
         'login' => (int) env('TENANCY_THROTTLE_LOGIN', 5),
         'sensitive' => (int) env('TENANCY_THROTTLE_SENSITIVE', 20),
+        // Staff invitations by email: per organization an hour, per person a minute.
+        'invites_per_hour' => (int) env('TENANCY_THROTTLE_INVITES_PER_HOUR', 30),
+        'invites_per_minute' => (int) env('TENANCY_THROTTLE_INVITES_PER_MINUTE', 10),
     ],
 
 ];

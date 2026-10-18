@@ -10,7 +10,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { confirmAction } from '@/lib/dialogs';
 import { toast } from '@/lib/toast';
@@ -85,6 +85,20 @@ async function unlink() {
         toast.error(error.message);
     }
 }
+// The invitation of their login, not used yet: a fresh link.
+const resending = ref(false);
+async function resendLogin() {
+    resending.value = true;
+    try {
+        const { data } = await hrm.resendLogin(employee.value.id);
+        toast.success(t('hrm.login.resent', { email: data.login?.email ?? '' }));
+        record.data.value = { data };
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        resending.value = false;
+    }
+}
 const history = ref(null);
 
 async function stepDone(data) {
@@ -157,8 +171,12 @@ const typeLabel = computed(() => opts.value?.employment_types.find((type) => typ
                         <dd class="flex flex-wrap items-center gap-2">
                             <span v-if="employee.login" class="font-medium text-fg">{{ employee.login.name }} <span class="text-[12.5px] font-normal text-muted" dir="ltr">{{ employee.login.email }}</span></span>
                             <span v-else class="text-muted">{{ t('hrm.login.none') }}</span>
+                            <AppBadge v-if="employee.login_invitation" :tone="employee.login_invitation.expired ? 'warn' : 'brand'">
+                                {{ employee.login_invitation.expired ? t('hrm.login.invite_expired') : t('hrm.login.invite_until', { when: formatDateTime(employee.login_invitation.expires_at) }) }}
+                            </AppBadge>
                             <template v-if="can.manage">
-                                <AppButton size="sm" variant="ghost" @click="linking = true">{{ employee.login ? t('hrm.login.change') : t('hrm.login.link') }}</AppButton>
+                                <AppButton v-if="employee.login_invitation" size="sm" variant="ghost" :loading="resending" @click="resendLogin">{{ t('hrm.login.resend') }}</AppButton>
+                                <AppButton size="sm" :variant="employee.login ? 'ghost' : 'primary'" @click="linking = true">{{ employee.login ? t('hrm.login.change') : t('hrm.login.give') }}</AppButton>
                                 <AppButton v-if="employee.login" size="sm" variant="ghost" @click="unlink">{{ t('hrm.login.unlink') }}</AppButton>
                             </template>
                         </dd>

@@ -71,5 +71,12 @@ class TenancyServiceProvider extends ServiceProvider
 
         RateLimiter::for('tenancy-sensitive', fn (Request $request) => Limit::perMinute((int) config('tenancy.throttle.sensitive'))
             ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
+
+        // Invitations send mail to addresses people type: an organization may send so many an
+        // hour, a person so many a minute (the app is never a way to mail strangers in bulk).
+        RateLimiter::for('member-invites', fn (Request $request) => [
+            Limit::perHour((int) config('tenancy.throttle.invites_per_hour', 30))->by('invites-org:'.$request->route('organization')),
+            Limit::perMinute((int) config('tenancy.throttle.invites_per_minute', 10))->by('invites-user:'.($request->user()?->getAuthIdentifier() ?? $request->ip())),
+        ]);
     }
 }

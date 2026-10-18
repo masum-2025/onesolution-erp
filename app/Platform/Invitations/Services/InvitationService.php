@@ -51,9 +51,11 @@ class InvitationService
         return DB::transaction(function () use ($organization, $email, $name, $type, $scope, $actor) {
             ['user' => $user, 'created' => $created] = $this->userFor($email, $name);
             $membership = $this->addMember->handle($organization, $user, $type, $scope, $actor);
-            $this->notify($user, $organization, $actor, $created);
+            // Someone invited elsewhere who never set a password needs a link too, not "you were added".
+            $needsLink = $created || Invitation::query()->where('user_id', $user->getKey())->whereNull('accepted_at')->exists();
+            $this->notify($user, $organization, $actor, $needsLink);
 
-            return ['membership' => $membership, 'user' => $user, 'invited' => $created];
+            return ['membership' => $membership, 'user' => $user, 'invited' => $needsLink];
         });
     }
 
@@ -121,6 +123,47 @@ class InvitationService
             );
 
             return $user;
+        });
+    }
+
+    /**
+     * People of an organization still to set their password (their link not
+     * used yet): when their latest link runs out, by user id.
+     *
+     * @param  list<string>  $userIds
+     * @return array<string, array{expires_at: string, expired: bool}>
+     */
+    public function pending(Organization $organization, array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        return Invitation::query()->where('organization_id', $organization->getKey())->whereIn('user_id', $userIds)->whereNull('accepted_at')
+            ->orderBy('expires_at')->get(['user_id', 'expires_at'])
+            ->mapWithKeys(fn (Invitation $invitation) => [$invitation->user_id => [
+                'expires_at' => $invitation->expires_at->toIso8601String(),
+                'expired' => $invitation->expires_at->isPast(),
+            ]])->all();
+    }
+
+    /**
+     * A new link for someone who has not set their password yet (the old
+     * one may have run out); the old links stop working. False when they
+     * already have (nothing to send: they sign in).
+     */
+    public function resend(Organization $organization, User $user, User $actor): bool
+    {
+        return DB::transaction(function () use ($organization, $user, $actor) {
+            $open = Invitation::query()->where('organization_id', $organization->getKey())->where('user_id', $user->getKey())
+                ->whereNull('accepted_at')->lockForUpdate()->get();
+            if ($open->isEmpty()) {
+                return false;
+            }
+            Invitation::query()->whereKey($open->modelKeys())->update(['expires_at' => now(), 'updated_at' => now()]);
+            $this->notify($user, $organization, $actor, newAccount: true);
+
+            return true;
         });
     }
 

@@ -3443,6 +3443,28 @@ Rules: `by_period` (false), `period_present_share_bp` (5000), `late_counts_prese
 - Next: screens and offline taking (STA-2); families in the portal, absence messages, the education
   home's widgets and bell (STA-3). Later: a class routine that fills period and subject by itself.
 
+## Staff invitations (INV-1)
+
+Owners and HR give staff a login without the staff signing up. The invitation service of Phase
+5B-5 (a new account without a usable password, a one-time link to set one, valid 72 hours, only
+its SHA-256 kept, audited) is now open to them:
+
+- **Members page** (`POST /api/organizations/{id}/members/invite`: `email`, `name`,
+  `membership_type` staff or owner, `access_scope`, `role_ids`): someone new gets the link,
+  someone with an account is just added and told; someone invited elsewhere who never set a
+  password gets a link too. Roles are given with it (the same checks as changing roles; the route
+  asks for a recent second step like role changes). The list shows who is invited and until when;
+  `POST …/members/{membership}/resend-invite` sends a fresh link (the old one stops).
+- **HRM employee, one step** (`POST /api/organizations/{id}/hrm/employees/{employee}/invite-login`:
+  `base_version`, `email` defaulting to the employee's, `role_ids`): invited as staff of the
+  employee's unit, roles given, linked to the employee. Needs `hrm.manage` and the right to manage
+  that unit's members; the version is checked before any mail goes. `…/resend-login` sends a fresh
+  link. The employee page shows the invitation and "Send again".
+- **Limits** (`member-invites`): 30 an hour per organization, 10 a minute per person
+  (`TENANCY_THROTTLE_INVITES_PER_HOUR`, `…_PER_MINUTE`); refused tries count too.
+
+Later: invitations by SMS for staff without email, and many employees at once.
+
 ## ZKTeco devices module (ZKT-1 backend)
 
 Module `zkteco` (`Modules/Zkteco`, requires HRM and staff attendance; every sector and plan).
