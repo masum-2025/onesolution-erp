@@ -21,6 +21,26 @@ it('gives the house brand its logo, mark and tagline in both languages', functio
         ->and(file_exists(public_path('brand/house/mark.png')))->toBeTrue();
 });
 
+it('lays what the house saved on its brand page over the config, value by value', function () {
+    $house = Partner::factory()->create(['is_house' => true]);
+    PartnerBrand::create(['partner_id' => $house->id, 'band_colors' => ['#2b9c4d'], 'side_band_color' => '#123456']);
+
+    $brand = app(BrandResolver::class)->for($house);
+
+    expect($brand['band_colors'])->toBe(['#2B9C4D'])
+        ->and($brand['side_band_color'])->toBe('#123456')
+        // Nothing saved for these: still the config's.
+        ->and($brand['primary_color'])->toBe('#2B4C9B')
+        ->and($brand['logo_url'])->toBe('/brand/house/logo.png')
+        ->and($brand['tagline']['en'])->toBe('the symbol of freedom')
+        // The app's sidebar and footer show it for the house's clients too, unless switched off.
+        ->and($brand['powered_by'])->toBe('One Solutions');
+    expect(app(BrandResolver::class)->for(Partner::factory()->create(['is_house' => true]))['band_colors'])->toBe(config('branding.house.band_colors'));
+
+    partnerRule($house, 'branding.show_powered_by', false);
+    expect(app(BrandResolver::class)->for($house)['powered_by'])->toBeNull();
+});
+
 it('never shows the house logo or tagline for a white-label partner', function () {
     $partner = Partner::factory()->create(['name' => 'Acme ERP']);
     PartnerBrand::create(['partner_id' => $partner->id, 'primary_color' => '#0F766E']);

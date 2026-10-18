@@ -347,6 +347,11 @@ const linkClass = (active) => [
             </section>
         </nav>
 
+        <!-- "Powered by" (branding.show_powered_by), under the menu; left out while the sidebar is narrow. -->
+        <p v-if="brand.powered_by && !collapsed" class="shrink-0 truncate border-t border-side-line px-5 py-3 text-[11.5px] text-side-muted">
+            {{ t('core.powered_by', { name: brand.powered_by }) }}
+        </p>
+
         <Teleport to="body">
             <div v-if="tip.show" class="side-tip" :class="tip.rtl && 'side-tip-rtl'" :style="{ top: `${tip.top}px`, left: `${tip.left}px` }" aria-hidden="true">{{ tip.text }}</div>
         </Teleport>

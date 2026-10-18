@@ -27,6 +27,8 @@ const channelOptions = computed(() => [
     { value: 'mail', label: t('auth.login.use_email'), icon: Mail },
     { value: 'sms', label: t('auth.login.use_phone'), icon: Smartphone },
 ]);
+// Not "One Solutions · Powered by One Solutions": left out where it repeats the brand's name.
+const poweredBy = computed(() => (brand.powered_by && brand.powered_by !== brand.name ? brand.powered_by : null));
 const showPassword = ref(false);
 const submitting = ref(false);
 const failure = ref(null);
@@ -281,10 +283,10 @@ onBeforeUnmount(() => clearInterval(countdown));
                     {{ t('auth.login.secure_note') }}
                 </p>
                 <p v-if="brandText('footer_text', i18n.locale)">{{ brandText('footer_text', i18n.locale) }}</p>
-                <p v-if="brand.terms_url || brand.privacy_url || brand.powered_by" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                <p v-if="brand.terms_url || brand.privacy_url || poweredBy" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
                     <a v-if="brand.terms_url" :href="brand.terms_url" target="_blank" rel="noopener noreferrer" class="hover:text-fg hover:underline">{{ t('auth.login.terms') }}</a>
                     <a v-if="brand.privacy_url" :href="brand.privacy_url" target="_blank" rel="noopener noreferrer" class="hover:text-fg hover:underline">{{ t('auth.login.privacy') }}</a>
-                    <span v-if="brand.powered_by">{{ t('auth.login.powered_by', { name: brand.powered_by }) }}</span>
+                    <span v-if="poweredBy">{{ t('auth.login.powered_by', { name: poweredBy }) }}</span>
                 </p>
             </div>
         </div>

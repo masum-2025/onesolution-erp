@@ -71,6 +71,7 @@
         "support": "Support",
         "billing": "Billing"
     },
+    "powered_by": "Powered by {name}",
     "nav": {
         "label": "Main navigation",
         "open": "Open navigation",

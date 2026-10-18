@@ -12,6 +12,7 @@ import AppDrawer from '@/components/AppDrawer.vue';
 import AppButton from '@/components/AppButton.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import { api } from '@/lib/http';
+import { brand } from '@/lib/brand';
 import { loadMenu } from '@/lib/menu';
 import { on } from '@/lib/events';
 import { can, currentOrganization, enterContext, hasOfflineData, isPortalMember, session } from '@/lib/session';
@@ -187,6 +188,11 @@ watch(() => route.path, () => (mobileNav.value = false));
                     </RouterView>
                 </div>
             </main>
+
+            <!-- "Powered by" (branding.show_powered_by) at the foot of every page. -->
+            <footer v-if="!focus && brand.powered_by" class="px-4 pb-5 pt-2 text-center text-[12px] text-faint print:hidden">
+                {{ t('core.powered_by', { name: brand.powered_by }) }}
+            </footer>
         </div>
 
         <CommandPalette :open="palette" @close="palette = false" />

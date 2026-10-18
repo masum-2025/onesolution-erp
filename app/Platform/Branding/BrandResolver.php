@@ -12,8 +12,9 @@ use App\Platform\Tenancy\Models\Partner;
 
 /**
  * Brand tokens the browser app applies at runtime (CSS variables, logos,
- * texts): no per-partner builds. The house brand comes from config; a
- * white-label partner's from partner_brands, and never shows the house logo
+ * texts): no per-partner builds. The house brand comes from config with the
+ * house's own partner_brands row over it; a white-label partner's from
+ * partner_brands alone, and never shows the house logo
  * or tagline. Every value is checked again here because it is written into
  * the page (<style>, <img>, <link>).
  */
@@ -86,36 +87,41 @@ class BrandResolver
         $house = config('branding.house');
         $fonts = (array) config('branding.fonts');
 
-        if ($partner === null || $partner->is_house) {
-            return [
-                'name' => $this->text($house['name']) ?? 'One Solutions',
-                'primary_color' => strtoupper($this->color($house['primary_color']) ?? '#2B4C9B'),
-                'secondary_color' => null,
-                'band_colors' => $this->colors($house['band_colors'] ?? []),
-                'side_band_color' => $this->upper($house['side_band_color'] ?? null),
-                'font' => $fonts['inter'] ?? null,
-                'support_email' => filter_var($house['support_email'] ?? null, FILTER_VALIDATE_EMAIL) ?: null,
-                'support_phone' => null,
-                'logo_url' => $this->path($house['logo_url'] ?? null),
-                'logo_dark_url' => null,
-                'mark_url' => $this->path($house['mark_url'] ?? null),
-                'favicon_url' => null,
-                'tagline' => $this->texts($house['tagline'] ?? null, 120),
-                'login_title' => [],
-                'login_text' => [],
-                'footer_text' => [],
-                'terms_url' => null,
-                'privacy_url' => null,
-                // The house brand is the platform: no "Powered by".
-                'powered_by' => null,
-                'version' => 0,
-            ];
-        }
-
-        $brand = PartnerBrand::query()->where('partner_id', $partner->getKey())->first();
+        $brand = $partner === null ? null : PartnerBrand::query()->where('partner_id', $partner->getKey())->first();
         $asset = fn (string $kind) => $brand?->{PartnerBrand::ASSETS[$kind]} === null
             ? null
             : "/brand-assets/{$partner->getKey()}/{$kind}?v={$brand->version}";
+
+        if ($partner === null || $partner->is_house) {
+            // The house brand starts from config; what the house's admins saved
+            // on the brand page lies over it, value by value.
+            return [
+                'name' => $this->text($brand?->product_name) ?? $this->text($house['name']) ?? 'One Solutions',
+                'primary_color' => strtoupper($this->color($brand?->primary_color) ?? $this->color($house['primary_color']) ?? '#2B4C9B'),
+                'secondary_color' => $this->upper($brand?->secondary_color),
+                'band_colors' => $this->colors($brand?->band_colors ?? $house['band_colors'] ?? []),
+                'side_band_color' => $this->upper($brand?->side_band_color) ?? $this->upper($house['side_band_color'] ?? null),
+                'font' => $fonts[$brand?->font_key ?? 'inter'] ?? $fonts['inter'] ?? null,
+                'support_email' => filter_var($brand?->support_email ?? $house['support_email'] ?? null, FILTER_VALIDATE_EMAIL) ?: null,
+                'support_phone' => $this->text($brand?->support_phone, 30),
+                'logo_url' => $asset('logo_light') ?? $this->path($house['logo_url'] ?? null),
+                'logo_dark_url' => $asset('logo_dark'),
+                'mark_url' => $asset('mark') ?? $this->path($house['mark_url'] ?? null),
+                'favicon_url' => $asset('favicon'),
+                'tagline' => $this->texts($brand?->tagline, 120) ?: $this->texts($house['tagline'] ?? null, 120),
+                'login_title' => $this->texts($brand?->login_title, 80),
+                'login_text' => $this->texts($brand?->login_text, 300),
+                'footer_text' => $this->texts($brand?->footer_text, 200),
+                'terms_url' => $this->link($brand?->terms_url),
+                'privacy_url' => $this->link($brand?->privacy_url),
+                // Shown in the app's sidebar and footer like any partner's (the login page
+                // leaves it out where it would only repeat the brand's name).
+                'powered_by' => $partner !== null && $this->rules->get('branding.show_powered_by', $this->contexts->forPartner($partner))
+                    ? $this->text(config('branding.powered_by'))
+                    : null,
+                'version' => (int) ($brand?->version ?? 0),
+            ];
+        }
 
         $showPoweredBy = (bool) $this->rules->get('branding.show_powered_by', $this->contexts->forPartner($partner));
 
