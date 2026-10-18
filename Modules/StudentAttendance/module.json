@@ -1,0 +1,11 @@
+{
+    "name": "StudentAttendance",
+    "alias": "student_attendance",
+    "description": "Students' attendance: once a day by the class teacher, or each period by the subject teacher.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\StudentAttendance\\Providers\\StudentAttendanceServiceProvider"
+    ],
+    "files": []
+}

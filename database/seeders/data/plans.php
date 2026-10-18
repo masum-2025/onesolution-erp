@@ -28,7 +28,7 @@ return [
         'modules' => [
             'accounting', 'api_integration', 'attendance', 'client_portal', 'course_registration', 'crm', 'education', 'education_exams', 'education_fees', 'education_lectures', 'external_integrations',
             'factory_erp', 'hrm', 'inventory', 'multi_currency', 'multi_language',
-            'offline_mode', 'online_payments', 'payroll', 'pos', 'teacher_feedback',
+            'offline_mode', 'online_payments', 'payroll', 'pos', 'student_attendance', 'teacher_feedback',
         ],
         'prices' => [
             ['currency' => 'BDT', 'period' => 'monthly', 'amount_minor' => 150000],

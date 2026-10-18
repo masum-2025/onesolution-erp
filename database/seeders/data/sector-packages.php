@@ -29,7 +29,7 @@ return [
     ],
     [
         'key' => 'school',
-        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'student_attendance', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             // School days start early and buses run late: a short grace period.
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
@@ -44,7 +44,7 @@ return [
     // (Education > presets); the school chart of accounts fits them (fees, salaries).
     [
         'key' => 'college',
-        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'student_attendance', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
@@ -53,8 +53,10 @@ return [
     ],
     [
         'key' => 'university',
-        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'student_attendance', 'course_registration', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
+            // Each lecturer takes their own class's attendance.
+            ['key' => 'student_attendance.by_period', 'value' => true],
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
             // Lecturers see every student of their campus; there are no class teachers.
@@ -67,7 +69,7 @@ return [
     ],
     [
         'key' => 'madrasa',
-        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'hrm', 'attendance', 'payroll', 'accounting'],
+        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'student_attendance', 'hrm', 'attendance', 'payroll', 'accounting'],
         'rules' => [
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
@@ -77,7 +79,7 @@ return [
     ],
     [
         'key' => 'coaching',
-        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'hrm', 'attendance', 'accounting'],
+        'modules' => ['education', 'education_exams', 'education_fees', 'education_lectures', 'student_attendance', 'hrm', 'attendance', 'accounting'],
         'rules' => [
             ['key' => 'accounting.chart_template', 'value' => 'school'],
             ['key' => 'education.teacher_scope', 'value' => 'all'],

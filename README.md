@@ -3357,6 +3357,54 @@ Rules: `approval_required` (false), `max_file_kb` (10240), `max_files` (5), `vid
   kind of institution gets lectures by naming the module in its sector package. No code change.
 - Later: lectures linked to curriculum topics, students marking a lecture read, offline reading.
 
+## Student attendance module (STA-1 backend)
+
+Module `student_attendance` (`Modules/StudentAttendance`, requires Education; school, college,
+university, madrasa and coaching; every plan, on in the education sector packages). Teachers take
+students' attendance once a day or in each period; the office sees who is missing and counts days.
+
+- **Two ways, by rule**: `student_attendance.by_period` off (default) — one sheet a day per
+  section, by its class teacher; on (university package) — one sheet per period, by a teacher of
+  that subject in the section (their only subject is picked for them) or the class teacher. Set per
+  company or campus; old sheets of either kind keep counting after a switch.
+- **Who**: `.view` reads (a teacher: the sections Education lets them see); `.take` saves their own
+  section or subject; `.manage` any section, any day of the session, periods and holidays. Role
+  templates: principal and registrar manage, teacher views and takes.
+- **A sheet**: saved whole with `op_id` (a resend answers with the same sheet) and `base_version`
+  (none for a new one; a sheet saved meanwhile, offline or not, answers 409 with its version).
+  Students left out stay as they were (present on a new sheet); anyone not in the section is
+  refused. Never a day to come; teachers go back `edit_days` (2), managers any day of the session.
+  A changed sheet (old and new state of each student changed) and one taken for an earlier day are
+  audited.
+- **Counting days**: a school day is a day the student's attendance was taken (weekly days off and
+  holidays never count). By period, a day is present when present (or late) in at least
+  `period_present_share_bp` (5000 = half) of the periods taken; leave in every period is leave.
+  `late_counts_present` (true) adds late days to present days. Report cards show "days attended"
+  through Exams' `StudentAttendance` contract (nothing while this module is off).
+- **Days off**: weekly (`weekend_days`, Bangladesh: Friday and Saturday) and holidays (the whole
+  institution, one campus, or some classes); a day off still takes a sheet (an extra class) and the
+  sheet says it is one.
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/organizations/{id}/student-attendance/setup | can, rules, statuses, open sessions' sections (class teacher, own subjects), subjects, periods |
+| GET | …/student-attendance/sheets?date= | each section's sheets that day (counts by state) and whether the day is off |
+| GET/PUT | …/student-attendance/sheets/{section}/{date} | the sheet (`?period_id=`), save it (`marks[]`, `period_id`, `subject_id`, `op_id`, `base_version`) |
+| GET/POST/PATCH/DELETE | …/student-attendance/periods[/{period}] | a campus's periods (number, name, times, on/off); one in use is switched off, not removed |
+| GET/POST/DELETE | …/student-attendance/holidays[/{holiday}] | `from`/`to`; whole institution from the institution, a campus from the campus |
+| GET | …/student-attendance/students/{student}?month= | a student's days (with periods), totals, holidays and weekly days off |
+| GET | …/student-attendance/register?section_id=&month=[&format=csv] | the section's month: school days, each student's state, totals (CSV for the office) |
+
+Rules: `by_period` (false), `period_present_share_bp` (5000), `late_counts_present` (true),
+`edit_days` (2), `weekend_days` (sat, sun; BD fri, sat).
+
+### Future expansion (student attendance)
+
+- A new country sets its school week in `rule-values.php`; a new kind of institution gets
+  attendance by naming the module in its sector package (and `by_period` if it suits). No code change.
+- Next: screens and offline taking (STA-2); families in the portal, absence messages, the education
+  home's widgets and bell (STA-3). Later: a class routine that fills period and subject by itself.
+
 ## Teacher feedback module (TFB-1)
 
 Module `teacher_feedback` (`Modules/TeacherFeedback`, requires Education; rating needs the client

@@ -19,6 +19,12 @@ return [
 
     // ── Bangladesh ───────────────────────────────────────────────────────
     [
+        'key' => 'student_attendance.weekend_days',
+        'country' => 'BD',
+        'value' => ['fri', 'sat'],
+        'reason' => 'Ministry of Education, 2022: schools and colleges close on Friday and Saturday every week.',
+    ],
+    [
         'key' => 'factory_erp.export_permit_required',
         'country' => 'BD',
         'value' => true,

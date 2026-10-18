@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/student-attendance",
+    "description": "Students' attendance: once a day by the class teacher, or each period by the subject teacher.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\StudentAttendance\\": "app/"
+        }
+    }
+}
