@@ -41,6 +41,10 @@ const REVIEWED_PUBLIC_ROUTES = [
     // Reworded texts for the browser (LANG-1): the current context's wording only (a signed-in
     // person's verified context, else the address's partner), plain texts, throttled.
     'GET api/i18n/{hash}/{locale}/{namespace?}',
+    // An office bridge (zkteco-bridge.exe) for an app hosted online: its bearer token only (one
+    // company, one bridge, revocable, only the SHA-256 kept), 120 calls a minute per token, 401
+    // otherwise; its own company's devices given to it, nothing else.
+    'GET api/zkteco/bridge/devices', 'POST api/zkteco/bridge/devices/{device}/readings', 'POST api/zkteco/bridge/devices/{device}/error',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

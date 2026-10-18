@@ -35,6 +35,8 @@ class DeviceRequest extends StrictFormRequest
             'comm_key' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:999999'],
             'import_from' => [$creating ? 'required' : 'sometimes', 'date_format:Y-m-d'],
             'is_active' => ['sometimes', 'boolean'],
+            // The office bridge that reads it (null: the app reads it itself).
+            'bridge_id' => ['sometimes', 'nullable', 'string', 'size:26'],
             'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],
         ];
     }

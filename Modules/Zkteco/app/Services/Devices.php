@@ -7,6 +7,7 @@ use App\Platform\Audit\AuditLogger;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Validation\ValidationException;
 use Modules\Zkteco\Exceptions\ZktecoException;
+use Modules\Zkteco\Models\Bridge;
 use Modules\Zkteco\Models\Device;
 use Modules\Zkteco\Models\Log;
 use Modules\Zkteco\Protocol\TerminalFactory;
@@ -31,11 +32,14 @@ class Devices
                     throw ZktecoException::versionConflict(['version' => $device->version]);
                 }
                 $old = $this->facts($device);
-                $device->fill(array_intersect_key($data, array_flip(['name', 'host', 'port', 'protocol', 'import_from', 'is_active'])));
+                $device->fill(array_intersect_key($data, array_flip(['name', 'host', 'port', 'protocol', 'import_from', 'is_active', 'bridge_id'])));
                 $device->version++;
             } else {
                 $old = [];
-                $device = new Device(['organization_id' => $company->getKey(), ...array_intersect_key($data, array_flip(['unit_id', 'name', 'host', 'port', 'protocol', 'import_from', 'is_active']))]);
+                $device = new Device(['organization_id' => $company->getKey(), ...array_intersect_key($data, array_flip(['unit_id', 'name', 'host', 'port', 'protocol', 'import_from', 'is_active', 'bridge_id']))]);
+            }
+            if ($device->bridge_id !== null && ! $this->place->query(Bridge::class, $company)->whereKey($device->bridge_id)->whereNull('revoked_at')->exists()) {
+                throw ValidationException::withMessages(['bridge_id' => __('zkteco::zkteco.validation.bridge')]);
             }
             $taken = $this->place->query(Device::class, $company)->where('host', $device->host)->where('port', $device->port)
                 ->when($device->exists, fn ($query) => $query->whereKeyNot($device->getKey()))->exists();
@@ -109,7 +113,7 @@ class Devices
     /** @return array<string, mixed> */
     private function facts(Device $device): array
     {
-        return ['unit_id' => $device->unit_id, 'name' => $device->name, 'host' => $device->host, 'port' => $device->port, 'protocol' => $device->protocol,
+        return ['unit_id' => $device->unit_id, 'bridge_id' => $device->bridge_id, 'name' => $device->name, 'host' => $device->host, 'port' => $device->port, 'protocol' => $device->protocol,
             'import_from' => $device->import_from?->toDateString(), 'is_active' => $device->is_active];
     }
 }

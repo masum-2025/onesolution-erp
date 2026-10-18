@@ -63,15 +63,37 @@ class DeviceSync
             $terminal->disconnect();
         }
 
+        return $this->ingest($company, $device, $facts, $users, $logs, $actor, $onlyUser);
+    }
+
+    /**
+     * Keep what was read from a device, by the app itself (pull) or by an
+     * office bridge (its readings): users, new logs, punches to attendance.
+     *
+     * @param  array{serial: ?string, model: ?string, users: int, logs: int}|null  $facts  null: unchanged (a bridge's later batch)
+     * @param  list<array{uid: int, user_id: string, name: string}>  $users
+     * @param  list<array{user_id: string, at: string, status: int, punch: int}>  $logs
+     * @return array{read: int, new: int, recorded: int, unmatched: int, not_employed: int, users: int}
+     */
+    public function ingest(Organization $company, Device $device, ?array $facts, array $users, array $logs, ?User $actor, ?string $onlyUser = null): array
+    {
         $this->keepUsers($company, $device, $users);
         $new = $this->keepLogs($company, $device, $logs, $onlyUser);
         $sent = $this->forward($company, $device, $actor);
         $device->forceFill([
-            'serial' => $facts['serial'], 'model' => $facts['model'], 'users_count' => $facts['users'], 'logs_count' => $facts['logs'],
-            'last_synced_at' => now(), 'last_error' => null,
+            ...($facts === null ? [] : ['serial' => $facts['serial'], 'model' => $facts['model'], 'users_count' => $facts['users'], 'logs_count' => $facts['logs']]),
+            'last_attempt_at' => now(), 'last_synced_at' => now(), 'last_error' => null,
         ])->save();
 
         return ['read' => count($logs), 'new' => $new, ...$sent, 'users' => count($users)];
+    }
+
+    /** The device's last kept log time (its own clock), from which a bridge sends; or the start of import_from. */
+    public function keptUntil(Organization $company, Device $device): string
+    {
+        $last = $this->place->query(Log::class, $company)->where('device_id', $device->getKey())->max('local_at');
+
+        return $last === null ? $device->import_from->toDateString().' 00:00:00' : substr((string) $last, 0, 19);
     }
 
     /**

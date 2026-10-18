@@ -226,6 +226,67 @@ it('needs the permission, answers 403 with a module off, and never shows another
     ($this->as)()->getJson(($this->zk)('devices'))->assertForbidden();
 });
 
+it('lets an office bridge read devices for an app hosted online, with its token only', function () {
+    $device = ($this->device)()->assertCreated()->json('data');
+    $made = ($this->as)()->postJson(($this->zk)('bridges', $this->w->b1), ['name' => 'Office PC'])->assertCreated()->json('data');
+    $token = $made['token'];
+    expect($token)->toStartWith("zkb.{$this->w->c1->id}.")->and($made['token_hint'])->toBe(substr($token, -4));
+    // Shown once: never listed, never in the audit, only its hash kept.
+    expect(json_encode(($this->as)()->getJson(($this->zk)('bridges'))->json()))->not->toContain($token)
+        ->and(json_encode(AuditLog::query()->where('action', 'zkteco.bridge_created')->sole()->new_values))->not->toContain($token)
+        ->and(DB::table('zk_bridges')->value('token_hash'))->toBe(hash('sha256', $token));
+
+    ($this->as)()->patchJson(($this->zk)("devices/{$device['id']}"), ['bridge_id' => $made['id'], 'base_version' => 1])->assertOk()->assertJsonPath('data.bridge_id', $made['id']);
+    ($this->as)()->patchJson(($this->zk)("devices/{$device['id']}"), ['bridge_id' => str_repeat('B', 26), 'base_version' => 2])->assertUnprocessable()->assertJsonValidationErrors('bridge_id');
+    // The app does not reach a device a bridge reads.
+    ($this->as)()->postJson(($this->zk)("devices/{$device['id']}/sync"))->assertStatus(409)->assertJsonPath('code', 'read_by_bridge');
+    FakeTerminal::$connects = 0;
+    $this->travel(6)->minutes();
+    $this->artisan('zkteco:pull')->assertSuccessful();
+    expect(FakeTerminal::$connects)->toBe(0);
+
+    $bridge = fn (?string $with = null) => $this->withToken($with ?? $token);
+    $this->withToken('zkb.nonsense')->getJson('/api/zkteco/bridge/devices')->assertUnauthorized()->assertJsonPath('code', 'bad_token');
+    $list = $bridge()->getJson('/api/zkteco/bridge/devices')->assertOk()->json('data');
+    expect($list)->toHaveCount(1)->and($list[0])->toMatchArray(['id' => $device['id'], 'host' => '192.168.1.201', 'comm_key' => 1234, 'since' => '2026-10-01 00:00:00']);
+    expect(DB::table('zk_bridges')->value('last_seen_at'))->not->toBeNull();
+
+    $readings = ['facts' => ['serial' => '6583165000291', 'model' => 'F18/ID', 'users' => 2, 'logs' => 5], 'users' => FakeTerminal::$users, 'logs' => FakeTerminal::$logs];
+    $bridge()->postJson("/api/zkteco/bridge/devices/{$device['id']}/readings", $readings)->assertOk()
+        ->assertJsonPath('data.new', 4)->assertJsonPath('data.recorded', 2)->assertJsonPath('data.unmatched', 2)->assertJsonPath('data.since', '2026-10-15 18:18:35');
+    // Sent again (a retry after a lost answer): nothing twice.
+    $bridge()->postJson("/api/zkteco/bridge/devices/{$device['id']}/readings", [...$readings, 'facts' => null])->assertOk()->assertJsonPath('data.new', 0);
+    expect(($this->punches)($this->rahima))->toHaveCount(2);
+    $bridge()->postJson("/api/zkteco/bridge/devices/{$device['id']}/readings", ['users' => [], 'logs' => [['user_id' => '33', 'at' => 'yesterday', 'status' => 1, 'punch' => 0]]])
+        ->assertUnprocessable()->assertJsonValidationErrors('logs.0.at');
+    $bridge()->postJson("/api/zkteco/bridge/devices/{$device['id']}/error", ['reason' => 'no_answer'])->assertNoContent();
+    expect(Device::query()->withoutGlobalScopes()->find($device['id'])->last_error)->toBe('no_answer');
+
+    // Another company's bridge never sees this device.
+    $theirs = ($this->as)(orgToken(createMember($this->w->c2), $this->w->c2))->postJson(($this->zk)('bridges', $this->w->c2), ['name' => 'Theirs'])->assertCreated()->json('data.token');
+    $bridge($theirs)->getJson('/api/zkteco/bridge/devices')->assertOk()->assertJsonCount(0, 'data');
+    $bridge($theirs)->postJson("/api/zkteco/bridge/devices/{$device['id']}/readings", $readings)->assertNotFound();
+
+    toggles()->disable($this->w->c1, 'zkteco', 'Test');
+    $bridge()->getJson('/api/zkteco/bridge/devices')->assertForbidden()->assertJsonPath('code', 'module_off');
+    toggles()->enable($this->w->c1, 'zkteco', 'Test');
+    // Revoked: the token stops, and the device is the app's to read again.
+    ($this->as)()->postJson(($this->zk)("bridges/{$made['id']}/revoke"))->assertOk();
+    $bridge()->getJson('/api/zkteco/bridge/devices')->assertUnauthorized();
+    expect(Device::query()->withoutGlobalScopes()->find($device['id'])->bridge_id)->toBeNull()
+        ->and(AuditLog::query()->where('action', 'zkteco.bridge_revoked')->count())->toBe(1);
+});
+
+it('gives the bridge program to those who manage devices, with its checksum', function () {
+    $exe = base_path('Modules/Zkteco/bridge/dist/zkteco-bridge.exe');
+    $download = ($this->as)()->get(($this->zk)('bridges/program'))->assertOk();
+    expect($download->headers->get('X-Content-SHA256'))->toBe(hash_file('sha256', $exe))
+        ->and($download->headers->get('Content-Disposition'))->toContain('zkteco-bridge.exe');
+    expect(($this->as)()->getJson(($this->zk)('bridges'))->json('meta.program.sha256'))->toBe(hash_file('sha256', $exe));
+    $viewer = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['zkteco.view', 'hrm.view'], 'Viewer')), $this->w->c1);
+    ($this->as)($viewer)->get(($this->zk)('bridges/program'))->assertForbidden();
+});
+
 it('reads the terminal\'s packed clock and checksums as the protocol writes them', function () {
     // 2026-10-15 08:55:00 packed the ZK way.
     $t = ((((26 * 12 + 9) * 31 + 14) * 24 + 8) * 60 + 55) * 60;

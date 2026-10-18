@@ -18,5 +18,10 @@ export function zktecoApi(organizationId) {
         users: (id) => api(`${base}/devices/${id}/users`),
         match: (id, userId, employeeId) => api(`${base}/devices/${id}/users/${userId}`, { method: 'PATCH', body: { employee_id: employeeId } }),
         matchMany: (id, matches) => api(`${base}/devices/${id}/users`, { method: 'PATCH', body: { matches } }),
+        bridges: () => api(`${base}/bridges`),
+        addBridge: (body) => api(`${base}/bridges`, { method: 'POST', body }),
+        revokeBridge: (id) => api(`${base}/bridges/${id}/revoke`, { method: 'POST' }),
+        // A plain link: the browser downloads it with the signed-in session.
+        programUrl: `${base}/bridges/program`,
     };
 }

@@ -3488,8 +3488,33 @@ their punches come into staff attendance by themselves, from several devices per
   comes from the name the device keeps when exactly one employee's name holds all its words
   (PARVEJ → Parvej Hossain); accept one, or all at once. Filters: all, not matched, suggested.
 
-Next: ZKT-3 ADMS (the device sends by itself), the bell when a device stops answering, and sending
-new employees to devices.
+### Office bridge for an app hosted online (ZKT-3)
+
+An app online cannot see an office network, so a small program on an office computer reads the
+devices there and sends what is new: **zkteco-bridge.exe** (`Modules/Zkteco/bridge`, C# 5 built
+with the .NET Framework 4 compiler every Windows 10/11 has, `build.ps1`; about 19 KB, nothing to
+install). It speaks the same reading-only ZK protocol as the app.
+
+- **Bridges** (`zk_bridges`): made in the app with a token shown once (`zkb.<company>.<secret>`;
+  only its SHA-256 is kept, with its last four characters), revoked at any time (its devices go
+  back to being read by the app). Both audited. A device's "Who reads it" is the app itself or a
+  bridge; the app never reaches a device a bridge reads (409 `read_by_bridge`, skipped by the
+  scheduler).
+- **The bridge API** (`/api/zkteco/bridge/…`, `Authorization: Bearer zkb…`, 120 calls a minute per
+  token; 401 bad or revoked token, 403 a module off, 404 a device not given to this bridge):
+  `GET devices` (address, port, protocol, comm key, import_from and `since`, the last log time
+  kept), `POST devices/{id}/readings` (facts, users, logs newer than `since`, up to 5,000 a call;
+  kept once each, so a retry is harmless), `POST devices/{id}/error` (`reason`).
+- **On the office computer**: put `zkteco-bridge.exe` and `zkteco-bridge.ini` (`server=`,
+  `token=`; made in the browser when the bridge is made) in one folder; `zkteco-bridge.exe --test`
+  reaches the app and each device; `--install` runs it every minute with Task Scheduler
+  (`--uninstall` stops it). Its log (`zkteco-bridge.log`, 1 MB kept) never holds the token; one
+  run at a time.
+- Tried against the real F18: 23,911 logs read in about 29 s, only the new ones sent.
+- The app gives the exe to those who manage devices (`GET …/zkteco/bridges/program`) with its SHA-256.
+
+Next: ADMS (the device sends by itself, no bridge), the bell when a device or bridge goes silent,
+and sending new employees to devices.
 
 ## Teacher feedback module (TFB-1)
 

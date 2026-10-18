@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { AlertTriangle, CheckCircle2, Fingerprint, Pencil, Plug, Plus, RefreshCw, Users } from 'lucide-vue-next';
+import { AlertTriangle, Ban, CheckCircle2, Fingerprint, Monitor, Pencil, Plug, Plus, RefreshCw, Users } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -9,11 +9,13 @@ import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { currentOrganization } from '@/lib/session';
 import { useResource } from '@/lib/useResource';
+import { confirmAction } from '@/lib/dialogs';
 import { formatNumber, formatRelative } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { zktecoApi } from '../api';
 import DeviceDialog from '../components/DeviceDialog.vue';
+import BridgeDialog from '../components/BridgeDialog.vue';
 
 /**
  * The company's attendance devices: each one's branch and address, what it
@@ -29,6 +31,29 @@ const can = (ability) => setup.data.value?.data?.can?.[ability] === true;
 const unitName = (id) => setup.data.value?.data?.units?.find((unit) => unit.id === id)?.name ?? '';
 const busy = ref({});
 const dialog = ref({ open: false, device: null });
+
+// Office bridges (an app hosted online reads devices through them).
+const bridgeList = useResource(() => api.bridges());
+const bridges = computed(() => bridgeList.data.value?.data ?? []);
+const liveBridges = computed(() => bridges.value.filter((bridge) => !bridge.revoked_at));
+const bridgeName = (id) => bridges.value.find((bridge) => bridge.id === id)?.name ?? '';
+const bridgeDialog = ref(false);
+// A bridge that has not called for this long is shown as silent (it runs every minute).
+const SILENT_MINUTES = 10;
+const silent = (bridge) => !bridge.last_seen_at || Date.now() - Date.parse(bridge.last_seen_at) > SILENT_MINUTES * 60 * 1000;
+
+async function revoke(bridge) {
+    const sure = await confirmAction({ title: t('zkteco.bridge.revoke_title', { name: bridge.name }), message: t('zkteco.bridge.revoke_text'), confirmLabel: t('zkteco.bridge.revoke'), danger: true });
+    if (!sure) return;
+    try {
+        await api.revokeBridge(bridge.id);
+        toast.success(t('zkteco.bridge.revoked'));
+        bridgeList.reload();
+        list.reload();
+    } catch (error) {
+        toast.error(error.message);
+    }
+}
 
 async function act(device, kind) {
     busy.value = { ...busy.value, [device.id]: kind };
@@ -78,6 +103,7 @@ function saved() {
                         <p class="truncate font-semibold text-fg">{{ device.name }}</p>
                         <p class="tabular truncate text-[12.5px] text-muted">{{ device.host }}:{{ device.port }} · {{ device.protocol.toUpperCase() }} · {{ unitName(device.unit_id) }}</p>
                         <p v-if="device.model || device.serial" class="truncate text-[12.5px] text-muted">{{ [device.model, device.serial].filter(Boolean).join(' · ') }}</p>
+                        <p v-if="device.bridge_id" class="mt-1"><AppBadge tone="brand" :icon="Monitor">{{ t('zkteco.devices.via_bridge', { name: bridgeName(device.bridge_id) }) }}</AppBadge></p>
                     </div>
                     <AppBadge v-if="!device.is_active" tone="neutral">{{ t('zkteco.devices.off') }}</AppBadge>
                     <AppBadge v-else-if="device.last_error" tone="bad" :icon="AlertTriangle">{{ t('zkteco.devices.not_answering') }}</AppBadge>
@@ -97,14 +123,46 @@ function saved() {
                 <div class="mt-auto flex flex-wrap gap-2">
                     <AppButton :to="{ name: 'zkteco-device', params: { id: device.id } }" :icon="Users" :variant="device.waiting ? 'primary' : 'secondary'">{{ t('zkteco.devices.match') }}</AppButton>
                     <template v-if="can('manage')">
-                        <AppButton :icon="Plug" :loading="busy[device.id] === 'test'" :disabled="!!busy[device.id]" @click="act(device, 'test')">{{ t('zkteco.devices.test') }}</AppButton>
-                        <AppButton :icon="RefreshCw" :loading="busy[device.id] === 'sync'" :disabled="!!busy[device.id] || !device.is_active" @click="act(device, 'sync')">{{ t('zkteco.devices.sync') }}</AppButton>
+                        <!-- A device a bridge reads is out of the app's reach: the bridge tries it every minute. -->
+                        <template v-if="!device.bridge_id">
+                            <AppButton :icon="Plug" :loading="busy[device.id] === 'test'" :disabled="!!busy[device.id]" @click="act(device, 'test')">{{ t('zkteco.devices.test') }}</AppButton>
+                            <AppButton :icon="RefreshCw" :loading="busy[device.id] === 'sync'" :disabled="!!busy[device.id] || !device.is_active" @click="act(device, 'sync')">{{ t('zkteco.devices.sync') }}</AppButton>
+                        </template>
                         <AppButton size="icon" variant="ghost" :icon="Pencil" :aria-label="t('zkteco.device.edit', { name: device.name })" @click="dialog = { open: true, device }" />
                     </template>
                 </div>
             </li>
         </ul>
 
-        <DeviceDialog v-if="setup.data.value" :open="dialog.open" :device="dialog.device" :setup="setup.data.value.data" :api="api" :today="setup.data.value.data.today" @close="dialog = { open: false, device: null }" @saved="saved" />
+        <!-- Office bridges: for an app hosted online, a program on an office computer reads the devices. -->
+        <section class="mt-8">
+            <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <h2 class="text-[16px] font-semibold text-fg">{{ t('zkteco.bridge.title') }}</h2>
+                    <p class="text-[13px] text-muted">{{ t('zkteco.bridge.text') }}</p>
+                </div>
+                <AppButton v-if="can('manage')" :icon="Plus" @click="bridgeDialog = true">{{ t('zkteco.bridge.add') }}</AppButton>
+            </div>
+            <div v-if="!bridges.length" class="card px-4 py-5 text-[13px] text-muted">{{ t('zkteco.bridge.none') }}</div>
+            <ul v-else class="card divide-y divide-line">
+                <li v-for="bridge in bridges" :key="bridge.id" class="flex flex-wrap items-center gap-3 px-4 py-3" :class="bridge.revoked_at && 'opacity-60'">
+                    <span class="grid size-9 shrink-0 place-items-center rounded-lg bg-subtle text-fg-2"><Monitor class="size-4.5" aria-hidden="true" /></span>
+                    <div class="min-w-0 flex-1">
+                        <p class="truncate font-medium text-fg">{{ bridge.name }} <span class="tabular text-[12px] text-muted">…{{ bridge.token_hint }}</span></p>
+                        <p class="truncate text-[12.5px] text-muted">
+                            {{ bridge.revoked_at ? t('zkteco.bridge.is_revoked') : bridge.last_seen_at ? t('zkteco.bridge.seen', { when: formatRelative(bridge.last_seen_at), ip: bridge.last_ip ?? '' }) : t('zkteco.bridge.never_seen') }}
+                            <template v-if="bridge.devices.length"> · {{ bridge.devices.map((device) => device.name).join(', ') }}</template>
+                        </p>
+                    </div>
+                    <AppBadge v-if="bridge.revoked_at" tone="neutral" :icon="Ban">{{ t('zkteco.bridge.is_revoked') }}</AppBadge>
+                    <AppBadge v-else-if="silent(bridge)" tone="warn" dot>{{ t('zkteco.bridge.silent') }}</AppBadge>
+                    <AppBadge v-else tone="ok" :icon="CheckCircle2">{{ t('zkteco.bridge.running') }}</AppBadge>
+                    <AppButton v-if="can('manage') && !bridge.revoked_at" size="sm" variant="danger-soft" @click="revoke(bridge)">{{ t('zkteco.bridge.revoke') }}</AppButton>
+                </li>
+            </ul>
+        </section>
+
+        <DeviceDialog v-if="setup.data.value" :open="dialog.open" :device="dialog.device" :setup="setup.data.value.data" :api="api" :today="setup.data.value.data.today" :bridges="liveBridges" @close="dialog = { open: false, device: null }" @saved="saved" />
+        <BridgeDialog v-if="setup.data.value" :open="bridgeDialog" :setup="setup.data.value.data" :api="api" :program="bridgeList.data.value?.meta?.program ?? null" @close="bridgeDialog = false" @made="bridgeList.reload()" />
     </div>
 </template>

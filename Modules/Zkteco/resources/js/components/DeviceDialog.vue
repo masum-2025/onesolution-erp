@@ -18,9 +18,11 @@ const props = defineProps({
     setup: { type: Object, required: true },
     api: { type: Object, required: true },
     today: { type: String, required: true },
+    // Bridges not revoked, for "who reads it".
+    bridges: { type: Array, default: () => [] },
 });
 const emit = defineEmits(['close', 'saved']);
-const form = reactive({ name: '', unit_id: '', host: '', port: '4370', protocol: 'udp', comm_key: '', change_key: false, import_from: '', is_active: true });
+const form = reactive({ name: '', unit_id: '', bridge_id: '', host: '', port: '4370', protocol: 'udp', comm_key: '', change_key: false, import_from: '', is_active: true });
 const errors = ref({});
 const saving = ref(false);
 
@@ -28,8 +30,8 @@ watch(() => props.open, (open) => {
     if (!open) return;
     const device = props.device;
     Object.assign(form, device
-        ? { name: device.name, unit_id: device.unit_id, host: device.host, port: String(device.port), protocol: device.protocol, comm_key: '', change_key: false, import_from: device.import_from, is_active: device.is_active }
-        : { name: '', unit_id: props.setup.units?.[0]?.id ?? '', host: '', port: '4370', protocol: 'udp', comm_key: '', change_key: true, import_from: `${props.today.slice(0, 7)}-01`, is_active: true });
+        ? { name: device.name, unit_id: device.unit_id, bridge_id: device.bridge_id ?? '', host: device.host, port: String(device.port), protocol: device.protocol, comm_key: '', change_key: false, import_from: device.import_from, is_active: device.is_active }
+        : { name: '', unit_id: props.setup.units?.[0]?.id ?? '', bridge_id: props.bridges.length === 1 ? props.bridges[0].id : '', host: '', port: '4370', protocol: 'udp', comm_key: '', change_key: true, import_from: `${props.today.slice(0, 7)}-01`, is_active: true });
     errors.value = {};
 });
 
@@ -38,6 +40,7 @@ async function save() {
     errors.value = {};
     const body = {
         name: form.name.trim(), host: form.host.trim(), port: Number(form.port), protocol: form.protocol, import_from: form.import_from,
+        bridge_id: form.bridge_id || null,
         ...(form.change_key ? { comm_key: form.comm_key === '' ? null : Number(form.comm_key) } : {}),
     };
     try {
@@ -76,6 +79,14 @@ async function save() {
                     <template #default="{ id }"><input :id="id" v-model="form.port" type="number" min="1" max="65535" class="field-input" /></template>
                 </AppField>
             </div>
+            <AppField :label="t('zkteco.device.reader')" :hint="t('zkteco.device.reader_hint')" :error="errors.bridge_id?.[0]">
+                <template #default="{ id, describedby }">
+                    <select :id="id" v-model="form.bridge_id" class="field-input" :aria-describedby="describedby">
+                        <option value="">{{ t('zkteco.device.reader_app') }}</option>
+                        <option v-for="bridge in bridges" :key="bridge.id" :value="bridge.id">{{ t('zkteco.device.reader_bridge', { name: bridge.name }) }}</option>
+                    </select>
+                </template>
+            </AppField>
             <AppField :label="t('zkteco.device.protocol')" :hint="t('zkteco.device.protocol_hint')">
                 <template #default="{ id, describedby }">
                     <select :id="id" v-model="form.protocol" class="field-input" :aria-describedby="describedby">

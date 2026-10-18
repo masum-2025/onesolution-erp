@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * A ZKTeco terminal on the office network, at a branch. Its comm key is
  * kept encrypted and never sent out.
  */
-#[Fillable(['organization_id', 'unit_id', 'name', 'host', 'port', 'protocol', 'comm_key', 'import_from', 'is_active', 'serial', 'model', 'users_count', 'logs_count', 'last_attempt_at', 'last_synced_at', 'last_error', 'version'])]
+#[Fillable(['organization_id', 'unit_id', 'bridge_id', 'name', 'host', 'port', 'protocol', 'comm_key', 'import_from', 'is_active', 'serial', 'model', 'users_count', 'logs_count', 'last_attempt_at', 'last_synced_at', 'last_error', 'version'])]
 #[Hidden(['comm_key'])]
 class Device extends Model
 {

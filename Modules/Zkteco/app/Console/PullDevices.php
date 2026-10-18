@@ -33,7 +33,8 @@ class PullDevices extends Command
         $failed = 0;
         foreach ([null, ...$databases->names()] as $database) {
             $databases->onConnection($databases->connectionFor($database), function () use ($modules, $sync, $rules, $contexts, $only, $user, &$failed) {
-                $devices = Device::query()->withoutGlobalScope(OrganizationScope::class)->where('is_active', true)
+                // Devices an office bridge reads are not the app's to reach.
+                $devices = Device::query()->withoutGlobalScope(OrganizationScope::class)->where('is_active', true)->whereNull('bridge_id')
                     ->when($only !== null, fn ($query) => $query->whereKey($only))->get();
                 foreach ($devices->groupBy('organization_id') as $companyId => $list) {
                     $company = Organization::query()->find($companyId);

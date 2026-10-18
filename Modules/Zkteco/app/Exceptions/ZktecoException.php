@@ -36,6 +36,12 @@ class ZktecoException extends TenancyException
         return new self('unreachable', 422, ['reason' => __("zkteco::zkteco.reasons.{$reason}")], ['reason' => $reason]);
     }
 
+    /** An office bridge reads this device: the app cannot reach it from where it runs. */
+    public static function readByBridge(): self
+    {
+        return new self('read_by_bridge', 409);
+    }
+
     /** A device with logs is switched off, not removed. */
     public static function hasLogs(): self
     {

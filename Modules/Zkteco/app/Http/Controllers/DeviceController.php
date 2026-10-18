@@ -108,6 +108,9 @@ class DeviceController extends Controller
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('zkteco.manage', $unit);
         $found = $this->find($company, $unit, $device);
+        if ($found->bridge_id !== null) {
+            throw ZktecoException::readByBridge();
+        }
 
         return response()->json(['data' => ['facts' => $this->devices->test($company, $found), 'device' => $this->present($found->refresh())]]);
     }
@@ -118,6 +121,9 @@ class DeviceController extends Controller
         [$unit, $company] = $this->workplace($organization);
         Gate::authorize('zkteco.manage', $unit);
         $found = $this->find($company, $unit, $device);
+        if ($found->bridge_id !== null) {
+            throw ZktecoException::readByBridge();
+        }
         $result = $this->sync->pull($company, $found, $request->user());
 
         return response()->json(['data' => ['result' => $result, 'device' => $this->present($found->refresh())]]);
@@ -204,7 +210,7 @@ class DeviceController extends Controller
     private function present(Device $device, ?int $waiting = null): array
     {
         return [
-            'id' => $device->getKey(), 'unit_id' => $device->unit_id, 'name' => $device->name, 'host' => $device->host, 'port' => $device->port,
+            'id' => $device->getKey(), 'unit_id' => $device->unit_id, 'bridge_id' => $device->bridge_id, 'name' => $device->name, 'host' => $device->host, 'port' => $device->port,
             'protocol' => $device->protocol, 'has_comm_key' => $device->comm_key !== null, 'import_from' => $device->import_from->toDateString(),
             'is_active' => $device->is_active, 'serial' => $device->serial, 'model' => $device->model, 'users_count' => $device->users_count,
             'logs_count' => $device->logs_count, 'last_attempt_at' => $device->last_attempt_at?->toIso8601String(),
