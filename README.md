@@ -4109,6 +4109,27 @@ screen up to 1120 px), whatever the form. Confirmations (`confirm` prop, `tone` 
 the shared confirm and step-up dialogs) always open in the middle at their own small size. "My look" shows the three with a miniature each and a sample window
 ("Try it"). No screen changed: the style lives in `AppDialog` alone.
 
+### Form-colour templates (UI-DT)
+
+Rule `ui.dialog_tone` (preference key `dialog_tone`, same levels, locks and own choice):
+the colours of the side-panel window, set on `<html data-dialog-tone>`.
+
+- `brand_wash` (default): a faint tint of the brand or highlight colour around a white card
+  with a soft shadow.
+- `soft`: light grey around the card (the look before UI-DT).
+- `mint`: light green around a white card, the same whatever the brand colour.
+- `plain`: one colour throughout, no card.
+
+A level above turns templates on or off with the rule's allowed list (Rules → Appearance,
+"Constrain"), or locks one. A person's pick of a template turned off gives way to the
+organization's value. Each template is a block of tokens in `resources/css/app.css`
+(`--dialog-sheet`, `--dialog-card`, `--dialog-card-line`, `--dialog-card-shadow`, light and
+dark, a stronger card edge with high contrast) used by `.dialog-sheet` and `.dialog-card`.
+"My look" shows a miniature of each with a side-panel sample.
+
+Future expansion: a new template is a value in the rule's list, a CSS block and two texts
+(bn, en). No server code. A partner's own default, or a narrower list, is a rule value.
+
 ### Future expansion (UI-1)
 
 - New template (e.g. icon rail, top navigation): add its value to `ui.shell_template`, the

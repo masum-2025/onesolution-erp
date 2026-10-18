@@ -291,6 +291,95 @@
     --side-line: rgb(255 255 255 / 0.18);
 }
 
+/*
+ * Form colours of the side-panel window (rule ui.dialog_tone), on <html data-dialog-tone>
+ * or on a preview. brand_wash: a faint brand tint around a white card;
+ * soft: light grey around the card; mint: light green around the card (whatever the brand);
+ * plain: one colour, no card.
+ * A new template = a value in the rule's list plus a block here.
+ */
+:root,
+[data-dialog-tone='brand_wash'] {
+    --dialog-sheet: color-mix(in oklab, var(--brand) 7%, #f3f5f9);
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: color-mix(in oklab, var(--brand) 12%, #e3e6ee);
+    --dialog-card-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px -6px rgb(16 24 40 / 0.1);
+}
+
+[data-dialog-tone='soft'] {
+    --dialog-sheet: var(--c-canvas);
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: var(--c-line);
+    --dialog-card-shadow: 0 1px 2px rgb(16 16 20 / 0.05);
+}
+
+[data-dialog-tone='mint'] {
+    --dialog-sheet: #eef7f1;
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: #d5e9dc;
+    --dialog-card-shadow: 0 1px 2px rgb(16 60 32 / 0.05);
+}
+
+[data-dialog-tone='plain'] {
+    --dialog-sheet: var(--c-surface);
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: transparent;
+    --dialog-card-shadow: none;
+}
+
+.dark,
+.dark[data-dialog-tone='brand_wash'],
+.dark [data-dialog-tone='brand_wash'] {
+    --dialog-sheet: color-mix(in oklab, var(--brand) 9%, #0a0a0c);
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: color-mix(in oklab, var(--brand) 18%, var(--c-line));
+    --dialog-card-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.5);
+}
+
+.dark[data-dialog-tone='soft'],
+.dark [data-dialog-tone='soft'] {
+    --dialog-sheet: var(--c-canvas);
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: var(--c-line);
+    --dialog-card-shadow: none;
+}
+
+.dark[data-dialog-tone='mint'],
+.dark [data-dialog-tone='mint'] {
+    --dialog-sheet: color-mix(in oklab, #15803d 10%, #0a0a0c);
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: color-mix(in oklab, #15803d 22%, var(--c-line));
+    --dialog-card-shadow: none;
+}
+
+.dark[data-dialog-tone='plain'],
+.dark [data-dialog-tone='plain'] {
+    --dialog-sheet: var(--c-surface);
+    --dialog-card: var(--c-surface);
+    --dialog-card-line: transparent;
+    --dialog-card-shadow: none;
+}
+
+/* High contrast keeps the card's edge visible in every template that has a card. */
+[data-contrast='high'] [data-dialog-tone='brand_wash'],
+[data-contrast='high'][data-dialog-tone='brand_wash'],
+[data-contrast='high'] [data-dialog-tone='soft'],
+[data-contrast='high'][data-dialog-tone='soft'],
+[data-contrast='high'] [data-dialog-tone='mint'],
+[data-contrast='high'][data-dialog-tone='mint'] {
+    --dialog-card-line: var(--c-line-strong);
+}
+
+.dialog-sheet {
+    background: var(--dialog-sheet);
+}
+
+.dialog-card {
+    background: var(--dialog-card);
+    border: 1px solid var(--dialog-card-line);
+    box-shadow: var(--dialog-card-shadow);
+}
+
 @layer base {
     html {
         font-family: var(--font-sans);

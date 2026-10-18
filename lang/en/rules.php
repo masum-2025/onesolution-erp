@@ -50,6 +50,11 @@ return [
             'description' => 'How forms and details open: center = a box in the middle, panel = a large panel from the side (for long forms), premium = a modern card in the brand colour. Confirmations always open in the middle. Lock it to give everyone below the same style.',
             'options' => ['center' => 'Center box', 'panel' => 'Side panel', 'premium' => 'Premium'],
         ],
+        'ui_dialog_tone' => [
+            'label' => 'Form colours',
+            'description' => 'Colours of forms in the side panel: brand tint = a faint wash of the brand colour around a white card, light grey = grey around the card, green and white = light green around the card, one colour = no card. Use the allowed list to turn templates on or off for everyone below; lock it to give everyone the same.',
+            'options' => ['brand_wash' => 'Brand tint', 'soft' => 'Light grey', 'mint' => 'Green and white', 'plain' => 'One colour'],
+        ],
         'ui_accent' => [
             'label' => 'Highlight color',
             'description' => 'Color of buttons and the selected page. brand = your brand color. Lock it to keep it the same for everyone below.',

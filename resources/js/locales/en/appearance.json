@@ -64,5 +64,19 @@
         "sample_name": "Name",
         "sample_name_hint": "For example: Half-yearly exam",
         "sample_date": "Date"
+    },
+    "tone": {
+        "title": "Form colours",
+        "text": "Colours of forms that open as a side panel.",
+        "brand_wash": "Brand tint",
+        "brand_wash_text": "A faint tint of your highlight colour around a white card.",
+        "soft": "Light grey",
+        "soft_text": "Light grey around a white card.",
+        "mint": "Green and white",
+        "mint_text": "Light green around a white card.",
+        "plain": "One colour",
+        "plain_text": "One colour throughout, no card.",
+        "off": "Turned off by your organization.",
+        "note": "Your organization decides which templates are on (Rules → Appearance)."
     }
 }

@@ -8,7 +8,7 @@ import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import SourceBadge from '@/components/SourceBadge.vue';
-import { ACCENTS, accentColor, allowedChoices, appearance, applyAppearance, DIALOGS, isLocked, saveAppearance, TEMPLATES } from '@/lib/appearance';
+import { ACCENTS, accentColor, allowedChoices, appearance, applyAppearance, DIALOG_TONES, DIALOGS, isLocked, saveAppearance, TEMPLATES } from '@/lib/appearance';
 import { readableOn } from '@/lib/brand';
 import { loadMe } from '@/lib/session';
 import { setTheme, theme } from '@/lib/theme';
@@ -59,15 +59,19 @@ async function choose(setting, value) {
     }
 }
 
-const hasOwnChoice = computed(() => !!(details.value?.template?.own || details.value?.accent?.own || details.value?.dialog?.own));
+const hasOwnChoice = computed(() => ['template', 'accent', 'dialog', 'dialog_tone'].some((setting) => !!details.value?.[setting]?.own));
 
-// A sample window in the chosen style.
+// A sample window in the chosen style (the form colours show in the side panel).
 const trying = ref(false);
+const tryingTone = ref(false);
+
+/** Form colours: a template turned off above shows greyed out with why. */
+const toneOff = (tone) => !isLocked('dialog_tone') && !allowedChoices('dialog_tone').includes(tone);
 
 async function reset() {
     saving.value = 'reset';
     try {
-        const message = await saveAppearance({ template: null, accent: null, dialog: null });
+        const message = await saveAppearance({ template: null, accent: null, dialog: null, dialog_tone: null });
         await loadMe();
         toast.success(message);
     } catch (error) {
@@ -185,7 +189,7 @@ const themeOptions = computed(() => [
                     role="radio"
                     :aria-checked="appearance.dialog === style"
                     :disabled="!canPick('dialog', style) || !!saving"
-                    class="group relative rounded-2xl border p-3 text-start transition disabled:cursor-not-allowed disabled:opacity-55"
+                    class="group relative flex flex-col rounded-2xl border p-3 text-start transition disabled:cursor-not-allowed disabled:opacity-55"
                     :class="appearance.dialog === style ? 'border-brand ring-4 ring-brand/15' : 'border-line hover:border-line-strong hover:shadow-pop'"
                     @click="choose('dialog', style)"
                 >
@@ -197,10 +201,10 @@ const themeOptions = computed(() => [
                             <span class="mt-2 block h-4 rounded border border-line bg-surface" />
                             <span class="mt-2 flex justify-end gap-1"><span class="h-3 w-7 rounded bg-subtle" /><span class="h-3 w-7 rounded bg-brand" /></span>
                         </div>
-                        <div v-else-if="style === 'panel'" class="absolute inset-y-0 end-0 w-[70%] bg-canvas p-2 shadow-pop">
-                            <span class="absolute -start-2 top-2 size-4 rounded-full bg-brand ring-2 ring-canvas" />
+                        <div v-else-if="style === 'panel'" class="dialog-sheet absolute inset-y-0 end-0 w-[70%] p-2 shadow-pop">
+                            <span class="absolute -start-2 top-2 size-4 rounded-full bg-brand ring-2 ring-[var(--dialog-sheet)]" />
                             <span class="block h-2 w-16 rounded-full bg-fg/60" />
-                            <span class="mt-2 block h-14 rounded-md border border-line bg-surface" />
+                            <span class="dialog-card mt-2 block h-14 rounded-md" />
                             <span class="mt-2 flex justify-end gap-1"><span class="h-3 w-7 rounded bg-subtle" /><span class="h-3 w-7 rounded bg-brand" /></span>
                         </div>
                         <div v-else class="absolute inset-x-5 top-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-raised p-2 shadow-pop ring-1 ring-brand/30">
@@ -235,6 +239,79 @@ const themeOptions = computed(() => [
                 <template #footer>
                     <AppButton variant="ghost" @click="trying = false">{{ t('core.actions.cancel') }}</AppButton>
                     <AppButton variant="primary" :icon="Check" @click="trying = false">{{ t('core.actions.save') }}</AppButton>
+                </template>
+            </AppDialog>
+        </section>
+
+        <!-- Form colours (templates of the side panel; levels above turn them on or off) -->
+        <section class="card p-5 sm:p-6" aria-labelledby="look-tone">
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 id="look-tone" class="text-[15px] font-semibold text-fg">{{ t('appearance.tone.title') }}</h2>
+                    <p class="mt-1 text-[13px] text-muted">{{ t('appearance.tone.text') }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <AppBadge v-if="isLocked('dialog_tone')" tone="neutral" :icon="Lock">{{ lockText('dialog_tone') }}</AppBadge>
+                    <SourceBadge v-else-if="source('dialog_tone')" v-bind="source('dialog_tone')" />
+                    <AppButton size="sm" :icon="AppWindow" @click="tryingTone = true">{{ t('appearance.dialog.try') }}</AppButton>
+                </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-labelledby="look-tone">
+                <button
+                    v-for="tone in DIALOG_TONES"
+                    :key="tone"
+                    type="button"
+                    role="radio"
+                    :aria-checked="appearance.dialog_tone === tone"
+                    :disabled="!canPick('dialog_tone', tone) || !!saving"
+                    class="group relative flex flex-col rounded-2xl border p-3 text-start transition disabled:cursor-not-allowed disabled:opacity-55"
+                    :class="appearance.dialog_tone === tone ? 'border-brand ring-4 ring-brand/15' : 'border-line hover:border-line-strong hover:shadow-pop'"
+                    @click="choose('dialog_tone', tone)"
+                >
+                    <!-- Miniature of a side-panel form in this template -->
+                    <div class="dialog-sheet relative h-32 overflow-hidden rounded-xl border border-line p-3" :data-dialog-tone="tone" aria-hidden="true">
+                        <span class="block h-2 w-20 rounded-full bg-fg/60" />
+                        <span class="dialog-card mt-2.5 block rounded-lg p-2">
+                            <span class="block h-1.5 w-10 rounded-full bg-muted/50" />
+                            <span class="mt-1.5 block h-4 rounded border border-line-strong/70 bg-surface" />
+                            <span class="mt-2 block h-1.5 w-12 rounded-full bg-muted/50" />
+                            <span class="mt-1.5 block h-4 rounded border border-line-strong/70 bg-surface" />
+                        </span>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2 px-1">
+                        <span class="min-w-0">
+                            <span class="block text-[14px] font-semibold text-fg">{{ t(`appearance.tone.${tone}`) }}</span>
+                            <span class="block text-[12.5px] text-muted">{{ t(toneOff(tone) ? 'appearance.tone.off' : `appearance.tone.${tone}_text`) }}</span>
+                        </span>
+                        <span v-if="appearance.dialog_tone === tone" class="ms-auto grid size-6 shrink-0 place-items-center rounded-full bg-brand text-brand-fg" aria-hidden="true">
+                            <Check class="size-3.5" />
+                        </span>
+                    </div>
+                </button>
+            </div>
+            <p class="mt-3 text-[13px] text-muted">{{ t(isLocked('dialog_tone') ? 'appearance.locked_help' : 'appearance.tone.note') }}</p>
+
+            <!-- The sample always opens as a side panel: that is where these colours show. -->
+            <AppDialog
+                :open="tryingTone"
+                :title="t('appearance.dialog.sample_title')"
+                :description="t('appearance.dialog.sample_text')"
+                :icon="AppWindow"
+                force-style="panel"
+                @close="tryingTone = false"
+            >
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <AppField v-slot="{ id }" :label="t('appearance.dialog.sample_name')">
+                        <input :id="id" class="field-input" :placeholder="t('appearance.dialog.sample_name_hint')" />
+                    </AppField>
+                    <AppField v-slot="{ id }" :label="t('appearance.dialog.sample_date')" optional>
+                        <input :id="id" type="date" class="field-input" />
+                    </AppField>
+                </div>
+                <template #footer>
+                    <AppButton variant="ghost" @click="tryingTone = false">{{ t('core.actions.cancel') }}</AppButton>
+                    <AppButton variant="primary" :icon="Check" @click="tryingTone = false">{{ t('core.actions.save') }}</AppButton>
                 </template>
             </AppDialog>
         </section>

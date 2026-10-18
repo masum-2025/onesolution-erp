@@ -55,6 +55,16 @@ describe('applyAppearance', () => {
         expect(appearance.template).toBe('classic');
     });
 
+    it('puts the form-colour template on the page, brand tint for one it does not know', () => {
+        applyAppearance(serverLook({ dialog_tone: { value: 'plain', locked: false, allowed: ['brand_wash', 'plain'] } }));
+        expect(document.documentElement.dataset.dialogTone).toBe('plain');
+        expect(allowedChoices('dialog_tone')).toEqual(['brand_wash', 'plain']);
+
+        applyAppearance(serverLook({ dialog_tone: { value: 'neon', locked: false, allowed: [] } }));
+        expect(appearance.dialog_tone).toBe('brand_wash');
+        expect(document.documentElement.dataset.dialogTone).toBe('brand_wash');
+    });
+
     it('knows what the organization locked and what may be picked', () => {
         applyAppearance(serverLook({ template: { value: 'classic', locked: true, level: 'company', name: 'C1', allowed: ['classic'] } }));
 

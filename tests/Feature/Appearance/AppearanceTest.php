@@ -162,3 +162,42 @@ it('lets each person pick a window style, or the company lock one for everyone',
     $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog' => null])->assertOk();
     expect(myLook($this, $this->token)['dialog']['own'])->toBeNull();
 });
+
+it('offers form-colour templates, brand tint first, and keeps the person\'s pick', function () {
+    expect(myLook($this, $this->token)['dialog_tone'])->toMatchArray([
+        'value' => 'brand_wash', 'source' => 'default', 'locked' => false, 'allowed' => ['brand_wash', 'soft', 'mint', 'plain'],
+    ]);
+
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog_tone' => 'plain'])->assertOk()->assertJsonPath('data.dialog_tone', 'plain');
+    expect(myLook($this, $this->token)['dialog_tone'])->toMatchArray(['value' => 'plain', 'source' => 'user', 'own' => 'plain']);
+
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog_tone' => 'neon'])->assertUnprocessable()->assertJsonValidationErrors(['dialog_tone']);
+});
+
+it('lets a level above turn form-colour templates off', function () {
+    $this->person->forceFill(['ui_preferences' => ['dialog_tone' => 'plain']])->save();
+    partnerRule($this->w->partnerA, 'ui.dialog_tone', ['allowed' => ['brand_wash', 'soft']], RuleMode::Constrain);
+
+    // A template turned off is not offered, and a pick of it gives way to the organization's.
+    expect(myLook($this, $this->token)['dialog_tone'])->toMatchArray(['value' => 'brand_wash', 'own' => 'plain', 'allowed' => ['brand_wash', 'soft']]);
+
+    // A template still on stays the person's to pick.
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog_tone' => 'soft'])->assertOk();
+    expect(myLook($this, $this->token)['dialog_tone'])->toMatchArray(['value' => 'soft', 'source' => 'user']);
+
+    // Another partner's clients keep every template.
+    $elsewhere = createMember($this->w->c4, MembershipType::Staff);
+    $elsewhere->forceFill(['ui_preferences' => ['dialog_tone' => 'plain']])->save();
+    expect(myLook($this, orgToken($elsewhere, $this->w->c4))['dialog_tone'])->toMatchArray(['value' => 'plain', 'allowed' => ['brand_wash', 'soft', 'mint', 'plain']]);
+});
+
+it('lets a company lock one form-colour template for everyone in it', function () {
+    $this->person->forceFill(['ui_preferences' => ['dialog_tone' => 'plain']])->save();
+    orgRule($this->w->c1, 'ui.dialog_tone', 'soft', RuleMode::Lock);
+
+    expect(myLook($this, $this->token)['dialog_tone'])->toMatchArray(['value' => 'soft', 'locked' => true, 'allowed' => ['soft'], 'name' => 'C1', 'own' => 'plain']);
+
+    // Its sister company is not touched.
+    $elsewhere = createMember($this->w->c2, MembershipType::Staff);
+    expect(myLook($this, orgToken($elsewhere, $this->w->c2))['dialog_tone'])->toMatchArray(['value' => 'brand_wash', 'locked' => false]);
+});

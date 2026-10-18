@@ -19,7 +19,7 @@ use App\Platform\Rules\RuleCatalog;
 final class AppearanceResolver
 {
     /** Rule keys of the choices an organization may lock, by preference name. */
-    public const RULES = ['template' => 'ui.shell_template', 'accent' => 'ui.accent', 'dialog' => 'ui.dialog_style'];
+    public const RULES = ['template' => 'ui.shell_template', 'accent' => 'ui.accent', 'dialog' => 'ui.dialog_style', 'dialog_tone' => 'ui.dialog_tone'];
 
     public const COLOR_VISION = ['standard', 'blue_orange'];
 

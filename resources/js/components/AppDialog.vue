@@ -10,7 +10,8 @@ import { t } from '@/lib/i18n';
  * (rule ui.dialog_style, see lib/appearance.js):
  *  - center: a box in the middle (a sheet from the bottom on phones);
  *  - panel: a large panel from the end edge with a round close button on
- *    its edge, the content on a card over the page colour (long forms);
+ *    its edge, the content on a card (long forms); its colours are the
+ *    person's form-colour template (rule ui.dialog_tone, CSS .dialog-sheet/.dialog-card);
  *  - premium: a centred card with a soft brand glow, a gradient icon tile,
  *    a frosted footer and a springy entrance (none with reduced motion).
  * Confirmations (tone warn/bad, or `confirm`) always open in the middle:
@@ -27,6 +28,8 @@ const props = defineProps({
     confirm: Boolean,
     // Confirmations can open on top of a drawer or another dialog.
     layer: { type: String, default: 'z-50' },
+    // A sample of one style whatever the person's ("My look" shows the side-panel colours this way).
+    forceStyle: { type: String, default: null },
 });
 
 const emit = defineEmits(['close']);
@@ -42,7 +45,7 @@ const isConfirm = computed(() => props.confirm || props.tone !== 'brand');
 const CENTER_WIDTH = 'sm:max-w-2xl';
 const PANEL_WIDTH = 'sm:w-[min(1120px,88vw)]';
 const PREMIUM_WIDTH = 'sm:max-w-2xl';
-const style = computed(() => (isConfirm.value ? 'center' : appearance.dialog));
+const style = computed(() => (isConfirm.value ? 'center' : (props.forceStyle ?? appearance.dialog)));
 const TONES = { brand: 'bg-brand-soft text-brand-text', bad: 'bg-bad-soft text-bad', warn: 'bg-warn-soft text-warn' };
 const close = () => emit('close');
 </script>
@@ -67,13 +70,13 @@ const close = () => emit('close');
                     aria-modal="true"
                     :aria-labelledby="titleId"
                     tabindex="-1"
-                    class="fixed inset-y-0 end-0 flex w-full flex-col bg-canvas shadow-dialog outline-none"
+                    class="dialog-sheet fixed inset-y-0 end-0 flex w-full flex-col shadow-dialog outline-none"
                     :class="[layer, PANEL_WIDTH]"
                     @keydown="onKeydown"
                 >
                     <button
                         type="button"
-                        class="absolute start-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-brand text-brand-fg shadow-lg ring-4 ring-canvas transition hover:scale-105 sm:-start-5 sm:top-5"
+                        class="absolute start-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-brand text-brand-fg shadow-lg ring-4 ring-[var(--dialog-sheet)] transition hover:scale-105 sm:-start-5 sm:top-5"
                         :aria-label="t('core.actions.close')"
                         @click="close"
                     >
@@ -84,7 +87,7 @@ const close = () => emit('close');
                         <p v-if="description" class="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted">{{ description }}</p>
                     </header>
                     <div class="min-h-0 flex-1 overflow-y-auto px-5 pb-6 sm:px-8">
-                        <div class="rounded-xl border border-line bg-surface p-5 shadow-sm sm:p-6">
+                        <div class="dialog-card rounded-xl p-5 sm:p-6">
                             <slot />
                         </div>
                     </div>

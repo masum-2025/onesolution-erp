@@ -28,10 +28,14 @@ export const TEMPLATES = ['classic', 'light'];
 /** How windows (AppDialog) open: a centred box, a side panel, or the premium card. Confirmations stay centred. */
 export const DIALOGS = ['center', 'panel', 'premium'];
 
+/** Form-colour templates of the side panel (rule ui.dialog_tone; CSS [data-dialog-tone]). */
+export const DIALOG_TONES = ['brand_wash', 'soft', 'mint', 'plain'];
+
 export const appearance = reactive({
     template: 'classic',
     accent: 'brand',
     dialog: 'center',
+    dialog_tone: 'brand_wash',
     color_vision: 'standard',
     contrast: 'standard',
     // Full answer from the server: value, source, lock and allowed choices per setting.
@@ -56,12 +60,14 @@ export function applyAppearance(next) {
     appearance.template = TEMPLATES.includes(value('template')) ? value('template') : 'classic';
     appearance.accent = value('accent', 'brand');
     appearance.dialog = DIALOGS.includes(value('dialog')) ? value('dialog') : 'center';
+    appearance.dialog_tone = DIALOG_TONES.includes(value('dialog_tone')) ? value('dialog_tone') : DIALOG_TONES[0];
     appearance.color_vision = value('color_vision', 'standard');
     appearance.contrast = value('contrast', 'standard');
 
     setAttribute('shell', appearance.template);
     setAttribute('vision', appearance.color_vision);
     setAttribute('contrast', appearance.contrast);
+    setAttribute('dialog-tone', appearance.dialog_tone);
 
     const color = accentColor(appearance.accent);
     const root = document.documentElement.style;
@@ -82,7 +88,7 @@ export function isLocked(setting) {
 
 /** Choices this person may pick for a setting here. */
 export function allowedChoices(setting) {
-    const all = { template: TEMPLATES, dialog: DIALOGS };
+    const all = { template: TEMPLATES, dialog: DIALOGS, dialog_tone: DIALOG_TONES };
     return appearance.details?.[setting]?.allowed ?? all[setting] ?? ['brand', ...Object.keys(ACCENTS)];
 }
 

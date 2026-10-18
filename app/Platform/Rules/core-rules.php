@@ -772,6 +772,21 @@ return [
         'sort_order' => 172,
     ],
     [
+        'key' => 'ui.dialog_tone',
+        'type' => 'enum',
+        // Colours of a side-panel window: brand_wash = a faint brand tint around a white card,
+        // soft = light grey around the card, mint = light green around the card, plain = one colour,
+        // no card. Levels above turn templates on or off with the allowed list; a new one is a
+        // value here plus a CSS block.
+        'schema' => ['enum' => ['brand_wash', 'soft', 'mint', 'plain']],
+        'default' => 'brand_wash',
+        'label' => 'rules.core.ui_dialog_tone.label',
+        'description' => 'rules.core.ui_dialog_tone.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
+        'category' => 'appearance',
+        'sort_order' => 173,
+    ],
+    [
         'key' => 'ui.accent',
         'type' => 'enum',
         // "brand" = the partner's brand color; the others are fixed, contrast-checked colors.

@@ -1,4 +1,5 @@
 /* global __BUILD_ID__ */
+import { readTabNote, writeTabNote } from './storage';
 
 /**
  * Keeping open tabs on the release the server has. A tab keeps running the
@@ -11,7 +12,7 @@
 export const appVersion = { current: typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'dev', stale: false };
 
 const EVERY_MS = 5 * 60 * 1000;
-const RELOADED_KEY = 'os-chunk-reload';
+const RELOADED_KEY = 'chunk-reload';
 
 export async function checkVersion() {
     try {
@@ -35,12 +36,9 @@ export function watchVersion() {
 
 /** A file of an older build is gone (a page loaded lazily): load that page fresh, once per address. */
 export function reloadForMissingFile(path) {
-    try {
-        if (sessionStorage.getItem(RELOADED_KEY) === path) return false;
-        sessionStorage.setItem(RELOADED_KEY, path);
-    } catch {
-        // No session storage: reload anyway, the browser keeps it from looping on its own page load.
-    }
+    if (readTabNote(RELOADED_KEY) === path) return false;
+    // Without tab storage it reloads anyway: the browser keeps it from looping on its own page load.
+    writeTabNote(RELOADED_KEY, path);
     globalThis.location.assign(path);
     return true;
 }
