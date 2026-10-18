@@ -50,10 +50,20 @@ return [
             'description' => 'How forms and details open: center = a box in the middle, panel = a large panel from the side (for long forms), premium = a modern card in the brand colour. Confirmations always open in the middle. Lock it to give everyone below the same style.',
             'options' => ['center' => 'Center box', 'panel' => 'Side panel', 'premium' => 'Premium'],
         ],
+        'ui_page_tone' => [
+            'label' => 'Page colours (header and body)',
+            'description' => 'Colours of the page body and the header above it. Use the allowed list to turn templates on or off for everyone below; lock it to give everyone the same.',
+            'options' => ['soft' => 'Light grey', 'white' => 'White', 'slate' => 'Slate', 'brand_wash' => 'Brand tint', 'brand_header' => 'Brand header', 'mint' => 'Green and white'],
+        ],
+        'ui_dialog_band' => [
+            'label' => 'Brand band in side-panel forms',
+            'description' => 'The brand band (the colours under the header) below the title of side-panel forms. Shown only when the brand has band colours. Lock it to give everyone the same.',
+            'options' => ['on' => 'On', 'off' => 'Off'],
+        ],
         'ui_dialog_tone' => [
             'label' => 'Form colours',
-            'description' => 'Colours of forms in the side panel: brand tint = a faint wash of the brand colour around a white card, light grey = grey around the card, green and white = light green around the card, one colour = no card. Use the allowed list to turn templates on or off for everyone below; lock it to give everyone the same.',
-            'options' => ['brand_wash' => 'Brand tint', 'soft' => 'Light grey', 'mint' => 'Green and white', 'plain' => 'One colour'],
+            'description' => 'Colours of forms in the side panel: brand tint = a faint wash of the brand colour around a white card, light grey = grey around the card, grey card = white around a light grey card, green and white = light green around the card, one colour = no card. Use the allowed list to turn templates on or off for everyone below; lock it to give everyone the same.',
+            'options' => ['brand_wash' => 'Brand tint', 'soft' => 'Light grey', 'grey_card' => 'Grey card', 'mint' => 'Green and white', 'plain' => 'One colour'],
         ],
         'ui_accent' => [
             'label' => 'Highlight color',

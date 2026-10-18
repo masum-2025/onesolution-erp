@@ -7,9 +7,10 @@ import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
+import AppSwitch from '@/components/AppSwitch.vue';
 import SourceBadge from '@/components/SourceBadge.vue';
-import { ACCENTS, accentColor, allowedChoices, appearance, applyAppearance, DIALOG_TONES, DIALOGS, isLocked, saveAppearance, TEMPLATES } from '@/lib/appearance';
-import { readableOn } from '@/lib/brand';
+import { ACCENTS, accentColor, allowedChoices, appearance, applyAppearance, DIALOG_TONES, DIALOGS, PAGE_TONES, isLocked, saveAppearance, TEMPLATES } from '@/lib/appearance';
+import { brand, readableOn } from '@/lib/brand';
 import { loadMe } from '@/lib/session';
 import { setTheme, theme } from '@/lib/theme';
 import { toast } from '@/lib/toast';
@@ -59,19 +60,20 @@ async function choose(setting, value) {
     }
 }
 
-const hasOwnChoice = computed(() => ['template', 'accent', 'dialog', 'dialog_tone'].some((setting) => !!details.value?.[setting]?.own));
+const hasOwnChoice = computed(() => ['template', 'accent', 'dialog', 'dialog_tone', 'dialog_band', 'page_tone'].some((setting) => !!details.value?.[setting]?.own));
 
 // A sample window in the chosen style (the form colours show in the side panel).
 const trying = ref(false);
 const tryingTone = ref(false);
 
-/** Form colours: a template turned off above shows greyed out with why. */
-const toneOff = (tone) => !isLocked('dialog_tone') && !allowedChoices('dialog_tone').includes(tone);
+/** A colour template turned off above shows greyed out with why. */
+const turnedOff = (setting, value) => !isLocked(setting) && !allowedChoices(setting).includes(value);
+const toneOff = (tone) => turnedOff('dialog_tone', tone);
 
 async function reset() {
     saving.value = 'reset';
     try {
-        const message = await saveAppearance({ template: null, accent: null, dialog: null, dialog_tone: null });
+        const message = await saveAppearance({ template: null, accent: null, dialog: null, dialog_tone: null, dialog_band: null, page_tone: null });
         await loadMe();
         toast.success(message);
     } catch (error) {
@@ -167,6 +169,62 @@ const themeOptions = computed(() => [
             <p v-if="isLocked('template')" class="mt-3 text-[13px] text-muted">{{ t('appearance.locked_help') }}</p>
         </section>
 
+        <!-- Page colours: header and body (templates; levels above turn them on or off) -->
+        <section class="card p-5 sm:p-6" aria-labelledby="look-page">
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 id="look-page" class="text-[15px] font-semibold text-fg">{{ t('appearance.page.title') }}</h2>
+                    <p class="mt-1 text-[13px] text-muted">{{ t('appearance.page.text') }}</p>
+                </div>
+                <AppBadge v-if="isLocked('page_tone')" tone="neutral" :icon="Lock">{{ lockText('page_tone') }}</AppBadge>
+                <SourceBadge v-else-if="source('page_tone')" v-bind="source('page_tone')" />
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-labelledby="look-page">
+                <button
+                    v-for="tone in PAGE_TONES"
+                    :key="tone"
+                    type="button"
+                    role="radio"
+                    :aria-checked="appearance.page_tone === tone"
+                    :disabled="!canPick('page_tone', tone) || !!saving"
+                    class="group relative flex flex-col rounded-2xl border p-3 text-start transition disabled:cursor-not-allowed disabled:opacity-55"
+                    :class="appearance.page_tone === tone ? 'border-brand ring-4 ring-brand/15' : 'border-line hover:border-line-strong hover:shadow-pop'"
+                    @click="choose('page_tone', tone)"
+                >
+                    <!-- Miniature of a page in this template: header strip, body, two cards -->
+                    <div class="flex h-32 flex-col overflow-hidden rounded-xl border border-line bg-canvas" :data-page-tone="tone" aria-hidden="true">
+                        <div class="flex h-7 shrink-0 items-center gap-1.5 border-b border-line bg-[var(--header-bg)] px-2.5">
+                            <span class="h-3.5 flex-1 rounded border border-line bg-surface" />
+                            <span class="h-3.5 w-7 rounded bg-brand" />
+                            <span class="size-3.5 rounded-full bg-muted/40" />
+                        </div>
+                        <div class="grid flex-1 grid-cols-2 gap-2 p-2.5">
+                            <span class="rounded-md border border-line bg-surface p-1.5">
+                                <span class="block h-1.5 w-10 rounded-full bg-muted/50" />
+                                <span class="mt-1.5 block h-3 w-8 rounded bg-fg/60" />
+                            </span>
+                            <span class="rounded-md border border-line bg-surface p-1.5">
+                                <span class="block h-1.5 w-8 rounded-full bg-muted/50" />
+                                <span class="mt-1.5 block h-3 w-10 rounded bg-fg/60" />
+                            </span>
+                            <span class="col-span-2 rounded-md border border-line bg-surface" />
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2 px-1">
+                        <span class="min-w-0">
+                            <span class="block text-[14px] font-semibold text-fg">{{ t(`appearance.page.${tone}`) }}</span>
+                            <span class="block text-[12.5px] text-muted">{{ t(turnedOff('page_tone', tone) ? 'appearance.tone.off' : `appearance.page.${tone}_text`) }}</span>
+                        </span>
+                        <span v-if="appearance.page_tone === tone" class="ms-auto grid size-6 shrink-0 place-items-center rounded-full bg-brand text-brand-fg" aria-hidden="true">
+                            <Check class="size-3.5" />
+                        </span>
+                    </div>
+                </button>
+            </div>
+            <p class="mt-3 text-[13px] text-muted">{{ t(isLocked('page_tone') ? 'appearance.locked_help' : 'appearance.tone.note') }}</p>
+        </section>
+
         <!-- Window style -->
         <section class="card p-5 sm:p-6" aria-labelledby="look-dialog">
             <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -227,6 +285,26 @@ const themeOptions = computed(() => [
             </div>
             <p class="mt-3 text-[13px] text-muted">{{ t(isLocked('dialog') ? 'appearance.locked_help' : 'appearance.dialog.confirm_note') }}</p>
 
+            <!-- Brand band below the title of side-panel forms (rule ui.dialog_band) -->
+            <div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line p-4">
+                <div class="flex h-1.5 w-16 shrink-0 overflow-hidden rounded-full bg-subtle" aria-hidden="true">
+                    <span v-for="(color, index) in brand.band_colors" :key="index" class="flex-1" :style="{ background: color }" />
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[14px] font-semibold text-fg">{{ t('appearance.band.title') }}</p>
+                    <p class="text-[12.5px] text-muted">{{ t(brand.band_colors?.length ? 'appearance.band.text' : 'appearance.band.no_colors') }}</p>
+                </div>
+                <AppBadge v-if="isLocked('dialog_band')" tone="neutral" :icon="Lock">{{ lockText('dialog_band') }}</AppBadge>
+                <SourceBadge v-else-if="source('dialog_band')" v-bind="source('dialog_band')" />
+                <AppSwitch
+                    :model-value="appearance.dialog_band === 'on'"
+                    :label="t('appearance.band.title')"
+                    :disabled="isLocked('dialog_band') || !canPick('dialog_band', appearance.dialog_band === 'on' ? 'off' : 'on')"
+                    :busy="saving === 'dialog_band'"
+                    @update:model-value="(on) => choose('dialog_band', on ? 'on' : 'off')"
+                />
+            </div>
+
             <AppDialog :open="trying" :title="t('appearance.dialog.sample_title')" :description="t('appearance.dialog.sample_text')" :icon="AppWindow" @close="trying = false">
                 <div class="grid gap-4 sm:grid-cols-2">
                     <AppField v-slot="{ id }" :label="t('appearance.dialog.sample_name')">
@@ -257,7 +335,7 @@ const themeOptions = computed(() => [
                 </div>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-labelledby="look-tone">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" role="radiogroup" aria-labelledby="look-tone">
                 <button
                     v-for="tone in DIALOG_TONES"
                     :key="tone"

@@ -29,9 +29,17 @@ export const TEMPLATES = ['classic', 'light'];
 export const DIALOGS = ['center', 'panel', 'premium'];
 
 /** Form-colour templates of the side panel (rule ui.dialog_tone; CSS [data-dialog-tone]). */
-export const DIALOG_TONES = ['brand_wash', 'soft', 'mint', 'plain'];
+export const DIALOG_TONES = ['brand_wash', 'soft', 'grey_card', 'mint', 'plain'];
+
+/** Page colours, header and body (rule ui.page_tone; CSS [data-page-tone]). */
+export const PAGE_TONES = ['soft', 'white', 'slate', 'brand_wash', 'brand_header', 'mint'];
+
+/** Brand band below the title of side-panel windows (rule ui.dialog_band). */
+export const DIALOG_BANDS = ['on', 'off'];
 
 export const appearance = reactive({
+    page_tone: 'soft',
+    dialog_band: 'on',
     template: 'classic',
     accent: 'brand',
     dialog: 'center',
@@ -68,6 +76,9 @@ export function applyAppearance(next) {
     setAttribute('vision', appearance.color_vision);
     setAttribute('contrast', appearance.contrast);
     setAttribute('dialog-tone', appearance.dialog_tone);
+    appearance.dialog_band = DIALOG_BANDS.includes(value('dialog_band')) ? value('dialog_band') : DIALOG_BANDS[0];
+    appearance.page_tone = PAGE_TONES.includes(value('page_tone')) ? value('page_tone') : PAGE_TONES[0];
+    setAttribute('page-tone', appearance.page_tone);
 
     const color = accentColor(appearance.accent);
     const root = document.documentElement.style;
@@ -77,6 +88,7 @@ export function applyAppearance(next) {
     // Remembered on this browser only so the next page load starts in the right look
     // (the Blade shell applies these before first paint). Not personal data.
     writePref('shell', appearance.template);
+    writePref('page', appearance.page_tone === PAGE_TONES[0] ? null : appearance.page_tone);
     writePref('vision', appearance.color_vision === 'standard' ? null : appearance.color_vision);
     writePref('contrast', appearance.contrast === 'standard' ? null : appearance.contrast);
 }
@@ -88,7 +100,7 @@ export function isLocked(setting) {
 
 /** Choices this person may pick for a setting here. */
 export function allowedChoices(setting) {
-    const all = { template: TEMPLATES, dialog: DIALOGS, dialog_tone: DIALOG_TONES };
+    const all = { template: TEMPLATES, dialog: DIALOGS, dialog_tone: DIALOG_TONES, dialog_band: DIALOG_BANDS, page_tone: PAGE_TONES };
     return appearance.details?.[setting]?.allowed ?? all[setting] ?? ['brand', ...Object.keys(ACCENTS)];
 }
 

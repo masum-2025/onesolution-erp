@@ -20,7 +20,7 @@ class AppearanceRequest extends StrictFormRequest
     {
         $appearance = app(AppearanceResolver::class);
 
-        return collect(['template', 'accent', 'dialog', 'dialog_tone', 'color_vision', 'contrast'])
+        return collect(['template', 'accent', 'dialog', 'dialog_tone', 'dialog_band', 'page_tone', 'color_vision', 'contrast'])
             ->mapWithKeys(fn (string $field) => [$field => ['sometimes', 'nullable', 'string', Rule::in($appearance->options($field))]])
             ->all();
     }

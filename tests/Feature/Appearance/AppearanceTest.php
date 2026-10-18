@@ -165,7 +165,7 @@ it('lets each person pick a window style, or the company lock one for everyone',
 
 it('offers form-colour templates, brand tint first, and keeps the person\'s pick', function () {
     expect(myLook($this, $this->token)['dialog_tone'])->toMatchArray([
-        'value' => 'brand_wash', 'source' => 'default', 'locked' => false, 'allowed' => ['brand_wash', 'soft', 'mint', 'plain'],
+        'value' => 'brand_wash', 'source' => 'default', 'locked' => false, 'allowed' => ['brand_wash', 'soft', 'grey_card', 'mint', 'plain'],
     ]);
 
     $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog_tone' => 'plain'])->assertOk()->assertJsonPath('data.dialog_tone', 'plain');
@@ -188,7 +188,7 @@ it('lets a level above turn form-colour templates off', function () {
     // Another partner's clients keep every template.
     $elsewhere = createMember($this->w->c4, MembershipType::Staff);
     $elsewhere->forceFill(['ui_preferences' => ['dialog_tone' => 'plain']])->save();
-    expect(myLook($this, orgToken($elsewhere, $this->w->c4))['dialog_tone'])->toMatchArray(['value' => 'plain', 'allowed' => ['brand_wash', 'soft', 'mint', 'plain']]);
+    expect(myLook($this, orgToken($elsewhere, $this->w->c4))['dialog_tone'])->toMatchArray(['value' => 'plain', 'allowed' => ['brand_wash', 'soft', 'grey_card', 'mint', 'plain']]);
 });
 
 it('lets a company lock one form-colour template for everyone in it', function () {
@@ -200,4 +200,38 @@ it('lets a company lock one form-colour template for everyone in it', function (
     // Its sister company is not touched.
     $elsewhere = createMember($this->w->c2, MembershipType::Staff);
     expect(myLook($this, orgToken($elsewhere, $this->w->c2))['dialog_tone'])->toMatchArray(['value' => 'brand_wash', 'locked' => false]);
+});
+
+it('offers page-colour templates for header and body, each turned on or off above', function () {
+    expect(myLook($this, $this->token)['page_tone'])->toMatchArray([
+        'value' => 'soft', 'source' => 'default', 'allowed' => ['soft', 'white', 'slate', 'brand_wash', 'brand_header', 'mint'],
+    ]);
+
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['page_tone' => 'mint'])->assertOk()->assertJsonPath('data.page_tone', 'mint');
+    expect(myLook($this, $this->token)['page_tone'])->toMatchArray(['value' => 'mint', 'source' => 'user']);
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['page_tone' => 'neon'])->assertUnprocessable()->assertJsonValidationErrors(['page_tone']);
+
+    // The company turns green off: the person's pick gives way, the others stay open.
+    orgRule($this->w->c1, 'ui.page_tone', ['allowed' => ['soft', 'white']], RuleMode::Constrain);
+    expect(myLook($this, $this->token)['page_tone'])->toMatchArray(['value' => 'soft', 'own' => 'mint', 'allowed' => ['soft', 'white']]);
+
+    // Its sister company is not touched.
+    $elsewhere = createMember($this->w->c2, MembershipType::Staff);
+    $elsewhere->forceFill(['ui_preferences' => ['page_tone' => 'mint']])->save();
+    expect(myLook($this, orgToken($elsewhere, $this->w->c2))['page_tone'])->toMatchArray(['value' => 'mint', 'locked' => false]);
+});
+
+it('shows the brand band in side-panel forms unless turned off, by the person or a lock above', function () {
+    expect(myLook($this, $this->token)['dialog_band'])->toMatchArray(['value' => 'on', 'source' => 'default', 'allowed' => ['on', 'off']]);
+
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog_band' => 'off'])->assertOk()->assertJsonPath('data.dialog_band', 'off');
+    expect(myLook($this, $this->token)['dialog_band'])->toMatchArray(['value' => 'off', 'source' => 'user']);
+    $this->asToken($this->token)->putJson('/api/me/appearance', ['dialog_band' => 'maybe'])->assertUnprocessable()->assertJsonValidationErrors(['dialog_band']);
+
+    orgRule($this->w->c1, 'ui.dialog_band', 'on', RuleMode::Lock);
+    expect(myLook($this, $this->token)['dialog_band'])->toMatchArray(['value' => 'on', 'locked' => true, 'own' => 'off']);
+
+    $elsewhere = createMember($this->w->c2, MembershipType::Staff);
+    $elsewhere->forceFill(['ui_preferences' => ['dialog_band' => 'off']])->save();
+    expect(myLook($this, orgToken($elsewhere, $this->w->c2))['dialog_band'])->toMatchArray(['value' => 'off', 'locked' => false]);
 });

@@ -4117,6 +4117,7 @@ the colours of the side-panel window, set on `<html data-dialog-tone>`.
 - `brand_wash` (default): a faint tint of the brand or highlight colour around a white card
   with a soft shadow.
 - `soft`: light grey around the card (the look before UI-DT).
+- `grey_card`: `soft` turned round, white around a light grey card (the fields stay white on it).
 - `mint`: light green around a white card, the same whatever the brand colour.
 - `plain`: one colour throughout, no card.
 
@@ -4129,6 +4130,27 @@ dark, a stronger card edge with high contrast) used by `.dialog-sheet` and `.dia
 
 Future expansion: a new template is a value in the rule's list, a CSS block and two texts
 (bn, en). No server code. A partner's own default, or a narrower list, is a rule value.
+
+Brand band: rule `ui.dialog_band` (`on` default / `off`, preference key `dialog_band`, same
+levels, lock and own choice) draws the brand's band colours (`partner_brands.band_colors`,
+as under the header) below the title of side-panel windows. Nothing shows when the brand
+has no band colours. "My look" has a switch for it under the window style.
+
+### Page-colour templates (UI-PT)
+
+Rule `ui.page_tone` (preference key `page_tone`, same levels, allowed list, lock and own
+choice): the page body and the header, set on `<html data-page-tone>` (and before first
+paint from the `os.page` browser preference).
+
+- `soft` (default): light grey body (the original look), frosted header in the same colour.
+- `white`: white body and header. `slate`: cool grey body, white header.
+- `brand_wash`: a faint brand tint on the body. `brand_header`: a light brand-shade header.
+- `mint`: light green body, white header.
+
+Each template sets `--c-canvas` (so everything drawn on the page follows) and `--header-bg`
+(used by `.header-glass`), light and dark. Header colours stay light enough for the normal
+text colours. "My look" shows a miniature of each. A new template is a value in the list, a
+CSS block and two texts (bn, en).
 
 ### Future expansion (UI-1)
 

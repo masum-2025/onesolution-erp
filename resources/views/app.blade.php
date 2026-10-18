@@ -16,10 +16,11 @@
     <script nonce="{{ Vite::cspNonce() }}">
         // Before first paint: theme and language from this browser's saved preferences.
         (function () {
-            var d = document.documentElement, theme = 'system', locale = null, shell = null, vision = null, contrast = null;
-            try { theme = localStorage.getItem('os.theme') || 'system'; locale = localStorage.getItem('os.locale'); shell = localStorage.getItem('os.shell'); vision = localStorage.getItem('os.vision'); contrast = localStorage.getItem('os.contrast'); } catch (e) {}
+            var d = document.documentElement, theme = 'system', locale = null, shell = null, vision = null, contrast = null, page = null;
+            try { theme = localStorage.getItem('os.theme') || 'system'; locale = localStorage.getItem('os.locale'); shell = localStorage.getItem('os.shell'); vision = localStorage.getItem('os.vision'); contrast = localStorage.getItem('os.contrast'); page = localStorage.getItem('os.page'); } catch (e) {}
             // Look of the app as last applied here (the server's answer replaces it once loaded).
             d.setAttribute('data-shell', shell === 'light' ? 'light' : 'classic');
+            if (page && /^[a-z_]{1,20}$/.test(page)) d.setAttribute('data-page-tone', page);
             if (vision === 'blue_orange') d.setAttribute('data-vision', vision);
             if (contrast === 'high') d.setAttribute('data-contrast', contrast);
             var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);

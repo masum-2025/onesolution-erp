@@ -65,6 +65,24 @@ describe('applyAppearance', () => {
         expect(document.documentElement.dataset.dialogTone).toBe('brand_wash');
     });
 
+    it('puts the page-colour template on the page and remembers it for the next load', () => {
+        applyAppearance(serverLook({ page_tone: { value: 'slate', locked: false, allowed: ['soft', 'slate'] } }));
+        expect(document.documentElement.dataset.pageTone).toBe('slate');
+        expect(window.localStorage.getItem('os.page')).toBe('slate');
+
+        applyAppearance(serverLook({ page_tone: { value: 'neon', locked: false, allowed: [] } }));
+        expect(appearance.page_tone).toBe('soft');
+        expect(window.localStorage.getItem('os.page')).toBeNull();
+    });
+
+    it('keeps the brand band on unless the answer turns it off', () => {
+        applyAppearance(serverLook({ dialog_band: { value: 'off', locked: false, allowed: ['on', 'off'] } }));
+        expect(appearance.dialog_band).toBe('off');
+
+        applyAppearance(serverLook({ dialog_band: { value: 'sideways', locked: false, allowed: [] } }));
+        expect(appearance.dialog_band).toBe('on');
+    });
+
     it('knows what the organization locked and what may be picked', () => {
         applyAppearance(serverLook({ template: { value: 'classic', locked: true, level: 'company', name: 'C1', allowed: ['classic'] } }));
 

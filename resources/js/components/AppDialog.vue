@@ -3,6 +3,7 @@ import { computed, ref, toRef, useId } from 'vue';
 import { X } from 'lucide-vue-next';
 import { useModal } from '@/lib/useModal';
 import { appearance } from '@/lib/appearance';
+import { brand } from '@/lib/brand';
 import { t } from '@/lib/i18n';
 
 /**
@@ -46,6 +47,7 @@ const CENTER_WIDTH = 'sm:max-w-2xl';
 const PANEL_WIDTH = 'sm:w-[min(1120px,88vw)]';
 const PREMIUM_WIDTH = 'sm:max-w-2xl';
 const style = computed(() => (isConfirm.value ? 'center' : (props.forceStyle ?? appearance.dialog)));
+const showBand = computed(() => appearance.dialog_band !== 'off' && brand.band_colors?.length > 0);
 const TONES = { brand: 'bg-brand-soft text-brand-text', bad: 'bg-bad-soft text-bad', warn: 'bg-warn-soft text-warn' };
 const close = () => emit('close');
 </script>
@@ -85,6 +87,10 @@ const close = () => emit('close');
                     <header class="px-5 pt-16 pb-4 sm:px-8 sm:pt-6">
                         <h2 :id="titleId" class="text-[20px] font-semibold tracking-[-0.01em] text-fg">{{ title }}</h2>
                         <p v-if="description" class="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted">{{ description }}</p>
+                        <!-- The brand band, as under the app header (rule ui.dialog_band). -->
+                        <div v-if="showBand" class="mt-4 flex h-1 overflow-hidden rounded-full" data-dialog-band aria-hidden="true">
+                            <span v-for="(color, index) in brand.band_colors" :key="index" class="flex-1" :style="{ background: color }" />
+                        </div>
                     </header>
                     <div class="min-h-0 flex-1 overflow-y-auto px-5 pb-6 sm:px-8">
                         <div class="dialog-card rounded-xl p-5 sm:p-6">

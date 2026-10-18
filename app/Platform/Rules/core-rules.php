@@ -775,16 +775,45 @@ return [
         'key' => 'ui.dialog_tone',
         'type' => 'enum',
         // Colours of a side-panel window: brand_wash = a faint brand tint around a white card,
-        // soft = light grey around the card, mint = light green around the card, plain = one colour,
-        // no card. Levels above turn templates on or off with the allowed list; a new one is a
-        // value here plus a CSS block.
-        'schema' => ['enum' => ['brand_wash', 'soft', 'mint', 'plain']],
+        // soft = light grey around the card, grey_card = white around a light grey card (soft turned
+        // round), mint = light green around the card, plain = one colour, no card. Levels above turn
+        // templates on or off with the allowed list; a new one is a value here plus a CSS block.
+        'schema' => ['enum' => ['brand_wash', 'soft', 'grey_card', 'mint', 'plain']],
         'default' => 'brand_wash',
         'label' => 'rules.core.ui_dialog_tone.label',
         'description' => 'rules.core.ui_dialog_tone.description',
         'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
         'category' => 'appearance',
         'sort_order' => 173,
+    ],
+    [
+        'key' => 'ui.dialog_band',
+        'type' => 'enum',
+        // The brand band (the partner's band colours, as under the header) below the title of a
+        // side-panel window: on or off. Shown only when the brand has band colours.
+        'schema' => ['enum' => ['on', 'off']],
+        'default' => 'on',
+        'label' => 'rules.core.ui_dialog_band.label',
+        'description' => 'rules.core.ui_dialog_band.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
+        'category' => 'appearance',
+        'sort_order' => 173,
+    ],
+    [
+        'key' => 'ui.page_tone',
+        'type' => 'enum',
+        // Colours of the page body and the header: soft = light grey body (the original look),
+        // white, slate = cool grey body under a white header, brand_wash = a faint brand tint,
+        // brand_header = a brand-tinted header over the grey body, mint = light green body.
+        // Levels above turn templates on or off with the allowed list; a new one is a value
+        // here plus a CSS block.
+        'schema' => ['enum' => ['soft', 'white', 'slate', 'brand_wash', 'brand_header', 'mint']],
+        'default' => 'soft',
+        'label' => 'rules.core.ui_page_tone.label',
+        'description' => 'rules.core.ui_page_tone.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch'],
+        'category' => 'appearance',
+        'sort_order' => 174,
     ],
     [
         'key' => 'ui.accent',

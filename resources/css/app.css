@@ -294,7 +294,7 @@
 /*
  * Form colours of the side-panel window (rule ui.dialog_tone), on <html data-dialog-tone>
  * or on a preview. brand_wash: a faint brand tint around a white card;
- * soft: light grey around the card; mint: light green around the card (whatever the brand);
+ * soft: light grey around the card; grey_card: white around a light grey card; mint: light green around the card (whatever the brand);
  * plain: one colour, no card.
  * A new template = a value in the rule's list plus a block here.
  */
@@ -311,6 +311,13 @@
     --dialog-card: var(--c-surface);
     --dialog-card-line: var(--c-line);
     --dialog-card-shadow: 0 1px 2px rgb(16 16 20 / 0.05);
+}
+
+[data-dialog-tone='grey_card'] {
+    --dialog-sheet: var(--c-surface);
+    --dialog-card: #f4f4f6;
+    --dialog-card-line: var(--c-line);
+    --dialog-card-shadow: none;
 }
 
 [data-dialog-tone='mint'] {
@@ -344,6 +351,14 @@
     --dialog-card-shadow: none;
 }
 
+.dark[data-dialog-tone='grey_card'],
+.dark [data-dialog-tone='grey_card'] {
+    --dialog-sheet: var(--c-surface);
+    --dialog-card: var(--c-subtle);
+    --dialog-card-line: var(--c-line);
+    --dialog-card-shadow: none;
+}
+
 .dark[data-dialog-tone='mint'],
 .dark [data-dialog-tone='mint'] {
     --dialog-sheet: color-mix(in oklab, #15803d 10%, #0a0a0c);
@@ -366,8 +381,93 @@
 [data-contrast='high'] [data-dialog-tone='soft'],
 [data-contrast='high'][data-dialog-tone='soft'],
 [data-contrast='high'] [data-dialog-tone='mint'],
-[data-contrast='high'][data-dialog-tone='mint'] {
+[data-contrast='high'][data-dialog-tone='mint'],
+[data-contrast='high'] [data-dialog-tone='grey_card'],
+[data-contrast='high'][data-dialog-tone='grey_card'] {
     --dialog-card-line: var(--c-line-strong);
+}
+
+/*
+ * Page colours (rule ui.page_tone), on <html data-page-tone> or a preview: the page body
+ * (--c-canvas, so everything drawn "on the page" follows) and the header above it
+ * (--header-bg, frosted). Header text stays the normal text colours, so every header
+ * colour here is light enough for them (4.5:1). Each template has a dark version.
+ */
+[data-page-tone='soft'] {
+    --c-canvas: #f7f7f8;
+    --header-bg: var(--c-canvas);
+}
+
+[data-page-tone='white'] {
+    --c-canvas: #ffffff;
+    --header-bg: #ffffff;
+}
+
+[data-page-tone='slate'] {
+    --c-canvas: #eef1f5;
+    --header-bg: #ffffff;
+}
+
+[data-page-tone='brand_wash'] {
+    --c-canvas: color-mix(in oklab, var(--brand) 6%, #f5f6f9);
+    --header-bg: #ffffff;
+}
+
+[data-page-tone='brand_header'] {
+    --c-canvas: #f7f7f8;
+    --header-bg: color-mix(in oklab, var(--brand) 13%, #ffffff);
+}
+
+[data-page-tone='mint'] {
+    --c-canvas: #eef7f1;
+    --header-bg: #ffffff;
+}
+
+.dark[data-page-tone='soft'],
+.dark [data-page-tone='soft'] {
+    --c-canvas: #0a0a0c;
+    --header-bg: var(--c-canvas);
+}
+
+.dark[data-page-tone='white'],
+.dark [data-page-tone='white'] {
+    --c-canvas: #121215;
+    --header-bg: #121215;
+}
+
+.dark[data-page-tone='slate'],
+.dark [data-page-tone='slate'] {
+    --c-canvas: #0b0e13;
+    --header-bg: #121215;
+}
+
+.dark[data-page-tone='brand_wash'],
+.dark [data-page-tone='brand_wash'] {
+    --c-canvas: color-mix(in oklab, var(--brand) 7%, #0a0a0c);
+    --header-bg: #121215;
+}
+
+.dark[data-page-tone='brand_header'],
+.dark [data-page-tone='brand_header'] {
+    --c-canvas: #0a0a0c;
+    --header-bg: color-mix(in oklab, var(--brand) 20%, #121215);
+}
+
+.dark[data-page-tone='mint'],
+.dark [data-page-tone='mint'] {
+    --c-canvas: color-mix(in oklab, #15803d 8%, #0a0a0c);
+    --header-bg: #121215;
+}
+
+/* Tailwind's bg-canvas reads --color-canvas where it is declared: re-declare it on a preview. */
+[data-page-tone] {
+    --color-canvas: var(--c-canvas);
+}
+
+.header-glass {
+    background: color-mix(in oklab, var(--header-bg, var(--c-canvas)) 82%, transparent);
+    backdrop-filter: saturate(1.6) blur(14px);
+    -webkit-backdrop-filter: saturate(1.6) blur(14px);
 }
 
 .dialog-sheet {

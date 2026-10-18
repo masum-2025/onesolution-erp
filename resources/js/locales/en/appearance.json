@@ -65,6 +65,27 @@
         "sample_name_hint": "For example: Half-yearly exam",
         "sample_date": "Date"
     },
+    "band": {
+        "title": "Brand band in side-panel forms",
+        "text": "The band of brand colours (as under the header) below the form's title.",
+        "no_colors": "Your brand has no band colours yet, so nothing shows."
+    },
+    "page": {
+        "title": "Page colours",
+        "text": "Colours of the page body and the header above it.",
+        "soft": "Light grey",
+        "soft_text": "Light grey body, white cards.",
+        "white": "White",
+        "white_text": "White body and header, cards with a fine line.",
+        "slate": "Slate",
+        "slate_text": "Cool grey body under a white header.",
+        "brand_wash": "Brand tint",
+        "brand_wash_text": "A faint tint of your highlight colour on the body.",
+        "brand_header": "Brand header",
+        "brand_header_text": "Header in a light shade of your highlight colour.",
+        "mint": "Green and white",
+        "mint_text": "Light green body under a white header."
+    },
     "tone": {
         "title": "Form colours",
         "text": "Colours of forms that open as a side panel.",
@@ -72,6 +93,8 @@
         "brand_wash_text": "A faint tint of your highlight colour around a white card.",
         "soft": "Light grey",
         "soft_text": "Light grey around a white card.",
+        "grey_card": "Grey card",
+        "grey_card_text": "White around a light grey card.",
         "mint": "Green and white",
         "mint_text": "Light green around a white card.",
         "plain": "One colour",

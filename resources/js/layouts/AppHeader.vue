@@ -28,7 +28,7 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigat
 </script>
 
 <template>
-    <header class="glass sticky top-0 z-30 print:hidden" :class="!brand.band_colors?.length && 'border-b border-line'">
+    <header class="header-glass sticky top-0 z-30 print:hidden" :class="!brand.band_colors?.length && 'border-b border-line'">
         <div class="flex h-16 items-center gap-2 px-3 sm:gap-3 sm:px-6 lg:px-8">
             <button
                 type="button"
