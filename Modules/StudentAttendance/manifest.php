@@ -5,6 +5,8 @@
 | Business numbers never live here; they are rules.
 */
 
+use Modules\StudentAttendance\Offline\AttendanceSync;
+
 return [
     'key' => 'student_attendance',
     'name' => 'student_attendance::module.name',
@@ -93,9 +95,17 @@ return [
             'dashboard' => false,
             'children' => [
                 ['key' => 'today', 'label' => 'student_attendance::module.menu_today', 'route' => '/student-attendance', 'permission' => 'student_attendance.view'],
+                ['key' => 'register', 'label' => 'student_attendance::module.menu_register', 'route' => '/student-attendance/register', 'permission' => 'student_attendance.view'],
+                ['key' => 'periods', 'label' => 'student_attendance::module.menu_periods', 'route' => '/student-attendance/periods', 'permission' => 'student_attendance.manage'],
+                ['key' => 'holidays', 'label' => 'student_attendance::module.menu_holidays', 'route' => '/student-attendance/holidays', 'permission' => 'student_attendance.view'],
             ],
         ],
     ],
+    'quick_actions' => [
+        ['key' => 'take', 'label' => 'student_attendance::module.take', 'route' => '/student-attendance', 'permission' => 'student_attendance.take', 'icon' => 'clipboard'],
+    ],
+    // Teachers take attendance on a phone without a network; it is sent when back online.
+    'sync_records' => [AttendanceSync::class],
     'events' => [],
     'is_core' => false,
     'requires_consent' => false,

@@ -3,6 +3,7 @@
 use App\Platform\Audit\AuditLog;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\EducationExams\Contracts\StudentAttendance;
 
 /*
@@ -43,8 +44,8 @@ beforeEach(function () {
     $this->section = $this->school->section['id'];
 
     // A teacher (HRM employee with a login and the school template's permissions): class teacher of section A, or a subject's teacher there.
-    $this->teacher = function (string $name, bool $classTeacher = false, ?string $subject = null) {
-        $user = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['education.view', 'student_attendance.view', 'student_attendance.take'], "Teacher {$name}"));
+    $this->teacher = function (string $name, bool $classTeacher = false, ?string $subject = null, array $more = []) {
+        $user = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['education.view', 'student_attendance.view', 'student_attendance.take', ...$more], "Teacher {$name}"));
         $employee = hireVia($this, $this->token, $this->w->c1, ['full_name' => $name, 'joined_on' => '2026-01-01'])->assertCreated()->json('data.id');
         DB::table('hrm_employees')->where('id', $employee)->update(['user_id' => $user->id]);
         if ($classTeacher) {
@@ -206,6 +207,37 @@ it('gives report cards the days attended in the session, nothing with the module
     ]);
     toggles()->disable($this->w->c1, 'student_attendance', 'Test');
     expect(app(StudentAttendance::class)->forSession($this->w->c1, $this->school->session['id'], [$this->rahim['id']]))->toBe([]);
+});
+
+it('takes a sheet taken offline once, never over one saved meanwhile, and gives the phone only what taking needs', function () {
+    toggles()->enable($this->w->g1, 'offline_mode', 'Test setup');
+    $rina = ($this->teacher)('Rina Akter', classTeacher: true, more: ['offline_mode.use']);
+    $device = ($this->as)($rina->token)->postJson('/api/offline/devices', ['name' => 'Rina phone', 'platform' => 'Android'])->assertCreated()->json('data');
+    $sync = fn (array $operations) => ($this->as)($rina->token)->postJson('/api/sync', ['device_id' => $device['device']['id'], 'lease' => $device['lease'], 'operations' => $operations]);
+    $op = fn (string $date, array $marks, ?int $base = null) => [
+        'op_id' => (string) Str::ulid(), 'kind' => 'student_attendance.sheet', 'action' => 'create', 'made_at' => '2026-03-10T03:30:00+00:00', 'lease_id' => $device['lease_id'],
+        'base_version' => $base, 'data' => ['section_id' => $this->section, 'date' => $date, 'marks' => $marks],
+    ];
+
+    $today = $op('2026-03-10', [($this->mark)($this->karim, 'absent')]);
+    $old = $op('2026-03-01', []);
+    $response = $sync([$today, $old])->assertOk();
+    $results = $response->json('results');
+    expect($results[$today['op_id']]['status'])->toBe('applied')
+        ->and($results[$old['op_id']])->toMatchArray(['status' => 'rejected', 'code' => 'outside_window']);
+    // Sent twice: one sheet.
+    expect($sync([$today])->json("results.{$today['op_id']}.record_id"))->toBe($results[$today['op_id']]['record_id']);
+
+    // The office changed it meanwhile: the phone's other sheet for the day is a conflict, not an overwrite.
+    ($this->sheet)('2026-03-10', ['marks' => [($this->mark)($this->karim, 'late')], 'base_version' => 1])->assertOk();
+    $stale = $op('2026-03-10', [($this->mark)($this->karim, 'absent')], 1);
+    expect($sync([$stale])->json("results.{$stale['op_id']}"))->toMatchArray(['status' => 'conflict']);
+    ($this->as)()->getJson(($this->sta)("sheets/{$this->section}/2026-03-10"))->assertJsonPath('data.sheet.counts.late', 1);
+
+    // What the phone keeps: the section with names and rolls, nothing else about the students.
+    $kept = collect($response->json('changes')['student_attendance.sheet']['records'] ?? [])->firstWhere('type', 'section');
+    expect($kept['id'])->toBe($this->section)->and($kept['students'])->toHaveCount(2)
+        ->and(array_keys($kept['students'][0]))->toEqualCanonicalizing(['id', 'name', 'name_local', 'roll']);
 });
 
 it('needs the permission, answers 403 with the module off, and never shows another company\'s attendance', function () {

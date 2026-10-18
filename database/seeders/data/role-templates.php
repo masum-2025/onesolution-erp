@@ -114,7 +114,7 @@ return [
             'course_registration.manage', 'course_registration.approve', 'course_registration.record_outcome',
             'education_fees.configure', 'education_fees.approve',
             'education_exams.manage', 'education_exams.moderate', 'education_exams.publish', 'education_exams.correct',
-            'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results', 'student_attendance.manage',
+            'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results', 'student_attendance.take', 'student_attendance.manage',
         ],
     ],
     [
@@ -139,7 +139,7 @@ return [
             'course_registration.manage', 'course_registration.register', 'course_registration.approve', 'course_registration.record_outcome',
             'education_fees.configure', 'education_fees.bill', 'education_fees.concede',
             'education_exams.manage', 'education_exams.publish', 'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results',
-            'student_attendance.manage',
+            'student_attendance.take', 'student_attendance.manage',
         ],
     ],
 

@@ -3398,6 +3398,24 @@ students' attendance once a day or in each period; the office sees who is missin
 Rules: `by_period` (false), `period_present_share_bp` (5000), `late_counts_present` (true),
 `edit_days` (2), `weekend_days` (sat, sun; BD fri, sat).
 
+### Attendance screens and offline taking (STA-2)
+
+- **Today** (`/student-attendance`): each section the person sees, taken or not (with absent, late
+  and leave counts), by period each period's state; days to come cannot be opened; a day off says so.
+- **Sheet** (`/student-attendance/sheet/{section}/{date}?period=`), made for a phone: roll order,
+  everyone present to start, a tap moves a student through absent → late → leave, a note per
+  student, "all present", counts on top and Save at the bottom; by period the period running now is
+  picked. A sheet the person may not change is shown read-only with the reason. Leaving with unsaved
+  changes asks first. If someone saved the sheet meanwhile, theirs is fetched and this person's
+  changes are put on top to check and save again.
+- **Offline** (kind `student_attendance.sheet`, `AttendanceSync`): without a network the sheet is
+  kept on the device (Offline mode) with the version it started from and sent when back; checked
+  again on arrival (a sheet saved meanwhile is a conflict, a day too old is refused). The device
+  keeps only the sections the person takes, their students' names and rolls, and the periods.
+- **Monthly register**, print and CSV; **periods** (managers); **holidays**; an **Attendance tab** on
+  the student's page (the month as a calendar, totals, share of days present). Every state shows its
+  letter or word beside its colour.
+
 ### Future expansion (student attendance)
 
 - A new country sets its school week in `rule-values.php`; a new kind of institution gets

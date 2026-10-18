@@ -3,6 +3,7 @@
 namespace Modules\StudentAttendance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -67,6 +68,11 @@ class SheetController extends Controller
                 'weekend_days' => array_values((array) $this->register->rule('student_attendance.weekend_days', $company, $unit->getKey())),
             ],
             'statuses' => Mark::STATUSES,
+            'institution' => ['id' => $company->getKey(), 'name' => $company->displayName()],
+            // Where periods and holidays may be kept (not departments), and the classes a holiday may name.
+            'campuses' => Organization::query()->whereKey($units)->whereNot('type', OrganizationType::Department->value)->orderBy('depth')->get()
+                ->map(fn (Organization $campus) => ['id' => $campus->getKey(), 'name' => $campus->displayName(), 'type' => $campus->type->value])->values(),
+            'levels' => collect($levels)->map(fn (array $level) => ['id' => $level['id'], 'name' => $level['name']])->values(),
             'today' => $this->register->today($company)->toDateString(),
             'sections' => $sections->map(fn (array $section) => [
                 'id' => $section['id'], 'name' => $section['name'], 'unit_id' => $section['unit_id'], 'session_id' => $section['session_id'],
