@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\StudentAttendance\Http\Controllers\CalendarController;
 use Modules\StudentAttendance\Http\Controllers\LedgerController;
+use Modules\StudentAttendance\Http\Controllers\PortalAttendanceController;
 use Modules\StudentAttendance\Http\Controllers\SheetController;
 
 /*
@@ -33,3 +34,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:education', 'module:student_at
             Route::delete('holidays/{holiday}', [CalendarController::class, 'destroyHoliday']);
         });
     });
+
+/*
+| A student's (or their child's) attendance in the client's portal (B2B2C):
+| portal members only, with the portal, Education and attendance on.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:education', 'module:student_attendance'])
+    ->get('portal/student-attendance', [PortalAttendanceController::class, 'show']);

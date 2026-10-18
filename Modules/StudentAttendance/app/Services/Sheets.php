@@ -10,6 +10,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Modules\Education\Directory\AcademicDirectory;
+use Modules\StudentAttendance\Events\SheetSaved;
 use Modules\StudentAttendance\Exceptions\StudentAttendanceException;
 use Modules\StudentAttendance\Models\Mark;
 use Modules\StudentAttendance\Models\Period;
@@ -219,7 +220,7 @@ class Sheets
         $slot = $period?->getKey() ?? Sheet::DAY;
 
         try {
-            return $this->register->transaction($company, function () use ($company, $actor, $section, $day, $data, $period, $subjectId, $byPeriod, $given, $roster, $slot) {
+            $saved = $this->register->transaction($company, function () use ($company, $actor, $section, $day, $data, $period, $subjectId, $byPeriod, $given, $roster, $slot) {
                 $sheet = $this->register->query(Sheet::class, $company)->where('section_id', $section['id'])
                     ->whereDate('taken_on', $day->toDateString())->where('slot', $slot)->lockForUpdate()->first();
                 $base = isset($data['base_version']) ? (int) $data['base_version'] : null;
@@ -291,6 +292,12 @@ class Sheets
 
             throw StudentAttendanceException::versionConflict(['version' => $other?->version, 'id' => $other?->getKey()]);
         }
+        // Today's sheet: families may be told about absences (rule student_attendance.notify_absent, queued).
+        if ($day->equalTo($this->register->today($company))) {
+            SheetSaved::dispatch($company->getKey(), $saved[0]->getKey());
+        }
+
+        return $saved;
     }
 
     /**

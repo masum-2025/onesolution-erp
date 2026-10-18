@@ -151,6 +151,11 @@
         "remove_text": "These days will no longer show as a holiday.",
         "removed": "Holiday removed."
     },
+    "portal": {
+        "title": "Attendance",
+        "text": "{name}'s attendance, a month at a time.",
+        "no_student": "No student to show"
+    },
     "student_tab": {
         "title": "Attendance",
         "calendar": "The month's attendance",

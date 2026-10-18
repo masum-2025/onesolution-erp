@@ -26,3 +26,8 @@ export function attendanceApi(organizationId) {
         removeHoliday: (id) => api(`${base}/holidays/${id}`, { method: 'DELETE' }),
     };
 }
+
+/** The portal: a student's own attendance, or (with a record) a child's. */
+export const portalAttendanceApi = {
+    month: (record, month) => api('/api/portal/student-attendance', { query: { month, ...(record ? { record } : {}) } }),
+};

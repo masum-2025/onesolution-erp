@@ -11,4 +11,5 @@ return [
     'menu_holidays' => 'Holidays',
     'take' => 'Take attendance',
     'student_tab' => 'Attendance',
+    'portal_page' => 'Attendance',
 ];

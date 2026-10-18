@@ -5,6 +5,8 @@
 | Business numbers never live here; they are rules.
 */
 
+use Modules\StudentAttendance\Dashboard\AttendanceWidgets;
+use Modules\StudentAttendance\Dashboard\LowAttendance;
 use Modules\StudentAttendance\Offline\AttendanceSync;
 
 return [
@@ -83,6 +85,48 @@ return [
             'category' => 'calendar',
             'sort_order' => 50,
         ],
+        [
+            'key' => 'student_attendance.notify_absent',
+            'type' => 'json',
+            // Off by default (SMS costs money). Families of a student absent today are told, after delay_minutes so a slip can be put right.
+            'schema' => [
+                'type' => 'object', 'required' => ['enabled', 'channels'], 'additionalProperties' => false,
+                'properties' => [
+                    'enabled' => ['type' => 'boolean'],
+                    'channels' => ['type' => 'array', 'items' => ['enum' => ['sms', 'mail']], 'minItems' => 1, 'uniqueItems' => true],
+                    'delay_minutes' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 240],
+                ],
+            ],
+            'default' => ['enabled' => false, 'channels' => ['sms'], 'delay_minutes' => 30],
+            'label' => 'student_attendance::rules.notify_absent.label',
+            'description' => 'student_attendance::rules.notify_absent.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'families',
+            'sort_order' => 60,
+        ],
+        [
+            'key' => 'student_attendance.notify_class_skip',
+            'type' => 'boolean',
+            // By period, with absence messages on: also tell when a student was in earlier but misses a later period.
+            'default' => false,
+            'label' => 'student_attendance::rules.notify_class_skip.label',
+            'description' => 'student_attendance::rules.notify_class_skip.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'families',
+            'sort_order' => 70,
+        ],
+        [
+            'key' => 'student_attendance.low_warn_bp',
+            'type' => 'integer',
+            // Students present on fewer than this share of their last 30 days' school days show on the home and in the bell (7500 = 75%).
+            'schema' => ['minimum' => 1, 'maximum' => 10000],
+            'default' => 7500,
+            'label' => 'student_attendance::rules.low_warn_bp.label',
+            'description' => 'student_attendance::rules.low_warn_bp.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'counting',
+            'sort_order' => 35,
+        ],
     ],
     'menu' => [
         [
@@ -106,9 +150,23 @@ return [
     ],
     // Teachers take attendance on a phone without a network; it is sent when back online.
     'sync_records' => [AttendanceSync::class],
-    'events' => [],
+    // Payloads carry ids only.
+    'events' => ['student_attendance.sheet_saved'],
+    // To families (wording in student_attendance::notifications); the link opens the portal.
+    'notifications' => [
+        'student_attendance.absent' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'date', 'link'], 'audience' => 'person', 'path' => '/portal'],
+        'student_attendance.skipped' => ['channels' => ['mail', 'sms'], 'placeholders' => ['product', 'organization', 'student', 'date', 'period', 'subject', 'link'], 'audience' => 'person', 'path' => '/portal'],
+    ],
+    // A family opens the student's attendance from the student's record in the portal.
+    'portal_pages' => [
+        ['subject' => 'education.student', 'label' => 'student_attendance::module.portal_page', 'route' => '/portal/student-attendance/{record}'],
+    ],
+    'attention' => [AttendanceWidgets::class],
     'is_core' => false,
     'requires_consent' => false,
-    'dashboard' => ['widgets' => []],
+    'dashboard' => ['widgets' => [
+        ['key' => 'today', 'label' => 'student_attendance::dashboard.today', 'type' => 'stat', 'provider' => AttendanceWidgets::class, 'permission' => 'student_attendance.view'],
+        ['key' => 'low', 'label' => 'student_attendance::dashboard.low', 'type' => 'list', 'provider' => LowAttendance::class, 'permission' => 'student_attendance.view'],
+    ]],
     'settings' => ['pages' => []],
 ];

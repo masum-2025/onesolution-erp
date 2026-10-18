@@ -17,11 +17,20 @@ import { addMonths, holidayOn, monthDays, statusTone, weekdayKey } from '../lib'
  * calendar (each school day's state as a letter on its colour, days off
  * marked), and the month's totals with the share of days present.
  */
-const props = defineProps({ studentId: { type: String, required: true } });
+const props = defineProps({
+    studentId: { type: String, default: null },
+    // The portal fetches through its own address: (month) => Promise.
+    load: { type: Function, default: null },
+});
+const emit = defineEmits(['loaded', 'failed']);
 const api = attendanceApi(currentOrganization().id);
 const month = ref(new Date().toISOString().slice(0, 7));
-const view = useResource(() => api.student(props.studentId, month.value), { immediate: false });
-watch(() => [props.studentId, month.value], () => view.reload(), { immediate: true });
+const view = useResource(() => (props.load ? props.load(month.value) : api.student(props.studentId, month.value)), { immediate: false });
+watch(() => [props.studentId, props.load, month.value], async () => {
+    await view.reload();
+    if (view.error.value) emit('failed', view.error.value);
+    else emit('loaded', view.data.value?.data ?? null);
+}, { immediate: true });
 
 const data = computed(() => view.data.value?.data ?? null);
 // Weeks start on Saturday, as school weeks do where the weekend is Friday.

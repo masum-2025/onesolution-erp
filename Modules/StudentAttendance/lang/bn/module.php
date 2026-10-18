@@ -11,4 +11,5 @@ return [
     'menu_holidays' => 'ছুটির দিন',
     'take' => 'হাজিরা নিন',
     'student_tab' => 'হাজিরা',
+    'portal_page' => 'হাজিরা',
 ];

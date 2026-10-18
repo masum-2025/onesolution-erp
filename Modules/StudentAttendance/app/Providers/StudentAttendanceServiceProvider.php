@@ -4,11 +4,15 @@ namespace Modules\StudentAttendance\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\EducationExams\Contracts\StudentAttendance;
+use Modules\StudentAttendance\Events\SheetSaved;
 use Modules\StudentAttendance\Exams\ReportCardAttendance;
+use Modules\StudentAttendance\Listeners\TellAbsences;
+use Modules\StudentAttendance\Setup\AttendanceSetupSteps;
 
 /**
  * Students' attendance: a sheet a day per section (class teacher) or a
@@ -30,6 +34,8 @@ class StudentAttendanceServiceProvider extends ServiceProvider
         if (interface_exists(StudentAttendance::class)) {
             $this->app->bind(StudentAttendance::class, ReportCardAttendance::class);
         }
+        // Its steps on Education's setup checklist.
+        $this->app->tag([AttendanceSetupSteps::class], 'education.setup_steps');
     }
 
     public function boot(): void
@@ -41,6 +47,8 @@ class StudentAttendanceServiceProvider extends ServiceProvider
             ->by('student-attendance-writes:'.($request->user()?->getKey() ?? $request->ip())));
         RateLimiter::for('student-attendance-exports', fn (Request $request) => Limit::perMinute(self::EXPORTS_PER_MINUTE)
             ->by('student-attendance-exports:'.($request->user()?->getKey() ?? $request->ip())));
+
+        Event::listen(SheetSaved::class, TellAbsences::class);
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');

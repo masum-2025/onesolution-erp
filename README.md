@@ -3416,6 +3416,26 @@ Rules: `by_period` (false), `period_present_share_bp` (5000), `late_counts_prese
   the student's page (the month as a calendar, totals, share of days present). Every state shows its
   letter or word beside its colour.
 
+### Families, home and checklist (STA-3)
+
+- **Absence messages** (`notify_absent` = `{enabled: false, channels: [sms], delay_minutes: 30}`):
+  a saved sheet of today queues `TellAbsences` (event `SheetSaved`, ids only) to run
+  `delay_minutes` later, so a slip put right in time sends nothing (the state is read when it
+  goes). Once a day: absent on the day's sheet. By period: absent in the day's first period
+  taken; with `notify_class_skip` (false) also a student present earlier but absent later.
+  Each kind once per student and day (`sta_notices`), never for an earlier day; to portal logins
+  and guardians with a login, then guardians' phone or email (notifications
+  `student_attendance.absent`, `.skipped`).
+- **Portal**: `GET /api/portal/student-attendance?record=&month=` — the student's own month (or a
+  linked child's): days (no periods), totals, holidays, weekly days off; anything else is 404. Page
+  `/portal/student-attendance/{record}`.
+- **Education home**: "Attendance not taken today" (sections the person sees; a day off counts none)
+  and "Low attendance (last 30 days)" (below `low_warn_bp`, 7500, from five school days on, lowest
+  first, opening the student's Attendance tab). Bell: sections still to take for whoever takes them;
+  students with low attendance for who manages.
+- **Setup checklist**: periods for each campus taking attendance by period; this year's holidays
+  (optional). Class teachers stay Education's step.
+
 ### Future expansion (student attendance)
 
 - A new country sets its school week in `rule-values.php`; a new kind of institution gets
