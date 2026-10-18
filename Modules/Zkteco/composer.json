@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/zkteco",
+    "description": "ZKTeco attendance terminals on the office network: punches pulled into staff attendance, several devices per company.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Zkteco\\": "app/"
+        }
+    }
+}

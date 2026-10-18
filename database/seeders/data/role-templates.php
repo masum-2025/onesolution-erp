@@ -51,7 +51,7 @@ return [
     [
         'key' => 'hr_officer',
         'sector' => null,
-        'permissions' => ['hrm.*', 'attendance.*', 'payroll.view', 'members.manage'],
+        'permissions' => ['hrm.*', 'attendance.*', 'zkteco.*', 'payroll.view', 'members.manage'],
     ],
     [
         'key' => 'store_keeper',
@@ -109,7 +109,7 @@ return [
         'key' => 'principal',
         'sector' => 'school',
         'permissions' => [
-            '*.view', 'hrm.manage', 'attendance.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
+            '*.view', 'hrm.manage', 'attendance.manage', 'zkteco.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
             'education.manage', 'education.view_sensitive', 'education.approve_promotion', 'education.issue_documents',
             'course_registration.manage', 'course_registration.approve', 'course_registration.record_outcome',
             'education_fees.configure', 'education_fees.approve',

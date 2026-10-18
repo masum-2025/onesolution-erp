@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Attendance\Console\CloseDays;
 use Modules\Attendance\Console\ForgetLocations;
+use Modules\Attendance\Contracts\DeviceAttendance;
 use Modules\Attendance\Export\AttendanceExporter;
+use Modules\Attendance\Services\DevicePunches;
 
 /**
  * Attendance: shifts, holidays, rosters, punches, days and corrections of a
@@ -29,6 +31,8 @@ class AttendanceServiceProvider extends ServiceProvider
     {
         // The client's data export includes attendance (ExportsModuleData).
         $this->app->tag([AttendanceExporter::class], 'module.exporters');
+        // Terminal modules (ZKTeco…) bring punches through this contract.
+        $this->app->bind(DeviceAttendance::class, DevicePunches::class);
     }
 
     public function boot(): void

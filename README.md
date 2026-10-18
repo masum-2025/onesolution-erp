@@ -3443,6 +3443,54 @@ Rules: `by_period` (false), `period_present_share_bp` (5000), `late_counts_prese
 - Next: screens and offline taking (STA-2); families in the portal, absence messages, the education
   home's widgets and bell (STA-3). Later: a class routine that fills period and subject by itself.
 
+## ZKTeco devices module (ZKT-1 backend)
+
+Module `zkteco` (`Modules/Zkteco`, requires HRM and staff attendance; every sector and plan).
+Fingerprint and card terminals by ZKTeco (F18, K18 and the ZEM family) on the office network:
+their punches come into staff attendance by themselves, from several devices per company.
+
+- **Reading only**: the ZK protocol on port 4370, UDP or TCP (`Protocol\ZkClient`, no outside
+  package): connect (with the comm key when asked), serial and model, users, attendance logs,
+  exit. Nothing is written to the device, its logs are never cleared and its keypad never locked.
+  Tried on a real F18 (ZEM760, 53 users, 23,903 logs read in about 26 s over UDP).
+- **A device**: a branch, a private IPv4 address only (never a public one), port, protocol, comm
+  key (kept encrypted, never sent out, audited as "changed" only), `import_from` (logs before it
+  are left on the device), on/off. One that brought logs is switched off, not removed.
+- **A pull** (`DeviceSync`): reads users and logs; users are matched to HRM employees by code (the
+  device's user id is the employee code) or by hand (audited); logs from `import_from` on are
+  kept once each in `zk_logs` (device, user id, the device's own clock), read in the company's
+  time zone; matched users' logs go to attendance through its new contract
+  `Attendance\Contracts\DeviceAttendance` (same op id as a file import, so a punch seen both ways
+  counts once; days worked out again). The rest wait as unmatched and go once matched.
+- **Scheduler**: `zkteco:pull` every minute, each device when `zkteco.pull_minutes` (5) have passed,
+  in every client database where the modules are on. On a cloud server it runs on an office
+  computer that sees the devices. `--device=` pulls one now; `--user=` keeps one device user's logs
+  (a first try on a real device).
+- **Errors** say why in words (`no_answer`, `wrong_comm_key`, `refused`, `read_failed`) and stay on
+  the device (`last_error`).
+
+| method | path | notes |
+|---|---|---|
+| GET | /api/organizations/{id}/zkteco/setup | can, rules, branches, protocols |
+| GET/POST/PATCH/DELETE | …/zkteco/devices[/{device}] | `base_version` on change and removal; `has_comm_key`, never the key |
+| POST | …/zkteco/devices/{device}/test, /sync | talks to the device (6 a minute) |
+| GET | …/zkteco/devices/{device}/users | each user, the employee matched, logs waiting |
+| PATCH | …/zkteco/devices/{device}/users/{user} | `employee_id` (or null): match by hand; waiting logs go now |
+| PATCH | …/zkteco/devices/{device}/users | `matches[] {user, employee_id}`: several at once, waiting logs go once |
+
+### Device screens and matching (ZKT-2)
+
+- **Devices** (`/zkteco`): each device's branch, address, model and serial, users and logs on it,
+  punches waiting for a match, when it was last read or why it could not be (in words); try it,
+  read it now, add or change one (the comm key is typed only to set or change it).
+- **Matching** (`/zkteco/devices/{id}`): each device user (its number and name) and the employee
+  they are, chosen from the company's staff. Device numbers rarely are HRM codes, so a suggestion
+  comes from the name the device keeps when exactly one employee's name holds all its words
+  (PARVEJ → Parvej Hossain); accept one, or all at once. Filters: all, not matched, suggested.
+
+Next: ZKT-3 ADMS (the device sends by itself), the bell when a device stops answering, and sending
+new employees to devices.
+
 ## Teacher feedback module (TFB-1)
 
 Module `teacher_feedback` (`Modules/TeacherFeedback`, requires Education; rating needs the client

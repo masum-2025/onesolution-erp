@@ -27,5 +27,6 @@
     "EducationLectures": true,
     "TeacherFeedback": true,
     "Fleet": true,
-    "StudentAttendance": true
+    "StudentAttendance": true,
+    "Zkteco": true
 }

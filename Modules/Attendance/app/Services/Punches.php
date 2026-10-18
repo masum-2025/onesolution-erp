@@ -79,8 +79,8 @@ class Punches
         return $this->write($company, $employee, $madeAt, 'offline', $opId, null, $user, sameTap: true, where: $where);
     }
 
-    /** A punch from an attendance machine's file (see DeviceImports). */
-    public function fromDevice(Organization $company, EmployeeRecord $employee, CarbonImmutable $at, string $opId, User $actor): Punch
+    /** A punch from an attendance machine: its file (DeviceImports) or the machine itself (DevicePunches; no person when scheduled). */
+    public function fromDevice(Organization $company, EmployeeRecord $employee, CarbonImmutable $at, string $opId, ?User $actor): Punch
     {
         return $this->write($company, $employee, $at, 'device', $opId, null, $actor, sameTap: false, recompute: false);
     }
@@ -138,7 +138,7 @@ class Punches
     /**
      * @param  array<string, int|string>  $where  Location fields (see Locations::check).
      */
-    private function write(Organization $company, EmployeeRecord $employee, CarbonImmutable $at, string $source, ?string $opId, ?string $note, User $actor, bool $sameTap, array $where = [], bool $recompute = true): Punch
+    private function write(Organization $company, EmployeeRecord $employee, CarbonImmutable $at, string $source, ?string $opId, ?string $note, ?User $actor, bool $sameTap, array $where = [], bool $recompute = true): Punch
     {
         if (! $employee->employedOn($this->workplace->dayOf($company, $at))) {
             throw AttendanceException::notEmployed();
@@ -156,7 +156,7 @@ class Punches
             $punch = new Punch;
             $punch->fill([
                 'organization_id' => $company->getKey(), 'unit_id' => $employee->unitId, 'employee_id' => $employee->id,
-                'punched_at' => $at->utc(), 'source' => $source, 'op_id' => $opId, 'note' => $note, 'created_by' => $actor->getKey(), ...$where,
+                'punched_at' => $at->utc(), 'source' => $source, 'op_id' => $opId, 'note' => $note, 'created_by' => $actor?->getKey(), ...$where,
             ])->save();
             if ($source === 'manual') {
                 $this->audit->record('attendance.punch_written', $punch, new: ['employee_id' => $employee->id, 'punched_at' => $at->toIso8601String(), 'note' => $note],

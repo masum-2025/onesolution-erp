@@ -1,0 +1,11 @@
+{
+    "name": "Zkteco",
+    "alias": "zkteco",
+    "description": "ZKTeco attendance terminals on the office network: punches pulled into staff attendance, several devices per company.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Zkteco\\Providers\\ZktecoServiceProvider"
+    ],
+    "files": []
+}
