@@ -78,21 +78,23 @@ const close = () => emit('close');
                 >
                     <button
                         type="button"
-                        class="absolute start-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-brand text-brand-fg shadow-lg ring-4 ring-[var(--dialog-sheet)] transition hover:scale-105 sm:-start-5 sm:top-5"
+                        class="absolute start-3 top-3 z-10 grid size-10 place-items-center rounded-full bg-brand text-brand-fg shadow-lg ring-4 ring-[var(--dialog-sheet)] transition hover:scale-105 sm:-start-5"
                         :aria-label="t('core.actions.close')"
                         @click="close"
                     >
                         <X class="size-4" aria-hidden="true" />
                     </button>
-                    <header class="px-5 pt-16 pb-4 sm:px-8 sm:pt-6">
-                        <h2 :id="titleId" class="text-[20px] font-semibold tracking-[-0.01em] text-fg">{{ title }}</h2>
-                        <p v-if="description" class="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted">{{ description }}</p>
-                        <!-- The brand band, as under the app header (rule ui.dialog_band). -->
-                        <div v-if="showBand" class="mt-4 flex h-1 overflow-hidden rounded-full" data-dialog-band aria-hidden="true">
-                            <span v-for="(color, index) in brand.band_colors" :key="index" class="flex-1" :style="{ background: color }" />
-                        </div>
+                    <!-- The title row is as tall as the app header (h-16), so the brand band below it
+                         lines up with the header's band across the screen (rule ui.dialog_band). -->
+                    <header class="flex h-16 shrink-0 items-center ps-16 pe-5 sm:px-8">
+                        <h2 :id="titleId" :title="title" class="truncate text-[20px] font-semibold tracking-[-0.01em] text-fg">{{ title }}</h2>
                     </header>
-                    <div class="min-h-0 flex-1 overflow-y-auto px-5 pb-6 sm:px-8">
+                    <div v-if="showBand" class="flex h-1 shrink-0" data-dialog-band aria-hidden="true">
+                        <span v-for="(color, index) in brand.band_colors" :key="index" class="flex-1" :style="{ background: color }" />
+                    </div>
+                    <div v-else class="h-px shrink-0 bg-line" aria-hidden="true" />
+                    <p v-if="description" class="max-w-3xl px-5 pt-4 text-[13px] leading-relaxed text-muted sm:px-8">{{ description }}</p>
+                    <div class="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-6 sm:px-8">
                         <div class="dialog-card rounded-xl p-5 sm:p-6">
                             <slot />
                         </div>
