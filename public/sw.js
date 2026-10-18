@@ -8,10 +8,16 @@
  *
  *  - page loads: network first, the last shell when offline;
  *  - /build/*: cache first (a new release has new file names);
+ *  - /build/version.json (which release is out): always the network;
  *  - everything else: straight to the network.
+ *
+ * It is registered as /sw.js?v=<build id>: each release has its own file
+ * cache, and the old one is dropped when the new worker takes over, so
+ * old builds do not pile up in the browser.
  */
+const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev';
 const SHELL_CACHE = 'os-shell-v1';
-const ASSET_CACHE = 'os-assets-v1';
+const ASSET_CACHE = `os-assets-${VERSION}`;
 const NEVER = [/^\/api\//, /^\/session\//, /^\/sanctum\//, /^\/payments\//, /^\/exports\//, /^\/internal\//];
 
 self.addEventListener('install', (event) => {
@@ -46,6 +52,10 @@ self.addEventListener('fetch', (event) => {
                 })
                 .catch(() => caches.open(SHELL_CACHE).then((cache) => cache.match('/')).then((cached) => cached ?? Response.error())),
         );
+        return;
+    }
+
+    if (url.pathname === '/build/version.json') {
         return;
     }
 

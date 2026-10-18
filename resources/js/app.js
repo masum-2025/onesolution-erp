@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import { router } from './router';
+import { appVersion, watchVersion } from './lib/appVersion';
 import { applyBrand } from './lib/brand';
 import { applySignupOptions } from './lib/identity';
 import { initI18n } from './lib/i18n';
@@ -25,9 +26,12 @@ async function boot() {
     createApp(App).use(router).mount(el);
 
     // The app itself opens without a connection (Phase 7-2); data offline is the encrypted store's.
+    // The build id in its address gives each release its own cache and drops the old one.
     if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => null);
+        navigator.serviceWorker.register(`/sw.js?v=${appVersion.current}`).catch(() => null);
     }
+    // An open tab moves to a newer release by itself (lib/appVersion.js).
+    watchVersion();
 }
 
 boot();

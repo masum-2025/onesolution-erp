@@ -1,5 +1,6 @@
 import { reactive } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import { appVersion, isMissingFile, reloadForMissingFile } from './lib/appVersion';
 import { loadNamespaces } from './lib/i18n';
 import { loadMe, session } from './lib/session';
 import { moduleOutsideRoutes, moduleRoutes } from './modules';
@@ -205,6 +206,11 @@ function homeFor(context) {
 }
 
 router.beforeEach(async (to) => {
+    // A newer release is out: this page change loads the app fresh (quietly, at the page asked for).
+    if (appVersion.stale && router.currentRoute.value.matched.length && to.fullPath !== router.currentRoute.value.fullPath) {
+        globalThis.location.assign(to.fullPath);
+        return false;
+    }
     navigation.pending = true;
 
     if (!session.ready) await loadMe().catch(() => null);
@@ -253,6 +259,8 @@ router.afterEach(() => {
     navigation.pending = false;
 });
 
-router.onError(() => {
+router.onError((error, to) => {
     navigation.pending = false;
+    // A page of an older build that is not on the server any more: load it fresh once.
+    if (to && isMissingFile(error)) reloadForMissingFile(to.fullPath);
 });
