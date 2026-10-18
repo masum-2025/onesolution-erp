@@ -89,10 +89,11 @@ const close = () => emit('close');
                     <header class="flex h-16 shrink-0 items-center ps-16 pe-5 sm:px-8">
                         <h2 :id="titleId" :title="title" class="truncate text-[20px] font-semibold tracking-[-0.01em] text-fg">{{ title }}</h2>
                     </header>
-                    <div v-if="showBand" class="flex h-1 shrink-0" data-dialog-band aria-hidden="true">
+                    <!-- As wide as the content below it (the same side gaps), at the header band's height. -->
+                    <div v-if="showBand" class="mx-5 flex h-1 shrink-0 overflow-hidden rounded-full sm:mx-8" data-dialog-band aria-hidden="true">
                         <span v-for="(color, index) in brand.band_colors" :key="index" class="flex-1" :style="{ background: color }" />
                     </div>
-                    <div v-else class="h-px shrink-0 bg-line" aria-hidden="true" />
+                    <div v-else class="mx-5 h-px shrink-0 bg-line sm:mx-8" aria-hidden="true" />
                     <p v-if="description" class="max-w-3xl px-5 pt-4 text-[13px] leading-relaxed text-muted sm:px-8">{{ description }}</p>
                     <div class="min-h-0 flex-1 overflow-y-auto px-5 pt-4 pb-6 sm:px-8">
                         <div class="dialog-card rounded-xl p-5 sm:p-6">
