@@ -114,6 +114,7 @@
         "days_paid": "Days employed",
         "absent": "Days absent",
         "half_days": "Half days",
+        "unpaid_leave": "Days of leave without pay",
         "late_days": "Days late",
         "early_days": "Days left early",
         "overtime": "Over time",

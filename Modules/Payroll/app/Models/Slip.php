@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 #[Fillable([
     'organization_id', 'run_id', 'unit_id', 'employee_id', 'employee_code', 'employee_name', 'salary_id', 'basic_minor',
-    'period_days', 'employed_days', 'absent_days', 'half_days', 'overtime_minutes', 'late_minutes', 'late_days', 'early_days',
+    'period_days', 'employed_days', 'absent_days', 'half_days', 'overtime_minutes', 'late_minutes', 'late_days', 'early_days', 'unpaid_leave_halves',
     'earnings_minor', 'deductions_minor', 'tax_minor', 'net_minor', 'problem',
 ])]
 class Slip extends Model
@@ -28,7 +28,7 @@ class Slip extends Model
     {
         return [
             'basic_minor' => 'integer', 'period_days' => 'integer', 'employed_days' => 'integer', 'absent_days' => 'integer',
-            'half_days' => 'integer', 'overtime_minutes' => 'integer', 'late_minutes' => 'integer', 'late_days' => 'integer', 'early_days' => 'integer',
+            'half_days' => 'integer', 'overtime_minutes' => 'integer', 'late_minutes' => 'integer', 'late_days' => 'integer', 'early_days' => 'integer', 'unpaid_leave_halves' => 'integer',
             'earnings_minor' => 'integer', 'deductions_minor' => 'integer', 'tax_minor' => 'integer', 'net_minor' => 'integer',
         ];
     }

@@ -39,11 +39,13 @@ export function dayTone(status) {
         weekend: 'outline',
         holiday: 'outline',
         no_shift: 'neutral',
+        leave: 'brand',
+        unpaid_leave: 'brand',
     }[status] ?? 'neutral';
 }
 
 /** One letter-ish short mark for the month grid ("P", "L", "A"…), from the translated short labels. */
-export const STATUSES = ['present', 'late', 'half_day', 'incomplete', 'absent', 'pending', 'weekend', 'holiday', 'no_shift'];
+export const STATUSES = ['present', 'late', 'half_day', 'incomplete', 'absent', 'pending', 'weekend', 'holiday', 'no_shift', 'leave', 'unpaid_leave'];
 
 /** The plain dates of a month ("2026-10") as "YYYY-MM-DD", up to `until` when given. */
 export function monthDates(month, until = null) {

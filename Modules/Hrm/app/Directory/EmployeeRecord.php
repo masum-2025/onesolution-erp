@@ -21,6 +21,10 @@ final readonly class EmployeeRecord
         public ?string $userId,
         public CarbonImmutable $joinedOn,
         public ?CarbonImmutable $exitsOn,
+        // Their manager (HRM reporting line), for approvals such as leave.
+        public ?string $managerId = null,
+        // As HR recorded it, only for rules that depend on it (e.g. maternity leave).
+        public ?string $gender = null,
     ) {}
 
     /** Employed on that day: joined by then, not gone before it. */

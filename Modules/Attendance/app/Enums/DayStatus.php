@@ -20,6 +20,10 @@ enum DayStatus: string
     case Holiday = 'holiday';
     /** No shift rostered and no punch. */
     case NoShift = 'no_shift';
+    /** On approved paid leave (Leave module), not at work. */
+    case Leave = 'leave';
+    /** On approved leave without pay, not at work. */
+    case UnpaidLeave = 'unpaid_leave';
 
     /** Counts as a day at work. */
     public function attended(): bool

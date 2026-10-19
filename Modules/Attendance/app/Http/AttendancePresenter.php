@@ -116,6 +116,7 @@ class AttendancePresenter
             ...($employee === null ? [] : ['employee_name' => $employee->name, 'employee_code' => $employee->code]),
             'work_date' => $day->work_date->toDateString(),
             'status' => $day->status->value,
+            'leave' => $day->leave,
             'shift_id' => $day->shift_id,
             'first_in_at' => $day->first_in_at?->toIso8601String(),
             'last_out_at' => $day->last_out_at?->toIso8601String(),

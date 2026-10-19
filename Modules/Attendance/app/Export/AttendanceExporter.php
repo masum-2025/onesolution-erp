@@ -56,7 +56,7 @@ class AttendanceExporter implements ExportsModuleData
             ]),
             'days' => $this->rows(AttendanceDay::class, $organization, $organizationIds, fn (AttendanceDay $day) => [
                 'id' => $day->getKey(), 'unit_id' => $day->unit_id, 'employee_id' => $day->employee_id,
-                'work_date' => $day->work_date->toDateString(), 'status' => $day->status->value,
+                'work_date' => $day->work_date->toDateString(), 'status' => $day->status->value, 'leave' => $day->leave,
                 'first_in_at' => $day->first_in_at?->toIso8601String(), 'last_out_at' => $day->last_out_at?->toIso8601String(),
                 'worked_minutes' => $day->worked_minutes, 'late_minutes' => $day->late_minutes, 'early_minutes' => $day->early_minutes, 'overtime_minutes' => $day->overtime_minutes,
             ]),

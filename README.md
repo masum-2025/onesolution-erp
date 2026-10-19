@@ -2514,6 +2514,61 @@ portal member of the company, one employee per login; audited `hrm.login_linked`
   grace, absence alert days, pay-cut policies) and its holiday list; shifts and rosters are each
   company's own data. No code change.
 
+## Leave module (LV-1 backend)
+
+Requires HRM; works with Attendance (weekends, holidays, the day shown as leave) and Payroll
+(leave without pay) when they are on. In the starter plan. Every amount is in **half days**
+(2 = one day); no fractions are stored.
+
+- **Tables** (tenant): `lv_types` (the company's kinds of leave: paid, accrual `yearly` /
+  `monthly` / `worked_days`, allowance, carry limit, half days allowed, counts days off, document
+  after N days, gender, encashable, active), `lv_requests`, `lv_approvals` (one row per step),
+  `lv_entries` (the balance ledger, append-only: accrual, carried, adjusted, taken, returned;
+  each source written once). A balance = the sum of a leave year's entries; waiting requests are
+  held back from what is available.
+- **Rules**: `leave.year_start_month` (1), `leave.approval_steps` (1–3, default 1),
+  `leave.beyond_balance` (`refuse` / `unpaid`), `leave.backdate_days` (7), `leave.default_types`
+  (json, per country; Bangladesh in `rule-values.php`: casual 10, sick 14, earned 1 per 18 days
+  kept up to 40, maternity 112 calendar days for women, leave without pay — **placeholders for a
+  lawyer**).
+- **Asking** (`LeavePolicy`, pure): one leave year per request, at most `backdate_days` back, no
+  overlap with waiting or approved leave; weekends and holidays (Attendance's `Days::dayOff`)
+  not counted unless the type counts them; half a day at either end. Paid types need the balance;
+  beyond it refused, or the rest without pay. Same `op_id` = same request (offline kind
+  `leave.request`).
+- **Approving**: `approval_steps` different people with `leave.approve`, never the employee nor
+  whoever asked. The first step is the employee's HRM manager when the manager's login holds
+  `leave.approve` (people with `leave.manage` may always decide). At the last step the paid half
+  days are taken from the balance; cancelling approved leave (the employee before it starts, HR
+  any time) gives them back. Every step audited; approvers get `leave.requested`, the employee
+  `leave.decided` (mail).
+- **Accrual**: `leave:accrue` (daily 01:20): yearly at the year's start (a share by months left
+  for joiners), monthly a twelfth per month begun, earned leave after each month from
+  Attendance's summary (days at work ÷ `worked_days_per_day`), carry into a new year up to the limit.
+- **Attendance**: contract `Modules\Attendance\Contracts\LeaveSource` (Leave's `LeaveDays`,
+  tagged `attendance.leave_sources`): a day without punches on leave shows `leave` or
+  `unpaid_leave` (`att_days.leave`: paid / unpaid / paid_half / unpaid_half); a half day ignores
+  lateness, and with no punch the other half is a half day missed. Came to work anyway: a normal day.
+- **Payroll**: `AttendanceSummary.unpaid_leave_halves` → `pay_slips.unpaid_leave_halves`, always
+  taken off pay (whatever `payroll.deduct_absence` says); shown on the slip.
+- **API** (`/api/organizations/{org}/leave/…`, `module:hrm` + `module:leave`, writes throttled
+  `leave-writes`): `GET types`, `POST types`, `PATCH types/{id}`, `POST types/defaults`,
+  `GET requests[?status&employee_id&from&to]` (with `can_decide`), `GET requests/{id}`,
+  `POST requests` (on behalf, `leave.manage`), `POST requests/{id}/approve|reject|cancel`
+  (`base_version`, note), `GET balances?employee_id&year`, `POST balances/adjust` (half days ≠ 0,
+  a reason; audited), `GET me`, `POST me/requests`, `POST me/requests/{id}/cancel`.
+  Portal: `GET /api/portal/leave` (the member's linked employees only).
+- Permissions `leave.view`, `leave.request`, `leave.approve`, `leave.manage`; role templates: HR
+  officer all, manager approve + request, staff / teacher / office staff request, principal
+  manage + approve. Dashboard: on leave today, requests waiting (+ bell). Data export: types,
+  requests, approvals, ledger.
+- Screens come with LV-2.
+
+### Future expansion (Leave)
+
+A new country or sector: values of `leave.default_types` and `leave.year_start_month`; a company
+changes its own types. No code change.
+
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 
 Requires HRM and Attendance; posts to Accounting where the company keeps books (optional).

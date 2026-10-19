@@ -28,5 +28,6 @@
     "TeacherFeedback": true,
     "Fleet": true,
     "StudentAttendance": true,
-    "Zkteco": true
+    "Zkteco": true,
+    "Leave": true
 }

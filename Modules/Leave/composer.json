@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/leave",
+    "description": "Kinds of leave, balances, requests and approval steps for a company's employees; approved leave shows in attendance and leave without pay in payroll.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Leave\\": "app/"
+        }
+    }
+}

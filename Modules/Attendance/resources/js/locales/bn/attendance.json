@@ -9,7 +9,9 @@
         "pending": "এখনো আসেননি",
         "weekend": "সাপ্তাহিক ছুটি",
         "holiday": "ছুটির দিন",
-        "no_shift": "শিফট নেই"
+        "no_shift": "শিফট নেই",
+        "leave": "ছুটিতে",
+        "unpaid_leave": "বিনা বেতনে ছুটি"
     },
     "short": {
         "present": "উ",
@@ -20,7 +22,9 @@
         "pending": "·",
         "weekend": "সা",
         "holiday": "ছু",
-        "no_shift": "–"
+        "no_shift": "–",
+        "leave": "ছু",
+        "unpaid_leave": "বছু"
     },
     "source": {
         "self": "নিজের হাজিরা",

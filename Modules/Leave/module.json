@@ -1,0 +1,11 @@
+{
+    "name": "Leave",
+    "alias": "leave",
+    "description": "Kinds of leave, balances, requests and approval steps for a company's employees; approved leave shows in attendance and leave without pay in payroll.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Leave\\Providers\\LeaveServiceProvider"
+    ],
+    "files": []
+}

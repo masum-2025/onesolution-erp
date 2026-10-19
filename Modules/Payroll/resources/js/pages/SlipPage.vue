@@ -75,6 +75,10 @@ const monthName = computed(() => (slip.value ? formatDate(`${slip.value.period}-
                         <dt class="text-muted">{{ t('payroll.slip.half_days') }}</dt>
                         <dd class="tabular">{{ formatNumber(slip.half_days) }}</dd>
                     </template>
+                    <template v-if="slip.unpaid_leave_halves">
+                        <dt class="text-muted">{{ t('payroll.slip.unpaid_leave') }}</dt>
+                        <dd class="tabular">{{ formatNumber(slip.unpaid_leave_halves / 2) }}</dd>
+                    </template>
                     <template v-if="slip.late_days">
                         <dt class="text-muted">{{ t('payroll.slip.late_days') }}</dt>
                         <dd class="tabular">{{ formatNumber(slip.late_days) }}</dd>

@@ -7,6 +7,7 @@ use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
+use Modules\Attendance\Contracts\LeaveSource;
 use Modules\Attendance\Enums\DayStatus;
 use Modules\Attendance\Exceptions\AttendanceException;
 use Modules\Attendance\Models\AttendanceDay;
@@ -73,6 +74,7 @@ class Days
                 'overtime_min' => (int) $this->rules->get('attendance.overtime_min_minutes', $context),
                 'early_grace' => (int) $this->rules->get('attendance.early_leave_grace_minutes', $context),
             ],
+            $this->leaveOn($company, $employee->id, $day),
         );
 
         $row = $this->workplace->query(AttendanceDay::class, $company)->where('employee_id', $employee->id)->where('work_date', $day->toDateString())->first()
@@ -104,6 +106,23 @@ class Days
         }
 
         return $days;
+    }
+
+    /**
+     * Approved leave that day from the modules that keep it (tagged
+     * "attendance.leave_sources"; Leave), when such a module is on.
+     *
+     * @return array{paid: bool, half: bool}|null
+     */
+    private function leaveOn(Organization $company, string $employeeId, CarbonImmutable $day): ?array
+    {
+        foreach (app()->tagged('attendance.leave_sources') as $source) {
+            if ($source instanceof LeaveSource && ($leave = $source->leaveOn($company, $employeeId, $day)) !== null) {
+                return $leave;
+            }
+        }
+
+        return null;
     }
 
     /** Work out again the days a punch may belong to (its local day, and the day before for night shifts). */

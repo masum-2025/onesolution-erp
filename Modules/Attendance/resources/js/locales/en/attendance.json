@@ -9,7 +9,9 @@
         "pending": "Not in yet",
         "weekend": "Weekend",
         "holiday": "Holiday",
-        "no_shift": "No shift"
+        "no_shift": "No shift",
+        "leave": "On leave",
+        "unpaid_leave": "Leave without pay"
     },
     "short": {
         "present": "P",
@@ -20,7 +22,9 @@
         "pending": "·",
         "weekend": "W",
         "holiday": "O",
-        "no_shift": "–"
+        "no_shift": "–",
+        "leave": "LV",
+        "unpaid_leave": "LW"
     },
     "source": {
         "self": "Own check-in",

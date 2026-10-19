@@ -19,6 +19,18 @@ return [
 
     // ── Bangladesh ───────────────────────────────────────────────────────
     [
+        'key' => 'leave.default_types',
+        'country' => 'BD',
+        'value' => [
+            ['code' => 'CL', 'name' => ['en' => 'Casual leave', 'bn' => 'নৈমিত্তিক ছুটি'], 'paid' => true, 'accrual' => 'yearly', 'days' => 10, 'half_day' => true],
+            ['code' => 'SL', 'name' => ['en' => 'Sick leave', 'bn' => 'অসুস্থতাজনিত ছুটি'], 'paid' => true, 'accrual' => 'yearly', 'days' => 14, 'half_day' => true, 'document_after_days' => 2],
+            ['code' => 'EL', 'name' => ['en' => 'Earned leave', 'bn' => 'অর্জিত ছুটি'], 'paid' => true, 'accrual' => 'worked_days', 'worked_days_per_day' => 18, 'carry_max_days' => 40, 'half_day' => false, 'encashable' => true],
+            ['code' => 'ML', 'name' => ['en' => 'Maternity leave', 'bn' => 'মাতৃত্বকালীন ছুটি'], 'paid' => true, 'accrual' => 'yearly', 'days' => 112, 'half_day' => false, 'counts_days_off' => true, 'gender' => 'female'],
+            ['code' => 'LWP', 'name' => ['en' => 'Leave without pay', 'bn' => 'বিনা বেতনে ছুটি'], 'paid' => false, 'accrual' => 'yearly', 'days' => 0, 'half_day' => true],
+        ],
+        'reason' => 'Bangladesh Labour Act 2006: casual 10 days (s.115), sick 14 days (s.116), earned one day per 18 days worked, kept up to 40 days (s.117), maternity 8 weeks before and 8 after birth (s.46). PLACEHOLDER: a lawyer must confirm for each sector (shops, factories and services differ).',
+    ],
+    [
         'key' => 'student_attendance.weekend_days',
         'country' => 'BD',
         'value' => ['fri', 'sat'],

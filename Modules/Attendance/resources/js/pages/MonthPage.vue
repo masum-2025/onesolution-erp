@@ -51,6 +51,8 @@ const CELL = {
     holiday: 'bg-subtle text-muted',
     pending: 'text-muted',
     no_shift: 'text-muted',
+    leave: 'bg-brand-soft text-brand-text',
+    unpaid_leave: 'bg-brand-soft text-brand-text',
 };
 
 const open = ref(null);

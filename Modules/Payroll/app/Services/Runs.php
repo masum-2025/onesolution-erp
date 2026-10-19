@@ -261,6 +261,7 @@ class Runs
             'overtime_minutes' => $summary['overtime_minutes'] ?? 0, 'late_minutes' => $summary['late_minutes'] ?? 0,
             // Half days already cost half a day (payroll.deduct_absence), so they are not late days too.
             'late_days' => $summary['days']['late'] ?? 0, 'early_days' => $summary['early_days'] ?? 0,
+            'unpaid_leave_halves' => $summary['unpaid_leave_halves'] ?? 0,
         ]);
         if ($salary === null) {
             $slip->fill(['problem' => 'no_salary'])->save();
@@ -274,7 +275,7 @@ class Runs
         $result = PayCalculator::slip([
             'basic' => $salary->basic_minor, 'items' => $items, 'period_days' => $slip->period_days, 'employed_days' => $employedDays,
             'absent_days' => $slip->absent_days, 'half_days' => $slip->half_days, 'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes,
-            'late_days' => $slip->late_days, 'early_days' => $slip->early_days,
+            'late_days' => $slip->late_days, 'early_days' => $slip->early_days, 'unpaid_leave_halves' => $slip->unpaid_leave_halves,
             'adjustments' => $adjustments->map(fn (Adjustment $adjustment) => ['kind' => $adjustment->kind, 'label' => $adjustment->label, 'amount' => $adjustment->amount_minor, 'taxable' => $adjustment->taxable])->values()->all(),
             'loans' => $loans,
             'earnings' => $earnings,

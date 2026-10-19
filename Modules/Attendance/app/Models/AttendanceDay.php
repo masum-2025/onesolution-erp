@@ -15,7 +15,7 @@ use Modules\Attendance\Enums\DayStatus;
  * Recalculated whenever something about that day changes.
  */
 #[Fillable([
-    'organization_id', 'unit_id', 'employee_id', 'work_date', 'shift_id', 'status',
+    'organization_id', 'unit_id', 'employee_id', 'work_date', 'shift_id', 'status', 'leave',
     'first_in_at', 'last_out_at', 'worked_minutes', 'late_minutes', 'early_minutes', 'overtime_minutes',
 ])]
 class AttendanceDay extends Model

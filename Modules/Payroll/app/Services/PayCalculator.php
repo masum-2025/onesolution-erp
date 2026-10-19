@@ -10,6 +10,7 @@ namespace Modules\Payroll\Services;
  * - Prorated items are paid for the days employed, less absences and half
  *   days when the company deducts them (payroll.deduct_absence):
  *   amount x payable half-days / (2 x days in the month).
+ * - Half days of leave without pay (Leave module) are always taken off.
  * - Over time: minutes x hourly rate x multiplier, the hourly rate being
  *   the basic (or the full gross) over payroll.monthly_hours.
  * - Coming late (payroll.late_policy): each minute at the basic's minute
@@ -25,13 +26,14 @@ namespace Modules\Payroll\Services;
 final class PayCalculator
 {
     /**
-     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, late_days?: int, early_days?: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
+     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, late_days?: int, early_days?: int, unpaid_leave_halves?: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
      * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_policy: string, late_per_cut?: int, late_cut_halves?: int, early_policy?: string, early_per_cut?: int, early_cut_halves?: int, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
      * @return array{lines: list<array{kind: string, code: string, name: array<string, string>, amount: int, taxable: bool}>, earnings: int, deductions: int, tax: int, net: int, problem: string|null}
      */
     public static function slip(array $facts, array $rules): array
     {
-        $half = 2 * $facts['employed_days'] - ($rules['deduct_absence'] ? 2 * $facts['absent_days'] + $facts['half_days'] : 0);
+        // Leave without pay is never paid, whatever payroll.deduct_absence says.
+        $half = 2 * $facts['employed_days'] - ($rules['deduct_absence'] ? 2 * $facts['absent_days'] + $facts['half_days'] : 0) - ($facts['unpaid_leave_halves'] ?? 0);
         $payable = max(0, $half);
         $whole = 2 * max(1, $facts['period_days']);
         $prorate = fn (int $amount) => intdiv($amount * $payable + intdiv($whole, 2), $whole);

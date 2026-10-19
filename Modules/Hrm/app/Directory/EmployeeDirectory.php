@@ -106,6 +106,8 @@ class EmployeeDirectory
             userId: $employee->user_id,
             joinedOn: $employee->joined_on,
             exitsOn: $employee->exits_on,
+            managerId: $employee->manager_id,
+            gender: $employee->gender,
         );
     }
 }

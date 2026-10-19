@@ -31,12 +31,12 @@ return [
     [
         'key' => 'manager',
         'sector' => null,
-        'permissions' => ['*.view', '*.manage', '*.use', '*.export', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
+        'permissions' => ['*.view', '*.manage', '*.use', '*.export', 'leave.approve', 'leave.request', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
     ],
     [
         'key' => 'staff',
         'sector' => null,
-        'permissions' => ['*.view', '*.use'],
+        'permissions' => ['*.view', '*.use', 'leave.request'],
     ],
     [
         'key' => 'accountant',
@@ -51,7 +51,7 @@ return [
     [
         'key' => 'hr_officer',
         'sector' => null,
-        'permissions' => ['hrm.*', 'attendance.*', 'zkteco.*', 'payroll.view', 'members.manage'],
+        'permissions' => ['hrm.*', 'attendance.*', 'leave.*', 'zkteco.*', 'payroll.view', 'members.manage'],
     ],
     [
         'key' => 'store_keeper',
@@ -109,7 +109,7 @@ return [
         'key' => 'principal',
         'sector' => 'school',
         'permissions' => [
-            '*.view', 'hrm.manage', 'attendance.manage', 'zkteco.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
+            '*.view', 'hrm.manage', 'attendance.manage', 'leave.manage', 'leave.approve', 'zkteco.manage', 'members.manage', 'rules.approve', 'payroll.approve', 'accounting.approve',
             'education.manage', 'education.view_sensitive', 'education.approve_promotion', 'education.issue_documents',
             'course_registration.manage', 'course_registration.approve', 'course_registration.record_outcome',
             'education_fees.configure', 'education_fees.approve',
@@ -121,12 +121,12 @@ return [
         'key' => 'teacher',
         'sector' => 'school',
         // Students of their own sections only (rule education.teacher_scope).
-        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post', 'teacher_feedback.view_own', 'student_attendance.view', 'student_attendance.take'],
+        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post', 'teacher_feedback.view_own', 'student_attendance.view', 'student_attendance.take', 'leave.request'],
     ],
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request'],
     ],
 
     // ── University ───────────────────────────────────────────────────────
