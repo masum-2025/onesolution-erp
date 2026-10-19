@@ -115,6 +115,7 @@ return [
             'education_fees.configure', 'education_fees.approve',
             'education_exams.manage', 'education_exams.moderate', 'education_exams.publish', 'education_exams.correct',
             'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results', 'student_attendance.take', 'student_attendance.manage',
+            'edu_website.manage', 'edu_website.publish',
         ],
     ],
     [
@@ -126,7 +127,7 @@ return [
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request', 'edu_website.manage'],
     ],
 
     // ── University ───────────────────────────────────────────────────────

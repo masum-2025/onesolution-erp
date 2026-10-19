@@ -1,0 +1,11 @@
+{
+    "name": "EduWebsite",
+    "alias": "edu_website",
+    "description": "A school's light public website: templates, pages of blocks, notice board, pictures and files.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\EduWebsite\\Providers\\EduWebsiteServiceProvider"
+    ],
+    "files": []
+}

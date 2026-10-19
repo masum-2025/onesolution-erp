@@ -45,6 +45,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     // company, one bridge, revocable, only the SHA-256 kept), 120 calls a minute per token, 401
     // otherwise; its own company's devices given to it, nothing else.
     'GET api/zkteco/bridge/devices', 'POST api/zkteco/bridge/devices/{device}/readings', 'POST api/zkteco/bridge/devices/{device}/error',
+    // A school's public website (WEB-1): published pages only (a draft only with a signed
+    // preview link), GET only, no session or cookie, its own strict CSP, 120 a minute per address.
+    'GET s/{slug}/{path?}',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

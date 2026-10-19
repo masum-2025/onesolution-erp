@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/edu-website",
+    "description": "A school's light public website: templates, pages of blocks, notice board, pictures and files.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\EduWebsite\\": "app/"
+        }
+    }
+}

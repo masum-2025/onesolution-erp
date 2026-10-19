@@ -2514,6 +2514,52 @@ portal member of the company, one employee per login; audited `hrm.login_linked`
   grace, absence alert days, pay-cut policies) and its holiday list; shifts and rosters are each
   company's own data. No code change.
 
+## School website module (WEB-1 backend and public pages)
+
+Module `edu_website` (requires Education; sectors school, college, university, madrasa,
+coaching; in the starter plan): a light public website per company.
+
+- **Addresses**: central `site_addresses` (slug → organization, one per module; `App\Platform\Sites`
+  `SiteResolver`). Served at `{slug}.{config sites.domain}` (env `SITES_DOMAIN`, **placeholder**
+  `sites.localhost`; needs a wildcard DNS record and certificate) by the global middleware
+  `ServeSiteByHost` (before `ResolveHost`, GET/HEAD only), and at `/s/{slug}/…` on the app host
+  (no session or cookie). The client's own domain comes with WEB-3.
+- **Tables** (tenant): `web_sites` (template, colours, names, contact, locales, status draft /
+  published / offline, the **published snapshot** of pages and blocks), `web_pages`, `web_blocks`,
+  `web_notices`, `web_media`. The public sees only the snapshot; a signed link (an hour) previews
+  the draft (`noindex`).
+- **Blocks** (`BlockTypes`, never HTML; texts per language, escaped on output; links http(s) or
+  site paths; pictures and files of the site only): hero, text, notices, admission, programs (from
+  Education's `AcademicDirectory::levels`, or written by hand), people (written by hand — never
+  pulled from HRM), gallery, downloads, contact, attendance (today's **numbers only** from the new
+  public services `Modules\StudentAttendance\Services\TodayCounts` and
+  `Modules\Attendance\Services\TodayCounts`, kept 10 minutes).
+- **Light pages**: server-built Blade, one inline stylesheet (allowed by its SHA-256 in a strict CSP:
+  `default-src 'none'`, no scripts, no framing), menu without JavaScript (`<details>`), images
+  lazy-loaded. Templates `school` and `minimal` are CSS over the same markup (`tpl-*`). Pages kept
+  `sites.cache_seconds` (each publish or notice change starts afresh), 120 requests a minute per
+  address (`sites.per_minute`).
+- **Media** (`MediaStore`): kind read from the bytes (JPEG/PNG/WebP, PDF), at most
+  `edu_website.max_media_mb`; pictures drawn again as WebP (1600 and 480 px wide; the original and
+  its hidden data are not kept); private disk, served by the site with `nosniff`; a file in use
+  (logo, block, notice) cannot be removed.
+- **Rules**: `edu_website.templates` (offered templates; a level above turns some off),
+  `edu_website.max_pages` (12, per plan), `edu_website.max_media_mb` (5).
+- **Permissions**: `edu_website.view`, `edu_website.manage` (pages, notices, files),
+  `edu_website.publish` (start, address, publish, offline). Principal: manage + publish; office
+  staff: manage. Audited: started, settings, published, offline, notice published / removed.
+- **API** (`/api/organizations/{org}/website`, `module:edu_website`): `GET|POST|PATCH /`,
+  `POST publish|offline`, `GET preview`, pages and blocks (`…/pages/{id}/blocks`, `…/order`),
+  notices, media (uploads throttled `edu-website-uploads`).
+- Screens come with WEB-2; Campus and Madrasa templates, the client's own domain, SEO and an
+  admission enquiry form with WEB-3.
+
+### Future expansion (Website)
+
+A new template is a value in `edu_website.templates`, a `tpl-*` block in `site-css.blade.php` and
+two labels; a new block type is an entry in `BlockTypes` and a Blade partial. A country, sector or
+partner changes rules and content only.
+
 ## Leave module (LV-1 backend)
 
 Requires HRM; works with Attendance (weekends, holidays, the day shown as leave) and Payroll

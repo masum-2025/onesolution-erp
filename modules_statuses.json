@@ -29,5 +29,6 @@
     "Fleet": true,
     "StudentAttendance": true,
     "Zkteco": true,
-    "Leave": true
+    "Leave": true,
+    "EduWebsite": true
 }

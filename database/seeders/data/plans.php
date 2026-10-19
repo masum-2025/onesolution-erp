@@ -26,7 +26,7 @@ return [
         'key' => 'starter',
         'public' => true,
         'modules' => [
-            'accounting', 'api_integration', 'attendance', 'client_portal', 'course_registration', 'crm', 'education', 'education_exams', 'education_fees', 'education_lectures', 'external_integrations',
+            'accounting', 'api_integration', 'attendance', 'client_portal', 'course_registration', 'crm', 'edu_website', 'education', 'education_exams', 'education_fees', 'education_lectures', 'external_integrations',
             'factory_erp', 'hrm', 'inventory', 'leave', 'multi_currency', 'multi_language',
             'offline_mode', 'online_payments', 'payroll', 'pos', 'student_attendance', 'teacher_feedback',
         ],

@@ -48,6 +48,7 @@ use App\Platform\Packaging\Models\Subscription;
 use App\Platform\PartnerApi\Models\PartnerApiKey;
 use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Partners\Models\PartnerDomain;
+use App\Platform\Sites\SiteAddress;
 use App\Platform\Partners\Models\PartnerModule;
 use App\Platform\Payments\Models\GatewayEvent;
 use App\Platform\Payments\Models\Payment;
@@ -113,6 +114,9 @@ const PLATFORM_MODELS = [
     PartnerBrand::class,
     PartnerDomain::class,
     PartnerModule::class,
+    // A public site's address (central): the slug -> organization lookup a public request needs
+    // before any tenant is known; written only by the website service of that organization.
+    SiteAddress::class,
     // Support grants are shared by a partner and a client; data exports are
     // written by the export service and job (which run without a tenant
     // context). Both are read only through visible-organization lookups.

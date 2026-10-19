@@ -25,7 +25,7 @@ it('loads every installed module from its manifest', function () {
         'hrm', 'attendance', 'payroll', 'accounting', 'inventory', 'pos', 'crm', 'factory_erp', 'education', 'course_registration', 'education_fees', 'education_exams', 'education_lectures', 'teacher_feedback',
         'offline_mode', 'multi_currency', 'multi_language', 'api_integration', 'external_integrations',
         'document_ai', 'ai_assistant', 'energy_monitoring', 'carbon_management', 'advanced_audit', 'custom_reports', 'client_portal', 'online_payments',
-        'fleet', 'student_attendance', 'zkteco', 'leave',
+        'fleet', 'student_attendance', 'zkteco', 'leave', 'edu_website',
     ]);
 });
 
