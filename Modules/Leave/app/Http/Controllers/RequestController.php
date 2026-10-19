@@ -99,6 +99,23 @@ class RequestController extends Controller
         return response()->json(['data' => $this->present($company, collect([$decided]), $request)[0]]);
     }
 
+    /**
+     * People at the unit (and below it) employed today, to pick someone on
+     * the leave screens: name and code only (HRM's list needs hrm.view).
+     */
+    public function people(Request $request, string $organization): JsonResponse
+    {
+        [$unit, $company] = $this->place($organization);
+        abort_unless(Gate::any(['leave.view', 'leave.manage'], $unit), 403);
+        $search = mb_strtolower(trim((string) ($request->validate(['q' => ['nullable', 'string', 'max:100']])['q'] ?? '')));
+
+        $people = collect($this->directory->inUnits($company, $this->place->subtreeIds($unit), $this->place->today($company)))
+            ->filter(fn ($employee) => $search === '' || str_contains(mb_strtolower($employee->name), $search) || str_contains(mb_strtolower($employee->code), $search))
+            ->take(50)->map(fn ($employee) => ['id' => $employee->id, 'name' => $employee->name, 'code' => $employee->code])->values();
+
+        return response()->json(['data' => $people]);
+    }
+
     /** One employee's balances in a leave year (the current one by default). */
     public function balances(Request $request, string $organization): JsonResponse
     {

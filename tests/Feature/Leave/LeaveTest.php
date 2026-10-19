@@ -218,6 +218,15 @@ it('keeps leave to the company and switches off with the module', function () {
     expect(collect($this->asToken($this->worker)->getJson(($this->api)('me'))->assertOk()->json('data.requests'))->pluck('id')->all())->toBe([$request['id']]);
 });
 
+it('lists the people of the unit to pick on the leave screens, by name or code', function () {
+    $people = collect($this->asToken($this->hr)->getJson(($this->api)('people?q=rahima'))->assertOk()->json('data'));
+    expect($people->sole())->toMatchArray(['id' => $this->rahima['id'], 'name' => 'Rahima Akter'])
+        ->and(array_keys($people->sole()))->toBe(['id', 'name', 'code']);
+    expect($this->asToken($this->hr)->getJson(($this->api)('people'))->json('data'))->toHaveCount(2);
+    // Someone who may only ask for their own leave sees nobody's list.
+    $this->asToken($this->worker)->getJson(($this->api)('people'))->assertForbidden();
+});
+
 it('shows a portal employee their own leave only', function () {
     toggles()->enable($this->w->g1, 'client_portal', 'Test setup');
     ($this->ask)(['from_date' => '2026-10-20', 'to_date' => '2026-10-20'])->assertCreated();

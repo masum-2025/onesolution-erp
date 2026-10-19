@@ -117,8 +117,26 @@ return [
             'sort_order' => 50,
         ],
     ],
-    // Screens come with LV-2.
-    'menu' => [],
+    'menu' => [
+        [
+            'key' => 'leave',
+            'label' => 'leave::module.menu',
+            'route' => '/leave/me',
+            'icon' => 'calendar-off',
+            'order' => 22,
+            'section' => 'people',
+            'children' => [
+                ['key' => 'me', 'label' => 'leave::module.menu_me', 'route' => '/leave/me', 'permission' => 'leave.request'],
+                ['key' => 'requests', 'label' => 'leave::module.menu_requests', 'route' => '/leave/requests', 'permission' => 'leave.view'],
+                ['key' => 'calendar', 'label' => 'leave::module.menu_calendar', 'route' => '/leave/calendar', 'permission' => 'leave.view'],
+                ['key' => 'balances', 'label' => 'leave::module.menu_balances', 'route' => '/leave/balances', 'permission' => 'leave.view'],
+            ],
+        ],
+    ],
+    // The header "New" menu: asking for leave from anywhere.
+    'quick_actions' => [
+        ['key' => 'ask_leave', 'label' => 'leave::module.ask', 'route' => '/leave/me', 'permission' => 'leave.request', 'icon' => 'calendar-off'],
+    ],
     'events' => [],
     'is_core' => false,
     'requires_consent' => false,
@@ -143,5 +161,11 @@ return [
     ],
     // Asking for leave while the phone is offline (Offline mode on).
     'sync_records' => [LeaveRequestSync::class],
-    'settings' => ['pages' => []],
+    'settings' => ['pages' => [
+        ['key' => 'types', 'label' => 'leave::module.menu_types', 'route' => '/leave/types', 'permission' => 'leave.view'],
+    ]],
+    // An employee opens their own leave from their record in the client's portal.
+    'portal_pages' => [
+        ['subject' => 'hrm.employee', 'label' => 'leave::module.portal_leave', 'route' => '/portal/leave'],
+    ],
 ];

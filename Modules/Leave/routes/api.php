@@ -19,6 +19,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:leave'])
         Route::get('requests', [RequestController::class, 'index']);
         Route::get('requests/{leave}', [RequestController::class, 'show']);
         Route::get('balances', [RequestController::class, 'balances']);
+        Route::get('people', [RequestController::class, 'people']);
         Route::get('me', [MeController::class, 'show']);
 
         Route::middleware('throttle:leave-writes')->group(function () {

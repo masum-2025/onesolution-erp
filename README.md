@@ -2562,7 +2562,19 @@ Requires HRM; works with Attendance (weekends, holidays, the day shown as leave)
   officer all, manager approve + request, staff / teacher / office staff request, principal
   manage + approve. Dashboard: on leave today, requests waiting (+ bell). Data export: types,
   requests, approvals, ledger.
-- Screens come with LV-2.
+- `GET leave/people?q=` (`leave.view` or `leave.manage`): people of the unit employed today, name
+  and code only, for the screens' pickers (HRM's list needs `hrm.view`).
+
+### Leave screens (LV-2)
+
+`Modules/Leave/resources/js` (routes, `api.js`, `lib.js`; amounts shown in days, half days as
+0.5). Menu section "people" → Leave: `/leave/me` (balance cards, ask, withdraw), `/leave/requests`
+(waiting first; approve / reject with an optional note where `can_decide`; HR cancels and asks for
+someone), `/leave/calendar` (who is away in a month: "A" approved, "W" waiting, with a legend),
+`/leave/balances` (pick a person, the year's figures, HR changes by hand with a reason); settings
+page `/leave/types` ("Add the usual ones", add / change, switch off). Header "New" → Ask for
+leave. Portal: `/portal/leave` (read only). Paying unused leave out at year end (encashment) is
+not built yet: it needs a Payroll earning line (LV-3).
 
 ### Future expansion (Leave)
 
