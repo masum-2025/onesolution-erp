@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Queue;
 use Modules\Attendance\Services\AttendanceSummary;
 use Modules\Leave\Models\LeaveEntry;
+use Modules\Leave\Payroll\EncashedDays;
 use Modules\Leave\Services\LeavePolicy;
+use Modules\Payroll\Services\PayCalculator;
 
 /*
  * LV-1: kinds of leave (the usual ones from the rule), leave coming in,
@@ -216,6 +218,50 @@ it('keeps leave to the company and switches off with the module', function () {
     $this->asToken($this->worker)->getJson(($this->api)('me'))->assertForbidden();
     toggles()->enable($this->w->g1, 'leave', 'Back');
     expect(collect($this->asToken($this->worker)->getJson(($this->api)('me'))->assertOk()->json('data.requests'))->pluck('id')->all())->toBe([$request['id']]);
+});
+
+it('pays unused leave out once someone else approves it, and hands Payroll the days', function () {
+    $annual = collect($this->asToken($this->hr)->getJson(($this->api)('types'))->json('data'))->firstWhere('code', 'AL');
+    $ask = fn (array $data) => $this->asToken($this->hr)->postJson(($this->api)('encashments'), [
+        'employee_id' => $this->rahima['id'], 'type_id' => $annual['id'], 'leave_year' => 2026, 'reason' => 'Year end', ...$data,
+    ]);
+    // Casual leave cannot be paid out; no more than is left (12.5 days of annual leave).
+    $this->asToken($this->hr)->postJson(($this->api)('encashments'), ['employee_id' => $this->rahima['id'], 'type_id' => $this->casual['id'], 'leave_year' => 2026, 'halves' => 2, 'reason' => 'Year end'])
+        ->assertUnprocessable()->assertJsonPath('code', 'not_encashable');
+    $ask(['halves' => 26])->assertUnprocessable()->assertJsonPath('code', 'not_enough');
+    $ask(['halves' => 4, 'colour' => 'red'])->assertUnprocessable();
+    $this->asToken($this->boss)->postJson(($this->api)('encashments'), ['employee_id' => $this->rahima['id'], 'type_id' => $annual['id'], 'leave_year' => 2026, 'halves' => 4, 'reason' => 'Mine'])->assertForbidden();
+
+    $payOut = $ask(['halves' => 4])->assertCreated()->json('data');
+    expect(($this->myBalance)('AL'))->toMatchArray(['balance_halves' => 25, 'waiting_halves' => 4, 'available_halves' => 21]);
+
+    // Money: never whoever asked.
+    $decide = fn (string $token, string $step) => $this->asToken($token)->postJson(($this->api)("encashments/{$payOut['id']}/{$step}"), ['base_version' => $payOut['version']]);
+    $decide($this->hr, 'approve')->assertForbidden()->assertJsonPath('code', 'own_encashment');
+    $list = collect($this->asToken($this->boss)->getJson(($this->api)('encashments?status=pending'))->assertOk()->json('data'));
+    expect($list->sole())->toMatchArray(['employee_name' => 'Rahima Akter', 'halves' => 4, 'can_decide' => true]);
+    $decide($this->boss, 'approve')->assertOk()->assertJsonPath('data.status', 'approved')->assertJsonPath('data.pay_on', '2026-10-15');
+
+    expect(($this->myBalance)('AL'))->toMatchArray(['given_halves' => 25, 'encashed_halves' => 4, 'balance_halves' => 21, 'available_halves' => 21])
+        ->and(AuditLog::query()->where('action', 'leave.encashment_approved')->count())->toBe(1);
+
+    // Payroll gets half days (never money) in the run whose days include the approval day.
+    $days = app(EncashedDays::class)->daysToPay($this->w->c1, [$this->rahima['id']], CarbonImmutable::parse('2026-10-01'), CarbonImmutable::parse('2026-10-31'));
+    expect($days[$this->rahima['id']][0])->toMatchArray(['code' => 'LEAVE_PAID_OUT', 'halves' => 4, 'taxable' => true])
+        ->and($days[$this->rahima['id']][0]['name']['en'])->toBe('Leave paid out (Annual leave)')
+        ->and(app(EncashedDays::class)->daysToPay($this->w->c1, [$this->rahima['id']], CarbonImmutable::parse('2026-11-01'), CarbonImmutable::parse('2026-11-30')))->toBe([]);
+});
+
+it('pays the days out at a day of the basic or the gross', function () {
+    $facts = ['basic' => 3000000, 'items' => [['code' => 'HOUSE', 'name' => ['en' => 'House'], 'kind' => 'earning', 'taxable' => true, 'prorated' => false, 'calc' => 'fixed', 'amount' => 1500000, 'rate_bp' => null]],
+        'period_days' => 31, 'employed_days' => 31, 'absent_days' => 0, 'half_days' => 0, 'overtime_minutes' => 0, 'late_minutes' => 0, 'adjustments' => [],
+        'paid_days' => [['code' => 'LEAVE_PAID_OUT', 'name' => ['en' => 'Leave paid out'], 'halves' => 4, 'taxable' => true]]];
+    $rules = ['deduct_absence' => true, 'overtime_multiplier_bp' => 0, 'overtime_base' => 'basic', 'monthly_hours' => 208, 'late_policy' => 'none', 'tax_slabs' => [], 'encash_divisor' => 30];
+    $line = fn (string $base) => collect(PayCalculator::slip($facts, [...$rules, 'encash_base' => $base])['lines'])->firstWhere('code', 'LEAVE_PAID_OUT');
+
+    // Two days at 30,000.00 / 30, or at 45,000.00 / 30.
+    expect($line('basic'))->toMatchArray(['kind' => 'earning', 'amount' => 200000, 'taxable' => true])
+        ->and($line('gross')['amount'])->toBe(300000);
 });
 
 it('lists the people of the unit to pick on the leave screens, by name or code', function () {

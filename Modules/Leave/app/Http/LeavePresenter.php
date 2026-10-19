@@ -3,6 +3,7 @@
 namespace Modules\Leave\Http;
 
 use Modules\Hrm\Directory\EmployeeRecord;
+use Modules\Leave\Models\LeaveEncashment;
 use Modules\Leave\Models\LeaveRequest;
 use Modules\Leave\Models\LeaveType;
 
@@ -25,15 +26,30 @@ class LeavePresenter
     }
 
     /**
-     * @param  array{type: LeaveType, given: int, taken: int, balance: int, waiting: int, available: int}  $row
+     * @param  array{type: LeaveType, given: int, taken: int, encashed?: int, balance: int, waiting: int, available: int}  $row
      * @return array<string, mixed>
      */
     public function balance(array $row): array
     {
         return [
             'type_id' => $row['type']->getKey(), 'code' => $row['type']->code, 'name' => $row['type']->textIn('name'), 'paid' => $row['type']->paid,
-            'half_day' => $row['type']->half_day, 'given_halves' => $row['given'], 'taken_halves' => $row['taken'],
+            'half_day' => $row['type']->half_day, 'given_halves' => $row['given'], 'taken_halves' => $row['taken'], 'encashed_halves' => $row['encashed'] ?? 0, 'encashable' => $row['type']->encashable,
             'balance_halves' => $row['balance'], 'waiting_halves' => $row['waiting'], 'available_halves' => $row['available'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function encashment(LeaveEncashment $item, ?EmployeeRecord $employee = null, ?LeaveType $type = null, ?bool $canDecide = null): array
+    {
+        return [
+            'id' => $item->getKey(), 'employee_id' => $item->employee_id,
+            ...($employee === null ? [] : ['employee_name' => $employee->name, 'employee_code' => $employee->code]),
+            'type_id' => $item->type_id, ...($type === null ? [] : ['type_name' => $type->textIn('name')]),
+            'leave_year' => $item->leave_year, 'halves' => $item->halves, 'reason' => $item->reason, 'status' => $item->status,
+            'decision_note' => $item->decision_note, 'pay_on' => $item->pay_on?->toDateString(), 'version' => $item->version,
+            ...($canDecide === null ? [] : ['can_decide' => $canDecide]),
         ];
     }
 

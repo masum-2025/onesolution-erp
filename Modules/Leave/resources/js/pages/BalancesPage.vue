@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { ChevronLeft, ChevronRight, Scale, SlidersHorizontal } from 'lucide-vue-next';
+import { Banknote, ChevronLeft, ChevronRight, Scale, SlidersHorizontal } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -14,7 +14,7 @@ import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import EmployeePicker from '../components/EmployeePicker.vue';
 import { leaveApi } from '../api';
-import { daysText, daysToHalves } from '../lib';
+import { daysText, daysToHalves, halvesToDays } from '../lib';
 
 /**
  * One person's leave in a leave year: given (accrued, carried, changed by
@@ -89,6 +89,32 @@ async function save() {
 }
 
 const fieldError = (name) => errors.value[name]?.[0] ?? null;
+
+// Paying unused leave out: HR asks, someone else approves on the "Paid out" page.
+const paying = ref(null);
+const pay = reactive({ days: 1, reason: '' });
+
+function payOut(row) {
+    Object.assign(pay, { days: halvesToDays(row.available_halves), reason: '' });
+    errors.value = {};
+    paying.value = row;
+}
+
+async function sendPayOut() {
+    saving.value = true;
+    errors.value = {};
+    try {
+        await leave.encash({ employee_id: person.value.id, type_id: paying.value.type_id, leave_year: year.value, halves: daysToHalves(pay.days), reason: pay.reason.trim() });
+        toast.success(t('leave.balances.pay_out_sent'));
+        paying.value = null;
+        load();
+    } catch (error) {
+        errors.value = error.errors ?? {};
+        if (!Object.keys(errors.value).length) toast.error(error.message);
+    } finally {
+        saving.value = false;
+    }
+}
 </script>
 
 <template>
@@ -118,6 +144,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                             <th scope="col" class="px-5 py-2 text-start font-medium">{{ t('leave.balances.type') }}</th>
                             <th scope="col" class="px-3 py-2 text-end font-medium">{{ t('leave.balances.given') }}</th>
                             <th scope="col" class="px-3 py-2 text-end font-medium">{{ t('leave.balances.taken') }}</th>
+                            <th scope="col" class="px-3 py-2 text-end font-medium">{{ t('leave.balances.paid_out') }}</th>
                             <th scope="col" class="px-3 py-2 text-end font-medium">{{ t('leave.balances.waiting') }}</th>
                             <th scope="col" class="px-3 py-2 text-end font-medium">{{ t('leave.balances.left') }}</th>
                             <th v-if="meta.can_adjust" scope="col"><span class="sr-only">{{ t('leave.balances.adjust') }}</span></th>
@@ -131,10 +158,14 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                             </th>
                             <td class="px-3 py-2.5 text-end tabular">{{ daysText(row.given_halves) }}</td>
                             <td class="px-3 py-2.5 text-end tabular">{{ daysText(row.taken_halves) }}</td>
+                            <td class="px-3 py-2.5 text-end tabular">{{ daysText(row.encashed_halves) }}</td>
                             <td class="px-3 py-2.5 text-end tabular">{{ daysText(row.waiting_halves) }}</td>
                             <td class="px-3 py-2.5 text-end font-semibold tabular" :class="row.available_halves < 0 ? 'text-bad' : ''">{{ daysText(row.available_halves) }}</td>
                             <td v-if="meta.can_adjust" class="px-3 py-2.5 text-end">
-                                <AppButton size="sm" variant="ghost" :icon="SlidersHorizontal" @click="adjust(row)">{{ t('leave.balances.adjust') }}</AppButton>
+                                <span class="inline-flex flex-wrap justify-end gap-1">
+                                    <AppButton v-if="row.encashable && row.paid && row.available_halves > 0" size="sm" variant="ghost" :icon="Banknote" @click="payOut(row)">{{ t('leave.balances.pay_out') }}</AppButton>
+                                    <AppButton size="sm" variant="ghost" :icon="SlidersHorizontal" @click="adjust(row)">{{ t('leave.balances.adjust') }}</AppButton>
+                                </span>
                             </td>
                         </tr>
                     </tbody>
@@ -161,6 +192,22 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <template #footer>
                 <AppButton variant="ghost" @click="adjusting = null">{{ t('leave.common.cancel') }}</AppButton>
                 <AppButton variant="primary" type="submit" form="leave-adjust" :loading="saving" :disabled="halves === 0 || form.note.trim().length < 3">{{ t('leave.common.save') }}</AppButton>
+            </template>
+        </AppDialog>
+
+        <AppDialog :open="paying !== null" :title="t('leave.balances.pay_out_title')" :description="paying ? t('leave.balances.pay_out_text', { type: paying.name, name: person?.name, days: daysText(paying.available_halves) }) : ''" :icon="Banknote" @close="paying = null">
+            <form id="leave-pay-out" class="grid gap-4" novalidate @submit.prevent="sendPayOut">
+                <AppField v-slot="{ id }" :label="t('leave.balances.days')" :hint="t('leave.balances.days_hint')" :error="fieldError('halves')">
+                    <input :id="id" v-model.number="pay.days" type="number" min="0.5" :max="paying ? halvesToDays(paying.available_halves) : 365" step="0.5" class="field-input tabular text-end" />
+                </AppField>
+                <AppField v-slot="{ id }" :label="t('leave.balances.reason')" :error="fieldError('reason')">
+                    <textarea :id="id" v-model="pay.reason" rows="3" class="field-input" maxlength="500"></textarea>
+                </AppField>
+                <p class="text-[12.5px] text-muted">{{ t('leave.balances.pay_out_note') }}</p>
+            </form>
+            <template #footer>
+                <AppButton variant="ghost" @click="paying = null">{{ t('leave.common.cancel') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="leave-pay-out" :loading="saving" :disabled="daysToHalves(pay.days) <= 0 || pay.reason.trim().length < 3">{{ t('leave.balances.pay_out_send') }}</AppButton>
             </template>
         </AppDialog>
     </div>

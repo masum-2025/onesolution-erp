@@ -9,6 +9,7 @@ export default [
     { path: 'leave/requests', name: 'leave-requests', component: () => import('./pages/RequestsPage.vue'), meta },
     { path: 'leave/calendar', name: 'leave-calendar', component: () => import('./pages/CalendarPage.vue'), meta },
     { path: 'leave/balances', name: 'leave-balances', component: () => import('./pages/BalancesPage.vue'), meta },
+    { path: 'leave/encashments', name: 'leave-encashments', component: () => import('./pages/EncashmentsPage.vue'), meta },
     { path: 'leave/types', name: 'leave-types', component: () => import('./pages/TypesPage.vue'), meta },
 
     // An employee's own leave in the client's portal (B2B2C): portal members may open this.

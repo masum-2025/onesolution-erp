@@ -11,6 +11,8 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Leave\Attendance\LeaveDays;
 use Modules\Leave\Console\AccrueLeave;
 use Modules\Leave\Export\LeaveExporter;
+use Modules\Leave\Payroll\EncashedDays;
+use Modules\Payroll\Contracts\DaysToPay;
 
 /**
  * Leave: each company's kinds of leave, the balance ledger, requests and
@@ -27,6 +29,10 @@ class LeaveServiceProvider extends ServiceProvider
     {
         // Attendance asks every tagged source whether someone is on leave that day.
         $this->app->tag([LeaveDays::class], 'attendance.leave_sources');
+        // Payroll pays approved leave pay-outs (its DaysToPay contract), when Payroll is installed.
+        if (interface_exists(DaysToPay::class)) {
+            $this->app->tag([EncashedDays::class], 'payroll.days_to_pay');
+        }
         // The client's data export includes leave (ExportsModuleData).
         $this->app->tag([LeaveExporter::class], 'module.exporters');
     }

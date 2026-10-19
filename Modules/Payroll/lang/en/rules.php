@@ -40,6 +40,15 @@ return [
         'description' => 'How much basic each cut takes: half a day or one day.',
         'options' => ['half_day' => 'Half a day', 'one_day' => 'One day'],
     ],
+    'encashment_base' => [
+        'label' => 'Leave paid out: a day of',
+        'description' => 'Unused leave paid out (Leave module) is paid at a day of the basic or of the gross pay.',
+        'options' => ['basic' => 'Basic', 'gross' => 'Gross'],
+    ],
+    'encashment_day_divisor' => [
+        'label' => 'Leave paid out: days in a month',
+        'description' => 'A day\'s pay for leave paid out = the month\'s basic (or gross) over this many days.',
+    ],
     'early_leave_policy' => [
         'label' => 'Pay cut for leaving early',
         'description' => 'Leaving before the shift ends (beyond the attendance grace): no cut, or every few such days cut a half or whole day\'s basic.',

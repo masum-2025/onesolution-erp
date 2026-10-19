@@ -10,6 +10,7 @@ use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Modules\Hrm\Directory\EmployeeRecord;
+use Modules\Leave\Models\LeaveEncashment;
 use Modules\Leave\Models\LeaveEntry;
 use Modules\Leave\Models\LeaveRequest;
 use Modules\Leave\Models\LeaveType;
@@ -47,13 +48,17 @@ class Balances
             ->where('type_id', $typeId)->where('leave_year', $year)->sum('halves');
     }
 
-    /** Paid half days asked for and not decided yet. */
+    /** Paid half days asked for (leave or paid out) and not decided yet. */
     public function waiting(Organization $company, string $employeeId, string $typeId, int $year, ?string $except = null): int
     {
-        return (int) $this->place->query(LeaveRequest::class, $company)->where('employee_id', $employeeId)
+        $requests = (int) $this->place->query(LeaveRequest::class, $company)->where('employee_id', $employeeId)
             ->where('type_id', $typeId)->where('leave_year', $year)->where('status', LeaveRequest::PENDING)
             ->when($except !== null, fn ($query) => $query->whereKeyNot($except))
             ->get(['halves', 'unpaid_halves'])->sum(fn (LeaveRequest $request) => $request->halves - $request->unpaid_halves);
+        $payOuts = (int) $this->place->query(LeaveEncashment::class, $company)->where('employee_id', $employeeId)
+            ->where('type_id', $typeId)->where('leave_year', $year)->where('status', LeaveEncashment::PENDING)->sum('halves');
+
+        return $requests + $payOuts;
     }
 
     public function available(Organization $company, string $employeeId, string $typeId, int $year): int
@@ -64,7 +69,7 @@ class Balances
     /**
      * Each type someone may take, with the year's figures (half days).
      *
-     * @return list<array{type: LeaveType, given: int, taken: int, balance: int, waiting: int, available: int}>
+     * @return list<array{type: LeaveType, given: int, taken: int, encashed: int, balance: int, waiting: int, available: int}>
      */
     public function forEmployee(Organization $company, EmployeeRecord $employee, int $year): array
     {
@@ -76,10 +81,11 @@ class Balances
         return $types->map(function (LeaveType $type) use ($company, $employee, $year, $entries) {
             $rows = $entries->get($type->getKey(), collect());
             $taken = (int) -$rows->where('kind', LeaveEntry::TAKEN)->sum('halves');
+            $encashed = (int) -$rows->where('kind', LeaveEntry::ENCASHED)->sum('halves');
             $balance = (int) $rows->sum('halves');
             $waiting = $this->waiting($company, $employee->id, $type->getKey(), $year);
 
-            return ['type' => $type, 'given' => $balance + $taken, 'taken' => $taken, 'balance' => $balance, 'waiting' => $waiting, 'available' => $balance - $waiting];
+            return ['type' => $type, 'given' => $balance + $taken + $encashed, 'taken' => $taken, 'encashed' => $encashed, 'balance' => $balance, 'waiting' => $waiting, 'available' => $balance - $waiting];
         })->values()->all();
     }
 

@@ -11,6 +11,8 @@ namespace Modules\Payroll\Services;
  *   days when the company deducts them (payroll.deduct_absence):
  *   amount x payable half-days / (2 x days in the month).
  * - Half days of leave without pay (Leave module) are always taken off.
+ * - Days to pay from other modules (unused leave paid out): a day = the
+ *   basic or gross over payroll.encashment_day_divisor.
  * - Over time: minutes x hourly rate x multiplier, the hourly rate being
  *   the basic (or the full gross) over payroll.monthly_hours.
  * - Coming late (payroll.late_policy): each minute at the basic's minute
@@ -26,8 +28,8 @@ namespace Modules\Payroll\Services;
 final class PayCalculator
 {
     /**
-     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, late_days?: int, early_days?: int, unpaid_leave_halves?: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
-     * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_policy: string, late_per_cut?: int, late_cut_halves?: int, early_policy?: string, early_per_cut?: int, early_cut_halves?: int, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
+     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, late_days?: int, early_days?: int, unpaid_leave_halves?: int, paid_days?: list<array{code: string, name: array<string, string>, halves: int, taxable: bool}>, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
+     * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_policy: string, late_per_cut?: int, late_cut_halves?: int, early_policy?: string, early_per_cut?: int, early_cut_halves?: int, encash_base?: string, encash_divisor?: int, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
      * @return array{lines: list<array{kind: string, code: string, name: array<string, string>, amount: int, taxable: bool}>, earnings: int, deductions: int, tax: int, net: int, problem: string|null}
      */
     public static function slip(array $facts, array $rules): array
@@ -87,6 +89,12 @@ final class PayCalculator
         // Loan instalments of the month (worked out from each loan's balance by Runs).
         foreach ($facts['loans'] ?? [] as $amount) {
             $lines[] = ['kind' => 'deduction', 'code' => 'LOAN', 'name' => ['en' => 'Loan instalment', 'bn' => 'ঋণের কিস্তি'], 'amount' => (int) $amount, 'taxable' => false];
+        }
+        // Days other modules say are to be paid (DaysToPay: unused leave paid out), at a day of the
+        // basic or the gross (payroll.encashment_base) over payroll.encashment_day_divisor days.
+        foreach ($facts['paid_days'] ?? [] as $days) {
+            $base = ($rules['encash_base'] ?? 'basic') === 'gross' ? $gross : $facts['basic'];
+            $lines[] = ['kind' => 'earning', 'code' => $days['code'], 'name' => $days['name'], 'amount' => self::divide($base * (int) $days['halves'], 2 * max(1, (int) ($rules['encash_divisor'] ?? 30))), 'taxable' => (bool) $days['taxable']];
         }
         // Earnings other modules work out (EarningSource: piece rates, commission).
         foreach ($facts['earnings'] ?? [] as $earning) {

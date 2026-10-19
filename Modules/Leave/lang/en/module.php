@@ -8,6 +8,7 @@ return [
     'menu_requests' => 'Requests',
     'menu_calendar' => 'Calendar',
     'menu_balances' => 'Balances',
+    'menu_encashments' => 'Paid out',
     'menu_types' => 'Kinds of leave',
     'ask' => 'Ask for leave',
     'portal_leave' => 'My leave',

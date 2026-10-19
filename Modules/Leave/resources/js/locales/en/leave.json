@@ -110,7 +110,27 @@
         "days": "Days",
         "days_hint": "Half days allowed (0.5).",
         "reason": "Reason",
-        "adjusted": "Balance changed."
+        "adjusted": "Balance changed.",
+        "paid_out": "Paid out",
+        "pay_out": "Pay out",
+        "pay_out_title": "Pay unused leave out",
+        "pay_out_text": "{type} of {name}: {days} day(s) left.",
+        "pay_out_note": "Someone else approves it on the \"Paid out\" page. Payroll then pays it in that month's run at a day of pay.",
+        "pay_out_send": "Ask to pay out",
+        "pay_out_sent": "Pay-out asked for. It waits for approval."
+    },
+    "encash": {
+        "title": "Leave paid out",
+        "text": "Unused leave paid out with pay. Someone other than whoever asked approves it.",
+        "empty": "Nothing here.",
+        "empty_text": "Ask from a person's balances, for kinds of leave that can be paid out.",
+        "approve_title": "Pay out {name}'s leave?",
+        "reject_title": "Reject paying out {name}'s leave?",
+        "what": "{type}: {days} day(s) of leave year {year}.",
+        "approve_done": "Approved. Payroll pays it in this month's run.",
+        "reject_done": "Rejected.",
+        "year": "leave year {year}",
+        "paid_with": "with the pay of {date}"
     },
     "types": {
         "title": "Kinds of leave",

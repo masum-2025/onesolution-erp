@@ -130,6 +130,32 @@ return [
             'sort_order' => 57,
         ],
         [
+            // Unused leave paid out (Leave's DaysToPay): a day of the basic or of the gross.
+            'key' => 'payroll.encashment_base',
+            'type' => 'enum',
+            'schema' => ['enum' => ['basic', 'gross']],
+            'default' => 'basic',
+            'label' => 'payroll::rules.encashment_base.label',
+            'description' => 'payroll::rules.encashment_base.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'attendance',
+            'sort_order' => 61,
+        ],
+        [
+            // A day's pay = the base over this many days (30 = a month's pay over thirty).
+            'key' => 'payroll.encashment_day_divisor',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 31],
+            'default' => 30,
+            'label' => 'payroll::rules.encashment_day_divisor.label',
+            'description' => 'payroll::rules.encashment_day_divisor.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'country_specific' => true,
+            'category' => 'attendance',
+            'sort_order' => 62,
+        ],
+        [
             // Leaving before the shift ends (beyond attendance.early_leave_grace_minutes).
             'key' => 'payroll.early_leave_policy',
             'type' => 'enum',

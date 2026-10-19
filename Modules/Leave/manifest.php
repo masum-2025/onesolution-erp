@@ -130,6 +130,7 @@ return [
                 ['key' => 'requests', 'label' => 'leave::module.menu_requests', 'route' => '/leave/requests', 'permission' => 'leave.view'],
                 ['key' => 'calendar', 'label' => 'leave::module.menu_calendar', 'route' => '/leave/calendar', 'permission' => 'leave.view'],
                 ['key' => 'balances', 'label' => 'leave::module.menu_balances', 'route' => '/leave/balances', 'permission' => 'leave.view'],
+                ['key' => 'encashments', 'label' => 'leave::module.menu_encashments', 'route' => '/leave/encashments', 'permission' => 'leave.view'],
             ],
         ],
     ],

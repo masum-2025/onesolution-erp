@@ -15,6 +15,7 @@ use Modules\Accounting\Ledger\LedgerLine;
 use Modules\Attendance\Services\AttendanceSummary;
 use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Hrm\Directory\EmployeeRecord;
+use Modules\Payroll\Contracts\DaysToPay;
 use Modules\Payroll\Contracts\EarningSource;
 use Modules\Payroll\Events\PayrollApproved;
 use Modules\Payroll\Exceptions\PayrollException;
@@ -99,9 +100,11 @@ class Runs
             );
             $adjustments = $this->payrolls->query(Adjustment::class, $company)->where('run_id', $run->getKey())->get()->groupBy('employee_id');
             $components = $this->payrolls->query(Component::class, $company)->get()->keyBy('id');
-            $earnings = $this->earnings($company, array_values(array_map(fn (EmployeeRecord $employee) => $employee->id, $employees)), $run);
+            $ids = array_values(array_map(fn (EmployeeRecord $employee) => $employee->id, $employees));
+            $earnings = $this->earnings($company, $ids, $run);
+            $paidDays = $this->daysToPay($company, $ids, $run);
             foreach ($employees as $employee) {
-                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components, $earnings[$employee->id] ?? []);
+                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components, $earnings[$employee->id] ?? [], $paidDays[$employee->id] ?? []);
             }
 
             $this->totals($company, $run);
@@ -244,7 +247,7 @@ class Runs
      * @param  Collection<string, Component>  $components
      * @param  list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>  $earnings  From other modules (EarningSource).
      */
-    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components, array $earnings = []): void
+    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components, array $earnings = [], array $paidDays = []): void
     {
         $from = $run->period_from->max($employee->joinedOn);
         $to = $employee->exitsOn === null ? $run->period_to : $run->period_to->min($employee->exitsOn);
@@ -279,6 +282,7 @@ class Runs
             'adjustments' => $adjustments->map(fn (Adjustment $adjustment) => ['kind' => $adjustment->kind, 'label' => $adjustment->label, 'amount' => $adjustment->amount_minor, 'taxable' => $adjustment->taxable])->values()->all(),
             'loans' => $loans,
             'earnings' => $earnings,
+            'paid_days' => $paidDays,
             ...($this->pfShares($employee) === null ? [] : ['pf' => $this->pfShares($employee)]),
         ], $this->ruleSet($employee));
 
@@ -321,6 +325,32 @@ class Runs
     }
 
     /**
+     * Days other modules say are to be paid in the run's period (DaysToPay, tagged
+     * "payroll.days_to_pay"), per employee; positive half days only.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, list<array{code: string, name: array<string, string>, halves: int, taxable: bool}>>
+     */
+    private function daysToPay(Organization $company, array $employeeIds, Run $run): array
+    {
+        $all = [];
+        foreach (app()->tagged('payroll.days_to_pay') as $source) {
+            if (! $source instanceof DaysToPay) {
+                continue;
+            }
+            foreach ($source->daysToPay($company, $employeeIds, $run->period_from, $run->period_to) as $employeeId => $lines) {
+                foreach ($lines as $line) {
+                    if (in_array($employeeId, $employeeIds, true) && (int) $line['halves'] > 0) {
+                        $all[$employeeId][] = $line;
+                    }
+                }
+            }
+        }
+
+        return $all;
+    }
+
+    /**
      * The company's rules at the employee's unit, as PayCalculator takes them.
      *
      * @return array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_policy: string, late_per_cut: int, late_cut_halves: int, early_policy: string, early_per_cut: int, early_cut_halves: int, tax_slabs: list<array{0: int|null, 1: int}>}
@@ -341,6 +371,8 @@ class Runs
             'early_policy' => (string) $get('payroll.early_leave_policy'),
             'early_per_cut' => (int) $get('payroll.early_count_per_cut'),
             'early_cut_halves' => $get('payroll.early_count_cut') === 'half_day' ? 1 : 2,
+            'encash_base' => (string) $get('payroll.encashment_base'),
+            'encash_divisor' => (int) $get('payroll.encashment_day_divisor'),
             'tax_slabs' => array_map(fn (array $slab) => [$slab['upto_minor'] ?? null, PayCalculator::toBasisPoints((string) $slab['rate_percent'], 100) ?? 0], (array) $get('payroll.tax_slabs')),
         ];
     }

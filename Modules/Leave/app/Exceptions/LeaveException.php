@@ -98,6 +98,21 @@ class LeaveException extends TenancyException
         return new self('cannot_cancel', 409);
     }
 
+    public static function notEncashable(): self
+    {
+        return new self('not_encashable', 422);
+    }
+
+    public static function encashmentNotFound(): self
+    {
+        return new self('encashment_not_found', 404);
+    }
+
+    public static function ownEncashment(): self
+    {
+        return new self('own_encashment', 403);
+    }
+
     public static function codeTaken(): self
     {
         return new self('code_taken', 409);

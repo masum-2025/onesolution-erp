@@ -6,6 +6,7 @@ use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Modules\Leave\Models\LeaveApproval;
+use Modules\Leave\Models\LeaveEncashment;
 use Modules\Leave\Models\LeaveEntry;
 use Modules\Leave\Models\LeaveRequest;
 use Modules\Leave\Models\LeaveType;
@@ -40,6 +41,10 @@ class LeaveExporter implements ExportsModuleData
             'approvals' => $this->rows(LeaveApproval::class, $organization, $organizationIds, fn (LeaveApproval $approval) => [
                 'request_id' => $approval->request_id, 'step' => $approval->step, 'user_id' => $approval->user_id,
                 'decision' => $approval->decision, 'note' => $approval->note, 'at' => $approval->created_at?->toIso8601String(),
+            ]),
+            'encashments' => $this->rows(LeaveEncashment::class, $organization, $organizationIds, fn (LeaveEncashment $item) => [
+                'id' => $item->getKey(), 'employee_id' => $item->employee_id, 'type_id' => $item->type_id, 'leave_year' => $item->leave_year,
+                'halves' => $item->halves, 'reason' => $item->reason, 'status' => $item->status, 'pay_on' => $item->pay_on?->toDateString(),
             ]),
             'ledger' => $this->rows(LeaveEntry::class, $organization, $organizationIds, fn (LeaveEntry $entry) => [
                 'employee_id' => $entry->employee_id, 'type_id' => $entry->type_id, 'leave_year' => $entry->leave_year, 'kind' => $entry->kind,

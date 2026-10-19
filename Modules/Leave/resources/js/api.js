@@ -27,6 +27,11 @@ export function leaveApi(organizationId) {
         people: (q) => api(`${base}/people`, { query: { q } }),
         balances: (employeeId, year) => api(`${base}/balances`, { query: { employee_id: employeeId, year } }),
         adjust: (body) => api(`${base}/balances/adjust`, { method: 'POST', body }),
+
+        encashments: (status) => api(`${base}/encashments`, { query: { status } }),
+        // { employee_id, type_id, leave_year, halves, reason }
+        encash: (body) => api(`${base}/encashments`, { method: 'POST', body }),
+        decideEncashment: (id, step, body) => api(`${base}/encashments/${id}/${step}`, { method: 'POST', body }),
     };
 }
 

@@ -8,6 +8,7 @@ return [
     'menu_requests' => 'আবেদন',
     'menu_calendar' => 'ক্যালেন্ডার',
     'menu_balances' => 'বাকি ছুটি',
+    'menu_encashments' => 'টাকায় নেওয়া',
     'menu_types' => 'ছুটির ধরন',
     'ask' => 'ছুটির আবেদন',
     'portal_leave' => 'আমার ছুটি',

@@ -2573,8 +2573,22 @@ Requires HRM; works with Attendance (weekends, holidays, the day shown as leave)
 someone), `/leave/calendar` (who is away in a month: "A" approved, "W" waiting, with a legend),
 `/leave/balances` (pick a person, the year's figures, HR changes by hand with a reason); settings
 page `/leave/types` ("Add the usual ones", add / change, switch off). Header "New" → Ask for
-leave. Portal: `/portal/leave` (read only). Paying unused leave out at year end (encashment) is
-not built yet: it needs a Payroll earning line (LV-3).
+leave. Portal: `/portal/leave` (read only).
+
+### Paying unused leave out (LV-3)
+
+- `lv_encashments`: HR (`leave.manage`) asks from a person's balances for half days of a paid kind
+  marked "can be paid out", at most what is left (waiting requests and pay-outs held back). It is
+  money: someone else with `leave.approve` approves or rejects, never whoever asked nor the
+  employee (`own_encashment`). Approved: ledger kind `encashed` (the days leave the balance; the
+  balances show "paid out"), `pay_on` = the approval day. Audited (`leave.encashment_*`).
+  API `GET|POST encashments`, `POST encashments/{id}/approve|reject`; screen `/leave/encashments`
+  and "Pay out" on `/leave/balances`.
+- Payroll contract `Modules\Payroll\Contracts\DaysToPay` (tagged `payroll.days_to_pay`; Leave's
+  `EncashedDays`): half days per employee whose `pay_on` falls in the run's days, never money.
+  Payroll pays them as an earning line (`LEAVE_PAID_OUT`, taxable): half days × a day of the basic
+  or gross (`payroll.encashment_base`) ÷ (2 × `payroll.encashment_day_divisor`, default 30).
+  Approved after that month's run was approved: it is not in any run (ask again for the next month).
 
 ### Future expansion (Leave)
 

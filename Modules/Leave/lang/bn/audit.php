@@ -9,5 +9,8 @@ return [
     'approved' => 'ছুটি অনুমোদিত',
     'rejected' => 'ছুটি নামঞ্জুর',
     'cancelled' => 'ছুটি বাতিল',
+    'encashment_asked' => 'ছুটি টাকায় নেওয়ার অনুরোধ',
+    'encashment_approved' => 'ছুটি টাকায় নেওয়া অনুমোদিত',
+    'encashment_rejected' => 'ছুটি টাকায় নেওয়া নামঞ্জুর',
     'balance_adjusted' => 'বাকি ছুটি হাতে বদলানো হয়েছে',
 ];

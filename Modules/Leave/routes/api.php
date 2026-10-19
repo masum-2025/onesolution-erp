@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Leave\Http\Controllers\EncashmentController;
 use Modules\Leave\Http\Controllers\MeController;
 use Modules\Leave\Http\Controllers\PortalLeaveController;
 use Modules\Leave\Http\Controllers\RequestController;
@@ -20,6 +21,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:leave'])
         Route::get('requests/{leave}', [RequestController::class, 'show']);
         Route::get('balances', [RequestController::class, 'balances']);
         Route::get('people', [RequestController::class, 'people']);
+        Route::get('encashments', [EncashmentController::class, 'index']);
         Route::get('me', [MeController::class, 'show']);
 
         Route::middleware('throttle:leave-writes')->group(function () {
@@ -29,6 +31,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:leave'])
             Route::post('requests', [RequestController::class, 'store']);
             Route::post('requests/{leave}/{step}', [RequestController::class, 'decide']);
             Route::post('balances/adjust', [RequestController::class, 'adjust']);
+            Route::post('encashments', [EncashmentController::class, 'store']);
+            Route::post('encashments/{encashment}/{step}', [EncashmentController::class, 'decide']);
             Route::post('me/requests', [MeController::class, 'ask']);
             Route::post('me/requests/{leave}/cancel', [MeController::class, 'cancel']);
         });

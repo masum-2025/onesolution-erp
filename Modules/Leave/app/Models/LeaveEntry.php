@@ -28,6 +28,9 @@ class LeaveEntry extends Model
 
     public const RETURNED = 'returned';
 
+    /** Paid out (an approved encashment). */
+    public const ENCASHED = 'encashed';
+
     public const UPDATED_AT = null;
 
     protected $table = 'lv_entries';
