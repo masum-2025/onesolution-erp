@@ -71,6 +71,18 @@ const monthName = computed(() => (slip.value ? formatDate(`${slip.value.period}-
                         <dt class="text-muted">{{ t('payroll.slip.absent') }}</dt>
                         <dd class="tabular">{{ formatNumber(slip.absent_days) }}</dd>
                     </template>
+                    <template v-if="slip.half_days">
+                        <dt class="text-muted">{{ t('payroll.slip.half_days') }}</dt>
+                        <dd class="tabular">{{ formatNumber(slip.half_days) }}</dd>
+                    </template>
+                    <template v-if="slip.late_days">
+                        <dt class="text-muted">{{ t('payroll.slip.late_days') }}</dt>
+                        <dd class="tabular">{{ formatNumber(slip.late_days) }}</dd>
+                    </template>
+                    <template v-if="slip.early_days">
+                        <dt class="text-muted">{{ t('payroll.slip.early_days') }}</dt>
+                        <dd class="tabular">{{ formatNumber(slip.early_days) }}</dd>
+                    </template>
                     <template v-if="slip.overtime_minutes">
                         <dt class="text-muted">{{ t('payroll.slip.overtime') }}</dt>
                         <dd class="tabular">{{ t('payroll.slip.hours', { hours: formatNumber(Math.floor(slip.overtime_minutes / 60)), minutes: formatNumber(slip.overtime_minutes % 60) }) }}</dd>

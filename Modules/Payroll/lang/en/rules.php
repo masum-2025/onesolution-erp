@@ -26,9 +26,33 @@ return [
         'label' => 'Deduct absent days',
         'description' => 'Pay for days absent (and half of half days) is deducted from prorated earnings.',
     ],
-    'late_deduction' => [
-        'label' => 'Deduct late minutes',
-        'description' => 'Minutes late are deducted at the basic\'s minute rate.',
+    'late_policy' => [
+        'label' => 'Pay cut for coming late',
+        'description' => 'None; per minute = each minute late at the basic\'s minute rate; by number of late days = every few late days cut a half or whole day\'s basic (see the next two rules).',
+        'options' => ['none' => 'No cut', 'per_minute' => 'Per minute late', 'count' => 'By number of late days'],
+    ],
+    'late_count_per_cut' => [
+        'label' => 'Late days for one cut',
+        'description' => 'With "by number of late days": every this many late days in the month make one cut (e.g. 3).',
+    ],
+    'late_count_cut' => [
+        'label' => 'Each cut for coming late',
+        'description' => 'How much basic each cut takes: half a day or one day.',
+        'options' => ['half_day' => 'Half a day', 'one_day' => 'One day'],
+    ],
+    'early_leave_policy' => [
+        'label' => 'Pay cut for leaving early',
+        'description' => 'Leaving before the shift ends (beyond the attendance grace): no cut, or every few such days cut a half or whole day\'s basic.',
+        'options' => ['none' => 'No cut', 'count' => 'By number of days'],
+    ],
+    'early_count_per_cut' => [
+        'label' => 'Early-leave days for one cut',
+        'description' => 'Every this many days of leaving early in the month make one cut (e.g. 3).',
+    ],
+    'early_count_cut' => [
+        'label' => 'Each cut for leaving early',
+        'description' => 'How much basic each cut takes: half a day or one day.',
+        'options' => ['half_day' => 'Half a day', 'one_day' => 'One day'],
     ],
     'overtime_base' => [
         'label' => 'Over time paid on',

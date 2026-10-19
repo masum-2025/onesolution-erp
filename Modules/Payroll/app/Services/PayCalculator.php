@@ -12,8 +12,11 @@ namespace Modules\Payroll\Services;
  *   amount x payable half-days / (2 x days in the month).
  * - Over time: minutes x hourly rate x multiplier, the hourly rate being
  *   the basic (or the full gross) over payroll.monthly_hours.
- * - Late minutes are deducted at the basic's minute rate when the company
- *   says so (payroll.late_deduction).
+ * - Coming late (payroll.late_policy): each minute at the basic's minute
+ *   rate (per_minute), or every N late days cut a half or whole day's basic
+ *   (count: payroll.late_count_per_cut / late_count_cut). Leaving early
+ *   (payroll.early_leave_policy) is counted the same way. A day's basic is
+ *   the basic over the days in the month.
  * - Tax at source: the month's taxable earnings x 12 through the slabs
  *   (payroll.tax_slabs: cumulative "up to" bands, null = the rest), a
  *   twelfth of it each month.
@@ -22,8 +25,8 @@ namespace Modules\Payroll\Services;
 final class PayCalculator
 {
     /**
-     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
-     * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_deduction: bool, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
+     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, late_days?: int, early_days?: int, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
+     * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_policy: string, late_per_cut?: int, late_cut_halves?: int, early_policy?: string, early_per_cut?: int, early_cut_halves?: int, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
      * @return array{lines: list<array{kind: string, code: string, name: array<string, string>, amount: int, taxable: bool}>, earnings: int, deductions: int, tax: int, net: int, problem: string|null}
      */
     public static function slip(array $facts, array $rules): array
@@ -54,10 +57,22 @@ final class PayCalculator
                 'amount' => self::divide($base * $facts['overtime_minutes'] * $rules['overtime_multiplier_bp'], $minuteBase * 10000), 'taxable' => true,
             ];
         }
-        if ($rules['late_deduction'] && $facts['late_minutes'] > 0) {
+        if ($rules['late_policy'] === 'per_minute' && $facts['late_minutes'] > 0) {
             $lines[] = [
                 'kind' => 'deduction', 'code' => 'LATE', 'name' => ['en' => 'Late arrival', 'bn' => 'দেরিতে আসা'],
                 'amount' => self::divide($facts['basic'] * $facts['late_minutes'], $minuteBase), 'taxable' => false,
+            ];
+        }
+        if ($rules['late_policy'] === 'count') {
+            $lines[] = [
+                'kind' => 'deduction', 'code' => 'LATE', 'name' => ['en' => 'Late arrival', 'bn' => 'দেরিতে আসা'],
+                'amount' => self::countCut($facts['basic'], $facts['period_days'], $facts['late_days'] ?? 0, $rules['late_per_cut'] ?? 3, $rules['late_cut_halves'] ?? 2), 'taxable' => false,
+            ];
+        }
+        if (($rules['early_policy'] ?? 'none') === 'count') {
+            $lines[] = [
+                'kind' => 'deduction', 'code' => 'EARLY_LEAVE', 'name' => ['en' => 'Leaving early', 'bn' => 'আগে বের হওয়া'],
+                'amount' => self::countCut($facts['basic'], $facts['period_days'], $facts['early_days'] ?? 0, $rules['early_per_cut'] ?? 3, $rules['early_cut_halves'] ?? 2), 'taxable' => false,
             ];
         }
         // Provident fund on the basic paid: the employee's share comes off pay; the
@@ -161,6 +176,18 @@ final class PayCalculator
         }
 
         return min(10000, $share);
+    }
+
+    /**
+     * A cut by counting days (late or left early): every $perCut days make
+     * one cut of $halves half days of the basic (a day = the basic over the
+     * days in the month). 7 late days at 3 per cut = 2 cuts.
+     */
+    public static function countCut(int $basic, int $periodDays, int $days, int $perCut, int $halves): int
+    {
+        $cuts = intdiv(max(0, $days), max(1, $perCut));
+
+        return self::divide($basic * $cuts * max(0, $halves), 2 * max(1, $periodDays));
     }
 
     /** Whole months of service from the day someone joined up to a day. */

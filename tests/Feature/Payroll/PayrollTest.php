@@ -191,7 +191,7 @@ it('does tax, rates and rounding with integers', function () {
     $slip = PayCalculator::slip(
         ['basic' => 1000, 'items' => [], 'period_days' => 30, 'employed_days' => 30, 'absent_days' => 0, 'half_days' => 0, 'overtime_minutes' => 0, 'late_minutes' => 0,
             'adjustments' => [['kind' => 'deduction', 'label' => 'Advance', 'amount' => 5000, 'taxable' => false]]],
-        ['deduct_absence' => true, 'overtime_multiplier_bp' => 15000, 'overtime_base' => 'basic', 'monthly_hours' => 208, 'late_deduction' => false, 'tax_slabs' => []],
+        ['deduct_absence' => true, 'overtime_multiplier_bp' => 15000, 'overtime_base' => 'basic', 'monthly_hours' => 208, 'late_policy' => 'none', 'tax_slabs' => []],
     );
     expect($slip)->toMatchArray(['net' => -4000, 'problem' => 'negative_net']);
 });

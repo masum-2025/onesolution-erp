@@ -5,6 +5,7 @@
 | Business numbers never live here; they are rules (Rules::get('attendance.*')).
 */
 
+use Modules\Attendance\Dashboard\AbsentInARow;
 use Modules\Attendance\Dashboard\CheckedInToday;
 use Modules\Attendance\Dashboard\CorrectionsWaiting;
 use Modules\Attendance\Offline\PunchSync;
@@ -63,6 +64,31 @@ return [
             'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch', 'department'],
             'category' => 'lateness',
             'sort_order' => 30,
+        ],
+        [
+            'key' => 'attendance.early_leave_grace_minutes',
+            'type' => 'integer',
+            'schema' => ['minimum' => 0, 'maximum' => 240],
+            'default' => 10,
+            'label' => 'attendance::rules.early_leave_grace_minutes.label',
+            'description' => 'attendance::rules.early_leave_grace_minutes.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company', 'branch', 'department'],
+            'category' => 'lateness',
+            'sort_order' => 32,
+        ],
+        [
+            'key' => 'attendance.absent_alert_days',
+            'type' => 'integer',
+            // 0 = no alert. Bangladesh: absence over 10 days without leave may end employment
+            // after notice (Labour Act s.27(3A)), so HR is told at 10 (placeholder for review).
+            'schema' => ['minimum' => 0, 'maximum' => 60],
+            'default' => 10,
+            'label' => 'attendance::rules.absent_alert_days.label',
+            'description' => 'attendance::rules.absent_alert_days.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'country_specific' => true,
+            'category' => 'absence',
+            'sort_order' => 33,
         ],
         [
             'key' => 'attendance.overtime_min_minutes',
@@ -214,7 +240,16 @@ return [
         ['key' => 'checked_in', 'label' => 'attendance::dashboard.checked_in', 'type' => 'stat', 'provider' => CheckedInToday::class, 'permission' => 'attendance.view', 'overview' => true],
         ['key' => 'corrections', 'label' => 'attendance::dashboard.corrections', 'type' => 'stat', 'provider' => CorrectionsWaiting::class, 'permission' => 'attendance.view'],
     ]],
-    'attention' => [CorrectionsWaiting::class],
+    'attention' => [CorrectionsWaiting::class, AbsentInARow::class],
+    // HR is told when someone has been absent many working days in a row (attendance:absence-alerts).
+    'notifications' => [
+        'attendance.absent_streak' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'count', 'people', 'link'],
+            'audience' => 'client',
+            'path' => '/attendance/month',
+        ],
+    ],
     // Checking in while the phone is offline (Offline mode on).
     'sync_records' => [PunchSync::class],
     'settings' => ['pages' => [

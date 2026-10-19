@@ -183,6 +183,7 @@ function sent() {
                             <span class="flex-1"></span>
                             <span class="tabular text-muted">{{ time(day.first_in_at) }} – {{ time(day.last_out_at) }}</span>
                             <span v-if="day.late_minutes" class="tabular text-[12px] text-muted">{{ t('attendance.day.late_by', { time: duration(day.late_minutes) }) }}</span>
+                            <span v-if="day.early_minutes" class="tabular text-[12px] text-muted">{{ t('attendance.day.early_by', { time: duration(day.early_minutes) }) }}</span>
                         </li>
                     </ul>
                 </section>

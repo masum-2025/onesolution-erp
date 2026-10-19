@@ -71,7 +71,7 @@ class PayrollExporter implements ExportsModuleData
             'slips' => $this->rows(Slip::class, $organization, $organizationIds, fn (Slip $row) => [
                 'id' => $row->getKey(), 'run_id' => $row->run_id, 'unit_id' => $row->unit_id, 'employee_id' => $row->employee_id, 'employee_code' => $row->employee_code,
                 'employee_name' => $row->employee_name, 'basic_minor' => $row->basic_minor, 'employed_days' => $row->employed_days, 'absent_days' => $row->absent_days,
-                'half_days' => $row->half_days, 'overtime_minutes' => $row->overtime_minutes, 'late_minutes' => $row->late_minutes,
+                'half_days' => $row->half_days, 'overtime_minutes' => $row->overtime_minutes, 'late_minutes' => $row->late_minutes, 'late_days' => $row->late_days, 'early_days' => $row->early_days,
                 'earnings_minor' => $row->earnings_minor, 'deductions_minor' => $row->deductions_minor, 'tax_minor' => $row->tax_minor, 'net_minor' => $row->net_minor,
             ]),
             'slip_lines' => $this->rows(SlipLine::class, $organization, $organizationIds, fn (SlipLine $row) => [

@@ -44,8 +44,10 @@
         "out": "Out",
         "worked": "Worked",
         "late": "Late by",
+        "early": "Left early by",
         "overtime": "Over time",
-        "late_by": "late by {time}"
+        "late_by": "late by {time}",
+        "early_by": "left {time} early"
     },
     "me": {
         "title": "My attendance",

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Attendance\Console\AbsenceAlerts;
 use Modules\Attendance\Console\CloseDays;
 use Modules\Attendance\Console\ForgetLocations;
 use Modules\Attendance\Contracts\DeviceAttendance;
@@ -46,11 +47,13 @@ class AttendanceServiceProvider extends ServiceProvider
             ->by('attendance-device-import:'.($request->user()?->getKey() ?? $request->ip())));
 
         if ($this->app->runningInConsole()) {
-            $this->commands([CloseDays::class, ForgetLocations::class]);
+            $this->commands([CloseDays::class, ForgetLocations::class, AbsenceAlerts::class]);
         }
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             // Each company's "yesterday" (its own timezone) is over by then; working a day out twice changes nothing.
             $schedule->command('attendance:close-days')->dailyAt('01:40')->withoutOverlapping()->onOneServer();
+            // After close-days, so yesterday's absences are in.
+            $schedule->command('attendance:absence-alerts')->dailyAt('01:55')->withoutOverlapping()->onOneServer();
             $schedule->command('attendance:forget-locations')->dailyAt('02:10')->withoutOverlapping()->onOneServer();
         });
 

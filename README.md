@@ -2485,10 +2485,34 @@ portal member of the company, one employee per login; audited `hrm.login_linked`
   from `GET …/hrm/employees/{id}/logins?search=` (active staff and portal members of the company,
   not linked to another employee; name and email only). The employee detail includes `login`.
 
+### HR policy: lateness, leaving early, absence (POL-1)
+
+- **Leaving early**: `att_days.early_minutes` = minutes the last punch is before the shift's end,
+  kept only beyond `attendance.early_leave_grace_minutes` (default 10). Shown in the day panel and
+  on "My attendance"; `AttendanceSummary` gives `early_minutes` and `early_days`.
+- **Pay cuts** (Payroll rules, at the employee's unit):
+  - `payroll.late_policy`: `none` (default), `per_minute` (each minute at the basic's minute rate),
+    or `count`: every `payroll.late_count_per_cut` late days (default 3) cut
+    `payroll.late_count_cut` (`one_day` / `half_day`) of the basic. A day = basic ÷ days in the month.
+    Late days are days with status `late`; half days already cost half a day, so they do not count again.
+  - `payroll.early_leave_policy`: `none` (default) or `count` with `payroll.early_count_per_cut` /
+    `payroll.early_count_cut`. Slip lines `LATE` / `EARLY_LEAVE`; the slip keeps `late_days` and
+    `early_days` and shows them with half days.
+  - `payroll.late_deduction` (boolean) was replaced: migration
+    `2026_11_01_120000_move_payroll_late_deduction_to_late_policy` copies every stored value
+    (true → `per_minute`, false → `none`) with a history entry; `rules:sync` marks the old rule deprecated.
+- **Absent many days in a row**: `attendance:absence-alerts` (daily 01:55, after close-days) finds
+  people whose absences in a row up to yesterday reach `attendance.absent_alert_days` (default 10,
+  0 = off; Bangladesh Labour Act s.27(3A), placeholder for review). Weekends, holidays and days
+  without a shift are skipped; any other day ends the streak. Each streak is reported once
+  (`att_absence_alerts`), in one mail per company and day (`attendance.absent_streak`) to people
+  with `attendance.manage`, and shows in their bell for 7 days (scoped to their unit and below).
+
 ### Future expansion (Attendance)
 
-- A new sector or country changes rules only (weekend days, grace, over-time minimum) and its
-  holiday list; shifts and rosters are each company's own data. No code change.
+- A new sector or country changes rules only (weekend days, grace, over-time minimum, early-leave
+  grace, absence alert days, pay-cut policies) and its holiday list; shifts and rosters are each
+  company's own data. No code change.
 
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 
@@ -2509,8 +2533,8 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
   items are paid for employed days less absences and half of half days (rule
   `payroll.deduct_absence`): amount × payable half-days ÷ (2 × days in the month). Over time =
   minutes × base (`payroll.overtime_base`: basic or gross) ÷ (`payroll.monthly_hours` × 60) ×
-  `payroll.overtime_multiplier`. Late minutes are deducted at the basic's minute rate when
-  `payroll.late_deduction` is on. Tax at source: twelve times the month's taxable earnings through
+  `payroll.overtime_multiplier`. Coming late and leaving early cut pay by `payroll.late_policy` /
+  `payroll.early_leave_policy` (see "HR policy: lateness, leaving early, absence (POL-1)"). Tax at source: twelve times the month's taxable earnings through
   `payroll.tax_slabs` (cumulative "up to" bands; **placeholders for a tax adviser**), a twelfth a
   month. A slip without a salary or with net pay below zero has a `problem` and blocks sending.
 - **Run steps** (`/api/organizations/{org}/payroll/runs…`, at the company): `POST runs {period}`,

@@ -11,12 +11,12 @@ use Modules\Attendance\Enums\DayStatus;
 
 /**
  * One employee's day, worked out from their shift, days off and punches:
- * status, first in and last out, and minutes worked, late and over time.
+ * status, first in and last out, and minutes worked, late, left early and over time.
  * Recalculated whenever something about that day changes.
  */
 #[Fillable([
     'organization_id', 'unit_id', 'employee_id', 'work_date', 'shift_id', 'status',
-    'first_in_at', 'last_out_at', 'worked_minutes', 'late_minutes', 'overtime_minutes',
+    'first_in_at', 'last_out_at', 'worked_minutes', 'late_minutes', 'early_minutes', 'overtime_minutes',
 ])]
 class AttendanceDay extends Model
 {
@@ -33,6 +33,8 @@ class AttendanceDay extends Model
             'last_out_at' => 'immutable_datetime',
             'worked_minutes' => 'integer',
             'late_minutes' => 'integer',
+            // Left before the shift's end by more than the grace (0 within it).
+            'early_minutes' => 'integer',
             'overtime_minutes' => 'integer',
         ];
     }

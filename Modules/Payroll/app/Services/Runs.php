@@ -259,6 +259,8 @@ class Runs
             'period_days' => (int) $run->period_from->diffInDays($run->period_to) + 1, 'employed_days' => $employedDays,
             'absent_days' => $summary['days']['absent'] ?? 0, 'half_days' => $summary['days']['half_day'] ?? 0,
             'overtime_minutes' => $summary['overtime_minutes'] ?? 0, 'late_minutes' => $summary['late_minutes'] ?? 0,
+            // Half days already cost half a day (payroll.deduct_absence), so they are not late days too.
+            'late_days' => $summary['days']['late'] ?? 0, 'early_days' => $summary['early_days'] ?? 0,
         ]);
         if ($salary === null) {
             $slip->fill(['problem' => 'no_salary'])->save();
@@ -272,6 +274,7 @@ class Runs
         $result = PayCalculator::slip([
             'basic' => $salary->basic_minor, 'items' => $items, 'period_days' => $slip->period_days, 'employed_days' => $employedDays,
             'absent_days' => $slip->absent_days, 'half_days' => $slip->half_days, 'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes,
+            'late_days' => $slip->late_days, 'early_days' => $slip->early_days,
             'adjustments' => $adjustments->map(fn (Adjustment $adjustment) => ['kind' => $adjustment->kind, 'label' => $adjustment->label, 'amount' => $adjustment->amount_minor, 'taxable' => $adjustment->taxable])->values()->all(),
             'loans' => $loans,
             'earnings' => $earnings,
@@ -319,7 +322,7 @@ class Runs
     /**
      * The company's rules at the employee's unit, as PayCalculator takes them.
      *
-     * @return array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_deduction: bool, tax_slabs: list<array{0: int|null, 1: int}>}
+     * @return array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_policy: string, late_per_cut: int, late_cut_halves: int, early_policy: string, early_per_cut: int, early_cut_halves: int, tax_slabs: list<array{0: int|null, 1: int}>}
      */
     public function ruleSet(EmployeeRecord $employee): array
     {
@@ -331,7 +334,12 @@ class Runs
             'overtime_multiplier_bp' => PayCalculator::toBasisPoints((string) $get('payroll.overtime_multiplier')) ?? 0,
             'overtime_base' => (string) $get('payroll.overtime_base'),
             'monthly_hours' => (int) $get('payroll.monthly_hours'),
-            'late_deduction' => (bool) $get('payroll.late_deduction'),
+            'late_policy' => (string) $get('payroll.late_policy'),
+            'late_per_cut' => (int) $get('payroll.late_count_per_cut'),
+            'late_cut_halves' => $get('payroll.late_count_cut') === 'half_day' ? 1 : 2,
+            'early_policy' => (string) $get('payroll.early_leave_policy'),
+            'early_per_cut' => (int) $get('payroll.early_count_per_cut'),
+            'early_cut_halves' => $get('payroll.early_count_cut') === 'half_day' ? 1 : 2,
             'tax_slabs' => array_map(fn (array $slab) => [$slab['upto_minor'] ?? null, PayCalculator::toBasisPoints((string) $slab['rate_percent'], 100) ?? 0], (array) $get('payroll.tax_slabs')),
         ];
     }
@@ -451,7 +459,7 @@ class Runs
         $month = PayCalculator::slip([
             'basic' => $salary->basic_minor, 'items' => $this->itemsFor($company, $salary, $components), 'period_days' => 30, 'employed_days' => 30,
             'absent_days' => 0, 'half_days' => 0, 'overtime_minutes' => 0, 'late_minutes' => 0, 'adjustments' => [],
-        ], [...$this->ruleSet($employee), 'late_deduction' => false]);
+        ], [...$this->ruleSet($employee), 'late_policy' => 'none', 'early_policy' => 'none']);
 
         return array_sum(array_map(fn (array $item) => $item['taxable'] ? $item['amount'] : 0, $month['lines']));
     }

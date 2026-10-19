@@ -14,6 +14,8 @@ use Modules\Attendance\Enums\DayStatus;
  * - Worked = out - in, less the break when more than the break was worked.
  * - Late = minutes after the shift start; beyond the grace minutes it is
  *   late, beyond the half-day minutes a half day.
+ * - Left early = minutes the last punch is before the shift's end, kept only
+ *   beyond the early-leave grace (0 within it, or without a last punch).
  * - Over time = worked beyond the shift's expected minutes, counted from the
  *   rule's minimum on; on a day off everything worked is over time.
  * - No punch: absent once the shift is over, pending before.
@@ -23,8 +25,8 @@ final class DayCalculator
     /**
      * @param  array{start: CarbonImmutable, end: CarbonImmutable, break: int, expected: int}|null  $shift
      * @param  list<CarbonImmutable>  $punches  Sorted, not voided.
-     * @param  array{grace: int, half_day: int, overtime_min: int}  $rules
-     * @return array{status: DayStatus, first_in_at: CarbonImmutable|null, last_out_at: CarbonImmutable|null, worked_minutes: int, late_minutes: int, overtime_minutes: int}
+     * @param  array{grace: int, half_day: int, overtime_min: int, early_grace?: int}  $rules
+     * @return array{status: DayStatus, first_in_at: CarbonImmutable|null, last_out_at: CarbonImmutable|null, worked_minutes: int, late_minutes: int, early_minutes: int, overtime_minutes: int}
      */
     public static function day(?array $shift, ?DayStatus $off, array $punches, CarbonImmutable $now, array $rules): array
     {
@@ -33,7 +35,7 @@ final class DayCalculator
         $span = $in !== null && $out !== null ? (int) $in->diffInMinutes($out) : 0;
         $break = $shift['break'] ?? 0;
         $worked = $span > $break ? $span - $break : $span;
-        $result = ['first_in_at' => $in, 'last_out_at' => $out, 'worked_minutes' => min($worked, 65535), 'late_minutes' => 0, 'overtime_minutes' => 0];
+        $result = ['first_in_at' => $in, 'last_out_at' => $out, 'worked_minutes' => min($worked, 65535), 'late_minutes' => 0, 'early_minutes' => 0, 'overtime_minutes' => 0];
 
         if ($off !== null) {
             return [...$result, 'status' => $off, 'overtime_minutes' => self::overtime($worked, $rules['overtime_min'])];
@@ -55,10 +57,13 @@ final class DayCalculator
             default => DayStatus::Present,
         };
 
+        $early = $out !== null && $out->lessThan($shift['end']) ? (int) $out->diffInMinutes($shift['end']) : 0;
+
         return [
             ...$result,
             'status' => $status,
             'late_minutes' => min($late, 65535),
+            'early_minutes' => $early > ($rules['early_grace'] ?? 0) ? min($early, 65535) : 0,
             'overtime_minutes' => self::overtime($worked - $shift['expected'], $rules['overtime_min']),
         ];
     }

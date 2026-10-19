@@ -121,6 +121,7 @@ class AttendancePresenter
             'last_out_at' => $day->last_out_at?->toIso8601String(),
             'worked_minutes' => $day->worked_minutes,
             'late_minutes' => $day->late_minutes,
+            'early_minutes' => $day->early_minutes,
             'overtime_minutes' => $day->overtime_minutes,
         ];
     }

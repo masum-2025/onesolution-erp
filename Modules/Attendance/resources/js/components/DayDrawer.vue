@@ -104,6 +104,7 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
                 <div><dt class="text-muted">{{ t('attendance.day.out') }}</dt><dd class="tabular font-semibold">{{ time(day.last_out_at) }}</dd></div>
                 <div><dt class="text-muted">{{ t('attendance.day.worked') }}</dt><dd class="tabular font-semibold">{{ duration(day.worked_minutes) }}</dd></div>
                 <div><dt class="text-muted">{{ t('attendance.day.late') }}</dt><dd class="tabular">{{ duration(day.late_minutes) }}</dd></div>
+                <div v-if="day.early_minutes"><dt class="text-muted">{{ t('attendance.day.early') }}</dt><dd class="tabular">{{ duration(day.early_minutes) }}</dd></div>
                 <div><dt class="text-muted">{{ t('attendance.day.overtime') }}</dt><dd class="tabular">{{ duration(day.overtime_minutes) }}</dd></div>
             </dl>
 

@@ -44,8 +44,10 @@
         "out": "বের হওয়া",
         "worked": "কাজ",
         "late": "দেরি",
+        "early": "আগে বের হয়েছেন",
         "overtime": "ওভারটাইম",
-        "late_by": "{time} দেরি"
+        "late_by": "{time} দেরি",
+        "early_by": "{time} আগে বের"
     },
     "me": {
         "title": "আমার হাজিরা",

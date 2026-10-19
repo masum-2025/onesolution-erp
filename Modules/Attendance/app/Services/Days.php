@@ -71,6 +71,7 @@ class Days
                 'grace' => (int) $this->rules->get('attendance.late_grace_minutes', $context),
                 'half_day' => (int) $this->rules->get('attendance.half_day_after_minutes', $context),
                 'overtime_min' => (int) $this->rules->get('attendance.overtime_min_minutes', $context),
+                'early_grace' => (int) $this->rules->get('attendance.early_leave_grace_minutes', $context),
             ],
         );
 

@@ -22,6 +22,14 @@ return [
         'label' => 'Half day after (minutes late)',
         'description' => 'A check-in this many minutes late counts as a half day.',
     ],
+    'early_leave_grace_minutes' => [
+        'label' => 'Leaving early allowed (minutes)',
+        'description' => 'Leaving up to this many minutes before the shift ends is not counted as leaving early.',
+    ],
+    'absent_alert_days' => [
+        'label' => 'Tell HR after this many absent days in a row',
+        'description' => 'Working days absent in a row (weekends and holidays skipped) before HR gets a message. 0 = never.',
+    ],
     'geo_fence_required' => [
         'label' => 'Location check required',
         'description' => 'Check-in is only allowed inside the workplace area.',
@@ -73,5 +81,6 @@ return [
         'calendar' => 'Calendar',
         'check_in' => 'Check-in',
         'lateness' => 'Lateness',
+        'absence' => 'Absence',
     ],
 ];

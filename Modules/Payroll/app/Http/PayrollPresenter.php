@@ -99,7 +99,7 @@ class PayrollPresenter
             'id' => $slip->getKey(), 'run_id' => $slip->run_id, 'employee_id' => $slip->employee_id, 'employee_code' => $slip->employee_code,
             'employee_name' => $slip->employee_name, 'unit_id' => $slip->unit_id, 'basic_minor' => $slip->basic_minor,
             'period_days' => $slip->period_days, 'employed_days' => $slip->employed_days, 'absent_days' => $slip->absent_days, 'half_days' => $slip->half_days,
-            'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes,
+            'overtime_minutes' => $slip->overtime_minutes, 'late_minutes' => $slip->late_minutes, 'late_days' => $slip->late_days, 'early_days' => $slip->early_days,
             'earnings_minor' => $slip->earnings_minor, 'deductions_minor' => $slip->deductions_minor, 'tax_minor' => $slip->tax_minor, 'net_minor' => $slip->net_minor,
             'problem' => $slip->problem,
             ...($run === null ? [] : ['period' => $run->period, 'currency' => $run->currency_code, 'paid_on' => $run->paid_on?->toDateString(), 'company' => $run->organization?->name]),
