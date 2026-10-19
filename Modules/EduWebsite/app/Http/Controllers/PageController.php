@@ -44,6 +44,15 @@ class PageController extends Controller
         return response()->json(['data' => $this->presenter->page($this->pages->create($company, $this->siteOf($company), $request->validated()), [])], 201);
     }
 
+    public function order(Request $request, string $organization): JsonResponse
+    {
+        $company = $this->company($organization, 'edu_website.manage');
+        $ids = $request->validate(['ids' => ['required', 'array', 'max:200'], 'ids.*' => ['string', 'size:26']])['ids'];
+        $this->pages->orderPages($company, $this->siteOf($company), $ids);
+
+        return response()->json(['data' => ['ordered' => true]]);
+    }
+
     public function update(PageRequest $request, string $organization, string $page): JsonResponse
     {
         $company = $this->company($organization, 'edu_website.manage');
@@ -86,7 +95,7 @@ class PageController extends Controller
         return response()->json(['data' => ['removed' => true]]);
     }
 
-    public function order(BlockRequest $request, string $organization, string $page): JsonResponse
+    public function orderBlocks(BlockRequest $request, string $organization, string $page): JsonResponse
     {
         $company = $this->company($organization, 'edu_website.manage');
         $found = $this->recordOf(Page::class, $company, $this->siteOf($company), $page, WebsiteException::pageNotFound());

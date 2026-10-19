@@ -13,6 +13,7 @@ return [
         'too_many_pages' => 'Your plan allows :max pages. Remove a page or ask about a bigger plan.',
         'home_needed' => 'The home page must stay, with its address.',
         'media_in_use' => 'This file is used on the website (logo, a block or a notice). Take it out there first.',
+        'default_locale_off' => 'The main language must be one of the languages of the website. Turn it on or choose another main language.',
         'version_conflict' => 'Someone changed this in the meantime. Reload and try again.',
     ],
     'validation' => [

@@ -26,6 +26,9 @@ class Sites
 {
     public const MODULE = 'edu_website';
 
+    /** The templates there are (the rule edu_website.templates says which are offered). */
+    public const TEMPLATES = ['school', 'minimal'];
+
     public function __construct(
         private Place $place,
         private RuleResolver $rules,
@@ -99,7 +102,10 @@ class Sites
                 $this->claim($company, strtolower($data['slug']), $site->slug);
                 $site->slug = strtolower($data['slug']);
             }
-            $site->fill(array_intersect_key($data, array_flip(['template', 'theme', 'contact', 'default_locale', 'logo_media_id'])));
+            $site->fill(array_intersect_key($data, array_flip(['template', 'theme', 'contact', 'default_locale', 'locales', 'logo_media_id'])));
+            if (! in_array($site->default_locale, $site->locales ?? [], true)) {
+                throw WebsiteException::defaultLocaleOff();
+            }
             foreach (['title', 'tagline'] as $field) {
                 if (array_key_exists($field, $data)) {
                     $site->putTexts($field, $data[$field]);
@@ -117,15 +123,10 @@ class Sites
     {
         return $this->place->transaction($company, function () use ($company, $site, $baseVersion, $actor) {
             $site = $this->fresh($company, $site, $baseVersion);
-            $pages = $this->place->query(Page::class, $company)->where('site_id', $site->getKey())->orderBy('sort_order')->get();
-            if (! $pages->contains(fn (Page $page) => $page->is_home)) {
+            $snapshot = $this->snapshot($company, $site);
+            if (! collect($snapshot)->contains(fn (array $page) => $page['is_home'])) {
                 throw WebsiteException::homeNeeded();
             }
-            $blocks = $this->place->query(Block::class, $company)->whereIn('page_id', $pages->modelKeys())->orderBy('sort_order')->get()->groupBy('page_id');
-            $snapshot = $pages->map(fn (Page $page) => [
-                'slug' => $page->slug, 'title' => $page->texts('title'), 'in_menu' => $page->in_menu, 'is_home' => $page->is_home,
-                'blocks' => $blocks->get($page->getKey(), collect())->map(fn (Block $block) => ['type' => $block->type, 'data' => $block->data])->values()->all(),
-            ])->values()->all();
 
             $site->forceFill([
                 'published' => ['pages' => $snapshot], 'published_at' => now(), 'status' => Site::PUBLISHED,
@@ -147,6 +148,28 @@ class Sites
 
             return $site;
         });
+    }
+
+    /**
+     * The draft pages and blocks as publishing keeps them.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function snapshot(Organization $company, Site $site): array
+    {
+        $pages = $this->place->query(Page::class, $company)->where('site_id', $site->getKey())->orderBy('sort_order')->get();
+        $blocks = $this->place->query(Block::class, $company)->whereIn('page_id', $pages->modelKeys())->orderBy('sort_order')->get()->groupBy('page_id');
+
+        return $pages->map(fn (Page $page) => [
+            'slug' => $page->slug, 'title' => $page->texts('title'), 'in_menu' => $page->in_menu, 'is_home' => $page->is_home,
+            'blocks' => $blocks->get($page->getKey(), collect())->map(fn (Block $block) => ['type' => $block->type, 'data' => $block->data])->values()->all(),
+        ])->values()->all();
+    }
+
+    /** The draft pages differ from what was last published (never published counts as changed). */
+    public function hasChanges(Organization $company, Site $site): bool
+    {
+        return $this->snapshot($company, $site) != ($site->published['pages'] ?? null);
     }
 
     /** Something the public sees changed (a notice): pages are built afresh. */

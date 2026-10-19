@@ -135,6 +135,23 @@ class Pages
     }
 
     /**
+     * Put the site's pages in the order given (menu order; ids of that site only).
+     *
+     * @param  list<string>  $ids
+     */
+    public function orderPages(Organization $company, Site $site, array $ids): void
+    {
+        $this->place->transaction($company, function () use ($company, $site, $ids) {
+            $pages = $this->place->query(Page::class, $company)->where('site_id', $site->getKey())->lockForUpdate()->get()->keyBy(fn (Page $page) => $page->getKey());
+            foreach (array_values(array_unique($ids)) as $index => $id) {
+                if (isset($pages[$id]) && $pages[$id]->sort_order !== $index) {
+                    $pages[$id]->forceFill(['sort_order' => $index, 'version' => $pages[$id]->version + 1])->save();
+                }
+            }
+        });
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */

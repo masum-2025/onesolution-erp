@@ -84,14 +84,22 @@ class MediaStore
 
     private function inUse(Organization $company, Media $media): bool
     {
-        $id = $media->getKey();
-        if ($this->place->query(Site::class, $company)->where('logo_media_id', $id)->exists()
-            || $this->place->query(Notice::class, $company)->where('media_id', $id)->exists()) {
-            return true;
-        }
+        return in_array($media->getKey(), $this->usedIds($company), true);
+    }
 
-        return $this->place->query(Block::class, $company)->get(['type', 'data'])
-            ->contains(fn (Block $block) => in_array($id, BlockTypes::mediaIds($block->type, $block->data ?? []), true));
+    /**
+     * Pictures and files the website uses: its logo, notices, blocks.
+     *
+     * @return list<string>
+     */
+    public function usedIds(Organization $company): array
+    {
+        return array_values(array_unique(array_filter([
+            ...$this->place->query(Site::class, $company)->pluck('logo_media_id')->all(),
+            ...$this->place->query(Notice::class, $company)->pluck('media_id')->all(),
+            ...$this->place->query(Block::class, $company)->get(['type', 'data'])
+                ->flatMap(fn (Block $block) => BlockTypes::mediaIds($block->type, $block->data ?? []))->all(),
+        ])));
     }
 
     /**

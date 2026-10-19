@@ -2551,14 +2551,33 @@ coaching; in the starter plan): a light public website per company.
 - **API** (`/api/organizations/{org}/website`, `module:edu_website`): `GET|POST|PATCH /`,
   `POST publish|offline`, `GET preview`, pages and blocks (`…/pages/{id}/blocks`, `…/order`),
   notices, media (uploads throttled `edu-website-uploads`).
-- Screens come with WEB-2; Campus and Madrasa templates, the client's own domain, SEO and an
-  admission enquiry form with WEB-3.
+- **Screens (WEB-2)**, `Modules/EduWebsite/resources/js`, menu "Website" in the education section:
+  `/website` (the site at a glance in its own colours; the three steps to start it for people who
+  may publish; preview in a new tab, publish, take offline — each confirmed), `/website/settings`
+  (name, address checked while typed, template cards with where a level above turned one off,
+  colour pairs or one's own with a white-text contrast check, logo, contact, languages),
+  `/website/pages` (menu order with up/down buttons, in menu, page limit with its source),
+  `/website/pages/:id` (blocks of a page; one form per kind drawn from `lib.js` `BLOCKS`, texts per
+  language, pictures picked or uploaded in place), `/website/notices` (`?new=1` from the header's
+  "New" menu), `/website/media` (upload, "in use" files cannot be removed). People without
+  `edu_website.manage` see everything read-only.
+- **API added with WEB-2**: `GET address-check?slug=` (publishers, `throttle:edu-website-address`
+  30 a minute), `POST pages/order`, `GET preview?page=` (a signed link to one page), `locales` in
+  `PATCH /`, `in_use` on media, and `meta` on `GET /` (template choices and source, page and file
+  limits with source, page count, `has_changes` against the published snapshot, languages,
+  sites domain).
+- **Dashboard and bell**: widget `notices` (published notices dated this month, on the main
+  dashboard); bell item `edu_website.unpublished` for people who may publish, once the site has
+  been published and the draft pages differ.
+- Campus and Madrasa templates, the client's own domain, SEO and an admission enquiry form come
+  with WEB-3.
 
 ### Future expansion (Website)
 
 A new template is a value in `edu_website.templates`, a `tpl-*` block in `site-css.blade.php` and
-two labels; a new block type is an entry in `BlockTypes` and a Blade partial. A country, sector or
-partner changes rules and content only.
+two labels; a new block type is an entry in `BlockTypes`, a Blade partial and an entry in the
+screens' `BLOCKS` (lib.js) with its labels (bn, en). A country, sector or partner changes rules and
+content only; a new language is its translation files.
 
 ## Leave module (LV-1 backend)
 

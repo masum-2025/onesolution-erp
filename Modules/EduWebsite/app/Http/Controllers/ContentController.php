@@ -75,7 +75,9 @@ class ContentController extends Controller
         $rows = $this->place->query(Media::class, $company)->where('site_id', $site->getKey())
             ->when($kind !== null, fn ($query) => $query->where('kind', $kind))->orderByDesc('created_at')->limit(500)->get();
 
-        return response()->json(['data' => $rows->map(fn (Media $media) => $this->presenter->media($media, $site->slug))->values()]);
+        $used = array_flip($this->media->usedIds($company));
+
+        return response()->json(['data' => $rows->map(fn (Media $media) => [...$this->presenter->media($media, $site->slug), 'in_use' => isset($used[$media->getKey()])])->values()]);
     }
 
     public function upload(MediaRequest $request, string $organization): JsonResponse

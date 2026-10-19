@@ -34,6 +34,8 @@ class SiteRequest extends StrictFormRequest
             ...$texts('tagline', 160, false),
             'template' => [$required, 'string', 'max:30'],
             'default_locale' => [$required, 'string', 'in:'.implode(',', $locales)],
+            'locales' => [$starting ? 'prohibited' : 'sometimes', 'array', 'min:1'],
+            'locales.*' => ['string', 'distinct', 'in:'.implode(',', $locales)],
             'theme' => ['sometimes', 'array:primary,accent'],
             'theme.primary' => ['required_with:theme', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'theme.accent' => ['required_with:theme', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],

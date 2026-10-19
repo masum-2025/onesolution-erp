@@ -26,6 +26,9 @@ class EduWebsiteServiceProvider extends ServiceProvider
     /** Files a person may send a minute (each is read and drawn again). */
     private const UPLOADS_PER_MINUTE = 10;
 
+    /** Address checks a person may make a minute (while typing an address). */
+    private const ADDRESS_CHECKS_PER_MINUTE = 30;
+
     public function register(): void
     {
         // The client's data export includes the website (ExportsModuleData).
@@ -40,6 +43,8 @@ class EduWebsiteServiceProvider extends ServiceProvider
 
         RateLimiter::for('edu-website-writes', fn (Request $request) => Limit::perMinute(self::WRITES_PER_MINUTE)
             ->by('edu-website-writes:'.($request->user()?->getKey() ?? $request->ip())));
+        RateLimiter::for('edu-website-address', fn (Request $request) => Limit::perMinute(self::ADDRESS_CHECKS_PER_MINUTE)
+            ->by('edu-website-address:'.($request->user()?->getKey() ?? $request->ip())));
         RateLimiter::for('edu-website-uploads', fn (Request $request) => Limit::perMinute(self::UPLOADS_PER_MINUTE)
             ->by('edu-website-uploads:'.($request->user()?->getKey() ?? $request->ip())));
 

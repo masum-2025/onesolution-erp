@@ -70,6 +70,11 @@ class WebsiteException extends TenancyException
         return new self('media_in_use', 409);
     }
 
+    public static function defaultLocaleOff(): self
+    {
+        return new self('default_locale_off', 422);
+    }
+
     public static function versionConflict(array $current): self
     {
         return new self('version_conflict', 409, extra: ['current' => $current]);

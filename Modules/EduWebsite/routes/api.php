@@ -19,6 +19,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:edu_website'])
         Route::get('notices', [ContentController::class, 'notices']);
         Route::get('media', [ContentController::class, 'media']);
         Route::get('preview', [SiteController::class, 'preview']);
+        // Whether an address is free while typing it (a few a minute: no list of addresses by guessing).
+        Route::get('address-check', [SiteController::class, 'addressCheck'])->middleware('throttle:edu-website-address');
 
         Route::middleware('throttle:edu-website-writes')->group(function () {
             Route::post('/', [SiteController::class, 'start']);
@@ -29,7 +31,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:edu_website'])
             Route::patch('pages/{page}', [PageController::class, 'update']);
             Route::delete('pages/{page}', [PageController::class, 'destroy']);
             Route::post('pages/{page}/blocks', [PageController::class, 'addBlock']);
-            Route::post('pages/{page}/blocks/order', [PageController::class, 'order']);
+            Route::post('pages/order', [PageController::class, 'order']);
+            Route::post('pages/{page}/blocks/order', [PageController::class, 'orderBlocks']);
             Route::patch('pages/{page}/blocks/{block}', [PageController::class, 'updateBlock']);
             Route::delete('pages/{page}/blocks/{block}', [PageController::class, 'removeBlock']);
             Route::post('notices', [ContentController::class, 'storeNotice']);

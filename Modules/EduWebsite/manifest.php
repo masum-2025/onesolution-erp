@@ -5,6 +5,10 @@
 | Business numbers never live here; they are rules (Rules::get('edu_website.*')).
 */
 
+use Modules\EduWebsite\Dashboard\NoticesThisMonth;
+use Modules\EduWebsite\Dashboard\UnpublishedChanges;
+use Modules\EduWebsite\Services\Sites;
+
 return [
     'key' => 'edu_website',
     'name' => 'edu_website::module.name',
@@ -29,8 +33,8 @@ return [
             // Templates offered; a level above turns some off (the allowed list) for everyone below.
             'key' => 'edu_website.templates',
             'type' => 'multi_enum',
-            'schema' => ['items' => ['enum' => ['school', 'minimal']], 'minItems' => 1],
-            'default' => ['school', 'minimal'],
+            'schema' => ['items' => ['enum' => Sites::TEMPLATES], 'minItems' => 1],
+            'default' => Sites::TEMPLATES,
             'label' => 'edu_website::rules.templates.label',
             'description' => 'edu_website::rules.templates.description',
             'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
@@ -60,11 +64,36 @@ return [
             'sort_order' => 30,
         ],
     ],
-    // Screens come with WEB-2.
-    'menu' => [],
+    'menu' => [
+        [
+            'key' => 'website',
+            'label' => 'edu_website::module.menu',
+            'route' => '/website',
+            'icon' => 'globe',
+            'order' => 40,
+            'section' => 'education',
+            // Its home is the "Overview" line (the site at a glance); the notices count shows on the main dashboard.
+            'dashboard' => false,
+            'children' => [
+                ['key' => 'overview', 'label' => 'edu_website::module.menu_overview', 'route' => '/website', 'permission' => 'edu_website.view'],
+                ['key' => 'pages', 'label' => 'edu_website::module.menu_pages', 'route' => '/website/pages', 'permission' => 'edu_website.view'],
+                ['key' => 'notices', 'label' => 'edu_website::module.menu_notices', 'route' => '/website/notices', 'permission' => 'edu_website.view'],
+                ['key' => 'media', 'label' => 'edu_website::module.menu_media', 'route' => '/website/media', 'permission' => 'edu_website.view'],
+            ],
+        ],
+    ],
+    // The header "New" menu: a notice on the website from anywhere.
+    'quick_actions' => [
+        ['key' => 'notice', 'label' => 'edu_website::module.new_notice', 'route' => '/website/notices?new=1', 'permission' => 'edu_website.manage', 'icon' => 'globe'],
+    ],
     'events' => [],
     'is_core' => false,
     'requires_consent' => false,
-    'dashboard' => ['widgets' => []],
-    'settings' => ['pages' => []],
+    'dashboard' => ['widgets' => [
+        ['key' => 'notices', 'label' => 'edu_website::dashboard.notices', 'type' => 'stat', 'provider' => NoticesThisMonth::class, 'permission' => 'edu_website.view', 'overview' => true],
+    ]],
+    'attention' => [UnpublishedChanges::class],
+    'settings' => ['pages' => [
+        ['key' => 'settings', 'label' => 'edu_website::module.menu_settings', 'route' => '/website/settings', 'permission' => 'edu_website.view'],
+    ]],
 ];
