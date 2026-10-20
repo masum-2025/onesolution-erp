@@ -30,6 +30,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class PublicSiteController extends Controller
 {
+    /** Certificate checks one address (the sites server) may make a minute. */
+    private const TLS_CHECKS_PER_MINUTE = 600;
+
     private const UNAVAILABLE_CSS = 'body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,sans-serif;color:#3b404c;background:#f6f7f9;padding:16px;text-align:center}';
 
     public function __construct(
@@ -43,6 +46,23 @@ class PublicSiteController extends Controller
     public function byPath(Request $request, string $slug, ?string $path = null): Response
     {
         return $this->serve($request, strtolower($slug), trim((string) $path, '/'), '/s/'.strtolower($slug));
+    }
+
+    /**
+     * For the sites server's on-demand certificates: 200 when the host is a site's address on the
+     * sites domain or a site's proven own domain, else 404 (no certificate for names nobody owns here).
+     */
+    public function tls(Request $request): Response
+    {
+        if (RateLimiter::tooManyAttempts($key = 'edu-website-tls:'.$request->ip(), self::TLS_CHECKS_PER_MINUTE)) {
+            return response('', 429, ['Retry-After' => (string) RateLimiter::availableIn($key)]);
+        }
+        RateLimiter::hit($key, 60);
+        $host = strtolower(trim((string) $request->query('domain', '')));
+        $slug = $this->resolver->slugFromHost($host);
+        $known = $slug !== null ? $this->resolver->find(Sites::MODULE, $slug) !== null : ($host !== '' && $this->resolver->slugForDomain($host) !== null);
+
+        return response('', $known ? 200 : 404, ['Cache-Control' => 'no-store']);
     }
 
     public function serve(Request $request, string $slug, string $path, string $base): Response
@@ -79,12 +99,25 @@ class PublicSiteController extends Controller
             return $this->unavailable();
         }
 
+        // One address for search engines: the site's own domain once proven, else its sites-domain address.
+        $origin = $this->resolver->primaryUrl($address);
+        if (! $preview && $path === 'robots.txt') {
+            return response("User-agent: *
+Allow: /
+Sitemap: {$origin}/sitemap.xml
+", 200, ['Content-Type' => 'text/plain; charset=UTF-8', 'Cache-Control' => 'public, max-age=3600']);
+        }
+        if (! $preview && $path === 'sitemap.xml') {
+            return response($this->public->sitemap($company, $site, $origin), 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'Cache-Control' => 'public, max-age=3600']);
+        }
+
         $locale = $this->public->locale($site, $request->query('lang'));
-        $render = fn () => $this->page($company, $site, $path, $locale, $base, $preview);
+        $render = fn () => $this->page($company, $site, $path, $locale, $base, $preview, $origin);
         if ($preview) {
             return $this->guarded($render(), ['Cache-Control' => 'no-store']);
         }
-        $cacheKey = "edu_website:page:{$site->getKey()}:{$site->cache_version}:{$locale}:".sha1($path);
+        // The base is part of the key: links differ between "/s/{slug}" and the site's own host.
+        $cacheKey = "edu_website:page:{$site->getKey()}:{$site->cache_version}:{$locale}:".sha1($base.'|'.$path);
         $html = Cache::get($cacheKey);
         if ($html === null) {
             $response = $render();
@@ -121,7 +154,7 @@ class PublicSiteController extends Controller
         return $response;
     }
 
-    private function page(Organization $company, Site $site, string $path, string $locale, string $base, bool $preview): Response
+    private function page(Organization $company, Site $site, string $path, string $locale, string $base, bool $preview, string $origin): Response
     {
         $pages = $this->public->pages($company, $site, $preview);
         $frame = $this->public->frame($company, $site, $pages, $locale, $base.($preview ? '/preview' : ''));
@@ -131,13 +164,19 @@ class PublicSiteController extends Controller
             $frame['query'] = '?'.http_build_query(request()->only(['expires', 'signature', 'lang']));
         }
 
+        // Search and sharing details (none for a preview, which is never indexed).
+        $seo = fn (?array $page, ?string $description = null) => $preview ? null : $this->public->seo($site, $origin, $path, $locale, $page, $description);
+
         if ($path === 'notices') {
-            return response()->view('edu_website::notices', [...$frame, 'notices' => $this->public->notices($company, $site, 100, $base), 'page' => null]);
+            return response()->view('edu_website::notices', [...$frame, 'notices' => $this->public->notices($company, $site, 100, $base), 'page' => null, 'seo' => $seo(null)]);
         }
         if (preg_match('#^notices/([0-9a-z]{26})$#i', $path, $match)) {
             $notice = $this->public->notice($company, $site, $match[1], $base);
 
-            return $notice === null ? $this->notFound($frame) : response()->view('edu_website::notice', [...$frame, 'notice' => $notice, 'page' => null]);
+            return $notice === null ? $this->notFound($frame) : response()->view('edu_website::notice', [
+                ...$frame, 'notice' => $notice, 'page' => null,
+                'seo' => $seo(null, mb_substr($frame['text']($notice['body']), 0, 160) ?: null),
+            ]);
         }
 
         $page = collect($pages)->first(fn ($page) => $path === '' ? $page['is_home'] : $page['slug'] === $path);
@@ -145,7 +184,7 @@ class PublicSiteController extends Controller
             return $this->notFound($frame);
         }
 
-        return response()->view('edu_website::page', [...$frame, 'page' => $page, 'blocks' => $this->public->blocks($company, $site, $page, $base)]);
+        return response()->view('edu_website::page', [...$frame, 'page' => $page, 'blocks' => $this->public->blocks($company, $site, $page, $base), 'seo' => $seo($page)]);
     }
 
     private function file(Organization $company, Site $site, string $id, string $size): Response

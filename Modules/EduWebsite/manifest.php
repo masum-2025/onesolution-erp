@@ -64,6 +64,17 @@ return [
             'category' => 'website',
             'sort_order' => 30,
         ],
+        [
+            // The website on the school's own domain (www.abcschool.edu.bd), proven by DNS; per plan or partner.
+            'key' => 'edu_website.own_domain',
+            'type' => 'boolean',
+            'default' => false,
+            'label' => 'edu_website::rules.own_domain.label',
+            'description' => 'edu_website::rules.own_domain.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'website',
+            'sort_order' => 40,
+        ],
     ],
     'menu' => [
         [

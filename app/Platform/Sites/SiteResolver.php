@@ -6,8 +6,9 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * A public site's address -> its organization. "{slug}.{sites domain}"
- * names a site by host; "/s/{slug}" by path. Unknown slugs resolve to
- * nothing (never a guess). Lookups are cached briefly.
+ * names a site by host; "/s/{slug}" by path; a verified own domain by its
+ * host. Unknown names resolve to nothing (never a guess). Lookups are
+ * cached briefly.
  */
 class SiteResolver
 {
@@ -38,9 +39,31 @@ class SiteResolver
         return SiteAddress::query()->with('organization')->whereKey($id)->where('module', $module)->first();
     }
 
+    /** The slug of the site whose verified own domain this host is, or null. */
+    public function slugForDomain(string $host): ?string
+    {
+        $slug = Cache::remember($this->domainKey($host), self::CACHE_SECONDS, fn () => SiteAddress::query()
+            ->where('domain', strtolower($host))->whereNotNull('domain_verified_at')->value('slug') ?? false);
+
+        return $slug === false ? null : $slug;
+    }
+
     public function forget(string $slug): void
     {
         Cache::forget($this->key(strtolower($slug)));
+    }
+
+    public function forgetDomain(?string $host): void
+    {
+        if ($host !== null) {
+            Cache::forget($this->domainKey($host));
+        }
+    }
+
+    /** Where the site lives for visitors: its verified own domain (https), else its address on the sites domain. */
+    public function primaryUrl(SiteAddress $address): string
+    {
+        return $address->domain !== null && $address->domain_verified_at !== null ? "https://{$address->domain}" : $this->url($address->slug);
     }
 
     /** The site's address on the sites domain. */
@@ -49,6 +72,11 @@ class SiteResolver
         $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
 
         return "{$scheme}://{$slug}.".config('sites.domain');
+    }
+
+    private function domainKey(string $host): string
+    {
+        return 'sites:domain:'.sha1(strtolower($host));
     }
 
     private function key(string $slug): string

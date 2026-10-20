@@ -24,7 +24,7 @@ beforeEach(function () {
     $this->token = orgToken(createMember($this->w->c1), $this->w->c1);
     $this->api = fn (string $path = '') => '/api/organizations/'.$this->w->c1->id.'/website'.($path === '' ? '' : "/{$path}");
     $this->asToken($this->token)->postJson(($this->api)(), [
-        'slug' => 'abc-school', 'title' => ['en' => 'ABC High School', 'bn' => 'এবিসি উচ্চ বিদ্যালয়'], 'template' => 'school', 'default_locale' => 'bn',
+        'slug' => 'abc-school', 'title' => ['en' => 'ABC High School', 'bn' => 'এবিসি উচ্চ বিদ্যালয়'], 'template' => 'school', 'default_locale' => 'en',
     ])->assertCreated();
     $this->home = $this->asToken($this->token)->getJson(($this->api)('pages'))->json('data.0');
     $this->add = fn (string $type, array $data) => $this->asToken($this->token)->postJson(($this->api)("pages/{$this->home['id']}/blocks"), ['type' => $type, 'data' => $data]);
@@ -70,7 +70,7 @@ it('shows the slider: the first picture first, arrows and dots for the script, a
     $this->asToken($this->token)->postJson(($this->api)("pages/{$this->home['id']}/blocks/order"), ['ids' => [$blocks->last()['id'], ...$blocks->slice(0, -1)->pluck('id')]])->assertOk();
     ($this->publish)();
 
-    $html = $this->get('/s/abc-school')->assertOk()->getContent();
+    $html = $this->get('/s/abc-school?lang=bn')->assertOk()->getContent();
     expect($html)->toContain('class="slider fx-fade h-normal"')->toContain('data-interval="7"')->toContain('data-autoplay="1"')
         ->toContain('<h1>এবিসিতে স্বাগতম</h1>')
         ->toContain('fetchpriority="high"')->toContain('loading="lazy"')
@@ -118,7 +118,7 @@ it('writes the numbers in the visitor\'s digits and lets the script count up to 
     ($this->add)('stats', ['items' => [['value' => 5]]])->assertUnprocessable()->assertJsonValidationErrors('data.items.0.label');
     ($this->publish)();
 
-    expect($this->get('/s/abc-school')->assertOk()->getContent())->toContain('data-count="1200">১,২০০</b><span class="suffix">+</span>')->toContain('শিক্ষার্থী');
+    expect($this->get('/s/abc-school?lang=bn')->assertOk()->getContent())->toContain('data-count="1200">১,২০০</b><span class="suffix">+</span>')->toContain('শিক্ষার্থী');
     expect($this->get('/s/abc-school?lang=en')->getContent())->toContain('data-count="1200">1,200</b>');
 });
 

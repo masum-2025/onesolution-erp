@@ -10,14 +10,33 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A public site's address (central): the slug that names it under the
- * sites domain and in "/s/{slug}", for one organization and module.
+ * sites domain and in "/s/{slug}", for one organization and module, and
+ * its own domain once proven by DNS (domain_verified_at).
  */
-#[Fillable(['organization_id', 'module', 'slug'])]
+#[Fillable(['organization_id', 'module', 'slug', 'domain', 'domain_token', 'domain_verified_at'])]
 class SiteAddress extends Model
 {
     use HasUlids;
 
     protected $table = 'site_addresses';
+
+    protected $hidden = ['domain_token'];
+
+    protected function casts(): array
+    {
+        return ['domain_verified_at' => 'datetime'];
+    }
+
+    /** The DNS name of the TXT record that proves the domain. */
+    public function txtName(): string
+    {
+        return '_onesolution-site.'.$this->domain;
+    }
+
+    public function txtValue(): string
+    {
+        return 'onesolution-site='.$this->domain_token;
+    }
 
     /**
      * @return BelongsTo<Organization, $this>

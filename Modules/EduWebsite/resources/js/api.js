@@ -17,6 +17,10 @@ export function websiteApi(organizationId) {
         offline: (version) => api(`${base}/offline`, { method: 'POST', body: { base_version: version } }),
         // A signed link to the draft (a page by its address, else the home page).
         preview: (page) => api(`${base}/preview`, { query: page ? { page } : undefined }),
+        // The own domain: set (waits for its DNS proof), prove, remove.
+        setDomain: (host) => api(`${base}/domain`, { method: 'PUT', body: { host } }),
+        verifyDomain: () => api(`${base}/domain/verify`, { method: 'POST' }),
+        removeDomain: () => api(`${base}/domain`, { method: 'DELETE' }),
         addressCheck: (slug, signal) => api(`${base}/address-check`, { query: { slug }, signal }),
 
         pages: () => api(`${base}/pages`),

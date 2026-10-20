@@ -27,6 +27,8 @@ const props = defineProps({
     maxMb: { type: Number, default: 5 },
     canUpload: Boolean,
     disabled: Boolean,
+    // The site's main language: required texts need it.
+    mainLocale: { type: String, default: 'en' },
 });
 const emit = defineEmits(['media']);
 
@@ -59,6 +61,7 @@ function move(list, index, step) {
     <div class="grid gap-4">
         <template v-for="field in visible" :key="field.key">
             <TranslatedFields
+                :required-locale="mainLocale"
                 v-if="field.kind === 'text'"
                 v-model="form[field.key]"
                 :label="label(field)"
@@ -147,6 +150,7 @@ function move(list, index, step) {
                             :max-mb="maxMb"
                             :can-upload="canUpload"
                             :disabled="disabled"
+                            :main-locale="mainLocale"
                             @media="(rows) => emit('media', rows)"
                         />
                     </li>

@@ -10,12 +10,32 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ trim(($pageTitle ?? '') !== '' ? $pageTitle.' · '.$title : $title) }}</title>
-    @if ($tagline !== '')
-        <meta name="description" content="{{ $tagline }}">
+    @php($description = $seo['description'] ?? $tagline)
+    @if ($description !== '')
+        <meta name="description" content="{{ $description }}">
     @endif
     <meta name="theme-color" content="{{ $theme['primary'] }}">
-    <meta property="og:title" content="{{ $title }}">
+    <meta property="og:title" content="{{ trim(($pageTitle ?? '') !== '' ? $pageTitle.' · '.$title : $title) }}">
+    <meta property="og:site_name" content="{{ $title }}">
     <meta property="og:type" content="website">
+    <meta property="og:locale" content="{{ $locale }}">
+    @if ($description !== '')
+        <meta property="og:description" content="{{ $description }}">
+    @endif
+    @isset($seo)
+        {{-- One address for search engines (the own domain once proven) and the page in each language. --}}
+        <link rel="canonical" href="{{ $seo['canonical'] }}">
+        <meta property="og:url" content="{{ $seo['canonical'] }}">
+        @foreach ($seo['alternates'] as $code => $href)
+            <link rel="alternate" hreflang="{{ $code }}" href="{{ $href }}">
+        @endforeach
+        @if ($seo['image'])
+            <meta property="og:image" content="{{ $seo['image'] }}">
+            <meta name="twitter:card" content="summary_large_image">
+        @endif
+        {{-- The school as structured data: JSON with < > & escaped (PublicSite::seo), so it cannot leave its element. --}}
+        <script type="application/ld+json">{{ $seo['json_ld'] }}</script>
+    @endisset
     @if ($logo)
         <link rel="icon" href="{{ $logo }}">
     @endif

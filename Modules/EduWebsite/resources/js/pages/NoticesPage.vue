@@ -29,7 +29,7 @@ import { useSite } from '../useSite';
  */
 const route = useRoute();
 const router = useRouter();
-const { web, resource, site, meta, canManage, pick } = useSite();
+const { web, resource, site, meta, canManage, mainLocale, pick } = useSite();
 const list = useResource(() => web.notices());
 const notices = computed(() => list.data.value?.data ?? []);
 
@@ -174,8 +174,8 @@ function pickFile(ids, rows) {
 
         <AppDialog :open="editing !== null" size="lg" :title="editing === 'new' ? t('edu_website.notices.add') : t('edu_website.notices.edit')" @close="editing = null">
             <form id="website-notice" class="grid gap-4" novalidate @submit.prevent="save">
-                <TranslatedFields v-model="form.title" :label="t('edu_website.notices.notice_title')" required :maxlength="200" :errors="errors" error-prefix="title" />
-                <TranslatedFields v-model="form.body" :label="t('edu_website.notices.body')" multiline :maxlength="5000" :errors="errors" error-prefix="body" />
+                <TranslatedFields :required-locale="mainLocale" v-model="form.title" :label="t('edu_website.notices.notice_title')" required :maxlength="200" :errors="errors" error-prefix="title" />
+                <TranslatedFields :required-locale="mainLocale" v-model="form.body" :label="t('edu_website.notices.body')" multiline :maxlength="5000" :errors="errors" error-prefix="body" />
                 <div class="grid gap-4 sm:grid-cols-2">
                     <AppField v-slot="{ id }" :label="t('edu_website.notices.date')" :hint="t('edu_website.notices.date_hint')" :error="errors.published_on?.[0] ?? null">
                         <input :id="id" v-model="form.published_on" type="date" class="field-input" />
@@ -197,7 +197,7 @@ function pickFile(ids, rows) {
             </form>
             <template #footer>
                 <AppButton variant="ghost" @click="editing = null">{{ t('edu_website.common.cancel') }}</AppButton>
-                <AppButton variant="primary" type="submit" form="website-notice" :loading="saving" :disabled="!form.title.en?.trim() || !form.published_on">{{ t('edu_website.common.save') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="website-notice" :loading="saving" :disabled="!form.title[mainLocale]?.trim() || !form.published_on">{{ t('edu_website.common.save') }}</AppButton>
             </template>
         </AppDialog>
 

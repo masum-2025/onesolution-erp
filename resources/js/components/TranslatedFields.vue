@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import AppField from './AppField.vue';
 import { direction, languageName } from '@/lib/i18n';
 import { FALLBACK_LOCALE, textLocales } from '@/lib/texts';
@@ -18,7 +19,12 @@ const props = defineProps({
     errors: { type: Object, default: () => ({}) },
     errorPrefix: { type: String, default: 'name' },
     autofocus: Boolean,
+    // The language that must be written (first in the list); English when not given.
+    requiredLocale: { type: String, default: null },
 });
+
+const mainLocale = computed(() => props.requiredLocale ?? FALLBACK_LOCALE);
+const locales = computed(() => [mainLocale.value, ...textLocales().filter((locale) => locale !== mainLocale.value)]);
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -34,11 +40,11 @@ function errorFor(locale) {
 <template>
     <div class="grid gap-4 sm:grid-cols-2">
         <AppField
-            v-for="locale in textLocales()"
+            v-for="locale in locales"
             :key="locale"
             :label="`${label} (${languageName(locale)})`"
             :error="errorFor(locale)"
-            :optional="!(required && locale === FALLBACK_LOCALE)"
+            :optional="!(required && locale === mainLocale)"
         >
             <template #default="{ id, invalid, describedby }">
                 <textarea

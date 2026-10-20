@@ -27,6 +27,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:edu_website'])
             Route::patch('/', [SiteController::class, 'update']);
             Route::post('publish', [SiteController::class, 'publish']);
             Route::post('offline', [SiteController::class, 'offline']);
+            Route::put('domain', [SiteController::class, 'setDomain']);
+            Route::delete('domain', [SiteController::class, 'removeDomain']);
             Route::post('pages', [PageController::class, 'store']);
             Route::patch('pages/{page}', [PageController::class, 'update']);
             Route::delete('pages/{page}', [PageController::class, 'destroy']);
@@ -40,6 +42,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:edu_website'])
             Route::delete('notices/{notice}', [ContentController::class, 'destroyNotice']);
             Route::delete('media/{media}', [ContentController::class, 'destroyMedia']);
         });
+        // Each check asks the DNS: a few a minute.
+        Route::post('domain/verify', [SiteController::class, 'verifyDomain'])->middleware('throttle:edu-website-address');
         // Files are read and drawn again: a few a minute.
         Route::post('media', [ContentController::class, 'upload'])->middleware('throttle:edu-website-uploads');
     });

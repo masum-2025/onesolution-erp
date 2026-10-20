@@ -30,7 +30,7 @@ beforeEach(function () {
 
     $this->api = fn (string $path = '', $org = null) => '/api/organizations/'.($org ?? $this->w->c1)->id.'/website'.($path === '' ? '' : "/{$path}");
     $this->start = fn (array $data = [], ?string $token = null, $org = null) => $this->asToken($token ?? $this->token)->postJson(($this->api)('', $org), [
-        'slug' => 'abc-school', 'title' => ['en' => 'ABC High School', 'bn' => 'এবিসি উচ্চ বিদ্যালয়'], 'template' => 'school', 'default_locale' => 'bn', ...$data,
+        'slug' => 'abc-school', 'title' => ['en' => 'ABC High School', 'bn' => 'এবিসি উচ্চ বিদ্যালয়'], 'template' => 'school', 'default_locale' => 'en', ...$data,
     ]);
     $this->publish = function () {
         $site = $this->asToken($this->token)->getJson(($this->api)())->json('data');
@@ -42,7 +42,7 @@ beforeEach(function () {
 
 it('starts a website at an address no one else has, from a template the rules offer', function () {
     $site = ($this->start)()->assertCreated()->json('data');
-    expect($site)->toMatchArray(['slug' => 'abc-school', 'template' => 'school', 'status' => 'draft', 'default_locale' => 'bn'])
+    expect($site)->toMatchArray(['slug' => 'abc-school', 'template' => 'school', 'status' => 'draft', 'default_locale' => 'en'])
         ->and($site['addresses']['site'])->toBe('http://abc-school.sites.localhost')
         ->and(collect(($this->home)()['blocks'])->pluck('type')->all())->toBe(['hero', 'notices', 'contact'])
         ->and(AuditLog::query()->where('action', 'edu_website.started')->count())->toBe(1);
@@ -61,11 +61,11 @@ it('shows the public only what was published; a signed link previews the draft',
     $this->get('/s/abc-school')->assertNotFound()->assertSee('not available');
 
     $preview = $this->asToken($this->token)->getJson(($this->api)('preview'))->assertOk()->json('data.url');
-    $this->get($preview)->assertOk()->assertSee('এবিসি উচ্চ বিদ্যালয়')->assertSee('noindex', false);
+    $this->get($preview)->assertOk()->assertSee('ABC High School')->assertSee('noindex', false);
     $this->get('/s/abc-school/preview')->assertNotFound();
 
     ($this->publish)();
-    $this->get('/s/abc-school')->assertOk()->assertSee('এবিসি উচ্চ বিদ্যালয়')->assertDontSee('noindex', false)
+    $this->get('/s/abc-school?lang=bn')->assertOk()->assertSee('এবিসি উচ্চ বিদ্যালয়')->assertDontSee('noindex', false)
         ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
     $this->get('/s/abc-school?lang=en')->assertOk()->assertSee('ABC High School');
 
@@ -83,7 +83,7 @@ it('shows the public only what was published; a signed link previews the draft',
     expect(AuditLog::query()->where('action', 'edu_website.published')->count())->toBe(2);
 
     // The same site on its own host name.
-    $this->get('http://abc-school.sites.localhost/')->assertOk()->assertSee('এবিসি উচ্চ বিদ্যালয়');
+    $this->get('http://abc-school.sites.localhost/?lang=bn')->assertOk()->assertSee('এবিসি উচ্চ বিদ্যালয়');
     $this->get('http://no-such-school.sites.localhost/')->assertNotFound();
     $this->post('http://abc-school.sites.localhost/')->assertStatus(405);
 });

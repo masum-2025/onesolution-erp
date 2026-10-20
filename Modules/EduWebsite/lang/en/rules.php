@@ -14,6 +14,10 @@ return [
         'label' => 'Largest website file (MB)',
         'description' => 'The largest picture or PDF that can be put on a website.',
     ],
+    'own_domain' => [
+        'label' => 'Website on its own domain',
+        'description' => 'A school may put its website on a domain it owns (proven by a DNS record).',
+    ],
     'categories' => [
         'website' => 'Website',
     ],

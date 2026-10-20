@@ -2583,8 +2583,25 @@ coaching; in the starter plan): a light public website per company.
   a year, `font-src 'self'`): about 146 KB for a Bangla page, 48 KB for an English one, once.
 - Manifests are cached by file time: the template list lives in `Sites::TEMPLATES`, so change
   `manifest.php` with it (then `rules:sync`).
-- Campus and Madrasa templates, the client's own domain, SEO and an admission enquiry form come
-  with WEB-3.
+- **Own domain (WEB-3a)**: `site_addresses.domain` (unique), `domain_token`,
+  `domain_verified_at`; rule `edu_website.own_domain` (off; on for the business and enterprise
+  plans in `rule-values.php`). `PUT|DELETE website/domain`, `POST website/domain/verify`
+  (publishers; audited). Never a platform host, the sites domain or its names, the CNAME target, a
+  partner domain or another site's; proven by `TXT _onesolution-site.{domain}` (the
+  `DnsTxtLookup` contract). `ServeSiteByHost` serves proven domains and sends the sites-domain
+  address there (301); `GET /s/_tls?domain=` answers the web server's on-demand certificate
+  question. Setup: [docs/ops/sites-domains.md](docs/ops/sites-domains.md).
+- **Search and sharing (WEB-3a)**: pages get `description` (per language) and `share_media_id`,
+  the site `share_media_id`; every public page has `canonical` (the own domain once proven),
+  `hreflang` alternates with `x-default`, description, Open Graph (title, description, picture,
+  URL) and the school as `EducationalOrganization` JSON-LD (written with `JSON_HEX_TAG|AMP`, so no
+  text can end its element); `sitemap.xml` and `robots.txt` from the published pages and notices;
+  previews stay `noindex` without a canonical. Kept pages are keyed by their base too ("/s/{slug}"
+  and the own host have different links).
+- **Main language (WEB-3a)**: every website text needs the site's main language (`title.{main}`,
+  block texts), not always English; the screens put that language first and mark it required
+  (`TranslatedFields` `required-locale`); starting a site asks the language before the name.
+- Campus and Madrasa templates and an admission enquiry form come with WEB-3b and WEB-3c.
 
 ### Future expansion (Website)
 

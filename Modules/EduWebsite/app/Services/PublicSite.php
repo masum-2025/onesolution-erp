@@ -7,6 +7,7 @@ use App\Platform\Modules\ModuleResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\HtmlString;
 use Modules\Attendance\Services\TodayCounts as StaffCounts;
 use Modules\EduWebsite\Models\Block;
 use Modules\EduWebsite\Models\Media;
@@ -72,16 +73,7 @@ class PublicSite
      */
     public function pages(Organization $company, Site $site, bool $draft): array
     {
-        if (! $draft) {
-            return $site->published['pages'] ?? [];
-        }
-        $pages = $this->place->query(Page::class, $company)->where('site_id', $site->getKey())->orderBy('sort_order')->get();
-        $blocks = $this->place->query(Block::class, $company)->whereIn('page_id', $pages->modelKeys())->orderBy('sort_order')->get()->groupBy('page_id');
-
-        return $pages->map(fn (Page $page) => [
-            'slug' => $page->slug, 'title' => $page->texts('title'), 'in_menu' => $page->in_menu, 'is_home' => $page->is_home,
-            'blocks' => $blocks->get($page->getKey(), collect())->map(fn (Block $block) => ['type' => $block->type, 'data' => $block->data])->values()->all(),
-        ])->values()->all();
+        return $draft ? app(Sites::class)->snapshot($company, $site) : ($site->published['pages'] ?? []);
     }
 
     /**
@@ -144,6 +136,59 @@ class PublicSite
                 default => ['media' => $media],
             },
         ])->all();
+    }
+
+    /**
+     * What search engines and shared links read about a page: its one address (the site's own domain when
+     * proven) and the same page in each language, a description, a picture, and the school as structured
+     * data. The JSON is written with < > & as escapes, so it cannot end its script element.
+     *
+     * @param  array<string, mixed>|null  $page  The page (null for notices).
+     * @return array{canonical: string, alternates: array<string, string>, description: string, image: string|null, json_ld: HtmlString}
+     */
+    public function seo(Site $site, string $origin, string $path, string $locale, ?array $page, ?string $description = null): array
+    {
+        $text = fn (?array $texts) => $this->text($texts, $locale, $site->default_locale);
+        $url = fn (string $code) => $origin.($path === '' ? '/' : '/'.$path).($code === $site->default_locale ? '' : '?lang='.$code);
+        $picture = fn (?string $id) => $id === null ? null : "{$origin}/media/{$id}/large";
+        $image = $picture(($page['share_media_id'] ?? null) ?: ($site->share_media_id ?: $site->logo_media_id));
+        $school = array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'EducationalOrganization',
+            'name' => $text($site->texts('title')),
+            'description' => $text($site->texts('tagline')) ?: null,
+            'url' => $origin.'/',
+            'logo' => $picture($site->logo_media_id),
+            'telephone' => $site->contact['phone'] ?? null,
+            'email' => $site->contact['email'] ?? null,
+            'address' => ($street = $text($site->contact['address'] ?? null)) === '' ? null : ['@type' => 'PostalAddress', 'streetAddress' => $street],
+            'hasMap' => $site->contact['map_url'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        return [
+            'canonical' => $url($locale),
+            'alternates' => [...collect($site->locales ?? [])->mapWithKeys(fn (string $code) => [$code => $url($code)])->all(), 'x-default' => $url($site->default_locale)],
+            'description' => (string) ($description ?: ($text($page['description'] ?? null) ?: $text($site->texts('tagline')))),
+            'image' => $image,
+            'json_ld' => new HtmlString(json_encode($school, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR)),
+        ];
+    }
+
+    /** The published pages and notices for search engines, at the site's one address. */
+    public function sitemap(Organization $company, Site $site, string $origin): string
+    {
+        $xml = fn (string $value) => htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $entry = fn (string $path, ?string $date) => '<url><loc>'.$xml($origin.$path).'</loc>'.($date === null ? '' : '<lastmod>'.$date.'</lastmod>').'</url>';
+        $published = $site->published_at?->toDateString();
+        $urls = collect($site->published['pages'] ?? [])->map(fn ($page) => $entry($page['is_home'] ? '/' : '/'.$page['slug'], $published))->all();
+        $urls[] = $entry('/notices', null);
+        foreach ($this->notices($company, $site, 100, '') as $notice) {
+            $urls[] = $entry($notice['url'], $notice['date']);
+        }
+
+        return '<?xml version="1.0" encoding="UTF-8"?>'."
+".'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'.implode('', $urls).'</urlset>'."
+";
     }
 
     /**

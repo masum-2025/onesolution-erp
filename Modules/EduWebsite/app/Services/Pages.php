@@ -35,9 +35,11 @@ class Pages
                 throw WebsiteException::tooManyPages($max);
             }
             $this->slugFree($company, $site, $data['slug']);
+            $this->picture($company, $site->getKey(), $data['share_media_id'] ?? null);
             $page = new Page;
-            $page->fill(['organization_id' => $company->getKey(), 'site_id' => $site->getKey(), 'slug' => $data['slug'], 'sort_order' => $count, 'in_menu' => $data['in_menu'] ?? true, 'is_home' => false, 'version' => 1]);
+            $page->fill(['organization_id' => $company->getKey(), 'site_id' => $site->getKey(), 'slug' => $data['slug'], 'sort_order' => $count, 'in_menu' => $data['in_menu'] ?? true, 'is_home' => false, 'share_media_id' => $data['share_media_id'] ?? null, 'version' => 1]);
             $page->putTexts('title', $data['title']);
+            $page->putTexts('description', $data['description'] ?? []);
             $page->save();
 
             return $page;
@@ -58,9 +60,15 @@ class Pages
                 $this->slugFree($company, $this->site($company, $page), $data['slug'], $page->getKey());
                 $page->slug = $data['slug'];
             }
-            $page->fill(array_intersect_key($data, array_flip(['in_menu', 'sort_order'])));
+            if (array_key_exists('share_media_id', $data)) {
+                $this->picture($company, $page->site_id, $data['share_media_id']);
+            }
+            $page->fill(array_intersect_key($data, array_flip(['in_menu', 'sort_order', 'share_media_id'])));
             if (isset($data['title'])) {
                 $page->putTexts('title', $data['title']);
+            }
+            if (array_key_exists('description', $data)) {
+                $page->putTexts('description', $data['description'] ?? []);
             }
             $page->forceFill(['version' => $page->version + 1])->save();
 
@@ -157,7 +165,9 @@ class Pages
      */
     private function checked(Organization $company, Page $page, string $type, array $data): array
     {
-        $clean = BlockTypes::clean($type, $data);
+        // Texts need the site's main language at least.
+        $main = (string) $this->place->query(Site::class, $company)->whereKey($page->site_id)->value('default_locale');
+        $clean = BlockTypes::clean($type, $data, $main ?: 'en');
         $wanted = BlockTypes::mediaIds($type, $clean);
         if ($wanted !== []) {
             $found = $this->place->query(Media::class, $company)->where('site_id', $page->site_id)->whereKey($wanted)->count();
@@ -167,6 +177,14 @@ class Pages
         }
 
         return $clean;
+    }
+
+    /** A picture of this site, or nothing. */
+    private function picture(Organization $company, string $siteId, ?string $id): void
+    {
+        if ($id !== null && ! $this->place->query(Media::class, $company)->where('site_id', $siteId)->where('kind', 'image')->whereKey($id)->exists()) {
+            throw WebsiteException::mediaNotFound();
+        }
     }
 
     private function slugFree(Organization $company, Site $site, string $slug, ?string $except = null): void

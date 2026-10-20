@@ -4,10 +4,13 @@ namespace Modules\EduWebsite\Http\Requests;
 
 use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
+use Modules\EduWebsite\Http\Requests\Concerns\MainLocale;
 
 /** A notice: title and plain text per language, an optional PDF of the site, the date it shows from, pinned, published. */
 class NoticeRequest extends StrictFormRequest
 {
+    use MainLocale;
+
     /**
      * @return array<string, mixed>
      */
@@ -20,7 +23,8 @@ class NoticeRequest extends StrictFormRequest
         return [
             'base_version' => [$creating ? 'prohibited' : 'required', 'integer', 'min:1'],
             'title' => [$required, 'array:'.$locales],
-            'title.en' => [$required, 'string', 'min:2', 'max:200'],
+            // In the site's main language at least.
+            "title.{$this->mainLocale()}" => [$creating ? 'required' : 'required_with:title', 'string', 'min:2', 'max:200'],
             'title.*' => ['nullable', 'string', 'max:200'],
             'body' => ['sometimes', 'nullable', 'array:'.$locales],
             'body.*' => ['nullable', 'string', 'max:5000'],

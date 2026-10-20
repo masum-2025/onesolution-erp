@@ -70,6 +70,31 @@ class WebsiteException extends TenancyException
         return new self('media_in_use', 409);
     }
 
+    public static function ownDomainOff(): self
+    {
+        return new self('own_domain_off', 403);
+    }
+
+    public static function domainReserved(): self
+    {
+        return new self('domain_reserved', 422);
+    }
+
+    public static function domainTaken(): self
+    {
+        return new self('domain_taken', 409);
+    }
+
+    public static function noDomain(): self
+    {
+        return new self('no_domain', 422);
+    }
+
+    public static function domainNotProven(string $name, string $value): self
+    {
+        return new self('domain_not_proven', 422, ['name' => $name], ['record' => ['type' => 'TXT', 'name' => $name, 'value' => $value]]);
+    }
+
     public static function defaultLocaleOff(): self
     {
         return new self('default_locale_off', 422);

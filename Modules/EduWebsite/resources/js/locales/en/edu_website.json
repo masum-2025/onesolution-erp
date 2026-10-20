@@ -119,7 +119,9 @@
         "languages_hint": "Visitors can switch between the languages turned on here.",
         "main_language": "Main language",
         "save_hint": "Settings show on the website as soon as you save.",
-        "saved": "Settings saved."
+        "saved": "Settings saved.",
+        "share": "Picture for shared links",
+        "share_hint": "Shown when the website is shared on Facebook or WhatsApp (1200 × 630 looks best). Without it, the logo."
     },
     "pages": {
         "title": "Pages",
@@ -134,14 +136,19 @@
         "hidden": "Not in the menu",
         "edit": "Edit",
         "open": "Open",
-        "rename": "Page name and address",
+        "rename": "Page settings",
         "name": "Page name",
         "address": "Page address",
         "address_hint": "Small letters, digits and hyphens, for example \"about-us\".",
         "remove_title": "Remove this page?",
         "remove_text": "\"{name}\" and its {count} blocks will be removed. It stays on the internet until you publish.",
         "removed": "Page removed.",
-        "saved": "Page saved."
+        "saved": "Page saved.",
+        "seo": "Search and sharing",
+        "seo_text": "What Google and shared links show for this page.",
+        "description": "Short description",
+        "share": "Picture for shared links",
+        "share_hint": "Without it, the website’s picture."
     },
     "editor": {
         "text": "Blocks from top to bottom, as visitors see them. Changes show after you publish.",
@@ -287,5 +294,30 @@
         "size_mb": "{value} MB",
         "in_use": "In use",
         "in_use_hint": "Used on the website (logo, a block or a notice). Take it out there first."
+    },
+    "domain": {
+        "title": "Own domain",
+        "text": "Put the website on a domain your school owns, such as www.yourschool.edu.bd.",
+        "host": "Domain",
+        "host_hint": "Buy it from a domain seller first (for .edu.bd: BTCL).",
+        "add": "Add the domain",
+        "added": "Domain added. Now put the records below in its DNS.",
+        "waiting": "Waiting for DNS",
+        "live": "Working",
+        "records_text": "Ask whoever manages the domain to add these records:",
+        "records_hint": "DNS changes can take a few minutes up to a day. Then check here; the certificate (https) comes by itself.",
+        "type": "Type",
+        "name": "Name",
+        "value": "Value",
+        "copy": "Copy",
+        "verify": "Check now",
+        "verified": "The domain is proven. The website opens there now.",
+        "proven": "proven {when}",
+        "live_text": "Visitors of {address} are sent here.",
+        "remove": "Remove the domain",
+        "remove_title": "Remove the own domain?",
+        "remove_text": "{host} stops showing the website; it opens at {address} again.",
+        "removed": "Domain removed.",
+        "not_in_plan": "Your plan does not include an own domain. Ask about a bigger plan."
     }
 }

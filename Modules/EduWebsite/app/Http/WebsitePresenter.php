@@ -2,12 +2,14 @@
 
 namespace Modules\EduWebsite\Http;
 
+use App\Platform\Sites\SiteAddress;
 use App\Platform\Sites\SiteResolver;
 use Modules\EduWebsite\Models\Block;
 use Modules\EduWebsite\Models\Media;
 use Modules\EduWebsite\Models\Notice;
 use Modules\EduWebsite\Models\Page;
 use Modules\EduWebsite\Models\Site;
+use Modules\EduWebsite\Services\Sites;
 
 /** Website records as the admin API shows them. */
 class WebsitePresenter
@@ -19,12 +21,30 @@ class WebsitePresenter
      */
     public function site(Site $site): array
     {
+        $address = SiteAddress::query()->where('organization_id', $site->organization_id)->where('module', Sites::MODULE)->first();
+
         return [
             'id' => $site->getKey(), 'slug' => $site->slug, 'template' => $site->template, 'theme' => $site->theme,
-            'logo_media_id' => $site->logo_media_id, 'title' => $site->texts('title'), 'tagline' => $site->texts('tagline'),
+            'logo_media_id' => $site->logo_media_id, 'share_media_id' => $site->share_media_id, 'title' => $site->texts('title'), 'tagline' => $site->texts('tagline'),
             'contact' => $site->contact ?? [], 'locales' => $site->locales, 'default_locale' => $site->default_locale,
             'status' => $site->status, 'published_at' => $site->published_at?->toIso8601String(), 'version' => $site->version,
-            'addresses' => ['site' => $this->resolver->url($site->slug), 'path' => url('/s/'.$site->slug)],
+            'addresses' => [
+                // Where visitors find it: the own domain once proven, else the sites-domain address.
+                'site' => $address === null ? $this->resolver->url($site->slug) : $this->resolver->primaryUrl($address),
+                'sites' => $this->resolver->url($site->slug),
+                'path' => url('/s/'.$site->slug),
+            ],
+            'domain' => $address?->domain === null ? null : [
+                'host' => $address->domain,
+                'verified' => $address->domain_verified_at !== null,
+                'verified_at' => $address->domain_verified_at?->toIso8601String(),
+                // What to put in the DNS of the domain: point it here, and prove it.
+                'records' => array_values(array_filter([
+                    ['type' => 'CNAME', 'name' => $address->domain, 'value' => (string) config('sites.cname_target')],
+                    config('sites.server_ip') ? ['type' => 'A', 'name' => $address->domain, 'value' => (string) config('sites.server_ip')] : null,
+                    ['type' => 'TXT', 'name' => $address->txtName(), 'value' => $address->txtValue()],
+                ])),
+            ],
         ];
     }
 
@@ -37,6 +57,7 @@ class WebsitePresenter
         return [
             'id' => $page->getKey(), 'slug' => $page->slug, 'title' => $page->texts('title'), 'sort_order' => $page->sort_order,
             'in_menu' => $page->in_menu, 'is_home' => $page->is_home, 'version' => $page->version,
+            'description' => $page->texts('description'), 'share_media_id' => $page->share_media_id,
             ...($blocks === null ? [] : ['blocks' => collect($blocks)->map(fn (Block $block) => $this->block($block))->values()->all()]),
         ];
     }

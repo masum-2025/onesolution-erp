@@ -13,6 +13,7 @@ import { languageName, t } from '@/lib/i18n';
 import { cleanTexts, textsFor } from '@/lib/texts';
 import { toast } from '@/lib/toast';
 import AddressField from '../components/AddressField.vue';
+import DomainCard from '../components/DomainCard.vue';
 import MediaPicker from '../components/MediaPicker.vue';
 import TemplateCard from '../components/TemplateCard.vue';
 import { COLOUR_SETS, carriesWhiteText } from '../lib';
@@ -27,7 +28,7 @@ import { useSite } from '../useSite';
  */
 const { web, resource, site, meta, canManage, canPublish } = useSite();
 
-const form = reactive({ title: {}, tagline: {}, slug: '', template: 'school', primary: '#0f6b4b', accent: '#f5b301', logo: '', contact: {}, locales: [], default_locale: 'bn' });
+const form = reactive({ title: {}, tagline: {}, slug: '', template: 'school', primary: '#0f6b4b', accent: '#f5b301', logo: '', share: '', contact: {}, locales: [], default_locale: 'bn' });
 const errors = ref({});
 const saving = ref(false);
 const address = ref('ok');
@@ -43,6 +44,7 @@ function fill(value) {
         primary: value.theme?.primary ?? '#0f6b4b',
         accent: value.theme?.accent ?? '#f5b301',
         logo: value.logo_media_id ?? '',
+        share: value.share_media_id ?? '',
         contact: {
             address: textsFor(value.contact?.address),
             hours: textsFor(value.contact?.hours),
@@ -57,11 +59,12 @@ function fill(value) {
 }
 watch(site, fill, { immediate: true });
 
-// The logo's thumbnail.
+// Thumbnails of the logo and the sharing picture.
 watch(
     site,
     async (value) => {
-        if (!value?.logo_media_id || media.value[value.logo_media_id]) return;
+        const wanted = [value?.logo_media_id, value?.share_media_id].filter(Boolean);
+        if (!wanted.length || wanted.every((id) => media.value[id])) return;
         try {
             media.value = Object.fromEntries((await web.media('image')).data.map((row) => [row.id, row]));
         } catch {
@@ -71,16 +74,17 @@ watch(
     { immediate: true },
 );
 
-const picking = ref(false);
-function pickLogo(ids, rows) {
+// Which picture is being chosen: 'logo' or 'share'.
+const picking = ref(null);
+function pickPicture(ids, rows) {
     rows.forEach((row) => (media.value[row.id] = row));
-    form.logo = ids[0] ?? '';
-    picking.value = false;
+    form[picking.value] = ids[0] ?? '';
+    picking.value = null;
 }
 
 const readable = computed(() => carriesWhiteText(form.primary));
 const slugChanged = computed(() => !!site.value && form.slug !== site.value.slug);
-const canSave = computed(() => canManage.value && !!form.title.en?.trim() && form.locales.length > 0 && (!slugChanged.value || address.value === 'ok'));
+const canSave = computed(() => canManage.value && !!form.title[form.default_locale]?.trim() && form.locales.length > 0 && (!slugChanged.value || address.value === 'ok'));
 const lockedBy = computed(() => meta.value.template_source?.name ?? '');
 
 function toggleLocale(code) {
@@ -97,6 +101,7 @@ async function save() {
         template: form.template,
         theme: { primary: form.primary.toLowerCase(), accent: form.accent.toLowerCase() },
         logo_media_id: form.logo || null,
+        share_media_id: form.share || null,
         contact: {
             address: cleanTexts(form.contact.address),
             hours: cleanTexts(form.contact.hours),
@@ -148,8 +153,8 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <fieldset class="card space-y-5 p-5 sm:p-6" :disabled="!canManage">
                 <legend class="sr-only">{{ t('edu_website.settings.identity') }}</legend>
                 <h2 class="text-[15px] font-semibold">{{ t('edu_website.settings.identity') }}</h2>
-                <TranslatedFields v-model="form.title" :label="t('edu_website.settings.name')" required :maxlength="120" :errors="errors" error-prefix="title" />
-                <TranslatedFields v-model="form.tagline" :label="t('edu_website.settings.tagline')" :maxlength="160" :errors="errors" error-prefix="tagline" />
+                <TranslatedFields :required-locale="form.default_locale" v-model="form.title" :label="t('edu_website.settings.name')" required :maxlength="120" :errors="errors" error-prefix="title" />
+                <TranslatedFields :required-locale="form.default_locale" v-model="form.tagline" :label="t('edu_website.settings.tagline')" :maxlength="160" :errors="errors" error-prefix="tagline" />
                 <AddressField v-if="canPublish" v-model="form.slug" :web="web" :domain="meta.sites_domain" :current="site.slug" :error="fieldError('slug')" @state="address = $event" />
                 <AppField v-else :label="t('edu_website.settings.address')" :hint="t('edu_website.settings.address_publishers')">
                     <p class="font-mono text-[14px]" dir="ltr">{{ site.addresses.site.replace(/^https?:\/\//, '') }}</p>
@@ -220,13 +225,27 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <div class="flex flex-wrap items-center gap-4">
                     <span class="flex size-16 items-center justify-center overflow-hidden rounded-xl border border-line bg-subtle">
                         <img v-if="form.logo && media[form.logo]?.thumb" :src="media[form.logo].thumb" alt="" class="size-full object-cover" />
-                        <span v-else class="flex size-full items-center justify-center text-[22px] font-bold text-white" :style="{ background: form.primary }" aria-hidden="true">{{ (form.title.en || '?').slice(0, 1).toUpperCase() }}</span>
+                        <span v-else class="flex size-full items-center justify-center text-[22px] font-bold text-white" :style="{ background: form.primary }" aria-hidden="true">{{ (form.title[form.default_locale] || form.title.en || '?').slice(0, 1).toUpperCase() }}</span>
                     </span>
                     <div class="space-y-2">
                         <p class="text-[12.5px] text-muted">{{ t('edu_website.settings.logo_hint') }}</p>
                         <div class="flex flex-wrap gap-2">
-                            <AppButton size="sm" :icon="ImagePlus" @click="picking = true">{{ form.logo ? t('edu_website.media.change') : t('edu_website.media.choose') }}</AppButton>
+                            <AppButton size="sm" :icon="ImagePlus" @click="picking = 'logo'">{{ form.logo ? t('edu_website.media.change') : t('edu_website.media.choose') }}</AppButton>
                             <AppButton v-if="form.logo" size="sm" variant="ghost" :icon="X" @click="form.logo = ''">{{ t('edu_website.settings.no_logo') }}</AppButton>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 border-t border-line pt-4">
+                    <span class="flex h-16 w-[122px] items-center justify-center overflow-hidden rounded-lg border border-line bg-subtle text-muted">
+                        <img v-if="form.share && media[form.share]?.thumb" :src="media[form.share].thumb" alt="" class="size-full object-cover" />
+                        <ImagePlus v-else class="size-6" aria-hidden="true" />
+                    </span>
+                    <div class="min-w-0 flex-1 space-y-2">
+                        <p class="text-[13px] font-medium">{{ t('edu_website.settings.share') }}</p>
+                        <p class="text-[12.5px] text-muted">{{ t('edu_website.settings.share_hint') }}</p>
+                        <div class="flex flex-wrap gap-2">
+                            <AppButton size="sm" :icon="ImagePlus" @click="picking = 'share'">{{ form.share ? t('edu_website.media.change') : t('edu_website.media.choose') }}</AppButton>
+                            <AppButton v-if="form.share" size="sm" variant="ghost" :icon="X" @click="form.share = ''">{{ t('edu_website.media.remove_from_block') }}</AppButton>
                         </div>
                     </div>
                 </div>
@@ -235,8 +254,8 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <fieldset class="card space-y-5 p-5 sm:p-6" :disabled="!canManage">
                 <legend class="sr-only">{{ t('edu_website.settings.contact') }}</legend>
                 <h2 class="text-[15px] font-semibold">{{ t('edu_website.settings.contact') }}</h2>
-                <TranslatedFields v-model="form.contact.address" :label="t('edu_website.settings.contact_address')" multiline :maxlength="300" :errors="errors" error-prefix="contact.address" />
-                <TranslatedFields v-model="form.contact.hours" :label="t('edu_website.settings.contact_hours')" :maxlength="200" :errors="errors" error-prefix="contact.hours" />
+                <TranslatedFields :required-locale="form.default_locale" v-model="form.contact.address" :label="t('edu_website.settings.contact_address')" multiline :maxlength="300" :errors="errors" error-prefix="contact.address" />
+                <TranslatedFields :required-locale="form.default_locale" v-model="form.contact.hours" :label="t('edu_website.settings.contact_hours')" :maxlength="200" :errors="errors" error-prefix="contact.hours" />
                 <div class="grid gap-4 sm:grid-cols-2">
                     <AppField v-slot="{ id }" :label="t('edu_website.settings.contact_phone')" :error="fieldError('contact.phone')" optional>
                         <input :id="id" v-model="form.contact.phone" class="field-input" dir="ltr" inputmode="tel" maxlength="40" />
@@ -274,7 +293,9 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" :icon="Save" :loading="saving" :disabled="!canSave">{{ t('edu_website.common.save') }}</AppButton>
             </div>
 
-            <MediaPicker :open="picking" :web="web" kind="image" :selected="form.logo ? [form.logo] : []" :max-mb="meta.max_media_mb?.value ?? 5" :can-upload="canManage" @close="picking = false" @pick="pickLogo" />
+            <MediaPicker :open="picking !== null" :web="web" kind="image" :selected="picking && form[picking] ? [form[picking]] : []" :max-mb="meta.max_media_mb?.value ?? 5" :can-upload="canManage" @close="picking = null" @pick="pickPicture" />
         </form>
+
+        <DomainCard v-if="site" :web="web" :site="site" :rule="meta.own_domain" :can-publish="canPublish" @changed="resource.reload()" />
     </div>
 </template>

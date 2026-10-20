@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * A company's public website: template, colours, names, contact and the
  * published snapshot the public sees (drafts never show until published).
  */
-#[Fillable(['organization_id', 'slug', 'template', 'theme', 'logo_media_id', 'contact', 'locales', 'default_locale', 'status', 'version'])]
+#[Fillable(['organization_id', 'slug', 'template', 'theme', 'logo_media_id', 'contact', 'locales', 'default_locale', 'share_media_id', 'status', 'version'])]
 class Site extends Model
 {
     use BelongsToOrganization, HasTranslatedTexts, HasUlids, UsesTenantDatabase;

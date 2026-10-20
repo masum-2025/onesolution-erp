@@ -102,7 +102,7 @@ class Sites
                 $this->claim($company, strtolower($data['slug']), $site->slug);
                 $site->slug = strtolower($data['slug']);
             }
-            $site->fill(array_intersect_key($data, array_flip(['template', 'theme', 'contact', 'default_locale', 'locales', 'logo_media_id'])));
+            $site->fill(array_intersect_key($data, array_flip(['template', 'theme', 'contact', 'default_locale', 'locales', 'logo_media_id', 'share_media_id'])));
             if (! in_array($site->default_locale, $site->locales ?? [], true)) {
                 throw WebsiteException::defaultLocaleOff();
             }
@@ -162,6 +162,8 @@ class Sites
 
         return $pages->map(fn (Page $page) => [
             'slug' => $page->slug, 'title' => $page->texts('title'), 'in_menu' => $page->in_menu, 'is_home' => $page->is_home,
+            // Search and sharing, only when set (snapshots published before them stay equal).
+            ...array_filter(['description' => $page->texts('description'), 'share_media_id' => $page->share_media_id]),
             'blocks' => $blocks->get($page->getKey(), collect())->map(fn (Block $block) => ['type' => $block->type, 'data' => $block->data])->values()->all(),
         ])->values()->all();
     }

@@ -5,6 +5,7 @@ namespace Modules\EduWebsite\Http\Requests;
 use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Sites\SiteResolver;
 use App\Platform\Support\Http\StrictFormRequest;
+use Modules\EduWebsite\Http\Requests\Concerns\MainLocale;
 
 /**
  * Starting a website (address, name, template, language) or changing its
@@ -13,6 +14,8 @@ use App\Platform\Support\Http\StrictFormRequest;
  */
 class SiteRequest extends StrictFormRequest
 {
+    use MainLocale;
+
     /**
      * @return array<string, mixed>
      */
@@ -30,7 +33,8 @@ class SiteRequest extends StrictFormRequest
             'base_version' => [$starting ? 'prohibited' : 'required', 'integer', 'min:1'],
             'slug' => [$required, 'string', 'min:3', 'max:63', 'regex:/^'.SiteResolver::SLUG_PATTERN.'$/'],
             ...$texts('title', 120, true),
-            'title.en' => [$required, 'string', 'min:2', 'max:120'],
+            // The name in the main language (the one chosen now, else the site's).
+            "title.{$this->nameLocale($locales, $starting)}" => [$starting ? 'required' : 'required_with:title', 'string', 'min:2', 'max:120'],
             ...$texts('tagline', 160, false),
             'template' => [$required, 'string', 'max:30'],
             'default_locale' => [$required, 'string', 'in:'.implode(',', $locales)],
@@ -48,6 +52,15 @@ class SiteRequest extends StrictFormRequest
             'contact.email' => ['nullable', 'email', 'max:150'],
             'contact.map_url' => ['nullable', 'url:https', 'max:500'],
             'logo_media_id' => ['sometimes', 'nullable', 'string', 'size:26'],
+            'share_media_id' => ['sometimes', 'nullable', 'string', 'size:26'],
         ];
+    }
+
+    /** @param list<string> $locales */
+    private function nameLocale(array $locales, bool $starting): string
+    {
+        $asked = $this->input('default_locale');
+
+        return is_string($asked) && in_array($asked, $locales, true) ? $asked : ($starting ? 'en' : $this->mainLocale());
     }
 }

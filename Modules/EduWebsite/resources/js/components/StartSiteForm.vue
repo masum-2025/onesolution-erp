@@ -14,7 +14,8 @@ import TemplateCard from './TemplateCard.vue';
 
 /**
  * Starting the website in three short steps: a template (those the rules
- * offer), the name and address, the main language. The server makes a
+ * offer), the main language, then the name (in that language at least) and
+ * the address. The server makes a
  * home page with a welcome, the notice board and contact details.
  */
 const props = defineProps({
@@ -40,8 +41,9 @@ const saving = ref(false);
 const lockedBy = computed(() => props.meta.template_source?.name ?? '');
 const canNext = computed(() => {
     if (step.value === 1) return !!form.template;
-    if (step.value === 2) return !!form.title.en?.trim() && address.value === 'ok';
-    return true;
+    if (step.value === 2) return !!form.default_locale;
+    // The name in the main language, and a free address.
+    return !!form.title[form.default_locale]?.trim() && address.value === 'ok';
 });
 
 async function start() {
@@ -53,14 +55,14 @@ async function start() {
         emit('started');
     } catch (error) {
         errors.value = error.errors ?? {};
-        if (errors.value.slug || errors.value['title.en'] || error.code === 'slug_taken') step.value = 2;
+        if (errors.value.default_locale) step.value = 2;
         if (!Object.keys(errors.value).length) toast.error(error.message);
     } finally {
         saving.value = false;
     }
 }
 
-const STEPS = ['template', 'name', 'language'];
+const STEPS = ['template', 'language', 'name'];
 </script>
 
 <template>
@@ -94,17 +96,17 @@ const STEPS = ['template', 'name', 'language'];
                 />
             </div>
 
-            <div v-else-if="step === 2" class="grid gap-5">
-                <TranslatedFields v-model="form.title" :label="t('edu_website.settings.name')" required :maxlength="120" :errors="errors" error-prefix="title" />
-                <AddressField v-model="form.slug" :web="web" :domain="meta.sites_domain" :error="errors.slug?.[0] ?? null" @state="address = $event" />
-            </div>
-
-            <div v-else class="grid gap-4">
+            <div v-else-if="step === 2" class="grid gap-4">
                 <AppField v-slot="{ id }" :label="t('edu_website.settings.main_language')" :hint="t('edu_website.start.language_hint')" :error="errors.default_locale?.[0] ?? null">
                     <select :id="id" v-model="form.default_locale" class="field-input sm:max-w-64">
                         <option v-for="code in meta.languages" :key="code" :value="code">{{ languageName(code) }}</option>
                     </select>
                 </AppField>
+            </div>
+
+            <div v-else class="grid gap-5">
+                <TranslatedFields v-model="form.title" :required-locale="form.default_locale" :label="t('edu_website.settings.name')" required :maxlength="120" :errors="errors" error-prefix="title" />
+                <AddressField v-model="form.slug" :web="web" :domain="meta.sites_domain" :error="errors.slug?.[0] ?? null" @state="address = $event" />
                 <p class="rounded-lg bg-subtle px-4 py-3 text-[13px] text-fg-2">{{ t('edu_website.start.what_next') }}</p>
             </div>
         </div>
@@ -113,7 +115,7 @@ const STEPS = ['template', 'name', 'language'];
             <AppButton v-if="step > 1" variant="ghost" :icon="ArrowLeft" @click="step--">{{ t('edu_website.common.back') }}</AppButton>
             <span v-else />
             <AppButton v-if="step < 3" variant="primary" :icon-end="ArrowRight" :disabled="!canNext" @click="step++">{{ t('edu_website.common.next') }}</AppButton>
-            <AppButton v-else variant="primary" :icon="Rocket" :loading="saving" @click="start">{{ t('edu_website.start.start') }}</AppButton>
+            <AppButton v-else variant="primary" :icon="Rocket" :loading="saving" :disabled="!canNext" @click="start">{{ t('edu_website.start.start') }}</AppButton>
         </div>
     </section>
 </template>

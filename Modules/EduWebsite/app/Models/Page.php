@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
 /** A draft page of the website: its address, title, place in the menu, and blocks. */
-#[Fillable(['organization_id', 'site_id', 'slug', 'sort_order', 'in_menu', 'is_home', 'version'])]
+#[Fillable(['organization_id', 'site_id', 'slug', 'sort_order', 'in_menu', 'is_home', 'share_media_id', 'version'])]
 class Page extends Model
 {
     use BelongsToOrganization, HasTranslatedTexts, HasUlids, UsesTenantDatabase;
@@ -18,7 +18,7 @@ class Page extends Model
     protected $table = 'web_pages';
 
     /** @var list<string> */
-    public array $translatable = ['title'];
+    public array $translatable = ['title', 'description'];
 
     protected function casts(): array
     {

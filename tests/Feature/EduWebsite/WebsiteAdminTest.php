@@ -29,7 +29,7 @@ beforeEach(function () {
 
     $this->api = fn (string $path = '', $org = null) => '/api/organizations/'.($org ?? $this->w->c1)->id.'/website'.($path === '' ? '' : "/{$path}");
     $this->asToken($this->token)->postJson(($this->api)(), [
-        'slug' => 'abc-school', 'title' => ['en' => 'ABC High School', 'bn' => 'এবিসি উচ্চ বিদ্যালয়'], 'template' => 'school', 'default_locale' => 'bn',
+        'slug' => 'abc-school', 'title' => ['en' => 'ABC High School', 'bn' => 'এবিসি উচ্চ বিদ্যালয়'], 'template' => 'school', 'default_locale' => 'en',
     ])->assertCreated();
     $this->site = fn (?string $token = null) => $this->asToken($token ?? $this->token)->getJson(($this->api)())->assertOk()->json();
 });
@@ -103,10 +103,10 @@ it('says which pictures are used, and changes the languages of the website', fun
     expect($media[$logo]['in_use'])->toBeTrue()->and($media[$spare]['in_use'])->toBeFalse();
 
     $site = ($this->site)()['data'];
-    $this->asToken($this->token)->patchJson(($this->api)(), ['base_version' => $site['version'], 'locales' => ['en']])
+    $this->asToken($this->token)->patchJson(($this->api)(), ['base_version' => $site['version'], 'locales' => ['bn']])
         ->assertUnprocessable()->assertJsonPath('code', 'default_locale_off');
-    $this->asToken($this->token)->patchJson(($this->api)(), ['base_version' => $site['version'], 'locales' => ['en'], 'default_locale' => 'en'])
-        ->assertOk()->assertJsonPath('data.locales', ['en']);
+    $this->asToken($this->token)->patchJson(($this->api)(), ['base_version' => $site['version'], 'locales' => ['bn'], 'default_locale' => 'bn'])
+        ->assertOk()->assertJsonPath('data.locales', ['bn']);
     $this->asToken($this->token)->patchJson(($this->api)(), ['base_version' => $site['version'] + 1, 'locales' => ['fr']])->assertUnprocessable()->assertJsonValidationErrors('locales.0');
 });
 

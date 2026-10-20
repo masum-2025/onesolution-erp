@@ -26,7 +26,7 @@ import { useSite } from '../useSite';
  * preview shows them at once.
  */
 const route = useRoute();
-const { web, resource, meta, canManage, pick } = useSite();
+const { web, resource, meta, canManage, mainLocale, pick } = useSite();
 const list = useResource(() => web.pages());
 const page = computed(() => (list.data.value?.data ?? []).find((row) => row.id === route.params.id) ?? null);
 const blocks = computed(() => page.value?.blocks ?? []);
@@ -207,6 +207,7 @@ async function preview() {
                     :web="web"
                     :max-mb="meta.max_media_mb?.value ?? 5"
                     :can-upload="canManage"
+                    :main-locale="mainLocale"
                     @media="remember"
                 />
             </form>

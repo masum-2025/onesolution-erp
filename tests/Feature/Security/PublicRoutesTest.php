@@ -48,6 +48,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     // A school's public website (WEB-1): published pages only (a draft only with a signed
     // preview link), GET only, no session or cookie, its own strict CSP, 120 a minute per address.
     'GET s/{slug}/{path?}',
+    // The sites server asks whether a host may get a certificate (WEB-3a): yes for a site's address
+    // or proven own domain, no for any other name; answers nothing else, 600 a minute per address.
+    'GET s/_tls',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

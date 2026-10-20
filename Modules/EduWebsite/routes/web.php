@@ -15,6 +15,11 @@ use Modules\EduWebsite\Http\Controllers\PublicSiteController;
 | ServeSiteByHost.
 */
 
+// The sites server asks before making a certificate for a host (on-demand TLS); "_" is never in a slug.
+Route::get('s/_tls', [PublicSiteController::class, 'tls'])
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class])
+    ->name('edu-website.tls');
+
 Route::get('s/{slug}/{path?}', [PublicSiteController::class, 'byPath'])
     ->where('slug', SiteResolver::SLUG_PATTERN)
     ->where('path', '.*')

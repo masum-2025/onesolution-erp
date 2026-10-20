@@ -24,6 +24,8 @@ export function useSite() {
         meta,
         canManage: computed(() => !!meta.value.can_manage),
         canPublish: computed(() => !!meta.value.can_publish),
+        // The language every text of the site must have (its main language).
+        mainLocale: computed(() => site.value?.default_locale ?? 'en'),
         pick: (texts) => textIn(texts ?? {}) || '',
     };
 }

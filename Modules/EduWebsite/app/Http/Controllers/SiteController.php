@@ -15,10 +15,12 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Modules\EduWebsite\Exceptions\WebsiteException;
 use Modules\EduWebsite\Http\Controllers\Concerns\FindsSite;
+use Modules\EduWebsite\Http\Requests\DomainRequest;
 use Modules\EduWebsite\Http\Requests\SiteRequest;
 use Modules\EduWebsite\Http\WebsitePresenter;
 use Modules\EduWebsite\Models\Media;
 use Modules\EduWebsite\Models\Page;
+use Modules\EduWebsite\Services\Domains;
 use Modules\EduWebsite\Services\Place;
 use Modules\EduWebsite\Services\Sites;
 
@@ -57,6 +59,7 @@ class SiteController extends Controller
             'template_source' => $offered['source'],
             'max_pages' => $this->rule($company, 'edu_website.max_pages'),
             'max_media_mb' => $this->rule($company, 'edu_website.max_media_mb'),
+            'own_domain' => $this->rule($company, 'edu_website.own_domain'),
             'page_count' => $site === null ? 0 : $this->place->query(Page::class, $company)->where('site_id', $site->getKey())->count(),
             'has_changes' => $site !== null && $this->sites->hasChanges($company, $site),
             'languages' => LanguageRegistry::codes(),
@@ -64,6 +67,34 @@ class SiteController extends Controller
             'can_manage' => Gate::allows('edu_website.manage', $company),
             'can_publish' => Gate::allows('edu_website.publish', $company),
         ]]);
+    }
+
+    /** The website's own domain: set it (a new one waits for its DNS proof), prove it, remove it. */
+    public function setDomain(DomainRequest $request, string $organization, Domains $domains): JsonResponse
+    {
+        $company = $this->company($organization, 'edu_website.publish');
+        $site = $this->siteOf($company);
+        $domains->set($company, $site, $request->validated('host'), $request->user());
+
+        return response()->json(['data' => $this->presenter->site($site->refresh())]);
+    }
+
+    public function verifyDomain(Request $request, string $organization, Domains $domains): JsonResponse
+    {
+        $company = $this->company($organization, 'edu_website.publish');
+        $site = $this->siteOf($company);
+        $domains->verify($company, $site, $request->user());
+
+        return response()->json(['data' => $this->presenter->site($site->refresh())]);
+    }
+
+    public function removeDomain(Request $request, string $organization, Domains $domains): JsonResponse
+    {
+        $company = $this->company($organization, 'edu_website.publish');
+        $site = $this->siteOf($company);
+        $domains->remove($company, $site, $request->user());
+
+        return response()->json(['data' => $this->presenter->site($site->refresh())]);
     }
 
     /** Whether an address can be used (its form, and no other website has it); a few a minute. */
@@ -95,8 +126,10 @@ class SiteController extends Controller
         if (isset($data['slug']) && $data['slug'] !== $site->slug) {
             Gate::authorize('edu_website.publish', $company);
         }
-        if (! empty($data['logo_media_id']) && ! $this->place->query(Media::class, $company)->where('site_id', $site->getKey())->where('kind', 'image')->whereKey($data['logo_media_id'])->exists()) {
-            throw WebsiteException::mediaNotFound();
+        foreach (['logo_media_id', 'share_media_id'] as $field) {
+            if (! empty($data[$field]) && ! $this->place->query(Media::class, $company)->where('site_id', $site->getKey())->where('kind', 'image')->whereKey($data[$field])->exists()) {
+                throw WebsiteException::mediaNotFound();
+            }
         }
 
         return response()->json(['data' => $this->presenter->site($this->sites->update($company, $site, $data, $request->user()))]);

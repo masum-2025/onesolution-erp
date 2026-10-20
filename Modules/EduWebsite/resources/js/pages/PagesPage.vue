@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import { ArrowDown, ArrowUp, FilePlus, FileStack, Globe, House, PenLine, Trash2 } from 'lucide-vue-next';
+import { ArrowDown, ArrowUp, FilePlus, FileStack, Globe, House, ImagePlus, PenLine, Settings2, Trash2, X } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -18,6 +18,7 @@ import { t } from '@/lib/i18n';
 import { cleanTexts, textsFor } from '@/lib/texts';
 import { toast } from '@/lib/toast';
 import { useResource } from '@/lib/useResource';
+import MediaPicker from '../components/MediaPicker.vue';
 import { slugFrom } from '../lib';
 import { useSite } from '../useSite';
 
@@ -27,7 +28,7 @@ import { useSite } from '../useSite';
  * edit their blocks, removed after a confirmation (the home page stays).
  * How many pages the plan allows is shown with where that comes from.
  */
-const { web, resource, site, meta, canManage, pick } = useSite();
+const { web, resource, site, meta, canManage, mainLocale, pick } = useSite();
 const list = useResource(() => web.pages());
 const pages = computed(() => list.data.value?.data ?? []);
 const max = computed(() => meta.value.max_pages?.value ?? 0);
@@ -86,27 +87,50 @@ async function remove(page) {
 
 // Adding or renaming a page.
 const editing = ref(null);
-const form = reactive({ title: {}, slug: '', in_menu: true });
+const form = reactive({ title: {}, slug: '', in_menu: true, description: {}, share: '' });
 const slugTouched = ref(false);
 const errors = ref({});
 const saving = ref(false);
 
 function edit(page = null) {
-    Object.assign(form, { title: textsFor(page?.title), slug: page?.slug ?? '', in_menu: page?.in_menu ?? true });
+    Object.assign(form, {
+        title: textsFor(page?.title), slug: page?.slug ?? '', in_menu: page?.in_menu ?? true,
+        description: textsFor(page?.description), share: page?.share_media_id ?? '',
+    });
+    if (form.share && !pictures.value[form.share]) loadPictures();
     slugTouched.value = !!page;
     errors.value = {};
     editing.value = page ?? 'new';
 }
 
+// The sharing picture (thumbnails of the site's pictures).
+const pictures = ref({});
+const picking = ref(false);
+async function loadPictures() {
+    try {
+        pictures.value = Object.fromEntries((await web.media('image')).data.map((row) => [row.id, row]));
+    } catch {
+        // Only the thumbnail is missing.
+    }
+}
+function pickShare(ids, rows) {
+    rows.forEach((row) => (pictures.value[row.id] = row));
+    form.share = ids[0] ?? '';
+    picking.value = false;
+}
+
 function titleChanged(value) {
     form.title = value;
+    // An address from the English name (a Bangla name gives none: then it is written by hand).
     if (!slugTouched.value) form.slug = slugFrom(value.en);
 }
 
 async function save() {
     saving.value = true;
     errors.value = {};
-    const body = { title: cleanTexts(form.title), in_menu: form.in_menu, ...(editing.value === 'new' || !editing.value.is_home ? { slug: form.slug } : {}) };
+    const body = {
+        title: cleanTexts(form.title), in_menu: form.in_menu, description: cleanTexts(form.description), share_media_id: form.share || null,
+        ...(editing.value === 'new' || !editing.value.is_home ? { slug: form.slug } : {}) };
     try {
         if (editing.value === 'new') await web.createPage(body);
         else await web.updatePage(editing.value.id, { ...body, base_version: editing.value.version });
@@ -169,6 +193,7 @@ async function save() {
                         <AppSwitch v-if="canManage" :model-value="page.in_menu" :busy="busy === page.id" :label="t('edu_website.pages.in_menu')" show-label @update:model-value="toggleMenu(page)" />
                         <AppBadge v-else-if="!page.in_menu" tone="outline">{{ t('edu_website.pages.hidden') }}</AppBadge>
                         <div class="flex items-center gap-1">
+                            <AppButton v-if="canManage" size="icon-sm" variant="ghost" :icon="Settings2" :aria-label="t('edu_website.pages.rename')" :title="t('edu_website.pages.rename')" @click="edit(page)" />
                             <AppButton size="sm" :icon="PenLine" :to="`/website/pages/${page.id}`">{{ canManage ? t('edu_website.pages.edit') : t('edu_website.pages.open') }}</AppButton>
                             <AppButton v-if="canManage && !page.is_home" size="icon-sm" variant="ghost" :icon="Trash2" :aria-label="t('edu_website.common.remove')" :loading="busy === page.id" @click="remove(page)" />
                         </div>
@@ -177,18 +202,34 @@ async function save() {
             </section>
         </template>
 
-        <AppDialog :open="editing !== null" :title="editing === 'new' ? t('edu_website.pages.add') : t('edu_website.pages.rename')" @close="editing = null">
+        <AppDialog :open="editing !== null" size="lg" :title="editing === 'new' ? t('edu_website.pages.add') : t('edu_website.pages.rename')" @close="editing = null">
             <form id="website-page" class="grid gap-4" novalidate @submit.prevent="save">
-                <TranslatedFields :model-value="form.title" :label="t('edu_website.pages.name')" required :maxlength="80" :errors="errors" error-prefix="title" @update:model-value="titleChanged" />
+                <TranslatedFields :required-locale="mainLocale" :model-value="form.title" :label="t('edu_website.pages.name')" required :maxlength="80" :errors="errors" error-prefix="title" @update:model-value="titleChanged" />
                 <AppField v-if="editing === 'new' || !editing?.is_home" v-slot="{ id }" :label="t('edu_website.pages.address')" :hint="t('edu_website.pages.address_hint')" :error="errors.slug?.[0] ?? null">
                     <input :id="id" v-model="form.slug" class="field-input font-mono" dir="ltr" maxlength="60" @input="slugTouched = true" />
                 </AppField>
                 <AppSwitch v-model="form.in_menu" :label="t('edu_website.pages.in_menu')" show-label />
+                <div class="space-y-4 rounded-lg border border-line p-4">
+                    <div>
+                        <p class="text-[13.5px] font-semibold">{{ t('edu_website.pages.seo') }}</p>
+                        <p class="text-[12.5px] text-muted">{{ t('edu_website.pages.seo_text') }}</p>
+                    </div>
+                    <TranslatedFields v-model="form.description" :required-locale="mainLocale" :label="t('edu_website.pages.description')" multiline :maxlength="160" :errors="errors" error-prefix="description" />
+                    <AppField :label="t('edu_website.pages.share')" :hint="t('edu_website.pages.share_hint')" :error="errors.share_media_id?.[0] ?? null" optional>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <img v-if="form.share && pictures[form.share]?.thumb" :src="pictures[form.share].thumb" alt="" class="h-14 w-24 rounded-md border border-line object-cover" />
+                            <AppButton size="sm" :icon="ImagePlus" @click="picking = true">{{ form.share ? t('edu_website.media.change') : t('edu_website.media.choose') }}</AppButton>
+                            <AppButton v-if="form.share" size="sm" variant="ghost" :icon="X" @click="form.share = ''">{{ t('edu_website.media.remove_from_block') }}</AppButton>
+                        </div>
+                    </AppField>
+                </div>
             </form>
             <template #footer>
                 <AppButton variant="ghost" @click="editing = null">{{ t('edu_website.common.cancel') }}</AppButton>
-                <AppButton variant="primary" type="submit" form="website-page" :loading="saving" :disabled="!form.title.en?.trim() || (editing === 'new' && !form.slug)">{{ t('edu_website.common.save') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="website-page" :loading="saving" :disabled="!form.title[mainLocale]?.trim() || (editing === 'new' && !form.slug)">{{ t('edu_website.common.save') }}</AppButton>
             </template>
         </AppDialog>
+
+        <MediaPicker :open="picking" :web="web" kind="image" :selected="form.share ? [form.share] : []" :max-mb="meta.max_media_mb?.value ?? 5" :can-upload="canManage" @close="picking = false" @pick="pickShare" />
     </div>
 </template>

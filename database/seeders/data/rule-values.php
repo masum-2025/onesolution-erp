@@ -128,6 +128,9 @@ return [
     ['key' => 'plans.max_branches', 'plan' => 'business', 'value' => 20, 'reason' => 'Business plan: up to 20 branches.'],
     ['key' => 'plans.max_storage_mb', 'plan' => 'starter', 'value' => 5120, 'reason' => 'Starter plan: 5 GB.'],
     ['key' => 'plans.max_storage_mb', 'plan' => 'business', 'value' => 51200, 'reason' => 'Business plan: 50 GB.'],
+    // A school website on its own domain (WEB-3a) comes with the bigger plans.
+    ['key' => 'edu_website.own_domain', 'plan' => 'business', 'value' => true, 'reason' => 'Business plan: the website on a domain the school owns.'],
+    ['key' => 'edu_website.own_domain', 'plan' => 'enterprise', 'value' => true, 'reason' => 'Enterprise plan: the website on a domain the school owns.'],
     // The house partner (One Solutions itself) takes self-serve sign-ups (Phase 5C).
     ['key' => 'b2c.self_signup_allowed', 'partner' => 'house', 'value' => true, 'reason' => 'One Solutions sells to individuals directly.'],
 

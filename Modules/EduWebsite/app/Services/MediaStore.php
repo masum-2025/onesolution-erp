@@ -14,6 +14,7 @@ use Modules\EduWebsite\Exceptions\WebsiteException;
 use Modules\EduWebsite\Models\Block;
 use Modules\EduWebsite\Models\Media;
 use Modules\EduWebsite\Models\Notice;
+use Modules\EduWebsite\Models\Page;
 use Modules\EduWebsite\Models\Site;
 
 /**
@@ -88,7 +89,7 @@ class MediaStore
     }
 
     /**
-     * Pictures and files the website uses: its logo, notices, blocks.
+     * Pictures and files the website uses: its logo and sharing pictures, notices, blocks.
      *
      * @return list<string>
      */
@@ -96,6 +97,8 @@ class MediaStore
     {
         return array_values(array_unique(array_filter([
             ...$this->place->query(Site::class, $company)->pluck('logo_media_id')->all(),
+            ...$this->place->query(Site::class, $company)->pluck('share_media_id')->all(),
+            ...$this->place->query(Page::class, $company)->pluck('share_media_id')->all(),
             ...$this->place->query(Notice::class, $company)->pluck('media_id')->all(),
             ...$this->place->query(Block::class, $company)->get(['type', 'data'])
                 ->flatMap(fn (Block $block) => BlockTypes::mediaIds($block->type, $block->data ?? []))->all(),
