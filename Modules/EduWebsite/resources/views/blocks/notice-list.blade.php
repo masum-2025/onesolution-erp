@@ -9,6 +9,9 @@
                     <time class="date" datetime="{{ $notice['date'] }}"><b>{{ $date($notice['date'], 'D') }}</b><span>{{ $date($notice['date'], 'MMM') }}</span></time>
                     <div>
                         <a href="{{ $notice['url'] }}{{ $query ?? '' }}">{{ $text($notice['title']) }}</a>
+                        @if ($notice['fresh'] ?? false)
+                            <span class="new">{{ __('edu_website::public.new', [], $locale) }}</span>
+                        @endif
                         @if ($notice['pinned'])
                             <span class="pin">{{ __('edu_website::public.pinned', [], $locale) }}</span>
                         @endif

@@ -30,7 +30,8 @@ return [
     ],
     'rules' => [
         [
-            // Templates offered; a level above turns some off (the allowed list) for everyone below.
+            // Templates offered (school, minimal, premium: Sites::TEMPLATES); a level above turns some off
+            // (the allowed list) for everyone below. Manifests are cached by file time: change this file with the list.
             'key' => 'edu_website.templates',
             'type' => 'multi_enum',
             'schema' => ['items' => ['enum' => Sites::TEMPLATES], 'minItems' => 1],

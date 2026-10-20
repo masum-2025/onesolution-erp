@@ -26,7 +26,7 @@ describe('website screens', () => {
     });
 
     it('knows the same kinds of block as the server', () => {
-        expect(BLOCK_TYPES).toEqual(['hero', 'text', 'notices', 'admission', 'programs', 'people', 'gallery', 'downloads', 'contact', 'attendance']);
+        expect(BLOCK_TYPES).toEqual(['hero', 'slider', 'text', 'notices', 'admission', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance']);
     });
 });
 
@@ -40,7 +40,9 @@ describe('block forms', () => {
         expect(blockForm('notices').count).toBe(5);
         expect(blockForm('contact').show_map).toBe(true);
         expect(blockForm('programs').source).toBe('education');
-        expect(blockForm('gallery').media_ids).toEqual([]);
+        expect(blockForm('gallery').items).toEqual([]);
+        expect(blockForm('gallery').layout).toBe('grid');
+        expect(blockForm('slider')).toMatchObject({ autoplay: true, interval: 5, effect: 'fade', height: 'normal', slides: [] });
         expect(blankItem(BLOCKS.people.fields[1].fields)).toMatchObject({ name: '', image_media_id: '' });
     });
 
@@ -60,6 +62,28 @@ describe('block forms', () => {
         const notices = blockForm('notices');
         notices.count = '8';
         expect(blockBody('notices', notices).count).toBe(8);
+    });
+
+    it('opens a gallery made before captions as pictures with empty captions', () => {
+        const form = blockForm('gallery', { title: { en: 'Sports day' }, media_ids: ['a'.repeat(26), 'b'.repeat(26)] });
+        expect(form.items.map((item) => item.image_media_id)).toEqual(['a'.repeat(26), 'b'.repeat(26)]);
+        const body = blockBody('gallery', form);
+        expect(body).not.toHaveProperty('media_ids');
+        expect(body.items[0]).toEqual({ image_media_id: 'a'.repeat(26), caption: null });
+        expect(body.layout).toBe('grid');
+    });
+
+    it('sends slides and numbers as the server checks them', () => {
+        const slider = blockForm('slider', { slides: [{ image_media_id: 'a'.repeat(26), title: { en: 'Welcome' } }], autoplay: false });
+        const body = blockBody('slider', slider);
+        expect(body.slides[0]).toEqual({ image_media_id: 'a'.repeat(26), title: { en: 'Welcome' }, text: null, button_label: null, button_url: null });
+        expect(body).not.toHaveProperty('interval');
+        expect(body.autoplay).toBe(false);
+
+        const stats = blockForm('stats', { items: [{ value: 1200, suffix: '+', label: { en: 'Students' } }] });
+        stats.items[0].value = '1250';
+        expect(blockBody('stats', stats).items).toEqual([{ value: 1250, suffix: '+', label: { en: 'Students' } }]);
+        expect(blockSummary({ data: { slides: [{ title: { en: 'A' } }, { title: { en: 'B' } }] } }, (texts) => texts?.en ?? '')).toBe('A · B');
     });
 
     it('sums up a block by its title, else its text or people', () => {

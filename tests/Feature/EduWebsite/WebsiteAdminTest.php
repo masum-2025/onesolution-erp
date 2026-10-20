@@ -36,7 +36,7 @@ beforeEach(function () {
 
 it('tells the screens the templates offered, the limits with their source and whether there is something to publish', function () {
     $meta = ($this->site)()['meta'];
-    expect($meta['template_choices'])->toBe([['key' => 'school', 'offered' => true], ['key' => 'minimal', 'offered' => true]])
+    expect($meta['template_choices'])->toBe([['key' => 'school', 'offered' => true], ['key' => 'minimal', 'offered' => true], ['key' => 'premium', 'offered' => true]])
         ->and($meta['template_source']['kind'])->toBe('default')
         ->and($meta['max_pages']['value'])->toBe(12)
         ->and($meta['page_count'])->toBe(1)

@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class BlockTypes
 {
-    public const TYPES = ['hero', 'text', 'notices', 'admission', 'programs', 'people', 'gallery', 'downloads', 'contact', 'attendance'];
+    public const TYPES = ['hero', 'slider', 'text', 'notices', 'admission', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance'];
 
     /** Validation rules for a block's data. */
     public static function rules(string $type): array
@@ -32,7 +32,21 @@ final class BlockTypes
                 ...self::text('items.*.name', 100, true), ...self::text('items.*.text', 300, false)],
             'people' => [...$title, 'items' => ['required', 'array', 'min:1', 'max:60'], 'items.*.name' => ['required', 'string', 'max:100'],
                 ...self::text('items.*.role', 100, false), 'items.*.image_media_id' => ['nullable', 'string', 'size:26']],
-            'gallery' => [...$title, 'media_ids' => ['required', 'array', 'min:1', 'max:40'], 'media_ids.*' => ['string', 'size:26']],
+            // Slides of pictures with a title, a line and a button; turning by themselves or not.
+            'slider' => ['slides' => ['required', 'array', 'min:1', 'max:8'], 'slides.*.image_media_id' => ['required', 'string', 'size:26'],
+                ...self::text('slides.*.title', 120, false), ...self::text('slides.*.text', 240, false),
+                ...self::text('slides.*.button_label', 40, false), 'slides.*.button_url' => self::link(),
+                'autoplay' => ['boolean'], 'interval' => ['nullable', 'integer', 'min:3', 'max:10'],
+                'height' => ['nullable', 'in:normal,full'], 'effect' => ['nullable', 'in:fade,slide']],
+            // Pictures with a caption each (items), or the ids alone as before (media_ids); laid out as a grid, masonry or a strip.
+            'gallery' => [...$title, 'layout' => ['nullable', 'in:grid,masonry,carousel'],
+                'items' => ['required_without:media_ids', 'array', 'min:1', 'max:40'], 'items.*.image_media_id' => ['required', 'string', 'size:26'],
+                ...self::text('items.*.caption', 150, false),
+                'media_ids' => ['required_without:items', 'array', 'min:1', 'max:40'], 'media_ids.*' => ['string', 'size:26']],
+            // A few numbers the school is proud of (written by hand): "1200+ students".
+            'stats' => [...$title, 'items' => ['required', 'array', 'min:1', 'max:6'],
+                'items.*.value' => ['required', 'integer', 'min:0', 'max:1000000000'], 'items.*.suffix' => ['nullable', 'string', 'max:4'],
+                ...self::text('items.*.label', 60, true)],
             'downloads' => [...$title, 'media_ids' => ['required', 'array', 'min:1', 'max:30'], 'media_ids.*' => ['string', 'size:26']],
             'contact' => [...$title, 'show_map' => ['boolean']],
             'attendance' => [...$title, 'students' => ['boolean'], 'staff' => ['boolean']],
@@ -65,7 +79,8 @@ final class BlockTypes
         return array_values(array_filter([
             $data['image_media_id'] ?? null,
             ...($data['media_ids'] ?? []),
-            ...array_map(fn ($item) => $item['image_media_id'] ?? null, $type === 'people' ? ($data['items'] ?? []) : []),
+            ...array_map(fn ($item) => $item['image_media_id'] ?? null, in_array($type, ['people', 'gallery'], true) ? ($data['items'] ?? []) : []),
+            ...array_map(fn ($slide) => $slide['image_media_id'] ?? null, $type === 'slider' ? ($data['slides'] ?? []) : []),
         ]));
     }
 

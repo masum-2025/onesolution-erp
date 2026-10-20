@@ -4,7 +4,7 @@ return [
     'templates' => [
         'label' => 'Website templates offered',
         'description' => 'Templates a school may choose for its website. Turn some off for everyone below.',
-        'options' => ['school' => 'School (colourful)', 'minimal' => 'Minimal'],
+        'options' => ['school' => 'School (colourful)', 'minimal' => 'Minimal', 'premium' => 'Premium (ink and gold)'],
     ],
     'max_pages' => [
         'label' => 'Website pages at most',

@@ -69,9 +69,9 @@ it('shows the public only what was published; a signed link previews the draft',
         ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
     $this->get('/s/abc-school?lang=en')->assertOk()->assertSee('ABC High School');
 
-    // Light and locked down: styles allowed by hash only, no scripts, no framing, no cookie for visitors.
+    // Light and locked down: our own style and script allowed by hash only, no framing, no cookie for visitors.
     $public = $this->get('/s/abc-school')->assertHeader('X-Frame-Options', 'DENY');
-    expect($public->headers->get('Content-Security-Policy'))->toContain("style-src 'sha256-")->toContain("default-src 'none'")->not->toContain('script-src')
+    expect($public->headers->get('Content-Security-Policy'))->toContain("style-src 'sha256-")->toContain("default-src 'none'")->toContain("script-src 'sha256-")->not->toContain('unsafe-inline')
         ->and($public->headers->getCookies())->toBe([]);
 
     // A draft change waits for the next publish.

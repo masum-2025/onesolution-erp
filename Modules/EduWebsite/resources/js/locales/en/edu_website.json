@@ -68,7 +68,9 @@
         "minimal": "Quiet",
         "minimal_text": "White and calm; colour only on links and buttons.",
         "off": "Not offered to you",
-        "off_by": "Turned off by {name}"
+        "off_by": "Turned off by {name}",
+        "premium": "Premium",
+        "premium_text": "Deep ink and gold, serif headings, quiet lines."
     },
     "colours": {
         "green": "Green",
@@ -76,7 +78,8 @@
         "maroon": "Maroon",
         "teal": "Teal",
         "purple": "Purple",
-        "navy": "Navy"
+        "navy": "Navy",
+        "royal": "Royal"
     },
     "settings": {
         "title": "Website settings",
@@ -176,7 +179,11 @@
         "contact": "Contact",
         "contact_text": "Address, phone, email, office hours and map.",
         "attendance": "Today in school",
-        "attendance_text": "How many students and staff are present today (numbers only)."
+        "attendance_text": "How many students and staff are present today (numbers only).",
+        "slider": "Picture slider",
+        "slider_text": "Big pictures that turn by themselves, each with a title and a button.",
+        "stats": "In numbers",
+        "stats_text": "A few numbers you are proud of, counting up."
     },
     "fields": {
         "title": "Title",
@@ -200,7 +207,26 @@
         "show_map": "Show the map link",
         "students": "Show students",
         "staff": "Show teachers and staff",
-        "add_item": "Add"
+        "add_item": "Add",
+        "slides": "Slides",
+        "autoplay": "Turn by themselves",
+        "interval": "Seconds per slide",
+        "effect": "How slides change",
+        "effect_fade": "Fade",
+        "effect_slide": "Slide",
+        "height": "Height",
+        "height_normal": "Normal",
+        "height_full": "Full screen",
+        "layout": "Layout",
+        "layout_grid": "Grid",
+        "layout_masonry": "Masonry",
+        "layout_carousel": "Strip",
+        "caption": "Caption",
+        "numbers": "Numbers",
+        "value": "Number",
+        "suffix": "After the number (+, %)",
+        "counts": "What it counts",
+        "add_pictures": "Add pictures"
     },
     "notices": {
         "title": "Notices",

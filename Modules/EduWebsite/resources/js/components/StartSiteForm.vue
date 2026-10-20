@@ -82,7 +82,7 @@ const STEPS = ['template', 'name', 'language'];
         </div>
 
         <div class="p-5 sm:p-6">
-            <div v-if="step === 1" class="grid gap-4 sm:grid-cols-2">
+            <div v-if="step === 1" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <TemplateCard
                     v-for="choice in choices"
                     :key="choice.key"

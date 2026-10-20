@@ -22,6 +22,30 @@ export const BLOCKS = {
             { key: 'button_url', kind: 'link' },
         ],
     },
+    slider: {
+        icon: 'slides',
+        fields: [
+            {
+                key: 'slides',
+                kind: 'items',
+                min: 1,
+                max: 8,
+                // Several pictures picked at once become one slide each.
+                bulk: 'image_media_id',
+                fields: [
+                    { key: 'image_media_id', kind: 'image', required: true },
+                    { key: 'title', kind: 'text', max: 120 },
+                    { key: 'text', kind: 'text', max: 240 },
+                    { key: 'button_label', kind: 'text', max: 40 },
+                    { key: 'button_url', kind: 'link' },
+                ],
+            },
+            { key: 'autoplay', kind: 'switch', default: true },
+            { key: 'interval', kind: 'number', min: 3, max: 10, default: 5, when: (data) => data.autoplay },
+            { key: 'effect', kind: 'choice', options: ['fade', 'slide'], default: 'fade' },
+            { key: 'height', kind: 'choice', options: ['normal', 'full'], default: 'normal' },
+        ],
+    },
     text: { icon: 'text', fields: [title, { key: 'body', kind: 'text', max: 5000, long: true, required: true }] },
     notices: { icon: 'bell', fields: [title, { key: 'count', kind: 'number', min: 1, max: 20, default: 5 }] },
     admission: {
@@ -70,7 +94,45 @@ export const BLOCKS = {
             },
         ],
     },
-    gallery: { icon: 'images', fields: [title, { key: 'media_ids', label: 'pictures', kind: 'media', media: 'image', min: 1, max: 40 }] },
+    gallery: {
+        icon: 'images',
+        fields: [
+            title,
+            { key: 'layout', kind: 'choice', options: ['grid', 'masonry', 'carousel'], default: 'grid' },
+            {
+                key: 'items',
+                label: 'pictures',
+                kind: 'items',
+                min: 1,
+                max: 40,
+                bulk: 'image_media_id',
+                fields: [
+                    { key: 'image_media_id', kind: 'image', required: true },
+                    { key: 'caption', kind: 'text', max: 150 },
+                ],
+            },
+        ],
+        // A gallery made before captions kept the picture ids alone.
+        upgrade: (data) => (data?.items || !data?.media_ids ? data : { ...data, items: data.media_ids.map((id) => ({ image_media_id: id })) }),
+    },
+    stats: {
+        icon: 'trend',
+        fields: [
+            title,
+            {
+                key: 'items',
+                label: 'numbers',
+                kind: 'items',
+                min: 1,
+                max: 6,
+                fields: [
+                    { key: 'value', kind: 'number', min: 0, max: 1000000000, required: true },
+                    { key: 'suffix', kind: 'name', max: 4 },
+                    { key: 'label', label: 'counts', kind: 'text', max: 60, required: true },
+                ],
+            },
+        ],
+    },
     downloads: { icon: 'file', fields: [title, { key: 'media_ids', label: 'files', kind: 'media', media: 'pdf', min: 1, max: 30 }] },
     contact: { icon: 'phone', fields: [title, { key: 'show_map', kind: 'switch', default: true }] },
     attendance: {
@@ -110,7 +172,9 @@ export function blankItem(fields) {
 
 /** The form of a block from its data (a new block when data is empty). */
 export function blockForm(type, data = {}) {
-    return formOf(BLOCKS[type].fields, data);
+    const kind = BLOCKS[type];
+
+    return formOf(kind.fields, kind.upgrade ? kind.upgrade(data) : data);
 }
 
 function bodyOf(fields, form) {
@@ -146,6 +210,7 @@ export function blockSummary(block, pick) {
     const data = block.data ?? {};
     const text = pick(data.title) || pick(data.text) || pick(data.body);
     if (text) return text;
+    if (Array.isArray(data.slides)) return data.slides.map((slide) => pick(slide.title)).filter(Boolean).join(' · ');
     if (Array.isArray(data.items)) return data.items.map((item) => (typeof item.name === 'string' ? item.name : pick(item.name))).filter(Boolean).join(', ');
 
     return '';
@@ -159,6 +224,7 @@ export const COLOUR_SETS = [
     { key: 'teal', primary: '#0e7490', accent: '#f97316' },
     { key: 'purple', primary: '#5b21b6', accent: '#f472b6' },
     { key: 'navy', primary: '#1e3a5f', accent: '#22c55e' },
+    { key: 'royal', primary: '#1f3a68', accent: '#c9a227' },
 ];
 
 function luminance(hex) {

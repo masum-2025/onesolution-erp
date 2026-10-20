@@ -62,6 +62,12 @@ class PublicSiteController extends Controller
         if ($site !== null && preg_match('#^(?:preview/)?media/([0-9a-z]{26})/(small|large|file)$#i', $path, $match)) {
             return $this->file($company, $site, $match[1], $match[2]);
         }
+        // The site's own fonts (the same for every site; kept a year).
+        if (preg_match('#^(?:preview/)?fonts/('.implode('|', PublicSite::FONTS).')\.woff2$#', $path, $match)) {
+            return response()->file(module_path('EduWebsite', "resources/fonts/{$match[1]}.woff2"), [
+                'Content-Type' => 'font/woff2', 'Cache-Control' => 'public, max-age=31536000, immutable', 'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
         $preview = $path === 'preview' || str_starts_with($path, 'preview/');
         if ($preview) {
             if (! URL::hasValidSignature($request)) {
@@ -93,17 +99,18 @@ class PublicSiteController extends Controller
     }
 
     /**
-     * A page's own strict policy: its inline stylesheet allowed by hash
-     * (the same for every page of a site, so a kept page needs no nonce),
-     * pictures from the site only, no scripts, no framing by others.
+     * A page's own strict policy: its inline stylesheet and our own small
+     * script allowed by hash, pictures and fonts from the site only, no
+     * other scripts, no framing by others.
      */
     private function guarded(Response $response, array $headers = []): Response
     {
         $html = (string) $response->getContent();
-        $hashes = preg_match_all('#<style>(.*?)</style>#s', $html, $styles)
-            ? implode(' ', array_map(fn (string $css) => "'sha256-".base64_encode(hash('sha256', $css, true))."'", array_unique($styles[1])))
+        $hashes = fn (string $tag) => preg_match_all("#<{$tag}>(.*?)</{$tag}>#s", $html, $found)
+            ? implode(' ', array_map(fn (string $code) => "'sha256-".base64_encode(hash('sha256', $code, true))."'", array_unique($found[1])))
             : "'none'";
-        $response->headers->set('Content-Security-Policy', "default-src 'none'; img-src 'self'; style-src {$hashes}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+        // Our own stylesheet and script only (by hash; the same on every page of a site, so a kept page needs no nonce).
+        $response->headers->set('Content-Security-Policy', "default-src 'none'; img-src 'self'; font-src 'self'; style-src {$hashes('style')}; script-src {$hashes('script')}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -118,7 +125,7 @@ class PublicSiteController extends Controller
     {
         $pages = $this->public->pages($company, $site, $preview);
         $frame = $this->public->frame($company, $site, $pages, $locale, $base.($preview ? '/preview' : ''));
-        $frame['css'] = $this->public->css($frame['theme']);
+        $frame['css'] = $this->public->css($frame['theme'], $base.($preview ? '/preview' : ''));
         if ($preview) {
             // Links inside a preview keep the signature, so the draft can be walked through.
             $frame['query'] = '?'.http_build_query(request()->only(['expires', 'signature', 'lang']));

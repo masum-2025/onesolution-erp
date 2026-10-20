@@ -27,7 +27,7 @@ class Sites
     public const MODULE = 'edu_website';
 
     /** The templates there are (the rule edu_website.templates says which are offered). */
-    public const TEMPLATES = ['school', 'minimal'];
+    public const TEMPLATES = ['school', 'minimal', 'premium'];
 
     public function __construct(
         private Place $place,

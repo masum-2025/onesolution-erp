@@ -120,5 +120,16 @@
         @endif
     </div>
 </footer>
+
+{{-- Pictures of a gallery, large (opened by the script; without it a picture opens on its own). --}}
+<dialog id="lightbox" class="lightbox" aria-label="{{ $ui('gallery') }}">
+    <button type="button" class="close" aria-label="{{ $ui('close') }}">@include('edu_website::icon', ['name' => 'close'])</button>
+    <button type="button" class="prev" aria-label="{{ $ui('previous') }}">@include('edu_website::icon', ['name' => 'left'])</button>
+    <figure><img alt=""><figcaption></figcaption></figure>
+    <button type="button" class="next" aria-label="{{ $ui('next') }}">@include('edu_website::icon', ['name' => 'right'])</button>
+    <span class="counter" aria-live="polite"></span>
+</dialog>
+{{-- Our own small script (no user data in it; allowed by its hash in the CSP). The page works without it. --}}
+<script>@include('edu_website::site-js')</script>
 </body>
 </html>

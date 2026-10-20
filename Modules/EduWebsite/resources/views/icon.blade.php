@@ -14,6 +14,11 @@
         @case('sun')<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>@break
         @case('file')<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>@break
         @case('map')<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>@break
+        @case('close')<path d="M18 6 6 18M6 6l12 12"/>@break
+        @case('left')<path d="m15 18-6-6 6-6"/>@break
+        @case('right')<path d="m9 18 6-6-6-6"/>@break
+        @case('image')<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>@break
+        @case('zoom')<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M11 8v6M8 11h6"/>@break
         @case('arrow')<path d="M5 12h14M13 5l7 7-7 7"/>@break
         @case('calendar')<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>@break
         @default<circle cx="12" cy="12" r="9"/>

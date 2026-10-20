@@ -165,7 +165,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     <h2 class="me-auto text-[15px] font-semibold">{{ t('edu_website.settings.template') }}</h2>
                     <SourceBadge v-if="meta.template_source && meta.template_source.kind !== 'default'" v-bind="meta.template_source" />
                 </div>
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <TemplateCard
                         v-for="choice in meta.template_choices"
                         :key="choice.key"

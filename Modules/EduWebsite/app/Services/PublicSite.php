@@ -26,6 +26,12 @@ use Modules\StudentAttendance\Services\TodayCounts as StudentCounts;
  */
 class PublicSite
 {
+    /** The fonts the sites use (served by the site itself; files in resources/fonts). */
+    public const FONTS = ['hind-bengali-400', 'hind-bengali-600', 'inter-latin'];
+
+    /** A notice this many days old or newer is marked "new". */
+    private const NEW_NOTICE_DAYS = 7;
+
     /** Today's attendance numbers are kept this long (never names). */
     private const COUNTS_SECONDS = 600;
 
@@ -35,10 +41,18 @@ class PublicSite
         private BrandResolver $brands,
     ) {}
 
-    /** The page's stylesheet: the site's colours and the shared styles (no user text in it). */
-    public function css(array $theme): string
+    /**
+     * The page's stylesheet: the site's fonts (Bangla letters load the Bangla font only when a page has
+     * them), its colours and the shared styles (no user text in it). $base is the site's own path.
+     */
+    public function css(array $theme, string $base = ''): string
     {
-        $css = ":root{--p:{$theme['primary']};--a:{$theme['accent']}}".view('edu_website::site-css')->render();
+        $bengali = 'U+0951-0952,U+0964-0965,U+0980-09FE,U+1CD0-1CF9,U+200C-200D,U+20B9,U+25CC,U+A8F1';
+        $latin = 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD';
+        $fonts = "@font-face{font-family:Hind Siliguri;font-weight:400;font-display:swap;src:url({$base}/fonts/hind-bengali-400.woff2);unicode-range:{$bengali}}"
+            ."@font-face{font-family:Hind Siliguri;font-weight:500 800;font-display:swap;src:url({$base}/fonts/hind-bengali-600.woff2);unicode-range:{$bengali}}"
+            ."@font-face{font-family:Inter;font-weight:100 900;font-display:swap;src:url({$base}/fonts/inter-latin.woff2);unicode-range:{$latin}}";
+        $css = $fonts.":root{--p:{$theme['primary']};--a:{$theme['accent']}}".view('edu_website::site-css')->render();
         // It is printed escaped like any text: nothing in it may be changed by escaping.
         if (preg_match('/[<>&"\x27]/', $css)) {
             throw new \LogicException('The website stylesheet must not contain < > & or quotes.');
@@ -105,6 +119,8 @@ class PublicSite
             'powered_by' => $brand['powered_by'] ?? null,
             'text' => $text,
             'date' => fn (string $date, string $format = 'LL') => $this->date($date, $format, $locale),
+            // A whole number in the visitor's digits and grouping (১,২০০ in Bangla).
+            'number' => fn (int $value) => (string) (new \NumberFormatter($locale, \NumberFormatter::DECIMAL))->format($value),
         ];
     }
 
@@ -141,8 +157,10 @@ class PublicSite
             ->whereDate('published_on', '<=', $this->place->today($company)->toDateString())
             ->orderByDesc('pinned')->orderByDesc('published_on')->orderByDesc('created_at')->limit(max(1, min(100, $limit)))->get();
 
+        $fresh = $this->place->today($company)->subDays(self::NEW_NOTICE_DAYS)->toDateString();
+
         return $rows->map(fn (Notice $notice) => [
-            'id' => $notice->getKey(), 'title' => $notice->texts('title'), 'body' => $notice->texts('body'), 'pinned' => $notice->pinned,
+            'id' => $notice->getKey(), 'fresh' => $notice->published_on->toDateString() >= $fresh, 'title' => $notice->texts('title'), 'body' => $notice->texts('body'), 'pinned' => $notice->pinned,
             'date' => $notice->published_on->toDateString(), 'url' => "{$base}/notices/{$notice->getKey()}",
             'file' => $notice->media_id === null ? null : "{$base}/media/{$notice->media_id}/file",
         ])->all();

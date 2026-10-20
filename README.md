@@ -2569,6 +2569,20 @@ coaching; in the starter plan): a light public website per company.
 - **Dashboard and bell**: widget `notices` (published notices dated this month, on the main
   dashboard); bell item `edu_website.unpublished` for people who may publish, once the site has
   been published and the draft pages differ.
+- **Look (WEB-2b)**: blocks `slider` (up to 8 slides of a site picture with title, line and
+  button; turns by itself every 3–10 s, fade or slide, normal or full height; swipe, arrows, dots,
+  keys; pauses on hover, focus and hidden tabs; never moves for "reduce motion"; the first picture
+  loaded first) and `stats` (up to 6 numbers in the visitor's digits, counting up when seen);
+  `gallery` items with captions (bn, en) laid out as grid, masonry or strip, opened large in a
+  viewer (`<dialog>`, keys and swipe; older galleries of `media_ids` alone still show); a "new"
+  mark on notices of the last 7 days; template `premium` (deep ink, the accent as gold, serif
+  headings); a sticky glass header and sections rising into view. One small script of our own
+  (`site-js.blade.php`, no library, no school text inside) is allowed by its SHA-256 like the
+  stylesheet; every page works without it. Fonts are the site's own (`resources/fonts`, OFL:
+  Hind Siliguri Bengali 400/600 by `unicode-range`, Inter Latin; served at `…/fonts/{name}.woff2`,
+  a year, `font-src 'self'`): about 146 KB for a Bangla page, 48 KB for an English one, once.
+- Manifests are cached by file time: the template list lives in `Sites::TEMPLATES`, so change
+  `manifest.php` with it (then `rules:sync`).
 - Campus and Madrasa templates, the client's own domain, SEO and an admission enquiry form come
   with WEB-3.
 

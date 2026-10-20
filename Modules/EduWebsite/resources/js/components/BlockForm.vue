@@ -39,7 +39,13 @@ const picking = ref(null);
 function pick(ids, rows) {
     emit('media', rows);
     const field = picking.value;
-    props.form[field.key] = field.kind === 'image' ? ids[0] ?? '' : ids;
+    if (field.kind === 'items') {
+        // Each picture picked becomes an item of its own (a slide, a picture of the gallery).
+        const room = field.max - props.form[field.key].length;
+        ids.slice(0, room).forEach((id) => props.form[field.key].push({ ...blankItem(field.fields), [field.bulk]: id }));
+    } else {
+        props.form[field.key] = field.kind === 'image' ? ids[0] ?? '' : ids;
+    }
     picking.value = null;
 }
 
@@ -89,7 +95,7 @@ function move(list, index, step) {
                 />
             </AppField>
 
-            <AppField v-else-if="field.kind === 'image'" :label="label(field)" :error="errorOf(field.key)" optional>
+            <AppField v-else-if="field.kind === 'image'" :label="label(field)" :error="errorOf(field.key)" :optional="!field.required">
                 <div class="flex flex-wrap items-center gap-3">
                     <img v-if="form[field.key] && media[form[field.key]]?.thumb" :src="media[form[field.key]].thumb" alt="" class="h-16 w-24 rounded-md border border-line object-cover" />
                     <AppButton size="sm" :icon="ImagePlus" :disabled="disabled" @click="picking = field">{{ form[field.key] ? t('edu_website.media.change') : t('edu_website.media.choose') }}</AppButton>
@@ -145,8 +151,9 @@ function move(list, index, step) {
                         />
                     </li>
                 </ol>
-                <div class="px-4 pb-3 pt-1">
-                    <AppButton size="sm" :icon="Plus" :disabled="disabled || form[field.key].length >= field.max" @click="form[field.key].push(blankItem(field.fields))">{{ t('edu_website.fields.add_item') }}</AppButton>
+                <div class="flex flex-wrap gap-2 px-4 pb-3 pt-1">
+                    <AppButton v-if="field.bulk" size="sm" :icon="ImagePlus" :disabled="disabled || form[field.key].length >= field.max" @click="picking = field">{{ t('edu_website.fields.add_pictures') }}</AppButton>
+                    <AppButton size="sm" :icon="Plus" :variant="field.bulk ? 'ghost' : 'secondary'" :disabled="disabled || form[field.key].length >= field.max" @click="form[field.key].push(blankItem(field.fields))">{{ t('edu_website.fields.add_item') }}</AppButton>
                 </div>
             </fieldset>
         </template>
@@ -155,8 +162,8 @@ function move(list, index, step) {
             :open="picking !== null"
             :web="web"
             :kind="picking?.media ?? 'image'"
-            :multiple="picking?.kind === 'media'"
-            :selected="picking ? (picking.kind === 'image' ? (form[picking.key] ? [form[picking.key]] : []) : form[picking.key]) : []"
+            :multiple="picking?.kind === 'media' || picking?.kind === 'items'"
+            :selected="picking ? (picking.kind === 'image' ? (form[picking.key] ? [form[picking.key]] : []) : picking.kind === 'items' ? [] : form[picking.key]) : []"
             :max-mb="maxMb"
             :can-upload="canUpload"
             @close="picking = null"
