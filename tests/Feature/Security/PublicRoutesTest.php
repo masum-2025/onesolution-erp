@@ -51,6 +51,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     // The sites server asks whether a host may get a certificate (WEB-3a): yes for a site's address
     // or proven own domain, no for any other name; answers nothing else, 600 a minute per address.
     'GET s/_tls',
+    // An admission enquiry from a published page (WEB-3b): its own signed token of the site, robots
+    // dropped, five an hour per address and a few a day per number, details kept encrypted.
+    'POST s/{slug}/enquiry',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

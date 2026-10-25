@@ -132,6 +132,7 @@ class PublicSite
             'extra' => match ($block['type']) {
                 'notices' => ['notices' => $this->notices($company, $site, (int) ($block['data']['count'] ?? 5), $base)],
                 'programs' => ['programs' => ($block['data']['source'] ?? 'manual') === 'education' ? $this->programs($company) : []],
+                'enquiry' => ['levels' => ($block['data']['ask_level'] ?? true) ? app(Enquiries::class)->levels($company) : [], 'token' => app(Enquiries::class)->token($site)],
                 'attendance' => $this->attendance($company, (bool) ($block['data']['students'] ?? true), (bool) ($block['data']['staff'] ?? false)),
                 default => ['media' => $media],
             },

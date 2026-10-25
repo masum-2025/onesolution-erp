@@ -12,7 +12,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * A request for "{slug}.{sites domain}" or for a site's verified own domain
- * is a school's public website: it is answered here (GET only) and never
+ * is a school's public website: it is answered here (GET, and POST of an
+ * admission enquiry only) and never
  * reaches the app. A site that has its own domain sends visitors of its
  * sites-domain address there (permanently). The app's own hosts and every
  * other host pass through untouched.
@@ -36,6 +37,11 @@ class ServeSiteByHost
             }
             $own = true;
         }
+        $path = trim($request->path(), '/');
+        // An admission enquiry is the one thing sent to a site.
+        if ($request->isMethod('POST') && $path === 'enquiry') {
+            return app(PublicSiteController::class)->enquire($request, $slug, '');
+        }
         if (! $request->isMethod('GET') && ! $request->isMethod('HEAD')) {
             return response('', 405, ['Allow' => 'GET, HEAD']);
         }
@@ -46,6 +52,6 @@ class ServeSiteByHost
             }
         }
 
-        return app(PublicSiteController::class)->serve($request, $slug, trim($request->path(), '/'), '');
+        return app(PublicSiteController::class)->serve($request, $slug, $path, '');
     }
 }

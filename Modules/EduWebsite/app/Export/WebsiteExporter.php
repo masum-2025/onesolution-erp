@@ -6,6 +6,7 @@ use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Modules\EduWebsite\Models\Block;
+use Modules\EduWebsite\Models\Enquiry;
 use Modules\EduWebsite\Models\Media;
 use Modules\EduWebsite\Models\Notice;
 use Modules\EduWebsite\Models\Page;
@@ -13,8 +14,9 @@ use Modules\EduWebsite\Models\Site;
 
 /**
  * The website in the client's data export: site settings, draft pages and
- * their blocks, notices, and the list of pictures and files (names and
- * kinds; the files themselves stay on the server).
+ * their blocks, notices, the list of pictures and files (names and kinds;
+ * the files themselves stay on the server), and the admission enquiries
+ * still kept (the client's own record of the people who asked).
  */
 class WebsiteExporter implements ExportsModuleData
 {
@@ -41,6 +43,11 @@ class WebsiteExporter implements ExportsModuleData
             'notices' => $this->rows(Notice::class, $organization, $organizationIds, fn (Notice $notice) => [
                 'id' => $notice->getKey(), 'title' => $json($notice->texts('title')), 'body' => $json($notice->texts('body')),
                 'published_on' => $notice->published_on->toDateString(), 'is_published' => $notice->is_published, 'pinned' => $notice->pinned,
+            ]),
+            'enquiries' => $this->rows(Enquiry::class, $organization, $organizationIds, fn (Enquiry $enquiry) => [
+                'id' => $enquiry->getKey(), 'created_at' => $enquiry->created_at->toIso8601String(), 'student_name' => $enquiry->student_name,
+                'guardian_name' => $enquiry->guardian_name, 'phone' => $enquiry->phone, 'class' => $json($enquiry->level_name),
+                'message' => $enquiry->message, 'status' => $enquiry->status, 'note' => $enquiry->note,
             ]),
             'media' => $this->rows(Media::class, $organization, $organizationIds, fn (Media $media) => [
                 'id' => $media->getKey(), 'kind' => $media->kind, 'name' => $media->name, 'size_bytes' => $media->size_bytes,

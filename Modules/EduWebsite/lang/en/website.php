@@ -18,9 +18,13 @@ return [
         'domain_taken' => 'This domain is already used by another website. Check the spelling.',
         'no_domain' => 'The website has no own domain yet. Add one first.',
         'domain_not_proven' => 'The DNS record was not found yet. Add the TXT record at :name and try again; DNS changes can take up to a day.',
+        'enquiry_not_found' => 'This enquiry was not found. It may have been removed after its keeping time.',
+        'too_many_enquiries' => 'This number has asked several times today. The school will call back; try again tomorrow.',
         'default_locale_off' => 'The main language must be one of the languages of the website. Turn it on or choose another main language.',
         'version_conflict' => 'Someone changed this in the meantime. Reload and try again.',
     ],
+    'enquiry_columns' => ['date' => 'Date', 'student' => 'Student', 'guardian' => 'Parent or guardian', 'phone' => 'Mobile', 'class' => 'Class', 'message' => 'Message', 'status' => 'Status', 'note' => 'Note'],
+    'enquiry_status' => ['new' => 'New', 'contacted' => 'Contacted', 'admitted' => 'Admitted', 'closed' => 'Closed'],
     'validation' => [
         'too_big' => 'The file is too big. At most :mb MB.',
         'file_kind' => 'Only JPEG, PNG or WebP pictures and PDF files can be used.',

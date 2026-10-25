@@ -95,6 +95,16 @@ class WebsiteException extends TenancyException
         return new self('domain_not_proven', 422, ['name' => $name], ['record' => ['type' => 'TXT', 'name' => $name, 'value' => $value]]);
     }
 
+    public static function enquiryNotFound(): self
+    {
+        return new self('enquiry_not_found', 404);
+    }
+
+    public static function tooManyEnquiries(): self
+    {
+        return new self('too_many_enquiries', 429);
+    }
+
     public static function defaultLocaleOff(): self
     {
         return new self('default_locale_off', 422);

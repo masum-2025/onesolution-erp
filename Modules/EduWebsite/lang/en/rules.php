@@ -18,6 +18,18 @@ return [
         'label' => 'Website on its own domain',
         'description' => 'A school may put its website on a domain it owns (proven by a DNS record).',
     ],
+    'enquiry_retention_days' => [
+        'label' => 'Keep admission enquiries (days)',
+        'description' => 'Enquiries from the website, with the names and numbers in them, are removed after this many days.',
+    ],
+    'enquiry_per_phone_day' => [
+        'label' => 'Enquiries per mobile number a day',
+        'description' => 'How many enquiries one number may send in a day (against spam).',
+    ],
+    'enquiry_notify_email' => [
+        'label' => 'Mail about new enquiries',
+        'description' => 'The people who handle enquiries get a mail when one comes (the class only, no names or numbers).',
+    ],
     'categories' => [
         'website' => 'Website',
     ],

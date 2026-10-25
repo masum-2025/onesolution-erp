@@ -11,4 +11,5 @@ export default [
     { path: 'website/pages/:id', name: 'website-page', component: () => import('./pages/PageEditorPage.vue'), meta },
     { path: 'website/notices', name: 'website-notices', component: () => import('./pages/NoticesPage.vue'), meta },
     { path: 'website/media', name: 'website-media', component: () => import('./pages/MediaPage.vue'), meta },
+    { path: 'website/enquiries', name: 'website-enquiries', component: () => import('./pages/EnquiriesPage.vue'), meta },
 ];

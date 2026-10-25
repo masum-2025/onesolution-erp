@@ -10,7 +10,7 @@ const keys = (object, prefix = '') => Object.entries(object).flatMap(([key, valu
 describe('website screens', () => {
     it('registers its screens with the app shell', () => {
         const names = moduleRoutes.filter((route) => route.meta.module === 'edu_website').map((route) => route.name);
-        expect(names).toEqual(['website', 'website-settings', 'website-pages', 'website-page', 'website-notices', 'website-media']);
+        expect(names).toEqual(['website', 'website-settings', 'website-pages', 'website-page', 'website-notices', 'website-media', 'website-enquiries']);
     });
 
     it('says everything in Bangla and English, a name and a line for every kind of block and field', () => {
@@ -26,7 +26,7 @@ describe('website screens', () => {
     });
 
     it('knows the same kinds of block as the server', () => {
-        expect(BLOCK_TYPES).toEqual(['hero', 'slider', 'text', 'notices', 'admission', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance']);
+        expect(BLOCK_TYPES).toEqual(['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance']);
     });
 });
 

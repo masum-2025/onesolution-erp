@@ -70,8 +70,11 @@ function go(to) {
 }
 
 const adding = ref(route.query.new === '1');
+// Opened from a website enquiry: its details come in the page's history state (never in the address or server logs).
+const prefill = ref(window.history.state?.prefill ?? null);
 function closeAdding() {
     adding.value = false;
+    prefill.value = null;
     if (route.query.new) router.replace({ query: { ...route.query, new: undefined } });
 }
 function saved(admission) {
@@ -152,6 +155,6 @@ const guardianPhone = (admission) => admission.applicant?.guardians?.find((guard
             </footer>
         </section>
 
-        <ApplicationDialog :open="adding" @close="closeAdding" @saved="saved" />
+        <ApplicationDialog :open="adding" :prefill="prefill" @close="closeAdding" @saved="saved" />
     </div>
 </template>

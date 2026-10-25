@@ -58,6 +58,15 @@ export const BLOCKS = {
             { key: 'button_url', kind: 'link' },
         ],
     },
+    enquiry: {
+        icon: 'message',
+        fields: [
+            title,
+            { key: 'text', kind: 'text', max: 300, long: true },
+            { key: 'thanks', kind: 'text', max: 300, long: true },
+            { key: 'ask_level', kind: 'switch', default: true },
+        ],
+    },
     programs: {
         icon: 'book',
         fields: [

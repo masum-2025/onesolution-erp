@@ -5,6 +5,7 @@ namespace Modules\EduWebsite\Http;
 use App\Platform\Sites\SiteAddress;
 use App\Platform\Sites\SiteResolver;
 use Modules\EduWebsite\Models\Block;
+use Modules\EduWebsite\Models\Enquiry;
 use Modules\EduWebsite\Models\Media;
 use Modules\EduWebsite\Models\Notice;
 use Modules\EduWebsite\Models\Page;
@@ -68,6 +69,20 @@ class WebsitePresenter
     public function block(Block $block): array
     {
         return ['id' => $block->getKey(), 'page_id' => $block->page_id, 'type' => $block->type, 'sort_order' => $block->sort_order, 'data' => $block->data, 'version' => $block->version];
+    }
+
+    /**
+     * An enquiry for the people who handle them (its details decrypted here only).
+     *
+     * @return array<string, mixed>
+     */
+    public function enquiry(Enquiry $enquiry): array
+    {
+        return [
+            'id' => $enquiry->getKey(), 'student_name' => $enquiry->student_name, 'guardian_name' => $enquiry->guardian_name, 'phone' => $enquiry->phone,
+            'level_id' => $enquiry->level_id, 'level_name' => $enquiry->level_name, 'message' => $enquiry->message, 'locale' => $enquiry->locale,
+            'status' => $enquiry->status, 'note' => $enquiry->note, 'created_at' => $enquiry->created_at->toIso8601String(), 'version' => $enquiry->version,
+        ];
     }
 
     /**

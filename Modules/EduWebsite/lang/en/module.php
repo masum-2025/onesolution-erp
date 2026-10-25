@@ -8,6 +8,7 @@ return [
     'menu_pages' => 'Pages',
     'menu_notices' => 'Notices',
     'menu_media' => 'Pictures and files',
+    'menu_enquiries' => 'Admission enquiries',
     'menu_settings' => 'Website settings',
     'new_notice' => 'Website notice',
 ];

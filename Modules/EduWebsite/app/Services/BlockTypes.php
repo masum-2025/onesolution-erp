@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class BlockTypes
 {
-    public const TYPES = ['hero', 'slider', 'text', 'notices', 'admission', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance'];
+    public const TYPES = ['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance'];
 
     /** Validation rules for a block's data. */
     public static function rules(string $type, string $main = 'en'): array
@@ -28,6 +28,8 @@ final class BlockTypes
             'notices' => [...$title, 'count' => ['required', 'integer', 'min:1', 'max:20']],
             'admission' => [...$title, ...self::text($main, 'body', 3000, true), 'deadline' => ['nullable', 'date_format:Y-m-d'],
                 ...self::text($main, 'button_label', 40, false), 'button_url' => self::link()],
+            // The admission enquiry form: its words, the thanks shown after sending, the class asked or not.
+            'enquiry' => [...$title, ...self::text($main, 'text', 300, false), ...self::text($main, 'thanks', 300, false), 'ask_level' => ['boolean']],
             'programs' => [...$title, 'source' => ['required', 'in:education,manual'], 'items' => ['array', 'max:40', 'required_if:source,manual'],
                 ...self::text($main, 'items.*.name', 100, true), ...self::text($main, 'items.*.text', 300, false)],
             'people' => [...$title, 'items' => ['required', 'array', 'min:1', 'max:60'], 'items.*.name' => ['required', 'string', 'max:100'],

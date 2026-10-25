@@ -8,6 +8,7 @@ return [
     'menu_pages' => 'পাতা',
     'menu_notices' => 'নোটিশ',
     'menu_media' => 'ছবি ও ফাইল',
+    'menu_enquiries' => 'ভর্তির জিজ্ঞাসা',
     'menu_settings' => 'ওয়েবসাইট সেটিংস',
     'new_notice' => 'ওয়েবসাইটে নোটিশ',
 ];

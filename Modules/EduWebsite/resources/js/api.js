@@ -1,4 +1,4 @@
-import { api } from '@/lib/http';
+import { api, toApiError } from '@/lib/http';
 
 /**
  * Calls to the website API of a company (or one of its branches: the
@@ -46,5 +46,15 @@ export function websiteApi(organizationId) {
             return api(`${base}/media`, { method: 'POST', body: form });
         },
         removeMedia: (id) => api(`${base}/media/${id}`, { method: 'DELETE' }),
+
+        // Admission enquiries from the website ({ status, q }).
+        enquiries: (query) => api(`${base}/enquiries`, { query }),
+        updateEnquiry: (id, body) => api(`${base}/enquiries/${id}`, { method: 'PATCH', body }),
+        // The CSV (personal details): fetched with the session, saved by the browser.
+        exportEnquiries: async (status) => {
+            const response = await fetch(`${base}/enquiries/export${status ? `?status=${status}` : ''}`, { credentials: 'same-origin', headers: { Accept: 'text/csv' } });
+            if (!response.ok) throw await toApiError(response);
+            return response.blob();
+        },
     };
 }

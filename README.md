@@ -2601,7 +2601,24 @@ coaching; in the starter plan): a light public website per company.
 - **Main language (WEB-3a)**: every website text needs the site's main language (`title.{main}`,
   block texts), not always English; the screens put that language first and mark it required
   (`TranslatedFields` `required-locale`); starting a site asks the language before the name.
-- Campus and Madrasa templates and an admission enquiry form come with WEB-3b and WEB-3c.
+- **Admission enquiries (WEB-3b)**: block `enquiry` (title, text, thanks, ask the class) puts a
+  plain HTML form on a published page: student, parent, mobile, class (Education's levels), a
+  question. `POST /s/{slug}/enquiry` (and `/enquiry` on the site's own host) has no session or
+  cookie: the form carries a signed token of the site (`Enquiries::token`, a day long, at least 3
+  seconds old); robots (the hidden field filled, or sent too fast) are told it went and nothing
+  is kept; wrong details show the page again with what to fix (never kept); 5 an hour per address
+  and `edu_website.enquiry_per_phone_day` (3) per number; CSP `form-action 'self'`. The number is
+  read in the company's country (its own or a level above; Bangla digits too). Table `web_enquiries`
+  (tenant): names, number, message and note **encrypted**, a keyed hash of the number for the
+  limit; removed after `edu_website.enquiry_retention_days` (180) by
+  `edu-website:prune-enquiries` (03:40). Permission `edu_website.enquiries` (principal, office
+  staff): `/website/enquiries` (status tabs with counts, search, tap to call, status and note,
+  CSV with formula guard — audited, `throttle:edu-website-export`), bell
+  `edu_website.enquiries_waiting`, widget `enquiries`, mail `edu_website.enquiry_received` (the
+  class only; rule `edu_website.enquiry_notify_email`). "Start an application" opens Education's
+  new application with the details in the history state (never the address or server logs). The
+  client's data export includes the enquiries still kept.
+- Campus and Madrasa templates come with WEB-3c.
 
 ### Future expansion (Website)
 

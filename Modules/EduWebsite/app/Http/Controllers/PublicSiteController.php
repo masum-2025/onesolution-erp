@@ -11,8 +11,12 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Modules\EduWebsite\Exceptions\WebsiteException;
 use Modules\EduWebsite\Models\Media;
 use Modules\EduWebsite\Models\Site;
+use Modules\EduWebsite\Services\Enquiries;
 use Modules\EduWebsite\Services\MediaStore;
 use Modules\EduWebsite\Services\Place;
 use Modules\EduWebsite\Services\PublicSite;
@@ -30,6 +34,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class PublicSiteController extends Controller
 {
+    /** Enquiries one visitor (address) may send an hour. */
+    private const ENQUIRIES_PER_HOUR = 5;
+
     /** Certificate checks one address (the sites server) may make a minute. */
     private const TLS_CHECKS_PER_MINUTE = 600;
 
@@ -41,6 +48,7 @@ class PublicSiteController extends Controller
         private Place $place,
         private PublicSite $public,
         private MediaStore $media,
+        private Enquiries $enquiries,
     ) {}
 
     public function byPath(Request $request, string $slug, ?string $path = null): Response
@@ -63,6 +71,70 @@ class PublicSiteController extends Controller
         $known = $slug !== null ? $this->resolver->find(Sites::MODULE, $slug) !== null : ($host !== '' && $this->resolver->slugForDomain($host) !== null);
 
         return response('', $known ? 200 : 404, ['Cache-Control' => 'no-store']);
+    }
+
+    public function enquireByPath(Request $request, string $slug): Response
+    {
+        return $this->enquire($request, strtolower($slug), '/s/'.strtolower($slug));
+    }
+
+    /**
+     * An admission enquiry sent from a published page's form. Robots (the hidden field filled, or sent
+     * within seconds) are told it went and nothing is kept; a form that is not this site's or too old,
+     * or wrong details, show the page again with what to fix; a few an hour per visitor.
+     */
+    public function enquire(Request $request, string $slug, string $base): Response
+    {
+        if (RateLimiter::tooManyAttempts($key = 'edu-website-enquiry:'.$request->ip(), self::ENQUIRIES_PER_HOUR)) {
+            return response('', 429, ['Retry-After' => (string) RateLimiter::availableIn($key)]);
+        }
+        $address = $this->resolver->find(Sites::MODULE, $slug);
+        $company = $address?->organization;
+        $site = $company === null || ! $this->modules->isEnabled(Sites::MODULE, $company) ? null : $this->place->query(Site::class, $company)->first();
+        $back = (string) $request->input('back', '');
+        $page = $site?->status !== Site::PUBLISHED ? null
+            : collect($site->published['pages'] ?? [])->first(fn ($page) => $back === '' ? $page['is_home'] : $page['slug'] === $back);
+        if ($page === null) {
+            return $this->unavailable();
+        }
+        RateLimiter::hit($key, 3600);
+
+        $locale = $this->public->locale($site, $request->input('lang'));
+        $path = $page['is_home'] ? '' : $page['slug'];
+        $ui = fn (string $text) => __("edu_website::public.{$text}", [], $locale);
+        $old = array_map('strval', $request->only(['student_name', 'guardian_name', 'phone', 'level_id', 'message']));
+        $again = fn (array $errors, int $status) => $this->guarded(
+            $this->page($company, $site, $path, $locale, $base, false, $this->resolver->primaryUrl($address), ['errors' => $errors, 'old' => $old])->setStatusCode($status),
+            ['Cache-Control' => 'no-store'],
+        );
+        $sent = fn () => redirect()->to(($base === '' ? '' : $base).'/'.$path.'?'.http_build_query(['lang' => $locale, 'enquiry' => 'sent']).'#enquiry', 303);
+
+        $check = $this->enquiries->check($site, $request->input('t'));
+        if (filled($request->input('website')) || $check === 'fast') {
+            return $sent();
+        }
+        if ($check === 'bad') {
+            return $again(['form' => [$ui('enquiry_expired')]], 422);
+        }
+        $validator = Validator::make($old, [
+            'student_name' => ['required', 'string', 'max:100'],
+            'guardian_name' => ['required', 'string', 'max:100'],
+            'phone' => ['required', 'string', 'max:30'],
+            'level_id' => ['nullable', 'string', 'size:26'],
+            'message' => ['nullable', 'string', 'max:1000'],
+        ], ['required' => $ui('enquiry_required'), 'max' => $ui('enquiry_too_long'), 'size' => $ui('enquiry_bad_level')]);
+        if ($validator->fails()) {
+            return $again($validator->errors()->toArray(), 422);
+        }
+        try {
+            $this->enquiries->receive($company, $site, $validator->validated(), $locale);
+        } catch (ValidationException $invalid) {
+            return $again($invalid->errors(), 422);
+        } catch (WebsiteException) {
+            return $again(['form' => [__('edu_website::website.errors.too_many_enquiries', [], $locale)]], 429);
+        }
+
+        return $sent();
     }
 
     public function serve(Request $request, string $slug, string $path, string $base): Response
@@ -112,8 +184,10 @@ Sitemap: {$origin}/sitemap.xml
         }
 
         $locale = $this->public->locale($site, $request->query('lang'));
-        $render = fn () => $this->page($company, $site, $path, $locale, $base, $preview, $origin);
-        if ($preview) {
+        // Back from sending an enquiry: the thanks shows (made afresh, never kept).
+        $state = $request->query('enquiry') === 'sent' ? ['sent' => true] : [];
+        $render = fn () => $this->page($company, $site, $path, $locale, $base, $preview, $origin, $state);
+        if ($preview || $state !== []) {
             return $this->guarded($render(), ['Cache-Control' => 'no-store']);
         }
         // The base is part of the key: links differ between "/s/{slug}" and the site's own host.
@@ -143,7 +217,7 @@ Sitemap: {$origin}/sitemap.xml
             ? implode(' ', array_map(fn (string $code) => "'sha256-".base64_encode(hash('sha256', $code, true))."'", array_unique($found[1])))
             : "'none'";
         // Our own stylesheet and script only (by hash; the same on every page of a site, so a kept page needs no nonce).
-        $response->headers->set('Content-Security-Policy', "default-src 'none'; img-src 'self'; font-src 'self'; style-src {$hashes('style')}; script-src {$hashes('script')}; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+        $response->headers->set('Content-Security-Policy', "default-src 'none'; img-src 'self'; font-src 'self'; style-src {$hashes('style')}; script-src {$hashes('script')}; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -154,7 +228,10 @@ Sitemap: {$origin}/sitemap.xml
         return $response;
     }
 
-    private function page(Organization $company, Site $site, string $path, string $locale, string $base, bool $preview, string $origin): Response
+    /**
+     * @param  array{sent?: bool, errors?: array<string, list<string>>, old?: array<string, string>}  $enquiry  The enquiry form's state.
+     */
+    private function page(Organization $company, Site $site, string $path, string $locale, string $base, bool $preview, string $origin, array $enquiry = []): Response
     {
         $pages = $this->public->pages($company, $site, $preview);
         $frame = $this->public->frame($company, $site, $pages, $locale, $base.($preview ? '/preview' : ''));
@@ -184,7 +261,7 @@ Sitemap: {$origin}/sitemap.xml
             return $this->notFound($frame);
         }
 
-        return response()->view('edu_website::page', [...$frame, 'page' => $page, 'blocks' => $this->public->blocks($company, $site, $page, $base), 'seo' => $seo($page)]);
+        return response()->view('edu_website::page', [...$frame, 'page' => $page, 'blocks' => $this->public->blocks($company, $site, $page, $base), 'seo' => $seo($page), 'enquiry' => $enquiry]);
     }
 
     private function file(Organization $company, Site $site, string $id, string $size): Response

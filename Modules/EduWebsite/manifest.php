@@ -5,6 +5,7 @@
 | Business numbers never live here; they are rules (Rules::get('edu_website.*')).
 */
 
+use Modules\EduWebsite\Dashboard\EnquiriesWaiting;
 use Modules\EduWebsite\Dashboard\NoticesThisMonth;
 use Modules\EduWebsite\Dashboard\UnpublishedChanges;
 use Modules\EduWebsite\Services\Sites;
@@ -27,6 +28,8 @@ return [
         'edu_website.manage',
         // Start the website, change its address, publish, take it offline.
         'edu_website.publish',
+        // See and handle admission enquiries from the website (names and numbers), and download them.
+        'edu_website.enquiries',
     ],
     'rules' => [
         [
@@ -75,6 +78,41 @@ return [
             'category' => 'website',
             'sort_order' => 40,
         ],
+        [
+            // Admission enquiries (names, numbers) are removed after this many days.
+            'key' => 'edu_website.enquiry_retention_days',
+            'type' => 'integer',
+            'schema' => ['minimum' => 30, 'maximum' => 1095],
+            'default' => 180,
+            'label' => 'edu_website::rules.enquiry_retention_days.label',
+            'description' => 'edu_website::rules.enquiry_retention_days.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'website',
+            'sort_order' => 50,
+        ],
+        [
+            // Enquiries one mobile number may send a day (against spam).
+            'key' => 'edu_website.enquiry_per_phone_day',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 20],
+            'default' => 3,
+            'label' => 'edu_website::rules.enquiry_per_phone_day.label',
+            'description' => 'edu_website::rules.enquiry_per_phone_day.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'website',
+            'sort_order' => 60,
+        ],
+        [
+            // A mail to the people who handle enquiries when one comes (no names or numbers in it).
+            'key' => 'edu_website.enquiry_notify_email',
+            'type' => 'boolean',
+            'default' => true,
+            'label' => 'edu_website::rules.enquiry_notify_email.label',
+            'description' => 'edu_website::rules.enquiry_notify_email.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'website',
+            'sort_order' => 70,
+        ],
     ],
     'menu' => [
         [
@@ -91,6 +129,7 @@ return [
                 ['key' => 'pages', 'label' => 'edu_website::module.menu_pages', 'route' => '/website/pages', 'permission' => 'edu_website.view'],
                 ['key' => 'notices', 'label' => 'edu_website::module.menu_notices', 'route' => '/website/notices', 'permission' => 'edu_website.view'],
                 ['key' => 'media', 'label' => 'edu_website::module.menu_media', 'route' => '/website/media', 'permission' => 'edu_website.view'],
+                ['key' => 'enquiries', 'label' => 'edu_website::module.menu_enquiries', 'route' => '/website/enquiries', 'permission' => 'edu_website.enquiries'],
             ],
         ],
     ],
@@ -103,8 +142,18 @@ return [
     'requires_consent' => false,
     'dashboard' => ['widgets' => [
         ['key' => 'notices', 'label' => 'edu_website::dashboard.notices', 'type' => 'stat', 'provider' => NoticesThisMonth::class, 'permission' => 'edu_website.view', 'overview' => true],
+        ['key' => 'enquiries', 'label' => 'edu_website::dashboard.enquiries', 'type' => 'stat', 'provider' => EnquiriesWaiting::class, 'permission' => 'edu_website.enquiries', 'overview' => true],
     ]],
-    'attention' => [UnpublishedChanges::class],
+    'attention' => [UnpublishedChanges::class, EnquiriesWaiting::class],
+    'notifications' => [
+        // To the people who handle enquiries; the class only (names and numbers stay in the app).
+        'edu_website.enquiry_received' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'level', 'link'],
+            'audience' => 'client',
+            'path' => '/website/enquiries',
+        ],
+    ],
     'settings' => ['pages' => [
         ['key' => 'settings', 'label' => 'edu_website::module.menu_settings', 'route' => '/website/settings', 'permission' => 'edu_website.view'],
     ]],

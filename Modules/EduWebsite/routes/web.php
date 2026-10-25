@@ -20,6 +20,13 @@ Route::get('s/_tls', [PublicSiteController::class, 'tls'])
     ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class])
     ->name('edu-website.tls');
 
+// An admission enquiry from a published page's form (its own signed token; no session or cookie).
+Route::post('s/{slug}/enquiry', [PublicSiteController::class, 'enquireByPath'])
+    ->where('slug', SiteResolver::SLUG_PATTERN)
+    ->middleware('throttle:edu-website-enquiry')
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class])
+    ->name('edu-website.enquiry');
+
 Route::get('s/{slug}/{path?}', [PublicSiteController::class, 'byPath'])
     ->where('slug', SiteResolver::SLUG_PATTERN)
     ->where('path', '.*')

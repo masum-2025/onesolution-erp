@@ -24,6 +24,8 @@ import GuardianFields from './GuardianFields.vue';
 const props = defineProps({
     open: Boolean,
     admission: { type: Object, default: null },
+    // A new application started from elsewhere (a website enquiry): { name, guardian, phone, level_id }.
+    prefill: { type: Object, default: null },
 });
 const emit = defineEmits(['close', 'saved', 'conflict']);
 
@@ -43,6 +45,8 @@ const guardians = ref([]);
 const errors = ref({});
 const saving = ref(false);
 let opId = null;
+// A class asked in an enquiry, placed once the programs are loaded.
+let pendingLevel = null;
 
 watch(
     () => props.open,
@@ -65,12 +69,35 @@ watch(
         });
         extra.value = fieldsToForm(fields.value, applicant.extra);
         guardians.value = props.admission ? (applicant.guardians ?? []).map((guardian) => guardianToForm(guardian, guardianFields.value)) : [{ ...emptyGuardian('father'), is_primary: true }];
+        if (!props.admission && props.prefill) fillFrom(props.prefill, programs);
         errors.value = {};
         opId = newOpId();
     },
     // Also when opened from the start (the header "New" menu opens the list with ?new=1).
     { immediate: true },
 );
+
+/**
+ * A new application with what an enquiry already says: the child (a Bangla name in its own field, the
+ * full name being in English letters), the guardian's name and number, the class and its program
+ * (once the institution's programs are loaded).
+ */
+function fillFrom(prefill, programs) {
+    const local = /[\u0980-\u09FF]/.test(prefill.name ?? '');
+    Object.assign(form, local ? { name_local: prefill.name } : { name: prefill.name ?? '' });
+    guardians.value[0] = { ...guardians.value[0], name: prefill.guardian ?? '', phone: prefill.phone ?? '' };
+    pendingLevel = prefill.level_id ?? null;
+    placeLevel(programs);
+}
+function placeLevel(programs) {
+    const program = pendingLevel ? programs.find((item) => setup.levelsOf(item.id).some((level) => level.id === pendingLevel)) : null;
+    if (!program) return;
+    Object.assign(form, { program_id: program.id, level_id: pendingLevel });
+    pendingLevel = null;
+}
+watch(() => setup.data.value?.programs, (programs) => {
+    if (props.open && pendingLevel && programs?.length) placeLevel(programs);
+});
 
 const levels = computed(() => (form.program_id ? setup.levelsOf(form.program_id).filter((level) => level.is_active) : []));
 // Applications are for a session not closed yet (often the next one).

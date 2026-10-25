@@ -274,3 +274,25 @@ header.top.scrolled{background:rgb(255 255 255/.8);box-shadow:0 12px 30px -20px 
 /* Bangla letters join: no spacing between them */
 :lang(bn) .eyebrow,:lang(bn) .tpl-premium .eyebrow,:lang(bn) .tpl-premium .board-head{letter-spacing:0;text-transform:none}
 @media (max-width:640px){.stats{grid-template-columns:1fr 1fr;gap:12px}.stat{padding:22px 12px}.stat .figure{font-size:34px}}
+
+/* Admission enquiry form */
+.enquiry{max-inline-size:860px;margin-inline:auto}
+.enquiry-text{text-align:center;margin-block-end:22px}
+.enquiry-form{background:#fff;border:1px solid #e6eaf1;border-radius:22px;padding:26px;box-shadow:0 22px 46px -30px rgb(16 24 40/.4)}
+.enquiry .fields{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.enquiry .field{display:grid;gap:6px;align-content:start;font-weight:600;font-size:14.5px}
+.enquiry .field.wide{grid-column:1/-1}
+.enquiry .field em{font-style:normal;font-weight:400;color:#5f6b7d}
+.enquiry input,.enquiry select,.enquiry textarea{font:inherit;font-weight:400;inline-size:100%;padding:11px 14px;border:1.5px solid #d5dbe5;border-radius:12px;background:#fbfcfe;color:#1d2433}
+.enquiry input:focus,.enquiry select:focus,.enquiry textarea:focus{outline:0;border-color:var(--p);box-shadow:0 0 0 4px color-mix(in oklab,var(--p) 18%,transparent);background:#fff}
+.enquiry [aria-invalid=true]{border-color:#d92d20}
+.enquiry .err{color:#b42318;font-weight:500;font-size:13px}
+.enquiry-alert{margin:0 0 16px;padding:12px 16px;border-radius:12px;background:#fee4e2;color:#912018;font-weight:600}
+.enquiry-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-block-start:20px}
+.enquiry-actions .btn{border:0;cursor:pointer;font:inherit;font-weight:700}
+.enquiry-actions .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.enquiry-done{text-align:center;padding:36px 24px;border-radius:22px;background:#fff;border:1px solid #e6eaf1}
+.enquiry-done .tile{margin-inline:auto;background:#dcfae6;color:#067647}
+.hp{position:absolute;inset-inline-start:-10000px;inline-size:1px;block-size:1px;overflow:hidden}
+.tpl-premium .enquiry-form,.tpl-premium .enquiry-done{border-radius:10px;border-color:#ebe3d0;border-block-start:3px solid var(--a)}
+.tpl-premium .enquiry input,.tpl-premium .enquiry select,.tpl-premium .enquiry textarea{border-radius:6px}

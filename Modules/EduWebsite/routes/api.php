@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\EduWebsite\Http\Controllers\ContentController;
+use Modules\EduWebsite\Http\Controllers\EnquiryController;
 use Modules\EduWebsite\Http\Controllers\PageController;
 use Modules\EduWebsite\Http\Controllers\SiteController;
 
@@ -18,6 +19,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:edu_website'])
         Route::get('pages', [PageController::class, 'index']);
         Route::get('notices', [ContentController::class, 'notices']);
         Route::get('media', [ContentController::class, 'media']);
+        // Admission enquiries (edu_website.enquiries); the CSV holds personal details: a few a minute, audited.
+        Route::get('enquiries', [EnquiryController::class, 'index']);
+        Route::get('enquiries/export', [EnquiryController::class, 'export'])->middleware('throttle:edu-website-export');
         Route::get('preview', [SiteController::class, 'preview']);
         // Whether an address is free while typing it (a few a minute: no list of addresses by guessing).
         Route::get('address-check', [SiteController::class, 'addressCheck'])->middleware('throttle:edu-website-address');
@@ -41,6 +45,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:edu_website'])
             Route::patch('notices/{notice}', [ContentController::class, 'updateNotice']);
             Route::delete('notices/{notice}', [ContentController::class, 'destroyNotice']);
             Route::delete('media/{media}', [ContentController::class, 'destroyMedia']);
+            Route::patch('enquiries/{enquiry}', [EnquiryController::class, 'update']);
         });
         // Each check asks the DNS: a few a minute.
         Route::post('domain/verify', [SiteController::class, 'verifyDomain'])->middleware('throttle:edu-website-address');

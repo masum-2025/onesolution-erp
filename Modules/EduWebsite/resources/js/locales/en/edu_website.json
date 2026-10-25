@@ -190,7 +190,9 @@
         "slider": "Picture slider",
         "slider_text": "Big pictures that turn by themselves, each with a title and a button.",
         "stats": "In numbers",
-        "stats_text": "A few numbers you are proud of, counting up."
+        "stats_text": "A few numbers you are proud of, counting up.",
+        "enquiry": "Admission enquiry",
+        "enquiry_text": "A form where parents leave their number; you call them back."
     },
     "fields": {
         "title": "Title",
@@ -233,7 +235,9 @@
         "value": "Number",
         "suffix": "After the number (+, %)",
         "counts": "What it counts",
-        "add_pictures": "Add pictures"
+        "add_pictures": "Add pictures",
+        "thanks": "Thanks after sending",
+        "ask_level": "Ask which class"
     },
     "notices": {
         "title": "Notices",
@@ -319,5 +323,29 @@
         "remove_text": "{host} stops showing the website; it opens at {address} again.",
         "removed": "Domain removed.",
         "not_in_plan": "Your plan does not include an own domain. Ask about a bigger plan."
+    },
+    "enquiries": {
+        "title": "Admission enquiries",
+        "text": "Parents who asked on the website. Call them back, then mark how it went.",
+        "all": "All",
+        "status": "Status",
+        "status_new": "New",
+        "status_contacted": "Contacted",
+        "status_admitted": "Admitted",
+        "status_closed": "Closed",
+        "search": "Search a name or number",
+        "empty": "No enquiries here",
+        "none_found": "Nothing found",
+        "empty_text": "Add an \"Admission enquiry\" block to a page of the website to receive them.",
+        "guardian": "Parent: {name}",
+        "moved": "Marked as {status}.",
+        "note": "Office note",
+        "note_hint": "Only your team sees it.",
+        "add_note": "Add a note",
+        "edit_note": "Note",
+        "note_saved": "Note saved.",
+        "apply": "Start an application",
+        "download": "Download CSV",
+        "kept": "{count} shown. Enquiries are removed after the keeping time of your settings."
     }
 }
