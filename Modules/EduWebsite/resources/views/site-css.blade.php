@@ -296,3 +296,94 @@ header.top.scrolled{background:rgb(255 255 255/.8);box-shadow:0 12px 30px -20px 
 .hp{position:absolute;inset-inline-start:-10000px;inline-size:1px;block-size:1px;overflow:hidden}
 .tpl-premium .enquiry-form,.tpl-premium .enquiry-done{border-radius:10px;border-color:#ebe3d0;border-block-start:3px solid var(--a)}
 .tpl-premium .enquiry input,.tpl-premium .enquiry select,.tpl-premium .enquiry textarea{border-radius:6px}
+
+/* The own line of the school above every page */
+.motto{padding:6px 16px;text-align:center;font-size:15px;line-height:1.6;background:var(--pd);color:#fff;border-block-end:1px solid rgb(255 255 255/.12)}
+
+/* Message from the head */
+.message{display:grid;gap:28px;align-items:center;max-inline-size:960px;margin:0 auto;padding:30px;border-radius:24px;background:#fff;border:1px solid #e6eaf1;box-shadow:0 22px 46px -32px rgb(16 24 40/.4)}
+@media (min-width:720px){.message{grid-template-columns:220px 1fr}}
+.message .portrait{inline-size:220px;block-size:260px;object-fit:cover;border-radius:18px;margin-inline:auto;box-shadow:0 18px 36px -20px rgb(16 24 40/.5)}
+.message blockquote{margin:0;white-space:pre-line;font-size:17.5px;line-height:1.85;position:relative;padding-inline-start:22px;border-inline-start:4px solid var(--a)}
+.message figcaption{margin-block-start:18px;display:grid;gap:2px}
+.message figcaption b{font-size:18px}.message figcaption span{color:#5f6b7d}
+
+/* Academic calendar */
+.calendar{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));max-inline-size:1100px;margin-inline:auto}
+.month{background:#fff;border:1px solid #e6eaf1;border-radius:20px;padding:18px 20px;box-shadow:0 14px 30px -26px rgb(16 24 40/.4)}
+.month h3{font-size:17px;color:var(--p);padding-block-end:10px;border-block-end:2px solid var(--ps)}
+.event{display:flex;gap:14px;align-items:flex-start;padding-block:10px;border-block-end:1px dashed #e6eaf1}
+.event:last-child{border-block-end:0}
+.event time{flex:none;display:grid;place-items:center;min-inline-size:52px;padding:4px 6px;border-radius:12px;background:var(--ps);color:var(--p);font-weight:700;line-height:1.15;text-align:center}
+.event time b{font-size:19px}.event time span{font-size:12px}
+.event p{margin:2px 0 0;font-weight:600}
+.event.past{opacity:.55}
+
+/* Template campus: a college or university; deep blue, straight lines, uppercase labels */
+.tpl-campus{--ink:color-mix(in oklab,var(--p) 55%,#06122b)}
+.tpl-campus .topbar{background:var(--ink)}
+.tpl-campus header.top{border-block-end:3px solid var(--p)}
+.tpl-campus .mono{border-radius:6px;background:var(--ink);box-shadow:none}
+.tpl-campus nav.menu a{border-radius:0;font-size:14.5px;letter-spacing:.04em;text-transform:uppercase}
+.tpl-campus nav.menu a:hover{background:transparent;color:var(--p);box-shadow:inset 0 -2px 0 var(--p)}
+.tpl-campus nav.menu a[aria-current=page]{background:var(--ink);color:#fff}
+.tpl-campus .hero{background:repeating-linear-gradient(135deg,rgb(255 255 255/.035) 0 2px,transparent 2px 14px),linear-gradient(120deg,var(--ink),var(--p))}
+.tpl-campus .hero .pic{border-radius:6px;transform:none;border:4px solid #fff}
+.tpl-campus .btn{border-radius:4px;text-transform:uppercase;letter-spacing:.05em;font-size:14.5px}
+.tpl-campus .eyebrow{border-radius:2px;background:var(--ink);color:#fff;letter-spacing:.14em}
+.tpl-campus .block:nth-of-type(even) .eyebrow{background:var(--ink)}
+.tpl-campus .head .line{inline-size:100%;max-inline-size:120px;block-size:3px;background:var(--p)}
+.tpl-campus .block:nth-of-type(even){background:#f2f5fa}
+.tpl-campus .card,.tpl-campus .month,.tpl-campus .stat,.tpl-campus .message,.tpl-campus .enquiry-form{border-radius:4px;box-shadow:none;border-color:#dfe5ee}
+.tpl-campus .card{border-inline-start:4px solid var(--p)}
+.tpl-campus .programs .card,.tpl-campus .programs .card:nth-child(3n+2),.tpl-campus .programs .card:nth-child(3n){background:var(--ink);border-inline-start-color:var(--a)}
+.tpl-campus .tile{border-radius:4px}
+.tpl-campus .board{border-radius:0;box-shadow:none;border:0;border-block-start:4px solid var(--ink);background:transparent}
+.tpl-campus .board-head{background:transparent;color:var(--ink);border-block-end:1px solid #dfe5ee;letter-spacing:.08em;text-transform:uppercase}
+.tpl-campus .notice{background:transparent;border-block-end:1px solid #dfe5ee}
+.tpl-campus .date{border-radius:2px;background:var(--ink);color:#fff}
+.tpl-campus .gallery a,.tpl-campus .message .portrait{border-radius:4px}
+.tpl-campus .block-stats,.tpl-campus .block-stats:nth-of-type(even){background:var(--ink);color:#fff}
+.tpl-campus .block-stats .title{color:#fff}
+.tpl-campus .block-stats .stat{background:transparent;border:0;border-inline-start:3px solid var(--a);text-align:start}
+.tpl-campus .block-stats .figure{color:#fff}.tpl-campus .block-stats .label{color:rgb(255 255 255/.75)}
+.tpl-campus footer.foot{background:var(--ink)}
+.tpl-campus .wave{display:none}
+.tpl-campus .motto{background:var(--ink)}
+
+/* Template madrasa: deep green and gold, a geometric band, arched cards */
+.tpl-madrasa{--ink:color-mix(in oklab,var(--p) 50%,#022b1c);--gold:color-mix(in oklab,var(--a) 85%,#5c4300);background:#fbfaf5}
+.tpl-madrasa .topbar,.tpl-madrasa .motto{background:repeating-conic-gradient(from 45deg,rgb(255 255 255/.06) 0 25%,transparent 0 50%) 0 0/16px 16px,var(--ink)}
+.tpl-madrasa .motto{font-size:18px;color:var(--a);border-block-end:1px solid color-mix(in oklab,var(--a) 50%,transparent)}
+.tpl-madrasa header.top{background:rgb(251 250 245/.94);border-block-end:2px solid var(--a)}
+.tpl-madrasa .mono{border-radius:50% 50% 12px 12px;background:var(--ink);color:var(--a);border:1px solid var(--a);box-shadow:none}
+.tpl-madrasa nav.menu a[aria-current=page]{background:var(--ink);color:var(--a)}
+.tpl-madrasa nav.menu a:hover{background:color-mix(in oklab,var(--a) 14%,#fff);color:var(--ink)}
+.tpl-madrasa .hero{background:repeating-conic-gradient(from 45deg,rgb(255 255 255/.045) 0 25%,transparent 0 50%) 0 0/28px 28px,radial-gradient(70% 90% at 50% 0,color-mix(in oklab,var(--p) 80%,#fff),transparent 70%),var(--ink)}
+.tpl-madrasa .hero .glow{background:radial-gradient(60% 70% at 85% 15%,color-mix(in oklab,var(--a) 25%,transparent),transparent 60%)}
+.tpl-madrasa .hero .pic{border-radius:120px 120px 16px 16px;transform:none;border:3px solid var(--a)}
+.tpl-madrasa .btn{background:var(--a);color:var(--ink)}
+.tpl-madrasa .btn.ghost{background:transparent;color:#fff;border-color:var(--a)}
+.tpl-madrasa .eyebrow{background:none;color:var(--gold);padding:0}
+.tpl-madrasa .block:nth-of-type(even){background:#f1f5ee}
+.tpl-madrasa .block:nth-of-type(even) .eyebrow{background:none}
+.tpl-madrasa .head .line{inline-size:170px;block-size:12px;background:radial-gradient(circle,var(--a) 0 2.5px,transparent 3px) center/14px 12px repeat-x,linear-gradient(var(--a),var(--a)) center/100% 1px no-repeat}
+.tpl-madrasa .card,.tpl-madrasa .month,.tpl-madrasa .message,.tpl-madrasa .enquiry-form,.tpl-madrasa .stat{border-radius:40px 40px 14px 14px;border-color:color-mix(in oklab,var(--a) 35%,#fff)}
+.tpl-madrasa .card{border-block-start:3px solid var(--a)}
+.tpl-madrasa .tile{border-radius:50% 50% 8px 8px;background:color-mix(in oklab,var(--a) 16%,#fff);color:var(--ink)}
+.tpl-madrasa .programs .card,.tpl-madrasa .programs .card:nth-child(3n+2),.tpl-madrasa .programs .card:nth-child(3n){background:repeating-conic-gradient(from 45deg,rgb(255 255 255/.05) 0 25%,transparent 0 50%) 0 0/20px 20px,var(--ink)}
+.tpl-madrasa .programs .tile{background:rgb(255 255 255/.1);color:var(--a)}
+.tpl-madrasa .board{border-radius:30px 30px 14px 14px;border-color:color-mix(in oklab,var(--a) 35%,#fff)}
+.tpl-madrasa .board-head{background:var(--ink);color:var(--a)}
+.tpl-madrasa .date,.tpl-madrasa .event time{background:var(--ink);color:var(--a);border-radius:50% 50% 8px 8px}
+.tpl-madrasa .message .portrait{border-radius:110px 110px 16px 16px;border:3px solid var(--a)}
+.tpl-madrasa .message blockquote{border-inline-start-color:var(--a)}
+.tpl-madrasa .gallery a{border-radius:60px 60px 12px 12px}
+.tpl-madrasa .block-stats,.tpl-madrasa .block-stats:nth-of-type(even){background:repeating-conic-gradient(from 45deg,rgb(255 255 255/.05) 0 25%,transparent 0 50%) 0 0/20px 20px,var(--ink);color:#fff}
+.tpl-madrasa .block-stats .title{color:#fff}
+.tpl-madrasa .block-stats .stat{background:transparent;border:1px solid color-mix(in oklab,var(--a) 45%,transparent)}
+.tpl-madrasa .block-stats .figure{color:var(--a)}.tpl-madrasa .block-stats .label{color:rgb(255 255 255/.8)}
+.tpl-madrasa .wave{color:#f1f5ee}
+.tpl-madrasa footer.foot{background:repeating-conic-gradient(from 45deg,rgb(255 255 255/.04) 0 25%,transparent 0 50%) 0 0/16px 16px,var(--ink)}
+.tpl-madrasa footer.foot h3{color:var(--a)}
+:lang(bn) .tpl-campus nav.menu a,:lang(bn) .tpl-campus .btn,:lang(bn) .tpl-campus .eyebrow,:lang(bn) .tpl-campus .board-head{letter-spacing:0}

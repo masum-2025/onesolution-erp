@@ -7,7 +7,8 @@ import { t } from '@/lib/i18n';
  * A template to choose, drawn small in the site's colours (no pictures to
  * load): "school" has a coloured band and a bold welcome, "minimal" stays
  * white with colour only on links and buttons, "premium" is deep ink with
- * the accent as gold. A template a level above
+ * the accent as gold, "campus" is deep blue with straight lines, "madrasa"
+ * is green with a geometric band and arched cards. A template a level above
  * turned off shows why and cannot be chosen.
  */
 const props = defineProps({
@@ -27,6 +28,20 @@ const look = computed(() => {
         return {
             page: '#fbf9f4', strip: ink, active: props.accent, hero: { background: ink }, line1: '#f8f5ec', line2: props.accent, button: props.accent,
             card: () => ({ background: '#ffffff', borderTop: `2px solid ${props.accent}` }),
+        };
+    }
+    if (props.template === 'campus') {
+        const ink = `color-mix(in oklab, ${props.primary} 55%, #06122b)`;
+        return {
+            page: '#f2f5fa', strip: ink, active: ink, hero: { background: `repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 8px), ${ink}` }, line1: '#ffffff', line2: props.accent, button: '#ffffff',
+            card: () => ({ background: '#ffffff', borderLeft: `3px solid ${props.primary}`, borderRadius: '2px' }),
+        };
+    }
+    if (props.template === 'madrasa') {
+        const ink = `color-mix(in oklab, ${props.primary} 50%, #022b1c)`;
+        return {
+            page: '#fbfaf5', strip: props.accent, active: ink, hero: { background: `repeating-conic-gradient(from 45deg, rgba(255,255,255,.08) 0 25%, transparent 0 50%) 0 0/10px 10px, ${ink}` }, line1: '#ffffff', line2: props.accent, button: props.accent,
+            card: () => ({ background: '#ffffff', borderTop: `2px solid ${props.accent}`, borderRadius: '12px 12px 3px 3px' }),
         };
     }
     if (props.template === 'minimal') {

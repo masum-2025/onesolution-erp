@@ -53,6 +53,8 @@ class SiteRequest extends StrictFormRequest
             'contact.map_url' => ['nullable', 'url:https', 'max:500'],
             'logo_media_id' => ['sometimes', 'nullable', 'string', 'size:26'],
             'share_media_id' => ['sometimes', 'nullable', 'string', 'size:26'],
+            // A short line above every page, as written (any script, such as Arabic).
+            'motto' => ['sometimes', 'nullable', 'string', 'max:160'],
         ];
     }
 

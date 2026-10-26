@@ -48,6 +48,9 @@ return [
         'rules' => [
             ['key' => 'hrm.probation_days', 'value' => 180],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
+            // A campus look for the website, with the academic calendar on its home page.
+            ['key' => 'edu_website.default_template', 'value' => 'campus'],
+            ['key' => 'edu_website.starter_blocks', 'value' => ['hero', 'notices', 'calendar', 'contact']],
         ],
         'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
     ],
@@ -64,6 +67,8 @@ return [
             // Credit-weighted grade points, no merit positions.
             ['key' => 'education_exams.gpa_by_credits', 'value' => true],
             ['key' => 'education_exams.show_rank', 'value' => false],
+            ['key' => 'edu_website.default_template', 'value' => 'campus'],
+            ['key' => 'edu_website.starter_blocks', 'value' => ['hero', 'notices', 'calendar', 'contact']],
         ],
         'role_templates' => ['registrar', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
     ],
@@ -74,6 +79,9 @@ return [
             ['key' => 'attendance.late_grace_minutes', 'value' => 10],
             ['key' => 'accounting.chart_template', 'value' => 'school'],
             ['key' => 'teacher_feedback.who_rates', 'value' => 'guardians'],
+            // The madrasa look, with the head's message on the home page.
+            ['key' => 'edu_website.default_template', 'value' => 'madrasa'],
+            ['key' => 'edu_website.starter_blocks', 'value' => ['hero', 'message', 'notices', 'contact']],
         ],
         'role_templates' => ['principal', 'teacher', 'office_staff', 'accountant', 'finance_approver'],
     ],
@@ -83,6 +91,7 @@ return [
         'rules' => [
             ['key' => 'accounting.chart_template', 'value' => 'school'],
             ['key' => 'education.teacher_scope', 'value' => 'all'],
+            ['key' => 'edu_website.default_template', 'value' => 'minimal'],
         ],
         'role_templates' => ['administrator', 'teacher', 'office_staff', 'accountant'],
     ],

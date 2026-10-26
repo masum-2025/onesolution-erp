@@ -48,6 +48,10 @@
 <body class="tpl-{{ $site->template }}">
 <a class="skip" href="#main">{{ $ui('skip') }}</a>
 
+@if (filled($site->motto))
+    {{-- The school's own line (any script; Arabic reads right to left by itself). --}}
+    <div class="motto" dir="auto">{{ $site->motto }}</div>
+@endif
 <div class="topbar">
     <div class="wrap">
         @if ($contact['phone'])

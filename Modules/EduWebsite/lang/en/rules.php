@@ -4,7 +4,16 @@ return [
     'templates' => [
         'label' => 'Website templates offered',
         'description' => 'Templates a school may choose for its website. Turn some off for everyone below.',
-        'options' => ['school' => 'School (colourful)', 'minimal' => 'Minimal', 'premium' => 'Premium (ink and gold)'],
+        'options' => ['school' => 'School (colourful)', 'minimal' => 'Minimal', 'premium' => 'Premium (ink and gold)', 'campus' => 'Campus (college, university)', 'madrasa' => 'Madrasa (green and gold)'],
+    ],
+    'default_template' => [
+        'label' => 'Template a new website starts with',
+        'description' => 'Chosen first when a school starts its website (per kind of institution); any offered template can be picked.',
+        'options' => ['school' => 'School (colourful)', 'minimal' => 'Minimal', 'premium' => 'Premium (ink and gold)', 'campus' => 'Campus (college, university)', 'madrasa' => 'Madrasa (green and gold)'],
+    ],
+    'starter_blocks' => [
+        'label' => 'Blocks of a new home page',
+        'description' => 'The blocks the home page of a new website starts with, in this order.',
     ],
     'max_pages' => [
         'label' => 'Website pages at most',

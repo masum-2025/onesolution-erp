@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class BlockTypes
 {
-    public const TYPES = ['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance'];
+    public const TYPES = ['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'message', 'calendar', 'gallery', 'stats', 'downloads', 'contact', 'attendance'];
 
     /** Validation rules for a block's data. */
     public static function rules(string $type, string $main = 'en'): array
@@ -34,6 +34,12 @@ final class BlockTypes
                 ...self::text($main, 'items.*.name', 100, true), ...self::text($main, 'items.*.text', 300, false)],
             'people' => [...$title, 'items' => ['required', 'array', 'min:1', 'max:60'], 'items.*.name' => ['required', 'string', 'max:100'],
                 ...self::text($main, 'items.*.role', 100, false), 'items.*.image_media_id' => ['nullable', 'string', 'size:26']],
+            // A word from the head (principal, chairman): their picture, name, role and message.
+            'message' => [...$title, 'image_media_id' => ['nullable', 'string', 'size:26'], 'name' => ['nullable', 'string', 'max:100'],
+                ...self::text($main, 'role', 100, false), ...self::text($main, 'body', 3000, true)],
+            // The academic calendar: dated events (a day, or from and to), written by hand.
+            'calendar' => [...$title, 'items' => ['present', 'array', 'max:60'], 'items.*.from' => ['required', 'date_format:Y-m-d'],
+                'items.*.to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:items.*.from'], ...self::text($main, 'items.*.label', 120, true)],
             // Slides of pictures with a title, a line and a button; turning by themselves or not.
             'slider' => ['slides' => ['required', 'array', 'min:1', 'max:8'], 'slides.*.image_media_id' => ['required', 'string', 'size:26'],
                 ...self::text($main, 'slides.*.title', 120, false), ...self::text($main, 'slides.*.text', 240, false),

@@ -4,6 +4,7 @@ namespace Modules\EduWebsite\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Sites\SiteAddress;
@@ -27,7 +28,7 @@ class Sites
     public const MODULE = 'edu_website';
 
     /** The templates there are (the rule edu_website.templates says which are offered). */
-    public const TEMPLATES = ['school', 'minimal', 'premium'];
+    public const TEMPLATES = ['school', 'minimal', 'premium', 'campus', 'madrasa'];
 
     public function __construct(
         private Place $place,
@@ -73,12 +74,10 @@ class Sites
             $home->fill(['organization_id' => $company->getKey(), 'site_id' => $site->getKey(), 'slug' => 'home', 'sort_order' => 0, 'in_menu' => true, 'is_home' => true, 'version' => 1]);
             $home->putTexts('title', ['en' => 'Home', 'bn' => 'প্রথম পাতা']);
             $home->save();
-            foreach ([
-                ['hero', ['title' => $data['title']]],
-                ['notices', ['title' => ['en' => 'Notices', 'bn' => 'নোটিশ'], 'count' => 5]],
-                ['contact', ['title' => ['en' => 'Contact', 'bn' => 'যোগাযোগ'], 'show_map' => true]],
-            ] as $index => [$type, $blockData]) {
-                (new Block)->fill(['organization_id' => $company->getKey(), 'page_id' => $home->getKey(), 'type' => $type, 'sort_order' => $index, 'data' => $blockData, 'version' => 1])->save();
+            // The home page's first blocks, as the rule says for this kind of institution.
+            $starter = (array) $this->rules->get('edu_website.starter_blocks', $this->contexts->forOrganization($company));
+            foreach (array_values(array_unique($starter)) as $index => $type) {
+                (new Block)->fill(['organization_id' => $company->getKey(), 'page_id' => $home->getKey(), 'type' => $type, 'sort_order' => $index, 'data' => $this->starterData($type, $data['title']), 'version' => 1])->save();
             }
             $this->audit->record('edu_website.started', $site, new: ['slug' => $slug, 'template' => $site->template], actor: $actor, organizationId: $company->getKey());
 
@@ -102,7 +101,7 @@ class Sites
                 $this->claim($company, strtolower($data['slug']), $site->slug);
                 $site->slug = strtolower($data['slug']);
             }
-            $site->fill(array_intersect_key($data, array_flip(['template', 'theme', 'contact', 'default_locale', 'locales', 'logo_media_id', 'share_media_id'])));
+            $site->fill(array_intersect_key($data, array_flip(['template', 'theme', 'contact', 'default_locale', 'locales', 'logo_media_id', 'share_media_id', 'motto'])));
             if (! in_array($site->default_locale, $site->locales ?? [], true)) {
                 throw WebsiteException::defaultLocaleOff();
             }
@@ -148,6 +147,31 @@ class Sites
 
             return $site;
         });
+    }
+
+    /**
+     * What a starter block holds: the site's name on the welcome band, a title in each language for the
+     * others (edu_website::website.starter.*), sensible settings; texts the school writes stay empty.
+     *
+     * @param  array<string, string>  $siteTitle
+     * @return array<string, mixed>
+     */
+    private function starterData(string $type, array $siteTitle): array
+    {
+        if ($type === 'hero') {
+            return ['title' => $siteTitle];
+        }
+        $title = ['title' => collect(LanguageRegistry::codes())->mapWithKeys(fn (string $code) => [$code => __("edu_website::website.starter.{$type}", [], $code)])->all()];
+
+        return [...$title, ...match ($type) {
+            'notices' => ['count' => 5],
+            'contact' => ['show_map' => true],
+            'attendance' => ['students' => true, 'staff' => true],
+            'programs' => ['source' => 'education'],
+            'enquiry' => ['ask_level' => true],
+            'calendar' => ['items' => []],
+            default => [],
+        }];
     }
 
     /**

@@ -57,6 +57,8 @@ class SiteController extends Controller
             // Every template, those a level above turned off marked (with where that was set).
             'template_choices' => array_map(fn (string $key) => ['key' => $key, 'offered' => in_array($key, $offered['value'], true)], Sites::TEMPLATES),
             'template_source' => $offered['source'],
+            // Chosen first when starting (per kind of institution).
+            'default_template' => $this->rule($company, 'edu_website.default_template')['value'],
             'max_pages' => $this->rule($company, 'edu_website.max_pages'),
             'max_media_mb' => $this->rule($company, 'edu_website.max_media_mb'),
             'own_domain' => $this->rule($company, 'edu_website.own_domain'),

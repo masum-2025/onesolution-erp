@@ -124,7 +124,7 @@ it('writes the numbers in the visitor\'s digits and lets the script count up to 
 
 it('offers the premium template, marks recent notices and serves the site\'s own fonts', function () {
     $site = $this->asToken($this->token)->getJson(($this->api)())->assertOk();
-    expect(collect($site->json('meta.template_choices'))->pluck('key')->all())->toBe(['school', 'minimal', 'premium']);
+    expect(collect($site->json('meta.template_choices'))->pluck('key')->all())->toBe(['school', 'minimal', 'premium', 'campus', 'madrasa']);
     $this->asToken($this->token)->patchJson(($this->api)(), ['base_version' => $site->json('data.version'), 'template' => 'premium'])->assertOk();
     $notice = fn (string $title, string $date) => $this->asToken($this->token)->postJson(($this->api)('notices'), ['title' => ['en' => $title], 'published_on' => $date, 'is_published' => true])->assertCreated();
     $notice('Fresh notice', '2026-10-12');

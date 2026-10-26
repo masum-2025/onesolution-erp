@@ -8,6 +8,7 @@
 use Modules\EduWebsite\Dashboard\EnquiriesWaiting;
 use Modules\EduWebsite\Dashboard\NoticesThisMonth;
 use Modules\EduWebsite\Dashboard\UnpublishedChanges;
+use Modules\EduWebsite\Services\BlockTypes;
 use Modules\EduWebsite\Services\Sites;
 
 return [
@@ -33,7 +34,7 @@ return [
     ],
     'rules' => [
         [
-            // Templates offered (school, minimal, premium: Sites::TEMPLATES); a level above turns some off
+            // Templates offered (school, minimal, premium, campus, madrasa: Sites::TEMPLATES); a level above turns some off
             // (the allowed list) for everyone below. Manifests are cached by file time: change this file with the list.
             'key' => 'edu_website.templates',
             'type' => 'multi_enum',
@@ -66,6 +67,30 @@ return [
             'overridable_levels' => ['platform', 'partner', 'plan'],
             'category' => 'website',
             'sort_order' => 30,
+        ],
+        [
+            // The template a new website starts with (per sector: sector-packages.php); any offered one can be chosen.
+            'key' => 'edu_website.default_template',
+            'type' => 'enum',
+            'schema' => ['enum' => Sites::TEMPLATES],
+            'default' => 'school',
+            'label' => 'edu_website::rules.default_template.label',
+            'description' => 'edu_website::rules.default_template.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'website',
+            'sort_order' => 15,
+        ],
+        [
+            // The blocks of a new website's home page, in order (per sector).
+            'key' => 'edu_website.starter_blocks',
+            'type' => 'multi_enum',
+            'schema' => ['items' => ['enum' => BlockTypes::TYPES], 'minItems' => 1],
+            'default' => ['hero', 'notices', 'contact'],
+            'label' => 'edu_website::rules.starter_blocks.label',
+            'description' => 'edu_website::rules.starter_blocks.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'website',
+            'sort_order' => 16,
         ],
         [
             // The website on the school's own domain (www.abcschool.edu.bd), proven by DNS; per plan or partner.

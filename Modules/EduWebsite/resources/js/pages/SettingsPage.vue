@@ -28,7 +28,7 @@ import { useSite } from '../useSite';
  */
 const { web, resource, site, meta, canManage, canPublish } = useSite();
 
-const form = reactive({ title: {}, tagline: {}, slug: '', template: 'school', primary: '#0f6b4b', accent: '#f5b301', logo: '', share: '', contact: {}, locales: [], default_locale: 'bn' });
+const form = reactive({ title: {}, tagline: {}, slug: '', template: 'school', primary: '#0f6b4b', accent: '#f5b301', logo: '', share: '', motto: '', contact: {}, locales: [], default_locale: 'bn' });
 const errors = ref({});
 const saving = ref(false);
 const address = ref('ok');
@@ -45,6 +45,7 @@ function fill(value) {
         accent: value.theme?.accent ?? '#f5b301',
         logo: value.logo_media_id ?? '',
         share: value.share_media_id ?? '',
+        motto: value.motto ?? '',
         contact: {
             address: textsFor(value.contact?.address),
             hours: textsFor(value.contact?.hours),
@@ -102,6 +103,7 @@ async function save() {
         theme: { primary: form.primary.toLowerCase(), accent: form.accent.toLowerCase() },
         logo_media_id: form.logo || null,
         share_media_id: form.share || null,
+        motto: form.motto.trim() || null,
         contact: {
             address: cleanTexts(form.contact.address),
             hours: cleanTexts(form.contact.hours),
@@ -155,6 +157,9 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <h2 class="text-[15px] font-semibold">{{ t('edu_website.settings.identity') }}</h2>
                 <TranslatedFields :required-locale="form.default_locale" v-model="form.title" :label="t('edu_website.settings.name')" required :maxlength="120" :errors="errors" error-prefix="title" />
                 <TranslatedFields :required-locale="form.default_locale" v-model="form.tagline" :label="t('edu_website.settings.tagline')" :maxlength="160" :errors="errors" error-prefix="tagline" />
+                <AppField v-slot="{ id }" :label="t('edu_website.settings.motto')" :hint="t('edu_website.settings.motto_hint')" :error="fieldError('motto')" optional>
+                    <input :id="id" v-model="form.motto" class="field-input text-[15px]" dir="auto" maxlength="160" />
+                </AppField>
                 <AddressField v-if="canPublish" v-model="form.slug" :web="web" :domain="meta.sites_domain" :current="site.slug" :error="fieldError('slug')" @state="address = $event" />
                 <AppField v-else :label="t('edu_website.settings.address')" :hint="t('edu_website.settings.address_publishers')">
                     <p class="font-mono text-[14px]" dir="ltr">{{ site.addresses.site.replace(/^https?:\/\//, '') }}</p>

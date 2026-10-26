@@ -946,7 +946,7 @@ Every /api endpoint also has the general per-address, per-person and per-organiz
 | Method | Path | Access | Context | Module | Limits | Step-up |
 |---|---|---|---|---|---|---|
 | GET | `/s/_tls` | public |  |  |  |  |
-| POST | `/s/{slug}/enquiry` | public |  |  |  |  |
+| POST | `/s/{slug}/enquiry` | public |  |  | edu-website-enquiry |  |
 | GET | `/s/{slug}/{path?}` | public |  |  |  |  |
 
 ## /sanctum

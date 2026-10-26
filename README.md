@@ -2618,7 +2618,17 @@ coaching; in the starter plan): a light public website per company.
   class only; rule `edu_website.enquiry_notify_email`). "Start an application" opens Education's
   new application with the details in the history state (never the address or server logs). The
   client's data export includes the enquiries still kept.
-- Campus and Madrasa templates come with WEB-3c.
+- **Templates for each kind of institution (WEB-3c)**: `campus` (deep blue, straight lines,
+  news-like notice board) and `madrasa` (green and gold, a geometric band, arched cards; all CSS)
+  join school, minimal and premium. The rules `edu_website.default_template` (chosen first when
+  starting) and `edu_website.starter_blocks` (the new home page's blocks, in order) are set per
+  sector in `sector-packages.php` (college and university: campus with the calendar; madrasa:
+  madrasa with the head's message; coaching: minimal) — no code asks which sector it is. Starter
+  blocks get a title in each language (`edu_website::website.starter.*`); texts the school writes
+  start empty and the message shows only once written. New blocks `message` (the head's picture,
+  name, role and words) and `calendar` (dated events, a day or from–to, grouped by month, past ones
+  quieter). Sites have an optional `motto` (a plain line above every page, any script — `dir=auto`
+  for Arabic).
 
 ### Future expansion (Website)
 

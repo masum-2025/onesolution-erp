@@ -111,6 +111,8 @@ class PublicSite
             'powered_by' => $brand['powered_by'] ?? null,
             'text' => $text,
             'date' => fn (string $date, string $format = 'LL') => $this->date($date, $format, $locale),
+            // The company's today (Y-m-d), for what is past.
+            'today' => $this->place->today($company)->toDateString(),
             // A whole number in the visitor's digits and grouping (১,২০০ in Bangla).
             'number' => fn (int $value) => (string) (new \NumberFormatter($locale, \NumberFormatter::DECIMAL))->format($value),
         ];

@@ -28,7 +28,8 @@ const emit = defineEmits(['started']);
 const step = ref(1);
 const choices = computed(() => props.meta.template_choices ?? []);
 const form = reactive({
-    template: choices.value.find((choice) => choice.offered)?.key ?? 'school',
+    // The kind of institution's template when it is offered, else the first offered one.
+    template: choices.value.find((choice) => choice.offered && choice.key === props.meta.default_template)?.key ?? choices.value.find((choice) => choice.offered)?.key ?? 'school',
     // The organization's name goes into the field of its own script (a Bangla name is not an English one).
     title: textsFor(/[^\u0000-\u007f]/.test(props.organizationName) ? { bn: props.organizationName } : { en: props.organizationName }),
     slug: slugFrom(props.organizationName),

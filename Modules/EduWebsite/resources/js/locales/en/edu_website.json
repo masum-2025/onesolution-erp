@@ -70,7 +70,11 @@
         "off": "Not offered to you",
         "off_by": "Turned off by {name}",
         "premium": "Premium",
-        "premium_text": "Deep ink and gold, serif headings, quiet lines."
+        "premium_text": "Deep ink and gold, serif headings, quiet lines.",
+        "campus": "Campus",
+        "campus_text": "Deep blue, straight lines and a news-like notice board; for colleges and universities.",
+        "madrasa": "Madrasa",
+        "madrasa_text": "Green and gold, a geometric band and arched cards."
     },
     "colours": {
         "green": "Green",
@@ -121,7 +125,9 @@
         "save_hint": "Settings show on the website as soon as you save.",
         "saved": "Settings saved.",
         "share": "Picture for shared links",
-        "share_hint": "Shown when the website is shared on Facebook or WhatsApp (1200 × 630 looks best). Without it, the logo."
+        "share_hint": "Shown when the website is shared on Facebook or WhatsApp (1200 × 630 looks best). Without it, the logo.",
+        "motto": "Line above every page",
+        "motto_hint": "A motto, or a line in Arabic for a madrasa. Shown as written."
     },
     "pages": {
         "title": "Pages",
@@ -192,7 +198,11 @@
         "stats": "In numbers",
         "stats_text": "A few numbers you are proud of, counting up.",
         "enquiry": "Admission enquiry",
-        "enquiry_text": "A form where parents leave their number; you call them back."
+        "enquiry_text": "A form where parents leave their number; you call them back.",
+        "message": "Message from the head",
+        "message_text": "The principal or chairman: picture, name, role and their words.",
+        "calendar": "Academic calendar",
+        "calendar_text": "Dated events of the year: classes start, exams, holidays."
     },
     "fields": {
         "title": "Title",
@@ -237,7 +247,11 @@
         "counts": "What it counts",
         "add_pictures": "Add pictures",
         "thanks": "Thanks after sending",
-        "ask_level": "Ask which class"
+        "ask_level": "Ask which class",
+        "events": "Events",
+        "from": "Date",
+        "to": "Until (optional)",
+        "event": "What happens"
     },
     "notices": {
         "title": "Notices",

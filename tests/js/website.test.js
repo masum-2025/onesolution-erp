@@ -26,7 +26,7 @@ describe('website screens', () => {
     });
 
     it('knows the same kinds of block as the server', () => {
-        expect(BLOCK_TYPES).toEqual(['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'gallery', 'stats', 'downloads', 'contact', 'attendance']);
+        expect(BLOCK_TYPES).toEqual(['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'message', 'calendar', 'gallery', 'stats', 'downloads', 'contact', 'attendance']);
     });
 });
 

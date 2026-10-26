@@ -26,7 +26,7 @@ class WebsitePresenter
 
         return [
             'id' => $site->getKey(), 'slug' => $site->slug, 'template' => $site->template, 'theme' => $site->theme,
-            'logo_media_id' => $site->logo_media_id, 'share_media_id' => $site->share_media_id, 'title' => $site->texts('title'), 'tagline' => $site->texts('tagline'),
+            'logo_media_id' => $site->logo_media_id, 'share_media_id' => $site->share_media_id, 'motto' => $site->motto, 'title' => $site->texts('title'), 'tagline' => $site->texts('tagline'),
             'contact' => $site->contact ?? [], 'locales' => $site->locales, 'default_locale' => $site->default_locale,
             'status' => $site->status, 'published_at' => $site->published_at?->toIso8601String(), 'version' => $site->version,
             'addresses' => [

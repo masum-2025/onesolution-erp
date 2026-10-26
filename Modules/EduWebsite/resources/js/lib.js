@@ -103,6 +103,33 @@ export const BLOCKS = {
             },
         ],
     },
+    message: {
+        icon: 'quote',
+        fields: [
+            title,
+            { key: 'image_media_id', kind: 'image' },
+            { key: 'name', kind: 'name', max: 100 },
+            { key: 'role', kind: 'text', max: 100 },
+            { key: 'body', kind: 'text', max: 3000, long: true, required: true },
+        ],
+    },
+    calendar: {
+        icon: 'calendar',
+        fields: [
+            title,
+            {
+                key: 'items',
+                label: 'events',
+                kind: 'items',
+                max: 60,
+                fields: [
+                    { key: 'from', kind: 'date', required: true },
+                    { key: 'to', kind: 'date' },
+                    { key: 'label', label: 'event', kind: 'text', max: 120, required: true },
+                ],
+            },
+        ],
+    },
     gallery: {
         icon: 'images',
         fields: [
