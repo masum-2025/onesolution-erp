@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Expenses\Http\Controllers\CategoryController;
 use Modules\Expenses\Http\Controllers\ClaimController;
 use Modules\Expenses\Http\Controllers\MeController;
+use Modules\Expenses\Http\Controllers\PortalExpensesController;
 
 /*
 | Expenses API (loaded by ExpensesServiceProvider under /api, group "api"):
@@ -36,4 +37,14 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:expenses'])
             Route::post('me/claims/{claim}/{step}', [MeController::class, 'step']);
             Route::delete('me/claims/{claim}/receipts/{receipt}', [MeController::class, 'removeReceipt']);
         });
+    });
+
+/*
+| An employee's own claims in the client's portal (B2B2C): portal members
+| only, with the portal, HRM and Expenses on.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:hrm', 'module:expenses'])
+    ->prefix('portal/expenses')
+    ->group(function () {
+        Route::get('/', [PortalExpensesController::class, 'show']);
     });

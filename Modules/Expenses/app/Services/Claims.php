@@ -425,7 +425,8 @@ class Claims
         return $prefix.str_pad((string) ((int) substr((string) $last, strlen($prefix)) + 1), 5, '0', STR_PAD_LEFT);
     }
 
-    private function currency(Organization $company): string
+    /** The company's currency: claims are in it. */
+    public function currency(Organization $company): string
     {
         return (string) ($this->settings->values($company)['currency_code'] ?? 'BDT');
     }

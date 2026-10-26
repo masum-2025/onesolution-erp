@@ -9,4 +9,5 @@ return array (
   'menu_claims' => 'সব দাবি',
   'menu_categories' => 'খরচের খাত',
   'new_claim' => 'খরচের দাবি',
+  'portal_expenses' => 'আমার খরচের দাবি',
 );

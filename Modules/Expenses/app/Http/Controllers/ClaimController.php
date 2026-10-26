@@ -3,6 +3,7 @@
 namespace Modules\Expenses\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Modules\ModuleResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class ClaimController extends Controller
             'waiting' => ['nullable', 'boolean'],
             'employee_id' => ['nullable', 'string', 'size:26'],
             'period' => ['nullable', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+            'q' => ['nullable', 'string', 'max:100'],
         ]);
         $list = $this->place->query(Claim::class, $company)->whereIn('unit_id', $this->place->subtreeIds($unit))
             // Drafts are their writers' own.
@@ -50,7 +52,17 @@ class ClaimController extends Controller
             $list = $list->filter(fn (Claim $claim) => $this->claims->canDecide($company, $claim, $request->user()))->values();
         }
 
-        return response()->json(['data' => $this->presenter->claims($company, $list)]);
+        $rows = $this->presenter->claims($company, $list);
+        // A name or claim number typed in (names live in HRM, so matched here, not in the query).
+        $q = mb_strtolower(trim((string) ($filters['q'] ?? '')));
+        if ($q !== '') {
+            $rows = array_values(array_filter($rows, fn (array $row) => str_contains(mb_strtolower($row['employee']['name'].' '.$row['employee']['code'].' '.$row['number'].' '.$row['title']), $q)));
+        }
+
+        return response()->json(['data' => $rows, 'meta' => [
+            'payroll' => app(ModuleResolver::class)->isEnabled('payroll', $company),
+            'can_pay' => Gate::allows('expenses.pay', $unit),
+        ]]);
     }
 
     public function show(Request $request, string $organization, string $claim): JsonResponse

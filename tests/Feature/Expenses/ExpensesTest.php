@@ -3,6 +3,11 @@
 use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Notifications\Models\NotificationDelivery;
+use App\Platform\Portal\Models\PortalLink;
+use App\Platform\Tenancy\Actions\AddMember;
+use App\Platform\Tenancy\Enums\AccessScope;
+use App\Platform\Tenancy\Enums\MembershipType;
+use App\Platform\Tenancy\Models\OrganizationMembership;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -296,4 +301,49 @@ it('keeps claims to the company, to the employee and to the module being on', fu
     $this->asToken($this->worker)->getJson(($this->api)('me'))->assertForbidden();
     $this->asToken($this->boss)->postJson(($this->api)("claims/{$claim['id']}/approve"), ['base_version' => $claim['version']])->assertForbidden();
     expect(Claim::query()->withoutGlobalScopes()->count())->toBe(2);
+});
+
+it('gives the screens what they show: the own summary, a search and whether Payroll is on', function () {
+    $paid = ($this->sent)(20000);
+    ($this->decide)($paid, 'approve', $this->boss)->assertOk();
+    ($this->sent)(35000);
+    ($this->draft)([($this->line)('MEALS', 1000)])->assertCreated();
+
+    $me = $this->asToken($this->worker)->getJson(($this->api)('me'))->assertOk()->json('data');
+    expect($me['summary'])->toBe(['drafts' => 1, 'waiting' => 1, 'owed_minor' => 20000])
+        ->and($me['currency'])->toBe('BDT')
+        ->and($me['employee']['name'])->toBe('Rahima Akter');
+
+    $found = $this->asToken($this->admin)->getJson(($this->api)('claims?q=rahima'))->assertOk();
+    expect($found->json('data'))->toHaveCount(2)
+        ->and($found->json('meta'))->toBe(['payroll' => false, 'can_pay' => false]);
+    expect($this->asToken($this->admin)->getJson(($this->api)('claims?q=EXP-2026-00002'))->json('data.0.total_minor'))->toBe(35000)
+        ->and($this->asToken($this->admin)->getJson(($this->api)('claims?q=nobody'))->json('data'))->toBe([])
+        ->and($this->asToken($this->finance)->getJson(($this->api)('claims'))->json('meta.can_pay'))->toBeTrue();
+});
+
+it('shows a portal employee their own sent claims only', function () {
+    toggles()->enable($this->w->g1, 'client_portal', 'Test setup');
+    ($this->sent)();
+    ($this->draft)([($this->line)('MEALS', 1000)])->assertCreated();
+    ($this->sent)(20000, $this->boss);
+    $member = User::factory()->create(['email_verified_at' => now()]);
+    app(AddMember::class)->handle($this->w->c1, $member, MembershipType::Portal, AccessScope::Own);
+    $membership = OrganizationMembership::query()->where('user_id', $member->id)->where('organization_id', $this->w->c1->id)->sole();
+    (new PortalLink)->forceFill([
+        'organization_id' => $this->w->c1->id, 'membership_id' => $membership->id, 'user_id' => $member->id,
+        'subject_type' => 'hrm.employee', 'subject_id' => $this->rahima['id'], 'relation' => 'self', 'status' => PortalLink::ACTIVE, 'linked_via' => 'invitation',
+    ])->save();
+    $portal = orgToken($member, $this->w->c1);
+
+    $mine = $this->asToken($portal)->getJson('/api/portal/expenses')->assertOk()->json('data');
+    expect($mine)->toHaveCount(1)
+        ->and($mine[0]['employee']['name'])->toBe('Rahima Akter')
+        ->and(collect($mine[0]['claims'])->pluck('status')->all())->toBe(['submitted']);
+    $this->asToken($portal)->getJson(($this->api)('claims'))->assertForbidden();
+    $this->asToken($portal)->getJson(($this->api)('me'))->assertForbidden();
+    expect($this->asToken($this->admin)->getJson('/api/portal/expenses')->json('data'))->toBe([]);
+
+    toggles()->disable($this->w->g1, 'client_portal', 'Not used');
+    $this->asToken($portal)->getJson('/api/portal/expenses')->assertForbidden();
 });

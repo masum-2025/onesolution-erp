@@ -48,6 +48,12 @@ class MeController extends Controller
         return response()->json(['data' => [
             'employee' => ['id' => $me->id, 'name' => $me->name, 'code' => $me->code],
             'claims' => $this->presenter->claims($company, $list),
+            // For the cards on top: drafts not sent, claims waiting for a decision, approved money not paid back yet.
+            'summary' => [
+                'drafts' => $list->where('status', Claim::DRAFT)->count(),
+                'waiting' => $list->where('status', Claim::SUBMITTED)->count(),
+                'owed_minor' => (int) $list->where('status', Claim::APPROVED)->sum('total_minor'),
+            ],
             'categories' => $categories->of($company, true)->map(fn ($category) => $this->presenter->category($category))->values(),
             'limits' => [
                 'receipt_required_above' => (int) $rules->get('expenses.receipt_required_above', $context),
@@ -57,6 +63,7 @@ class MeController extends Controller
                 'receipt_max_kb' => (int) $rules->get('expenses.receipt_max_kb', $context),
             ],
             'payroll' => $modules->isEnabled('payroll', $company),
+            'currency' => $this->claims->currency($company),
         ]]);
     }
 

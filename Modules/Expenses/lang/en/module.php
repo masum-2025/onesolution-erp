@@ -9,4 +9,5 @@ return array (
   'menu_claims' => 'All claims',
   'menu_categories' => 'Kinds of expense',
   'new_claim' => 'Expense claim',
+  'portal_expenses' => 'My expense claims',
 );

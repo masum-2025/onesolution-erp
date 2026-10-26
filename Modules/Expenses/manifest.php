@@ -161,4 +161,8 @@ return [
     'settings' => ['pages' => [
         ['key' => 'categories', 'label' => 'expenses::module.menu_categories', 'route' => '/expenses/categories', 'permission' => 'expenses.manage'],
     ]],
+    // An employee follows their own claims from their record in the client's portal.
+    'portal_pages' => [
+        ['subject' => 'hrm.employee', 'label' => 'expenses::module.portal_expenses', 'route' => '/portal/expenses'],
+    ],
 ];

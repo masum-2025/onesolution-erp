@@ -2718,7 +2718,7 @@ leave. Portal: `/portal/leave` (read only).
 A new country or sector: values of `leave.default_types` and `leave.year_start_month`; a company
 changes its own types. No code change.
 
-## Expenses module (EXP-1 backend)
+## Expenses module (EXP-1 backend, EXP-2 screens)
 
 Employees claim back money they spent for work. Requires HRM; posts to Accounting where the
 company keeps books, and pays back with salary where Payroll is on (both optional). In the
@@ -2766,10 +2766,25 @@ starter plan. Money in minor units of the company's currency.
   `expenses.paid`. Data export: kinds, claims, lines, approvals, receipts (without files). Audited: kinds, sent, each step,
   withdrawn, scheduled, paid.
 
+### Expenses screens (EXP-2)
+
+`Modules/Expenses/resources/js` (routes, `api.js`, `lib.js`: money typed as minor units and km as
+tenths with Bangla digits understood, mileage worked out as the server does to preview). Menu
+section "people" → Expenses: `/expenses/me` (cards: owed to me, waiting, drafts; the claims; "New
+claim", also from the header "New" menu via `?new=1`), `/expenses/approvals` (waiting for this
+person), `/expenses/claims` (to pay first, waiting for me, by status, search by name, code or
+number); settings page `/expenses/categories`. `ClaimEditor` (drawer: lines as cards, receipt per
+line, a warning on lines above the receipt limit, the draft saved before a receipt is added),
+`ClaimDetail` (lines, receipts through fresh signed links, decisions, approve / reject with a
+reason, take back, edit), `PayDialog` (cash, bank, or a month's salary when Payroll is on).
+Portal: `/portal/expenses` (`GET /api/portal/expenses`, read only: the linked employees' sent
+claims). API additions: `GET me` gives `summary` and `currency`; `GET claims` takes `q` and gives
+`meta.payroll` and `meta.can_pay`. No offline claims (receipts are files; not kept on phones).
+
 ### Future expansion (Expenses)
 
 A new country, sector or partner: values of the rules (limits, mileage rate, usual kinds) and the
-chart's posting map; a company adds its own kinds. No code change. Later: screens (EXP-2),
+chart's posting map; a company adds its own kinds. No code change. Later:
 advances and per-diem.
 
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
