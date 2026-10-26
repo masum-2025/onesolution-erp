@@ -2718,6 +2718,60 @@ leave. Portal: `/portal/leave` (read only).
 A new country or sector: values of `leave.default_types` and `leave.year_start_month`; a company
 changes its own types. No code change.
 
+## Expenses module (EXP-1 backend)
+
+Employees claim back money they spent for work. Requires HRM; posts to Accounting where the
+company keeps books, and pays back with salary where Payroll is on (both optional). In the
+starter plan. Money in minor units of the company's currency.
+
+- **Tables** (tenant): `exp_categories` (the company's kinds: code, translatable name, one of the
+  declared posting keys, mileage or not, active), `exp_claims` (number `EXP-YYYY-NNNNN` when
+  sent, total, status `draft` / `submitted` / `approved` / `rejected` / `paid` / `withdrawn`,
+  steps needed and done, journal ids, how and when paid, `op_id`, `version`), `exp_lines` (day,
+  kind, description, amount, kilometres in tenths for mileage kinds), `exp_receipts` (private
+  disk, path never shown), `exp_approvals` (one row per step).
+- **Rules**: `expenses.receipt_required_above` (500.00), `expenses.second_approval_above`
+  (5,000.00), `expenses.max_claim_age_days` (60), `expenses.mileage_rate` (per km, 0 = no mileage
+  claims), `expenses.receipt_max_kb` (5120; platform, partner and plan only),
+  `expenses.default_categories` (json: travel, meals, office, phone, other).
+- **Claiming** (`expenses.claim`, the login linked to an employee in HRM): a draft with lines
+  (not in the future, not older than the rule; mileage = km × rate, rounded half up), receipts
+  (PDF, JPEG, PNG, WebP read from the file; shown only through a 5-minute signed link
+  `files/expenses/{org}/{receipt}`, `nosniff`, `no-store`). Sending checks that every line above
+  the receipt limit has its receipt. Same `op_id` = same claim. Taken back while nobody decided.
+- **Approving**: never one's own claim (nor one written for oneself). Step 1: the employee's HRM
+  manager when the manager's login holds `expenses.approve` (else anyone with it), or anyone with
+  `expenses.manage`. Above `second_approval_above` a second step by someone else with
+  `expenses.pay`. Rejecting needs a note. At the last step the claim is booked: each kind's posting
+  key (the employee's unit as cost centre) against `expenses.claims_payable`.
+- **Paying** (`expenses.pay`): cash or bank now (claims payable against cash / bank account), or
+  with a month's salary from this month on. Payroll contract `EarningSource` (Expenses'
+  `ClaimsWithSalary`): an `EXPENSES` line on the slip, not taxed, with `posting_key`
+  `expenses.claims_payable`, so the run reduces what is owed instead of adding salary cost (new
+  `pay_slip_lines.posting_key`). On `PayrollApproved` for that month the claims become paid.
+- **Books**: posting keys `expenses.travel` / `meals` / `office` / `communication` / `other`,
+  `expenses.claims_payable`, `expenses.cash_account`, `expenses.bank_account` (general chart:
+  5600 / 5900 / 5500 / 5900 / 5900, 2140, 1110, 1120; `accounting:map-postings` for existing books).
+- **API** (`/api/organizations/{org}/expenses/…`, `module:hrm` + `module:expenses`, writes
+  throttled `expenses-writes` 30/min, uploads `expenses-uploads` 10/min): `GET|POST categories`,
+  `PATCH categories/{id}`, `POST categories/defaults`; `GET claims[?status&waiting&employee_id&period]`
+  (no drafts), `GET claims/{id}`, `POST claims/{id}/approve|reject`, `POST claims/{id}/pay`
+  (`method`, `period`); `GET me` (claims, kinds, limits), `GET|POST me/claims`,
+  `PATCH|DELETE me/claims/{id}`, `POST me/claims/{id}/submit|withdraw`,
+  `POST me/claims/{id}/receipts`, `DELETE me/claims/{id}/receipts/{receipt}`.
+- Permissions `expenses.claim`, `expenses.approve`, `expenses.pay`, `expenses.manage`; role
+  templates: manager approve + claim, accountant pay + claim, finance approver pay, principal
+  manage + approve + claim, staff / teacher / office staff claim. Dashboard: claims waiting (+ bell
+  for those who may decide), spent this month. Mail: `expenses.submitted`, `expenses.decided`,
+  `expenses.paid`. Data export: kinds, claims, lines, approvals, receipts (without files). Audited: kinds, sent, each step,
+  withdrawn, scheduled, paid.
+
+### Future expansion (Expenses)
+
+A new country, sector or partner: values of the rules (limits, mileage rate, usual kinds) and the
+chart's posting map; a company adds its own kinds. No code change. Later: screens (EXP-2),
+advances and per-diem.
+
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 
 Requires HRM and Attendance; posts to Accounting where the company keeps books (optional).

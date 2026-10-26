@@ -25,6 +25,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     // Module files (files/…): the HRM employee documents; class lecture files (signed, ten minutes).
     'GET files/hrm/{organization}/{document}',
     'GET files/lectures/{organization}/{file}',
+    // An expense claim's receipt: signed, five minutes.
+    'GET files/expenses/{organization}/{receipt}',
     // A student's photo (Education): signed, five minutes.
     'GET files/education/{organization}/{student}/photo',
     // Images of document designs and the photo on an issued document (Education): signed, thirty minutes.

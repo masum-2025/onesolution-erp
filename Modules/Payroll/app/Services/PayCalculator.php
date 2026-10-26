@@ -98,7 +98,7 @@ final class PayCalculator
         }
         // Earnings other modules work out (EarningSource: piece rates, commission).
         foreach ($facts['earnings'] ?? [] as $earning) {
-            $lines[] = ['kind' => 'earning', 'code' => $earning['code'], 'name' => $earning['name'], 'amount' => (int) $earning['amount'], 'taxable' => (bool) $earning['taxable']];
+            $lines[] = ['kind' => 'earning', 'code' => $earning['code'], 'name' => $earning['name'], 'amount' => (int) $earning['amount'], 'taxable' => (bool) $earning['taxable'], 'posting_key' => $earning['posting_key'] ?? null];
         }
         foreach ($facts['adjustments'] as $adjustment) {
             $lines[] = [

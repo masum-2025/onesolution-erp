@@ -31,22 +31,22 @@ return [
     [
         'key' => 'manager',
         'sector' => null,
-        'permissions' => ['*.view', '*.manage', '*.use', '*.export', 'leave.approve', 'leave.request', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
+        'permissions' => ['*.view', '*.manage', '*.use', '*.export', 'leave.approve', 'leave.request', 'expenses.approve', 'expenses.claim', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
     ],
     [
         'key' => 'staff',
         'sector' => null,
-        'permissions' => ['*.view', '*.use', 'leave.request'],
+        'permissions' => ['*.view', '*.use', 'leave.request', 'expenses.claim'],
     ],
     [
         'key' => 'accountant',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'accounting.reconcile', 'payroll.view', 'payroll.run', 'custom_reports.view', 'education_fees.view', 'education_fees.bill', 'education_fees.collect'],
+        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'accounting.reconcile', 'payroll.view', 'payroll.run', 'custom_reports.view', 'education_fees.view', 'education_fees.bill', 'education_fees.collect', 'expenses.pay', 'expenses.claim'],
     ],
     [
         'key' => 'finance_approver',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.approve', 'accounting.close', 'payroll.view', 'payroll.approve', 'inventory.view', 'inventory.approve', 'rules.approve', 'custom_reports.view', 'education_fees.view', 'education_fees.approve', 'education_fees.void'],
+        'permissions' => ['accounting.view', 'accounting.approve', 'accounting.close', 'payroll.view', 'payroll.approve', 'inventory.view', 'inventory.approve', 'rules.approve', 'custom_reports.view', 'education_fees.view', 'education_fees.approve', 'education_fees.void', 'expenses.pay'],
     ],
     [
         'key' => 'hr_officer',
@@ -116,18 +116,19 @@ return [
             'education_exams.manage', 'education_exams.moderate', 'education_exams.publish', 'education_exams.correct',
             'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results', 'student_attendance.take', 'student_attendance.manage',
             'edu_website.manage', 'edu_website.publish', 'edu_website.enquiries',
+            'expenses.approve', 'expenses.manage', 'expenses.claim',
         ],
     ],
     [
         'key' => 'teacher',
         'sector' => 'school',
         // Students of their own sections only (rule education.teacher_scope).
-        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post', 'teacher_feedback.view_own', 'student_attendance.view', 'student_attendance.take', 'leave.request'],
+        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post', 'teacher_feedback.view_own', 'student_attendance.view', 'student_attendance.take', 'leave.request', 'expenses.claim'],
     ],
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request', 'edu_website.manage', 'edu_website.enquiries'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request', 'edu_website.manage', 'edu_website.enquiries', 'expenses.claim'],
     ],
 
     // ── University ───────────────────────────────────────────────────────

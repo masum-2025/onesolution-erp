@@ -172,8 +172,8 @@ it('counts SMS parts the way operators do', function (string $text, int $parts, 
 
 it('lists every message with the placeholders it may use and its default wording', function () {
     $this->asToken($this->ownerToken)->getJson('http://localhost/api/partner/templates')->assertOk()
-        // The platform's messages and the modules' own (HRM, attendance, leave, CRM, course registration, fees, exams).
-        ->assertJsonCount(35, 'data')
+        // The platform's messages and the modules' own (HRM, attendance, leave, expenses, CRM, course registration, fees, exams).
+        ->assertJsonCount(38, 'data')
         ->assertJsonPath('data.0.key', 'support.requested')
         ->assertJsonPath('data.0.channels', ['mail', 'sms']);
 

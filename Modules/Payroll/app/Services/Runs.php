@@ -292,7 +292,7 @@ class Runs
         ])->save();
         foreach ($result['lines'] as $index => $line) {
             $row = new SlipLine;
-            $row->fill(['organization_id' => $company->getKey(), 'slip_id' => $slip->getKey(), 'line_no' => $index + 1, 'kind' => $line['kind'], 'code' => $line['code'], 'amount_minor' => $line['amount'], 'taxable' => $line['taxable']]);
+            $row->fill(['organization_id' => $company->getKey(), 'slip_id' => $slip->getKey(), 'line_no' => $index + 1, 'kind' => $line['kind'], 'code' => $line['code'], 'amount_minor' => $line['amount'], 'taxable' => $line['taxable'], 'posting_key' => $line['posting_key'] ?? null]);
             $row->putTexts('name', $line['name']);
             $row->save();
         }
@@ -384,10 +384,18 @@ class Runs
      */
     private function salaryLines(Organization $company, Run $run): array
     {
-        $slips = $this->payrolls->query(Slip::class, $company)->where('run_id', $run->getKey())->get(['unit_id', 'earnings_minor']);
+        $slips = $this->payrolls->query(Slip::class, $company)->where('run_id', $run->getKey())->get(['id', 'unit_id', 'earnings_minor']);
+        // Earnings another module says go elsewhere (EarningSource posting_key: expenses paid back) are not salary cost.
+        $elsewhere = $this->payrolls->query(SlipLine::class, $company)->whereIn('slip_id', $slips->modelKeys())->where('kind', 'earning')
+            ->whereNotNull('posting_key')->get(['slip_id', 'posting_key', 'amount_minor']);
+        $elsewhereBySlip = $elsewhere->groupBy('slip_id')->map(fn ($group) => (int) $group->sum('amount_minor'));
         $lines = [];
         foreach ($slips->groupBy('unit_id') as $unitId => $unitSlips) {
-            $lines[] = LedgerLine::debit('payroll.salary_expense', (int) $unitSlips->sum('earnings_minor'), (string) $unitId);
+            $cost = (int) $unitSlips->sum(fn (Slip $slip) => $slip->earnings_minor - (int) ($elsewhereBySlip[$slip->getKey()] ?? 0));
+            $lines[] = LedgerLine::debit('payroll.salary_expense', $cost, (string) $unitId);
+        }
+        foreach ($elsewhere->groupBy('posting_key') as $key => $group) {
+            $lines[] = LedgerLine::debit((string) $key, (int) $group->sum('amount_minor'));
         }
         $loans = (int) $this->payrolls->query(LoanInstallment::class, $company)->where('run_id', $run->getKey())->where('status', LoanInstallment::RECOVERED)->sum('amount_minor');
         $fund = $this->payrolls->query(PfEntry::class, $company)->where('run_id', $run->getKey())->get(['employee_minor', 'employer_minor']);

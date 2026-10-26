@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/expenses",
+    "description": "Expense claims of a company's employees: receipts, approval steps, posting to the books and paying back.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Expenses\\": "app/"
+        }
+    }
+}

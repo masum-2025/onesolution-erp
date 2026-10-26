@@ -1,0 +1,11 @@
+{
+    "name": "Expenses",
+    "alias": "expenses",
+    "description": "Expense claims of a company's employees: receipts, approval steps, posting to the books and paying back in cash, by bank or with the next salary.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Expenses\\Providers\\ExpensesServiceProvider"
+    ],
+    "files": []
+}

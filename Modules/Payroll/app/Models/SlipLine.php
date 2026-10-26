@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
 /** One line of a slip (earning, deduction or tax), with the name it had then. */
-#[Fillable(['organization_id', 'slip_id', 'line_no', 'kind', 'code', 'amount_minor', 'taxable'])]
+#[Fillable(['organization_id', 'slip_id', 'line_no', 'kind', 'code', 'amount_minor', 'taxable', 'posting_key'])]
 class SlipLine extends Model
 {
     use BelongsToOrganization, HasTranslatedTexts, HasUlids, UsesTenantDatabase;

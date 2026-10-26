@@ -17,11 +17,13 @@ interface EarningSource
     /**
      * Each employee's earning lines for the days from-to (inclusive):
      * a code (capitals, e.g. PIECE_RATE), a name in each language, the
-     * amount in minor units of the company's currency, and whether it is
-     * taxable. Employees with nothing are left out.
+     * amount in minor units of the company's currency, whether it is
+     * taxable, and optionally where it goes in the books (a posting key the
+     * source declares, e.g. expenses paid back against what is owed to
+     * employees; else salary cost). Employees with nothing are left out.
      *
      * @param  list<string>  $employeeIds
-     * @return array<string, list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>>
+     * @return array<string, list<array{code: string, name: array<string, string>, amount: int, taxable: bool, posting_key?: string|null}>>
      */
     public function earnings(Organization $company, array $employeeIds, CarbonImmutable $from, CarbonImmutable $to): array;
 }
