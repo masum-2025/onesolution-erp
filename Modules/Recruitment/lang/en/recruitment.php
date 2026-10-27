@@ -14,6 +14,10 @@ return [
         'cannot_feedback' => 'Only the people asked to this interview can give feedback on it.',
         'slug_taken' => 'This address is already used. Choose another one.',
         'version_conflict' => 'Someone changed this in the meantime. Reload and try again.',
+        'offer_not_found' => 'This job offer was not found.',
+        'offer_exists' => 'This application already has an offer going. Withdraw it first to make a new one.',
+        'own_offer' => 'You wrote this offer; someone else who may hire approves it.',
+        'no_careers_address' => 'Set your careers page address first: the candidate answers the offer there.',
     ],
     'validation' => [
         'unit' => 'Choose a unit of this company.',
@@ -26,6 +30,9 @@ return [
         'past' => 'Choose a time in the future.',
         'cv_size' => 'The file is too big. At most :max KB.',
         'cv_kind' => 'Only PDF and Word files can be CVs.',
+        'placeholders' => 'Unknown placeholders: :names. Use only those in the list.',
+        'past_day' => 'Choose today or a later day.',
+        'start_after_answer' => 'The first day cannot be before the day to answer by.',
     ],
     'modes' => [
         'in_person' => 'In person',
@@ -33,4 +40,17 @@ return [
         'video' => 'By video call',
     ],
     'hired_reason' => 'Hired through recruitment: :job',
+    'offer_status' => [
+        'draft' => 'Draft',
+        'pending_approval' => 'Waiting for approval',
+        'sent' => 'Sent',
+        'accepted' => 'Accepted',
+        'declined' => 'Declined',
+        'expired' => 'Expired',
+        'withdrawn' => 'Withdrawn',
+    ],
+    'sample' => [
+        'name' => 'Sadia Rahman',
+        'job' => 'Accounts officer',
+    ],
 ];

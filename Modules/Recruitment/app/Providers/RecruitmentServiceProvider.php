@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Recruitment\Console\ExpireOffers;
 use Modules\Recruitment\Console\ForgetCandidates;
 use Modules\Recruitment\Export\RecruitmentExporter;
 
@@ -32,7 +33,7 @@ class RecruitmentServiceProvider extends ServiceProvider
     {
         // The client's data export includes recruitment (ExportsModuleData).
         $this->app->tag([RecruitmentExporter::class], 'module.exporters');
-        $this->commands([ForgetCandidates::class]);
+        $this->commands([ForgetCandidates::class, ExpireOffers::class]);
     }
 
     public function boot(): void
@@ -51,6 +52,8 @@ class RecruitmentServiceProvider extends ServiceProvider
         // People not taken (and never confirmed) are forgotten every night.
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $schedule->command('recruitment:forget-candidates')->dailyAt('03:50')->withoutOverlapping()->onOneServer();
+            // Offers not answered by their day expire (hourly: each company's day ends at its own time).
+            $schedule->command('recruitment:expire-offers')->hourlyAt(5)->withoutOverlapping()->onOneServer();
         });
 
         if (! $this->app->routesAreCached()) {

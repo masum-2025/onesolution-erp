@@ -27,6 +27,10 @@ Route::get('careers/{slug}/confirm/{token}', [PublicCareersController::class, 'c
     ->where('slug', SiteResolver::SLUG_PATTERN)->withoutMiddleware($public)->name('recruitment.careers.confirm-page');
 Route::post('careers/{slug}/confirm/{token}', [PublicCareersController::class, 'confirm'])
     ->where('slug', SiteResolver::SLUG_PATTERN)->middleware('throttle:recruitment-apply')->withoutMiddleware($public)->name('recruitment.careers.confirm');
+Route::get('careers/{slug}/offer/{token}', [PublicCareersController::class, 'offer'])
+    ->where('slug', SiteResolver::SLUG_PATTERN)->withoutMiddleware($public)->name('recruitment.careers.offer');
+Route::post('careers/{slug}/offer/{token}', [PublicCareersController::class, 'answer'])
+    ->where('slug', SiteResolver::SLUG_PATTERN)->middleware('throttle:recruitment-apply')->withoutMiddleware($public)->name('recruitment.careers.answer');
 
 // A CV: only through a short-lived signed link from the application (module files live under files/).
 Route::get('files/recruitment/{organization}/{file}', [FileController::class, 'show'])

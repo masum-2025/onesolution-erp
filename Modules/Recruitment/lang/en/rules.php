@@ -24,4 +24,12 @@ return [
     'categories' => [
         'recruitment' => 'Recruitment',
     ],
+    'offer_needs_approval' => [
+        'label' => 'Offers need approval',
+        'description' => 'Someone else who may hire approves a job offer before it is sent.',
+    ],
+    'offer_template' => [
+        'label' => 'Offer letter wording',
+        'description' => 'The offer letter per language, with {placeholders}, until a company writes its own.',
+    ],
 ];

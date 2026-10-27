@@ -20,6 +20,8 @@ const props = defineProps({
     // the opening (its kind of employment)
     opening: { type: Object, default: null },
     employmentTypes: { type: Array, default: () => [] },
+    // the first day of the offer the candidate accepted, if any
+    startOn: { type: String, default: null },
     calls: { type: Object, required: true },
 });
 const emit = defineEmits(['close', 'hired']);
@@ -31,7 +33,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 watch(() => props.open, (open) => {
     if (!open) return;
-    Object.assign(form, { joined_on: today(), employment_type: props.opening?.employment_type ?? props.employmentTypes[0] ?? '', manager: null });
+    Object.assign(form, { joined_on: props.startOn ?? today(), employment_type: props.opening?.employment_type ?? props.employmentTypes[0] ?? '', manager: null });
     errors.value = {};
 });
 

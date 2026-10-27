@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountToMinor, applicationTone, byStage, minorToText, nameIn, nextSlot, openingTone, recommendationTone } from '../../Modules/Recruitment/resources/js/lib';
+import { amountToMinor, applicationTone, byStage, minorToText, nameIn, nextSlot, offerTone, openingTone, recommendationTone } from '../../Modules/Recruitment/resources/js/lib';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Recruitment/resources/js/locales/en/recruitment.json';
 import bn from '../../Modules/Recruitment/resources/js/locales/bn/recruitment.json';
@@ -9,7 +9,7 @@ const keys = (object, prefix = '') => Object.entries(object).flatMap(([key, valu
 describe('recruitment helpers', () => {
     it('registers its screens with the app shell', () => {
         const names = moduleRoutes.filter((route) => route.meta.module === 'recruitment').map((route) => route.name);
-        expect(names).toEqual(expect.arrayContaining(['recruitment-openings', 'recruitment-pipeline', 'recruitment-interviews', 'recruitment-settings']));
+        expect(names).toEqual(expect.arrayContaining(['recruitment-openings', 'recruitment-pipeline', 'recruitment-interviews', 'recruitment-settings', 'recruitment-letter', 'recruitment-offer']));
     });
 
     it('says everything in Bangla and English', () => {
@@ -40,6 +40,8 @@ describe('recruitment helpers', () => {
         expect(openingTone('open')).toBe('ok');
         expect(applicationTone('rejected')).toBe('bad');
         expect(recommendationTone('maybe')).toBe('warn');
+        expect(offerTone('accepted')).toBe('ok');
+        expect(offerTone('pending_approval')).toBe('warn');
         expect(nextSlot(new Date(2026, 9, 28, 15, 0))).toBe('2026-10-29T10:00');
     });
 });

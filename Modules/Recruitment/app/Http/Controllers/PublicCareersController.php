@@ -14,10 +14,12 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Modules\Recruitment\Exceptions\RecruitmentException;
+use Modules\Recruitment\Models\Offer;
 use Modules\Recruitment\Models\Opening;
 use Modules\Recruitment\Services\Applications;
 use Modules\Recruitment\Services\Careers;
 use Modules\Recruitment\Services\CvFiles;
+use Modules\Recruitment\Services\Offers;
 use Modules\Recruitment\Services\Openings;
 use Modules\Recruitment\Services\Place;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,6 +43,7 @@ class PublicCareersController extends Controller
     public function __construct(
         private Careers $careers,
         private Openings $openings,
+        private Offers $offers,
         private Applications $applications,
         private CvFiles $files,
         private Place $place,
@@ -170,6 +173,56 @@ class PublicCareersController extends Controller
 
         return $this->page('recruitment::careers.confirm', $company, $slug, $locale, ['token' => null, 'state' => $confirmed === null ? 'expired' : 'done'], ['Cache-Control' => 'no-store'])
             ->setStatusCode($confirmed === null ? 410 : 200);
+    }
+
+    /** A job offer through the candidate's link: the letter, and buttons to accept or decline while it stands. */
+    public function offer(Request $request, string $slug, string $token): Response
+    {
+        if ($limited = $this->limited($request)) {
+            return $limited;
+        }
+        $company = $this->company($slug);
+        $offer = $company === null || ! $this->tokenShape($token) ? null : $this->offers->byToken($company, $token);
+        if ($offer === null) {
+            return $this->missing($request);
+        }
+        $locale = $this->locale($request, $company);
+
+        return $this->page('recruitment::careers.offer', $company, $slug, $locale, $this->offerView($company, $offer, $token), ['Cache-Control' => 'no-store']);
+    }
+
+    /** The candidate's answer: accept or decline (a POST from the offer's page; a few an hour per visitor). */
+    public function answer(Request $request, string $slug, string $token): Response
+    {
+        if (RateLimiter::tooManyAttempts($key = 'recruitment-apply:'.$request->ip(), self::APPLIES_PER_HOUR)) {
+            return response('', 429, ['Retry-After' => (string) RateLimiter::availableIn($key)]);
+        }
+        RateLimiter::hit($key, 3600);
+        $company = $this->company($slug);
+        $answer = (string) $request->input('answer');
+        if ($company === null || ! $this->tokenShape($token) || ! in_array($answer, ['accept', 'decline'], true)) {
+            return $this->missing($request);
+        }
+        $offer = $this->offers->answer($company, $token, $answer);
+        if ($offer === null) {
+            return $this->missing($request);
+        }
+        $locale = $this->locale($request, $company);
+
+        return $this->page('recruitment::careers.offer', $company, $slug, $locale, $this->offerView($company, $offer, $token), ['Cache-Control' => 'no-store']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function offerView(Organization $company, Offer $offer, string $token): array
+    {
+        $open = $offer->status === Offer::SENT && ! $this->offers->isPast($company, $offer);
+
+        return [
+            'offer' => ['status' => $open ? 'open' : ($offer->status === Offer::SENT ? Offer::EXPIRED : $offer->status), 'letter' => (string) $offer->letter],
+            'token' => $token, 'robots' => 'noindex, nofollow',
+        ];
     }
 
     private function company(string $slug): ?Organization

@@ -7,6 +7,7 @@
 
 use Modules\Recruitment\Dashboard\FeedbackOwed;
 use Modules\Recruitment\Dashboard\NewApplications;
+use Modules\Recruitment\Dashboard\OffersToApprove;
 use Modules\Recruitment\Dashboard\OpenJobs;
 
 $integer = fn (string $key, int $default, int $min, int $max, array $levels, int $order) => [
@@ -82,6 +83,56 @@ return [
         $integer('applications_per_email_day', 3, 1, 20, ['platform', 'partner', 'plan'], 40),
         // Privacy: people not taken are forgotten after this many days.
         $integer('keep_rejected_days', 180, 30, 1095, ['platform', 'partner', 'plan', 'group', 'company'], 50),
+        [
+            // A salary offered is money: someone else who may hire approves it before it goes.
+            'key' => 'recruitment.offer_needs_approval',
+            'type' => 'boolean',
+            'default' => true,
+            'label' => 'recruitment::rules.offer_needs_approval.label',
+            'description' => 'recruitment::rules.offer_needs_approval.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'recruitment',
+            'sort_order' => 60,
+        ],
+        [
+            // The offer letter until a company writes its own (per country or partner), per language, with {placeholders}.
+            'key' => 'recruitment.offer_template',
+            'type' => 'json',
+            'schema' => ['type' => 'object', 'required' => ['en']],
+            'default' => [
+                'en' => '{today}
+
+Dear {candidate.name},
+
+We are pleased to offer you the position of {job.title} at {company.name} ({unit.name}).
+
+Your salary will be {salary} a month, and your first day will be {start_date}.
+
+Please let us know your answer by {respond_by}.
+
+We look forward to working with you.
+
+{company.name}',
+                'bn' => '{today}
+
+প্রিয় {candidate.name},
+
+আমরা আনন্দের সাথে আপনাকে {company.name}-এ ({unit.name}) {job.title} পদে নিয়োগের প্রস্তাব দিচ্ছি।
+
+আপনার মাসিক বেতন হবে {salary}, আর প্রথম কর্মদিবস {start_date}।
+
+{respond_by}-এর মধ্যে আপনার উত্তর জানান।
+
+আপনার সাথে কাজ করার অপেক্ষায় রইলাম।
+
+{company.name}',
+            ],
+            'label' => 'recruitment::rules.offer_template.label',
+            'description' => 'recruitment::rules.offer_template.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'recruitment',
+            'sort_order' => 70,
+        ],
     ],
     'menu' => [
         [
@@ -107,7 +158,7 @@ return [
         ['key' => 'open', 'label' => 'recruitment::dashboard.open', 'type' => 'stat', 'provider' => OpenJobs::class, 'permission' => 'recruitment.view', 'overview' => true],
         ['key' => 'new', 'label' => 'recruitment::dashboard.new', 'type' => 'stat', 'provider' => NewApplications::class, 'permission' => 'recruitment.manage'],
     ]],
-    'attention' => [NewApplications::class, FeedbackOwed::class],
+    'attention' => [NewApplications::class, FeedbackOwed::class, OffersToApprove::class],
     'notifications' => [
         // To the people who handle the opening: no candidate's name or contact in the mail.
         'recruitment.applied' => [
@@ -137,6 +188,27 @@ return [
             'audience' => 'person',
             'path' => '/',
         ],
+        // To people who may hire: an offer waits for their approval (no name or salary in the mail).
+        'recruitment.offer_to_approve' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'job', 'link'],
+            'audience' => 'client',
+            'path' => '/recruitment/openings',
+        ],
+        // To the candidate: the offer and the link to answer it.
+        'recruitment.offer_sent' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'name', 'job', 'respond_by', 'link'],
+            'audience' => 'person',
+            'path' => '/',
+        ],
+        // To the people who wrote and approved it and manage recruitment: the candidate answered.
+        'recruitment.offer_answered' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'job', 'answer', 'link'],
+            'audience' => 'client',
+            'path' => '/recruitment/openings',
+        ],
         'recruitment.not_selected' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'name', 'job', 'link'],
@@ -146,5 +218,6 @@ return [
     ],
     'settings' => ['pages' => [
         ['key' => 'careers', 'label' => 'recruitment::module.menu_settings', 'route' => '/recruitment/settings', 'permission' => 'recruitment.manage'],
+        ['key' => 'letter', 'label' => 'recruitment::module.menu_letter', 'route' => '/recruitment/letter', 'permission' => 'recruitment.manage'],
     ]],
 ];

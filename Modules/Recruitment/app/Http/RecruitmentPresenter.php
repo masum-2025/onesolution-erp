@@ -5,16 +5,19 @@ namespace Modules\Recruitment\Http;
 use App\Models\User;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Recruitment\Models\Application;
 use Modules\Recruitment\Models\Candidate;
 use Modules\Recruitment\Models\CandidateFile;
 use Modules\Recruitment\Models\Feedback;
 use Modules\Recruitment\Models\Interview;
+use Modules\Recruitment\Models\Offer;
 use Modules\Recruitment\Models\Opening;
 use Modules\Recruitment\Models\StageMove;
 use Modules\Recruitment\Services\CvFiles;
 use Modules\Recruitment\Services\Interviews;
+use Modules\Recruitment\Services\Offers;
 use Modules\Recruitment\Services\Place;
 use Modules\Recruitment\Services\Stages;
 
@@ -31,6 +34,7 @@ class RecruitmentPresenter
         private CvFiles $files,
         private Interviews $interviews,
         private EmployeeDirectory $directory,
+        private Offers $offers,
     ) {}
 
     /**
@@ -141,7 +145,33 @@ class RecruitmentPresenter
                 ])->values()->all(),
             ])->values()->all(),
             'stages' => $this->stages->of($company),
+            // Offers: those who may see the application's money (not an interviewer only).
+            'offers' => ($can['contact'] ?? false) ? $this->place->query(Offer::class, $company)->where('application_id', $application->getKey())
+                ->orderByDesc('created_at')->get()->map(fn (Offer $offer) => $this->offer($company, $offer, $viewer))->values()->all() : [],
             'can' => $can,
+        ];
+    }
+
+    /**
+     * An offer and what this person may do with it (the letter itself is read on its own).
+     *
+     * @return array<string, mixed>
+     */
+    public function offer(Organization $company, Offer $offer, User $viewer): array
+    {
+        $names = User::query()->whereKey(array_filter([$offer->created_by, $offer->approved_by]))->pluck('name', 'id');
+
+        return [
+            'id' => $offer->getKey(), 'application_id' => $offer->application_id, 'currency' => $offer->currency, 'salary_minor' => $offer->salary_minor,
+            'start_on' => $offer->start_on?->toDateString(), 'respond_by' => $offer->respond_by?->toDateString(), 'status' => $offer->status,
+            'past' => $offer->status === Offer::SENT && $this->offers->isPast($company, $offer), 'note' => $offer->note,
+            'written_by' => $names[$offer->created_by] ?? '', 'approved_by' => $offer->approved_by === null ? null : ($names[$offer->approved_by] ?? ''),
+            'sent_at' => $offer->sent_at?->toIso8601String(), 'answered_at' => $offer->answered_at?->toIso8601String(), 'version' => $offer->version,
+            'can' => [
+                'edit' => $offer->status === Offer::DRAFT && $this->may('recruitment.manage', $offer, $company),
+                'approve' => $this->offers->canApprove($company, $offer, $viewer),
+                'withdraw' => in_array($offer->status, [Offer::DRAFT, Offer::PENDING, Offer::SENT], true) && $this->may('recruitment.manage', $offer, $company),
+            ],
         ];
     }
 
@@ -159,5 +189,12 @@ class RecruitmentPresenter
             'place' => $interview->place, 'status' => $interview->status, 'version' => $interview->version,
             'interviewers' => array_map(fn (string $id) => ['id' => $id, 'name' => $names[$id] ?? ''], $interview->interviewer_ids),
         ];
+    }
+
+    private function may(string $permission, Offer $offer, Organization $company): bool
+    {
+        $unit = Organization::query()->find($this->place->query(Application::class, $company)->whereKey($offer->application_id)->value('unit_id'));
+
+        return $unit !== null && Gate::allows($permission, $unit);
     }
 }

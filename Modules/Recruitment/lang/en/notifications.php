@@ -51,6 +51,25 @@ Thank you for your interest in {{ job }} at {{ organization }}. After careful th
 We wish you all the best.',
             'action' => 'Open',
         ],
+        'recruitment_offer_to_approve' => [
+            'subject' => 'A job offer for {{ job }} to approve',
+            'body' => 'A job offer for {{ job }} at {{ organization }} waits for your approval.
+
+Open it to read the letter and approve it or send it back.',
+            'action' => 'Open the opening',
+        ],
+        'recruitment_offer_sent' => [
+            'subject' => 'Your job offer for {{ job }}',
+            'body' => 'Hello {{ name }},
+
+{{ organization }} offers you the job of {{ job }}. Read the letter and give your answer by {{ respond_by }}.',
+            'action' => 'Read my offer',
+        ],
+        'recruitment_offer_answered' => [
+            'subject' => 'Job offer for {{ job }}: {{ answer }}',
+            'body' => 'The candidate answered the job offer for {{ job }} at {{ organization }}: {{ answer }}.',
+            'action' => 'Open the opening',
+        ],
     ],
     'catalog' => [
         'recruitment_applied' => [
@@ -72,6 +91,18 @@ We wish you all the best.',
         'recruitment_not_selected' => [
             'name' => 'Application not taken further',
             'description' => 'To the candidate, when HR rejects and wishes to tell them.',
+        ],
+        'recruitment_offer_to_approve' => [
+            'name' => 'Job offer to approve',
+            'description' => 'To people who may hire, when an offer waits for approval (no name or salary in the mail).',
+        ],
+        'recruitment_offer_sent' => [
+            'name' => 'Job offer',
+            'description' => 'To the candidate, with the link to read and answer the offer.',
+        ],
+        'recruitment_offer_answered' => [
+            'name' => 'Job offer answered',
+            'description' => 'To the people who wrote and approved the offer and manage recruitment.',
         ],
     ],
 ];

@@ -47,5 +47,15 @@ export function recruitmentApi(organizationId) {
         // { score, recommendation, note }
         feedback: (id, body) => api(`${base}/interviews/${id}/feedback`, { method: 'POST', body }),
         cancelInterview: (id, body) => api(`${base}/interviews/${id}/cancel`, { method: 'POST', body }),
+
+        // { salary_minor, start_on, respond_by }
+        writeOffer: (applicationId, body) => api(`${base}/applications/${applicationId}/offers`, { method: 'POST', body }),
+        offer: (id) => api(`${base}/offers/${id}`),
+        updateOffer: (id, body) => api(`${base}/offers/${id}`, { method: 'PATCH', body }),
+        // step: send | approve | return | withdraw; body: { base_version, note }
+        stepOffer: (id, step, body) => api(`${base}/offers/${id}/${step}`, { method: 'POST', body }),
+        // { body: { en, bn }, own, version, placeholders, sample, can_manage }
+        letter: () => api(`${base}/letter`),
+        saveLetter: (body) => api(`${base}/letter`, { method: 'PUT', body }),
     };
 }

@@ -11,6 +11,7 @@ use Modules\Recruitment\Models\Candidate;
 use Modules\Recruitment\Models\CandidateFile;
 use Modules\Recruitment\Models\Feedback;
 use Modules\Recruitment\Models\Interview;
+use Modules\Recruitment\Models\Offer;
 use Modules\Recruitment\Models\Opening;
 use Modules\Recruitment\Models\StageMove;
 
@@ -62,6 +63,11 @@ class RecruitmentExporter implements ExportsModuleData
             ]),
             'files' => $this->rows(CandidateFile::class, $organization, $organizationIds, fn (CandidateFile $file) => [
                 'application_id' => $file->application_id, 'name' => $file->name, 'mime' => $file->mime, 'size_bytes' => $file->size_bytes,
+            ]),
+            'offers' => $this->rows(Offer::class, $organization, $organizationIds, fn (Offer $offer) => [
+                'id' => $offer->getKey(), 'application_id' => $offer->application_id, 'currency' => $offer->currency, 'salary_minor' => $offer->salary_minor,
+                'start_on' => $offer->start_on?->toDateString(), 'respond_by' => $offer->respond_by?->toDateString(), 'status' => $offer->status,
+                'sent_at' => $offer->sent_at?->toIso8601String(), 'answered_at' => $offer->answered_at?->toIso8601String(), 'letter' => $offer->letter,
             ]),
         ];
     }

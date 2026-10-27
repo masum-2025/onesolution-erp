@@ -70,6 +70,26 @@ class RecruitmentException extends TenancyException
         return new self('slug_taken', 422);
     }
 
+    public static function offerNotFound(): self
+    {
+        return new self('offer_not_found', 404);
+    }
+
+    public static function offerExists(): self
+    {
+        return new self('offer_exists', 409);
+    }
+
+    public static function ownOffer(): self
+    {
+        return new self('own_offer', 403);
+    }
+
+    public static function noCareersAddress(): self
+    {
+        return new self('no_careers_address', 422);
+    }
+
     public static function versionConflict(array $current): self
     {
         return new self('version_conflict', 409, extra: ['current' => $current]);

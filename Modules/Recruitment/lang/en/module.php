@@ -8,4 +8,5 @@ return [
     'menu_interviews' => 'My interviews',
     'menu_settings' => 'Careers page',
     'new_opening' => 'Job opening',
+    'menu_letter' => 'Offer letter',
 ];

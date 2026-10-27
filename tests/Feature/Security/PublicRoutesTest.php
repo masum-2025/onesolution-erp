@@ -64,6 +64,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     // nothing seen by the company until the email is confirmed (a POST from the mailed link's page).
     'GET careers/{slug}', 'GET careers/{slug}/jobs/{opening}', 'POST careers/{slug}/jobs/{opening}/apply',
     'GET careers/{slug}/confirm/{token}', 'POST careers/{slug}/confirm/{token}',
+    // A job offer (REC-3): its own 48-character link (only the hash kept), read only until a POST answers it
+    // once while it stands, no scripts, ten answers an hour per address.
+    'GET careers/{slug}/offer/{token}', 'POST careers/{slug}/offer/{token}',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

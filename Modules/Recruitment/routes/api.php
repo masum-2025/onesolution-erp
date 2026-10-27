@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Recruitment\Http\Controllers\ApplicationController;
 use Modules\Recruitment\Http\Controllers\CareersController;
 use Modules\Recruitment\Http\Controllers\InterviewController;
+use Modules\Recruitment\Http\Controllers\OfferController;
 use Modules\Recruitment\Http\Controllers\OpeningController;
 
 /*
@@ -25,6 +26,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:recruitment'])
         Route::get('applications/{application}/interviewers', [ApplicationController::class, 'interviewers']);
         Route::get('applications/{application}/people', [ApplicationController::class, 'people']);
         Route::get('interviews/mine', [InterviewController::class, 'mine']);
+        Route::get('offers/{offer}', [OfferController::class, 'show']);
+        Route::get('letter', [OfferController::class, 'letter']);
 
         // CVs are read and kept: a few a minute (before applications/{application}/{step}, which would take the path).
         Route::post('applications/{application}/files', [ApplicationController::class, 'addFile'])->middleware('throttle:recruitment-uploads');
@@ -38,8 +41,12 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:recruitment'])
             Route::patch('applications/{application}', [ApplicationController::class, 'update']);
             Route::post('applications/{application}/hire', [ApplicationController::class, 'hire']);
             Route::post('applications/{application}/interviews', [ApplicationController::class, 'schedule']);
+            Route::post('applications/{application}/offers', [OfferController::class, 'store']);
             Route::post('applications/{application}/{step}', [ApplicationController::class, 'end']);
             Route::post('interviews/{interview}/feedback', [InterviewController::class, 'feedback']);
             Route::post('interviews/{interview}/cancel', [InterviewController::class, 'cancel']);
+            Route::patch('offers/{offer}', [OfferController::class, 'update']);
+            Route::post('offers/{offer}/{step}', [OfferController::class, 'step']);
+            Route::put('letter', [OfferController::class, 'saveLetter']);
         });
     });

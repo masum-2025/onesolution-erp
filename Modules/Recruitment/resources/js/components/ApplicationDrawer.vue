@@ -13,6 +13,7 @@ import { toast } from '@/lib/toast';
 import FeedbackDialog from './FeedbackDialog.vue';
 import HireDialog from './HireDialog.vue';
 import InterviewDialog from './InterviewDialog.vue';
+import OfferPanel from './OfferPanel.vue';
 import { applicationTone, nameIn, recommendationTone } from '../lib';
 
 /**
@@ -229,6 +230,8 @@ function afterFeedback() {
                 </ol>
             </section>
 
+            <OfferPanel v-if="can.contact" :application="item" :calls="calls" @changed="load(); emit('changed')" />
+
             <section v-if="item.history.length" :aria-label="t('recruitment.drawer.history')">
                 <h3 class="mb-2 text-[13px] font-semibold text-fg-2">{{ t('recruitment.drawer.history') }}</h3>
                 <ol class="space-y-1 border-s border-line ps-4 text-[12.5px]">
@@ -253,7 +256,7 @@ function afterFeedback() {
             </div>
         </template>
         <InterviewDialog :open="scheduling" :application="item" :calls="calls" @close="scheduling = false" @scheduled="afterScheduled" />
-        <HireDialog :open="hiring" :application="item" :opening="opening" :employment-types="employmentTypes" :calls="calls" @close="hiring = false" @hired="afterHired" />
+        <HireDialog :open="hiring" :application="item" :opening="opening" :employment-types="employmentTypes" :start-on="item?.offers?.find((offer) => offer.status === 'accepted')?.start_on ?? null" :calls="calls" @close="hiring = false" @hired="afterHired" />
         <FeedbackDialog :open="giving !== null" :interview="giving" :name="item?.name ?? ''" :given="giving ? mineOn(giving) : null" :calls="calls" @close="giving = null" @saved="afterFeedback" />
     </AppDrawer>
 </template>

@@ -50,6 +50,11 @@ export function applicationTone(status) {
     return { active: 'brand', hired: 'ok', rejected: 'bad', withdrawn: 'neutral' }[status] ?? 'neutral';
 }
 
+/** Badge tone per offer status. */
+export function offerTone(status) {
+    return { draft: 'neutral', pending_approval: 'warn', sent: 'brand', accepted: 'ok', declined: 'bad', expired: 'neutral', withdrawn: 'neutral' }[status] ?? 'neutral';
+}
+
 /** Badge tone per recommendation. */
 export function recommendationTone(value) {
     return { yes: 'ok', maybe: 'warn', no: 'bad' }[value] ?? 'neutral';

@@ -18,6 +18,7 @@ use Modules\Recruitment\Models\Application;
 use Modules\Recruitment\Models\Candidate;
 use Modules\Recruitment\Models\Feedback;
 use Modules\Recruitment\Models\Interview;
+use Modules\Recruitment\Models\Offer;
 use Modules\Recruitment\Models\Opening;
 use Modules\Recruitment\Models\StageMove;
 
@@ -276,6 +277,7 @@ class Applications
             $this->place->transaction($company, function () use ($company, $application) {
                 $this->files->removeAll($company, $application);
                 $this->place->query(Feedback::class, $company)->where('application_id', $application->getKey())->delete();
+                $this->place->query(Offer::class, $company)->where('application_id', $application->getKey())->delete();
                 $this->place->query(Interview::class, $company)->where('application_id', $application->getKey())->delete();
                 $this->place->query(StageMove::class, $company)->where('application_id', $application->getKey())->delete();
                 $application->delete();

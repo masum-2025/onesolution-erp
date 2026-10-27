@@ -8,4 +8,5 @@ return [
     'menu_interviews' => 'আমার সাক্ষাৎকার',
     'menu_settings' => 'ক্যারিয়ার পাতা',
     'new_opening' => 'চাকরির বিজ্ঞাপন',
+    'menu_letter' => 'অফার লেটার',
 ];

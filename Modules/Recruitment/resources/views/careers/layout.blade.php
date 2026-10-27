@@ -42,6 +42,8 @@
         .chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 12%, white); color: var(--brand); font-size: 13px; font-weight: 600; }
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 10px; border: 0; background: var(--brand); color: #fff; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
         .btn[disabled] { opacity: .6; cursor: default; }
+        .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+        .choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-block: 14px; }
         .text { white-space: pre-line; }
         h2.section { font-size: 18px; margin: 28px 0 12px; }
         form .fields { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }

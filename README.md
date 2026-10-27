@@ -2790,7 +2790,7 @@ A new country, sector or partner: values of the rules (limits, mileage rate, usu
 chart's posting map; a company adds its own kinds. No code change. Later:
 advances and per-diem.
 
-## Recruitment module (REC-1 backend and careers page, REC-2 screens)
+## Recruitment module (REC-1 backend and careers page, REC-2 screens, REC-3 offers)
 
 Job openings, applications from a public careers page or added by hand, interviews with feedback,
 and hiring into HRM. Requires HRM (units, positions through `EmployeeDirectory::positions`, hiring
@@ -2864,10 +2864,37 @@ person, withdrawn, hire), `InterviewDialog` (the company's local time, who may i
 for those who may hire; HR's own missing details listed), `FeedbackDialog` (1–5, hire / maybe /
 not, notes). The application's detail gives `employee` (name and code) once hired.
 
+### Job offers (REC-3)
+
+- **Offer letter** (`rec_letter_templates`, one per company, per language): plain text with
+  `{candidate.name}`, `{job.title}`, `{company.name}`, `{unit.name}`, `{salary}`, `{start_date}`,
+  `{respond_by}`, `{today}`; an unknown placeholder is refused. Until a company writes its own, the
+  rule `recruitment.offer_template` (json per language; platform, partner, plan) is used. Settings
+  page `/recruitment/letter` (placeholders put in at the cursor, a sample filled in). Money in the
+  letter is formatted with integer maths (no floats), dates in the language's words and digits.
+- **Offers** (`rec_offers`): HR (`recruitment.manage` where the job is) writes one for an
+  application still going (one live offer at a time): monthly salary in minor units, first day
+  (not before) the day to answer by. Sending: when `recruitment.offer_needs_approval` (default on)
+  someone else holding `recruitment.hire` there approves it or sends it back with a note (never its
+  writer: `own_offer`); then the letter is filled in and kept as sent (encrypted) in the candidate's
+  language and the candidate gets `recruitment.offer_sent` with a link `/careers/{slug}/offer/{token}`
+  (48 characters, only the hash kept; a careers address is needed). The page shows the letter and
+  "I accept / I decline" (a POST; opening the link answers nothing; no scripts, strict CSP, ten
+  answers an hour per address). Answers go to the writer, the approver and the people managing
+  recruitment (`recruitment.offer_answered`, no name or salary in staff mails). Not answered by its
+  day: `recruitment:expire-offers` (hourly) expires it and the link stops working; withdrawn offers'
+  links stop at once. Hiring stays HR's own step; the hire form takes the accepted offer's first day.
+  Bell: offers waiting for one's approval. Audited: written, changed, each step, answers, expiry,
+  letter changes. Forgetting an applicant removes their offers; the data export lists them.
+- **Screens**: the candidate drawer's "Job offer" part (write, change, send, approve / send back,
+  withdraw) and `/recruitment/offers/{id}` (the letter on an A4 page; the browser's print or "Save as
+  PDF"; a draft is marked as such). API: `POST applications/{id}/offers`, `GET|PATCH offers/{id}`,
+  `POST offers/{id}/send|approve|return|withdraw`, `GET|PUT letter`.
+
 ### Future expansion (Recruitment)
 
 A new country, sector or partner: the rules (steps, limits, keeping time); wording of the mails in
-the partner's message editor. No code change. Later: offer letters (REC-3).
+the partner's message editor and the offer letter's wording (rule or the company's own). No code change.
 
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 
