@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advanceTone, amountToMinor, kmToTenths, mileageAmount, minorToText, monthsFrom, nameIn, needsReceipt, statusTone, tenthsToKm } from '../../Modules/Expenses/resources/js/lib';
+import { advanceTone, amountToMinor, dayOf, kmToTenths, mileageAmount, minorToText, monthsFrom, nameIn, needsReceipt, statusTone, tenthsToKm } from '../../Modules/Expenses/resources/js/lib';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Expenses/resources/js/locales/en/expenses.json';
 import bn from '../../Modules/Expenses/resources/js/locales/bn/expenses.json';
@@ -50,6 +50,11 @@ describe('expenses helpers', () => {
         expect(nameIn(null)).toBe('');
         expect(advanceTone('settled')).toBe('ok');
         expect(advanceTone('submitted')).toBe('warn');
+    });
+
+    it('dates a new expense by the reader clock: 1:30 at night is today, not yesterday as in UTC', () => {
+        expect(dayOf(new Date(2026, 9, 28, 1, 30))).toBe('2026-10-28');
+        expect(dayOf(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
     });
 
     it('steps months for paying with a salary, and tones each status', () => {

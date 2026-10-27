@@ -146,9 +146,9 @@ function afterFeedback() {
 
 <template>
     <AppDrawer :open="open" :title="item?.name ?? t('recruitment.drawer.title')" width="sm:max-w-[620px]" @close="emit('close')">
-        <ErrorState v-if="error" compact :error="error" @retry="load" />
-        <SkeletonRows v-else-if="!item" :rows="5" />
-        <div v-else class="space-y-5">
+        <ErrorState v-if="error" compact class="m-5" :error="error" @retry="load" />
+        <SkeletonRows v-else-if="!item" class="px-5 py-5 sm:px-6" :rows="5" />
+        <div v-else class="space-y-5 px-5 py-5 sm:px-6">
             <header class="space-y-2">
                 <p class="flex flex-wrap items-center gap-2">
                     <AppBadge :tone="applicationTone(item.status)">{{ t(`recruitment.status.${item.status}`) }}</AppBadge>
@@ -244,7 +244,7 @@ function afterFeedback() {
             </section>
         </div>
         <template v-if="item && (can.manage || can.hire)" #footer>
-            <div class="flex w-full flex-wrap justify-between gap-2">
+            <div class="flex w-full flex-wrap justify-between gap-2 border-t border-line px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-6">
                 <div class="flex flex-wrap gap-2">
                     <AppButton v-if="can.manage" variant="danger-soft" :icon="X" :loading="busy" @click="end('reject')">{{ t('recruitment.drawer.reject') }}</AppButton>
                     <AppButton v-if="can.manage" variant="ghost" :icon="UserMinus" :loading="busy" @click="end('withdraw')">{{ t('recruitment.drawer.withdraw') }}</AppButton>

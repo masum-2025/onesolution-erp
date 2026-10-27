@@ -6,7 +6,7 @@ import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { amountToMinor, minorToText } from '../lib';
+import { amountToMinor, dayOf, minorToText } from '../lib';
 
 /** A job offer: the monthly salary, the first day and the day to answer by. Written as a draft (or a draft changed). */
 const props = defineProps({
@@ -23,7 +23,7 @@ const form = reactive({ salary: '', start_on: '', respond_by: '' });
 const errors = ref({});
 const saving = ref(false);
 const money = computed(() => props.offer?.currency ?? props.currency);
-const inDays = (days) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+const inDays = (days) => dayOf(days);
 
 watch(() => props.open, (open) => {
     if (!open) return;

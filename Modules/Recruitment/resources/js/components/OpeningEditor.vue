@@ -81,7 +81,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 
 <template>
     <AppDrawer :open="open" :title="opening ? t('recruitment.editor.edit_title') : t('recruitment.editor.new_title')" width="sm:max-w-[640px]" @close="emit('close')">
-        <form id="recruitment-opening" class="space-y-5" novalidate @submit.prevent="save">
+        <form id="recruitment-opening" class="space-y-5 px-5 py-5 sm:px-6" novalidate @submit.prevent="save">
             <TranslatedFields v-model="form.title" :label="t('recruitment.editor.title')" :errors="errors" error-prefix="title" required :maxlength="150" />
             <TranslatedFields v-model="form.description" :label="t('recruitment.editor.description')" :errors="errors" error-prefix="description" multiline :maxlength="8000" />
 
@@ -123,7 +123,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <p class="text-[12.5px] text-muted">{{ form.is_public ? t('recruitment.editor.public_hint') : t('recruitment.editor.private_hint') }}</p>
         </form>
         <template #footer>
-            <div class="flex w-full justify-end gap-2">
+            <div class="flex w-full justify-end gap-2 border-t border-line px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-6">
                 <AppButton variant="ghost" @click="emit('close')">{{ t('recruitment.common.cancel') }}</AppButton>
                 <AppButton variant="primary" type="submit" form="recruitment-opening" :icon="Save" :loading="saving" :disabled="!form.title.en?.trim() || salaryBad">{{ t('recruitment.common.save') }}</AppButton>
             </div>

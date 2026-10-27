@@ -7,7 +7,7 @@ import AppField from '@/components/AppField.vue';
 import { confirmAction } from '@/lib/dialogs';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { amountText, amountToMinor, kmToTenths, mileageAmount, minorToText, nameIn, needsReceipt, newOpId, tenthsToKm } from '../lib';
+import { amountText, amountToMinor, dayOf, kmToTenths, mileageAmount, minorToText, nameIn, needsReceipt, newOpId, tenthsToKm } from '../lib';
 
 /**
  * Writing one's own claim: a title, the expenses (day, kind, what for, the
@@ -43,7 +43,7 @@ let opId = newOpId();
 let saved = '';
 let nextKey = 1;
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => dayOf();
 const kindOf = (id) => props.categories.find((item) => item.id === id) ?? null;
 const blankLine = () => ({ key: nextKey++, id: null, spent_on: today(), category_id: props.categories[0]?.id ?? '', description: '', amount: '', km: '', per_diem_code: props.perDiemRates[0]?.code ?? '', days: '' });
 const rateOf = (code) => props.perDiemRates.find((rate) => rate.code === code)?.amount_minor ?? 0;
@@ -82,7 +82,7 @@ const wantsReceipt = (line) => needsReceipt({ mileage: kindOf(line.category_id)?
 const oldest = computed(() => {
     const date = new Date();
     date.setDate(date.getDate() - (props.limits.max_claim_age_days ?? 60));
-    return date.toISOString().slice(0, 10);
+    return dayOf(date);
 });
 
 function body() {
@@ -207,7 +207,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 
 <template>
     <AppDrawer :open="open" :title="current ? t('expenses.editor.edit_title') : t('expenses.editor.new_title')" width="sm:max-w-[640px]" @close="emit('close')">
-        <form id="expenses-claim" class="space-y-5" novalidate @submit.prevent="save()">
+        <form id="expenses-claim" class="space-y-5 px-5 py-5 sm:px-6" novalidate @submit.prevent="save()">
             <AppField v-slot="{ id }" :label="t('expenses.editor.title')" :hint="t('expenses.editor.title_hint')" :error="fieldError('title')">
                 <input :id="id" v-model="form.title" class="field-input" maxlength="150" />
             </AppField>
@@ -299,7 +299,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <p class="text-[12.5px] text-muted">{{ t('expenses.editor.rules', { amount: amountText(limits.receipt_required_above, currency), days: limits.max_claim_age_days }) }}</p>
         </form>
         <template #footer>
-            <div class="flex w-full flex-wrap items-center justify-between gap-2">
+            <div class="flex w-full flex-wrap items-center justify-between gap-2 border-t border-line px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-6">
                 <AppButton variant="danger-soft" :icon="Trash2" @click="discard">{{ current ? t('expenses.editor.discard') : t('expenses.common.cancel') }}</AppButton>
                 <div class="flex flex-wrap gap-2">
                     <AppButton type="submit" form="expenses-claim" :icon="Save" :loading="saving" :disabled="!ready">{{ t('expenses.editor.save') }}</AppButton>

@@ -11,6 +11,7 @@ import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { i18n, t } from '@/lib/i18n';
+import { formatNumber } from '@/lib/format';
 import { recruitmentApi } from '../api';
 import { nameIn } from '../lib';
 
@@ -95,7 +96,7 @@ async function copy() {
                     <p class="mb-2 text-[13.5px]">{{ t('recruitment.settings.stages') }}</p>
                     <ol class="flex flex-wrap items-center gap-2">
                         <li v-for="(stage, index) in stages" :key="stage.key" class="inline-flex items-center gap-2 text-[13px]">
-                            <span class="rounded-lg bg-subtle px-3 py-1.5">{{ index + 1 }}. {{ nameIn(stage.name, i18n.locale) }}</span>
+                            <span class="rounded-lg bg-subtle px-3 py-1.5">{{ formatNumber(index + 1) }}. {{ nameIn(stage.name, i18n.locale) }}</span>
                             <span v-if="index < stages.length - 1" class="text-muted" aria-hidden="true">→</span>
                         </li>
                     </ol>

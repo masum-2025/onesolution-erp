@@ -6,6 +6,7 @@ import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import { has, t } from '@/lib/i18n';
 import { toast } from '@/lib/toast';
+import { dayOf } from '../lib';
 import PersonPicker from './PersonPicker.vue';
 
 /**
@@ -29,7 +30,7 @@ const emit = defineEmits(['close', 'hired']);
 const form = reactive({ joined_on: '', employment_type: '', manager: null });
 const errors = ref({});
 const saving = ref(false);
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => dayOf();
 
 watch(() => props.open, (open) => {
     if (!open) return;

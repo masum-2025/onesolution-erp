@@ -88,9 +88,9 @@ const methods = (withSalary) => ['cash', 'bank', ...(withSalary && props.payroll
 
 <template>
     <AppDrawer :open="open" :title="item?.number ?? t('expenses.advance.title')" width="sm:max-w-[560px]" @close="emit('close')">
-        <ErrorState v-if="error" compact :error="error" @retry="load" />
-        <SkeletonRows v-else-if="!item" :rows="4" />
-        <div v-else class="space-y-5">
+        <ErrorState v-if="error" compact class="m-5" :error="error" @retry="load" />
+        <SkeletonRows v-else-if="!item" class="px-5 py-5 sm:px-6" :rows="4" />
+        <div v-else class="space-y-5 px-5 py-5 sm:px-6">
             <header class="space-y-1">
                 <p class="text-[15px] font-semibold">{{ item.purpose }}</p>
                 <p class="text-[13px] text-muted">{{ item.employee.name }}<template v-if="item.settle_by"> · {{ t('expenses.advance.settle_by_on', { date: day(item.settle_by) }) }}</template></p>
@@ -139,7 +139,7 @@ const methods = (withSalary) => ['cash', 'bank', ...(withSalary && props.payroll
             </section>
         </div>
         <template v-if="item && (can.decide || can.withdraw)" #footer>
-            <div class="flex w-full flex-wrap justify-end gap-2">
+            <div class="flex w-full flex-wrap justify-end gap-2 border-t border-line px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-6">
                 <AppButton v-if="can.withdraw" variant="danger-soft" :icon="Undo2" :loading="busy" @click="withdraw">{{ t('expenses.advance.withdraw') }}</AppButton>
                 <template v-if="can.decide">
                     <AppButton variant="danger-soft" :icon="X" :loading="busy" @click="decide('reject')">{{ t('expenses.advance.reject') }}</AppButton>

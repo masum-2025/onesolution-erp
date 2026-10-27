@@ -66,10 +66,15 @@ export function nameIn(texts, locale) {
     return texts[locale] || texts.en || Object.values(texts).find(Boolean) || '';
 }
 
+/** "YYYY-MM-DD" some days from now (today by default), in the reader's clock, not UTC. */
+export function dayOf(days = 0, now = new Date()) {
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+    return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+}
+
 /** "2026-10-30T10:30" for a datetime input, a day ahead at 10:00 by default. */
 export function nextSlot(now = new Date()) {
-    const day = new Date(now.getTime() + 24 * 3600 * 1000);
-    return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}T10:00`;
+    return `${dayOf(1, now)}T10:00`;
 }
 
 /** A new id for one sending (the same id again is the same application). */

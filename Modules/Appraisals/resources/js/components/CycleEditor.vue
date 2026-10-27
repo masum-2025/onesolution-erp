@@ -70,7 +70,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 
 <template>
     <AppDrawer :open="open" :title="cycle ? t('appraisals.editor.edit_title') : t('appraisals.editor.new_title')" width="sm:max-w-[600px]" @close="emit('close')">
-        <form id="appraisals-cycle" class="space-y-5" novalidate @submit.prevent="save">
+        <form id="appraisals-cycle" class="space-y-5 px-5 py-5 sm:px-6" novalidate @submit.prevent="save">
             <p v-if="fixed" class="rounded-lg bg-subtle px-3 py-2 text-[13px]">{{ t('appraisals.editor.fixed') }}</p>
             <template v-else>
                 <TranslatedFields v-model="form.name" :label="t('appraisals.editor.name')" :errors="errors" error-prefix="name" required :maxlength="120" />
@@ -103,7 +103,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <p class="text-[12.5px] text-muted">{{ t('appraisals.editor.hint') }}</p>
         </form>
         <template #footer>
-            <div class="flex w-full justify-end gap-2">
+            <div class="flex w-full justify-end gap-2 border-t border-line px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-6">
                 <AppButton variant="ghost" @click="emit('close')">{{ t('appraisals.common.cancel') }}</AppButton>
                 <AppButton variant="primary" type="submit" form="appraisals-cycle" :icon="Save" :loading="saving" :disabled="(!fixed && !form.name.en?.trim()) || !form.goals_due || !form.manager_due">{{ t('appraisals.common.save') }}</AppButton>
             </div>

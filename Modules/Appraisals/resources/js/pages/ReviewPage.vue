@@ -151,6 +151,7 @@ const shown = (item, which) => item[`${which}_rating`] !== null && item[`${which
                     <span v-if="can.edit_goals" class="tabular text-[13px]" :class="total === 100 ? 'text-ok' : 'text-warn'">{{ t('appraisals.review.total', { total: formatNumber(total) }) }}</span>
                 </div>
                 <template v-if="can.edit_goals">
+                    <p v-if="!goals.length" class="text-[13px] text-muted">{{ t('appraisals.review.no_goals') }}</p>
                     <ol class="space-y-3">
                         <li v-for="(goal, index) in goals" :key="goal.id ?? `new-${index}`" class="grid gap-2 rounded-xl border border-line p-3 sm:grid-cols-[minmax(0,1fr)_110px_auto]">
                             <div class="grid gap-2">
@@ -168,8 +169,8 @@ const shown = (item, which) => item[`${which}_rating`] !== null && item[`${which
                     <div class="mt-3 flex flex-wrap gap-2">
                         <AppButton :icon="Plus" :disabled="goals.length >= 15" @click="goals.push({ id: null, title: '', description: '', weight: Math.max(1, 100 - total) })">{{ t('appraisals.review.add_goal') }}</AppButton>
                         <AppButton :icon="Save" :loading="busy" @click="saveGoals()">{{ t('appraisals.common.save') }}</AppButton>
-                        <AppButton v-if="can.submit_goals" variant="primary" :icon="Send" :loading="busy" @click="sendGoals('submit_goals')">{{ t('appraisals.review.submit_goals') }}</AppButton>
-                        <AppButton v-if="can.approve_goals" variant="primary" :icon="Check" :loading="busy" @click="sendGoals('approve_goals')">{{ t('appraisals.review.approve_goals') }}</AppButton>
+                        <AppButton v-if="can.submit_goals" variant="primary" :icon="Send" :loading="busy" :disabled="!goals.length" @click="sendGoals('submit_goals')">{{ t('appraisals.review.submit_goals') }}</AppButton>
+                        <AppButton v-if="can.approve_goals" variant="primary" :icon="Check" :loading="busy" :disabled="!goals.length" @click="sendGoals('approve_goals')">{{ t('appraisals.review.approve_goals') }}</AppButton>
                     </div>
                 </template>
                 <p v-else-if="!review.goals.length" class="text-[13px] text-muted">{{ review.stage === 'goals' && review.goals_sent ? t('appraisals.review.goals_waiting') : t('appraisals.review.no_goals') }}</p>

@@ -111,9 +111,9 @@ function paid() {
 
 <template>
     <AppDrawer :open="open" :title="claim?.number ?? claim?.title ?? t('expenses.detail.title')" width="sm:max-w-[600px]" @close="emit('close')">
-        <ErrorState v-if="error" compact :error="error" @retry="load" />
-        <SkeletonRows v-else-if="!claim" :rows="4" />
-        <div v-else class="space-y-5">
+        <ErrorState v-if="error" compact class="m-5" :error="error" @retry="load" />
+        <SkeletonRows v-else-if="!claim" class="px-5 py-5 sm:px-6" :rows="4" />
+        <div v-else class="space-y-5 px-5 py-5 sm:px-6">
             <header class="space-y-1">
                 <p class="text-[15px] font-semibold">{{ claim.title }}</p>
                 <p class="text-[13px] text-muted">
@@ -171,7 +171,7 @@ function paid() {
             </section>
         </div>
         <template v-if="claim" #footer>
-            <div class="flex w-full flex-wrap justify-end gap-2">
+            <div class="flex w-full flex-wrap justify-end gap-2 border-t border-line px-5 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:px-6">
                 <template v-if="own">
                     <AppButton v-if="can.withdraw" variant="danger-soft" :icon="Undo2" :loading="busy" @click="withdraw">{{ t('expenses.detail.withdraw') }}</AppButton>
                     <AppButton v-if="can.edit" variant="primary" :icon="PenLine" @click="emit('edit', claim)">{{ t('expenses.detail.edit') }}</AppButton>

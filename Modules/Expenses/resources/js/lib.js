@@ -71,6 +71,11 @@ export function monthOf(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
+/** "YYYY-MM-DD" of a date (today by default), in the reader's clock: not UTC, which is yesterday before 6 am in Dhaka. */
+export function dayOf(date = new Date()) {
+    return `${monthOf(date)}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 /** "2026-10", 3 -> ["2026-10", "2026-11", "2026-12"] */
 export function monthsFrom(month, count) {
     const [year, number] = month.split('-').map(Number);

@@ -104,7 +104,7 @@ return [
 
 Dear {candidate.name},
 
-We are pleased to offer you the position of {job.title} at {company.name} ({unit.name}).
+We are pleased to offer you the position of {job.title} at {company.name}.
 
 Your salary will be {salary} a month, and your first day will be {start_date}.
 
@@ -117,7 +117,7 @@ We look forward to working with you.
 
 প্রিয় {candidate.name},
 
-আমরা আনন্দের সাথে আপনাকে {company.name}-এ ({unit.name}) {job.title} পদে নিয়োগের প্রস্তাব দিচ্ছি।
+আমরা আনন্দের সাথে আপনাকে {company.name}-এ {job.title} পদে নিয়োগের প্রস্তাব দিচ্ছি।
 
 আপনার মাসিক বেতন হবে {salary}, আর প্রথম কর্মদিবস {start_date}।
 
