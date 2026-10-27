@@ -2784,11 +2784,38 @@ Portal: `/portal/expenses` (`GET /api/portal/expenses`, read only: the linked em
 claims). API additions: `GET me` gives `summary` and `currency`; `GET claims` takes `q` and gives
 `meta.payroll` and `meta.can_pay`. No offline claims (receipts are files; not kept on phones).
 
+### Advances and daily allowances (EXP-3)
+
+- **Advances** (`exp_advances`, `exp_advance_moves` append-only, `exp_advance_approvals`): an
+  employee asks for money before spending it (`POST me/advances`: amount, what for, settle-by day;
+  same `op_id` = same advance), at most `expenses.advance_max_open` owed or asked at a time. Decided
+  like a claim (`Deciders`, shared by claims and advances: the manager first, the finance people
+  above `second_approval_above`, never one's own) and paid out in cash or by bank (books: employee
+  advances `expenses.employee_advances`, chart 1160, against cash or bank); expected back by its day
+  or `expenses.advance_settle_days` after payment. A claim may name the employee's paid advance
+  (`advance_id`): when the claim is paid, what is owed goes against the advance first (claims
+  payable against employee advances; `advance_minor` on the claim) and only the rest is paid in
+  cash, by bank or with the salary (`pay_method` `advance` when nothing is left to pay). What is left
+  of an advance comes back (`POST advances/{id}/settle`, `expenses.pay`): handed back in cash or by
+  bank, or from a month's salary. Payroll gained a `DeductionSource` contract (tagged
+  `payroll.deduction_sources`, like `EarningSource`): Expenses' `AdvancesFromSalary` puts an
+  `ADVANCE` deduction on the slip posted to employee advances (not deductions payable), and on
+  `PayrollApproved` the advance is settled. Bell for the finance people: advances past their day.
+  Mails `expenses.advance_submitted`, `expenses.advance_decided`. API: `GET advances[?status=waiting|overdue|…]`,
+  `GET advances/{id}`, `POST advances/{id}/approve|reject|pay|settle`, `GET me/advances/{id}`,
+  `POST me/advances/{id}/withdraw`.
+- **Daily allowances**: a kind of expense marked `per_diem` takes days and a kind of place on its
+  lines (`per_diem_code`, `days`); the amount is days × the rule `expenses.per_diem_rates` (json,
+  per country or company); no receipt needed. A kind is never both by the day and by the kilometre.
+- **Screens**: "My advances" on My expenses (ask, follow, take back), the advance to settle chosen in
+  the claim editor, daily allowance lines (place and days, the amount shown as typed), the
+  "Advances" part of All claims (waiting for me, to pay out, paid out, past their day) with the
+  advance drawer (decide, pay out, settle the rest), the "By day" switch on kinds of expense.
+
 ### Future expansion (Expenses)
 
 A new country, sector or partner: values of the rules (limits, mileage rate, usual kinds) and the
-chart's posting map; a company adds its own kinds. No code change. Later:
-advances and per-diem.
+chart's posting map; a company adds its own kinds; daily rates and advance limits are rules. No code change.
 
 ## Recruitment module (REC-1 backend and careers page, REC-2 screens, REC-3 offers)
 

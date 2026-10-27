@@ -34,6 +34,21 @@ export function expensesApi(organizationId) {
         // { base_version, method: cash | bank | payroll, period }
         pay: (id, body) => api(`${base}/claims/${id}/pay`, { method: 'POST', body }),
 
+        // Advances: one's own, and those of the unit's people.
+        // { amount_minor, purpose, settle_by, op_id }
+        askAdvance: (body) => api(`${base}/me/advances`, { method: 'POST', body }),
+        myAdvance: (id) => api(`${base}/me/advances/${id}`),
+        withdrawAdvance: (id, body) => api(`${base}/me/advances/${id}/withdraw`, { method: 'POST', body }),
+        // status: submitted | approved | paid | settled | rejected | withdrawn | waiting (for me) | overdue
+        advances: (status) => api(`${base}/advances`, { query: { status } }),
+        advance: (id) => api(`${base}/advances/${id}`),
+        // step: approve | reject; body: { base_version, note }
+        decideAdvance: (id, step, body) => api(`${base}/advances/${id}/${step}`, { method: 'POST', body }),
+        // { base_version, method: cash | bank }
+        payAdvance: (id, body) => api(`${base}/advances/${id}/pay`, { method: 'POST', body }),
+        // what is left: { base_version, method: cash | bank | payroll, period }
+        settleAdvance: (id, body) => api(`${base}/advances/${id}/settle`, { method: 'POST', body }),
+
         categories: () => api(`${base}/categories`),
         createCategory: (body) => api(`${base}/categories`, { method: 'POST', body }),
         updateCategory: (id, body) => api(`${base}/categories/${id}`, { method: 'PATCH', body }),

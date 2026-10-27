@@ -45,6 +45,11 @@ class ExpensesException extends TenancyException
         return new self('claim_not_found', 404);
     }
 
+    public static function advanceNotFound(): self
+    {
+        return new self('advance_not_found', 404);
+    }
+
     public static function receiptNotFound(): self
     {
         return new self('receipt_not_found', 404);

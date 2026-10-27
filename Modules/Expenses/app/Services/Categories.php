@@ -56,16 +56,18 @@ class Categories
                     throw ExpensesException::versionConflict(['version' => $category->version]);
                 }
             }
-            $old = $category?->only(['code', 'posting_key', 'mileage', 'is_active']);
+            $old = $category?->only(['code', 'posting_key', 'mileage', 'per_diem', 'is_active']);
             $category ??= new Category(['organization_id' => $company->getKey(), 'version' => 0, 'sort_order' => $this->place->query(Category::class, $company)->count()]);
             $category->fill([
                 'code' => $code, 'posting_key' => $data['posting_key'], 'mileage' => (bool) ($data['mileage'] ?? false),
+                // A daily allowance kind is never also by the kilometre.
+                'per_diem' => (bool) ($data['per_diem'] ?? false) && ! (bool) ($data['mileage'] ?? false),
                 'is_active' => (bool) ($data['is_active'] ?? true),
             ]);
             $category->putTexts('name', $data['name']);
             $category->forceFill(['version' => $category->version + 1])->save();
             $this->audit->record($old === null ? 'expenses.category_added' : 'expenses.category_changed', $category, old: $old ?? [],
-                new: $category->only(['code', 'posting_key', 'mileage', 'is_active']), actor: $actor, organizationId: $company->getKey());
+                new: $category->only(['code', 'posting_key', 'mileage', 'per_diem', 'is_active']), actor: $actor, organizationId: $company->getKey());
 
             return $category;
         });

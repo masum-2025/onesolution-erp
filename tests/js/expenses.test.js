@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountToMinor, kmToTenths, mileageAmount, minorToText, monthsFrom, needsReceipt, statusTone, tenthsToKm } from '../../Modules/Expenses/resources/js/lib';
+import { advanceTone, amountToMinor, kmToTenths, mileageAmount, minorToText, monthsFrom, nameIn, needsReceipt, statusTone, tenthsToKm } from '../../Modules/Expenses/resources/js/lib';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Expenses/resources/js/locales/en/expenses.json';
 import bn from '../../Modules/Expenses/resources/js/locales/bn/expenses.json';
@@ -42,6 +42,14 @@ describe('expenses helpers', () => {
         expect(needsReceipt({ amount_minor: 50001 }, 50000)).toBe(true);
         expect(needsReceipt({ amount_minor: 50000 }, 50000)).toBe(false);
         expect(needsReceipt({ amount_minor: 90000, mileage: true }, 50000)).toBe(false);
+    });
+
+    it('names the daily rates of the rule in the language of the reader, and tones advances', () => {
+        expect(nameIn({ en: 'Outside the city', bn: 'শহরের বাইরে' }, 'bn')).toBe('শহরের বাইরে');
+        expect(nameIn({ en: 'Outside' }, 'bn')).toBe('Outside');
+        expect(nameIn(null)).toBe('');
+        expect(advanceTone('settled')).toBe('ok');
+        expect(advanceTone('submitted')).toBe('warn');
     });
 
     it('steps months for paying with a salary, and tones each status', () => {

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
 /** A kind of expense of the company (travel, meals, ...): its name per language and the posting key it goes to; a mileage kind is paid by kilometre. */
-#[Fillable(['organization_id', 'code', 'posting_key', 'mileage', 'is_active', 'sort_order', 'version'])]
+#[Fillable(['organization_id', 'code', 'posting_key', 'mileage', 'per_diem', 'is_active', 'sort_order', 'version'])]
 class Category extends Model
 {
     use BelongsToOrganization, HasTranslatedTexts, HasUlids, UsesTenantDatabase;
@@ -22,6 +22,6 @@ class Category extends Model
 
     protected function casts(): array
     {
-        return ['mileage' => 'boolean', 'is_active' => 'boolean', 'sort_order' => 'integer', 'version' => 'integer'];
+        return ['mileage' => 'boolean', 'per_diem' => 'boolean', 'is_active' => 'boolean', 'sort_order' => 'integer', 'version' => 'integer'];
     }
 }

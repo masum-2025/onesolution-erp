@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Expenses\Http\Controllers\AdvanceController;
 use Modules\Expenses\Http\Controllers\CategoryController;
 use Modules\Expenses\Http\Controllers\ClaimController;
 use Modules\Expenses\Http\Controllers\MeController;
@@ -21,6 +22,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:expenses'])
         Route::get('claims/{claim}', [ClaimController::class, 'show']);
         Route::get('me', [MeController::class, 'show']);
         Route::get('me/claims/{claim}', [MeController::class, 'claim']);
+        Route::get('me/advances/{advance}', [AdvanceController::class, 'mine']);
+        Route::get('advances', [AdvanceController::class, 'index']);
+        Route::get('advances/{advance}', [AdvanceController::class, 'show']);
 
         // Receipts are read and kept: a few a minute (before me/claims/{claim}/{step}, which would take the path).
         Route::post('me/claims/{claim}/receipts', [MeController::class, 'addReceipt'])->middleware('throttle:expenses-uploads');
@@ -30,6 +34,11 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:expenses'])
             Route::patch('categories/{category}', [CategoryController::class, 'update']);
             Route::post('categories/defaults', [CategoryController::class, 'defaults']);
             Route::post('claims/{claim}/pay', [ClaimController::class, 'pay']);
+            Route::post('me/advances', [AdvanceController::class, 'ask']);
+            Route::post('me/advances/{advance}/withdraw', [AdvanceController::class, 'withdraw']);
+            Route::post('advances/{advance}/pay', [AdvanceController::class, 'pay']);
+            Route::post('advances/{advance}/settle', [AdvanceController::class, 'settle']);
+            Route::post('advances/{advance}/{step}', [AdvanceController::class, 'decide']);
             Route::post('claims/{claim}/{step}', [ClaimController::class, 'decide']);
             Route::post('me/claims', [MeController::class, 'store']);
             Route::patch('me/claims/{claim}', [MeController::class, 'update']);

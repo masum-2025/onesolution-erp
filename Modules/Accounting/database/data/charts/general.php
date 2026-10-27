@@ -94,6 +94,7 @@ return [
         'expenses.claims_payable' => '2140',
         'expenses.cash_account' => '1110',
         'expenses.bank_account' => '1120',
+        'expenses.employee_advances' => '1160',
         'inventory.stock' => '1150',
         'inventory.grni' => '2115',
         'inventory.cogs' => '5100',

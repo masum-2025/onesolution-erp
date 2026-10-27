@@ -16,6 +16,7 @@ use Modules\Attendance\Services\AttendanceSummary;
 use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Hrm\Directory\EmployeeRecord;
 use Modules\Payroll\Contracts\DaysToPay;
+use Modules\Payroll\Contracts\DeductionSource;
 use Modules\Payroll\Contracts\EarningSource;
 use Modules\Payroll\Events\PayrollApproved;
 use Modules\Payroll\Exceptions\PayrollException;
@@ -103,8 +104,9 @@ class Runs
             $ids = array_values(array_map(fn (EmployeeRecord $employee) => $employee->id, $employees));
             $earnings = $this->earnings($company, $ids, $run);
             $paidDays = $this->daysToPay($company, $ids, $run);
+            $deductions = $this->deductions($company, $ids, $run);
             foreach ($employees as $employee) {
-                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components, $earnings[$employee->id] ?? [], $paidDays[$employee->id] ?? []);
+                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components, $earnings[$employee->id] ?? [], $paidDays[$employee->id] ?? [], $deductions[$employee->id] ?? []);
             }
 
             $this->totals($company, $run);
@@ -246,8 +248,9 @@ class Runs
      * @param  Collection<int, Adjustment>  $adjustments
      * @param  Collection<string, Component>  $components
      * @param  list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>  $earnings  From other modules (EarningSource).
+     * @param  list<array{code: string, name: array<string, string>, amount: int, posting_key?: string|null}>  $deductions  From other modules (DeductionSource).
      */
-    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components, array $earnings = [], array $paidDays = []): void
+    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components, array $earnings = [], array $paidDays = [], array $deductions = []): void
     {
         $from = $run->period_from->max($employee->joinedOn);
         $to = $employee->exitsOn === null ? $run->period_to : $run->period_to->min($employee->exitsOn);
@@ -282,6 +285,7 @@ class Runs
             'adjustments' => $adjustments->map(fn (Adjustment $adjustment) => ['kind' => $adjustment->kind, 'label' => $adjustment->label, 'amount' => $adjustment->amount_minor, 'taxable' => $adjustment->taxable])->values()->all(),
             'loans' => $loans,
             'earnings' => $earnings,
+            'deductions' => $deductions,
             'paid_days' => $paidDays,
             ...($this->pfShares($employee) === null ? [] : ['pf' => $this->pfShares($employee)]),
         ], $this->ruleSet($employee));
@@ -313,6 +317,32 @@ class Runs
                 continue;
             }
             foreach ($source->earnings($company, $employeeIds, $run->period_from, $run->period_to) as $employeeId => $lines) {
+                foreach ($lines as $line) {
+                    if (in_array($employeeId, $employeeIds, true) && (int) $line['amount'] > 0) {
+                        $all[$employeeId][] = $line;
+                    }
+                }
+            }
+        }
+
+        return $all;
+    }
+
+    /**
+     * What other modules recover from the month's pay (DeductionSource, tagged
+     * "payroll.deduction_sources"), per employee; positive amounts only.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, list<array{code: string, name: array<string, string>, amount: int, posting_key?: string|null}>>
+     */
+    private function deductions(Organization $company, array $employeeIds, Run $run): array
+    {
+        $all = [];
+        foreach (app()->tagged('payroll.deduction_sources') as $source) {
+            if (! $source instanceof DeductionSource) {
+                continue;
+            }
+            foreach ($source->deductions($company, $employeeIds, $run->period_from, $run->period_to) as $employeeId => $lines) {
                 foreach ($lines as $line) {
                     if (in_array($employeeId, $employeeIds, true) && (int) $line['amount'] > 0) {
                         $all[$employeeId][] = $line;
@@ -397,6 +427,9 @@ class Runs
         foreach ($elsewhere->groupBy('posting_key') as $key => $group) {
             $lines[] = LedgerLine::debit((string) $key, (int) $group->sum('amount_minor'));
         }
+        // Deductions another module says go elsewhere (DeductionSource posting_key: an advance recovered) settle that account.
+        $recovered = $this->payrolls->query(SlipLine::class, $company)->whereIn('slip_id', $slips->modelKeys())->where('kind', 'deduction')
+            ->whereNotNull('posting_key')->get(['posting_key', 'amount_minor']);
         $loans = (int) $this->payrolls->query(LoanInstallment::class, $company)->where('run_id', $run->getKey())->where('status', LoanInstallment::RECOVERED)->sum('amount_minor');
         $fund = $this->payrolls->query(PfEntry::class, $company)->where('run_id', $run->getKey())->get(['employee_minor', 'employer_minor']);
         $pfEmployee = (int) $fund->sum('employee_minor');
@@ -404,7 +437,10 @@ class Runs
         $lines[] = LedgerLine::debit('payroll.pf_employer_expense', $pfEmployer);
         $lines[] = LedgerLine::credit('payroll.salaries_payable', $run->net_minor);
         $lines[] = LedgerLine::credit('payroll.tax_payable', $run->tax_minor);
-        $lines[] = LedgerLine::credit('payroll.deductions_payable', $run->deductions_minor - $loans - $pfEmployee);
+        $lines[] = LedgerLine::credit('payroll.deductions_payable', $run->deductions_minor - $loans - $pfEmployee - (int) $recovered->sum('amount_minor'));
+        foreach ($recovered->groupBy('posting_key') as $key => $group) {
+            $lines[] = LedgerLine::credit((string) $key, (int) $group->sum('amount_minor'));
+        }
         $lines[] = LedgerLine::credit('payroll.employee_loans', $loans);
         $lines[] = LedgerLine::credit('payroll.pf_payable', $pfEmployee + $pfEmployer);
 

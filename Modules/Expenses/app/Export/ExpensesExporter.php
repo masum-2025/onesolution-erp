@@ -5,6 +5,9 @@ namespace Modules\Expenses\Export;
 use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
+use Illuminate\Database\Eloquent\Model;
+use Modules\Expenses\Models\Advance;
+use Modules\Expenses\Models\AdvanceMove;
 use Modules\Expenses\Models\Approval;
 use Modules\Expenses\Models\Category;
 use Modules\Expenses\Models\Claim;
@@ -46,11 +49,20 @@ class ExpensesExporter implements ExportsModuleData
             'receipts' => $this->rows(Receipt::class, $organization, $organizationIds, fn (Receipt $receipt) => [
                 'claim_id' => $receipt->claim_id, 'line_id' => $receipt->line_id, 'name' => $receipt->name, 'mime' => $receipt->mime, 'size_bytes' => $receipt->size_bytes,
             ]),
+            'advances' => $this->rows(Advance::class, $organization, $organizationIds, fn (Advance $advance) => [
+                'id' => $advance->getKey(), 'number' => $advance->number, 'unit_id' => $advance->unit_id, 'employee_id' => $advance->employee_id, 'purpose' => $advance->purpose,
+                'currency' => $advance->currency, 'amount_minor' => $advance->amount_minor, 'status' => $advance->status, 'settle_by' => $advance->settle_by?->toDateString(),
+                'pay_method' => $advance->pay_method, 'paid_at' => $advance->paid_at?->toIso8601String(), 'settled_at' => $advance->settled_at?->toIso8601String(),
+            ]),
+            'advance_moves' => $this->rows(AdvanceMove::class, $organization, $organizationIds, fn (AdvanceMove $move) => [
+                'advance_id' => $move->advance_id, 'kind' => $move->kind, 'amount_minor' => $move->amount_minor, 'claim_id' => $move->claim_id,
+                'method' => $move->method, 'at' => $move->created_at?->toIso8601String(),
+            ]),
         ];
     }
 
     /**
-     * @param  class-string<\Illuminate\Database\Eloquent\Model>  $model
+     * @param  class-string<Model>  $model
      * @param  list<string>  $organizationIds
      * @return iterable<array<string, mixed>>
      */

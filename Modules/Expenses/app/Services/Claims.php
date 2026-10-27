@@ -13,7 +13,6 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Services\OrganizationSettingsResolver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Modules\Accounting\Ledger\LedgerLine;
 use Modules\Expenses\Exceptions\ExpensesException;
@@ -63,13 +62,15 @@ class Claims
             }
         }
         $lines = $this->checkedLines($company, $data['lines']);
+        // An advance it settles: the employee's own, paid and not settled yet.
+        $advance = empty($data['advance_id']) ? null : app(Advances::class)->openFor($company, $employee->id, $data['advance_id']);
 
-        return $this->place->transaction($company, function () use ($company, $employee, $data, $lines, $actor) {
+        return $this->place->transaction($company, function () use ($company, $employee, $data, $lines, $actor, $advance) {
             $claim = new Claim;
             $claim->fill([
                 'organization_id' => $company->getKey(), 'unit_id' => $employee->unitId, 'employee_id' => $employee->id,
                 'title' => trim($data['title']), 'currency' => $this->currency($company), 'status' => Claim::DRAFT,
-                'requested_by' => $actor->getKey(), 'op_id' => $data['op_id'] ?? null, 'version' => 1,
+                'requested_by' => $actor->getKey(), 'op_id' => $data['op_id'] ?? null, 'advance_id' => $advance?->getKey(), 'version' => 1,
             ])->save();
             $this->writeLines($company, $claim, $lines);
 
@@ -94,6 +95,9 @@ class Claims
             }
             if (isset($data['title'])) {
                 $claim->title = trim($data['title']);
+            }
+            if (array_key_exists('advance_id', $data)) {
+                $claim->advance_id = empty($data['advance_id']) ? null : app(Advances::class)->openFor($company, $claim->employee_id, $data['advance_id'])->getKey();
             }
             if ($lines !== null) {
                 $this->writeLines($company, $claim, $lines);
@@ -136,7 +140,7 @@ class Claims
             $needs = (int) $this->rules->get('expenses.receipt_required_above', $context);
             $withReceipt = $this->place->query(Receipt::class, $company)->where('claim_id', $claim->getKey())->pluck('line_id')->filter()->all();
             foreach ($lines as $line) {
-                if ($line->distance_tenths === null && $line->amount_minor > $needs && ! in_array($line->getKey(), $withReceipt, true)) {
+                if ($line->distance_tenths === null && $line->per_diem_code === null && $line->amount_minor > $needs && ! in_array($line->getKey(), $withReceipt, true)) {
                     throw ExpensesException::receiptNeeded($line->line_no);
                 }
             }
@@ -175,31 +179,9 @@ class Claims
         if ($claim->status !== Claim::SUBMITTED) {
             return false;
         }
-        $employee = $this->directory->find($company, $claim->employee_id);
-        if ($employee === null || $claim->requested_by === $actor->getKey() || $employee->userId === $actor->getKey()) {
-            return false;
-        }
-        $unit = Organization::query()->find($claim->unit_id);
-        if ($unit === null) {
-            return false;
-        }
-        $decided = $this->place->query(Approval::class, $company)->where('claim_id', $claim->getKey())->where('user_id', $actor->getKey())->exists();
-        if ($decided) {
-            return false;
-        }
-        // The second step is the finance people's.
-        if ($claim->steps_done >= 1) {
-            return Gate::forUser($actor)->allows('expenses.pay', $unit);
-        }
-        if (! Gate::forUser($actor)->any(['expenses.approve', 'expenses.manage'], $unit)) {
-            return false;
-        }
-        if (Gate::forUser($actor)->allows('expenses.manage', $unit)) {
-            return true;
-        }
-        $manager = $this->managerUser($company, $employee, $unit);
+        $decided = $this->place->query(Approval::class, $company)->where('claim_id', $claim->getKey())->pluck('user_id')->map(fn ($id) => (string) $id)->all();
 
-        return $manager === null || $manager === $actor->getKey();
+        return app(Deciders::class)->canDecide($company, $claim->unit_id, $claim->employee_id, $claim->requested_by, $claim->steps_done, $decided, $actor);
     }
 
     public function approve(Organization $company, Claim $claim, int $baseVersion, ?string $note, User $actor): Claim
@@ -253,6 +235,18 @@ class Claims
             if ($claim->status !== Claim::APPROVED) {
                 throw ExpensesException::notPayable();
             }
+            // The advance it settles goes first (owed to the employee against the advance, as far as it goes).
+            if ($claim->advance_id !== null && $claim->advance_minor === 0) {
+                $claim->advance_minor = app(Advances::class)->settleByClaim($company, $claim, $actor);
+            }
+            $rest = $claim->total_minor - $claim->advance_minor;
+            if ($rest <= 0) {
+                $claim->forceFill(['status' => Claim::PAID, 'pay_method' => 'advance', 'pay_period' => null, 'paid_at' => now(), 'paid_by' => $actor->getKey(), 'version' => $claim->version + 1])->save();
+                $this->audit->record('expenses.paid', $claim, new: $this->values($claim), actor: $actor, organizationId: $company->getKey());
+                $this->tell('expenses.paid', $company, $claim, $this->claimant($company, $claim));
+
+                return $claim;
+            }
             if ($data['method'] === 'payroll') {
                 if (! $this->modules->isEnabled('payroll', $company)) {
                     throw ExpensesException::payrollOff();
@@ -269,7 +263,7 @@ class Claims
             $account = $data['method'] === 'bank' ? 'expenses.bank_account' : 'expenses.cash_account';
             $journal = $this->postings->post($company, "expense-payment-{$claim->getKey()}", $this->place->today($company),
                 __('expenses::expenses.narration.payment', ['number' => $claim->number]), 'payment', $claim->getKey(), $claim->currency,
-                [LedgerLine::debit('expenses.claims_payable', $claim->total_minor), LedgerLine::credit($account, $claim->total_minor)]);
+                [LedgerLine::debit('expenses.claims_payable', $rest), LedgerLine::credit($account, $rest)]);
             $claim->forceFill([
                 'status' => Claim::PAID, 'pay_method' => $data['method'], 'pay_period' => null, 'paid_at' => now(), 'paid_by' => $actor->getKey(),
                 'payment_journal_id' => $journal, 'version' => $claim->version + 1,
@@ -306,24 +300,15 @@ class Claims
     public function dueWithSalary(Organization $company, array $employeeIds, string $period): array
     {
         return $this->place->query(Claim::class, $company)->where('status', Claim::APPROVED)->where('pay_method', 'payroll')
-            ->where('pay_period', $period)->whereIn('employee_id', $employeeIds)->get(['employee_id', 'total_minor'])
-            ->groupBy('employee_id')->map(fn (Collection $claims) => (int) $claims->sum('total_minor'))->all();
+            ->where('pay_period', $period)->whereIn('employee_id', $employeeIds)->get(['employee_id', 'total_minor', 'advance_minor'])
+            // Only what an advance did not settle is paid with the salary.
+            ->groupBy('employee_id')->map(fn (Collection $claims) => (int) $claims->sum(fn (Claim $claim) => $claim->total_minor - $claim->advance_minor))->all();
     }
 
     /** The people who may decide the claim's next step (for telling them). */
     public function approvers(Organization $company, Claim $claim): Collection
     {
-        $unit = Organization::query()->find($claim->unit_id);
-        if ($unit === null) {
-            return collect();
-        }
-        if ($claim->steps_done >= 1) {
-            return $this->recipients->holding('expenses.pay', $unit);
-        }
-        $employee = $this->directory->find($company, $claim->employee_id);
-        $manager = $employee === null ? null : $this->managerUser($company, $employee, $unit);
-
-        return $manager === null ? $this->recipients->holding('expenses.approve', $unit) : User::query()->whereKey($manager)->get();
+        return app(Deciders::class)->approvers($company, $claim->unit_id, $claim->employee_id, $claim->steps_done);
     }
 
     /**
@@ -339,6 +324,7 @@ class Claims
         $today = $this->place->today($company);
         $oldest = $today->subDays((int) $this->rules->get('expenses.max_claim_age_days', $context));
         $rate = (int) $this->rules->get('expenses.mileage_rate', $context);
+        $perDiem = collect((array) $this->rules->get('expenses.per_diem_rates', $context))->keyBy('code');
         $categories = $this->place->query(Category::class, $company)->whereKey(array_column($lines, 'category_id'))->get()->keyBy(fn (Category $category) => $category->getKey());
         $errors = [];
         $checked = [];
@@ -357,8 +343,22 @@ class Claims
                 $errors["lines.{$index}.spent_on"] = __('expenses::expenses.validation.too_old', ['days' => $today->diffInDays($oldest)]);
             }
             $distance = null;
+            $code = null;
+            $days = null;
             $amount = (int) ($line['amount_minor'] ?? 0);
-            if ($category->mileage) {
+            if ($category->per_diem) {
+                // Days at a daily rate of the rule (by kind of place), no receipt needed.
+                $code = (string) ($line['per_diem_code'] ?? '');
+                $days = (int) ($line['days'] ?? 0);
+                $daily = (int) ($perDiem[$code]['amount_minor'] ?? 0);
+                if ($daily <= 0) {
+                    $errors["lines.{$index}.per_diem_code"] = __('expenses::expenses.validation.per_diem_rate');
+                }
+                if ($days <= 0) {
+                    $errors["lines.{$index}.days"] = __('expenses::expenses.validation.days');
+                }
+                $amount = $days * $daily;
+            } elseif ($category->mileage) {
                 $distance = (int) ($line['distance_tenths'] ?? 0);
                 if ($distance <= 0 || $rate <= 0) {
                     $errors["lines.{$index}.distance_tenths"] = __($rate <= 0 ? 'expenses::expenses.validation.no_mileage_rate' : 'expenses::expenses.validation.distance');
@@ -371,6 +371,7 @@ class Claims
             $checked[] = [
                 'id' => $line['id'] ?? null, 'spent_on' => $day->toDateString(), 'category_id' => $category->getKey(),
                 'description' => trim((string) $line['description']), 'amount_minor' => $amount, 'distance_tenths' => $distance,
+                'per_diem_code' => $code, 'days' => $days,
             ];
         }
         if ($errors !== []) {
@@ -450,19 +451,6 @@ class Claims
         }
 
         return $fresh;
-    }
-
-    /** The employee's manager, when they hold expenses.approve where the employee works. */
-    private function managerUser(Organization $company, EmployeeRecord $employee, Organization $unit): ?string
-    {
-        $manager = $employee->managerId === null ? null : $this->directory->find($company, $employee->managerId);
-        if ($manager?->userId === null) {
-            return null;
-        }
-        // Gates answer for the signed-in person's context; for someone else ask who holds the permission there.
-        $holds = $this->recipients->holding('expenses.approve', $unit)->contains(fn (User $user) => $user->getKey() === $manager->userId);
-
-        return $holds ? $manager->userId : null;
     }
 
     private function record(Organization $company, Claim $claim, int $step, string $decision, ?string $note, User $actor): void

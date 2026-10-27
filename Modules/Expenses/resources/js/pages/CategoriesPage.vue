@@ -47,11 +47,11 @@ async function addDefaults() {
 const editing = ref(null);
 const saving = ref(false);
 const errors = ref({});
-const blank = () => ({ code: '', name: { en: '', bn: '' }, posting_key: 'expenses.other', mileage: false, is_active: true });
+const blank = () => ({ code: '', name: { en: '', bn: '' }, posting_key: 'expenses.other', mileage: false, per_diem: false, is_active: true });
 const form = reactive(blank());
 
 function edit(kind = null) {
-    Object.assign(form, blank(), kind ? { code: kind.code, name: { en: kind.names.en ?? '', bn: kind.names.bn ?? '' }, posting_key: kind.posting_key, mileage: kind.mileage, is_active: kind.is_active } : {});
+    Object.assign(form, blank(), kind ? { code: kind.code, name: { en: kind.names.en ?? '', bn: kind.names.bn ?? '' }, posting_key: kind.posting_key, mileage: kind.mileage, per_diem: kind.per_diem, is_active: kind.is_active } : {});
     errors.value = {};
     editing.value = kind ?? 'new';
 }
@@ -62,6 +62,7 @@ async function save() {
         name: Object.fromEntries(Object.entries(form.name).filter(([, value]) => value?.trim())),
         posting_key: form.posting_key,
         mileage: form.mileage,
+        per_diem: form.per_diem && !form.mileage,
     };
     saving.value = true;
     errors.value = {};
@@ -110,6 +111,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                         <span class="block text-[12.5px] text-muted">{{ t('expenses.categories.goes_to', { account: keyLabel(kind.posting_key) }) }}</span>
                     </span>
                     <AppBadge v-if="kind.mileage" tone="brand">{{ t('expenses.categories.by_km') }}</AppBadge>
+                    <AppBadge v-if="kind.per_diem" tone="brand">{{ t('expenses.categories.by_day') }}</AppBadge>
                     <AppBadge v-if="!kind.is_active" tone="neutral">{{ t('expenses.categories.off') }}</AppBadge>
                     <AppButton v-if="canManage" size="icon-sm" variant="ghost" :icon="PenLine" :aria-label="t('expenses.categories.edit')" @click="edit(kind)" />
                 </li>
@@ -130,10 +132,12 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     </select>
                 </AppField>
                 <div class="grid gap-3 sm:col-span-3 sm:grid-cols-2">
-                    <AppSwitch v-model="form.mileage" :label="t('expenses.categories.mileage')" show-label />
+                    <AppSwitch v-model="form.mileage" :label="t('expenses.categories.mileage')" show-label :disabled="form.per_diem" />
+                    <AppSwitch v-model="form.per_diem" :label="t('expenses.categories.per_diem')" show-label :disabled="form.mileage" />
                     <AppSwitch v-if="editing !== 'new'" v-model="form.is_active" :label="t('expenses.categories.active')" show-label />
                 </div>
                 <p v-if="form.mileage" class="text-[12.5px] text-muted sm:col-span-3">{{ t('expenses.categories.mileage_hint') }}</p>
+                <p v-if="form.per_diem" class="text-[12.5px] text-muted sm:col-span-3">{{ t('expenses.categories.per_diem_hint') }}</p>
             </form>
             <template #footer>
                 <AppButton variant="ghost" @click="editing = null">{{ t('expenses.common.cancel') }}</AppButton>

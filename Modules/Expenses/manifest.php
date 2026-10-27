@@ -5,6 +5,7 @@
 | Business numbers never live here; they are rules (Rules::get('expenses.*')).
 */
 
+use Modules\Expenses\Dashboard\AdvancesOverdue;
 use Modules\Expenses\Dashboard\ClaimsWaiting;
 use Modules\Expenses\Dashboard\SpentThisMonth;
 
@@ -99,6 +100,44 @@ return [
             'category' => 'expenses',
             'sort_order' => 60,
         ],
+        [
+            // Daily allowances by kind of place, minor units a day (PLACEHOLDERS for Bangladesh taka).
+            'key' => 'expenses.per_diem_rates',
+            'type' => 'json',
+            'schema' => [
+                'type' => 'array', 'maxItems' => 20,
+                'items' => [
+                    'type' => 'object', 'required' => ['code', 'name', 'amount_minor'], 'additionalProperties' => false,
+                    'properties' => [
+                        'code' => ['type' => 'string', 'maxLength' => 20],
+                        'name' => ['type' => 'object'],
+                        'amount_minor' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 100000000],
+                    ],
+                ],
+            ],
+            'default' => [
+                ['code' => 'CITY', 'name' => ['en' => 'In the city', 'bn' => 'শহরের ভেতরে'], 'amount_minor' => 50000],
+                ['code' => 'OUTSIDE', 'name' => ['en' => 'Outside the city', 'bn' => 'শহরের বাইরে'], 'amount_minor' => 100000],
+            ],
+            'label' => 'expenses::rules.per_diem_rates.label',
+            'description' => 'expenses::rules.per_diem_rates.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'expenses',
+            'sort_order' => 70,
+        ],
+        // At most this much in advances owed or asked for by one employee at a time.
+        $money('advance_max_open', 5000000, 80),
+        [
+            'key' => 'expenses.advance_settle_days',
+            'type' => 'integer',
+            'schema' => ['minimum' => 1, 'maximum' => 365],
+            'default' => 30,
+            'label' => 'expenses::rules.advance_settle_days.label',
+            'description' => 'expenses::rules.advance_settle_days.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'expenses',
+            'sort_order' => 90,
+        ],
     ],
     'menu' => [
         [
@@ -126,7 +165,7 @@ return [
         ['key' => 'waiting', 'label' => 'expenses::dashboard.waiting', 'type' => 'stat', 'provider' => ClaimsWaiting::class, 'permission' => 'expenses.approve', 'overview' => true],
         ['key' => 'spent', 'label' => 'expenses::dashboard.spent', 'type' => 'stat', 'provider' => SpentThisMonth::class, 'permission' => 'expenses.pay'],
     ]],
-    'attention' => [ClaimsWaiting::class],
+    'attention' => [ClaimsWaiting::class, AdvancesOverdue::class],
     'notifications' => [
         'expenses.submitted' => [
             'channels' => ['mail'],
@@ -135,6 +174,20 @@ return [
             'path' => '/expenses/approvals',
         ],
         'expenses.decided' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'employee', 'number', 'amount', 'decision', 'note', 'link'],
+            'audience' => 'client',
+            'path' => '/expenses/me',
+        ],
+        // To the people who decide the next step of an advance.
+        'expenses.advance_submitted' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'employee', 'number', 'amount', 'link'],
+            'audience' => 'client',
+            'path' => '/expenses/claims',
+        ],
+        // To the employee: their advance approved, rejected or paid.
+        'expenses.advance_decided' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'employee', 'number', 'amount', 'decision', 'note', 'link'],
             'audience' => 'client',
@@ -157,6 +210,7 @@ return [
         'expenses.claims_payable' => ['label' => 'expenses::expenses.posting_keys.claims_payable', 'type' => 'liability'],
         'expenses.cash_account' => ['label' => 'expenses::expenses.posting_keys.cash_account', 'type' => 'asset'],
         'expenses.bank_account' => ['label' => 'expenses::expenses.posting_keys.bank_account', 'type' => 'asset'],
+        'expenses.employee_advances' => ['label' => 'expenses::expenses.posting_keys.employee_advances', 'type' => 'asset'],
     ],
     'settings' => ['pages' => [
         ['key' => 'categories', 'label' => 'expenses::module.menu_categories', 'route' => '/expenses/categories', 'permission' => 'expenses.manage'],

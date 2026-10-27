@@ -14,6 +14,7 @@ use Modules\Expenses\Http\Controllers\Concerns\FindsPlace;
 use Modules\Expenses\Http\ExpensesPresenter;
 use Modules\Expenses\Http\Requests\ClaimRequest;
 use Modules\Expenses\Http\Requests\ReceiptRequest;
+use Modules\Expenses\Models\Advance;
 use Modules\Expenses\Models\Claim;
 use Modules\Expenses\Models\Receipt;
 use Modules\Expenses\Services\Categories;
@@ -61,7 +62,11 @@ class MeController extends Controller
                 'max_claim_age_days' => (int) $rules->get('expenses.max_claim_age_days', $context),
                 'mileage_rate' => (int) $rules->get('expenses.mileage_rate', $context),
                 'receipt_max_kb' => (int) $rules->get('expenses.receipt_max_kb', $context),
+                'advance_max_open' => (int) $rules->get('expenses.advance_max_open', $context),
             ],
+            'per_diem_rates' => array_values((array) $rules->get('expenses.per_diem_rates', $context)),
+            // One's own advances (the open ones and the last few).
+            'advances' => $this->presenter->advances($company, $this->place->query(Advance::class, $company)->where('employee_id', $me->id)->orderByDesc('created_at')->limit(50)->get()),
             'payroll' => $modules->isEnabled('payroll', $company),
             'currency' => $this->claims->currency($company),
         ]]);

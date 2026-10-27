@@ -5,7 +5,9 @@
         "save": "Save",
         "km": "{km} km",
         "lines_one": "{count} expense",
-        "lines_other": "{count} expenses"
+        "lines_other": "{count} expenses",
+        "days_one": "{count} day",
+        "days_other": "{count} days"
     },
     "status": {
         "draft": "Draft",
@@ -67,7 +69,14 @@
         "discard": "Delete draft",
         "discard_title": "Delete this draft?",
         "discard_text": "The draft and its receipts are removed. This cannot be undone.",
-        "discarded": "Draft deleted."
+        "discarded": "Draft deleted.",
+        "per_diem_place": "Where",
+        "days": "Days",
+        "days_amount": "= {amount}",
+        "advance": "Settles an advance",
+        "advance_hint": "What you spent is taken from the advance first; you get only what is above it.",
+        "no_advance": "No advance",
+        "advance_left": "{amount} left"
     },
     "detail": {
         "title": "Claim",
@@ -95,7 +104,10 @@
         "withdraw": "Take back",
         "withdraw_title": "Take this claim back?",
         "withdraw_text": "{number} will not be decided. You can start a new claim later.",
-        "withdrawn": "Claim taken back."
+        "withdrawn": "Claim taken back.",
+        "paid_advance": "Settled by the advance",
+        "from_advance": "Taken from the advance",
+        "advance_named": "Settles an advance: what is owed goes against it first."
     },
     "pay": {
         "title": "Pay back",
@@ -135,7 +147,9 @@
         "empty_submitted": "No claims waiting",
         "empty_paid": "No paid claims yet",
         "empty_rejected": "No rejected claims",
-        "empty_all": "No claims yet"
+        "empty_all": "No claims yet",
+        "part_claims": "Claims",
+        "part_advances": "Advances"
     },
     "categories": {
         "title": "Kinds of expense",
@@ -162,12 +176,77 @@
             "office": "Office supplies",
             "communication": "Phone and internet",
             "other": "Other expenses"
-        }
+        },
+        "by_day": "By day",
+        "per_diem": "Daily allowance (by day)",
+        "per_diem_hint": "People write the days and choose the place; the amount is the rule's daily rate. No receipt needed."
     },
     "portal": {
         "title": "My expense claims",
         "text": "Where your claims stand. To claim, use the app.",
         "empty": "No employee record is linked to you here.",
         "none": "No claims sent yet."
+    },
+    "advance_status": {
+        "submitted": "Waiting",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "paid": "Paid out",
+        "settled": "Settled",
+        "withdrawn": "Taken back"
+    },
+    "advance": {
+        "title": "Advance",
+        "mine": "My advances",
+        "ask": "Ask for an advance",
+        "none": "No advances. Going on a trip? Ask for money before you spend it.",
+        "left": "{amount} still owed",
+        "overdue": "Past its day",
+        "ask_title": "Ask for an advance",
+        "ask_text": "Money before you spend it, settled later by your claims. At most {max} at a time.",
+        "amount": "Amount ({currency})",
+        "amount_bad": "Write an amount, like 5000.",
+        "settle_by": "Settle by",
+        "settle_by_hint": "Leave empty for the usual days after it is paid.",
+        "purpose": "What for",
+        "purpose_hint": "For example: Trip to Chattogram for the audit",
+        "send": "Send for approval",
+        "sent": "Advance asked for. Your approver is told.",
+        "settle_by_on": "settle by {date}",
+        "from_salary": "To come from the salary of {month}",
+        "amount_label": "Advance",
+        "owed": "Still owed",
+        "moves": "Movements",
+        "move_paid": "Paid out",
+        "move_claim": "Settled by claim {number}",
+        "move_returned": "Handed back",
+        "move_salary": "Taken from the salary",
+        "pay_title": "Pay out",
+        "settle_title": "What is left comes back",
+        "pay": "Pay {amount}",
+        "settle": "Settle {amount}",
+        "approve": "Approve",
+        "approve_title": "Approve advance {number}?",
+        "approve_done": "Approved.",
+        "reject": "Reject",
+        "reject_title": "Reject advance {number}?",
+        "reject_done": "Rejected. The employee is told why.",
+        "decide_text": "{name} asks for {amount}.",
+        "withdraw": "Take back",
+        "withdraw_title": "Take this advance back?",
+        "withdrawn": "Advance taken back.",
+        "paid": "Advance paid out. The employee is told.",
+        "to_salary": "What is left will come from that month's salary.",
+        "returned": "Handed back: the advance is settled.",
+        "view_waiting": "Waiting for me",
+        "view_approved": "To pay out",
+        "view_paid": "Paid out",
+        "view_overdue": "Past their day",
+        "view_all": "All",
+        "empty_waiting": "Nothing waits for you",
+        "empty_approved": "Nothing to pay out",
+        "empty_paid": "No advances out",
+        "empty_overdue": "No advance is past its day",
+        "empty_all": "No advances yet"
     }
 }

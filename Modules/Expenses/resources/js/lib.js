@@ -1,3 +1,4 @@
+import { i18n } from '@/lib/i18n';
 import { currencyDigits, decimalStringToMinor, formatMoney, formatNumber, localeTag, minorToDecimalString } from '@/lib/format';
 
 /**
@@ -82,6 +83,17 @@ export function monthsFrom(month, count) {
 /** "2026-10" -> "October 2026" in the reader's language. */
 export function monthText(month) {
     return new Intl.DateTimeFormat(localeTag(), { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${month}-01T00:00:00Z`));
+}
+
+/** A name from the rules ({ en, bn }) in the reader's language, else English. */
+export function nameIn(texts, locale = i18n.locale) {
+    if (!texts) return '';
+    return texts[locale] || texts.en || Object.values(texts).find(Boolean) || '';
+}
+
+/** Badge tone per advance status. */
+export function advanceTone(status) {
+    return { submitted: 'warn', approved: 'brand', rejected: 'bad', paid: 'brand', settled: 'ok', withdrawn: 'neutral' }[status] ?? 'neutral';
 }
 
 /** A new id for one sending of a claim (the same id again is the same claim). */

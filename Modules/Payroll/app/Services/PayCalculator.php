@@ -100,6 +100,10 @@ final class PayCalculator
         foreach ($facts['earnings'] ?? [] as $earning) {
             $lines[] = ['kind' => 'earning', 'code' => $earning['code'], 'name' => $earning['name'], 'amount' => (int) $earning['amount'], 'taxable' => (bool) $earning['taxable'], 'posting_key' => $earning['posting_key'] ?? null];
         }
+        // Amounts other modules recover (DeductionSource: an expense advance not spent).
+        foreach ($facts['deductions'] ?? [] as $deduction) {
+            $lines[] = ['kind' => 'deduction', 'code' => $deduction['code'], 'name' => $deduction['name'], 'amount' => (int) $deduction['amount'], 'taxable' => false, 'posting_key' => $deduction['posting_key'] ?? null];
+        }
         foreach ($facts['adjustments'] as $adjustment) {
             $lines[] = [
                 'kind' => $adjustment['kind'], 'code' => 'ADJUSTMENT', 'name' => ['en' => $adjustment['label']],

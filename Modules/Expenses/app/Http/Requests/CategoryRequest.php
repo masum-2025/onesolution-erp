@@ -24,6 +24,7 @@ class CategoryRequest extends StrictFormRequest
             'name.*' => ['nullable', 'string', 'max:80'],
             'posting_key' => ['required', 'string', 'in:'.implode(',', Categories::POSTING_KEYS)],
             'mileage' => ['sometimes', 'boolean'],
+            'per_diem' => ['sometimes', 'boolean'],
             'is_active' => [$creating ? 'prohibited' : 'sometimes', 'boolean'],
         ];
     }

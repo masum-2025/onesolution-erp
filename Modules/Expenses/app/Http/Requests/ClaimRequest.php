@@ -29,6 +29,10 @@ class ClaimRequest extends StrictFormRequest
             'lines.*.description' => ['required', 'string', 'min:2', 'max:300'],
             'lines.*.amount_minor' => ['nullable', 'integer', 'min:0', 'max:100000000000'],
             'lines.*.distance_tenths' => ['nullable', 'integer', 'min:0', 'max:1000000'],
+            'lines.*.per_diem_code' => ['nullable', 'string', 'max:20'],
+            'lines.*.days' => ['nullable', 'integer', 'min:1', 'max:60'],
+            // An advance the claim settles (the employee's own, paid, something left).
+            'advance_id' => ['sometimes', 'nullable', 'string', 'size:26'],
         ];
     }
 }

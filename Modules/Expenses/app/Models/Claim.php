@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'organization_id', 'unit_id', 'employee_id', 'number', 'title', 'currency', 'total_minor', 'status', 'steps_needed', 'steps_done',
     'submitted_at', 'decided_at', 'decided_by', 'decision_note', 'journal_id', 'pay_method', 'pay_period', 'pay_run_id',
-    'paid_at', 'paid_by', 'payment_journal_id', 'requested_by', 'op_id', 'version',
+    'paid_at', 'paid_by', 'payment_journal_id', 'requested_by', 'op_id', 'version', 'advance_id', 'advance_minor',
 ])]
 class Claim extends Model
 {
@@ -44,7 +44,7 @@ class Claim extends Model
     protected function casts(): array
     {
         return [
-            'total_minor' => 'integer', 'steps_needed' => 'integer', 'steps_done' => 'integer', 'version' => 'integer',
+            'total_minor' => 'integer', 'advance_minor' => 'integer', 'steps_needed' => 'integer', 'steps_done' => 'integer', 'version' => 'integer',
             'submitted_at' => 'immutable_datetime', 'decided_at' => 'immutable_datetime', 'paid_at' => 'immutable_datetime',
         ];
     }

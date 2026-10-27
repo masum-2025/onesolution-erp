@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
 /** What was spent: the day, the kind, what for, the amount (or kilometres driven, in tenths, for a mileage kind). */
-#[Fillable(['organization_id', 'claim_id', 'line_no', 'spent_on', 'category_id', 'description', 'amount_minor', 'distance_tenths'])]
+#[Fillable(['organization_id', 'claim_id', 'line_no', 'spent_on', 'category_id', 'description', 'amount_minor', 'distance_tenths', 'per_diem_code', 'days'])]
 class Line extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;
@@ -18,6 +18,6 @@ class Line extends Model
 
     protected function casts(): array
     {
-        return ['spent_on' => 'immutable_date', 'line_no' => 'integer', 'amount_minor' => 'integer', 'distance_tenths' => 'integer'];
+        return ['spent_on' => 'immutable_date', 'line_no' => 'integer', 'amount_minor' => 'integer', 'distance_tenths' => 'integer', 'days' => 'integer'];
     }
 }

@@ -7,7 +7,7 @@ import AppField from '@/components/AppField.vue';
 import { confirmAction } from '@/lib/dialogs';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { amountText, amountToMinor, kmToTenths, mileageAmount, minorToText, needsReceipt, newOpId, tenthsToKm } from '../lib';
+import { amountText, amountToMinor, kmToTenths, mileageAmount, minorToText, nameIn, needsReceipt, newOpId, tenthsToKm } from '../lib';
 
 /**
  * Writing one's own claim: a title, the expenses (day, kind, what for, the
@@ -24,6 +24,10 @@ const props = defineProps({
     categories: { type: Array, default: () => [] },
     // { receipt_required_above, max_claim_age_days, mileage_rate, receipt_max_kb }
     limits: { type: Object, default: () => ({}) },
+    // daily allowance rates [{ code, name, amount_minor }]
+    perDiemRates: { type: Array, default: () => [] },
+    // one's paid advances with something left [{ id, number, purpose, outstanding_minor }]
+    advances: { type: Array, default: () => [] },
     currency: { type: String, default: 'BDT' },
     // expensesApi(org)
     calls: { type: Object, required: true },
@@ -31,7 +35,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'changed', 'sent']);
 
 const current = ref(null);
-const form = reactive({ title: '', lines: [] });
+const form = reactive({ title: '', advance_id: '', lines: [] });
 const errors = ref({});
 const saving = ref(false);
 const uploading = ref(null);
@@ -41,15 +45,18 @@ let nextKey = 1;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const kindOf = (id) => props.categories.find((item) => item.id === id) ?? null;
-const blankLine = () => ({ key: nextKey++, id: null, spent_on: today(), category_id: props.categories[0]?.id ?? '', description: '', amount: '', km: '' });
+const blankLine = () => ({ key: nextKey++, id: null, spent_on: today(), category_id: props.categories[0]?.id ?? '', description: '', amount: '', km: '', per_diem_code: props.perDiemRates[0]?.code ?? '', days: '' });
+const rateOf = (code) => props.perDiemRates.find((rate) => rate.code === code)?.amount_minor ?? 0;
 
 function load(claim) {
     current.value = claim;
     form.title = claim?.title ?? '';
+    form.advance_id = claim?.advance_id ?? '';
     form.lines = claim
         ? claim.lines.map((line) => ({
             key: nextKey++, id: line.id, spent_on: line.spent_on, category_id: line.category_id, description: line.description,
-            amount: line.mileage ? '' : minorToText(line.amount_minor, props.currency), km: line.mileage ? tenthsToKm(line.distance_tenths) : '',
+            amount: line.mileage || line.per_diem ? '' : minorToText(line.amount_minor, props.currency), km: line.mileage ? tenthsToKm(line.distance_tenths) : '',
+            per_diem_code: line.per_diem_code ?? props.perDiemRates[0]?.code ?? '', days: line.days ?? '',
         }))
         : [blankLine()];
     saved = JSON.stringify(body());
@@ -62,11 +69,16 @@ watch(() => props.open, (open) => {
     load(props.claim);
 });
 
-const amountOf = (line) => (kindOf(line.category_id)?.mileage ? mileageAmount(kmToTenths(line.km), props.limits.mileage_rate) : amountToMinor(line.amount, props.currency) ?? 0);
+function amountOf(line) {
+    const kind = kindOf(line.category_id);
+    if (kind?.per_diem) return (Number.parseInt(line.days, 10) || 0) * rateOf(line.per_diem_code);
+    if (kind?.mileage) return mileageAmount(kmToTenths(line.km), props.limits.mileage_rate);
+    return amountToMinor(line.amount, props.currency) ?? 0;
+}
 const total = computed(() => form.lines.reduce((sum, line) => sum + amountOf(line), 0));
 const receiptsOf = (line) => (current.value?.receipts ?? []).filter((receipt) => line.id && receipt.line_id === line.id);
 const looseReceipts = computed(() => (current.value?.receipts ?? []).filter((receipt) => !receipt.line_id || !form.lines.some((line) => line.id === receipt.line_id)));
-const wantsReceipt = (line) => needsReceipt({ mileage: kindOf(line.category_id)?.mileage, amount_minor: amountOf(line) }, props.limits.receipt_required_above ?? 0) && !receiptsOf(line).length;
+const wantsReceipt = (line) => needsReceipt({ mileage: kindOf(line.category_id)?.mileage || kindOf(line.category_id)?.per_diem, amount_minor: amountOf(line) }, props.limits.receipt_required_above ?? 0) && !receiptsOf(line).length;
 const oldest = computed(() => {
     const date = new Date();
     date.setDate(date.getDate() - (props.limits.max_claim_age_days ?? 60));
@@ -76,15 +88,19 @@ const oldest = computed(() => {
 function body() {
     return {
         title: form.title.trim(),
+        advance_id: form.advance_id || null,
         lines: form.lines.map((line) => {
             const mileage = kindOf(line.category_id)?.mileage;
+            const perDiem = kindOf(line.category_id)?.per_diem;
             return {
                 ...(line.id ? { id: line.id } : {}),
                 spent_on: line.spent_on,
                 category_id: line.category_id,
                 description: line.description.trim(),
-                amount_minor: mileage ? null : amountToMinor(line.amount, props.currency),
+                amount_minor: mileage || perDiem ? null : amountToMinor(line.amount, props.currency),
                 distance_tenths: mileage ? kmToTenths(line.km) : null,
+                per_diem_code: perDiem ? line.per_diem_code : null,
+                days: perDiem ? Number.parseInt(line.days, 10) || null : null,
             };
         }),
     };
@@ -195,6 +211,12 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             <AppField v-slot="{ id }" :label="t('expenses.editor.title')" :hint="t('expenses.editor.title_hint')" :error="fieldError('title')">
                 <input :id="id" v-model="form.title" class="field-input" maxlength="150" />
             </AppField>
+            <AppField v-if="advances.length || form.advance_id" v-slot="{ id }" :label="t('expenses.editor.advance')" :hint="t('expenses.editor.advance_hint')" :error="fieldError('advance_id')" optional>
+                <select :id="id" v-model="form.advance_id" class="field-input">
+                    <option value="">{{ t('expenses.editor.no_advance') }}</option>
+                    <option v-for="advance in advances" :key="advance.id" :value="advance.id">{{ advance.number }} · {{ advance.purpose }} — {{ t('expenses.editor.advance_left', { amount: amountText(advance.outstanding_minor, currency) }) }}</option>
+                </select>
+            </AppField>
 
             <ol class="space-y-3" :aria-label="t('expenses.editor.lines')">
                 <li v-for="(line, index) in form.lines" :key="line.key" class="rounded-xl border border-line p-4">
@@ -214,7 +236,17 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                         <AppField v-slot="{ id }" :label="t('expenses.editor.description')" :error="fieldError(`lines.${index}.description`)" class="sm:col-span-2">
                             <input :id="id" v-model="line.description" class="field-input" maxlength="300" :placeholder="t('expenses.editor.description_hint')" />
                         </AppField>
-                        <template v-if="kindOf(line.category_id)?.mileage">
+                        <template v-if="kindOf(line.category_id)?.per_diem">
+                            <AppField v-slot="{ id }" :label="t('expenses.editor.per_diem_place')" :error="fieldError(`lines.${index}.per_diem_code`)">
+                                <select :id="id" v-model="line.per_diem_code" class="field-input">
+                                    <option v-for="rate in perDiemRates" :key="rate.code" :value="rate.code">{{ nameIn(rate.name) }} — {{ amountText(rate.amount_minor, currency) }}</option>
+                                </select>
+                            </AppField>
+                            <AppField v-slot="{ id }" :label="t('expenses.editor.days')" :hint="t('expenses.editor.days_amount', { amount: amountText(amountOf(line), currency) })" :error="fieldError(`lines.${index}.days`)">
+                                <input :id="id" v-model="line.days" type="number" min="1" max="60" class="field-input tabular text-end" />
+                            </AppField>
+                        </template>
+                        <template v-else-if="kindOf(line.category_id)?.mileage">
                             <AppField v-slot="{ id }" :label="t('expenses.editor.km')" :error="fieldError(`lines.${index}.distance_tenths`)">
                                 <input :id="id" v-model="line.km" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
                             </AppField>

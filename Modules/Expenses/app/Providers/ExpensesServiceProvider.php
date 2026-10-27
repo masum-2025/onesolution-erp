@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Expenses\Export\ExpensesExporter;
 use Modules\Expenses\Listeners\PayClaimsWithPayroll;
+use Modules\Expenses\Payroll\AdvancesFromSalary;
 use Modules\Expenses\Payroll\ClaimsWithSalary;
+use Modules\Payroll\Contracts\DeductionSource;
 use Modules\Payroll\Contracts\EarningSource;
 use Modules\Payroll\Events\PayrollApproved;
 
@@ -34,6 +36,10 @@ class ExpensesServiceProvider extends ServiceProvider
         // Claims paid with a month's salary go on the slips (Payroll's EarningSource), when Payroll is installed.
         if (interface_exists(EarningSource::class)) {
             $this->app->tag([ClaimsWithSalary::class], 'payroll.earning_sources');
+        }
+        // Advances recovered from a month's salary come off the slips (Payroll's DeductionSource).
+        if (interface_exists(DeductionSource::class)) {
+            $this->app->tag([AdvancesFromSalary::class], 'payroll.deduction_sources');
         }
         // The client's data export includes expenses (ExportsModuleData).
         $this->app->tag([ExpensesExporter::class], 'module.exporters');

@@ -2,13 +2,18 @@
 
 namespace Modules\Expenses\Http;
 
+use App\Models\User;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Collection;
+use Modules\Expenses\Models\Advance;
+use Modules\Expenses\Models\AdvanceApproval;
+use Modules\Expenses\Models\AdvanceMove;
 use Modules\Expenses\Models\Approval;
 use Modules\Expenses\Models\Category;
 use Modules\Expenses\Models\Claim;
 use Modules\Expenses\Models\Line;
 use Modules\Expenses\Models\Receipt;
+use Modules\Expenses\Services\Advances;
 use Modules\Expenses\Services\Place;
 use Modules\Expenses\Services\Receipts;
 use Modules\Hrm\Directory\EmployeeDirectory;
@@ -25,7 +30,7 @@ class ExpensesPresenter
     {
         return [
             'id' => $category->getKey(), 'code' => $category->code, 'name' => $category->textIn('name'), 'names' => $category->texts('name'),
-            'posting_key' => $category->posting_key, 'mileage' => $category->mileage, 'is_active' => $category->is_active, 'version' => $category->version,
+            'posting_key' => $category->posting_key, 'mileage' => $category->mileage, 'per_diem' => $category->per_diem, 'is_active' => $category->is_active, 'version' => $category->version,
         ];
     }
 
@@ -68,6 +73,7 @@ class ExpensesPresenter
                 'category' => isset($categories[$line->category_id]) ? $categories[$line->category_id]->textIn('name') : '',
                 'mileage' => (bool) ($categories[$line->category_id]->mileage ?? false), 'description' => $line->description,
                 'amount_minor' => $line->amount_minor, 'distance_tenths' => $line->distance_tenths,
+                'per_diem' => (bool) ($categories[$line->category_id]->per_diem ?? false), 'per_diem_code' => $line->per_diem_code, 'days' => $line->days,
             ])->values()->all(),
             'receipts' => $receipts->map(fn (Receipt $receipt) => [
                 'id' => $receipt->getKey(), 'line_id' => $receipt->line_id, 'name' => $receipt->name, 'mime' => $receipt->mime,
@@ -90,6 +96,63 @@ class ExpensesPresenter
             'decided_at' => $claim->decided_at?->toIso8601String(), 'decision_note' => $claim->decision_note,
             'pay_method' => $claim->pay_method, 'pay_period' => $claim->pay_period, 'paid_at' => $claim->paid_at?->toIso8601String(),
             'posted' => $claim->journal_id !== null, 'created_at' => $claim->created_at?->toIso8601String(), 'version' => $claim->version,
+            'advance_id' => $claim->advance_id, 'advance_minor' => $claim->advance_minor,
+        ];
+    }
+
+    /**
+     * Advances for a list: the employee, what is still owed, where it stands.
+     *
+     * @param  iterable<Advance>  $advances
+     * @return list<array<string, mixed>>
+     */
+    public function advances(Organization $company, iterable $advances): array
+    {
+        $advances = collect($advances);
+        $people = collect($this->directory->many($company, $advances->pluck('employee_id')->unique()->values()->all()))->keyBy('id');
+        $service = app(Advances::class);
+        $today = $this->place->today($company)->toDateString();
+
+        return $advances->map(function (Advance $advance) use ($company, $people, $service, $today) {
+            $owed = $service->outstanding($company, $advance);
+
+            return [
+                'id' => $advance->getKey(), 'number' => $advance->number, 'purpose' => $advance->purpose, 'unit_id' => $advance->unit_id,
+                'employee' => ['id' => $advance->employee_id, 'name' => $people[$advance->employee_id]->name ?? '', 'code' => $people[$advance->employee_id]->code ?? ''],
+                'currency' => $advance->currency, 'amount_minor' => $advance->amount_minor, 'outstanding_minor' => $owed,
+                'settle_by' => $advance->settle_by?->toDateString(), 'status' => $advance->status, 'steps_needed' => $advance->steps_needed, 'steps_done' => $advance->steps_done,
+                'decision_note' => $advance->decision_note, 'pay_method' => $advance->pay_method, 'paid_at' => $advance->paid_at?->toIso8601String(),
+                'recover_period' => $advance->recover_period,
+                'overdue' => $advance->status === Advance::PAID && $advance->settle_by !== null && $advance->settle_by->toDateString() < $today && $owed > 0,
+                'created_at' => $advance->created_at?->toIso8601String(), 'version' => $advance->version,
+            ];
+        })->values()->all();
+    }
+
+    /**
+     * One advance with its decisions and movements, and what this person may do.
+     *
+     * @param  array<string, bool>  $can
+     * @return array<string, mixed>
+     */
+    public function advance(Organization $company, Advance $advance, array $can = []): array
+    {
+        $approvals = $this->place->query(AdvanceApproval::class, $company)->where('advance_id', $advance->getKey())->orderBy('step')->get();
+        $moves = $this->place->query(AdvanceMove::class, $company)->where('advance_id', $advance->getKey())->orderBy('created_at')->get();
+        $numbers = $this->place->query(Claim::class, $company)->whereKey($moves->pluck('claim_id')->filter()->all())->pluck('number', 'id');
+        $names = User::query()->whereKey($approvals->pluck('user_id')->unique()->all())->pluck('name', 'id');
+
+        return [
+            ...$this->advances($company, [$advance])[0],
+            'approvals' => $approvals->map(fn (AdvanceApproval $approval) => [
+                'step' => $approval->step, 'decision' => $approval->decision, 'note' => $approval->note,
+                'by' => $names[$approval->user_id] ?? '', 'at' => $approval->created_at?->toIso8601String(),
+            ])->values()->all(),
+            'moves' => $moves->map(fn (AdvanceMove $move) => [
+                'kind' => $move->kind, 'amount_minor' => $move->amount_minor, 'claim_number' => $move->claim_id === null ? null : ($numbers[$move->claim_id] ?? null),
+                'method' => $move->method, 'at' => $move->created_at?->toIso8601String(),
+            ])->values()->all(),
+            'can' => $can,
         ];
     }
 
@@ -99,7 +162,7 @@ class ExpensesPresenter
      */
     private function decisions(Collection $approvals): array
     {
-        $names = \App\Models\User::query()->whereKey($approvals->pluck('user_id')->unique()->all())->pluck('name', 'id');
+        $names = User::query()->whereKey($approvals->pluck('user_id')->unique()->all())->pluck('name', 'id');
 
         return $approvals->map(fn (Approval $approval) => [
             'step' => $approval->step, 'decision' => $approval->decision, 'note' => $approval->note,

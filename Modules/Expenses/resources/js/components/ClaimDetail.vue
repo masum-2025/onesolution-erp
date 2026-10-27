@@ -133,6 +133,7 @@ function paid() {
                         <p class="text-[12.5px] text-muted">
                             {{ line.category }} · {{ date(line.spent_on) }}
                             <template v-if="line.mileage"> · {{ t('expenses.common.km', { km: kmText(line.distance_tenths) }) }}</template>
+                            <template v-if="line.per_diem"> · {{ t('expenses.common.days', { count: line.days ?? 0 }) }}</template>
                         </p>
                         <p v-if="receiptsOf(line).length" class="mt-1 flex flex-wrap gap-1.5">
                             <a v-for="receipt in receiptsOf(line)" :key="receipt.id" :href="receipt.url" target="_blank" rel="noopener" class="inline-flex max-w-full items-center gap-1 rounded-lg bg-subtle px-2 py-0.5 text-[12px]">
@@ -146,6 +147,11 @@ function paid() {
                     <span class="text-[13.5px] font-medium">{{ t('expenses.editor.total') }}</span>
                     <span class="tabular text-[18px] font-semibold">{{ amountText(claim.total_minor, claim.currency) }}</span>
                 </li>
+                <li v-if="claim.advance_minor > 0" class="flex items-baseline justify-between px-4 py-2 text-[13px]">
+                    <span class="text-muted">{{ t('expenses.detail.from_advance') }}</span>
+                    <span class="tabular">− {{ amountText(claim.advance_minor, claim.currency) }}</span>
+                </li>
+                <li v-else-if="claim.advance_id && ['submitted', 'approved'].includes(claim.status)" class="px-4 py-2 text-[12.5px] text-muted">{{ t('expenses.detail.advance_named') }}</li>
             </ul>
             <p v-if="loose.length" class="flex flex-wrap gap-1.5">
                 <a v-for="receipt in loose" :key="receipt.id" :href="receipt.url" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-lg bg-subtle px-2 py-0.5 text-[12px]">
