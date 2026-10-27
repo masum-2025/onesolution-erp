@@ -2896,6 +2896,54 @@ not, notes). The application's detail gives `employee` (name and code) once hire
 A new country, sector or partner: the rules (steps, limits, keeping time); wording of the mails in
 the partner's message editor and the offer letter's wording (rule or the company's own). No code change.
 
+## Appraisals module (APR-1 backend and screens)
+
+Performance appraisals. Requires HRM (employees, their managers and units through
+`EmployeeDirectory`). In the business and enterprise plans. Scores are whole numbers per mille
+(0–1000), never floats; comments and summaries are encrypted.
+
+- **Tables** (tenant): `apr_competencies` (code, name per language, in use), `apr_cycles` (name,
+  unit, period, the last day of each step; draft / open / closed; at opening it keeps the rules'
+  scale, goal share and self review so results never move with the rules), `apr_reviews` (one per
+  employee and cycle: stage goals / self / manager / acknowledge / done, the manager as at opening,
+  summaries, scores, band), `apr_goals` (title, description, weight %), `apr_ratings` (per goal or
+  competency: self and manager rating and comment), `apr_steps` (append-only history).
+- **Rules**: `appraisals.rating_scale` (json, lowest first), `appraisals.bands` (json, minimum per
+  mille), `appraisals.goal_share_percent` (70), `appraisals.goals_total_100` (on),
+  `appraisals.self_review` (on), `appraisals.reminder_days` (3), `appraisals.default_competencies`.
+- **Flow**: opening a cycle gives everyone employed at its unit (and below) today a review
+  (`appraisals.opened`). Goals: the employee writes them and sends them (weights adding up to 100 when
+  the rule asks); the reviewer may change and approves them. Self review: the employee rates each goal
+  and competency on the scale with a comment and a summary. Manager review: the reviewer rates them;
+  `Scoring` works out goals (weighed), competencies (alike), the overall score by the goal share and
+  the band. The employee reads the result and acknowledges it (with a comment). The reviewer is the
+  manager (as at opening) when they hold `appraisals.review` there, else the people holding
+  `appraisals.manage` there; nobody reviews themselves. `send_back` (appraisals.manage, a reason)
+  moves a review one step back and clears its scores. Whoever acts next is told
+  (`appraisals.your_turn`, no ratings or comments in mails); `appraisals:remind` (daily 08:10) reminds
+  `reminder_days` before a step's last day and the day before. Closed cycles are read only.
+- **Who sees what**: the employee their own ratings, and the manager's and the result once the
+  manager is done; the reviewer the self review once sent; `appraisals.view` / `appraisals.manage`
+  everything at their unit and below; anyone else gets 404. Role templates: HR officer all, principal
+  manage + review + self, manager review + self (never view / manage), staff, teacher, office staff
+  and registrar self only (`!appraisals.view`; registrar and staff also `!recruitment.view`).
+- **API** (`/api/organizations/{org}/appraisals/…`, `module:hrm` + `module:appraisals`, writes
+  throttled `appraisals-writes`): `GET options`, `GET|POST competencies`, `PATCH competencies/{id}`,
+  `POST competencies/defaults`, `GET|POST cycles`, `GET|PATCH cycles/{id}`,
+  `POST cycles/{id}/open|close`, `GET me`, `GET team`, `GET reviews/{id}`, `PUT reviews/{id}/goals`,
+  `PUT reviews/{id}/ratings`, `POST reviews/{id}/submit_goals|approve_goals|submit_self|submit_manager|acknowledge|send_back`.
+- **Screens**: `/appraisals/me`, `/appraisals/team` (waiting for me first), `/appraisals/cycles`
+  (cards with step counts, editor drawer, open / close), `/appraisals/cycles/{id}` (everyone by step,
+  search), `/appraisals/reviews/{id}` (steps, goals with a running weight total, ratings on the scale
+  with comments, the result, acknowledge, send back, history); settings page `/appraisals/competencies`.
+  Bell: my appraisal waiting, my team's appraisals waiting. Dashboard: appraisals in progress.
+
+### Future expansion (Appraisals)
+
+A new country, sector or partner: the rules (scale, bands, goal share, self review, usual
+competencies); a company adds its own competencies. No code change. Later: 360° feedback, increment
+proposals to Payroll, teacher feedback from students alongside.
+
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 
 Requires HRM and Attendance; posts to Accounting where the company keeps books (optional).

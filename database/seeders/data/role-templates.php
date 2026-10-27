@@ -31,12 +31,12 @@ return [
     [
         'key' => 'manager',
         'sector' => null,
-        'permissions' => ['*.view', '*.manage', '*.use', '*.export', 'leave.approve', 'leave.request', 'expenses.approve', 'expenses.claim', 'recruitment.interview', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
+        'permissions' => ['*.view', '*.manage', '*.use', '*.export', 'leave.approve', 'leave.request', 'expenses.approve', 'expenses.claim', 'recruitment.interview', 'appraisals.review', 'appraisals.self', '!appraisals.view', '!appraisals.manage', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
     ],
     [
         'key' => 'staff',
         'sector' => null,
-        'permissions' => ['*.view', '*.use', 'leave.request', 'expenses.claim', '!recruitment.view'],
+        'permissions' => ['*.view', '*.use', 'leave.request', 'expenses.claim', 'appraisals.self', '!recruitment.view', '!appraisals.view'],
     ],
     [
         'key' => 'accountant',
@@ -51,7 +51,7 @@ return [
     [
         'key' => 'hr_officer',
         'sector' => null,
-        'permissions' => ['hrm.*', 'attendance.*', 'leave.*', 'zkteco.*', 'recruitment.*', 'payroll.view', 'members.manage'],
+        'permissions' => ['hrm.*', 'attendance.*', 'leave.*', 'zkteco.*', 'recruitment.*', 'appraisals.*', 'payroll.view', 'members.manage'],
     ],
     [
         'key' => 'store_keeper',
@@ -118,18 +118,19 @@ return [
             'edu_website.manage', 'edu_website.publish', 'edu_website.enquiries',
             'expenses.approve', 'expenses.manage', 'expenses.claim',
             'recruitment.manage', 'recruitment.interview', 'recruitment.hire',
+            'appraisals.manage', 'appraisals.review', 'appraisals.self',
         ],
     ],
     [
         'key' => 'teacher',
         'sector' => 'school',
         // Students of their own sections only (rule education.teacher_scope).
-        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post', 'teacher_feedback.view_own', 'student_attendance.view', 'student_attendance.take', 'leave.request', 'expenses.claim'],
+        'permissions' => ['attendance.view', 'attendance.manage', 'hrm.view', 'education.view', 'course_registration.view', 'education_exams.view', 'education_exams.enter_marks', 'education_lectures.view', 'education_lectures.post', 'teacher_feedback.view_own', 'student_attendance.view', 'student_attendance.take', 'leave.request', 'expenses.claim', 'appraisals.self'],
     ],
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request', 'edu_website.manage', 'edu_website.enquiries', 'expenses.claim', '!recruitment.view'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request', 'edu_website.manage', 'edu_website.enquiries', 'expenses.claim', 'appraisals.self', '!recruitment.view', '!appraisals.view'],
     ],
 
     // ── University ───────────────────────────────────────────────────────
@@ -137,7 +138,7 @@ return [
         'key' => 'registrar',
         'sector' => 'university',
         'permissions' => [
-            '*.view', 'members.manage', 'education.manage', 'education.admit', 'education.edit_students',
+            '*.view', '!recruitment.view', '!appraisals.view', 'appraisals.self', 'members.manage', 'education.manage', 'education.admit', 'education.edit_students',
             'education.view_sensitive', 'education.promote', 'education.issue_documents', 'crm.manage',
             'course_registration.manage', 'course_registration.register', 'course_registration.approve', 'course_registration.record_outcome',
             'education_fees.configure', 'education_fees.bill', 'education_fees.concede',

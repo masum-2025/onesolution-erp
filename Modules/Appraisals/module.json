@@ -1,0 +1,11 @@
+{
+    "name": "Appraisals",
+    "alias": "appraisals",
+    "description": "Performance appraisals: review cycles, goals with weights, self and manager reviews, scores and bands from rules.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Appraisals\\Providers\\AppraisalsServiceProvider"
+    ],
+    "files": []
+}

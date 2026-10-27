@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/appraisals",
+    "description": "Performance appraisals: cycles, goals, self and manager reviews.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Appraisals\\": "app/"
+        }
+    }
+}
