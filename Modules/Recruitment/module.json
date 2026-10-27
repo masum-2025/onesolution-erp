@@ -1,0 +1,11 @@
+{
+    "name": "Recruitment",
+    "alias": "recruitment",
+    "description": "Job openings, applications from a public careers page, interviews with feedback, and hiring into HRM.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Recruitment\\Providers\\RecruitmentServiceProvider"
+    ],
+    "files": []
+}

@@ -2629,6 +2629,9 @@ coaching; in the starter plan): a light public website per company.
   name, role and words) and `calendar` (dated events, a day or from–to, grouped by month, past ones
   quieter). Sites have an optional `motto` (a plain line above every page, any script — `dir=auto`
   for Arabic).
+- **Jobs block (REC-1)**: `jobs` lists the jobs open on the company's careers page (Recruitment's
+  public service `Modules\Recruitment\Directory\JobBoard`, read live; nothing when Recruitment is off
+  or no careers address is set), each linking there to apply, with "All jobs".
 
 ### Future expansion (Website)
 
@@ -2786,6 +2789,67 @@ claims). API additions: `GET me` gives `summary` and `currency`; `GET claims` ta
 A new country, sector or partner: values of the rules (limits, mileage rate, usual kinds) and the
 chart's posting map; a company adds its own kinds. No code change. Later:
 advances and per-diem.
+
+## Recruitment module (REC-1 backend and careers page)
+
+Job openings, applications from a public careers page or added by hand, interviews with feedback,
+and hiring into HRM. Requires HRM (units, positions through `EmployeeDirectory::positions`, hiring
+through `EmployeeLifecycle::hire` with HRM's own checks and audit). In the business and enterprise
+plans (not starter). People's details are encrypted; an email is found again by its keyed hash.
+
+- **Tables** (tenant): `rec_openings` (title and description per language, unit, HRM position,
+  kind of employment, vacancies and hired count, salary range in minor units shown or not, public
+  or not, last day; draft / open / closed / filled), `rec_candidates` (name, email, phone
+  encrypted; once per email), `rec_applications` (stage, status unconfirmed / active / hired /
+  rejected / withdrawn, source careers / manual / referral, rating, reason, employee id, confirm
+  token hash, `op_id`, `version`), `rec_stage_moves` (append-only history), `rec_files` (CVs on the
+  private disk), `rec_interviews` (UTC time, minutes, in person / phone / video, place or link,
+  interviewers), `rec_feedback` (score 1–5, yes / maybe / no, encrypted note; one per interviewer).
+- **Rules**: `recruitment.stages` (json, in order; new applications start at the first),
+  `recruitment.public_apply`, `recruitment.cv_max_kb` (5120; platform, partner, plan),
+  `recruitment.applications_per_email_day` (3; platform, partner, plan),
+  `recruitment.keep_rejected_days` (180).
+- **Careers page** `/careers/{slug}` (the address is kept in the central `site_addresses` with
+  module `recruitment`, so no public site shares it): the open public jobs, one job with its form.
+  No session or cookie, no scripts, a strict CSP by hash, 60 pages a minute per address. Applying:
+  the page's signed token (24 hours; sent within 4 seconds or with the hidden field filled = a robot,
+  told it went, nothing kept), ten an hour per address, a few a day per email, consent, a PDF or Word
+  CV read from the file. The application stays unconfirmed (nobody at the company sees it) until the
+  person presses the button on the page the mail links to (`recruitment.confirm`; a mail scanner
+  opening the link confirms nothing; 48 hours). Then the people managing recruitment where the job
+  is are told (`recruitment.applied`, no name or contact in the mail).
+- **Working on applications** (`recruitment.manage` where the job is): add someone by hand (same
+  `op_id` = same application), move between stages and rate, reject (a reason; tell the person with
+  `recruitment.not_selected` when chosen) or mark withdrawn; scheduled interviews are cancelled when
+  an application ends. Interviews: people holding `recruitment.interview` or `recruitment.manage`
+  there; interviewers (`recruitment.interview_scheduled`) and the candidate
+  (`recruitment.interview_invite`) are told. Each interviewer gives their own feedback; they see only
+  their own, HR sees everyone's; when all have, the interview is done. Bell: new applications (HR),
+  interviews waiting for one's feedback.
+- **Hiring** (`recruitment.hire` and `hrm.manage` where the job is): HRM checks first
+  (`hireErrors`), then hires with the person's name and contacts, the opening's unit and position,
+  the first day and kind of employment; the application ends hired with the employee id, the
+  opening is filled when everyone needed is hired.
+- **Forgetting** `recruitment:forget-candidates` (daily 03:50, every client database): applications
+  never confirmed (after 48 hours) and those rejected or withdrawn longer ago than
+  `keep_rejected_days`, with CVs, interviews and feedback; a person with no application left goes.
+- **API** (`/api/organizations/{org}/recruitment/…`, `module:hrm` + `module:recruitment`, writes
+  throttled `recruitment-writes`, CVs `recruitment-uploads`): `GET options`, `GET|PUT careers`,
+  `GET|POST openings`, `GET|PATCH openings/{id}`, `POST openings/{id}/open|close`,
+  `GET applications[?opening_id&stage&status&q]`, `POST applications`, `GET|PATCH applications/{id}`,
+  `POST applications/{id}/reject|withdraw|hire|files|interviews`, `GET applications/{id}/interviewers`,
+  `GET interviews/mine`, `POST interviews/{id}/feedback|cancel`. CVs: `files/recruitment/{org}/{file}`
+  (signed, five minutes).
+- Permissions `recruitment.view`, `recruitment.manage`, `recruitment.interview`,
+  `recruitment.hire`; role templates: HR officer all, manager interview, principal manage +
+  interview + hire; staff and office staff keep `*.view` but never `recruitment.view` (applicants'
+  details). Dashboard: open jobs, new applications. Data export: openings, candidates,
+  applications (not unconfirmed), history, interviews, feedback, files (names only).
+
+### Future expansion (Recruitment)
+
+A new country, sector or partner: the rules (steps, limits, keeping time); wording of the mails in
+the partner's message editor. No code change. Later: screens (REC-2), offer letters (REC-3).
 
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 

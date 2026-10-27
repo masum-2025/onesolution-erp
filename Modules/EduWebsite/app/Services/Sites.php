@@ -167,6 +167,7 @@ class Sites
             'notices' => ['count' => 5],
             'contact' => ['show_map' => true],
             'attendance' => ['students' => true, 'staff' => true],
+            'jobs' => ['count' => 5],
             'programs' => ['source' => 'education'],
             'enquiry' => ['ask_level' => true],
             'calendar' => ['items' => []],

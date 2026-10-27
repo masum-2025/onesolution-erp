@@ -31,12 +31,12 @@ return [
     [
         'key' => 'manager',
         'sector' => null,
-        'permissions' => ['*.view', '*.manage', '*.use', '*.export', 'leave.approve', 'leave.request', 'expenses.approve', 'expenses.claim', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
+        'permissions' => ['*.view', '*.manage', '*.use', '*.export', 'leave.approve', 'leave.request', 'expenses.approve', 'expenses.claim', 'recruitment.interview', '!modules.manage', '!roles.manage', '!members.manage', '!organizations.manage'],
     ],
     [
         'key' => 'staff',
         'sector' => null,
-        'permissions' => ['*.view', '*.use', 'leave.request', 'expenses.claim'],
+        'permissions' => ['*.view', '*.use', 'leave.request', 'expenses.claim', '!recruitment.view'],
     ],
     [
         'key' => 'accountant',
@@ -51,7 +51,7 @@ return [
     [
         'key' => 'hr_officer',
         'sector' => null,
-        'permissions' => ['hrm.*', 'attendance.*', 'leave.*', 'zkteco.*', 'payroll.view', 'members.manage'],
+        'permissions' => ['hrm.*', 'attendance.*', 'leave.*', 'zkteco.*', 'recruitment.*', 'payroll.view', 'members.manage'],
     ],
     [
         'key' => 'store_keeper',
@@ -117,6 +117,7 @@ return [
             'education_lectures.manage', 'teacher_feedback.manage', 'teacher_feedback.view_results', 'student_attendance.take', 'student_attendance.manage',
             'edu_website.manage', 'edu_website.publish', 'edu_website.enquiries',
             'expenses.approve', 'expenses.manage', 'expenses.claim',
+            'recruitment.manage', 'recruitment.interview', 'recruitment.hire',
         ],
     ],
     [
@@ -128,7 +129,7 @@ return [
     [
         'key' => 'office_staff',
         'sector' => 'school',
-        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request', 'edu_website.manage', 'edu_website.enquiries', 'expenses.claim'],
+        'permissions' => ['*.view', 'crm.manage', 'inventory.manage', 'accounting.post', 'accounting.sell', 'education.admit', 'education.edit_students', 'education.promote', 'education.issue_documents', 'course_registration.register', 'education_fees.bill', 'education_fees.concede', 'education_fees.collect', 'leave.request', 'edu_website.manage', 'edu_website.enquiries', 'expenses.claim', '!recruitment.view'],
     ],
 
     // ── University ───────────────────────────────────────────────────────

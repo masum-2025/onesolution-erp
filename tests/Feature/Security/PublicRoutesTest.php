@@ -27,6 +27,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET files/lectures/{organization}/{file}',
     // An expense claim's receipt: signed, five minutes.
     'GET files/expenses/{organization}/{receipt}',
+    // A job applicant's CV (Recruitment): signed, five minutes.
+    'GET files/recruitment/{organization}/{file}',
     // A student's photo (Education): signed, five minutes.
     'GET files/education/{organization}/{student}/photo',
     // Images of document designs and the photo on an issued document (Education): signed, thirty minutes.
@@ -56,6 +58,12 @@ const REVIEWED_PUBLIC_ROUTES = [
     // An admission enquiry from a published page (WEB-3b): its own signed token of the site, robots
     // dropped, five an hour per address and a few a day per number, details kept encrypted.
     'POST s/{slug}/enquiry',
+    // A company's careers page (REC-1): open public jobs only, no session or cookie, no scripts and a
+    // strict CSP, 60 pages a minute per address. Applying: the page's own signed token, robots dropped,
+    // ten an hour per address and a few a day per email, CV kind and size checked, details encrypted,
+    // nothing seen by the company until the email is confirmed (a POST from the mailed link's page).
+    'GET careers/{slug}', 'GET careers/{slug}/jobs/{opening}', 'POST careers/{slug}/jobs/{opening}/apply',
+    'GET careers/{slug}/confirm/{token}', 'POST careers/{slug}/confirm/{token}',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

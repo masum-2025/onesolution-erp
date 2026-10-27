@@ -15,6 +15,7 @@ use Modules\EduWebsite\Models\Notice;
 use Modules\EduWebsite\Models\Page;
 use Modules\EduWebsite\Models\Site;
 use Modules\Education\Directory\AcademicDirectory;
+use Modules\Recruitment\Directory\JobBoard;
 use Modules\StudentAttendance\Services\TodayCounts as StudentCounts;
 
 /**
@@ -136,6 +137,7 @@ class PublicSite
                 'programs' => ['programs' => ($block['data']['source'] ?? 'manual') === 'education' ? $this->programs($company) : []],
                 'enquiry' => ['levels' => ($block['data']['ask_level'] ?? true) ? app(Enquiries::class)->levels($company) : [], 'token' => app(Enquiries::class)->token($site)],
                 'attendance' => $this->attendance($company, (bool) ($block['data']['students'] ?? true), (bool) ($block['data']['staff'] ?? false)),
+                'jobs' => $this->jobs($company, (int) ($block['data']['count'] ?? 5)),
                 default => ['media' => $media],
             },
         ])->all();
@@ -248,6 +250,16 @@ class PublicSite
 
         return collect(app(AcademicDirectory::class)->levels($company))->groupBy('program_id')
             ->map(fn ($levels) => ['name' => $levels->first()['program']['name'], 'levels' => $levels->pluck('name')->all()])->values()->all();
+    }
+
+    /**
+     * The jobs open on the company's careers page, through Recruitment's JobBoard (nothing where it is off).
+     *
+     * @return array{url: string|null, jobs: list<array{id: string, title: array<string, string>, closes_on: string|null, url: string}>}
+     */
+    private function jobs(Organization $company, int $count): array
+    {
+        return class_exists(JobBoard::class) ? app(JobBoard::class)->forCompany($company, $count) : ['url' => null, 'jobs' => []];
     }
 
     /**

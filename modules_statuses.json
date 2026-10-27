@@ -30,6 +30,7 @@
     "StudentAttendance": true,
     "Zkteco": true,
     "Expenses": true,
+    "Recruitment": true,
     "Leave": true,
     "EduWebsite": true
 }

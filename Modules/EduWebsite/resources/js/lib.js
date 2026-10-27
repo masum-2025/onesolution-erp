@@ -175,6 +175,8 @@ export const BLOCKS = {
         icon: 'chart',
         fields: [title, { key: 'students', kind: 'switch', default: true }, { key: 'staff', kind: 'switch', default: true }],
     },
+    // The jobs open on the careers page (Recruitment).
+    jobs: { icon: 'briefcase', fields: [title, { key: 'count', label: 'jobs_count', kind: 'number', min: 1, max: 20, default: 5 }] },
 };
 
 export const BLOCK_TYPES = Object.keys(BLOCKS);

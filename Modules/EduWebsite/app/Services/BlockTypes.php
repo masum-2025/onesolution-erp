@@ -14,7 +14,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class BlockTypes
 {
-    public const TYPES = ['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'message', 'calendar', 'gallery', 'stats', 'downloads', 'contact', 'attendance'];
+    public const TYPES = ['hero', 'slider', 'text', 'notices', 'admission', 'enquiry', 'programs', 'people', 'message', 'calendar', 'gallery', 'stats', 'downloads', 'contact', 'attendance', 'jobs'];
 
     /** Validation rules for a block's data. */
     public static function rules(string $type, string $main = 'en'): array
@@ -58,6 +58,8 @@ final class BlockTypes
             'downloads' => [...$title, 'media_ids' => ['required', 'array', 'min:1', 'max:30'], 'media_ids.*' => ['string', 'size:26']],
             'contact' => [...$title, 'show_map' => ['boolean']],
             'attendance' => [...$title, 'students' => ['boolean'], 'staff' => ['boolean']],
+            // The jobs open on the company's careers page (Recruitment), newest first.
+            'jobs' => [...$title, 'count' => ['required', 'integer', 'min:1', 'max:20']],
             default => [],
         };
     }

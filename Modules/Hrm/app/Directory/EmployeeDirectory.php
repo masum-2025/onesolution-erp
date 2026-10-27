@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Modules\Hrm\Enums\EmployeeStatus;
 use Modules\Hrm\Models\Employee;
+use Modules\Hrm\Models\Position;
 
 /**
  * HRM's public service for other modules: employees of a company, by id, by
@@ -84,6 +85,19 @@ class EmployeeDirectory
         }
 
         return $records;
+    }
+
+    /**
+     * The positions in use at the company (its own and its group's): a job opening names one; hiring keeps it.
+     *
+     * @return array<string, array{id: string, code: string, title: array<string, string>}> By id.
+     */
+    public function positions(Organization $company): array
+    {
+        return Position::inTenantOf($company)->withoutGlobalScope(OrganizationScope::class)
+            ->whereIn('organization_id', [$company->getKey(), ...$company->ancestorIds()])->where('is_active', true)->orderBy('code')->get()
+            ->mapWithKeys(fn (Position $position) => [$position->getKey() => ['id' => $position->getKey(), 'code' => (string) $position->code, 'title' => $position->texts('title')]])
+            ->all();
     }
 
     /**

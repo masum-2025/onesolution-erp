@@ -42,6 +42,7 @@ return [
         'downloads' => 'ডাউনলোড',
         'contact' => 'যোগাযোগ',
         'attendance' => 'আজ প্রতিষ্ঠানে',
+        'jobs' => 'আমাদের সাথে যোগ দিন',
     ],
     'validation' => [
         'too_big' => 'ফাইলটি বেশি বড়। সর্বোচ্চ :mb MB।',

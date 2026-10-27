@@ -42,6 +42,7 @@ return [
         'downloads' => 'Downloads',
         'contact' => 'Contact',
         'attendance' => 'Today at school',
+        'jobs' => 'Join our team',
     ],
     'validation' => [
         'too_big' => 'The file is too big. At most :mb MB.',

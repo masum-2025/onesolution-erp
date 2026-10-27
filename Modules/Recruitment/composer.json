@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/recruitment",
+    "description": "Job openings, applications, interviews and hiring into HRM.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Recruitment\\": "app/"
+        }
+    }
+}

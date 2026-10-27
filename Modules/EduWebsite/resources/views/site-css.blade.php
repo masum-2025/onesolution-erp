@@ -85,6 +85,13 @@ h2.title{font-size:clamp(26px,3.4vw,36px)}
 .more{text-align:center;margin-block-start:22px}
 .more a{display:inline-flex;align-items:center;gap:6px;font-weight:700;text-decoration:none}
 
+/* Jobs */
+.jobs{max-inline-size:900px;margin-inline:auto;display:grid;gap:12px}
+.jobs .job{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;background:#fff;border:1px solid #e6eaf1;border-radius:18px;text-decoration:none;color:#1d2433;box-shadow:0 14px 34px -26px rgb(16 24 40/.35)}
+.jobs .job:hover{border-color:var(--p)}
+.jobs .job b{font-size:17px}
+.jobs .apply{display:inline-flex;align-items:center;gap:6px;color:var(--p);font-weight:700}
+
 /* Programs */
 .programs .card{position:relative;overflow:hidden;border:0;color:#fff;background:linear-gradient(140deg,var(--p),var(--pd))}
 .programs .card:nth-child(3n+2){background:linear-gradient(140deg,color-mix(in oklab,var(--p) 55%,#0ea5e9),var(--pd))}
