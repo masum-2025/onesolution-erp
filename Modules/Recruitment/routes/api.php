@@ -23,6 +23,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:recruitment'])
         Route::get('applications', [ApplicationController::class, 'index']);
         Route::get('applications/{application}', [ApplicationController::class, 'show']);
         Route::get('applications/{application}/interviewers', [ApplicationController::class, 'interviewers']);
+        Route::get('applications/{application}/people', [ApplicationController::class, 'people']);
         Route::get('interviews/mine', [InterviewController::class, 'mine']);
 
         // CVs are read and kept: a few a minute (before applications/{application}/{step}, which would take the path).

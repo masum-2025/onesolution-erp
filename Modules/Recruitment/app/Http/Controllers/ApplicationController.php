@@ -8,6 +8,7 @@ use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Recruitment\Http\Controllers\Concerns\FindsPlace;
 use Modules\Recruitment\Http\RecruitmentPresenter;
 use Modules\Recruitment\Http\Requests\ApplicationRequest;
@@ -155,6 +156,21 @@ class ApplicationController extends Controller
         Gate::authorize('recruitment.manage', $where);
 
         return response()->json(['data' => $this->interviews->interviewers($where)->map(fn (User $user) => ['id' => $user->getKey(), 'name' => $user->name])->values()]);
+    }
+
+    /** People employed where the job is (name and code only), to choose the new employee's manager when hiring. */
+    public function people(Request $request, string $organization, string $application, EmployeeDirectory $directory): JsonResponse
+    {
+        [$unit, $company] = $this->place($organization);
+        $found = $this->applicationIn($unit, $company, $application);
+        $where = $this->unitOf($found->unit_id);
+        Gate::authorize('recruitment.hire', $where);
+        $search = mb_strtolower(trim((string) ($request->validate(['q' => ['nullable', 'string', 'max:100']])['q'] ?? '')));
+        $people = collect($directory->inUnits($company, $this->place->subtreeIds($company), $this->place->today($company)))
+            ->filter(fn ($employee) => $search === '' || str_contains(mb_strtolower($employee->name), $search) || str_contains(mb_strtolower($employee->code), $search))
+            ->take(50)->map(fn ($employee) => ['id' => $employee->id, 'name' => $employee->name, 'code' => $employee->code])->values();
+
+        return response()->json(['data' => $people]);
     }
 
     /**

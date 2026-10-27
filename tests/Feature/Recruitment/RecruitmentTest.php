@@ -269,8 +269,15 @@ it('hires into HRM with its rules, and fills the opening', function () {
     $hire($noHrm)->assertForbidden();
     $hire($this->hr, ['employment_type' => 'astronaut'])->assertUnprocessable()->assertJsonValidationErrors('employment_type');
 
-    $hired = $hire($this->hr)->assertOk()->json('data');
-    expect($hired['status'])->toBe('hired')->and($hired['employee_id'])->not->toBeNull();
+    // A manager chosen from the people employed (name and code only; for those who may hire).
+    hireVia($this, $this->w->token, $this->w->b1, ['full_name' => 'Mahmud Hasan', 'joined_on' => '2026-01-01'])->assertCreated();
+    $this->asToken($this->viewer)->getJson(($this->api)("applications/{$application['id']}/people?q=mahmud"))->assertForbidden();
+    $people = $this->asToken($this->hr)->getJson(($this->api)("applications/{$application['id']}/people?q=mahmud"))->assertOk()->json('data');
+    expect($people)->toHaveCount(1)->and(array_keys($people[0]))->toBe(['id', 'name', 'code']);
+
+    $hired = $hire($this->hr, ['manager_id' => $people[0]['id']])->assertOk()->json('data');
+    expect($hired['status'])->toBe('hired')->and($hired['employee_id'])->not->toBeNull()
+        ->and($hired['employee']['name'])->toBe('Karim Uddin');
     $employee = $this->asToken($this->hr)->getJson("/api/organizations/{$this->w->c1->id}/hrm/employees/{$hired['employee_id']}")->assertOk()->json('data');
     expect($employee)->toMatchArray(['full_name' => 'Karim Uddin', 'employment_type' => 'permanent'])
         ->and($this->asToken($this->hr)->getJson(($this->api)("openings/{$job['id']}"))->json('data'))->toMatchArray(['status' => 'filled', 'hired_count' => 1])

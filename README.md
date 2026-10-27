@@ -2790,7 +2790,7 @@ A new country, sector or partner: values of the rules (limits, mileage rate, usu
 chart's posting map; a company adds its own kinds. No code change. Later:
 advances and per-diem.
 
-## Recruitment module (REC-1 backend and careers page)
+## Recruitment module (REC-1 backend and careers page, REC-2 screens)
 
 Job openings, applications from a public careers page or added by hand, interviews with feedback,
 and hiring into HRM. Requires HRM (units, positions through `EmployeeDirectory::positions`, hiring
@@ -2846,10 +2846,28 @@ plans (not starter). People's details are encrypted; an email is found again by 
   details). Dashboard: open jobs, new applications. Data export: openings, candidates,
   applications (not unconfirmed), history, interviews, feedback, files (names only).
 
+### Recruitment screens (REC-2)
+
+`Modules/Recruitment/resources/js` (routes, `api.js`, `lib.js`: salaries typed as minor units with
+Bangla digits understood, applications sorted into the stages). Menu section "people" →
+Recruitment: `/recruitment/openings` (cards by status with how many people are at each step, the
+places filled, public or internal; a note when the careers page has no address; "New opening",
+also from the header "New" menu via `?new=1`; open / close), `/recruitment/openings/{id}` (the
+board: a column per stage, cards dragged between columns with the browser's own drag and drop, one
+stage at a time on phones; hired, rejected and withdrawn lists; search; "Add candidate"),
+`/recruitment/interviews` (waiting for my feedback first, coming, earlier; feedback here); settings
+page `/recruitment/settings` (the careers address, its link to copy or open, public applying and
+the stages from the rules). `ApplicationDrawer` (contacts, note, CVs through fresh signed links,
+step and rating, interviews with feedback, history; reject with a reason and the choice to tell the
+person, withdrawn, hire), `InterviewDialog` (the company's local time, who may interview there),
+`HireDialog` (first day, kind, a manager from `GET applications/{id}/people` — name and code only,
+for those who may hire; HR's own missing details listed), `FeedbackDialog` (1–5, hire / maybe /
+not, notes). The application's detail gives `employee` (name and code) once hired.
+
 ### Future expansion (Recruitment)
 
 A new country, sector or partner: the rules (steps, limits, keeping time); wording of the mails in
-the partner's message editor. No code change. Later: screens (REC-2), offer letters (REC-3).
+the partner's message editor. No code change. Later: offer letters (REC-3).
 
 ## Payroll module (business module 4: PAY-1 backend, PAY-2 screens)
 

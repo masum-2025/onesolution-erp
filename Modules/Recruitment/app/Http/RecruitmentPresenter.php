@@ -123,6 +123,9 @@ class RecruitmentPresenter
         return [
             ...$this->applications($company, [$application])[0],
             'cover_note' => $application->cover_note, 'reject_reason' => $application->reject_reason,
+            // Hired: the employee HRM made of them.
+            'employee' => ($hired = $application->employee_id === null ? null : $this->directory->find($company, $application->employee_id)) === null
+                ? null : ['id' => $hired->id, 'name' => $hired->name, 'code' => $hired->code],
             'files' => $files->map(fn (CandidateFile $file) => [
                 'id' => $file->getKey(), 'name' => $file->name, 'mime' => $file->mime, 'size_bytes' => $file->size_bytes, 'url' => $this->files->url($company, $file),
             ])->values()->all(),
