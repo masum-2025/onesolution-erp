@@ -47,6 +47,11 @@ class HrmException extends TenancyException
         return new self('not_company_unit', 422);
     }
 
+    public static function unitClosed(): self
+    {
+        return new self('unit_closed', 422);
+    }
+
     public static function otherCompany(): self
     {
         return new self('other_company', 422);

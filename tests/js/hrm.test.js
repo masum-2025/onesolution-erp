@@ -6,19 +6,23 @@ import {
     changedDetails,
     csvTemplate,
     customPayload,
+    departmentsOf,
     fieldKeyFrom,
     hirePayload,
     initials,
     missingCustom,
     missingRequired,
+    placeOf,
     statusTone,
+    today,
+    workPlaces,
 } from '../../Modules/Hrm/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 
 describe('HRM screens', () => {
     it('registers its screens with the app shell, each a lazy page', () => {
         const names = moduleRoutes.map((route) => route.name);
-        expect(names).toEqual(expect.arrayContaining(['hrm', 'hrm-hire', 'hrm-positions', 'hrm-employee', 'hrm-fields', 'hrm-import']));
+        expect(names).toEqual(expect.arrayContaining(['hrm', 'hrm-hire', 'hrm-positions', 'hrm-departments', 'hrm-employee', 'hrm-fields', 'hrm-import']));
         moduleRoutes.forEach((route) => {
             expect(typeof route.component).toBe('function');
             expect(route.meta.ns).toContain(route.meta.module);
@@ -100,5 +104,27 @@ describe('HRM screens', () => {
 
     it('builds the import template Excel reads as UTF-8', () => {
         expect(csvTemplate([{ key: 'full_name' }, { key: 'employment_type' }, { key: 'custom_shift' }])).toBe('\uFEFFfull_name,employment_type,custom_shift\r\n');
+    });
+
+    it("splits where someone works into branch and department, open ones only", () => {
+        const units = [
+            { id: "c", type: "company", parent_id: "g", depth: 1, status: "active" },
+            { id: "b1", type: "branch", parent_id: "c", depth: 2, status: "active" },
+            { id: "b2", type: "branch", parent_id: "c", depth: 2, status: "archived" },
+            { id: "d1", type: "department", parent_id: "b1", depth: 3, status: "active" },
+            { id: "d2", type: "department", parent_id: "b1", depth: 3, status: "archived" },
+            { id: "d3", type: "department", parent_id: "c", depth: 2, status: "active" },
+        ];
+        expect(workPlaces(units).map((unit) => unit.id)).toEqual(["c", "b1"]);
+        expect(departmentsOf(units, "b1").map((unit) => unit.id)).toEqual(["d1"]);
+        expect(departmentsOf(units, "c").map((unit) => unit.id)).toEqual(["d3"]);
+        expect(departmentsOf(units, "")).toEqual([]);
+        expect(placeOf(units, "d1")).toBe("b1");
+        expect(placeOf(units, "b1")).toBe("b1");
+        expect(placeOf(units, "nope")).toBe("");
+    });
+
+    it("dates today by the reader clock, not UTC", () => {
+        expect(today(new Date(2026, 9, 28, 1, 30))).toBe("2026-10-28");
     });
 });

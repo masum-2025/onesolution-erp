@@ -179,6 +179,7 @@ const rowTone = (status) => ({ invalid: 'bad', failed: 'bad', skipped: 'outline'
                         <li><span class="font-mono" dir="ltr">joined_on, date_of_birth</span> — {{ t('hrm.import_page.hint_dates') }}</li>
                         <li><span class="font-mono" dir="ltr">employment_type</span> — {{ t('hrm.import_page.hint_kinds') }}</li>
                         <li><span class="font-mono" dir="ltr">position_code, unit_code, manager_code</span> — {{ t('hrm.import_page.hint_codes') }}</li>
+                        <li><span class="font-mono" dir="ltr">department</span> — {{ t('hrm.import_page.hint_department') }}</li>
                         <li><span class="font-mono" dir="ltr">gender</span> — female, male, other, undisclosed</li>
                         <li v-for="column in custom" :key="column.key"><span class="font-mono" dir="ltr">{{ column.key }}</span> — {{ column.label }}</li>
                     </ul>

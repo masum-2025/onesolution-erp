@@ -7,6 +7,8 @@ use App\Platform\Audit\AuditLogger;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Databases\TenantDatabases;
+use App\Platform\Tenancy\Enums\OrganizationStatus;
+use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
@@ -39,7 +41,7 @@ class EmployeeImporter
     public const COLUMNS = [
         'full_name', 'employment_type', 'joined_on',
         'full_name_local', 'phone', 'email', 'date_of_birth', 'gender', 'national_id', 'tax_id',
-        'position_code', 'unit_code', 'manager_code',
+        'position_code', 'unit_code', 'department', 'manager_code',
         'address_line1', 'address_city', 'address_district',
         'emergency_name', 'emergency_relation', 'emergency_phone',
     ];
@@ -355,6 +357,17 @@ class EmployeeImporter
                 $unit = $found;
             }
         }
+        // A department by its name (in any language), under the row's branch (or the company).
+        if (($name = $get('department')) !== null && ! isset($errors['unit_code'])) {
+            $place = $this->units->placeOf($unit)['place'];
+            $departmentId = $lookups['departments'][$place][mb_strtolower(trim($name))] ?? null;
+            $found = $departmentId === null ? null : Organization::query()->find($departmentId);
+            if ($found === null) {
+                $errors['department'] = __('hrm::hrm.validation.import_department');
+            } else {
+                $unit = $found;
+            }
+        }
 
         $data = array_filter([
             'organization_id' => $unit->getKey(),
@@ -422,15 +435,24 @@ class EmployeeImporter
     /**
      * Units, positions and managers of the company, looked up once per file.
      *
-     * @return array{units: array<string, string|null>, positions: array<string, list<Position>>, managers: array<string, string>}
+     * @return array{units: array<string, string|null>, departments: array<string, array<string, string|null>>, positions: array<string, list<Position>>, managers: array<string, string>}
      */
     private function lookups(Organization $unit, Organization $company): array
     {
         $units = [];
+        $departments = [];
         foreach (Organization::query()->subtreeOf($unit)->get() as $candidate) {
             $code = mb_strtoupper($this->units->codeOf($candidate));
             // The same code twice is no code at all: the row must say which unit.
             $units[$code] = array_key_exists($code, $units) ? null : $candidate->getKey();
+            if ($candidate->type === OrganizationType::Department && $candidate->status === OrganizationStatus::Active && $candidate->parent_id !== null) {
+                foreach (array_filter($candidate->texts('name')) as $text) {
+                    $key = mb_strtolower(trim((string) $text));
+                    // Two departments of one branch with the same name: neither is meant.
+                    $departments[$candidate->parent_id][$key] = isset($departments[$candidate->parent_id][$key]) && $departments[$candidate->parent_id][$key] !== $candidate->getKey()
+                        ? null : $candidate->getKey();
+                }
+            }
         }
 
         $positions = [];
@@ -446,7 +468,7 @@ class EmployeeImporter
             ->mapWithKeys(fn ($id, $code) => [mb_strtolower((string) $code) => (string) $id])
             ->all();
 
-        return ['units' => $units, 'positions' => $positions, 'managers' => $managers];
+        return ['units' => $units, 'departments' => $departments, 'positions' => $positions, 'managers' => $managers];
     }
 
     /**

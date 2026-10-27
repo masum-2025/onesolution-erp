@@ -41,9 +41,9 @@ function dashboardStaff(object $test): void
 it('lists the widgets of a module the person may see', function () {
     $this->asToken($this->w->token)->getJson($this->base)
         ->assertOk()
-        ->assertJsonPath('module', ['key' => 'hrm', 'name' => 'Human Resources', 'description' => 'Employees, positions and employment records.'])
+        ->assertJsonPath('module', ['key' => 'hrm', 'name' => 'Human Resources', 'description' => 'Employees, designations and employment records.'])
         ->assertJsonPath('data.0', ['module' => 'hrm', 'module_name' => 'Human Resources', 'key' => 'headcount', 'label' => 'Employees', 'type' => 'stat', 'size' => 1])
-        ->assertJsonCount(6, 'data');
+        ->assertJsonCount(7, 'data');
 });
 
 it('counts employees, joiners and probation from the records', function () {
@@ -71,7 +71,7 @@ it('groups employees by position and lists the latest changes', function () {
         ->assertJsonPath('data.items', [
             ['label' => 'Teacher', 'value' => 2],
             ['label' => 'Accountant', 'value' => 1],
-            ['label' => 'No position', 'value' => 1],
+            ['label' => 'No designation', 'value' => 1],
         ]);
 
     $recent = $this->asToken($this->w->token)->getJson("{$this->base}/recent")->assertOk()->json('data.items');
@@ -141,13 +141,13 @@ it('gathers the overview widgets of modules that are on', function () {
 
 it('shows a module settings page with the setup screens the person may open', function () {
     $this->asToken($this->w->token)->getJson('/api/modules/hrm/settings')->assertOk()
-        ->assertJsonPath('data.pages.*.key', ['positions', 'fields'])
+        ->assertJsonPath('data.pages.*.key', ['departments', 'positions', 'fields'])
         ->assertJsonPath('data.rule_count', 13)
         ->assertJsonPath('data.can_manage_modules', true);
 
     $viewer = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'HR viewer'));
     $this->asToken(orgToken($viewer, $this->w->c1))->getJson('/api/modules/hrm/settings')->assertOk()
-        ->assertJsonPath('data.pages.*.key', ['positions'])
+        ->assertJsonPath('data.pages.*.key', ['departments', 'positions'])
         ->assertJsonPath('data.can_manage_modules', false);
 });
 

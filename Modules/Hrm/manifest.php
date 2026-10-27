@@ -5,6 +5,7 @@
 | Business numbers never live here; they are rules (Rules::get('hrm.*')).
 */
 
+use Modules\Hrm\Dashboard\ByDepartment;
 use Modules\Hrm\Dashboard\ByPosition;
 use Modules\Hrm\Dashboard\ExpiringDocuments;
 use Modules\Hrm\Dashboard\Headcount;
@@ -194,6 +195,7 @@ return [
             'section' => 'people',
             'children' => [
                 ['key' => 'employees', 'label' => 'hrm::module.menu_employees', 'route' => '/hrm', 'permission' => 'hrm.view'],
+                ['key' => 'departments', 'label' => 'hrm::module.menu_departments', 'route' => '/hrm/departments', 'permission' => 'hrm.view'],
                 ['key' => 'positions', 'label' => 'hrm::module.menu_positions', 'route' => '/hrm/positions', 'permission' => 'hrm.view'],
                 ['key' => 'org_chart', 'label' => 'hrm::module.menu_org_chart', 'route' => '/hrm/org-chart', 'permission' => 'hrm.view'],
                 ['key' => 'fields', 'label' => 'hrm::module.menu_fields', 'route' => '/hrm/fields', 'permission' => 'hrm.configure'],
@@ -207,6 +209,7 @@ return [
         ['key' => 'joiners', 'label' => 'hrm::dashboard.joiners', 'type' => 'stat', 'provider' => Joiners::class, 'permission' => 'hrm.view', 'overview' => true],
         ['key' => 'probation', 'label' => 'hrm::dashboard.probation', 'type' => 'stat', 'provider' => OnProbation::class, 'permission' => 'hrm.view', 'overview' => true],
         ['key' => 'by_position', 'label' => 'hrm::dashboard.by_position', 'type' => 'bars', 'provider' => ByPosition::class, 'permission' => 'hrm.view', 'size' => 2],
+        ['key' => 'by_department', 'label' => 'hrm::dashboard.by_department', 'type' => 'bars', 'provider' => ByDepartment::class, 'permission' => 'hrm.view', 'size' => 2],
         ['key' => 'recent', 'label' => 'hrm::dashboard.recent', 'type' => 'list', 'provider' => RecentChanges::class, 'permission' => 'hrm.view', 'size' => 1],
         ['key' => 'expiring', 'label' => 'hrm::dashboard.expiring', 'type' => 'list', 'provider' => ExpiringDocuments::class, 'permission' => 'hrm.view', 'overview' => true],
     ]],
@@ -223,6 +226,7 @@ return [
     ],
     // Setup screens shown on the module's settings page (next to its rules).
     'settings' => ['pages' => [
+        ['key' => 'departments', 'label' => 'hrm::module.menu_departments', 'route' => '/hrm/departments', 'permission' => 'hrm.view'],
         ['key' => 'positions', 'label' => 'hrm::module.menu_positions', 'route' => '/hrm/positions', 'permission' => 'hrm.view'],
         ['key' => 'fields', 'label' => 'hrm::module.menu_fields', 'route' => '/hrm/fields', 'permission' => 'hrm.configure'],
     ]],

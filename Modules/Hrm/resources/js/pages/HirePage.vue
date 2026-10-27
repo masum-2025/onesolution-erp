@@ -1,9 +1,10 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { ArrowLeft, ArrowRight, Check, UserPlus } from 'lucide-vue-next';
+import { ArrowLeft, ArrowRight, Check, Plus, UserPlus } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppButton from '@/components/AppButton.vue';
+import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -15,8 +16,9 @@ import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { hrmApi } from '../api';
-import { addDays, hirePayload, missingCustom, missingRequired } from '../lib';
+import { addDays, hirePayload, missingCustom, missingRequired, placeOf, today } from '../lib';
 import CustomFieldInputs from '../components/CustomFieldInputs.vue';
+import UnitPicker from '../components/UnitPicker.vue';
 
 /**
  * Hiring in three steps: the person, the job, a last check. Which details
@@ -48,7 +50,7 @@ const form = reactive({
     position_id: '',
     employment_type: '',
     manager_id: '',
-    joined_on: new Date().toISOString().slice(0, 10),
+    joined_on: today(),
     custom: {},
 });
 
@@ -67,7 +69,26 @@ const opts = computed(() => options.data.value?.data ?? null);
 const required = computed(() => new Set(opts.value?.required_fields ?? []));
 // Extra fields of the chosen unit (its own and those set up above it).
 const customFields = computed(() => opts.value?.custom_fields ?? []);
-const workUnits = computed(() => (units.data.value?.data ?? []).filter((unit) => ['company', 'branch', 'department', 'personal'].includes(unit.type)));
+const allUnits = computed(() => units.data.value?.data ?? []);
+const unitName = (id) => allUnits.value.find((unit) => unit.id === id)?.display_name ?? opts.value?.unit.name ?? '';
+
+// A designation added on the spot, chosen at once.
+const newPosition = reactive({ open: false, en: '', bn: '', saving: false, error: null });
+async function addPosition() {
+    newPosition.saving = true;
+    newPosition.error = null;
+    try {
+        const { data } = await hrm.createPosition({ title: { en: newPosition.en.trim(), ...(newPosition.bn.trim() ? { bn: newPosition.bn.trim() } : {}) } });
+        await positions.reload();
+        form.position_id = data.id;
+        Object.assign(newPosition, { open: false, en: '', bn: '' });
+        toast.success(t('hrm.positions.saved'));
+    } catch (error) {
+        newPosition.error = Object.values(error.errors ?? {})[0]?.[0] ?? error.message;
+    } finally {
+        newPosition.saving = false;
+    }
+}
 const activeManagers = computed(() => (managers.data.value?.data ?? []).filter((person) => person.status !== 'exited'));
 const probationEnds = computed(() => {
     const days = opts.value?.probation_days.value ?? 0;
@@ -211,11 +232,7 @@ function fieldError(name) {
 
                 <!-- 2. The job -->
                 <div v-show="step === 1" class="grid gap-4 sm:grid-cols-2">
-                    <AppField v-slot="{ id }" :label="t('hrm.fields.unit')" :error="fieldError('organization_id')" class="sm:col-span-2">
-                        <select :id="id" v-model="form.organization_id" class="field-input">
-                            <option v-for="unit in workUnits" :key="unit.id" :value="unit.id">{{ '— '.repeat(Math.max(0, unit.depth - workUnits[0].depth)) }}{{ unit.display_name }}</option>
-                        </select>
-                    </AppField>
+                    <UnitPicker v-model="form.organization_id" :units="allUnits" :error="fieldError('organization_id')" />
                     <AppField v-slot="{ id }" :label="t('hrm.fields.employment_type')" :error="fieldError('employment_type')">
                         <select :id="id" v-model="form.employment_type" class="field-input">
                             <option v-for="type in opts?.employment_types ?? []" :key="type.value" :value="type.value">{{ type.label }}</option>
@@ -225,10 +242,13 @@ function fieldError(name) {
                         <input :id="id" v-model="form.joined_on" type="date" class="field-input" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('hrm.fields.position')" :error="fieldError('position_id')" optional>
-                        <select :id="id" v-model="form.position_id" class="field-input">
-                            <option value="">{{ t('hrm.fields.no_position') }}</option>
-                            <option v-for="position in positions.data.value?.data ?? []" :key="position.id" :value="position.id">{{ position.title }}</option>
-                        </select>
+                        <div class="flex gap-2">
+                            <select :id="id" v-model="form.position_id" class="field-input min-w-0 flex-1">
+                                <option value="">{{ t('hrm.fields.no_position') }}</option>
+                                <option v-for="position in positions.data.value?.data ?? []" :key="position.id" :value="position.id">{{ position.title }}</option>
+                            </select>
+                            <AppButton :icon="Plus" :aria-label="t('hrm.positions.add')" :title="t('hrm.positions.add')" size="icon" @click="newPosition.open = true" />
+                        </div>
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('hrm.fields.manager')" :error="fieldError('manager_id')" optional>
                         <select :id="id" v-model="form.manager_id" class="field-input">
@@ -246,7 +266,9 @@ function fieldError(name) {
                 <div v-show="step === 2" class="space-y-4">
                     <dl class="grid gap-x-6 gap-y-3 text-[13.5px] sm:grid-cols-2">
                         <div><dt class="text-muted">{{ t('hrm.fields.full_name') }}</dt><dd class="font-medium text-fg">{{ form.full_name }}</dd></div>
-                        <div><dt class="text-muted">{{ t('hrm.fields.unit') }}</dt><dd class="font-medium text-fg">{{ opts?.unit.name }}</dd></div>
+                        <div><dt class="text-muted">{{ t('hrm.fields.branch') }}</dt><dd class="font-medium text-fg">{{ unitName(placeOf(allUnits, form.organization_id)) }}</dd></div>
+                        <div><dt class="text-muted">{{ t('hrm.fields.department') }}</dt><dd class="font-medium text-fg">{{ form.organization_id !== placeOf(allUnits, form.organization_id) ? unitName(form.organization_id) : t('hrm.fields.no_department') }}</dd></div>
+                        <div><dt class="text-muted">{{ t('hrm.fields.position') }}</dt><dd class="font-medium text-fg">{{ (positions.data.value?.data ?? []).find((position) => position.id === form.position_id)?.title ?? t('hrm.fields.no_position') }}</dd></div>
                         <div><dt class="text-muted">{{ t('hrm.fields.employment_type') }}</dt><dd class="font-medium text-fg">{{ opts?.employment_types.find((type) => type.value === form.employment_type)?.label }}</dd></div>
                         <div><dt class="text-muted">{{ t('hrm.fields.joined_on') }}</dt><dd class="font-medium text-fg">{{ formatDate(form.joined_on) }}</dd></div>
                     </dl>
@@ -268,5 +290,20 @@ function fieldError(name) {
                 </div>
             </form>
         </section>
+
+        <AppDialog :open="newPosition.open" :title="t('hrm.positions.add')" @close="newPosition.open = false">
+            <form id="hrm-new-position" class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="addPosition">
+                <AppField v-slot="{ id }" :label="t('hrm.positions.title_en')" :error="newPosition.error">
+                    <input :id="id" v-model="newPosition.en" class="field-input" lang="en" maxlength="100" />
+                </AppField>
+                <AppField v-slot="{ id }" :label="t('hrm.positions.title_bn')" optional>
+                    <input :id="id" v-model="newPosition.bn" class="field-input" lang="bn" maxlength="100" />
+                </AppField>
+            </form>
+            <template #footer>
+                <AppButton variant="ghost" @click="newPosition.open = false">{{ t('hrm.profile.cancel') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="hrm-new-position" :loading="newPosition.saving" :disabled="!newPosition.en.trim()">{{ t('hrm.positions.save') }}</AppButton>
+            </template>
+        </AppDialog>
     </div>
 </template>

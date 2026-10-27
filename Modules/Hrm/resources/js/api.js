@@ -12,6 +12,11 @@ export function hrmApi(organizationId) {
         positions: (all = false) => api(`${base}/positions`, { query: { all: all ? 1 : undefined } }),
         createPosition: (body) => api(`${base}/positions`, { method: 'POST', body }),
         updatePosition: (id, body) => api(`${base}/positions/${id}`, { method: 'PATCH', body }),
+        // Departments per branch with head counts; they are units of the organization tree,
+        // made, renamed and closed by the platform's organization endpoints (organizations.manage).
+        departments: () => api(`${base}/departments`),
+        createDepartment: (parentId, name) => api('/api/organizations', { method: 'POST', body: { parent_id: parentId, type: 'department', name } }),
+        updateDepartment: (id, body) => api(`/api/organizations/${id}`, { method: 'PATCH', body }),
 
         employees: (query) => api(`${base}/employees`, { query }),
         // One level of the org chart: the top (no manager) or one person's direct reports.

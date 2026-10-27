@@ -136,3 +136,28 @@ export function availableSteps(employee, can) {
     if (can.manage && status === 'exited') steps.push('rehire');
     return steps;
 }
+
+const PLACE_TYPES = ['company', 'branch', 'personal'];
+
+/** Open branches and companies people can work at, in tree order (as /api/organizations lists them). */
+export function workPlaces(units) {
+    return units.filter((unit) => PLACE_TYPES.includes(unit.type) && unit.status === 'active');
+}
+
+/** The open departments right under a branch (or the company). */
+export function departmentsOf(units, placeId) {
+    if (!placeId) return [];
+    return units.filter((unit) => unit.type === 'department' && unit.parent_id === placeId && unit.status === 'active');
+}
+
+/** The branch (or company) of a unit: a department's parent, else the unit itself; '' when none. */
+export function placeOf(units, unitId) {
+    const unit = units.find((item) => item.id === unitId);
+    if (!unit) return '';
+    return unit.type === 'department' && unit.parent_id ? unit.parent_id : unit.id;
+}
+
+/** Today as "YYYY-MM-DD" by the reader's clock (UTC is yesterday before 6 am in Dhaka). */
+export function today(now = new Date()) {
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}

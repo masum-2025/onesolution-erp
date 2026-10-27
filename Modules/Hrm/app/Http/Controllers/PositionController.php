@@ -8,10 +8,12 @@ use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Modules\Hrm\Enums\EmployeeStatus;
 use Modules\Hrm\Exceptions\HrmException;
 use Modules\Hrm\Http\Controllers\Concerns\FindsHrmRecords;
 use Modules\Hrm\Http\EmployeePresenter;
 use Modules\Hrm\Http\Requests\PositionRequest;
+use Modules\Hrm\Models\Employee;
 use Modules\Hrm\Models\Position;
 
 /**
@@ -30,12 +32,16 @@ class PositionController extends Controller
         $organization = $this->findVisible($organization);
         Gate::authorize('hrm.view', $organization);
 
-        $ids = [...$organization->ancestorIds(), ...$this->subtreeIds($organization)];
+        $subtree = $this->subtreeIds($organization);
+        $ids = [...$organization->ancestorIds(), ...$subtree];
+        // How many people (not gone) hold each, here and below.
+        $people = Employee::query()->whereIn('organization_id', $subtree)->where('status', '!=', EmployeeStatus::Exited->value)
+            ->whereNotNull('position_id')->pluck('position_id')->countBy();
 
         return response()->json(['data' => Position::query()->whereIn('organization_id', $ids)
             ->when(! $request->boolean('all'), fn ($query) => $query->where('is_active', true))
             ->orderBy('code')->get()
-            ->map(fn (Position $position) => $this->presenter->position($position))->values()]);
+            ->map(fn (Position $position) => [...$this->presenter->position($position), 'employees' => (int) ($people[$position->getKey()] ?? 0)])->values()]);
     }
 
     public function store(PositionRequest $request, string $organization): JsonResponse

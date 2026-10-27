@@ -2111,6 +2111,30 @@ a deploy that adds a rule or changes a default never reads a map cached before i
   "{module}.{name}"); wording lives in `{module}::notifications` and partners can reword them
   like the platform's.
 
+### Departments and designations (HRM-4)
+
+- A department is a unit of the organization tree under a branch (or the company), so a
+  department head can be given rights over it alone and attendance, pay and reports follow it.
+  Departments are made, renamed and closed (`status: archived`) through the platform's
+  organization endpoints (`POST /api/organizations` with `type: department`,
+  `PATCH /api/organizations/{id}`; `organizations.manage`); HRM never writes the tree.
+- `GET …/hrm/departments` (hrm.view): per branch (or the company), its departments with how
+  many people (not gone) work in each and in the branch outside them, and `can_manage`
+  (hrm.manage and organizations.manage there). Screen `/hrm/departments`: add at a branch, add
+  to every branch at once (only where the name is missing), rename, close (only when empty;
+  shown again with "Show closed departments").
+- Employees now carry `branch` and `department` next to `unit` (the department's parent is the
+  branch). Hiring, transfer, promotion and rehire choose the branch, then a department of it
+  (`UnitPicker`); a closed branch or department takes nobody in (`unit_closed`, 422).
+- "Position" reads "Designation" (পদবি) on every screen; the API keeps `position_id`.
+  `GET …/hrm/positions` gives `employees` per designation; designations can be added from the
+  hire form. The employee list filters by branch or department (`unit_id`) and designation
+  (`position_id`), kept in the address.
+- CSV import: an optional `department` column names a department of the row's branch, in
+  English or Bangla (two departments of one branch with the same name: neither is chosen).
+- Dashboard: "Employees by department" (the six largest, the rest together, and those in no
+  department).
+
 ### Future expansion (HRM)
 
 - A new country or sector needs no code: kinds of employment, required details, the id

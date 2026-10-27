@@ -156,7 +156,8 @@ const typeLabel = computed(() => opts.value?.employment_types.find((type) => typ
 
             <section v-if="tab === 'overview'" class="card p-5 sm:p-6">
                 <dl class="grid gap-x-6 gap-y-4 text-[13.5px] sm:grid-cols-2 lg:grid-cols-3">
-                    <div><dt class="text-muted">{{ t('hrm.fields.unit') }}</dt><dd class="font-medium text-fg">{{ employee.unit.name }}</dd></div>
+                    <div><dt class="text-muted">{{ t('hrm.fields.branch') }}</dt><dd class="font-medium text-fg">{{ employee.branch?.name ?? employee.unit.name }}</dd></div>
+                    <div><dt class="text-muted">{{ t('hrm.fields.department') }}</dt><dd class="font-medium text-fg">{{ employee.department?.name ?? '–' }}</dd></div>
                     <div><dt class="text-muted">{{ t('hrm.fields.position') }}</dt><dd class="font-medium text-fg">{{ employee.position?.title ?? '–' }}</dd></div>
                     <div><dt class="text-muted">{{ t('hrm.fields.employment_type') }}</dt><dd class="font-medium text-fg">{{ typeLabel }}</dd></div>
                     <div><dt class="text-muted">{{ t('hrm.fields.manager') }}</dt><dd class="font-medium text-fg">{{ employee.manager?.full_name ?? '–' }}</dd></div>

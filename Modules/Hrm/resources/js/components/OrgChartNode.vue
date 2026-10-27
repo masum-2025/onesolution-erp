@@ -59,7 +59,7 @@ async function toggle() {
             <RouterLink :to="`/hrm/employees/${person.id}`" class="min-w-0 flex-1 rounded-lg outline-offset-4">
                 <span class="block truncate text-[14px] font-semibold text-fg group-hover:text-brand-text">{{ person.full_name }}</span>
                 <span class="block truncate text-[12.5px] text-muted">
-                    {{ person.position?.title ?? t('hrm.org_chart.no_position') }} · {{ person.unit.name }}
+                    {{ person.position?.title ?? t('hrm.org_chart.no_position') }}<template v-if="person.department"> · {{ person.department.name }}</template> · {{ person.branch?.name ?? person.unit.name }}
                 </span>
             </RouterLink>
             <button

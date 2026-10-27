@@ -7,6 +7,8 @@ import { api } from '@/lib/http';
 import { confirmAction } from '@/lib/dialogs';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
+import { today } from '../lib';
+import UnitPicker from './UnitPicker.vue';
 
 /**
  * One employment step (confirm, transfer, promote, notice, exit, rehire)
@@ -35,12 +37,9 @@ watch(
     () => props.open,
     async (open) => {
         if (!open) return;
-        Object.assign(form, { on: new Date().toISOString().slice(0, 10), reason: '', to_organization_id: props.step === 'transfer' ? '' : '', position_id: '', exits_on: '' });
+        Object.assign(form, { on: today(), reason: '', to_organization_id: '', position_id: '', exits_on: '' });
         errors.value = {};
-        if (needsUnit.value) {
-            const result = await api('/api/organizations', { query: { per_page: 100 } }).catch(() => ({ data: [] }));
-            units.value = result.data.filter((unit) => ['company', 'branch', 'department', 'personal'].includes(unit.type) && unit.id !== props.employee.unit.id);
-        }
+        if (needsUnit.value) units.value = (await api('/api/organizations', { query: { per_page: 100 } }).catch(() => ({ data: [] }))).data;
         if (needsPosition.value) positions.value = (await props.hrm.positions().catch(() => ({ data: [] }))).data;
     },
 );
@@ -86,12 +85,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <input :id="id" v-model="form.on" type="date" class="field-input" />
             </AppField>
 
-            <AppField v-if="needsUnit" v-slot="{ id }" :label="t('hrm.steps.to_unit')" :error="fieldError('to_organization_id')" :optional="step !== 'transfer'">
-                <select :id="id" v-model="form.to_organization_id" class="field-input">
-                    <option value="">–</option>
-                    <option v-for="unit in units" :key="unit.id" :value="unit.id">{{ unit.display_name }}</option>
-                </select>
-            </AppField>
+            <UnitPicker v-if="needsUnit" v-model="form.to_organization_id" :units="units" :place-label="t('hrm.steps.to_unit')" :error="fieldError('to_organization_id')" :optional="step !== 'transfer'" />
 
             <AppField v-if="needsPosition" v-slot="{ id }" :label="t('hrm.steps.to_position')" :error="fieldError('position_id')" :optional="step !== 'promote'">
                 <select :id="id" v-model="form.position_id" class="field-input">

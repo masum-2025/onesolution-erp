@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Hrm\Http\Controllers\CustomFieldController;
+use Modules\Hrm\Http\Controllers\DepartmentController;
 use Modules\Hrm\Http\Controllers\EmployeeController;
 use Modules\Hrm\Http\Controllers\EmployeeDocumentController;
 use Modules\Hrm\Http\Controllers\EmployeeImportController;
@@ -20,6 +21,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
     ->group(function () {
         Route::get('form-options', [EmployeeController::class, 'formOptions']);
         Route::get('positions', [PositionController::class, 'index']);
+        Route::get('departments', [DepartmentController::class, 'index']);
         Route::get('org-chart', OrgChartController::class);
         Route::get('custom-fields', [CustomFieldController::class, 'index']);
         Route::get('imports/columns', [EmployeeImportController::class, 'columns']);

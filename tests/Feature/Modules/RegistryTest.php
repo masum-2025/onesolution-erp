@@ -127,5 +127,5 @@ it('gives every installed module a dashboard and a settings page', function () {
         }
     }
 
-    expect(app(ModuleRegistry::class)->get('hrm')->widgets)->toHaveCount(6);
+    expect(app(ModuleRegistry::class)->get('hrm')->widgets)->toHaveCount(7);
 });

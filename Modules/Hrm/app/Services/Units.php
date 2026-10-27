@@ -2,6 +2,7 @@
 
 namespace Modules\Hrm\Services;
 
+use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Modules\Hrm\Exceptions\HrmException;
@@ -27,6 +28,27 @@ class Units
             ->whereIn('type', [OrganizationType::Company->value, OrganizationType::Personal->value])
             ->orderByDesc('depth')
             ->first() ?? throw HrmException::notCompanyUnit();
+    }
+
+    /** Nobody is hired into, or moved to, a closed (suspended or archived) branch or department. */
+    public function assertOpen(Organization $unit): void
+    {
+        if ($unit->status !== OrganizationStatus::Active) {
+            throw HrmException::unitClosed();
+        }
+    }
+
+    /**
+     * Where a unit sits for people: its branch (or the company) and its
+     * department, if the unit is one.
+     *
+     * @return array{place: string, department: string|null}
+     */
+    public function placeOf(Organization $unit): array
+    {
+        return $unit->type === OrganizationType::Department && $unit->parent_id !== null
+            ? ['place' => $unit->parent_id, 'department' => $unit->getKey()]
+            : ['place' => $unit->getKey(), 'department' => null];
     }
 
     /**

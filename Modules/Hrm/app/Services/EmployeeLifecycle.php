@@ -58,6 +58,7 @@ class EmployeeLifecycle
     public function hire(Organization $unit, array $data, User $actor): Employee
     {
         $company = $this->units->companyOf($unit);
+        $this->units->assertOpen($unit);
         $joinedOn = CarbonImmutable::parse($data['joined_on'] ?? now()->toDateString());
         $position = $this->position($data['position_id'] ?? null, $company);
         $custom = $this->checkDetails($company, $unit, $data, null, requireAll: true);
@@ -199,6 +200,7 @@ class EmployeeLifecycle
             if ($employee->organization_id === $to->getKey()) {
                 throw HrmException::sameUnit();
             }
+            $this->units->assertOpen($to);
 
             $from = $employee->organization_id;
             $employee->organization_id = $to->getKey();
@@ -226,6 +228,7 @@ class EmployeeLifecycle
 
             if ($to !== null && $to->getKey() !== $employee->organization_id) {
                 $this->assertSameCompany($employee, $to);
+                $this->units->assertOpen($to);
                 $from['unit_id'] = $employee->organization_id;
                 $into['unit_id'] = $to->getKey();
                 $employee->organization_id = $to->getKey();
@@ -286,6 +289,7 @@ class EmployeeLifecycle
 
             if ($to !== null && $to->getKey() !== $employee->organization_id) {
                 $this->assertSameCompany($employee, $to);
+                $this->units->assertOpen($to);
                 $employee->organization_id = $to->getKey();
             }
             $probationDays = (int) $this->rules->get('hrm.probation_days', $this->contexts->forOrganization($this->unitOf($employee)));
@@ -401,6 +405,11 @@ class EmployeeLifecycle
     public function hireErrors(Organization $unit, array $data): array
     {
         $errors = [];
+        try {
+            $this->units->assertOpen($unit);
+        } catch (HrmException $exception) {
+            $errors['organization_id'] = $exception->getMessage();
+        }
         try {
             $this->position($data['position_id'] ?? null, $this->units->companyOf($unit));
         } catch (ValidationException $exception) {

@@ -109,6 +109,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                             <template v-if="position.grade">{{ t('hrm.positions.grade') }} {{ position.grade }}</template>
                         </span>
                     </span>
+                    <RouterLink class="shrink-0 text-[12.5px] text-muted hover:text-fg hover:underline" :to="{ name: 'hrm', query: { position_id: position.id } }">{{ t('hrm.positions.people', { count: position.employees ?? 0 }) }}</RouterLink>
                     <AppBadge v-if="!position.is_active" tone="outline">{{ t('hrm.positions.inactive') }}</AppBadge>
                     <AppButton v-if="can('hrm.manage') && position.organization_id === org.id" size="icon-sm" variant="ghost" :icon="PenLine" :aria-label="t('hrm.positions.edit')" @click="edit(position)" />
                 </li>

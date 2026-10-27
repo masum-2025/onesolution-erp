@@ -12,6 +12,7 @@ use Modules\Hrm\Models\EmployeeImport;
 use Modules\Hrm\Models\EmploymentEvent;
 use Modules\Hrm\Models\ImportRow;
 use Modules\Hrm\Models\Position;
+use Modules\Hrm\Services\Units;
 
 /**
  * API shapes of HRM records. National and tax ids are always masked here;
@@ -21,6 +22,9 @@ class EmployeePresenter
 {
     /** @var array<string, string> */
     private array $unitNames = [];
+
+    /** @var array<string, Organization|null> */
+    private array $units = [];
 
     /**
      * @return array<string, mixed>
@@ -33,6 +37,8 @@ class EmployeePresenter
             'full_name' => $employee->full_name,
             'full_name_local' => $employee->full_name_local,
             'unit' => ['id' => $employee->organization_id, 'name' => $this->unitName($employee->organization_id)],
+            // The same unit told apart: the branch (or company) and the department in it, if any.
+            ...$this->placeOf($employee->organization_id),
             'position' => $employee->position === null ? null : ['id' => $employee->position->getKey(), 'title' => $employee->position->textIn('title')],
             'employment_type' => $employee->employment_type,
             'status' => $employee->status->value,
@@ -206,6 +212,29 @@ class EmployeePresenter
 
     private function unitName(string $id): string
     {
-        return $this->unitNames[$id] ??= (string) Organization::query()->find($id)?->displayName();
+        return $this->unitNames[$id] ??= (string) $this->unit($id)?->displayName();
+    }
+
+    private function unit(string $id): ?Organization
+    {
+        if (! array_key_exists($id, $this->units)) {
+            $this->units[$id] = Organization::query()->find($id);
+        }
+
+        return $this->units[$id];
+    }
+
+    /**
+     * @return array{branch: array{id: string, name: string}, department: array{id: string, name: string}|null}
+     */
+    private function placeOf(string $unitId): array
+    {
+        $unit = $this->unit($unitId);
+        $place = $unit === null ? ['place' => $unitId, 'department' => null] : app(Units::class)->placeOf($unit);
+
+        return [
+            'branch' => ['id' => $place['place'], 'name' => $this->unitName($place['place'])],
+            'department' => $place['department'] === null ? null : ['id' => $place['department'], 'name' => $this->unitName($place['department'])],
+        ];
     }
 }
