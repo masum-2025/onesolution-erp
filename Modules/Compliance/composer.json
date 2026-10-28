@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/compliance",
+    "description": "Your factories' audit register: services, providers, last audit and expiry days, days left, reminders before expiry.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Compliance\\": "app/"
+        }
+    }
+}

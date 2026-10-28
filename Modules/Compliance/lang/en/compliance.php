@@ -1,0 +1,38 @@
+<?php
+
+return [
+    'states' => [
+        'valid' => 'Valid',
+        'expiring' => 'Expiring',
+        'expired' => 'Expired',
+        'unknown' => 'No expiry day',
+    ],
+    'errors' => [
+        'not_factory' => 'Choose a company or a branch that is open: audits are kept per factory.',
+        'not_list_owner' => 'Lists are kept by a group or a company. This one is kept above: change it there.',
+        'audit_not_found' => 'This register line was not found here. Open it again from the register.',
+        'item_not_found' => 'This item is not in the lists here. Choose one from the list.',
+        'already_in_register' => 'This factory already has this audit service in the register. Open that line instead.',
+        'code_taken' => 'This code is already used in the list. Choose another one.',
+        'version_conflict' => 'Someone changed this meanwhile. Reload and try again.',
+        'dates_order' => 'The expiry day cannot be before the last audit day.',
+        'dates_need_permission' => 'Only people allowed to set official dates may set the last audit and expiry days.',
+        'import_columns' => 'The file needs these columns: :columns. Download the template to see them.',
+        'import_unknown_columns' => 'The file has columns that are not known: :columns. Use the template\'s columns.',
+        'import_too_many_rows' => 'The file has more than :max rows. Split it into smaller files.',
+        'import_unreadable' => 'The file could not be read. Save it as Excel (.xlsx) or CSV (UTF-8) and try again.',
+        'import_empty' => 'The file has no rows under its header.',
+        'import_has_errors' => ':count row(s) have problems. Fix them, or import only the rows without problems.',
+    ],
+    'import' => [
+        'reason' => 'Imported from :file',
+        'required' => 'Needed.',
+        'factory_unknown' => 'No company or branch here has this name.',
+        'service_unknown' => 'No audit service here has this code or name.',
+        'type_unknown' => 'No kind of audit here has this code or name.',
+        'bad_date' => 'Not a date: write it like 2026-10-31 or 31/10/2026.',
+        'twice' => 'This factory and service are already in row :row.',
+        'too_long' => 'Too long: at most :max characters.',
+        'formula' => 'Formulas are not imported: write the value itself.',
+    ],
+];

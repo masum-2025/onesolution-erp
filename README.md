@@ -1297,6 +1297,48 @@ module (business and enterprise plans).
   quotations, invoices and reports as connection kinds; supplier and buyer links can reuse it
   with no change here.
 
+## Compliance module (CMP-1: the audit register)
+
+A group of factories keeps its audit register: its factories are its own companies and
+branches. Module `compliance` (business, enterprise; plug-and-play: own tables `cmp_*`, own
+manifest; nothing outside it changed except shared counts in tests).
+
+- **Lists** (`cmp_services`, `cmp_audit_types`, `cmp_providers`): kept by a group (for all its
+  companies) or a company (its own extra), switched off, never removed. "Add the usual ones"
+  takes `compliance.default_services` (BSCI, WRAP, SMETA, ISO 9001/14001/45001, Higg FEM/FSLM,
+  OEKO-TEX, GOTS, fire licence; placeholders per country) and `compliance.default_audit_types`.
+  A provider may carry `connection_id` (NET-1) and shows as "on the platform".
+- **Register** (`cmp_audits`): one line per factory and service (unique), with provider, kind,
+  last audit day, official expiry day, result, certificate, notes. **Days left are never
+  stored**: `Support\Validity` works them out from the expiry day and the company's today
+  (its timezone); state valid / expiring (within `compliance.expiring_days`, 60) / expired /
+  unknown. A renewal under way changes nothing: expired stays expired until a new expiry day.
+- **Who:** `compliance.view` reads; `compliance.manage` adds lines and changes details and
+  lists; only `compliance.set_expiry` sets the official dates, always with a reason. Every
+  change goes to `cmp_audit_changes` (append-only) and the audit log. A group's context reads
+  all its factories but never writes their lines (platform rule): lines are kept at the company.
+- **Reminders:** `compliance:expiry-reminders` daily 02:20 UTC: at each stage of
+  `compliance.reminder_days` ([60, 30, 15, 7]) and once expired, one message per company to
+  the people with `compliance.manage`; each stage once per expiry day (`cmp_reminders_sent`,
+  unique); a new expiry day starts the stages again. Bell and dashboard ("Audit register",
+  "Audits to renew").
+- **Import:** `POST …/compliance/import` (Excel .xlsx or CSV, openspout; `dry_run` checks only,
+  then import, optionally skipping rows with problems); factory and service by name or code in
+  either language; dates as Excel dates, day numbers or text (2026-10-31, 31/10/2026…); a new
+  provider is added to the company's list; formulas refused; rows limited by
+  `compliance.import_max_rows`. Needs `manage` and `set_expiry`. Template:
+  `GET …/compliance/import/template` (.xlsx). The file is never stored.
+- **API** (`/api/organizations/{org}/compliance`): `options`, `register[?unit_id&service_id&state]`,
+  `audits` (POST), `audits/{id}` (GET, PATCH), `audits/{id}/dates` (POST), `lists/{kind}`
+  (GET, POST), `lists/{kind}/{id}` (PATCH), `lists/{kind}/defaults` (POST), `import`,
+  `import/template`.
+- **Screens:** `/compliance` (counts by state, factory × service grid on wide screens, most
+  urgent first on phones, drawer with history and official dates), `/compliance/lists`,
+  `/compliance/import`.
+- **Future:** service providers on the platform work in a client's register through connection
+  grants (NET-2); renewal requests and projects follow (CMP-2, PRJ). A new country or sector:
+  its usual services are rule data; no code change.
+
 ## A client's own payment gateway accounts (Phase 6, first part)
 
 Code: `app/Platform/Payments` (merchant accounts, collections, gateway drivers) and

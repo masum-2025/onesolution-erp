@@ -1,0 +1,11 @@
+{
+    "name": "Compliance",
+    "alias": "compliance",
+    "description": "Your factories' audit register: services, providers, last audit and expiry days, days left, reminders before expiry.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Compliance\\Providers\\ComplianceServiceProvider"
+    ],
+    "files": []
+}
