@@ -1257,6 +1257,46 @@ only "My records" and My account.
   portal payments once a fees or invoicing module exists, and a portal-only address
   (e.g. `parents.school.com`) through client domains.
 
+## Business connections (NET-1)
+
+Two clients of the platform working together: a **service provider** (a company, e.g. an audit
+coordination firm) and its **client** (a group or a company, e.g. a group of factories). Each
+keeps its own data in its own tenant; nothing is read across. Logic in
+`app/Platform/Connections`; the switch, rules, texts and screen are the `business_network`
+module (business and enterprise plans).
+
+- **Connecting:** the provider makes an invitation code (`POST …/connections/invitations`,
+  shown once, only its hash kept, valid `business_network.invite_valid_days`). The client
+  looks it up (`POST …/connections/preview`: who invites, and its own companies and branches)
+  and accepts at its group or company (`POST …/connections/accept`, recent two-step check),
+  choosing which companies and branches the provider may deal with; a shared company covers
+  its branches. Never within one's own tree; once per provider and client; with a company of
+  another partner only while `business_network.allow_other_partners` allows it on both sides
+  (neither partner ever sees the other's client).
+- **Running it:** only the client changes the shared units (`PUT …/{id}/units`); either side
+  pauses (only that side resumes) or ends it with a reason (final; the other side is told).
+  The provider learns only the client's name and the shared units' names. Support access
+  never shows connections (`not_during_support`).
+- **Messages (for modules):** a module declares the kinds it receives in its manifest
+  (`connection_kinds` → `ConnectionMessageHandler`, `to_client` or `to_provider`) and sends
+  through `Services\Connections::send()` with an `op_id` (the same op_id is the same message).
+  Sending is refused unless the connection is active, the receiving unit is shared (or is the
+  provider), the payload is under 64 KB and files are within `business_network.max_file_mb`.
+  `Jobs\DeliverConnectionMessage` (queued, after commit) copies the files into the receiver's
+  area of the private disk (checksums compared) and lets the receiving module store the message
+  inside the receiver's own database with no signed-in context; then the payload and file list
+  are wiped (central table `connection_messages` keeps the envelope). A closed connection, the
+  kind's module off at the receiver, a damaged file or a receiving error ends it as failed and
+  the sender's managers are told. Locally, without a queue worker, messages wait in the queue
+  (`php artisan queue:work`).
+- **Screen:** `/connections` ("My clients" / "My service providers", invite, enter a code and
+  choose factories, the connection with its shared factories, envelopes, pause and end).
+- **Audit:** invitation, acceptance, unit changes, pause, resume and end on both sides; every
+  message sent, received or failed (envelope only).
+- **Future:** Compliance (client side) and Projects (provider side) send renewal requests,
+  quotations, invoices and reports as connection kinds; supplier and buyer links can reuse it
+  with no change here.
+
 ## A client's own payment gateway accounts (Phase 6, first part)
 
 Code: `app/Platform/Payments` (merchant accounts, collections, gateway drivers) and

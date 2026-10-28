@@ -1,0 +1,11 @@
+{
+    "name": "BusinessNetwork",
+    "alias": "business_network",
+    "description": "Connect with your service providers or your clients on the platform: share chosen factories and exchange requests, quotations and reports.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BusinessNetwork\\Providers\\BusinessNetworkServiceProvider"
+    ],
+    "files": []
+}

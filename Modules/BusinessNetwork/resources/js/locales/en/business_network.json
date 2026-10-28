@@ -1,0 +1,97 @@
+{
+    "title": "Business connections",
+    "text": "Work with your service providers and your clients on the platform: each side sees only what the client shares.",
+    "common": {
+        "cancel": "Cancel",
+        "done": "Done"
+    },
+    "parts": {
+        "clients": "My clients",
+        "providers": "My service providers"
+    },
+    "status": {
+        "invited": "Invited",
+        "active": "Active",
+        "paused": "Paused",
+        "ended": "Ended"
+    },
+    "side": {
+        "provider": "You serve them",
+        "client": "They serve you"
+    },
+    "list": {
+        "waiting": "Waiting for the client",
+        "expires": "Code valid until {date}",
+        "since": "Connected since {date}"
+    },
+    "empty": {
+        "clients_title": "No clients connected yet",
+        "clients_text": "Invite a client: give them the code, and they choose which of their factories you may work for.",
+        "providers_title": "No service providers connected yet",
+        "providers_text": "Has a service provider given you a connection code? Enter it and choose which factories they may work for."
+    },
+    "invite": {
+        "button": "Invite a client",
+        "title": "Invite a client",
+        "text": "You get a code to give your client. They enter it in their own account and choose which factories you may work for.",
+        "note": "Your name for them",
+        "note_hint": "Only you see it, e.g. Rider Group.",
+        "make": "Make the code",
+        "give": "Give this code to your client (by phone, email or in person):",
+        "copy": "Copy",
+        "copied": "Code copied.",
+        "copy_failed": "Could not copy: select the code and copy it by hand.",
+        "once": "Shown only now. It can be used once, until {date}."
+    },
+    "accept": {
+        "button": "Enter a code",
+        "title": "Connect with a service provider",
+        "text": "Enter the code your service provider gave you. You choose which of your companies and branches they may work for.",
+        "code": "Connection code",
+        "look_up": "Check the code",
+        "from": "{name} invites you to connect.",
+        "confirm": "Connect",
+        "done": "Connected with {name}."
+    },
+    "units": {
+        "title": "Factories they may work for",
+        "hint": "Tick companies or branches. A ticked company includes its branches.",
+        "covered": "With its company",
+        "type_company": "Company",
+        "type_branch": "Branch",
+        "shared": "Factories shared with you",
+        "save": "Save shared factories",
+        "saved": "Shared factories saved."
+    },
+    "drawer": {
+        "title": "Connection",
+        "note": "Your name for them: {note}",
+        "since": "Connected since {date}",
+        "paused_by_you": "You paused this connection: nothing goes either way until you resume it.",
+        "paused_by_them": "The other side paused this connection: nothing goes either way until they resume it.",
+        "ended": "Ended on {date}."
+    },
+    "messages": {
+        "title": "Sent and received",
+        "none": "Nothing sent either way yet.",
+        "sent": "Sent to {to}",
+        "received": "From {from}",
+        "status_queued": "On its way",
+        "status_delivered": "Delivered",
+        "status_failed": "Not delivered"
+    },
+    "steps": {
+        "pause": "Pause",
+        "pause_title": "Pause the connection with {name}?",
+        "pause_text": "Nothing can be sent either way until you resume it. What each side has stays.",
+        "pause_done": "Connection paused.",
+        "resume": "Resume",
+        "resume_title": "Resume the connection with {name}?",
+        "resume_text": "Both sides can send again.",
+        "resume_done": "Connection resumed.",
+        "end": "End connection",
+        "end_title": "End the connection with {name}?",
+        "end_text": "This cannot be undone: nothing more can be sent. What each side received stays theirs. The other side is told your reason.",
+        "end_done": "Connection ended."
+    }
+}

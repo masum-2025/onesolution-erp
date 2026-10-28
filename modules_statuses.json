@@ -33,5 +33,6 @@
     "Recruitment": true,
     "Appraisals": true,
     "Leave": true,
-    "EduWebsite": true
+    "EduWebsite": true,
+    "BusinessNetwork": true
 }

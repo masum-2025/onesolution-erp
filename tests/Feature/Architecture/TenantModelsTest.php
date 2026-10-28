@@ -14,6 +14,9 @@ use App\Platform\Billing\Models\Payout;
 use App\Platform\Billing\Models\TrialGrant;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\Branding\Models\ClientBrand;
+use App\Platform\Connections\Models\Connection;
+use App\Platform\Connections\Models\ConnectionMessage;
+use App\Platform\Connections\Models\ConnectionUnit;
 use App\Platform\Countries\Models\Country;
 use App\Platform\DataExport\Models\DataExport;
 use App\Platform\Identity\Models\OtpChallenge;
@@ -177,6 +180,13 @@ const PLATFORM_MODELS = [
     // organization and membership.
     PortalInvitation::class,
     PortalLink::class,
+    // Business connections (NET-1): each belongs to two clients at once (a
+    // provider and its client), so it lives in the main database; every read
+    // goes through Connections / ConnectionLinks, which keep each side to its
+    // own. Message payloads are wiped once delivered.
+    Connection::class,
+    ConnectionMessage::class,
+    ConnectionUnit::class,
     // Country facts (Phase 6): platform reference data.
     Country::class,
     // Offline sync (Phase 7): checked by the sync endpoint before any tenant

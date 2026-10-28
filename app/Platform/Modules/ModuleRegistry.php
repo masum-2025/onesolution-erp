@@ -218,6 +218,12 @@ final class ModuleRegistry
             }
         }
 
+        foreach ($manifest['connection_kinds'] ?? [] as $class) {
+            if (! is_string($class) || $class === '') {
+                throw InvalidModuleManifest::because($key, 'connection kinds must be class names');
+            }
+        }
+
         self::validateDashboardAndSettings($manifest);
         self::validateNotifications($manifest);
         self::validateLedgerAccounts($manifest);

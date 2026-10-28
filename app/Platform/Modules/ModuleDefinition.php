@@ -24,6 +24,7 @@ final readonly class ModuleDefinition
      * @param  list<array{key: string, label: string, type: string, provider: class-string, permission?: string, size?: int, overview?: bool}>  $widgets  The module's dashboard.
      * @param  list<array{key: string, label: string, route: string, permission?: string}>  $settingsPages  The module's own setting screens (besides its rules).
      * @param  array<string, array{label: string, type: string}>  $ledgerAccounts  Accounts the module posts to, keyed "{module}.{name}" (Accounting maps each to an account).
+     * @param  list<class-string>  $connectionKinds  ConnectionMessageHandler classes.
      */
     public function __construct(
         public string $key,
@@ -61,6 +62,8 @@ final readonly class ModuleDefinition
         public array $ledgerAccounts = [],
         // The module's own portal screens for another module's record kind: [{subject, label, route}].
         public array $portalPages = [],
+        // Messages it receives over business connections (NET-1): ConnectionMessageHandler classes.
+        public array $connectionKinds = [],
     ) {}
 
     /**
@@ -94,6 +97,7 @@ final readonly class ModuleDefinition
             notifications: $manifest['notifications'] ?? [],
             ledgerAccounts: $manifest['ledger_accounts'] ?? [],
             portalPages: array_values($manifest['portal_pages'] ?? []),
+            connectionKinds: array_values($manifest['connection_kinds'] ?? []),
         );
     }
 

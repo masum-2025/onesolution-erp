@@ -12,6 +12,7 @@ use App\Platform\Billing\Http\Controllers\PartnerPlansController;
 use App\Platform\Billing\Http\Controllers\PartnerSubscriptionController;
 use App\Platform\Billing\Http\Controllers\SelfServeBillingController;
 use App\Platform\Branding\Http\ClientBrandController;
+use App\Platform\Connections\Http\Controllers\ConnectionController;
 use App\Platform\Countries\Http\CountryController;
 use App\Platform\Dashboard\Http\ModuleDashboardController;
 use App\Platform\Dashboard\Http\ModuleSettingsController;
@@ -252,6 +253,23 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 
         Route::get('portal', [PortalMemberController::class, 'index']);
         Route::get('portal/records/{link}', [PortalMemberController::class, 'show'])->where('link', '[0-9A-Za-z]{26}');
+    });
+
+    // Business connections (NET-1): a service provider and its client, two clients of the platform.
+    Route::middleware('module:business_network')->group(function () {
+        Route::get('organizations/{organization}/connections', [ConnectionController::class, 'index']);
+        Route::post('organizations/{organization}/connections/invitations', [ConnectionController::class, 'invite'])->middleware('throttle:tenancy-sensitive');
+        // Codes: looked up and used a few times a minute at most.
+        Route::middleware('throttle:connection-codes')->group(function () {
+            Route::post('organizations/{organization}/connections/preview', [ConnectionController::class, 'preview']);
+            Route::post('organizations/{organization}/connections/accept', [ConnectionController::class, 'accept'])->middleware('two_factor.recent');
+        });
+        Route::get('organizations/{organization}/connections/{connection}', [ConnectionController::class, 'show']);
+        Route::get('organizations/{organization}/connections/{connection}/messages', [ConnectionController::class, 'messages']);
+        Route::middleware('throttle:tenancy-sensitive')->group(function () {
+            Route::put('organizations/{organization}/connections/{connection}/units', [ConnectionController::class, 'units']);
+            Route::post('organizations/{organization}/connections/{connection}/{step}', [ConnectionController::class, 'step'])->middleware('two_factor.recent');
+        });
     });
 
     // A client's own payment gateway accounts (Phase 6), at its company.

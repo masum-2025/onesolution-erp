@@ -16,6 +16,7 @@ use App\Platform\Packaging\PackagingServiceProvider;
 use App\Platform\PartnerApi\PartnerApiServiceProvider;
 use App\Platform\Partners\PartnersServiceProvider;
 use App\Platform\Payments\PaymentsServiceProvider;
+use App\Platform\Connections\ConnectionsServiceProvider;
 use App\Platform\Portal\PortalServiceProvider;
 use App\Platform\Rules\RulesServiceProvider;
 use App\Platform\Security\SecurityServiceProvider;
@@ -42,6 +43,7 @@ return [
     PartnerApiServiceProvider::class,
     IdentityServiceProvider::class,
     PortalServiceProvider::class,
+    ConnectionsServiceProvider::class,
     CountriesServiceProvider::class,
     OfflineServiceProvider::class,
     SecurityServiceProvider::class,
