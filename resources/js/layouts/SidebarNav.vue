@@ -100,6 +100,9 @@ const platformSections = computed(() => {
     // A client's own person in its portal (Phase 5C-4): their records, nothing else.
     if (context?.membership_type === 'portal') return [{ key: 'workspace', label: t('core.nav.workspace'), items: [{ to: '/portal', label: t('core.nav.portal_home'), icon: Home }] }];
 
+    // A connected provider's person in a client's factory (NET-2): the overview, then only the modules given.
+    if (context?.mode === 'connection') return [{ key: 'workspace', label: t('core.nav.workspace'), items: [{ to: '/', label: t('core.nav.overview'), icon: Home, exact: true }] }];
+
     return [
         {
             key: 'workspace',

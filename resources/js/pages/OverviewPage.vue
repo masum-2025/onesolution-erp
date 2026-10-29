@@ -16,11 +16,14 @@ import { settingSource, settingValue } from '@/lib/display';
 import { t } from '@/lib/i18n';
 
 const org = currentOrganization();
+// A connected provider's person (NET-2) sees the given modules' numbers and their work, not the client's set-up.
+const connected = session.me?.context?.mode === 'connection';
+const unlessConnected = (load) => (connected ? Promise.resolve(null) : load());
 
-const units = useResource(() => visibleOrganizations());
-const modules = useResource(() => api(`/api/organizations/${org.id}/modules`).then((response) => response.data));
-const rules = useResource(() => api(`/api/organizations/${org.id}/rules`).then((response) => response.data));
-const settings = useResource(() => api(`/api/organizations/${org.id}/settings`).then((response) => response.data));
+const units = useResource(() => unlessConnected(() => visibleOrganizations()));
+const modules = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/modules`).then((response) => response.data)));
+const rules = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/rules`).then((response) => response.data)));
+const settings = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/settings`).then((response) => response.data)));
 // Headline widgets of every module that is on here (UI-1b), each loading on its own.
 const overview = useResource(() => api('/api/dashboard').then((response) => response.data));
 const icons = ref({});
@@ -124,7 +127,7 @@ const actions = computed(() =>
 
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
             <!-- Needs your action -->
-            <section class="card lg:col-span-3 lg:self-start" aria-labelledby="needs-action">
+            <section class="card lg:self-start" :class="connected ? 'lg:col-span-5' : 'lg:col-span-3'" aria-labelledby="needs-action">
                 <header class="border-b border-line px-5 py-4">
                     <h2 id="needs-action" class="text-[14.5px] font-semibold text-fg">{{ t('dashboard.needs_action') }}</h2>
                     <p class="mt-0.5 text-[12.5px] text-muted">{{ t('dashboard.needs_action_text') }}</p>
@@ -154,7 +157,7 @@ const actions = computed(() =>
                 </ul>
             </section>
 
-            <section class="lg:col-span-2">
+            <section v-if="!connected" class="lg:col-span-2">
                 <h2 class="mb-3 text-[14.5px] font-semibold text-fg">{{ t('home.actions.title') }}</h2>
                 <ul class="space-y-2">
                     <li v-for="action in actions" :key="action.to">
@@ -178,53 +181,55 @@ const actions = computed(() =>
         </div>
 
         <!-- The workspace itself -->
-        <h2 class="mt-8 mb-3 text-[14.5px] font-semibold text-fg">{{ t('dashboard.workspace') }}</h2>
-        <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <component
-                :is="stat.to ? 'RouterLink' : 'div'"
-                v-for="stat in stats"
-                :key="stat.key"
-                :to="stat.to ?? undefined"
-                class="card group relative p-4 transition-[box-shadow,border-color]"
-                :class="stat.to ? 'hover:border-line-strong hover:shadow-pop' : ''"
-            >
-                <div class="flex items-center justify-between">
-                    <p class="text-[13px] font-medium text-muted">{{ stat.label }}</p>
-                    <span class="grid size-8 place-items-center rounded-lg bg-subtle text-muted transition-colors group-hover:bg-brand-soft group-hover:text-brand-text">
-                        <component :is="stat.icon" class="size-4" aria-hidden="true" />
-                    </span>
-                </div>
-                <div class="mt-3 h-8">
-                    <div v-if="stat.loading" class="skeleton mt-1 h-6 w-16" />
-                    <p v-else class="tabular text-[26px] leading-none font-semibold tracking-[-0.02em] text-fg">{{ stat.value ?? '—' }}</p>
-                </div>
-                <p class="mt-2 truncate text-[12.5px] text-muted">{{ stat.hint }}</p>
-            </component>
-        </div>
-
-        <section class="card mt-6" aria-labelledby="home-settings">
-            <header class="flex items-center justify-between border-b border-line px-5 py-4">
-                <div>
-                    <h2 id="home-settings" class="text-[14.5px] font-semibold text-fg">{{ t('home.settings.title') }}</h2>
-                    <p class="mt-0.5 text-[12.5px] text-muted">{{ t('home.settings.text') }}</p>
-                </div>
-                <RouterLink :to="`/organizations/${org.id}?tab=settings`" class="text-[13px] font-medium text-brand-text hover:underline">
-                    {{ t('home.settings.view_all') }}
-                </RouterLink>
-            </header>
-            <ErrorState v-if="settings.error.value" compact :error="settings.error.value" @retry="settings.reload()" />
-            <dl v-else class="divide-y divide-line">
-                <div v-for="key in SETTING_KEYS" :key="key" class="flex flex-col gap-1.5 px-5 py-3.5 sm:flex-row sm:items-center sm:gap-4">
-                    <dt class="w-40 shrink-0 text-[13px] text-muted">{{ t(`orgs.settings.fields.${key}`) }}</dt>
-                    <dd class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2">
-                        <span v-if="!settings.data.value" class="skeleton h-4 w-32" />
-                        <template v-else>
-                            <span class="truncate text-[13.5px] font-medium text-fg">{{ settingValue(key, settings.data.value[key]?.value) }}</span>
-                            <SourceBadge :kind="settingSource(settings.data.value[key])" :name="settings.data.value[key]?.source_organization_name" />
-                        </template>
-                    </dd>
-                </div>
-            </dl>
-        </section>
+        <template v-if="!connected">
+            <h2 class="mt-8 mb-3 text-[14.5px] font-semibold text-fg">{{ t('dashboard.workspace') }}</h2>
+            <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <component
+                    :is="stat.to ? 'RouterLink' : 'div'"
+                    v-for="stat in stats"
+                    :key="stat.key"
+                    :to="stat.to ?? undefined"
+                    class="card group relative p-4 transition-[box-shadow,border-color]"
+                    :class="stat.to ? 'hover:border-line-strong hover:shadow-pop' : ''"
+                >
+                    <div class="flex items-center justify-between">
+                        <p class="text-[13px] font-medium text-muted">{{ stat.label }}</p>
+                        <span class="grid size-8 place-items-center rounded-lg bg-subtle text-muted transition-colors group-hover:bg-brand-soft group-hover:text-brand-text">
+                            <component :is="stat.icon" class="size-4" aria-hidden="true" />
+                        </span>
+                    </div>
+                    <div class="mt-3 h-8">
+                        <div v-if="stat.loading" class="skeleton mt-1 h-6 w-16" />
+                        <p v-else class="tabular text-[26px] leading-none font-semibold tracking-[-0.02em] text-fg">{{ stat.value ?? '—' }}</p>
+                    </div>
+                    <p class="mt-2 truncate text-[12.5px] text-muted">{{ stat.hint }}</p>
+                </component>
+            </div>
+    
+            <section class="card mt-6" aria-labelledby="home-settings">
+                <header class="flex items-center justify-between border-b border-line px-5 py-4">
+                    <div>
+                        <h2 id="home-settings" class="text-[14.5px] font-semibold text-fg">{{ t('home.settings.title') }}</h2>
+                        <p class="mt-0.5 text-[12.5px] text-muted">{{ t('home.settings.text') }}</p>
+                    </div>
+                    <RouterLink :to="`/organizations/${org.id}?tab=settings`" class="text-[13px] font-medium text-brand-text hover:underline">
+                        {{ t('home.settings.view_all') }}
+                    </RouterLink>
+                </header>
+                <ErrorState v-if="settings.error.value" compact :error="settings.error.value" @retry="settings.reload()" />
+                <dl v-else class="divide-y divide-line">
+                    <div v-for="key in SETTING_KEYS" :key="key" class="flex flex-col gap-1.5 px-5 py-3.5 sm:flex-row sm:items-center sm:gap-4">
+                        <dt class="w-40 shrink-0 text-[13px] text-muted">{{ t(`orgs.settings.fields.${key}`) }}</dt>
+                        <dd class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2">
+                            <span v-if="!settings.data.value" class="skeleton h-4 w-32" />
+                            <template v-else>
+                                <span class="truncate text-[13.5px] font-medium text-fg">{{ settingValue(key, settings.data.value[key]?.value) }}</span>
+                                <SourceBadge :kind="settingSource(settings.data.value[key])" :name="settings.data.value[key]?.source_organization_name" />
+                            </template>
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+        </template>
     </div>
 </template>

@@ -67,7 +67,10 @@ class AccessResolver
             return [];
         }
 
-        return $this->memo['held:'.$this->context->membership()->getKey()] ??= $this->computeHeld();
+        // Support and connection memberships are not stored (no id): told apart by what they are.
+        $key = $this->context->membership()->getKey() ?? ($this->context->isConnection() ? 'connection:'.$this->context->connection()->getKey() : 'unsaved');
+
+        return $this->memo['held:'.$key] ??= $this->computeHeld();
     }
 
     public function holds(string $permission): bool
@@ -214,6 +217,11 @@ class AccessResolver
 
         if ($membership->membership_type === MembershipType::Portal) {
             return [];
+        }
+
+        // A connected provider's person (NET-2) holds exactly what the client gave: no roles, never an owner's all.
+        if ($this->context->isConnection()) {
+            return array_values(array_intersect($this->context->grantedPermissions(), $this->catalog->keys()));
         }
 
         $organization = $this->context->organization();

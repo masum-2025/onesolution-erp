@@ -3,6 +3,11 @@
 namespace App\Platform\Tenancy\Context;
 
 use App\Models\User;
+use App\Platform\Connections\Exceptions\ConnectionException;
+use App\Platform\Connections\Models\Connection;
+use App\Platform\Connections\Services\ConnectionGrants;
+use App\Platform\Connections\Services\Connections;
+use App\Platform\Notifications\Services\Recipients;
 use App\Platform\Partners\HostContext;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
@@ -145,6 +150,56 @@ class ContextResolver
         $this->enter($user, $membership, $grant->organization, supportView: true);
         $this->signIn->check($user, $this->context);
         $this->context->restrict(CurrentContext::MODE_READ_ONLY, 'support', $grant->expires_at, $grant);
+
+        return $this->context;
+    }
+
+    /**
+     * A connected service provider's person in one shared factory of its
+     * client (NET-2): no membership is created; they see that factory and
+     * what is below it, and hold exactly the permissions the client gave.
+     * Everything is checked again on every request: the connection active,
+     * the factory still shared, the person still allowed at the provider
+     * (business_network.act), at least one permission in force.
+     */
+    public function enterConnection(User $user, string $connectionId, string $unitId, bool $checkSignIn = true): CurrentContext
+    {
+        $connection = Connection::query()->with(['provider.partner', 'client'])->find($connectionId);
+        $unit = Organization::query()->with('partner')->find($unitId);
+        $connections = app(Connections::class);
+        if ($connection === null || $unit === null || ! $connection->isActive() || ! $connections->covers($connection, $unit->getKey())
+            || ! in_array($unit->type, [OrganizationType::Company, OrganizationType::Branch], true)) {
+            throw ConnectionException::noGrant();
+        }
+        // The person works for the provider and may act for it with its clients.
+        $provider = $connection->provider;
+        if (! $provider->isActive()) {
+            throw ConnectionException::noGrant();
+        }
+        if (! app(Recipients::class)->holding('business_network.act', $provider)->contains(fn (User $holder) => $holder->is($user))) {
+            throw ConnectionException::notAllowedToAct();
+        }
+        $granted = app(ConnectionGrants::class)->inForce($connection, $unit);
+        if ($granted === []) {
+            throw ConnectionException::noGrant();
+        }
+
+        $membership = new OrganizationMembership([
+            'organization_id' => $unit->getKey(),
+            'user_id' => $user->getKey(),
+            'membership_type' => MembershipType::Staff,
+            'access_scope' => AccessScope::Descendants,
+            'status' => MembershipStatus::Active,
+        ]);
+        $membership->setRelation('organization', $unit);
+        $membership->setRelation('user', $user);
+
+        $this->enter($user, $membership, $unit, supportView: true);
+        if ($checkSignIn) {
+            $this->signIn->check($user, $this->context);
+        }
+        $until = app(ConnectionGrants::class)->of($connection)->filter(fn ($grant) => $grant->isActive() && $grant->expires_at !== null)->min('expires_at');
+        $this->context->actThroughConnection($connection, array_values(array_unique(array_merge(...array_values($granted)))), $until);
 
         return $this->context;
     }

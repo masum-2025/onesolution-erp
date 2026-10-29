@@ -30,6 +30,12 @@ return [
         'payload_too_large' => 'What you are sending is too large. Send files as attachments instead.',
         'file_too_large' => 'A file is larger than :mb MB, the largest that can be sent.',
         'file_missing' => 'A file to send was not found. Upload it again.',
+        'module_not_grantable' => 'This module cannot be shared with a connected company, or it is off here. Choose another module.',
+        'permissions_not_of_module' => 'Choose only actions of this module.',
+        'no_grant' => 'The client has not given your company access to any module here. Ask them to give it on the connection.',
+        'outside_grant' => 'The client has not given your company access to this. Ask them to give it on the connection.',
+        'browser_only' => 'Working inside a client\'s factory is possible in the browser only.',
+        'not_allowed_to_act' => 'You may not work inside clients\' factories. Ask your company\'s administrator.',
     ],
     'delivery_errors' => [
         'connection_closed' => 'the connection was paused or ended before it arrived',

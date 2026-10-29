@@ -183,7 +183,10 @@
         "export": "Export data",
         "export_only": "Your service provider’s account is closed for now. You can still export all your data.",
         "payment_overdue": "This workspace is read-only because a bill is overdue. Pay it (or move to the free plan) and everything works again at once. Nothing is deleted.",
-        "pay_now": "Pay now"
+        "pay_now": "Pay now",
+        "connection": "You are working in {org} for {provider}, with only what the client gave. Everything you change shows in their log.",
+        "access_days_left_one": "Access ends in {days} day.",
+        "access_days_left_other": "Access ends in {days} days."
     },
     "legal": {
         "pending_one": "{count} legal document from your provider waits for your acceptance.",

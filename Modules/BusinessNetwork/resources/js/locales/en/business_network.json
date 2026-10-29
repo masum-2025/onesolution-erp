@@ -22,7 +22,35 @@
     "list": {
         "waiting": "Waiting for the client",
         "expires": "Code valid until {date}",
-        "since": "Connected since {date}"
+        "since": "Connected since {date}",
+        "modules_one": "Works in {modules} module",
+        "modules_other": "Works in {modules} modules",
+        "no_modules": "No module given yet",
+        "last_used": "last worked in {date}"
+    },
+    "grants": {
+        "title": "What they may do in your data",
+        "hint_client": "Switch on a module and tick what they may do in it. Only the shared factories, only these actions; you can take it back at any time.",
+        "hint_provider": "What the client lets your company do in its shared factories.",
+        "none_grantable": "None of your modules can be given here. Turn on a module first.",
+        "none_given": "The client has not given you any module yet.",
+        "given": "Given",
+        "actions": "What they may do in {module}",
+        "until": "Until",
+        "until_hint": "Leave empty for no end.",
+        "ends": "Until {date}",
+        "save": "Save",
+        "saved": "{module} given.",
+        "revoke": "Take back",
+        "revoke_title": "Take back {module}?",
+        "revoke_text": "{name} loses it at once, also in a screen already open. What they did stays in your data and your log.",
+        "revoked": "{module} taken back."
+    },
+    "work": {
+        "title": "Work in this client's factory",
+        "text": "You see and do only what the client gave. Everything you change shows in their log, with your name.",
+        "unit": "Factory",
+        "enter": "Go in"
     },
     "empty": {
         "clients_title": "No clients connected yet",

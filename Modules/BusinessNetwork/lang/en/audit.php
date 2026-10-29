@@ -12,4 +12,8 @@ return [
     'message_sent' => 'Sent over a connection',
     'message_received' => 'Received over a connection',
     'message_failed' => 'Not delivered over a connection',
+    'granted' => 'Module access given to a connected company',
+    'revoked' => 'Module access taken back from a connected company',
+    'session_started' => 'Connected company started working here',
+    'acted' => 'Change made by a connected company',
 ];

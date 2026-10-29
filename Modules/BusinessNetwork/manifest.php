@@ -18,7 +18,8 @@ return [
     'requires' => [],
     'sectors' => ['*'],
     'plans' => ['business', 'enterprise'],
-    'permissions' => ['business_network.view', 'business_network.manage'],
+    // act: a provider's person works inside a client's shared factory, within what the client gave (NET-2).
+    'permissions' => ['business_network.view', 'business_network.manage', 'business_network.act'],
     'rules' => [
         [
             'key' => 'business_network.invite_valid_days',

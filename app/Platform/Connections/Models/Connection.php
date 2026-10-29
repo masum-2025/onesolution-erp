@@ -43,6 +43,7 @@ class Connection extends Model
             'accepted_at' => 'immutable_datetime',
             'paused_at' => 'immutable_datetime',
             'ended_at' => 'immutable_datetime',
+            'last_used_at' => 'immutable_datetime',
             'version' => 'integer',
         ];
     }

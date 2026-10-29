@@ -3,20 +3,26 @@
 namespace App\Platform\Connections\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Access\PermissionCatalog;
 use App\Platform\Connections\Exceptions\ConnectionException;
 use App\Platform\Connections\Http\Requests\CodeRequest;
+use App\Platform\Connections\Http\Requests\GrantRequest;
 use App\Platform\Connections\Http\Requests\InviteRequest;
 use App\Platform\Connections\Http\Requests\StepRequest;
 use App\Platform\Connections\Http\Requests\UnitsRequest;
 use App\Platform\Connections\Models\Connection;
+use App\Platform\Connections\Models\ConnectionGrant;
 use App\Platform\Connections\Models\ConnectionMessage;
+use App\Platform\Connections\Services\ConnectionGrants;
 use App\Platform\Connections\Services\ConnectionLinks;
 use App\Platform\Connections\Services\Connections;
+use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\OrganizationStatus;
 use App\Platform\Tenancy\Http\Controllers\Api\Concerns\FindsVisibleOrganizations;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -32,15 +38,23 @@ class ConnectionController extends Controller
 
     private const STEPS = ['pause', 'resume', 'end'];
 
-    public function __construct(private ConnectionLinks $links, private Connections $connections, private CurrentContext $context) {}
+    public function __construct(
+        private ConnectionLinks $links,
+        private Connections $connections,
+        private ConnectionGrants $grants,
+        private CurrentContext $context,
+    ) {}
 
     public function index(string $organization): JsonResponse
     {
         $organization = $this->organization($organization, 'business_network.view');
         $chain = [...$organization->ancestorIds(), $organization->getKey()];
+        $list = $this->links->visibleTo($organization);
+        // Grants of every listed connection in one query, not one per row.
+        $grants = ConnectionGrant::query()->whereIn('connection_id', $list->pluck('id')->all())->orderBy('module')->get()->groupBy('connection_id');
 
         return response()->json([
-            'data' => $this->links->visibleTo($organization)->map(fn (Connection $connection) => $this->item($connection, $chain, $organization))->values(),
+            'data' => $list->map(fn (Connection $connection) => $this->item($connection, $chain, $organization, $grants->get($connection->getKey(), collect())))->values(),
             'meta' => [
                 // Only a company invites clients; a group or a company accepts.
                 'can_invite' => $organization->type->value === 'company' && Gate::allows('business_network.manage', $organization),
@@ -108,6 +122,26 @@ class ConnectionController extends Controller
         return response()->json(['data' => $this->detail($done->fresh(['provider', 'client']), $organization)]);
     }
 
+    /** The client gives (or changes) what the provider may do in one module (NET-2). */
+    public function grant(GrantRequest $request, string $organization, string $connection, string $module): JsonResponse
+    {
+        $organization = $this->organization($organization, 'business_network.manage');
+        $found = $this->connectionIn($organization, $connection);
+        $this->grants->give($found, $organization, $module, $request->validated('permissions'), $request->validated('expires_on'), $request->user());
+
+        return response()->json(['data' => $this->detail($found->fresh(['provider', 'client']), $organization)]);
+    }
+
+    /** Taken back at once: the provider's people lose it on their next request. */
+    public function revoke(string $organization, string $connection, string $module): JsonResponse
+    {
+        $organization = $this->organization($organization, 'business_network.manage');
+        $found = $this->connectionIn($organization, $connection);
+        $this->grants->revoke($found, $organization, $module, request()->user());
+
+        return response()->json(['data' => $this->detail($found->fresh(['provider', 'client']), $organization)]);
+    }
+
     /** What was sent each way: envelopes only (kind, who, when, delivered), never what was in them. */
     public function messages(string $organization, string $connection): JsonResponse
     {
@@ -171,14 +205,16 @@ class ConnectionController extends Controller
 
     /**
      * @param  list<string>  $chain
+     * @param  Collection<int, ConnectionGrant>|null  $grants  Null: read them now.
      * @return array<string, mixed>
      */
-    private function item(Connection $connection, array $chain, Organization $organization): array
+    private function item(Connection $connection, array $chain, Organization $organization, ?Collection $grants = null): array
     {
         $side = $this->sideFor($connection, $chain);
         $other = $side === Connection::PROVIDER ? $connection->client : $connection->provider;
         // Acting is for the side itself (the provider company, the client group or company), not a unit under it.
         $acts = $connection->sideOf($organization->getKey()) !== null && Gate::allows('business_network.manage', $organization);
+        $grants ??= $this->grants->of($connection);
 
         return [
             'id' => $connection->getKey(),
@@ -192,8 +228,15 @@ class ConnectionController extends Controller
             'paused_by' => $connection->paused_by_side,
             'ended_at' => $connection->ended_at?->toIso8601String(),
             'version' => $connection->version,
+            // Modules the provider may work in now (NET-2), and when its people last came in.
+            'modules' => $grants->filter(fn (ConnectionGrant $grant) => $grant->isActive())->pluck('module')->values(),
+            'last_used_at' => $connection->last_used_at?->toIso8601String(),
             'can' => [
                 'units' => $acts && $side === Connection::CLIENT && in_array($connection->status, [Connection::ACTIVE, Connection::PAUSED], true),
+                'grants' => $acts && $side === Connection::CLIENT && in_array($connection->status, [Connection::ACTIVE, Connection::PAUSED], true),
+                // The provider's person goes in to work: checked again, fully, on entering and on every request.
+                'act' => $side === Connection::PROVIDER && $connection->sideOf($organization->getKey()) !== null && $connection->status === Connection::ACTIVE
+                    && $grants->contains(fn (ConnectionGrant $grant) => $grant->isActive()) && Gate::allows('business_network.act', $organization),
                 'pause' => $acts && $connection->status === Connection::ACTIVE,
                 'resume' => $acts && $connection->status === Connection::PAUSED && $connection->paused_by_side === $side,
                 'end' => $acts && $connection->status !== Connection::ENDED,
@@ -209,6 +252,7 @@ class ConnectionController extends Controller
         $chain = [...$organization->ancestorIds(), $organization->getKey()];
         $item = $this->item($connection, $chain, $organization);
         $shared = $this->links->activeUnits($connection);
+        $catalog = app(PermissionCatalog::class);
 
         return [
             ...$item,
@@ -218,7 +262,29 @@ class ConnectionController extends Controller
             'shared_ids' => $shared->pluck('unit_id')->values(),
             // The client's own companies and branches, to change what is shared.
             'own_units' => $item['can']['units'] ? $this->ownUnits($organization) : [],
+            // What the provider may do, module by module: both sides see it.
+            'grants' => $this->grants->of($connection)->map(fn (ConnectionGrant $grant) => [
+                'module' => $grant->module,
+                'name' => $this->moduleName($grant->module),
+                'permissions' => array_values((array) $grant->permissions),
+                'labels' => array_map(fn (string $key) => $catalog->has($key) ? $catalog->get($key)->label() : $key, array_values((array) $grant->permissions)),
+                'expires_at' => $grant->expires_at?->toIso8601String(),
+                // The last day as the client chose it (the moment is its end in UTC).
+                'expires_on' => $grant->expires_at?->toDateString(),
+                'active' => $grant->isActive(),
+                'revoked_at' => $grant->revoked_at?->toIso8601String(),
+                'version' => $grant->version,
+            ])->values(),
+            // What the client could give here: only to the client side that may change it.
+            'grantable' => $item['can']['grants'] ? $this->grants->grantable($organization) : [],
         ];
+    }
+
+    private function moduleName(string $key): string
+    {
+        $registry = app(ModuleRegistry::class);
+
+        return $registry->has($key) ? $registry->get($key)->label() : $key;
     }
 
     /**

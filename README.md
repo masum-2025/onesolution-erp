@@ -1297,6 +1297,39 @@ module (business and enterprise plans).
   quotations, invoices and reports as connection kinds; supplier and buyer links can reuse it
   with no change here.
 
+### Working in a client's data (NET-2: connection grants)
+
+The client lets its connected provider work inside its own data, module by module; the
+provider's people then work in a shared factory as if they were staff there, with only that.
+
+- **Giving:** at its group or company the client gives a module
+  (`PUT …/connections/{id}/grants/{module}`, recent two-step check): the module's own actions
+  only (`crm.view`, `crm.edit`, …), optionally until a day; `DELETE` takes it back at once.
+  Never platform modules (connections, portals, payments, integrations, audit) nor platform
+  permissions (members, roles, rules, billing). Table `business_connection_grants` (central,
+  one row per connection and module, versioned); both sides see the grants and both audit
+  logs keep every change (`business_network.granted`, `revoked`).
+- **Who may go in:** a person of the provider company holding `business_network.act` there
+  (owners hold it; others get it through a role). The connection's "Go in" picks a shared
+  company or branch: `POST /session/context {connection_id, unit_id}`, browser sessions
+  only (tokens refuse it).
+- **The connection context** (`CurrentContext::MODE_CONNECTION`,
+  `ContextResolver::enterConnection`): an unsaved staff membership at the unit, seeing that
+  unit and below only; permissions are exactly the grants in force there (module on at the
+  unit, not revoked, not past its day), with no roles and no owner's all. Re-checked on every
+  request: taken back, past its day, the connection paused or ended, the unit no longer
+  shared or the module turned off, and the next request is refused (`no_grant`).
+  `ResolveOrganization` opens only routes whose `module:x` modules are all given, plus a few
+  read-only frame screens (menu, bell, dashboards); anything else answers `outside_grant`.
+  Every change is logged in the client's log as `business_network.acted`; entering is logged
+  on both sides (`session_started`), and the connection keeps `last_used_at`.
+- **Screens:** the connection drawer has "What they may do in your data" (client: a switch
+  per module, its actions, a last day; provider: what it was given) and "Work in this
+  client's factory" (provider). While working there a banner says for whom and where, with
+  "Leave" back to one's own company. The list shows the modules given and the last visit.
+- **Future:** a provider's "my clients" dashboard with each module's numbers through a module
+  contract; a new module becomes grantable just by declaring its permissions (no change here).
+
 ## Compliance module (CMP-1: the audit register)
 
 A group of factories keeps its audit register: its factories are its own companies and

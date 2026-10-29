@@ -15,6 +15,9 @@ export function connectionsApi(organizationId) {
         show: (id) => api(`${base}/${id}`),
         messages: (id) => api(`${base}/${id}/messages`),
         units: (id, version, unitIds) => api(`${base}/${id}/units`, { method: 'PUT', body: { base_version: version, unit_ids: unitIds } }),
+        // What the provider may do in one module of the client's data (NET-2).
+        grant: (id, module, permissions, expiresOn) => api(`${base}/${id}/grants/${module}`, { method: 'PUT', body: { permissions, expires_on: expiresOn || null } }),
+        revoke: (id, module) => api(`${base}/${id}/grants/${module}`, { method: 'DELETE' }),
         step: (id, step, version, reason) => api(`${base}/${id}/${step}`, { method: 'POST', body: { base_version: version, ...(reason ? { reason } : {}) } }),
     };
 }

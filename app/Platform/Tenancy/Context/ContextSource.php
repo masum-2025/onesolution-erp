@@ -49,6 +49,23 @@ final class ContextSource
     }
 
     /**
+     * A connection session (browser only): the connection and the client's shared factory.
+     *
+     * @return array{connection: string, unit: string}|null
+     */
+    public function connectionEntry(Request $request): ?array
+    {
+        $token = $request->user()?->currentAccessToken();
+        if ($token instanceof PersonalAccessToken) {
+            return null;
+        }
+        $stored = $this->session($request);
+
+        return $stored !== null && $stored['type'] === 'connection' && is_string($stored['unit'] ?? null)
+            ? ['connection' => $stored['id'], 'unit' => $stored['unit']] : null;
+    }
+
+    /**
      * When the active context stops being valid (token or session expiry).
      */
     public function expiresAt(Request $request): ?string
@@ -64,14 +81,16 @@ final class ContextSource
         return $stored === null ? null : now()->setTimestamp($stored['expires_at'])->toIso8601String();
     }
 
-    public function putInSession(Request $request, string $type, string $id, User $user, CarbonInterface $expiresAt): void
+    public function putInSession(Request $request, string $type, string $id, User $user, CarbonInterface $expiresAt, ?string $unit = null): void
     {
-        $request->session()->put(self::SESSION_KEY, [
+        $request->session()->put(self::SESSION_KEY, array_filter([
             'type' => $type,
             'id' => $id,
             'user_id' => $user->getKey(),
             'expires_at' => $expiresAt->getTimestamp(),
-        ]);
+            // A connection session's shared factory.
+            'unit' => $unit,
+        ], fn ($value) => $value !== null));
     }
 
     public function forgetSession(Request $request): void
@@ -112,7 +131,7 @@ final class ContextSource
             return null;
         }
 
-        $valid = in_array($stored['type'] ?? null, ['organization', 'partner', 'support'], true)
+        $valid = in_array($stored['type'] ?? null, ['organization', 'partner', 'support', 'connection'], true)
             && is_string($stored['id'] ?? null)
             && ($stored['user_id'] ?? null) === $request->user()->getAuthIdentifier()
             && is_int($stored['expires_at'] ?? null)
@@ -124,6 +143,6 @@ final class ContextSource
             return null;
         }
 
-        return ['type' => $stored['type'], 'id' => $stored['id'], 'expires_at' => $stored['expires_at']];
+        return ['type' => $stored['type'], 'id' => $stored['id'], 'expires_at' => $stored['expires_at'], 'unit' => $stored['unit'] ?? null];
     }
 }

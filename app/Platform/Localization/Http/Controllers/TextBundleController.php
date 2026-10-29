@@ -66,6 +66,8 @@ class TextBundleController extends Controller
                 $this->resolver->enterPartner($user, $partnerId);
             } elseif (($grantId = $this->source->supportGrantId($request)) !== null) {
                 $this->resolver->enterSupport($user, $grantId);
+            } elseif (($entry = $this->source->connectionEntry($request)) !== null) {
+                $this->resolver->enterConnection($user, $entry['connection'], $entry['unit']);
             }
         } catch (TenancyException) {
             // A context no longer valid: the address's wording only.

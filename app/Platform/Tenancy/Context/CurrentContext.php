@@ -3,6 +3,7 @@
 namespace App\Platform\Tenancy\Context;
 
 use App\Models\User;
+use App\Platform\Connections\Models\Connection;
 use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Tenancy\Exceptions\MissingTenantContext;
 use App\Platform\Tenancy\Models\Organization;
@@ -75,6 +76,14 @@ final class CurrentContext
 
     public const MODE_EXPORT_ONLY = 'export_only';
 
+    /** A connected service provider's person working in a client's shared factory (NET-2). */
+    public const MODE_CONNECTION = 'connection';
+
+    private ?Connection $connection = null;
+
+    /** @var list<string> What the client gave, the only permissions held in a connection context. */
+    private array $grantedPermissions = [];
+
     public function __construct()
     {
         $this->ancestors = new Collection;
@@ -142,6 +151,41 @@ final class CurrentContext
         $this->modeReason = null;
         $this->modeUntil = null;
         $this->supportGrant = null;
+        $this->connection = null;
+        $this->grantedPermissions = [];
+    }
+
+    /**
+     * Work in a client's factory as its connected provider (set by
+     * ContextResolver only): exactly the permissions given, nothing else.
+     *
+     * @param  list<string>  $permissions
+     */
+    public function actThroughConnection(Connection $connection, array $permissions, ?CarbonInterface $until): void
+    {
+        $this->mode = self::MODE_CONNECTION;
+        $this->modeReason = 'connection';
+        $this->modeUntil = $until;
+        $this->connection = $connection;
+        $this->grantedPermissions = array_values($permissions);
+    }
+
+    public function isConnection(): bool
+    {
+        return $this->connection !== null;
+    }
+
+    public function connection(): ?Connection
+    {
+        return $this->connection;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function grantedPermissions(): array
+    {
+        return $this->grantedPermissions;
     }
 
     /**
@@ -292,7 +336,9 @@ final class CurrentContext
         }
 
         // Support access and a suspended partner's clients never write, whatever the route.
-        if ($this->mode !== self::MODE_NORMAL) {
+        // A connected provider writes inside its shared factory only (the writable path),
+        // and only where a given permission lets it (checked by the caller).
+        if (! in_array($this->mode, [self::MODE_NORMAL, self::MODE_CONNECTION], true)) {
             return false;
         }
 

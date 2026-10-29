@@ -1,21 +1,26 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { CirclePause, CirclePlay, Save, XCircle } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { CirclePause, CirclePlay, LogIn, Save, XCircle } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { confirmAction } from '@/lib/dialogs';
+import { enterContext } from '@/lib/session';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { indentOf, statusTone } from '../api';
+import GrantsSection from './GrantsSection.vue';
 import UnitChecklist from './UnitChecklist.vue';
 
 /**
  * One connection: who it is with, the shared factories (the client changes
- * them), what was sent each way (envelopes only), and pausing or ending it.
+ * them), the modules the provider may work in (NET-2: the client gives
+ * them; the provider's people go in from here), what was sent each way
+ * (envelopes only), and pausing or ending it.
  */
 const props = defineProps({
     open: Boolean,
@@ -39,11 +44,28 @@ async function load() {
         item.value = detail.data;
         messages.value = sent.data;
         shared.value = [...detail.data.shared_ids];
+        workUnit.value = detail.data.units[0]?.id ?? null;
     } catch (caught) {
         error.value = caught;
     }
 }
 watch(() => [props.open, props.connectionId], ([open]) => open && props.connectionId && load(), { immediate: true });
+
+// Working in the client's factory: the server checks everything again on entering.
+const router = useRouter();
+const workUnit = ref(null);
+const entering = ref(false);
+async function workIn() {
+    entering.value = true;
+    try {
+        await enterContext({ connection_id: item.value.id, unit_id: workUnit.value });
+        await router.push('/');
+    } catch (caught) {
+        toast.error(caught.message);
+    } finally {
+        entering.value = false;
+    }
+}
 
 const changedUnits = computed(() => item.value && [...shared.value].sort().join() !== [...item.value.shared_ids].sort().join());
 
@@ -115,6 +137,21 @@ async function step(name) {
                         <span class="text-[12px] text-muted">{{ t(`business_network.units.type_${unit.type}`) }}</span>
                     </li>
                 </ul>
+            </section>
+
+            <GrantsSection v-if="item.status === 'active' || item.status === 'paused'" :item="item" :calls="calls" @saved="(data) => { item = data; emit('changed'); }" />
+
+            <!-- The provider's person goes in to work, in one shared factory at a time. -->
+            <section v-if="item.can.act" class="rounded-xl border border-brand/25 bg-brand-soft px-4 py-3" :aria-label="t('business_network.work.title')">
+                <h3 class="text-[13.5px] font-semibold">{{ t('business_network.work.title') }}</h3>
+                <p class="mb-2.5 text-[12.5px] text-fg-2">{{ t('business_network.work.text') }}</p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <label class="sr-only" for="work-unit">{{ t('business_network.work.unit') }}</label>
+                    <select id="work-unit" v-model="workUnit" class="field-input w-auto min-w-0 flex-1">
+                        <option v-for="unit in item.units" :key="unit.id" :value="unit.id">{{ ' '.repeat(indentOf(item.units, unit)) }}{{ unit.name }}</option>
+                    </select>
+                    <AppButton variant="primary" :icon="LogIn" :loading="entering" :disabled="!workUnit" @click="workIn">{{ t('business_network.work.enter') }}</AppButton>
+                </div>
             </section>
 
             <section :aria-label="t('business_network.messages.title')">

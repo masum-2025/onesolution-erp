@@ -111,6 +111,34 @@ class ConnectionException extends TenancyException
         return new self('file_too_large', 413, ['mb' => $mb]);
     }
 
+    public static function moduleNotGrantable(): self
+    {
+        return new self('module_not_grantable', 422, [], ['field' => 'module']);
+    }
+
+    public static function permissionsNotOfModule(): self
+    {
+        return new self('permissions_not_of_module', 422, [], ['field' => 'permissions']);
+    }
+
+    /** No working permission (not given, taken back, past its day, or the factory not shared). */
+    public static function noGrant(): self
+    {
+        return new self('no_grant', 403);
+    }
+
+    /** The person's own company has not let them act for it with clients (business_network.act). */
+    public static function notAllowedToAct(): self
+    {
+        return new self('not_allowed_to_act', 403);
+    }
+
+    /** In a connection context: this part of the client's data was not given. */
+    public static function outsideGrant(): self
+    {
+        return new self('outside_grant', 403);
+    }
+
     public static function fileMissing(): self
     {
         return new self('file_missing', 422);

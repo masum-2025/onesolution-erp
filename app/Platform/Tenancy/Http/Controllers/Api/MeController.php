@@ -92,6 +92,7 @@ class MeController extends Controller
         $organizationId = $source->organizationId($request);
         $partnerId = $organizationId === null ? $source->partnerId($request) : null;
         $grantId = $organizationId === null && $partnerId === null ? $source->supportGrantId($request) : null;
+        $entry = $organizationId === null && $partnerId === null && $grantId === null ? $source->connectionEntry($request) : null;
 
         try {
             if ($organizationId !== null) {
@@ -102,6 +103,12 @@ class MeController extends Controller
 
             if ($grantId !== null) {
                 $resolver->enterSupport($request->user(), $grantId);
+
+                return $this->organizationContext($context, $access, $source->expiresAt($request));
+            }
+
+            if ($entry !== null) {
+                $resolver->enterConnection($request->user(), $entry['connection'], $entry['unit']);
 
                 return $this->organizationContext($context, $access, $source->expiresAt($request));
             }
@@ -170,8 +177,16 @@ class MeController extends Controller
                 'grant_id' => $context->supportGrant()->getKey(),
                 'expires_at' => $context->supportGrant()->expires_at?->toIso8601String(),
             ] : null,
+            // Working in a client's shared factory as its connected provider (NET-2): shown on every screen.
+            'connection' => $context->isConnection() ? [
+                'id' => $context->connection()->getKey(),
+                'provider_id' => $context->connection()->provider_id,
+                'provider' => $context->connection()->provider?->displayName(),
+                'client' => $context->connection()->client?->displayName(),
+                'until' => $context->modeUntil()?->toIso8601String(),
+            ] : null,
             // The owner of the whole account: accepts legal documents, may move provider.
-            'account_owner' => $accountOwner = ! $context->isSupport() && $membership->isOwner() && $organization->isRoot(),
+            'account_owner' => $accountOwner = ! $context->isSupport() && ! $context->isConnection() && $membership->isOwner() && $organization->isRoot(),
             'legal_pending' => $accountOwner ? count(app(LegalService::class)->pending($organization)) : 0,
         ];
     }
@@ -187,7 +202,8 @@ class MeController extends Controller
     {
         $permissions = $access->effective();
 
-        if (! $context->hasOrganization() || $context->mode() === CurrentContext::MODE_NORMAL) {
+        // A connected provider's person: what the client gave (already all they hold).
+        if (! $context->hasOrganization() || in_array($context->mode(), [CurrentContext::MODE_NORMAL, CurrentContext::MODE_CONNECTION], true)) {
             return $permissions;
         }
 

@@ -77,6 +77,28 @@ class EnterSessionContext
     }
 
     /**
+     * A connected provider's person enters one shared factory of its client
+     * (NET-2). Checked again on every request (ResolveOrganization); the
+     * session never outlives the earliest end of a permission given.
+     */
+    public function forConnection(Request $request, User $user, string $connectionId, string $unitId): void
+    {
+        $context = $this->resolver->enterConnection($user, $connectionId, $unitId);
+        $connection = $context->connection();
+        $request->session()->regenerate();
+        $expires = $this->expiresAt();
+        $until = $context->modeUntil();
+        $this->source->putInSession($request, 'connection', $connectionId, $user, $until !== null && $until->lt($expires) ? $until : $expires, $unitId);
+        $connection->forceFill(['last_used_at' => now()])->save();
+        $new = ['connection' => $connectionId, 'unit' => $unitId, 'permissions' => $context->grantedPermissions()];
+        // Both sides see who entered: the client in its log, the provider in its own.
+        $this->audit->record('business_network.session_started', $connection, new: $new, actor: $user,
+            organizationId: $unitId, partnerId: $context->partner()->getKey());
+        $this->audit->record('business_network.session_started', $connection, new: $new, actor: $user,
+            organizationId: $connection->provider_id, partnerId: $connection->provider?->partner_id);
+    }
+
+    /**
      * Same lifetime as a context token, resolved for the context just entered.
      */
     private function expiresAt(): CarbonInterface

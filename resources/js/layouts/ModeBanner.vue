@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { CreditCard, Download, Eye, LifeBuoy, LogOut } from 'lucide-vue-next';
+import { CreditCard, Download, Eye, Handshake, LifeBuoy, LogOut } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
 import { enterContext, session } from '@/lib/session';
 import { formatNumber } from '@/lib/format';
@@ -11,8 +11,9 @@ import { t } from '@/lib/i18n';
 /**
  * Says clearly when this workspace is limited: support access (read-only,
  * with the time left), a bill overdue past its grace period (read-only until
- * paid), or a suspended provider (read-only grace period, then
- * export only). The server enforces all of it; this only explains.
+ * paid), a suspended provider (read-only grace period, then export
+ * only), or a connected company working in its client's factory (NET-2).
+ * The server enforces all of it; this only explains.
  */
 const router = useRouter();
 const context = computed(() => session.me?.context ?? null);
@@ -33,8 +34,10 @@ const leaving = ref(false);
 async function leave() {
     leaving.value = true;
     try {
-        await enterContext({ partner_id: context.value.partner.id });
-        await router.push('/partner/support');
+        // Back to one's own company (a connected provider) or the partner console (support).
+        const connection = context.value.connection;
+        await enterContext(connection ? { organization_id: connection.provider_id } : { partner_id: context.value.partner.id });
+        await router.push(connection ? '/connections' : '/partner/support');
     } catch (error) {
         toast.error(error.message);
     } finally {
@@ -47,11 +50,19 @@ async function leave() {
     <div
         v-if="mode !== 'normal'"
         class="border-b px-4 py-2.5 sm:px-6 lg:px-8"
-        :class="reason === 'support' ? 'border-brand/25 bg-brand-soft' : 'border-warn/25 bg-warn-soft'"
+        :class="reason === 'support' || mode === 'connection' ? 'border-brand/25 bg-brand-soft' : 'border-warn/25 bg-warn-soft'"
         role="status"
     >
         <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 text-[13px] text-fg-2">
-            <template v-if="reason === 'support'">
+            <template v-if="mode === 'connection'">
+                <Handshake class="size-4 shrink-0 text-brand-text" aria-hidden="true" />
+                <span class="flex-1">
+                    {{ t('core.mode.connection', { provider: context.connection.provider, org: context.name }) }}
+                    <strong v-if="daysLeft !== null" class="font-semibold">{{ t('core.mode.access_days_left', { count: daysLeft, days: formatNumber(daysLeft) }) }}</strong>
+                </span>
+                <AppButton size="sm" :icon="LogOut" :loading="leaving" @click="leave">{{ t('core.mode.leave') }}</AppButton>
+            </template>
+            <template v-else-if="reason === 'support'">
                 <LifeBuoy class="size-4 shrink-0 text-brand-text" aria-hidden="true" />
                 <span class="flex-1">
                     {{ t('core.mode.support', { org: context.name }) }}

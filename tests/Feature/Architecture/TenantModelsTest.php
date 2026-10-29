@@ -15,6 +15,7 @@ use App\Platform\Billing\Models\TrialGrant;
 use App\Platform\Billing\Models\WholesalePrice;
 use App\Platform\Branding\Models\ClientBrand;
 use App\Platform\Connections\Models\Connection;
+use App\Platform\Connections\Models\ConnectionGrant;
 use App\Platform\Connections\Models\ConnectionMessage;
 use App\Platform\Connections\Models\ConnectionUnit;
 use App\Platform\Countries\Models\Country;
@@ -187,6 +188,8 @@ const PLATFORM_MODELS = [
     Connection::class,
     ConnectionMessage::class,
     ConnectionUnit::class,
+    // What a client gives its provider (NET-2): read through ConnectionGrants only.
+    ConnectionGrant::class,
     // Country facts (Phase 6): platform reference data.
     Country::class,
     // Offline sync (Phase 7): checked by the sync endpoint before any tenant

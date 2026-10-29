@@ -12,7 +12,7 @@ import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatNumber } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { connectionsApi, statusTone } from '../api';
@@ -130,6 +130,10 @@ async function confirmAccept() {
                             <span class="block truncate text-[12.5px] text-muted">
                                 <template v-if="row.status === 'invited'">{{ t('business_network.list.expires', { date: formatDate(row.expires_at) }) }}</template>
                                 <template v-else-if="row.accepted_at">{{ t('business_network.list.since', { date: formatDate(row.accepted_at) }) }}<template v-if="row.note && row.other"> · {{ row.note }}</template></template>
+                            </span>
+                            <span v-if="row.status === 'active' || row.status === 'paused'" class="block truncate text-[12.5px] text-muted">
+                                {{ row.modules.length ? t('business_network.list.modules', { count: row.modules.length, modules: formatNumber(row.modules.length) }) : t('business_network.list.no_modules') }}
+                                <template v-if="row.last_used_at"> · {{ t('business_network.list.last_used', { date: formatDate(row.last_used_at) }) }}</template>
                             </span>
                         </span>
                         <AppBadge :tone="statusTone(row.status)">{{ t(`business_network.status.${row.status}`) }}</AppBadge>

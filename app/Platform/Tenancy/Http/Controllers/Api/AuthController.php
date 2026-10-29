@@ -68,6 +68,10 @@ class AuthController extends Controller
         if ($request->filled('support_grant_id')) {
             throw ValidationException::withMessages(['support_grant_id' => __('support.errors.browser_only')]);
         }
+        // So is working through a business connection (NET-2).
+        if ($request->filled('connection_id')) {
+            throw ValidationException::withMessages(['connection_id' => __('connections.errors.browser_only')]);
+        }
 
         $token = $request->filled('organization_id')
             ? $tokens->forOrganization($user, $request->validated('organization_id'))

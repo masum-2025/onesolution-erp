@@ -4,6 +4,7 @@ namespace App\Platform\Tenancy\Http\Middleware;
 
 use App\Http\Middleware\ApplyRequestLocale;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Connections\Exceptions\ConnectionException;
 use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Security\SecurityLog;
 use App\Platform\Tenancy\Context\ContextResolver;
@@ -38,14 +39,17 @@ class ResolveOrganization
         $user = $request->user();
         $organizationId = $user === null ? null : $this->source->organizationId($request);
         $grantId = $user === null || $organizationId !== null ? null : $this->source->supportGrantId($request);
+        $entry = $user === null || $organizationId !== null || $grantId !== null ? null : $this->source->connectionEntry($request);
 
-        if ($user === null || ($organizationId === null && $grantId === null)) {
+        if ($user === null || ($organizationId === null && $grantId === null && $entry === null)) {
             throw new MissingTenantContext;
         }
 
-        $context = $grantId !== null
-            ? $this->resolver->enterSupport($user, $grantId)
-            : $this->resolver->enterOrganization($user, $organizationId);
+        $context = match (true) {
+            $grantId !== null => $this->resolver->enterSupport($user, $grantId),
+            $entry !== null => $this->resolver->enterConnection($user, $entry['connection'], $entry['unit']),
+            default => $this->resolver->enterOrganization($user, $organizationId),
+        };
 
         // Break-glass access is fully audited: every page support opens shows in the
         // client's log, and so does every change it tried (refused just below).
@@ -65,6 +69,7 @@ class ResolveOrganization
         }
 
         $this->enforceMode($request, $context);
+        $this->enforceConnection($request, $context);
 
         // A portal member (parent, employee, customer) reaches only the portal's own
         // endpoints, never the organization's structure, members, rules or billing.
@@ -87,6 +92,44 @@ class ResolveOrganization
         $this->guardRouteOrganization($request, $context);
 
         return $next($request);
+    }
+
+    /**
+     * A connected provider's person (NET-2) reaches only the modules the
+     * client gave: a route is open when every module it needs ("module:x"
+     * middleware) is given, besides a few read-only screens of the app's
+     * frame (menu, bell, dashboards, the shared factory itself). Members,
+     * roles, rules, billing, exports and everything else stay closed. Every
+     * change goes into the client's log, with the connection.
+     */
+    private function enforceConnection(Request $request, CurrentContext $context): void
+    {
+        if (! $context->isConnection()) {
+            return;
+        }
+        $given = array_values(array_unique(array_map(fn (string $permission) => Str::before($permission, '.'), $context->grantedPermissions())));
+        $needed = collect($request->route()?->gatherMiddleware() ?? [])
+            ->filter(fn ($middleware) => is_string($middleware) && str_starts_with($middleware, 'module:'))
+            ->map(fn (string $middleware) => Str::after($middleware, 'module:'))
+            ->values();
+        // The app's frame: reading only.
+        $shell = $request->is('api/menu', 'api/attention', 'api/dashboard', 'api/organizations', 'api/organizations/*') && ! $request->is('api/organizations/*/*');
+        $moduleScreens = collect($given)->contains(fn (string $module) => $request->is("api/modules/{$module}/dashboard", "api/modules/{$module}/dashboard/*", "api/modules/{$module}/settings"));
+        $frame = $request->isMethodSafe() && ($shell || $moduleScreens);
+        $allowed = $needed->isNotEmpty() ? $needed->diff($given)->isEmpty() : $frame;
+        if (! $allowed) {
+            throw ConnectionException::outsideGrant();
+        }
+
+        if (! $request->isMethodSafe()) {
+            $this->audit->record(
+                action: 'business_network.acted',
+                new: ['method' => $request->method(), 'path' => '/'.ltrim($request->path(), '/'), 'connection' => $context->connection()->getKey()],
+                actor: $context->user(),
+                organizationId: $context->organization()->getKey(),
+                partnerId: $context->partner()->getKey(),
+            );
+        }
     }
 
     /**

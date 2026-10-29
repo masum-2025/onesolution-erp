@@ -268,6 +268,9 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::get('organizations/{organization}/connections/{connection}/messages', [ConnectionController::class, 'messages']);
         Route::middleware('throttle:tenancy-sensitive')->group(function () {
             Route::put('organizations/{organization}/connections/{connection}/units', [ConnectionController::class, 'units']);
+            // The client gives or takes back a module of its data to the provider (NET-2).
+            Route::put('organizations/{organization}/connections/{connection}/grants/{module}', [ConnectionController::class, 'grant'])->middleware('two_factor.recent');
+            Route::delete('organizations/{organization}/connections/{connection}/grants/{module}', [ConnectionController::class, 'revoke']);
             Route::post('organizations/{organization}/connections/{connection}/{step}', [ConnectionController::class, 'step'])->middleware('two_factor.recent');
         });
     });

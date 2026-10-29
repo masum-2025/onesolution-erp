@@ -39,6 +39,7 @@ class SessionController extends Controller
         match (true) {
             $request->filled('organization_id') => $enter->forOrganization($request, $request->user(), $request->validated('organization_id')),
             $request->filled('support_grant_id') => $enter->forSupport($request, $request->user(), $request->validated('support_grant_id')),
+            $request->filled('connection_id') => $enter->forConnection($request, $request->user(), $request->validated('connection_id'), $request->validated('unit_id')),
             default => $enter->forPartner($request, $request->user(), $request->validated('partner_id')),
         };
 
