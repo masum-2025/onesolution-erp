@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
         Route::get('{project}/money', [MoneyController::class, 'show']);
 
         Route::middleware('throttle:projects-writes')->group(function () {
+            Route::post('clients', [ProjectController::class, 'addClient']);
             Route::post('requests/{incoming}/accept', [InboxController::class, 'accept']);
             Route::post('requests/{incoming}/decline', [InboxController::class, 'decline']);
             Route::post('templates', [TemplateController::class, 'store']);

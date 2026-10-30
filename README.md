@@ -1408,9 +1408,13 @@ A service company runs projects for its clients. Module `projects` (business, en
 plug-and-play: own tables `prj_*`, own manifest). **Works on its own**: no business connection
 is needed; CRM is used for clients when it is on.
 
-- **Clients:** a CRM organization contact tagged `client` (found by name, or added from here
-  through CRM's public `Organizations` service); without CRM, the name typed in. The project
-  keeps the contact's id and the name.
+- **Clients:** any CRM contact, a **person or an organization**, chosen in the project form
+  (search by name, company, email or phone, filter by kind; those tagged `client` first; the
+  one chosen is tagged `client`), or added from the form with its kind, name, the company a
+  person works for, phone, email and address (`POST …/projects/clients`, needs `crm.edit`;
+  CRM's own rules: phone format, one contact per phone). Through CRM's public
+  `ContactDirectory` service. Without CRM, the name typed in. The project keeps the contact's
+  id and the name; the detail shows its kind.
 - **Projects** (`prj_projects`): run by a company or branch, numbered per company and year
   (`PRJ-2026-0001`; prefix rule `projects.number_prefix`), with manager, service, start and due
   days. Steps: planned → start → active ⇄ hold (reason) / resume → finish → done; cancel

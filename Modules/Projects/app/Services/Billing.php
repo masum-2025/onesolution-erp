@@ -8,7 +8,6 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Support\Collection;
 use Modules\Accounting\Services\Customers;
-use Modules\Crm\Services\Organizations;
 use Modules\Crm\Services\Quotations;
 use Modules\Projects\Exceptions\ProjectsException;
 use Modules\Projects\Models\Project;
@@ -30,7 +29,7 @@ class Billing
         private Workplace $place,
         private Quotations $quotations,
         private Customers $customers,
-        private Organizations $organizations,
+        private Clients $clients,
         private AuditLogger $audit,
     ) {}
 
@@ -119,7 +118,7 @@ class Billing
         if (! $this->customers->available($company)) {
             throw ProjectsException::booksOff();
         }
-        $contact = $this->organizations->many($company, [$project->client_contact_id])[$project->client_contact_id] ?? ['name' => $project->client_name];
+        $contact = $this->clients->details($company, $project->client_contact_id) ?? ['name' => $project->client_name];
 
         return $this->place->transaction(Organization::query()->findOrFail($project->organization_id), function () use ($project, $company, $contact, $issueDate, $lines, $actor) {
             $party = $this->customers->forContact($company, $project->client_contact_id, [
@@ -144,7 +143,7 @@ class Billing
     public function clientToCrm(Project $project, int $baseVersion, User $actor): Project
     {
         $company = $this->companyOf($project);
-        if (! $this->organizations->available($company)) {
+        if (! $this->clients->usesCrm($company)) {
             throw ProjectsException::crmOff();
         }
         $unit = Organization::query()->findOrFail($project->organization_id);
@@ -157,7 +156,7 @@ class Billing
             if ($fresh->client_contact_id !== null) {
                 return $fresh;
             }
-            $added = $this->organizations->add($company, $unit->getKey(), Clients::TAG, ['name' => (string) $fresh->client_name], $actor);
+            $added = $this->clients->add($company, $unit, ['kind' => 'organization', 'name' => mb_substr((string) $fresh->client_name, 0, 150)], $actor);
             $fresh->forceFill(['client_contact_id' => $added['id'], 'client_name' => $added['name'], 'version' => $fresh->version + 1])->save();
             $this->audit->record('projects.client_to_crm', $fresh, new: ['client_contact_id' => $added['id']], actor: $actor, organizationId: $unit->getKey());
 

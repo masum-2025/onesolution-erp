@@ -3,13 +3,14 @@ import { computed, reactive, ref, watch } from 'vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
+import ClientPicker from './ClientPicker.vue';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 
 /**
- * Open a project, or change one. The client is found among the company's
- * CRM clients as you type (or added there by its new name); without CRM
- * it is only a name. A template makes the usual tasks.
+ * Open a project, or change one. With CRM the client is one of the
+ * company's contacts, a person or an organization (or a new one added there
+ * from here); without CRM it is only a name. A template makes the usual tasks.
  */
 const props = defineProps({
     open: Boolean,
@@ -19,11 +20,12 @@ const props = defineProps({
 });
 const emit = defineEmits(['close', 'saved']);
 
-const form = reactive({ name: '', client: '', client_contact_id: null, template_id: '', service: '', manager_id: '', starts_on: '', due_on: '', description: '' });
+const form = reactive({ name: '', client: '', picked: { contact_id: null, name: '', kind: null }, template_id: '', service: '', manager_id: '', starts_on: '', due_on: '', description: '' });
 const errors = ref({});
 const saving = ref(false);
-const found = ref([]);
 const editing = computed(() => !!props.project);
+// With CRM the client is one of its contacts (person or organization); without it, a name.
+const usesCrm = computed(() => !!props.options?.uses_crm);
 
 watch(() => props.open, (open) => {
     if (!open) return;
@@ -31,7 +33,7 @@ watch(() => props.open, (open) => {
     Object.assign(form, {
         name: project?.name ?? '',
         client: project?.client.name ?? '',
-        client_contact_id: project?.client.contact_id ?? null,
+        picked: project?.client.contact_id ? { contact_id: project.client.contact_id, name: project.client.name, kind: project.client.kind ?? null } : { contact_id: null, name: '', kind: null },
         template_id: '',
         service: project?.service ?? '',
         manager_id: project?.manager?.id ?? '',
@@ -40,31 +42,8 @@ watch(() => props.open, (open) => {
         description: project?.description ?? '',
     });
     errors.value = {};
-    found.value = [];
 });
-
-// The company's clients as you type (CRM only); typing again forgets a chosen one.
-let timer;
-function typed() {
-    form.client_contact_id = null;
-    clearTimeout(timer);
-    if (!props.options?.uses_crm || form.client.trim().length < 2) {
-        found.value = [];
-        return;
-    }
-    timer = setTimeout(async () => {
-        try {
-            found.value = (await props.calls.clients(form.client.trim())).data;
-        } catch {
-            found.value = [];
-        }
-    }, 250);
-}
-function choose(client) {
-    form.client = client.name;
-    form.client_contact_id = client.id;
-    found.value = [];
-}
+const hasClient = computed(() => (usesCrm.value ? !!form.picked.contact_id : !!form.client.trim()));
 // A template's service comes with it unless one is typed.
 watch(() => form.template_id, (id) => {
     const template = props.options?.templates.find((item) => item.id === id);
@@ -76,7 +55,7 @@ async function save() {
     errors.value = {};
     const body = {
         name: form.name.trim(),
-        ...(form.client_contact_id ? { client_contact_id: form.client_contact_id } : { client_name: form.client.trim() || null }),
+        ...(usesCrm.value ? { client_contact_id: form.picked.contact_id } : { client_name: form.client.trim() || null }),
         service: form.service.trim() || null,
         manager_id: form.manager_id || null,
         starts_on: form.starts_on,
@@ -106,18 +85,12 @@ const fieldError = (...names) => names.map((name) => errors.value[name]?.[0]).fi
             <AppField v-slot="{ id }" :label="t('projects.fields.name')" :error="fieldError('name')" class="sm:col-span-2">
                 <input :id="id" v-model="form.name" class="field-input" maxlength="200" />
             </AppField>
-            <AppField v-slot="{ id }" :label="t('projects.fields.client')" :hint="form.client.trim() ? null : options?.uses_crm ? t('projects.dialog.client_hint') : t('projects.dialog.client_hint_plain')"
-                :error="fieldError('client_name', 'client_contact_id')" class="relative sm:col-span-2">
-                <input :id="id" v-model="form.client" class="field-input" maxlength="190" autocomplete="off" @input="typed" />
-                <ul v-if="found.length" class="absolute inset-x-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-xl border border-line bg-raised shadow-pop">
-                    <li v-for="client in found" :key="client.id">
-                        <button type="button" class="block w-full px-3 py-2 text-start text-[13.5px] hover:bg-subtle" @click="choose(client)">
-                            {{ client.name }}<span v-if="client.phone" class="text-[12px] text-muted"> · {{ client.phone }}</span>
-                        </button>
-                    </li>
-                </ul>
-                <p v-if="form.client_contact_id" class="mt-1 text-[12px] text-ok">{{ t('projects.dialog.client_known') }}</p>
-                <p v-else-if="options?.uses_crm && form.client.trim().length >= 2" class="mt-1 text-[12px] text-muted">{{ t('projects.dialog.client_new') }}</p>
+            <div v-if="usesCrm" class="sm:col-span-2">
+                <ClientPicker v-model="form.picked" :calls="calls" :can-add="!!options?.can.add_client" :error="fieldError('client_name', 'client_contact_id')" />
+            </div>
+            <AppField v-else v-slot="{ id }" :label="t('projects.fields.client')" :hint="t('projects.dialog.client_hint_plain')"
+                :error="fieldError('client_name', 'client_contact_id')" class="sm:col-span-2">
+                <input :id="id" v-model="form.client" class="field-input" maxlength="190" autocomplete="off" />
             </AppField>
             <AppField v-if="!editing" v-slot="{ id }" :label="t('projects.fields.template')" :hint="t('projects.dialog.template_hint')" :error="fieldError('template_id')" optional>
                 <select :id="id" v-model="form.template_id" class="field-input">
@@ -146,7 +119,7 @@ const fieldError = (...names) => names.map((name) => errors.value[name]?.[0]).fi
         </form>
         <template #footer>
             <AppButton variant="ghost" @click="emit('close')">{{ t('projects.common.cancel') }}</AppButton>
-            <AppButton variant="primary" type="submit" form="project-form" :loading="saving" :disabled="form.name.trim().length < 2 || !form.client.trim() || !form.starts_on">
+            <AppButton variant="primary" type="submit" form="project-form" :loading="saving" :disabled="form.name.trim().length < 2 || !hasClient || !form.starts_on">
                 {{ editing ? t('projects.common.save') : t('projects.dialog.open') }}
             </AppButton>
         </template>

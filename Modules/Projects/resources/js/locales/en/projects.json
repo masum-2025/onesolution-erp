@@ -43,10 +43,7 @@
         "open": "Open the project",
         "opened": "Project {code} opened.",
         "saved": "Project {code} saved.",
-        "client_hint": "Type the name: your clients show up to choose from. A new name is added to your clients.",
         "client_hint_plain": "The client's name.",
-        "client_known": "One of your clients.",
-        "client_new": "A new client: added to your clients when you save.",
         "template_hint": "Its usual steps become the project's tasks, due from the start day.",
         "no_template": "No template"
     },
@@ -249,5 +246,28 @@
         "hint": "The client checks it and accepts it into its own register; their request is marked done.",
         "send": "Send",
         "sent": "Result sent to the client."
+    },
+    "client": {
+        "all": "All",
+        "person": "Person",
+        "organization": "Organization",
+        "kind": "Kind of client",
+        "search": "Search your contacts by name, company or phone",
+        "looking": "Looking…",
+        "none": "No contact matches. Add a new client.",
+        "is_client": "Client",
+        "change": "Choose another client",
+        "new": "New client",
+        "new_title": "New client (kept in CRM)",
+        "person_name": "Full name",
+        "organization_name": "Organization name",
+        "company_name": "Works for (company)",
+        "phone": "Phone",
+        "email": "Email",
+        "address": "Address",
+        "city": "City",
+        "district": "District",
+        "kept_in_crm": "Kept in your CRM contacts, marked as a client.",
+        "add": "Add and choose"
     }
 }

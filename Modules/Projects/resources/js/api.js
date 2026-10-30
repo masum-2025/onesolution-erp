@@ -9,7 +9,8 @@ export function projectsApi(organizationId) {
 
     return {
         options: () => api(`${base}/options`),
-        clients: (q) => api(`${base}/clients`, { query: { q: q || undefined } }),
+        clients: (q, kind) => api(`${base}/clients`, { query: { q: q || undefined, kind: kind || undefined } }),
+        addClient: (body) => api(`${base}/clients`, { method: 'POST', body }),
         list: (query) => api(base, { query }),
         project: (id) => api(`${base}/${id}`),
         open: (body) => api(base, { method: 'POST', body }),

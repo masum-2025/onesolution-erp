@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Modules\Projects\Http\Controllers\Concerns\FindsWorkplace;
 use Modules\Projects\Http\ProjectsPresenter;
+use Modules\Projects\Http\Requests\ClientRequest;
 use Modules\Projects\Http\Requests\ProjectRequest;
 use Modules\Projects\Http\Requests\StepRequest;
 use Modules\Projects\Models\Project;
@@ -64,6 +65,8 @@ class ProjectController extends Controller
             'today' => $company === null ? CarbonImmutable::now('UTC')->toDateString() : $this->place->today($company)->toDateString(),
             'can' => [
                 'open' => $writes && Gate::allows('projects.manage', $unit),
+                // A new client from the project form goes into CRM: its own permission too.
+                'add_client' => $writes && $company !== null && Gate::allows('projects.manage', $unit) && $this->clients->usesCrm($company) && Gate::allows('crm.edit', $company),
                 'templates' => in_array($unit->type->value, ['group', 'company'], true) && Gate::allows('projects.configure', $unit),
                 'view' => Gate::allows('projects.view', $unit),
             ],
@@ -71,14 +74,26 @@ class ProjectController extends Controller
         ]]);
     }
 
-    /** The company's clients in CRM, by name. */
+    /** The company's CRM contacts to choose a client from: people and organizations, clients first. */
     public function clients(Request $request, string $organization): JsonResponse
     {
         $unit = $this->unit($organization, 'projects.manage');
-        $query = $request->validate(['q' => ['nullable', 'string', 'max:100']]);
+        $query = $request->validate(['q' => ['nullable', 'string', 'max:100'], 'kind' => ['nullable', 'in:person,organization']]);
         $company = $unit->type->value === 'group' ? null : $this->place->companyOf($unit);
 
-        return response()->json(['data' => $company === null ? [] : $this->clients->search($company, $query['q'] ?? null)]);
+        return response()->json(['data' => $company === null ? [] : $this->clients->search($company, $query['q'] ?? null, $query['kind'] ?? null)]);
+    }
+
+    /** A new client kept in CRM (a person or an organization), to choose for a project. */
+    public function addClient(ClientRequest $request, string $organization): JsonResponse
+    {
+        $unit = $this->unit($organization, 'projects.view');
+        $this->writable($unit->getKey(), 'projects.manage');
+        $this->place->assertWorkplace($unit);
+        $company = $this->place->companyOf($unit);
+        Gate::authorize('crm.edit', $company);
+
+        return response()->json(['data' => $this->clients->add($company, $unit, $request->validated(), $request->user())], 201);
     }
 
     public function index(Request $request, string $organization): JsonResponse
@@ -148,9 +163,13 @@ class ProjectController extends Controller
         $tasks = $this->tasks->of($project);
         $people = $this->tasks->assigneesOf($project->organization_id, $tasks->modelKeys());
         $counts = $this->counts($unit, collect([$project]));
+        $shaped = $this->presenter->project($project, $counts[$project->getKey()] ?? [], $today);
+        // Person or organization, as CRM has the contact now.
+        $shaped['client']['kind'] = $project->client_contact_id === null ? null
+            : ($this->clients->kindOf(Organization::query()->findOrFail($project->company_id), $project->client_contact_id));
 
         return [
-            ...$this->presenter->project($project, $counts[$project->getKey()] ?? [], $today),
+            ...$shaped,
             'task_list' => $tasks->map(fn (Task $task) => $this->presenter->task($task, $people->get($task->getKey(), collect()), $project, $today, $viewer))->values(),
         ];
     }
