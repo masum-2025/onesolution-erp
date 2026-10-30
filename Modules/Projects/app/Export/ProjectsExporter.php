@@ -7,6 +7,7 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Projects\Models\Project;
+use Modules\Projects\Models\ProjectLink;
 use Modules\Projects\Models\Task;
 use Modules\Projects\Models\TaskAssignee;
 use Modules\Projects\Models\TaskNote;
@@ -46,6 +47,10 @@ class ProjectsExporter implements ExportsModuleData
             ]),
             'task_notes' => $this->rows(TaskNote::class, $organization, $organizationIds, fn (TaskNote $item) => [
                 'task_id' => $item->task_id, 'user_id' => $item->user_id, 'body' => $item->body, 'at' => $item->created_at?->toIso8601String(),
+            ]),
+            // Which CRM quotes and Accounting invoices belong to which project (their amounts are in those modules' exports).
+            'project_documents' => $this->rows(ProjectLink::class, $organization, $organizationIds, fn (ProjectLink $item) => [
+                'project_id' => $item->project_id, 'kind' => $item->kind, 'document_id' => $item->target_id, 'at' => $item->created_at?->toIso8601String(),
             ]),
         ];
     }

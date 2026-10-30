@@ -11,6 +11,9 @@ return [
         'cancelled' => 'Cancelled',
     ],
     'no_due' => 'no due day',
+    'posting_keys' => [
+        'services' => 'Project services income',
+    ],
     'errors' => [
         'not_workplace' => 'Projects run at a company or a branch that is open. Choose one of them.',
         'project_not_found' => 'This project was not found here. Open it again from the projects list.',
@@ -26,6 +29,9 @@ return [
         'not_assignable' => 'Choose only people who work on projects here (and the lead among the task\'s people).',
         'too_many_assignees' => 'A task can be for at most :max people.',
         'too_many_tasks' => 'A project can have at most :max tasks. Split the work into another project.',
+        'crm_off' => 'Quotes are made in CRM, which is off here. Turn CRM on to quote clients.',
+        'books_off' => 'Invoices are made in Accounting, which is off here or has no books yet. Set up the books first.',
+        'client_not_in_crm' => 'This project\'s client is only a name. Add the client to CRM (button on the project) to quote or invoice them.',
         'not_your_task' => 'You can change only the tasks you are on. Ask the project\'s manager.',
     ],
 ];

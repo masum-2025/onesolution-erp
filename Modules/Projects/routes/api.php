@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Projects\Http\Controllers\MoneyController;
 use Modules\Projects\Http\Controllers\ProjectController;
 use Modules\Projects\Http\Controllers\TaskController;
 use Modules\Projects\Http\Controllers\TemplateController;
@@ -23,6 +24,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
         Route::get('', [ProjectController::class, 'index']);
         Route::get('{project}', [ProjectController::class, 'show']);
         Route::get('{project}/tasks/{task}/notes', [TaskController::class, 'notes']);
+        // The project's quotes (CRM) and invoices (Accounting), PRJ-2.
+        Route::get('{project}/money', [MoneyController::class, 'show']);
 
         Route::middleware('throttle:projects-writes')->group(function () {
             Route::post('templates', [TemplateController::class, 'store']);
@@ -35,6 +38,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
             Route::post('{project}/tasks/{task}/status', [TaskController::class, 'status']);
             Route::put('{project}/tasks/{task}/people', [TaskController::class, 'people']);
             Route::post('{project}/tasks/{task}/notes', [TaskController::class, 'addNote']);
+            Route::post('{project}/quotes', [MoneyController::class, 'quote'])->name('projects.quote');
+            Route::post('{project}/invoices', [MoneyController::class, 'invoice'])->name('projects.invoice');
+            Route::post('{project}/client/crm', [MoneyController::class, 'clientToCrm']);
             // Literal "tasks" above: this is start, hold, resume, finish, cancel or reopen.
             Route::post('{project}/{step}', [ProjectController::class, 'step']);
         });

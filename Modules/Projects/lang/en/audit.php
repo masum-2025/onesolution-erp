@@ -18,4 +18,7 @@ return [
     'task_moved' => 'Task status changed',
     'task_assigned' => 'Task people changed',
     'tasks_ordered' => 'Tasks reordered',
+    'quote_linked' => 'Quote made for the project',
+    'invoice_linked' => 'Invoice made for the project',
+    'client_to_crm' => 'Project client added to CRM',
 ];

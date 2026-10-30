@@ -32,8 +32,13 @@ return [
     'requires' => [],
     'sectors' => ['*'],
     'plans' => ['business', 'enterprise'],
-    // work: change the status of one's own tasks and add notes; manage: projects and all their tasks.
-    'permissions' => ['projects.view', 'projects.manage', 'projects.work', 'projects.configure'],
+    // work: change the status of one's own tasks and add notes; manage: projects and all their tasks;
+    // bill: quotes (CRM) and invoices (Accounting) for a project (PRJ-2).
+    'permissions' => ['projects.view', 'projects.manage', 'projects.work', 'projects.configure', 'projects.bill'],
+    // Invoices made from a project are income on the account mapped to this key.
+    'ledger_accounts' => [
+        'projects.services' => ['label' => 'projects::projects.posting_keys.services', 'type' => 'income'],
+    ],
     'rules' => [
         // Project numbers: PREFIX-YEAR-0001, per company.
         $rule('number_prefix', 'string', 'PRJ', ['schema' => ['minLength' => 1, 'maxLength' => 8, 'pattern' => '^[A-Z0-9]{1,8}$'], 'sort_order' => 10]),

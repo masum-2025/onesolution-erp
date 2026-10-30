@@ -23,6 +23,11 @@ export function projectsApi(organizationId) {
         order: (projectId, ids) => api(`${base}/${projectId}/tasks/order`, { method: 'POST', body: { ids } }),
         notes: (projectId, id) => api(`${base}/${projectId}/tasks/${id}/notes`),
         addNote: (projectId, id, body) => api(`${base}/${projectId}/tasks/${id}/notes`, { method: 'POST', body: { body } }),
+        // Money (PRJ-2): CRM's quotes and Accounting's invoices of the project.
+        money: (projectId) => api(`${base}/${projectId}/money`),
+        quote: (projectId, kind, lines) => api(`${base}/${projectId}/quotes`, { method: 'POST', body: { kind, lines } }),
+        invoice: (projectId, issueDate, lines) => api(`${base}/${projectId}/invoices`, { method: 'POST', body: { issue_date: issueDate, lines } }),
+        clientToCrm: (projectId, version) => api(`${base}/${projectId}/client/crm`, { method: 'POST', body: { base_version: version } }),
         mine: (done = false) => api(`${base}/my-tasks`, { query: { done: done ? 1 : undefined } }),
 
         templates: (all = false) => api(`${base}/templates`, { query: { all: all ? 1 : undefined } }),

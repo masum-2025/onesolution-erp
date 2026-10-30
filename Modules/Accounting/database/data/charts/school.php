@@ -25,7 +25,7 @@ return [
     'remove' => ['4100', '5100'],
     // Fees owed by families go to their own receivable account.
     'postings' => [
-        'accounting.receivable' => '1145', 'crm.sales' => '4120',
+        'accounting.receivable' => '1145', 'crm.sales' => '4120', 'projects.services' => '4120',
         'education_fees.tuition_income' => '4110', 'education_fees.admission_income' => '4120',
         'education_fees.exam_income' => '4130', 'education_fees.transport_income' => '4140',
         'education_fees.other_income' => '4900',

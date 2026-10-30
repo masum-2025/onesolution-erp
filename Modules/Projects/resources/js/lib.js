@@ -1,3 +1,5 @@
+import { currencyDigits, decimalStringToMinor } from '@/lib/format';
+
 /**
  * Small helpers of the projects screens. Overdue and counts come from the
  * server (the company's today); these only show them.
@@ -32,6 +34,29 @@ export function initials(name) {
     const parts = String(name ?? '').trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return '?';
     return (parts.length === 1 ? parts[0].slice(0, 2) : parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const BANGLA = Object.fromEntries([...'০১২৩৪৫৬৭৮৯'].map((digit, index) => [digit, String(index)]));
+
+/** Typed digits (Bangla or Latin, with thousands commas or spaces) as plain Latin text. */
+function cleanNumber(text) {
+    return String(text ?? '').trim().replace(/[০-৯]/g, (digit) => BANGLA[digit]).replace(/[,\s]/g, '');
+}
+
+/** Typed money -> minor units; null when not an amount at or above zero. */
+export function amountToMinor(text, currency) {
+    const clean = cleanNumber(text);
+    if (clean === '' || !/^\d+(\.\d+)?$/.test(clean)) return null;
+    return decimalStringToMinor(clean, currencyDigits(currency));
+}
+
+/** Typed quantity -> thousandths ("1.5" -> 1500); null when not above zero or finer than 0.001. */
+export function quantityToMilli(text) {
+    const clean = cleanNumber(text);
+    const match = /^(\d{1,9})(?:\.(\d{1,3}))?$/.exec(clean);
+    if (!match) return null;
+    const milli = Number(match[1]) * 1000 + Number((match[2] ?? '').padEnd(3, '0'));
+    return milli > 0 ? milli : null;
 }
 
 /**

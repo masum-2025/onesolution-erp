@@ -15,6 +15,7 @@ import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { projectsApi } from '../api';
 import { TASK_STATUSES, columns, progress, projectTone } from '../lib';
+import MoneySection from '../components/MoneySection.vue';
 import ProjectDialog from '../components/ProjectDialog.vue';
 import TaskCard from '../components/TaskCard.vue';
 import TaskDialog from '../components/TaskDialog.vue';
@@ -120,6 +121,8 @@ function taskSaved(task) {
                 <p v-if="project.status_reason" class="col-span-2 rounded-lg bg-subtle px-3 py-2 text-[13px] lg:col-span-5">{{ t(`projects.reason.${project.status}`, { reason: project.status_reason }) }}</p>
                 <p v-if="project.description" class="col-span-2 whitespace-pre-line text-fg-2 lg:col-span-5">{{ project.description }}</p>
             </section>
+
+            <MoneySection :project="project" :today="opts?.today ?? ''" :calls="calls" @client-changed="data.reload()" />
 
             <div class="mb-3 flex items-center justify-between gap-3">
                 <h2 class="text-[14.5px] font-semibold">{{ t('projects.board.title') }}</h2>

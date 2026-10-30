@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { columns, groupMine, initials, progress, projectTone } from '../../Modules/Projects/resources/js/lib';
+import { amountToMinor, columns, groupMine, initials, progress, projectTone, quantityToMilli } from '../../Modules/Projects/resources/js/lib';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Projects/resources/js/locales/en/projects.json';
 import bn from '../../Modules/Projects/resources/js/locales/bn/projects.json';
@@ -36,6 +36,17 @@ describe('projects screens', () => {
         ], '2026-10-29');
         expect(Object.fromEntries(Object.entries(groups).map(([key, tasks]) => [key, tasks.map((task) => task.id)])))
             .toEqual({ overdue: ['late'], week: ['soon'], later: ['later'], none: ['free'] });
+    });
+
+    it('reads typed money and quantities, Bangla digits too', () => {
+        expect(amountToMinor('৪৫,০০০', 'BDT')).toBe(4500000);
+        expect(amountToMinor('12.5', 'BDT')).toBe(1250);
+        expect(amountToMinor('-1', 'BDT')).toBeNull();
+        expect(amountToMinor('1.234', 'BDT')).toBeNull();
+        expect(quantityToMilli('১.৫')).toBe(1500);
+        expect(quantityToMilli('2')).toBe(2000);
+        expect(quantityToMilli('0')).toBeNull();
+        expect(quantityToMilli('1.2345')).toBeNull();
     });
 
     it('marks people with up to two letters', () => {

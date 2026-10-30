@@ -88,6 +88,24 @@ class ProjectsException extends TenancyException
         return new self('too_many_tasks', 422, ['max' => $max]);
     }
 
+    /** Quotes need CRM on at the company. */
+    public static function crmOff(): self
+    {
+        return new self('crm_off', 422);
+    }
+
+    /** Invoices need Accounting on and its books set up at the company. */
+    public static function booksOff(): self
+    {
+        return new self('books_off', 422);
+    }
+
+    /** Quotes and invoices go to a client kept in CRM (add the client there first). */
+    public static function clientNotInCrm(): self
+    {
+        return new self('client_not_in_crm', 422, [], ['field' => 'client_contact_id']);
+    }
+
     /** Someone with projects.work changes only tasks they are on. */
     public static function notYourTask(): self
     {

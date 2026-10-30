@@ -1441,7 +1441,21 @@ is needed; CRM is used for clients when it is on.
   star, notes), `/projects/my-tasks` (overdue, this week, later, no due day),
   `/projects/templates` (steps with titles per language, days, order). The client field finds
   CRM clients as you type; a new name is added as a client.
-- **Future:** quotations and invoices through CRM and Accounting (PRJ-2);
+- **Money (PRJ-2):** kept by the modules that keep money. A project's estimates and
+  quotations are drafts in CRM (`POST …/projects/{id}/quotes`, through CRM's public
+  `Quotations` service: CRM's numbers, VAT, validity; sending and accepting stay in CRM, and
+  accepting a quotation may make Accounting's invoice). Its invoices are drafts in Accounting
+  (`POST …/{id}/invoices`, `Customers::draftInvoice`, income on the account mapped to the new
+  posting key `projects.services`: 4100 general, 4120 school; existing books need
+  `accounting:map-postings`). `prj_project_links` keeps only which ones belong to the project;
+  `GET …/{id}/money` reads numbers, statuses and amounts from CRM and Accounting each time
+  (`Customers::invoices`), with totals: quoted (accepted quotations), invoiced (posted), still
+  owed. Needs `projects.bill` and the other module's own permission (`crm.edit`,
+  `accounting.sell`). A client kept only by name is added to CRM with
+  `POST …/{id}/client/crm`. With CRM and Accounting off the money part is hidden and projects
+  work as before.
+- **Future:** a client also connected on the platform could receive the quote over the
+  connection;
   when a client is also connected on the platform, its renewal requests (CMP-2) may arrive as
   new projects (optional). A new sector or country needs no code: templates are data, numbers
   are rules.

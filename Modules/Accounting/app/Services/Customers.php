@@ -5,8 +5,10 @@ namespace Modules\Accounting\Services;
 use App\Models\User;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Tenancy\Models\Organization;
+use Modules\Accounting\Enums\DocumentStatus;
 use Modules\Accounting\Enums\DocumentType;
 use Modules\Accounting\Exceptions\AccountingException;
+use Modules\Accounting\Models\Document;
 use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\PostingAccount;
 
@@ -100,6 +102,33 @@ class Customers
         ], $actor);
 
         return ['id' => $invoice->getKey(), 'status' => $invoice->status->value, 'total_minor' => (int) $invoice->total_minor];
+    }
+
+    /**
+     * Sales invoices by id, in short (unknown ones left out): what other
+     * modules show of the invoices they started (Projects).
+     *
+     * @param  list<string>  $ids
+     * @return array<string, array{id: string, number: string|null, status: string, total_minor: int, balance_minor: int, currency_code: string, issue_date: string|null, due_date: string|null}>
+     */
+    public function invoices(Organization $company, array $ids): array
+    {
+        if ($ids === [] || ! $this->available($company)) {
+            return [];
+        }
+
+        return $this->books->query(Document::class, $company)->whereKey($ids)->where('type', DocumentType::Invoice->value)->get()
+            ->mapWithKeys(fn (Document $invoice) => [$invoice->getKey() => [
+                'id' => $invoice->getKey(),
+                'number' => $invoice->number,
+                'status' => $invoice->status->value,
+                'total_minor' => (int) $invoice->total_minor,
+                // A void or unposted invoice is owed nothing.
+                'balance_minor' => in_array($invoice->status, [DocumentStatus::Posted, DocumentStatus::PartlyPaid], true) ? $invoice->balance() : 0,
+                'currency_code' => $invoice->currency_code,
+                'issue_date' => $invoice->issue_date?->toDateString(),
+                'due_date' => $invoice->due_date?->toDateString(),
+            ]])->all();
     }
 
     /** What the contact's customer owes today (0 without books or a customer). */
