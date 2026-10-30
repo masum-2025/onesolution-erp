@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Projects\Http\Controllers\InboxController;
 use Modules\Projects\Http\Controllers\MoneyController;
 use Modules\Projects\Http\Controllers\ProjectController;
 use Modules\Projects\Http\Controllers\TaskController;
@@ -19,6 +20,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
         Route::get('options', [ProjectController::class, 'options']);
         Route::get('clients', [ProjectController::class, 'clients']);
         Route::get('my-tasks', [TaskController::class, 'mine']);
+        // Renewal requests from connected clients (optional, over a business connection).
+        Route::get('requests', [InboxController::class, 'index']);
         Route::get('templates', [TemplateController::class, 'index']);
         Route::get('templates/{template}', [TemplateController::class, 'show']);
         Route::get('', [ProjectController::class, 'index']);
@@ -28,6 +31,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
         Route::get('{project}/money', [MoneyController::class, 'show']);
 
         Route::middleware('throttle:projects-writes')->group(function () {
+            Route::post('requests/{incoming}/accept', [InboxController::class, 'accept']);
+            Route::post('requests/{incoming}/decline', [InboxController::class, 'decline']);
             Route::post('templates', [TemplateController::class, 'store']);
             Route::patch('templates/{template}', [TemplateController::class, 'update']);
             Route::post('', [ProjectController::class, 'store']);
@@ -41,6 +46,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
             Route::post('{project}/quotes', [MoneyController::class, 'quote'])->name('projects.quote');
             Route::post('{project}/invoices', [MoneyController::class, 'invoice'])->name('projects.invoice');
             Route::post('{project}/client/crm', [MoneyController::class, 'clientToCrm']);
+            Route::post('{project}/result', [InboxController::class, 'result']);
             // Literal "tasks" above: this is start, hold, resume, finish, cancel or reopen.
             Route::post('{project}/{step}', [ProjectController::class, 'step']);
         });

@@ -6,6 +6,7 @@ use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Projects\Models\IncomingRequest;
 use Modules\Projects\Models\Project;
 use Modules\Projects\Models\ProjectLink;
 use Modules\Projects\Models\Task;
@@ -47,6 +48,11 @@ class ProjectsExporter implements ExportsModuleData
             ]),
             'task_notes' => $this->rows(TaskNote::class, $organization, $organizationIds, fn (TaskNote $item) => [
                 'task_id' => $item->task_id, 'user_id' => $item->user_id, 'body' => $item->body, 'at' => $item->created_at?->toIso8601String(),
+            ]),
+            'client_requests' => $this->rows(IncomingRequest::class, $organization, $organizationIds, fn (IncomingRequest $item) => [
+                'id' => $item->getKey(), 'connection_id' => $item->connection_id, 'client' => $item->client_name, 'factory' => $item->factory_name,
+                'service_code' => $item->service_code, 'expires_on' => $item->expires_on?->toDateString(), 'wanted_by' => $item->wanted_by?->toDateString(),
+                'note' => $item->note, 'status' => $item->status, 'reason' => $item->reason, 'project_id' => $item->project_id, 'at' => $item->created_at?->toIso8601String(),
             ]),
             // Which CRM quotes and Accounting invoices belong to which project (their amounts are in those modules' exports).
             'project_documents' => $this->rows(ProjectLink::class, $organization, $organizationIds, fn (ProjectLink $item) => [

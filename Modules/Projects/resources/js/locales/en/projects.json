@@ -218,5 +218,36 @@
             "void": "Void"
         },
         "why_permission": "Making quotes needs CRM's editing permission, and invoices Accounting's selling permission, besides billing projects. Ask an administrator."
+    },
+    "requests": {
+        "title": "Renewal requests from clients",
+        "expires": "expires {date}",
+        "wanted_by": "wanted by {date}",
+        "accept": "Accept",
+        "decline": "Decline",
+        "accept_title": "Accept and open a project",
+        "accept_open": "Open the project",
+        "accepted": "Project {code} opened. The client was told the start day.",
+        "template_found": "Chosen because its service matches.",
+        "starts_on": "Start day",
+        "starts_on_hint": "The client sees this as the planned day.",
+        "decline_title": "Decline the request from {client}?",
+        "decline_text": "Say why: the client sees your reason.",
+        "declined": "Request declined. The client was told."
+    },
+    "result": {
+        "connected": "Connected client",
+        "button": "Send the result",
+        "title": "Send the result to the client",
+        "last_audit_on": "Audit day",
+        "expires_on": "New expiry day",
+        "result": "Result or grade",
+        "certificate_no": "Certificate number",
+        "file": "Certificate",
+        "file_hint": "PDF or a picture.",
+        "note": "Note to the client",
+        "hint": "The client checks it and accepts it into its own register; their request is marked done.",
+        "send": "Send",
+        "sent": "Result sent to the client."
     }
 }

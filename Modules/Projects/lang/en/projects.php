@@ -32,6 +32,10 @@ return [
         'crm_off' => 'Quotes are made in CRM, which is off here. Turn CRM on to quote clients.',
         'books_off' => 'Invoices are made in Accounting, which is off here or has no books yet. Set up the books first.',
         'client_not_in_crm' => 'This project\'s client is only a name. Add the client to CRM (button on the project) to quote or invoice them.',
+        'request_not_found' => 'This request was not found here. Open it again from the requests.',
+        'request_closed' => 'This request was already answered or cancelled by the client. Reload to see it.',
+        'not_connected_project' => 'Only a project opened from a connected client\'s request can send its result back.',
+        'connection_closed' => 'The connection with this client is paused or ended: nothing can be sent now.',
         'not_your_task' => 'You can change only the tasks you are on. Ask the project\'s manager.',
     ],
 ];

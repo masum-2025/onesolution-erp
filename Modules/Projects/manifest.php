@@ -1,5 +1,7 @@
 <?php
 
+use Modules\Projects\Connections\RenewalCancelledHandler;
+use Modules\Projects\Connections\RenewalRequestHandler;
 use Modules\Projects\Dashboard\MyTasks;
 use Modules\Projects\Dashboard\ProjectsAttention;
 use Modules\Projects\Dashboard\ProjectsByStatus;
@@ -63,6 +65,8 @@ return [
         ],
     ],
     'events' => [],
+    // Optional, over a business connection: a connected client's Compliance asks for renewals here.
+    'connection_kinds' => [RenewalRequestHandler::class, RenewalCancelledHandler::class],
     'is_core' => false,
     'requires_consent' => false,
     'attention' => [ProjectsAttention::class],

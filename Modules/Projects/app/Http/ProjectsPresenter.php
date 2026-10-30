@@ -70,10 +70,13 @@ class ProjectsPresenter
             'late' => $project->isOpen() && $project->due_on !== null && $project->due_on->lt($today),
             'description' => $project->description,
             'tasks' => ['total' => $counts['total'] ?? 0, 'done' => $counts['done'] ?? 0, 'overdue' => $counts['overdue'] ?? 0],
+            // Opened from a connected client's renewal request: the answer and the result go back over it.
+            'connected' => $project->connection_id !== null,
             'version' => $project->version,
             'can' => [
                 'edit' => $manages && $project->isOpen(),
                 'tasks' => $manages && $project->isOpen(),
+                'send_result' => $manages && $project->connection_id !== null && $project->status !== Project::CANCELLED,
                 'steps' => $manages ? $this->steps($project) : [],
             ],
         ];

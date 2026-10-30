@@ -28,6 +28,16 @@ export function projectsApi(organizationId) {
         quote: (projectId, kind, lines) => api(`${base}/${projectId}/quotes`, { method: 'POST', body: { kind, lines } }),
         invoice: (projectId, issueDate, lines) => api(`${base}/${projectId}/invoices`, { method: 'POST', body: { issue_date: issueDate, lines } }),
         clientToCrm: (projectId, version) => api(`${base}/${projectId}/client/crm`, { method: 'POST', body: { base_version: version } }),
+        // Renewal requests from connected clients, and the result sent back (optional, over a connection).
+        requests: (newOnly = false) => api(`${base}/requests`, { query: { new: newOnly ? 1 : undefined } }),
+        acceptRequest: (id, body) => api(`${base}/requests/${id}/accept`, { method: 'POST', body }),
+        declineRequest: (id, reason) => api(`${base}/requests/${id}/decline`, { method: 'POST', body: { reason } }),
+        sendResult: (projectId, fields, file) => {
+            const body = new FormData();
+            for (const [key, value] of Object.entries(fields)) if (value) body.append(key, value);
+            if (file) body.append('file', file);
+            return api(`${base}/${projectId}/result`, { method: 'POST', body });
+        },
         mine: (done = false) => api(`${base}/my-tasks`, { query: { done: done ? 1 : undefined } }),
 
         templates: (all = false) => api(`${base}/templates`, { query: { all: all ? 1 : undefined } }),

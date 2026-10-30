@@ -1454,6 +1454,20 @@ is needed; CRM is used for clients when it is on.
   `accounting.sell`). A client kept only by name is added to CRM with
   `POST …/{id}/client/crm`. With CRM and Accounting off the money part is hidden and projects
   work as before.
+- **Board:** on wide screens a card is dragged to another column (its status: its people or a
+  manager) or within one (the order: a manager); the drawer's status buttons work everywhere.
+- **Connected clients (optional):** when a client is connected with the company on the
+  platform, its Compliance's renewal request (`compliance.renewal_request`) arrives in
+  `prj_requests` ("Renewal requests from clients" on the projects list, bell for managers).
+  Accepting it (`POST …/projects/requests/{id}/accept`) opens a project for that client and
+  factory (`connection_id`, `client_unit_id`, `request_id` on the project; the template whose
+  service matches is chosen; an existing CRM client of the same name is reused) and tells the
+  client the start day (`projects.request_reply`); declining tells the reason; a request the
+  client cancels (`compliance.renewal_cancelled`) shows cancelled. "Send the result"
+  (`POST …/projects/{id}/result`, multipart: days, grade, certificate number, the certificate
+  file) sends `projects.audit_result` to the client's factory and marks the request done; the
+  client accepts it into its register (CMP-2). Locally, without a queue worker, messages wait
+  in the queue (`php artisan queue:work`).
 - **Future:** a client also connected on the platform could receive the quote over the
   connection;
   when a client is also connected on the platform, its renewal requests (CMP-2) may arrive as

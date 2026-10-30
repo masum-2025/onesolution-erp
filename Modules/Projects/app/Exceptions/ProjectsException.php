@@ -106,6 +106,28 @@ class ProjectsException extends TenancyException
         return new self('client_not_in_crm', 422, [], ['field' => 'client_contact_id']);
     }
 
+    public static function requestNotFound(): self
+    {
+        return new self('request_not_found', 404);
+    }
+
+    /** Already accepted, declined or cancelled. */
+    public static function requestClosed(): self
+    {
+        return new self('request_closed', 409);
+    }
+
+    /** Results go back only for a project opened from a connected client's request. */
+    public static function notConnectedProject(): self
+    {
+        return new self('not_connected_project', 422);
+    }
+
+    public static function connectionClosed(): self
+    {
+        return new self('connection_closed', 409);
+    }
+
     /** Someone with projects.work changes only tasks they are on. */
     public static function notYourTask(): self
     {

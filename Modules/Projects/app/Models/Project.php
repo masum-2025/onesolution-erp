@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * on hold, done or cancelled (never deleted). Its tasks can change only
  * while it is planned, active or on hold.
  */
-#[Fillable(['organization_id', 'company_id', 'code', 'name', 'client_contact_id', 'client_name', 'template_id', 'service', 'manager_id', 'status', 'status_reason', 'starts_on', 'due_on', 'finished_on', 'description', 'created_by', 'version'])]
+#[Fillable(['organization_id', 'company_id', 'code', 'name', 'client_contact_id', 'client_name', 'connection_id', 'client_unit_id', 'request_id', 'template_id', 'service', 'manager_id', 'status', 'status_reason', 'starts_on', 'due_on', 'finished_on', 'description', 'created_by', 'version'])]
 class Project extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;

@@ -21,4 +21,9 @@ return [
     'quote_linked' => 'Quote made for the project',
     'invoice_linked' => 'Invoice made for the project',
     'client_to_crm' => 'Project client added to CRM',
+    'request_received' => 'Renewal request received from a connected client',
+    'request_cancelled' => 'Renewal request cancelled by the client',
+    'request_accepted' => 'Renewal request accepted: project opened',
+    'request_declined' => 'Renewal request declined',
+    'result_sent' => 'Audit result sent to the client',
 ];

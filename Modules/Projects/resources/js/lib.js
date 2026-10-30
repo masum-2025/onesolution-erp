@@ -29,6 +29,26 @@ export function columns(tasks) {
     return byStatus;
 }
 
+/**
+ * The project's task order after a card is dropped: before another card
+ * (beforeId), or at the end of a column (beforeId null). Returns all ids
+ * in the new order; the dropped task takes the column's status.
+ */
+export function orderAfterDrop(tasks, draggedId, status, beforeId = null) {
+    const sorted = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+    const dragged = sorted.find((task) => task.id === draggedId);
+    if (!dragged) return sorted.map((task) => task.id);
+    const rest = sorted.filter((task) => task.id !== draggedId);
+    let index = beforeId ? rest.findIndex((task) => task.id === beforeId) : -1;
+    if (index < 0) {
+        // The end of the column: after its last task (or at the very end when it is empty).
+        const last = rest.map((task) => task.status).lastIndexOf(status);
+        index = last < 0 ? rest.length : last + 1;
+    }
+    rest.splice(index, 0, { ...dragged, status });
+    return rest.map((task) => task.id);
+}
+
 /** Up to two letters of a person's name, for the small round marks. */
 export function initials(name) {
     const parts = String(name ?? '').trim().split(/\s+/).filter(Boolean);

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, CirclePause, CirclePlay, CircleCheck, PenLine, Plus, RotateCcw, XCircle } from 'lucide-vue-next';
+import { ArrowLeft, CirclePause, CirclePlay, CircleCheck, PenLine, Plus, RotateCcw, Send, XCircle } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -14,9 +14,10 @@ import { formatDate, formatNumber } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { projectsApi } from '../api';
-import { TASK_STATUSES, columns, progress, projectTone } from '../lib';
+import { TASK_STATUSES, columns, orderAfterDrop, progress, projectTone } from '../lib';
 import MoneySection from '../components/MoneySection.vue';
 import ProjectDialog from '../components/ProjectDialog.vue';
+import ResultDialog from '../components/ResultDialog.vue';
 import TaskCard from '../components/TaskCard.vue';
 import TaskDialog from '../components/TaskDialog.vue';
 import TaskDrawer from '../components/TaskDrawer.vue';
@@ -42,6 +43,7 @@ const openTask = computed(() => project.value?.task_list.find((task) => task.id 
 watch(openTaskId, (id) => router.replace({ query: id ? { task: id } : {} }));
 
 const editing = ref(false);
+const sendingResult = ref(false);
 const taskDialog = ref({ open: false, task: null });
 const busy = ref(false);
 
@@ -65,6 +67,34 @@ async function step(name) {
         if (error.code === 'version_conflict' || error.code === 'wrong_step') data.reload();
     } finally {
         busy.value = false;
+    }
+}
+
+// Drag and drop on the board (wide screens; the drawer's status buttons work everywhere).
+const dragging = ref(null);
+const dropOn = ref(null);
+function dragStart(event, task) {
+    dragging.value = task.id;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', task.id);
+}
+async function drop(status, beforeId) {
+    const task = project.value?.task_list.find((item) => item.id === dragging.value);
+    dragging.value = null;
+    dropOn.value = null;
+    if (!task || beforeId === task.id) return;
+    const moved = task.status !== status;
+    if (moved && !task.can.move) return;
+    busy.value = true;
+    try {
+        if (moved) await calls.moveTask(project.value.id, task.id, status, task.version);
+        // The order is a manager's: others only change the status.
+        if (project.value.can.tasks) await calls.order(project.value.id, orderAfterDrop(project.value.task_list, task.id, status, beforeId));
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        busy.value = false;
+        data.reload();
     }
 }
 
@@ -94,10 +124,12 @@ function taskSaved(task) {
                         <RouterLink :to="{ name: 'projects' }" class="inline-flex items-center gap-1 hover:text-fg"><ArrowLeft class="size-3.5 rtl:rotate-180" aria-hidden="true" />{{ t('projects.list.title') }}</RouterLink>
                         <span class="font-mono" dir="ltr">{{ project.code }}</span>
                         <AppBadge :tone="projectTone(project.status)">{{ t(`projects.statuses.${project.status}`) }}</AppBadge>
+                        <AppBadge v-if="project.connected" tone="outline">{{ t('projects.result.connected') }}</AppBadge>
                     </p>
                 </template>
                 <template #actions>
                     <AppButton v-if="project.can.edit" variant="ghost" :icon="PenLine" @click="editing = true">{{ t('projects.common.edit') }}</AppButton>
+                    <AppButton v-if="project.can.send_result" :icon="Send" @click="sendingResult = true">{{ t('projects.result.button') }}</AppButton>
                     <AppButton v-for="name in project.can.steps" :key="name" :variant="name === 'cancel' ? 'ghost' : 'secondary'" :class="name === 'cancel' ? 'text-bad' : ''"
                         :icon="STEP_ICONS[name]" :disabled="busy" @click="step(name)">{{ t(`projects.steps.${name}`) }}</AppButton>
                 </template>
@@ -131,18 +163,25 @@ function taskSaved(task) {
             <p v-if="!project.task_list.length" class="card px-5 py-6 text-center text-[13.5px] text-muted">{{ t(project.can.tasks ? 'projects.board.empty' : 'projects.board.empty_read') }}</p>
             <!-- Wide screens: a column per status. Phones: the same, one under another. -->
             <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <section v-for="status in TASK_STATUSES" :key="status" class="rounded-2xl bg-subtle/70 p-3" :aria-label="t(`projects.task_statuses.${status}`)">
+                <section v-for="status in TASK_STATUSES" :key="status" class="rounded-2xl bg-subtle/70 p-3 transition" :aria-label="t(`projects.task_statuses.${status}`)"
+                    :class="dropOn === status ? 'ring-2 ring-brand' : ''"
+                    @dragover.prevent="dropOn = status" @dragleave="dropOn = dropOn === status ? null : dropOn" @drop.prevent="drop(status, null)">
                     <h3 class="mb-2 flex items-center justify-between px-1 text-[13px] font-semibold text-fg-2">
                         {{ t(`projects.task_statuses.${status}`) }}<span class="tabular text-[12px] font-normal text-muted">{{ formatNumber(board[status].length) }}</span>
                     </h3>
                     <p v-if="!board[status].length" class="px-1 py-2 text-[12.5px] text-faint">{{ t('projects.board.column_empty') }}</p>
                     <div v-else class="space-y-2">
-                        <TaskCard v-for="task in board[status]" :key="task.id" :task="task" @open="openTaskId = task.id" />
+                        <!-- Dragged to another column: its new status (its people or a manager); within one: the order (a manager). -->
+                        <div v-for="task in board[status]" :key="task.id" :draggable="task.can.move || task.can.edit" :class="dragging === task.id ? 'opacity-40' : ''"
+                            @dragstart="dragStart($event, task)" @dragend="dragging = null; dropOn = null" @dragover.prevent @drop.prevent.stop="drop(status, task.id)">
+                            <TaskCard :task="task" @open="openTaskId = task.id" />
+                        </div>
                     </div>
                 </section>
             </div>
         </template>
 
+        <ResultDialog :open="sendingResult" :project="project" :calls="calls" @close="sendingResult = false" @sent="sendingResult = false" />
         <ProjectDialog :open="editing" :project="project" :options="opts" :calls="calls" @close="editing = false" @saved="editing = false; data.reload()" />
         <TaskDialog v-if="project" :open="taskDialog.open" :project-id="project.id" :task="taskDialog.task" :options="opts" :calls="calls" @close="taskDialog = { open: false, task: null }" @saved="taskSaved" />
         <TaskDrawer v-if="project" :open="!!openTask && !taskDialog.open" :task="openTask" :project-id="project.id" :options="opts" :calls="calls"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { amountToMinor, columns, groupMine, initials, progress, projectTone, quantityToMilli } from '../../Modules/Projects/resources/js/lib';
+import { amountToMinor, columns, groupMine, initials, orderAfterDrop, progress, projectTone, quantityToMilli } from '../../Modules/Projects/resources/js/lib';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Projects/resources/js/locales/en/projects.json';
 import bn from '../../Modules/Projects/resources/js/locales/bn/projects.json';
@@ -36,6 +36,22 @@ describe('projects screens', () => {
         ], '2026-10-29');
         expect(Object.fromEntries(Object.entries(groups).map(([key, tasks]) => [key, tasks.map((task) => task.id)])))
             .toEqual({ overdue: ['late'], week: ['soon'], later: ['later'], none: ['free'] });
+    });
+
+    it('orders the tasks after a card is dropped on the board', () => {
+        const tasks = [
+            { id: 'a', status: 'todo', sort_order: 1 }, { id: 'b', status: 'todo', sort_order: 2 },
+            { id: 'c', status: 'doing', sort_order: 3 }, { id: 'd', status: 'done', sort_order: 4 },
+        ];
+        // Before another card, in another column.
+        expect(orderAfterDrop(tasks, 'a', 'doing', 'c')).toEqual(['b', 'a', 'c', 'd']);
+        // At the end of a column: after its last task.
+        expect(orderAfterDrop(tasks, 'd', 'todo')).toEqual(['a', 'b', 'd', 'c']);
+        // An empty column: at the very end.
+        expect(orderAfterDrop(tasks, 'a', 'blocked')).toEqual(['b', 'c', 'd', 'a']);
+        // Within a column: before the first.
+        expect(orderAfterDrop(tasks, 'b', 'todo', 'a')).toEqual(['b', 'a', 'c', 'd']);
+        expect(orderAfterDrop(tasks, 'x', 'todo')).toEqual(['a', 'b', 'c', 'd']);
     });
 
     it('reads typed money and quantities, Bangla digits too', () => {

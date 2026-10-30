@@ -15,6 +15,7 @@ import { t } from '@/lib/i18n';
 import { projectsApi } from '../api';
 import { progress, projectTone } from '../lib';
 import ProjectDialog from '../components/ProjectDialog.vue';
+import RequestsSection from '../components/RequestsSection.vue';
 
 /**
  * Projects at this unit and below: counts by status (each opens its own),
@@ -60,6 +61,8 @@ function opened(project) {
         </PageHeader>
 
         <p v-if="opts?.reads_only" class="mb-4 rounded-xl border border-line bg-subtle px-4 py-3 text-[13px] text-fg-2">{{ t('projects.list.group_reads') }}</p>
+
+        <RequestsSection v-if="opts" :options="opts" :calls="calls" :highlight="route.query.requests === '1'" @changed="list.reload()" />
 
         <section class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5" :aria-label="t('projects.list.summary')">
             <button v-for="key in STATUSES" :key="key" type="button" class="card px-4 py-3 text-start transition hover:bg-subtle/60"

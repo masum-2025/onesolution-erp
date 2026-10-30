@@ -2,7 +2,6 @@
 
 use App\Platform\Audit\AuditLog;
 use App\Platform\Connections\ConnectionDelivery;
-use App\Platform\Connections\ConnectionKinds;
 use App\Platform\Connections\Jobs\DeliverConnectionMessage;
 use App\Platform\Connections\Models\ConnectionMessage;
 use App\Platform\Notifications\Models\NotificationDelivery;
@@ -17,7 +16,7 @@ use Modules\Compliance\Connections\RequestReplyHandler;
 use Modules\Compliance\Models\ProposedResult;
 use Modules\Compliance\Models\RenewalRequest;
 use Modules\Compliance\Services\Reminders;
-use Tests\Fixtures\FixtureRenewalInbox;
+use Modules\Projects\Models\IncomingRequest;
 
 /*
  * CMP-2: renewals with the providers. The client (group G1: C1 > B1 and
@@ -35,12 +34,12 @@ beforeEach(function () {
     $this->w = tenancyWorld();
     foreach ([$this->w->g1, $this->w->g2, $this->w->g3] as $group) {
         setPlan($group, 'business');
-        foreach (['compliance', 'business_network', 'crm'] as $module) {
+        // Apex's side receives requests in its Projects.
+        foreach (['compliance', 'business_network', 'crm', 'projects'] as $module) {
             toggles()->enable($group, $module, 'Test setup');
         }
     }
-    app(ConnectionKinds::class)->register('crm', FixtureRenewalInbox::class);
-    FixtureRenewalInbox::$received = [];
+    $this->received = fn () => IncomingRequest::query()->withoutGlobalScope(OrganizationScope::class)->get();
 
     $person = function (Organization $at, array $permissions, string $name) {
         $user = createMember($at, MembershipType::Staff, AccessScope::Descendants);
@@ -102,13 +101,15 @@ it('sends a renewal request to a connected provider and takes its answers', func
     $made = $this->asToken($this->hrac)->postJson(($this->api)("audits/{$line['id']}/renewal"), ['wanted_by' => '2026-11-20', 'note' => 'Before the buyer visit'])
         ->assertCreated()->assertJsonPath('data.status', 'sent')->assertJsonPath('data.mail', null)->assertJsonPath('data.delivery', 'delivered')->json('data');
 
-    // Apex received it in its own account, from the factory, with what it needs.
-    expect(FixtureRenewalInbox::$received)->toHaveCount(1)
-        ->and(FixtureRenewalInbox::$received[0])->toMatchArray(['to' => $this->w->c3->id, 'from' => 'B1'])
-        ->and(FixtureRenewalInbox::$received[0]['payload'])->toMatchArray([
-            'request_id' => $made['id'], 'expires_on' => '2026-12-01', 'wanted_by' => '2026-11-20', 'note' => 'Before the buyer visit', 'requested_by' => $this->hracUser->name,
+    // Apex received it in its own Projects, from the factory, with what it needs.
+    $inbox = ($this->received)();
+    expect($inbox)->toHaveCount(1)
+        ->and($inbox[0])->toMatchArray([
+            'organization_id' => $this->w->c3->id, 'factory_name' => 'B1', 'client_name' => 'G1', 'client_request_id' => $made['id'],
+            'service_code' => 'BSCI', 'note' => 'Before the buyer visit', 'requested_by' => $this->hracUser->name, 'status' => 'new',
         ])
-        ->and(FixtureRenewalInbox::$received[0]['payload']['service']['code'])->toBe('BSCI');
+        ->and($inbox[0]->expires_on->toDateString())->toBe('2026-12-01')
+        ->and($inbox[0]->wanted_by->toDateString())->toBe('2026-11-20');
     // One open request per line.
     $this->asToken($this->hrac)->postJson(($this->api)("audits/{$line['id']}/renewal"), [])->assertStatus(409)->assertJsonPath('code', 'request_open');
     $this->asToken($this->hrac)->getJson(($this->api)('register'))->assertOk()->assertJsonPath('data.0.renewal.status', 'sent');
@@ -139,7 +140,7 @@ it('notes a request for a provider not on the platform, with the email ready, an
         ->assertCreated()->assertJsonPath('data.status', 'recorded')->assertJsonPath('data.mail.email', 'desk@localcerts.test')->json('data');
     expect($made['mail']['subject'])->toContain('WRAP')->toContain('C1')
         ->and($made['mail']['body'])->toContain('2026-12-01')->toContain('2026-11-25')
-        ->and(FixtureRenewalInbox::$received)->toBe([]);
+        ->and(($this->received)())->toHaveCount(0);
 
     // Not past days, nothing unknown.
     $this->asToken($this->hrac)->postJson(($this->api)("audits/{$line['id']}/renewal"), ['wanted_by' => '2026-10-01'])->assertUnprocessable();
@@ -236,22 +237,20 @@ it('takes results in at once and sends requests by itself when the rules say so'
     app(Reminders::class)->run();
     app()->forgetScopedInstances();
     app(Reminders::class)->run();
-    expect(FixtureRenewalInbox::$received)->toHaveCount(1)
-        ->and(FixtureRenewalInbox::$received[0]['payload']['service']['code'])->toBe('BSCI')
+    expect(($this->received)())->toHaveCount(1)
+        ->and(($this->received)()[0]->service_code)->toBe('BSCI')
         ->and(RenewalRequest::query()->withoutGlobalScope(OrganizationScope::class)->sole()->requested_by)->toBeNull();
 });
 
-it('notes and emails a request when nothing on the platform receives it yet', function () {
+it('shows the request as not delivered when the provider does not use Projects', function () {
     ($this->prepare)();
-    // A fresh registry: no module declares compliance.renewal_request (as before Projects exists).
-    app()->forgetInstance(ConnectionKinds::class);
+    toggles()->disable($this->w->g2, 'projects', 'Test');
     $line = ($this->line)($this->w->b1, 'BSCI', $this->apex);
-    // The screens say so before sending: on the platform, but not receiving requests yet.
-    expect($line['provider'])->toMatchArray(['on_platform' => true, 'receives_requests' => false]);
     $this->asToken($this->hrac)->postJson(($this->api)("audits/{$line['id']}/renewal"), [])
-        ->assertCreated()->assertJsonPath('data.status', 'recorded')->assertJsonPath('data.mail.subject', fn ($subject) => str_contains($subject, 'BSCI'));
-    expect(FixtureRenewalInbox::$received)->toBe([])
-        ->and(RenewalRequest::query()->withoutGlobalScope(OrganizationScope::class)->sole()->connection_id)->toBeNull();
+        ->assertCreated()->assertJsonPath('data.status', 'sent')->assertJsonPath('data.delivery', 'failed');
+    expect(($this->received)())->toHaveCount(0);
+    // The client sees it, and may cancel and email them instead.
+    $this->asToken($this->hrac)->getJson(($this->api)("audits/{$line['id']}"))->assertJsonPath('data.renewal.delivery', 'failed');
 });
 
 it('keeps renewals to the right people, factories and tenants', function () {
