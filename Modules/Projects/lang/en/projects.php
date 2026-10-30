@@ -11,6 +11,11 @@ return [
         'cancelled' => 'Cancelled',
     ],
     'no_due' => 'no due day',
+    'client_declined' => 'Declined by the client',
+    'quote_answers' => [
+        'accepted' => 'accepted',
+        'declined' => 'declined',
+    ],
     'posting_keys' => [
         'services' => 'Project services income',
     ],
@@ -35,6 +40,8 @@ return [
         'request_not_found' => 'This request was not found here. Open it again from the requests.',
         'request_closed' => 'This request was already answered or cancelled by the client. Reload to see it.',
         'not_connected_project' => 'Only a project opened from a connected client\'s request can send its result back.',
+        'quote_not_of_project' => 'This quotation is not one of this project\'s. Make it from the project\'s money part.',
+        'quote_not_sendable' => 'Only a quotation still draft or sent can go to the client (make an estimate a quotation first in CRM).',
         'connection_closed' => 'The connection with this client is paused or ended: nothing can be sent now.',
         'not_your_task' => 'You can change only the tasks you are on. Ask the project\'s manager.',
     ],

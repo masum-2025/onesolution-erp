@@ -90,6 +90,16 @@ class ComplianceException extends TenancyException
         return new self('dates_need_permission', 403);
     }
 
+    public static function quoteNotFound(): self
+    {
+        return new self('quote_not_found', 404);
+    }
+
+    public static function quoteDecided(): self
+    {
+        return new self('quote_decided', 409);
+    }
+
     /** A provider of the lists links only to a connection where this client is the client. */
     public static function connectionNotYours(): self
     {

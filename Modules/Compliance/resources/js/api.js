@@ -19,6 +19,7 @@ export function complianceApi(organizationId) {
         renewals: (open = false) => api(`${base}/renewals`, { query: { open: open ? 1 : undefined } }),
         requestRenewal: (auditId, body) => api(`${base}/audits/${auditId}/renewal`, { method: 'POST', body }),
         cancelRenewal: (id, version, reason) => api(`${base}/renewals/${id}/cancel`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
+        decideQuote: (id, step, version, reason) => api(`${base}/quotes/${id}/${step}`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
         decideResult: (id, step, version, reason) => api(`${base}/results/${id}/${step}`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
 
         list: (kind, all = false) => api(`${base}/lists/${kind}`, { query: { all: all ? 1 : undefined } }),

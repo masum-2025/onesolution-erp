@@ -3,6 +3,7 @@
 use App\Platform\Audit\AuditLog;
 use App\Platform\Connections\Models\Connection;
 use App\Platform\Connections\Services\ConnectionLinks;
+use App\Platform\Notifications\Models\NotificationDelivery;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Enums\AccessScope;
 use App\Platform\Tenancy\Enums\MembershipType;
@@ -152,6 +153,82 @@ it('keeps requests to the provider\'s managers, and results to connected project
     app(ConnectionLinks::class)->step($connection, $this->w->c3, 'pause', $connection->version, null, $this->apexUser);
     app(CurrentContext::class)->clear();
     ($this->provider)()->postJson(($this->apex)("requests/{$incoming['id']}/accept"), ['starts_on' => '2026-11-10'])->assertStatus(409)->assertJsonPath('code', 'connection_closed');
+});
+
+it('sends a quotation to the connected client; its answer is applied in the provider\'s CRM', function () {
+    toggles()->enable($this->w->g2, 'accounting', 'Test setup');
+    ($this->prepare)();
+    setUpBooks($this, orgToken($this->apexUser, $this->w->c3), $this->w->c3)->assertCreated();
+    [$line] = ($this->ask)($this->w->b1, 'BSCI');
+    $incoming = ($this->provider)()->getJson(($this->apex)('requests'))->json('data.0');
+    $projectId = ($this->provider)()->postJson(($this->apex)("requests/{$incoming['id']}/accept"), ['starts_on' => '2026-11-10'])->assertCreated()->json('data.project_id');
+    $lines = [['description' => 'BSCI audit coordination', 'quantity_milli' => 1000, 'unit_price_minor' => 4500000], ['description' => 'Follow-up visit', 'quantity_milli' => 2000, 'unit_price_minor' => 500000]];
+    $quote = ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes"), ['kind' => 'quotation', 'lines' => $lines])->assertCreated()->json('data');
+    ($this->provider)()->getJson(($this->apex)("{$projectId}/money"))->assertJsonPath('data.can.send_to_client', true);
+
+    // Sent: the client has it, line by line; CRM has it as sent.
+    ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$quote['id']}/send"))->assertOk();
+    $quoter = createMember($this->w->c1, MembershipType::Staff, AccessScope::Descendants);
+    giveRoles($quoter, $this->w->c1, makeRole($this->w->c1, ['compliance.view', 'compliance.quotes'], 'Purchasing'));
+    $client = fn () => $this->asToken(orgToken($quoter, $this->w->c1));
+    $received = $client()->getJson(($this->client)('renewals'))->assertOk()->json('data.quotes');
+    expect($received)->toHaveCount(1)
+        ->and($received[0])->toMatchArray(['from' => 'C3', 'number' => $quote['number'], 'total_minor' => 5500000, 'currency_code' => 'BDT', 'status' => 'pending'])
+        ->and($received[0]['lines'])->toHaveCount(2)
+        ->and($received[0]['can']['decide'])->toBeTrue();
+    ($this->hrac)()->getJson(($this->client)("audits/{$line['id']}"))->assertJsonCount(1, 'data.quotes');
+    ($this->provider)()->getJson(($this->apex)("{$projectId}/money"))->assertJsonPath('data.quotes.0.status', 'sent')
+        ->assertJsonPath('data.quotes.0.sent_to_client_at', fn ($at) => $at !== null);
+
+    // Without compliance.quotes nobody answers it; the client accepts it: CRM accepts it with its draft invoice.
+    ($this->hrac)()->postJson(($this->client)("quotes/{$received[0]['id']}/accept"), ['base_version' => 1])->assertForbidden();
+    $client()->postJson(($this->client)("quotes/{$received[0]['id']}/accept"), ['base_version' => 1])->assertOk()->assertJsonPath('data.status', 'accepted');
+    $money = ($this->provider)()->getJson(($this->apex)("{$projectId}/money"))->assertOk()->json('data');
+    expect($money['quotes'][0])->toMatchArray(['status' => 'accepted', 'client_answer' => 'accepted'])
+        ->and($money['invoices'])->toHaveCount(1)
+        ->and(NotificationDelivery::query()->where('notification_key', 'projects.quote_answered')->where('user_id', $this->apexUser->id)->exists())->toBeTrue();
+    // Decided: it cannot go again.
+    ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$quote['id']}/send"))->assertStatus(409)->assertJsonPath('code', 'quote_not_sendable');
+
+    // A second quotation, changed after sending: the newer one replaces the client's pending copy; declined with a reason.
+    $second = ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes"), ['kind' => 'quotation', 'lines' => [$lines[1]]])->assertCreated()->json('data');
+    ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$second['id']}/send"))->assertOk();
+    $this->asToken(orgToken($this->apexUser, $this->w->c3))->patchJson("/api/organizations/{$this->w->c3->id}/crm/quotes/{$second['id']}", ['base_version' => 2, 'lines' => [[...$lines[1], 'quantity_milli' => 3000]]])->assertOk();
+    ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$second['id']}/send"))->assertOk();
+    $pending = collect($client()->getJson(($this->client)('renewals'))->json('data.quotes'))->where('status', 'pending')->values();
+    expect($pending)->toHaveCount(1)->and($pending[0]['total_minor'])->toBe(1500000);
+    $client()->postJson(($this->client)("quotes/{$pending[0]['id']}/decline"), ['base_version' => 1])->assertUnprocessable()->assertJsonValidationErrors('reason');
+    $client()->postJson(($this->client)("quotes/{$pending[0]['id']}/decline"), ['base_version' => 1, 'reason' => 'Too many visits'])->assertOk();
+    $declined = collect(($this->provider)()->getJson(($this->apex)("{$projectId}/money"))->json('data.quotes'))->firstWhere('id', $second['id']);
+    expect($declined)->toMatchArray(['status' => 'declined', 'client_answer' => 'declined', 'client_reason' => 'Too many visits']);
+
+    // Estimates do not go; nor quotes of a project without a connection.
+    $estimate = ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes"), ['kind' => 'estimate', 'lines' => $lines])->assertCreated()->json('data');
+    ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$estimate['id']}/send"))->assertStatus(409)->assertJsonPath('code', 'quote_not_sendable');
+});
+
+it('keeps a sent quotation to its client, and stops with either module off', function () {
+    ($this->prepare)();
+    ($this->ask)($this->w->b1, 'BSCI');
+    $incoming = ($this->provider)()->getJson(($this->apex)('requests'))->json('data.0');
+    $projectId = ($this->provider)()->postJson(($this->apex)("requests/{$incoming['id']}/accept"), ['starts_on' => '2026-11-10'])->assertCreated()->json('data.project_id');
+    $quote = ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes"), ['kind' => 'quotation', 'lines' => [['description' => 'Audit', 'quantity_milli' => 1000, 'unit_price_minor' => 100000]]])->assertCreated()->json('data');
+    ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$quote['id']}/send"))->assertOk();
+    $received = $this->asToken($this->groupOwner)->getJson(($this->client)('renewals', $this->w->g1))->assertOk()->json('data.quotes.0');
+
+    // Another tenant reaches neither the client's copy nor the provider's project; the client cannot send it.
+    $other = $this->asToken(orgToken(createMember($this->w->c4), $this->w->c4));
+    $other->getJson(($this->client)('renewals', $this->w->c4))->assertOk()->assertJsonCount(0, 'data.quotes');
+    $other->postJson(($this->client)("quotes/{$received['id']}/accept", $this->w->c4), ['base_version' => 1])->assertNotFound();
+    $other->postJson(($this->client)("quotes/{$received['id']}/accept"), ['base_version' => 1])->assertNotFound();
+    ($this->hrac)()->postJson(($this->apex)("{$projectId}/quotes/{$quote['id']}/send"))->assertNotFound();
+    ($this->provider)()->postJson(($this->client)("quotes/{$received['id']}/accept"), ['base_version' => 1])->assertNotFound();
+
+    // Compliance off at the client: no answer; Projects off at the provider: nothing sent.
+    toggles()->disable($this->w->g1, 'compliance', 'Test');
+    $this->asToken($this->groupOwner)->postJson(($this->client)("quotes/{$received['id']}/accept", $this->w->g1), ['base_version' => 1])->assertForbidden();
+    toggles()->disable($this->w->g2, 'projects', 'Test');
+    ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$quote['id']}/send"))->assertForbidden();
 });
 
 it('works for a client kept in its own database', function () {

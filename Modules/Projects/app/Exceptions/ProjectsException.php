@@ -123,6 +123,17 @@ class ProjectsException extends TenancyException
         return new self('not_connected_project', 422);
     }
 
+    public static function quoteNotOfProject(): self
+    {
+        return new self('quote_not_of_project', 404);
+    }
+
+    /** Only a quotation still draft or sent goes to the client (an estimate is made a quotation first). */
+    public static function quoteNotSendable(): self
+    {
+        return new self('quote_not_sendable', 409);
+    }
+
     public static function connectionClosed(): self
     {
         return new self('connection_closed', 409);

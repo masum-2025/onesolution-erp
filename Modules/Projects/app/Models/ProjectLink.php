@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
 /** A project's quote (CRM) or invoice (Accounting), by id only. */
-#[Fillable(['organization_id', 'project_id', 'kind', 'target_id', 'created_by', 'created_at'])]
+#[Fillable(['organization_id', 'project_id', 'kind', 'target_id', 'created_by', 'created_at', 'sent_at', 'sent_by', 'client_answer', 'client_reason'])]
 class ProjectLink extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;
@@ -24,6 +24,6 @@ class ProjectLink extends Model
 
     protected function casts(): array
     {
-        return ['created_at' => 'immutable_datetime'];
+        return ['created_at' => 'immutable_datetime', 'sent_at' => 'immutable_datetime'];
     }
 }

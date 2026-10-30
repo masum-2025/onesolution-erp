@@ -27,6 +27,7 @@ export function projectsApi(organizationId) {
         // Money (PRJ-2): CRM's quotes and Accounting's invoices of the project.
         money: (projectId) => api(`${base}/${projectId}/money`),
         quote: (projectId, kind, lines) => api(`${base}/${projectId}/quotes`, { method: 'POST', body: { kind, lines } }),
+        sendQuote: (projectId, quoteId) => api(`${base}/${projectId}/quotes/${quoteId}/send`, { method: 'POST' }),
         invoice: (projectId, issueDate, lines) => api(`${base}/${projectId}/invoices`, { method: 'POST', body: { issue_date: issueDate, lines } }),
         clientToCrm: (projectId, version) => api(`${base}/${projectId}/client/crm`, { method: 'POST', body: { base_version: version } }),
         // Renewal requests from connected clients, and the result sent back (optional, over a connection).

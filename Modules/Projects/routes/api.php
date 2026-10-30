@@ -45,6 +45,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
             Route::put('{project}/tasks/{task}/people', [TaskController::class, 'people']);
             Route::post('{project}/tasks/{task}/notes', [TaskController::class, 'addNote']);
             Route::post('{project}/quotes', [MoneyController::class, 'quote'])->name('projects.quote');
+            Route::post('{project}/quotes/{quote}/send', [MoneyController::class, 'sendQuote']);
             Route::post('{project}/invoices', [MoneyController::class, 'invoice'])->name('projects.invoice');
             Route::post('{project}/client/crm', [MoneyController::class, 'clientToCrm']);
             Route::post('{project}/result', [InboxController::class, 'result']);

@@ -21,4 +21,7 @@ return [
     'result_received' => 'Audit result received from the provider',
     'result_applied' => 'Provider\'s result accepted into the register',
     'result_rejected' => 'Provider\'s result rejected',
+    'quote_received' => 'Quotation received from the provider',
+    'quote_accepted' => 'Provider\'s quotation accepted',
+    'quote_declined' => 'Provider\'s quotation declined',
 ];

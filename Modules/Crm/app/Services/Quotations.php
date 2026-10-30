@@ -5,6 +5,7 @@ namespace Modules\Crm\Services;
 use App\Models\User;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Tenancy\Models\Organization;
+use Modules\Accounting\Services\Customers;
 use Modules\Crm\Models\Quote;
 
 /**
@@ -66,6 +67,71 @@ class Quotations
 
         return $this->crm->query(Quote::class, $company)->whereKey($ids)->get()
             ->mapWithKeys(fn (Quote $quote) => [$quote->getKey() => self::shape($quote)])->all();
+    }
+
+    /**
+     * One quote in full, as the customer would see it: dates, terms, every line
+     * and the totals (for sending it to a connected client). Null when unknown.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function full(Organization $company, string $id): ?array
+    {
+        $quote = $this->available($company) ? $this->crm->query(Quote::class, $company)->find($id) : null;
+        if ($quote === null) {
+            return null;
+        }
+
+        return [
+            ...self::shape($quote),
+            'valid_until' => $quote->valid_until?->toDateString(),
+            'subject' => $quote->subject,
+            'notes' => $quote->notes,
+            'terms' => $quote->terms,
+            'prices_include_tax' => (bool) $quote->prices_include_tax,
+            'subtotal_minor' => (int) $quote->subtotal_minor,
+            'discount_minor' => (int) $quote->discount_minor,
+            'tax_minor' => (int) $quote->tax_minor,
+            'version' => (int) $quote->version,
+            'lines' => $this->quotes->linesOf($company, $quote)->map(fn ($line) => [
+                'description' => $line->description,
+                'quantity_milli' => (int) $line->quantity_milli,
+                'unit' => $line->unit,
+                'unit_price_minor' => (int) $line->unit_price_minor,
+                'discount_minor' => (int) $line->discount_minor,
+                'tax_rate_bp' => (int) $line->tax_rate_bp,
+                'net_minor' => (int) $line->net_minor,
+                'tax_minor' => (int) $line->tax_minor,
+                'total_minor' => (int) $line->total_minor,
+            ])->values()->all(),
+        ];
+    }
+
+    /** Marked as given to the customer (a draft becomes sent; a sent one stays). */
+    public function markSent(Organization $company, string $id, User $actor): void
+    {
+        $quote = $this->crm->query(Quote::class, $company)->findOrFail($id);
+        $this->quotes->send($company, $quote, $quote->version, $actor);
+    }
+
+    /**
+     * The customer accepted it (e.g. over a business connection): CRM's own
+     * accepting, with the draft invoice when Accounting keeps the books.
+     */
+    public function accept(Organization $company, string $id, User $actor): array
+    {
+        $quote = $this->crm->query(Quote::class, $company)->findOrFail($id);
+        $books = app(Customers::class)->available($company);
+
+        return self::shape($this->quotes->accept($company, $quote, $quote->version, $books, $actor));
+    }
+
+    /** The customer declined it, with their reason. */
+    public function decline(Organization $company, string $id, string $reason, User $actor): array
+    {
+        $quote = $this->crm->query(Quote::class, $company)->findOrFail($id);
+
+        return self::shape($this->quotes->decline($company, $quote, $quote->version, $reason, $actor));
     }
 
     /** @return array{id: string, kind: string, number: string|null, status: string, total_minor: int, currency_code: string, invoice_id: string|null, issue_date: string|null} */

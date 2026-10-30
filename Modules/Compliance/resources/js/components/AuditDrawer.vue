@@ -14,6 +14,7 @@ import { t } from '@/lib/i18n';
 import { renewalTone, stateTone } from '../lib';
 import DatesDialog from './DatesDialog.vue';
 import RenewalDialog from './RenewalDialog.vue';
+import QuoteCard from './QuoteCard.vue';
 import ResultCard from './ResultCard.vue';
 
 /**
@@ -159,6 +160,7 @@ const changeText = (change) => Object.entries(change.new ?? {})
                     <AppButton v-if="line.renewal.can.cancel" size="sm" variant="ghost" class="text-bad" :icon="XCircle" :disabled="cancelling" @click="cancelRenewal">{{ t('compliance.renewal.cancel') }}</AppButton>
                 </div>
                 <p v-else class="text-[12.5px] text-muted">{{ t(line.provider ? 'compliance.renewal.none_yet' : 'compliance.renewal.needs_provider') }}</p>
+                <QuoteCard v-for="quote in line.quotes ?? []" :key="quote.id" :quote="quote" :calls="calls" @decided="load(); emit('changed')" />
                 <ResultCard v-for="result in line.results" :key="result.id" :result="result" :calls="calls" @decided="load(); emit('changed')" />
             </section>
 

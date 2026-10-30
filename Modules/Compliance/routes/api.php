@@ -30,6 +30,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:compliance'])
             Route::post('audits/{audit}/renewal', [RenewalController::class, 'store']);
             Route::post('renewals/{renewal}/cancel', [RenewalController::class, 'cancel']);
             Route::post('results/{result}/{step}', [RenewalController::class, 'decide']);
+            Route::post('quotes/{quote}/{step}', [RenewalController::class, 'decideQuote']);
             // Literal before {item}.
             Route::post('lists/{kind}/defaults', [ListController::class, 'defaults']);
             Route::post('lists/{kind}', [ListController::class, 'store']);

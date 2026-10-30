@@ -17,7 +17,8 @@ class DecisionRequest extends StrictFormRequest
     {
         return [
             'base_version' => ['required', 'integer', 'min:1'],
-            'reason' => [$this->route('step') === 'reject' ? 'required' : 'nullable', 'string', 'min:3', 'max:500'],
+            // Rejecting a result and declining a quotation say why.
+            'reason' => [in_array($this->route('step'), ['reject', 'decline'], true) ? 'required' : 'nullable', 'string', 'min:3', 'max:500'],
         ];
     }
 }

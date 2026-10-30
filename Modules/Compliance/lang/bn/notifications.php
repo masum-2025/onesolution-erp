@@ -16,6 +16,11 @@ return [
             'body' => '{{ other }} {{ organization }}-এর {{ service }}-এর ফলাফল পাঠিয়েছে। মিলিয়ে দেখে রেজিস্টারে গ্রহণ করুন, অথবা কারণসহ প্রত্যাখ্যান করুন।',
             'action' => 'ফলাফল দেখুন',
         ],
+        'compliance_quote_received' => [
+            'subject' => '{{ other }}-এর কোটেশন {{ number }}',
+            'body' => '{{ other }} {{ organization }}-এর জন্য {{ number }} কোটেশন পাঠিয়েছে। দেখে গ্রহণ বা প্রত্যাখ্যান করুন; তাদের আপনার উত্তর জানানো হবে।',
+            'action' => 'নবায়নের তালিকা খুলুন',
+        ],
         'compliance_renewal_answered' => [
             'subject' => '{{ other }} আপনার নবায়নের অনুরোধের উত্তর দিয়েছে: {{ status }}',
             'body' => '{{ organization }}-এর {{ service }} নবায়ন: {{ status }}। নির্ধারিত দিন: {{ planned }}।',
@@ -30,6 +35,10 @@ return [
         'compliance_result_received' => [
             'name' => 'প্রোভাইডারের পাঠানো অডিটের ফলাফল',
             'description' => 'সংযুক্ত প্রোভাইডার ফলাফল পাঠালে, যাঁরা ফলাফল রেজিস্টারে গ্রহণ করেন তাঁদের কাছে।',
+        ],
+        'compliance_quote_received' => [
+            'name' => 'প্রোভাইডারের কোটেশন',
+            'description' => 'সংযুক্ত প্রোভাইডার কোটেশন পাঠালে, যাঁরা কোটেশনের উত্তর দেন তাঁদের কাছে।',
         ],
         'compliance_renewal_answered' => [
             'name' => 'নবায়নের অনুরোধের উত্তর',

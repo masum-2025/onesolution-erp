@@ -26,4 +26,7 @@ return [
     'request_accepted' => 'Renewal request accepted: project opened',
     'request_declined' => 'Renewal request declined',
     'result_sent' => 'Audit result sent to the client',
+    'quote_sent' => 'Quotation sent to the connected client',
+    'quote_accepted' => 'Quotation accepted by the client',
+    'quote_declined' => 'Quotation declined by the client',
 ];

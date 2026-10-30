@@ -68,6 +68,15 @@ class Billing
         $invoices = $this->customers->invoices($company, $invoiceIds);
         $counted = array_filter($invoices, fn (array $invoice) => ! in_array($invoice['status'], ['void', 'draft', 'rejected', 'pending_approval'], true));
 
+        // Sent over the business connection, and the client's answer there (optional).
+        $quoteLinks = $links->where('kind', ProjectLink::QUOTE)->keyBy('target_id');
+        $quotes = array_map(fn (array $quote) => [
+            ...$quote,
+            'sent_to_client_at' => $quoteLinks->get($quote['id'])?->sent_at?->toIso8601String(),
+            'client_answer' => $quoteLinks->get($quote['id'])?->client_answer,
+            'client_reason' => $quoteLinks->get($quote['id'])?->client_reason,
+        ], $quotes);
+
         return [
             'quotes' => array_values($quotes),
             'invoices' => array_values($invoices),

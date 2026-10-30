@@ -18,6 +18,8 @@ use Modules\Compliance\Http\Requests\DecisionRequest;
 use Modules\Compliance\Http\Requests\RenewalRequestForm;
 use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\ProposedResult;
+use Modules\Compliance\Models\ReceivedQuote;
+use Modules\Compliance\Services\Quotes;
 use Modules\Compliance\Services\Register;
 use Modules\Compliance\Services\Renewals;
 use Modules\Compliance\Services\Results;
@@ -38,6 +40,7 @@ class RenewalController extends Controller
         private Register $register,
         private Renewals $renewals,
         private Results $results,
+        private Quotes $quotes,
         private CompliancePresenter $presenter,
     ) {}
 
@@ -58,7 +61,21 @@ class RenewalController extends Controller
                 'expires_on' => $line?->expires_on?->toDateString(),
             ])->values(),
             'results' => $results->map(fn (ProposedResult $item) => $this->presenter->result($item, $audits->get($item->audit_id)))->values(),
+            // Quotations from connected providers (optional, over a business connection).
+            'quotes' => $this->quotes->list($unit, $open)->map(fn (ReceivedQuote $item) => $this->presenter->quote($item))->values(),
         ]]);
+    }
+
+    /** Accept or decline a provider's quotation; the provider is told at once. */
+    public function decideQuote(DecisionRequest $request, string $organization, string $quote, string $step): JsonResponse
+    {
+        abort_unless(in_array($step, ['accept', 'decline'], true), 404);
+        $unit = $this->unit($organization, 'compliance.view');
+        $found = $this->quotes->find($unit, $quote);
+        $this->writableFactory($found->organization_id, 'compliance.quotes');
+        $done = $this->quotes->decide($unit, $found, $step, (int) $request->validated('base_version'), $request->validated('reason'), $request->user());
+
+        return response()->json(['data' => $this->presenter->quote($done)]);
     }
 
     /** Ask the line's provider to renew it; a provider not on the platform gets the prepared email text. */

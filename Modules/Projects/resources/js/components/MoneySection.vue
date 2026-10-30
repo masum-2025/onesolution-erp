@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { FilePlus, Receipt, UserPlus } from 'lucide-vue-next';
+import { FilePlus, Receipt, Send, UserPlus } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -64,6 +64,20 @@ async function clientToCrm() {
         busy.value = false;
     }
 }
+// A quotation to the connected client over the business connection.
+const sending = ref(null);
+async function sendToClient(quote) {
+    sending.value = quote.id;
+    try {
+        await props.calls.sendQuote(props.project.id, quote.id);
+        toast.success(t('projects.money.sent_done'));
+        load();
+    } catch (caught) {
+        toast.error(caught.message);
+    } finally {
+        sending.value = null;
+    }
+}
 function saved() {
     dialog.value.open = false;
     load();
@@ -96,12 +110,21 @@ function saved() {
                     <h3 class="mb-1.5 text-[13px] font-semibold text-fg-2">{{ t('projects.money.quotes') }}</h3>
                     <p v-if="!money.quotes.length" class="text-[12.5px] text-muted">{{ t('projects.money.no_quotes') }}</p>
                     <ul v-else class="divide-y divide-line rounded-xl border border-line">
-                        <li v-for="quote in money.quotes" :key="quote.id">
-                            <RouterLink :to="{ name: 'crm-quote', params: { id: quote.id } }" class="flex items-center gap-2 px-3 py-2 text-[13px] hover:bg-subtle">
-                                <span class="min-w-0 flex-1 truncate"><span class="font-mono" dir="ltr">{{ quote.number }}</span> · {{ t(`projects.money.${quote.kind}`) }}<span class="text-muted"> · {{ formatDate(quote.issue_date) }}</span></span>
+                        <li v-for="quote in money.quotes" :key="quote.id" class="flex items-center gap-2 pe-2">
+                            <RouterLink :to="{ name: 'crm-quote', params: { id: quote.id } }" class="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-[13px] hover:bg-subtle">
+                                <span class="min-w-0 flex-1 truncate">
+                                    <span class="font-mono" dir="ltr">{{ quote.number }}</span> · {{ t(`projects.money.${quote.kind}`) }}<span class="text-muted"> · {{ formatDate(quote.issue_date) }}</span>
+                                    <!-- Sent over the connection, and the client's answer there. -->
+                                    <span v-if="quote.client_answer" class="block truncate text-[12px]" :class="quote.client_answer === 'accepted' ? 'text-ok' : 'text-bad'">
+                                        {{ t(`projects.money.client_${quote.client_answer}`) }}<template v-if="quote.client_reason">: “{{ quote.client_reason }}”</template>
+                                    </span>
+                                    <span v-else-if="quote.sent_to_client_at" class="block truncate text-[12px] text-muted">{{ t('projects.money.sent_to_client', { date: formatDate(quote.sent_to_client_at) }) }}</span>
+                                </span>
                                 <span class="tabular">{{ formatMoney({ amount: quote.total_minor, currency: quote.currency_code }) }}</span>
                                 <AppBadge :tone="tone(quote.status)">{{ t(`projects.money.statuses.${quote.status}`) }}</AppBadge>
                             </RouterLink>
+                            <AppButton v-if="money.can.send_to_client && quote.kind === 'quotation' && ['draft', 'sent'].includes(quote.status)" size="icon-sm" variant="ghost"
+                                :icon="Send" :loading="sending === quote.id" :aria-label="t('projects.money.send_to_client')" :title="t('projects.money.send_to_client')" @click="sendToClient(quote)" />
                         </li>
                     </ul>
                 </div>

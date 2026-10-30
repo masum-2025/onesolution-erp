@@ -13,6 +13,7 @@ use Modules\Projects\Http\Requests\VersionRequest;
 use Modules\Projects\Models\Project;
 use Modules\Projects\Services\Billing;
 use Modules\Projects\Services\ProjectBook;
+use Modules\Projects\Services\QuoteExchange;
 
 /**
  * A project's money (PRJ-2): its quotes (CRM) and invoices (Accounting)
@@ -24,7 +25,7 @@ class MoneyController extends Controller
 {
     use FindsWorkplace;
 
-    public function __construct(private ProjectBook $projects, private Billing $billing) {}
+    public function __construct(private ProjectBook $projects, private Billing $billing, private QuoteExchange $exchange) {}
 
     public function show(string $organization, string $project): JsonResponse
     {
@@ -48,6 +49,15 @@ class MoneyController extends Controller
         $invoice = $this->billing->invoice($found, $request->validated('issue_date'), $request->validated('lines'), $request->user());
 
         return response()->json(['data' => $invoice], 201);
+    }
+
+    /** A quotation to the connected client over the business connection (needs crm.edit too). */
+    public function sendQuote(string $organization, string $project, string $quote): JsonResponse
+    {
+        $found = $this->billable($organization, $project, 'crm.edit');
+        $link = $this->exchange->send($found, $quote, request()->user());
+
+        return response()->json(['data' => ['sent_at' => $link->sent_at?->toIso8601String()]]);
     }
 
     /** A client typed by name becomes a CRM client (needs crm.edit too). */
@@ -87,6 +97,8 @@ class MoneyController extends Controller
                 'quote' => $bills && $state['crm'] && $state['client_in_crm'] && Gate::allows('crm.edit', $company),
                 'invoice' => $bills && $state['books'] && $state['client_in_crm'] && Gate::allows('accounting.sell', $company),
                 'client_to_crm' => $bills && $state['crm'] && ! $state['client_in_crm'] && Gate::allows('crm.edit', $company),
+                // Quotations go to a connected client over the business connection.
+                'send_to_client' => $bills && $state['crm'] && $project->connection_id !== null && Gate::allows('crm.edit', $company),
             ],
         ];
     }

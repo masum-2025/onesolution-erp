@@ -16,6 +16,11 @@ Open the register to plan the renewals.',
             'body' => '{{ other }} sent the result of {{ service }} for {{ organization }}. Check it and accept it into the register, or reject it with a reason.',
             'action' => 'Check the result',
         ],
+        'compliance_quote_received' => [
+            'subject' => 'Quotation {{ number }} from {{ other }}',
+            'body' => '{{ other }} sent quotation {{ number }} for {{ organization }}. Check it and accept or decline it; they are told your answer.',
+            'action' => 'Open renewals',
+        ],
         'compliance_renewal_answered' => [
             'subject' => '{{ other }} answered your renewal request: {{ status }}',
             'body' => 'Renewal of {{ service }} at {{ organization }}: {{ status }}. Planned day: {{ planned }}.',
@@ -30,6 +35,10 @@ Open the register to plan the renewals.',
         'compliance_result_received' => [
             'name' => 'Audit result from a provider',
             'description' => 'To the people who accept results into the register, when a connected provider sends one.',
+        ],
+        'compliance_quote_received' => [
+            'name' => 'Quotation from a provider',
+            'description' => 'To the people who answer quotations, when a connected provider sends one.',
         ],
         'compliance_renewal_answered' => [
             'name' => 'Answer to a renewal request',

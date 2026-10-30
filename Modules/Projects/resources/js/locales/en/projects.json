@@ -214,7 +214,12 @@
             "paid": "Paid",
             "void": "Void"
         },
-        "why_permission": "Making quotes needs CRM's editing permission, and invoices Accounting's selling permission, besides billing projects. Ask an administrator."
+        "why_permission": "Making quotes needs CRM's editing permission, and invoices Accounting's selling permission, besides billing projects. Ask an administrator.",
+        "send_to_client": "Send to the client over the connection",
+        "sent_done": "Quotation sent to the client.",
+        "sent_to_client": "Sent to the client {date}",
+        "client_accepted": "The client accepted it",
+        "client_declined": "The client declined it"
     },
     "requests": {
         "title": "Renewal requests from clients",

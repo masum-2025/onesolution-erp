@@ -1,6 +1,7 @@
 <?php
 
 use Modules\Compliance\Connections\AuditResultHandler;
+use Modules\Compliance\Connections\QuotationHandler;
 use Modules\Compliance\Connections\RequestReplyHandler;
 use Modules\Compliance\Dashboard\ComplianceAttention;
 use Modules\Compliance\Dashboard\ExpiringSoon;
@@ -41,7 +42,8 @@ return [
     'sectors' => ['*'],
     'plans' => ['business', 'enterprise'],
     // request / confirm: renewals with the providers (CMP-2).
-    'permissions' => ['compliance.view', 'compliance.manage', 'compliance.set_expiry', 'compliance.request', 'compliance.confirm'],
+    // quotes: accept or decline a connected provider's quotations (a money decision).
+    'permissions' => ['compliance.view', 'compliance.manage', 'compliance.set_expiry', 'compliance.request', 'compliance.confirm', 'compliance.quotes'],
     'rules' => [
         // Days before the expiry day when the people who manage compliance are told (and once more when expired).
         $rule('reminder_days', 'json', [60, 30, 15, 7], ['schema' => ['type' => 'array', 'maxItems' => 10, 'uniqueItems' => true, 'items' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365]], 'sort_order' => 10]),
@@ -76,7 +78,7 @@ return [
         $rule('auto_apply_results', 'boolean', false, ['sort_order' => 80]),
     ],
     // What connected providers send back (CMP-2): kinds named after the provider's module.
-    'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class],
+    'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class, QuotationHandler::class],
     'menu' => [
         [
             'key' => 'compliance',
@@ -114,6 +116,12 @@ return [
         'compliance.result_received' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'other', 'service', 'link'],
+            'audience' => 'client',
+            'path' => '/compliance/renewals',
+        ],
+        'compliance.quote_received' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'other', 'number', 'link'],
             'audience' => 'client',
             'path' => '/compliance/renewals',
         ],

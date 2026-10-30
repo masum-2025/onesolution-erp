@@ -226,5 +226,29 @@
         "none_title": "No renewal requests",
         "none_text": "Open a line of the register and press \"Request renewal\" to ask its provider.",
         "expires": "expires {date}"
+    },
+    "quotes": {
+        "section": "Quotations from providers",
+        "title": "Quotation {number}",
+        "valid_until": "valid until {date}",
+        "item": "Item",
+        "quantity": "Qty",
+        "price": "Price",
+        "amount": "Amount",
+        "vat": "VAT",
+        "total": "Total",
+        "declined_because": "Declined: {reason}",
+        "accept": "Accept",
+        "decline": "Decline",
+        "accept_title": "Accept quotation {number}?",
+        "accept_text": "{from} will be told that you accept {total}.",
+        "decline_title": "Decline quotation {number}?",
+        "decline_text": "{from} will be told, with your reason.",
+        "accept_done": "Quotation accepted; the provider has been told.",
+        "decline_done": "Quotation declined; the provider has been told.",
+        "status_pending": "Waiting for you",
+        "status_accepted": "Accepted",
+        "status_declined": "Declined",
+        "status_replaced": "Replaced by a newer one"
     }
 }

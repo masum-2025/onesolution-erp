@@ -1392,6 +1392,12 @@ manifest; nothing outside it changed except shared counts in tests).
   kind `from_provider`; the line is added when missing; the request becomes done) or reject
   it with a reason. Files open through ten-minute signed links
   (`files/compliance/{org}/results/{id}/{index}`).
+- **Quotations** (`cmp_quotes`): `projects.quotation` from a connected provider is kept as it
+  came (lines as JSON, minor units and currency), linked to the factory's open request; a newer
+  copy of the same quotation replaces the pending one. People with the new permission
+  `compliance.quotes` are told (`compliance.quote_received`) and accept it or decline it with a
+  reason (`POST …/quotes/{id}/accept|decline`, `base_version`); the answer goes back
+  (`compliance.quote_reply`). Shown first on `/compliance/renewals` and in the line's drawer.
 - **Rules:** `compliance.request_days_before` (60: the bell suggests a request),
   `compliance.auto_request` (off: the daily run sends to connected providers by itself, once),
   `compliance.auto_apply_results` (off: results enter the register without a person).
@@ -1472,11 +1478,17 @@ is needed; CRM is used for clients when it is on.
   file) sends `projects.audit_result` to the client's factory and marks the request done; the
   client accepts it into its register (CMP-2). Locally, without a queue worker, messages wait
   in the queue (`php artisan queue:work`).
-- **Future:** a client also connected on the platform could receive the quote over the
-  connection;
-  when a client is also connected on the platform, its renewal requests (CMP-2) may arrive as
-  new projects (optional). A new sector or country needs no code: templates are data, numbers
-  are rules.
+- **Quotation to a connected client:** on a connected project a quotation (draft or sent, not
+  an estimate) goes to the client with "Send to client" (`POST …/projects/{id}/quotes/{quote}/send`,
+  `projects.bill` and `crm.edit`): CRM marks it sent (`Quotations::markSent`) and
+  `projects.quotation` carries its lines, VAT, totals, validity and terms to the client's
+  factory (`prj_project_links.sent_at`, `sent_by`). Sending a changed quotation again replaces
+  the client's pending copy. The client's answer (`compliance.quote_reply`) is applied in CRM in
+  the sender's name (accept: CRM's own accept, with Accounting's draft invoice when books are
+  kept; decline: with the reason), shown on the quote (`client_answer`, `client_reason`) and told
+  to the sender and the manager (`projects.quote_answered`).
+- **Future:** an invoice could go the same way, into the client's Accounting as a bill. A new
+  sector or country needs no code: templates are data, numbers are rules.
 
 ## A client's own payment gateway accounts (Phase 6, first part)
 

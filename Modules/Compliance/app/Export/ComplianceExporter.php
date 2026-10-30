@@ -10,6 +10,7 @@ use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\AuditChange;
 use Modules\Compliance\Models\AuditType;
 use Modules\Compliance\Models\Provider;
+use Modules\Compliance\Models\ReceivedQuote;
 use Modules\Compliance\Models\Service;
 
 /**
@@ -37,6 +38,12 @@ class ComplianceExporter implements ExportsModuleData
                 'id' => $audit->getKey(), 'factory_id' => $audit->organization_id, 'service_id' => $audit->service_id, 'provider_id' => $audit->provider_id,
                 'audit_type_id' => $audit->audit_type_id, 'last_audit_on' => $audit->last_audit_on?->toDateString(), 'expires_on' => $audit->expires_on?->toDateString(),
                 'result' => $audit->result, 'certificate_no' => $audit->certificate_no, 'notes' => $audit->notes,
+            ]),
+            // Quotations connected providers sent, and the answers given.
+            'provider_quotes' => $this->rows(ReceivedQuote::class, $organization, $organizationIds, fn (ReceivedQuote $quote) => [
+                'id' => $quote->getKey(), 'factory_id' => $quote->organization_id, 'from' => $quote->from_name, 'number' => $quote->number,
+                'currency_code' => $quote->currency_code, 'total_minor' => $quote->total_minor, 'lines' => json_encode($quote->lines, JSON_UNESCAPED_UNICODE),
+                'status' => $quote->status, 'reason' => $quote->reason, 'at' => $quote->created_at?->toIso8601String(),
             ]),
             'changes' => $this->rows(AuditChange::class, $organization, $organizationIds, fn (AuditChange $change) => [
                 'audit_id' => $change->audit_id, 'kind' => $change->kind, 'old' => json_encode($change->old), 'new' => json_encode($change->new),

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\AuditChange;
 use Modules\Compliance\Models\ProposedResult;
+use Modules\Compliance\Models\ReceivedQuote;
 use Modules\Compliance\Models\RenewalRequest;
 use Modules\Compliance\Services\Lists;
 use Modules\Compliance\Services\Renewals;
@@ -115,6 +116,43 @@ class CompliancePresenter
             'created_at' => $request->created_at?->toIso8601String(),
             'version' => $request->version,
             'can' => ['cancel' => $writes && $request->isOpen() && Gate::allows('compliance.request', $factory)],
+        ];
+    }
+
+    /**
+     * A quotation the provider sent, line by line.
+     *
+     * @return array<string, mixed>
+     */
+    public function quote(ReceivedQuote $quote): array
+    {
+        $factory = $this->unit($quote->organization_id);
+        $writes = $factory !== null && app(CurrentContext::class)->canWriteTo($factory->getKey());
+
+        return [
+            'id' => $quote->getKey(),
+            'factory' => ['id' => $quote->organization_id, 'name' => $factory?->displayName()],
+            'request_id' => $quote->request_id,
+            'from' => $quote->from_name,
+            'number' => $quote->number,
+            'subject' => $quote->subject,
+            'issue_date' => $quote->issue_date?->toDateString(),
+            'valid_until' => $quote->valid_until?->toDateString(),
+            'currency_code' => $quote->currency_code,
+            'prices_include_tax' => $quote->prices_include_tax,
+            'subtotal_minor' => $quote->subtotal_minor,
+            'discount_minor' => $quote->discount_minor,
+            'tax_minor' => $quote->tax_minor,
+            'total_minor' => $quote->total_minor,
+            'lines' => $quote->lines,
+            'notes' => $quote->notes,
+            'terms' => $quote->terms,
+            'status' => $quote->status,
+            'reason' => $quote->reason,
+            'decided_at' => $quote->decided_at?->toIso8601String(),
+            'created_at' => $quote->created_at?->toIso8601String(),
+            'version' => $quote->version,
+            'can' => ['decide' => $writes && $quote->status === ReceivedQuote::PENDING && Gate::allows('compliance.quotes', $factory)],
         ];
     }
 

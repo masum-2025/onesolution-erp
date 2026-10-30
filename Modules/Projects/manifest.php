@@ -1,5 +1,6 @@
 <?php
 
+use Modules\Projects\Connections\QuoteReplyHandler;
 use Modules\Projects\Connections\RenewalCancelledHandler;
 use Modules\Projects\Connections\RenewalRequestHandler;
 use Modules\Projects\Dashboard\MyTasks;
@@ -66,7 +67,7 @@ return [
     ],
     'events' => [],
     // Optional, over a business connection: a connected client's Compliance asks for renewals here.
-    'connection_kinds' => [RenewalRequestHandler::class, RenewalCancelledHandler::class],
+    'connection_kinds' => [RenewalRequestHandler::class, RenewalCancelledHandler::class, QuoteReplyHandler::class],
     'is_core' => false,
     'requires_consent' => false,
     'attention' => [ProjectsAttention::class],
@@ -83,6 +84,12 @@ return [
             'placeholders' => ['product', 'organization', 'project', 'task', 'due', 'by', 'link'],
             'audience' => 'client',
             'path' => '/projects/my-tasks',
+        ],
+        'projects.quote_answered' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'project', 'other', 'answer', 'link'],
+            'audience' => 'client',
+            'path' => '/projects',
         ],
         'projects.task_overdue' => [
             'channels' => ['mail'],

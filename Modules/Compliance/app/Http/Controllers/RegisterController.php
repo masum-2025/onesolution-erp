@@ -20,6 +20,7 @@ use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\ProposedResult;
 use Modules\Compliance\Services\Lists;
 use Modules\Compliance\Services\Place;
+use Modules\Compliance\Services\Quotes;
 use Modules\Compliance\Services\Register;
 use Modules\Compliance\Services\Reminders;
 use Modules\Compliance\Services\Renewals;
@@ -168,6 +169,8 @@ class RegisterController extends Controller
             // Renewals (CMP-2): the latest request with its answer, and results waiting to be accepted.
             'renewal' => $request === null ? null : $this->presenter->request($request),
             'results' => $results->map(fn (ProposedResult $result) => $this->presenter->result($result, $audit))->values(),
+            // The provider's quotations for this renewal (newest first).
+            'quotes' => $request === null ? [] : app(Quotes::class)->forRequest($unit, $request->getKey())->map(fn ($quote) => $this->presenter->quote($quote))->values(),
         ];
     }
 

@@ -14,6 +14,7 @@ import { t } from '@/lib/i18n';
 import { complianceApi } from '../api';
 import { renewalTone } from '../lib';
 import AuditDrawer from '../components/AuditDrawer.vue';
+import QuoteCard from '../components/QuoteCard.vue';
 import ResultCard from '../components/ResultCard.vue';
 
 /**
@@ -30,6 +31,8 @@ watch(which, () => data.reload());
 
 const requests = computed(() => data.data.value?.data.requests ?? []);
 const waiting = computed(() => (data.data.value?.data.results ?? []).filter((result) => result.status === 'pending'));
+// Quotations from connected providers: pending first (open shows only them).
+const quotes = computed(() => [...(data.data.value?.data.quotes ?? [])].sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1)));
 const decided = computed(() => (data.data.value?.data.results ?? []).filter((result) => result.status !== 'pending'));
 const openId = ref(null);
 </script>
@@ -41,6 +44,13 @@ const openId = ref(null);
         <SkeletonRows v-if="data.loading.value && !data.data.value" :rows="5" />
         <ErrorState v-else-if="data.error.value" :error="data.error.value" @retry="data.reload()" />
         <template v-else>
+            <section v-if="quotes.length" class="mb-6" :aria-label="t('compliance.quotes.section')">
+                <h2 class="mb-2 text-[14.5px] font-semibold">{{ t('compliance.quotes.section') }}</h2>
+                <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                    <QuoteCard v-for="quote in quotes" :key="quote.id" :quote="quote" :calls="calls" show-factory @decided="data.reload()" />
+                </div>
+            </section>
+
             <section v-if="waiting.length" class="mb-6" :aria-label="t('compliance.renewals.results_title')">
                 <h2 class="mb-2 text-[14.5px] font-semibold">{{ t('compliance.renewals.results_title') }}</h2>
                 <div class="grid grid-cols-1 gap-3 lg:grid-cols-2">
