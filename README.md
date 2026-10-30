@@ -1402,6 +1402,44 @@ manifest; nothing outside it changed except shared counts in tests).
   sending module must be on at the sender, the handler's module at the receiver
   (`Connections::send`).
 
+## Projects module (PRJ-1: projects and tasks for clients)
+
+A service company runs projects for its clients. Module `projects` (business, enterprise;
+plug-and-play: own tables `prj_*`, own manifest). **Works on its own**: no business connection
+is needed; CRM is used for clients when it is on.
+
+- **Clients:** a CRM organization contact tagged `client` (found by name, or added from here
+  through CRM's public `Organizations` service); without CRM, the name typed in. The project
+  keeps the contact's id and the name.
+- **Projects** (`prj_projects`): run by a company or branch, numbered per company and year
+  (`PRJ-2026-0001`; prefix rule `projects.number_prefix`), with manager, service, start and due
+  days. Steps: planned → start → active ⇄ hold (reason) / resume → finish → done; cancel
+  (reason); reopen (reason). Never deleted; every change audited.
+- **Templates** (`prj_templates`, `prj_template_tasks`): the usual steps of a kind of work,
+  kept by a group or a company (`projects.configure`), titles per language, each step due some
+  days after the start. Opening a project from one makes its tasks (titles in the company's
+  language).
+- **Tasks** (`prj_tasks`): for **one or more people** (`prj_task_assignees`, one may lead;
+  at most `projects.max_assignees`), priority, due day, order; at most `projects.max_tasks`
+  per project. `projects.manage` adds, changes, orders and assigns; the people on a task
+  (`projects.work`) change its status (to do, doing, blocked, done) and add notes
+  (`prj_task_notes`). Changes carry `base_version`; a task made offline carries `op_id`. Tasks
+  change only while the project is open.
+- **Who may be given a task:** people holding `projects.work` or `projects.manage` at the
+  project's unit (owners included).
+- **Telling people:** `projects.task_assigned` to each person added; `projects:overdue-tasks`
+  daily 02:40 UTC tells a task's people once per due day when it is past it
+  (`projects.overdue_alert`). Bell: your overdue and blocked tasks. Dashboard: projects under
+  way, my next tasks.
+- **API** (`/api/organizations/{org}/projects`): `options`, `clients?q=`, `my-tasks`, list and
+  open (`GET`/`POST ''`), `{id}` (GET, PATCH), `{id}/{step}`, `{id}/tasks` (POST),
+  `{id}/tasks/order`, `{id}/tasks/{task}` (PATCH), `…/status`, `…/people` (PUT), `…/notes`
+  (GET, POST), `templates` (GET, POST), `templates/{id}` (GET, PATCH).
+- **Future:** screens (PRJ-1b); quotations and invoices through CRM and Accounting (PRJ-2);
+  when a client is also connected on the platform, its renewal requests (CMP-2) may arrive as
+  new projects (optional). A new sector or country needs no code: templates are data, numbers
+  are rules.
+
 ## A client's own payment gateway accounts (Phase 6, first part)
 
 Code: `app/Platform/Payments` (merchant accounts, collections, gateway drivers) and

@@ -35,5 +35,6 @@
     "Leave": true,
     "EduWebsite": true,
     "BusinessNetwork": true,
-    "Compliance": true
+    "Compliance": true,
+    "Projects": true
 }

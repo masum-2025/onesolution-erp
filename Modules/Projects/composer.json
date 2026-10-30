@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/projects",
+    "description": "Projects for your clients: tasks shared among several people, due days, templates of the usual steps, and everyone's own task list.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Projects\\": "app/"
+        }
+    }
+}
