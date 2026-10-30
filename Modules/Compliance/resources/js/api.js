@@ -15,6 +15,12 @@ export function complianceApi(organizationId) {
         update: (id, body) => api(`${base}/audits/${id}`, { method: 'PATCH', body }),
         dates: (id, body) => api(`${base}/audits/${id}/dates`, { method: 'POST', body }),
 
+        // Renewals with the providers (CMP-2).
+        renewals: (open = false) => api(`${base}/renewals`, { query: { open: open ? 1 : undefined } }),
+        requestRenewal: (auditId, body) => api(`${base}/audits/${auditId}/renewal`, { method: 'POST', body }),
+        cancelRenewal: (id, version, reason) => api(`${base}/renewals/${id}/cancel`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
+        decideResult: (id, step, version, reason) => api(`${base}/results/${id}/${step}`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
+
         list: (kind, all = false) => api(`${base}/lists/${kind}`, { query: { all: all ? 1 : undefined } }),
         addItem: (kind, body) => api(`${base}/lists/${kind}`, { method: 'POST', body }),
         updateItem: (kind, id, body) => api(`${base}/lists/${kind}/${id}`, { method: 'PATCH', body }),

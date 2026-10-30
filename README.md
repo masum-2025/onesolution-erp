@@ -1372,6 +1372,36 @@ manifest; nothing outside it changed except shared counts in tests).
   grants (NET-2); renewal requests and projects follow (CMP-2, PRJ). A new country or sector:
   its usual services are rule data; no code change.
 
+### Renewals with the providers (CMP-2)
+
+- **Linking a provider:** in the lists a provider may be linked to one of the client's own
+  business connections (`connection_id`, only connections where the client is the client).
+- **Requests** (`cmp_requests`, one open per line): `POST …/audits/{id}/renewal`
+  (`compliance.request` at the factory, written at the company). A connected provider whose
+  connection covers the factory gets it over the connection (kind
+  `compliance.renewal_request`, received by the provider's Projects, PRJ-1); any other
+  provider: the request is noted (`recorded`) and the answer carries a ready email (subject
+  and text in the person's language) to send or copy. Cancel: `POST …/renewals/{id}/cancel`.
+  The provider's answers (`projects.request_reply`: accepted with a planned day, declined,
+  done) update the request, once per message, only for that connection and factory; the
+  requesters are told (`compliance.renewal_answered`).
+- **Results** (`cmp_results`): `projects.audit_result` from a connected provider (dates,
+  result, certificate, kind, files copied into the client's storage) waits as proposed; the
+  people with `compliance.confirm` are told (`compliance.result_received`), compare it with
+  the line and accept it (`POST …/results/{id}/apply`: details then official dates, history
+  kind `from_provider`; the line is added when missing; the request becomes done) or reject
+  it with a reason. Files open through ten-minute signed links
+  (`files/compliance/{org}/results/{id}/{index}`).
+- **Rules:** `compliance.request_days_before` (60: the bell suggests a request),
+  `compliance.auto_request` (off: the daily run sends to connected providers by itself, once),
+  `compliance.auto_apply_results` (off: results enter the register without a person).
+- **Screens:** the drawer's "Renewal" part (request, answer, cancel, results to check),
+  `/compliance/renewals` (results to check first, then requests open or all), marks in the
+  register grid. Bell: renewals to request, results to check.
+- **Platform change:** a connection kind is named after the module that **sends** it; the
+  sending module must be on at the sender, the handler's module at the receiver
+  (`Connections::send`).
+
 ## A client's own payment gateway accounts (Phase 6, first part)
 
 Code: `app/Platform/Payments` (merchant accounts, collections, gateway drivers) and

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Models\Organization;
+use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,10 +17,13 @@ use Modules\Compliance\Http\Controllers\Concerns\FindsPlace;
 use Modules\Compliance\Http\Requests\AuditRequest;
 use Modules\Compliance\Http\Requests\DatesRequest;
 use Modules\Compliance\Models\Audit;
+use Modules\Compliance\Models\ProposedResult;
 use Modules\Compliance\Services\Lists;
 use Modules\Compliance\Services\Place;
 use Modules\Compliance\Services\Register;
 use Modules\Compliance\Services\Reminders;
+use Modules\Compliance\Services\Renewals;
+use Modules\Compliance\Services\Results;
 use Modules\Compliance\Support\Validity;
 
 /**
@@ -35,7 +39,14 @@ class RegisterController extends Controller
     /** @var array<string, CarbonImmutable> */
     private array $todays = [];
 
-    public function __construct(private Place $place, private Lists $lists, private Register $register, private CompliancePresenter $presenter) {}
+    public function __construct(
+        private Place $place,
+        private Lists $lists,
+        private Register $register,
+        private CompliancePresenter $presenter,
+        private Renewals $renewals,
+        private Results $results,
+    ) {}
 
     /** What the screens choose from here, and what the rules say. */
     public function options(string $organization, Reminders $reminders): JsonResponse
@@ -74,10 +85,19 @@ class RegisterController extends Controller
         ]);
         $at = $this->unitInside($unit, $filters['unit_id'] ?? null);
         $expiring = $this->register->expiringDays($unit);
+        $audits = $this->register->withLists($this->register->lines($at))
+            ->when($filters['service_id'] ?? null, fn ($lines, $service) => $lines->where('service_id', $service));
+        // Renewals (CMP-2): the latest request of each line and the results waiting, read once for the list.
+        $ids = $audits->pluck('id')->values()->all();
+        $requests = $this->renewals->latestOf($at, $ids);
+        $pending = $this->results->pendingByAudit($at, $ids);
 
-        $lines = $this->register->withLists($this->register->lines($at))
-            ->when($filters['service_id'] ?? null, fn ($lines, $service) => $lines->where('service_id', $service))
-            ->map(fn (Audit $audit) => $this->presenter->line($audit, $this->todayOf($audit->company_id), $expiring))
+        $lines = $audits
+            ->map(fn (Audit $audit) => [
+                ...$this->presenter->line($audit, $this->todayOf($audit->company_id), $expiring),
+                'renewal' => ($request = $requests->get($audit->getKey())) === null ? null : ['id' => $request->getKey(), 'status' => $request->status, 'planned_on' => $request->planned_on?->toDateString()],
+                'results_pending' => $pending[$audit->getKey()] ?? 0,
+            ])
             ->when($filters['state'] ?? null, fn ($lines, $state) => $lines->where('state', $state))
             // Most urgent first: expired, then fewest days left; unknown last.
             ->sortBy(fn (array $line) => $line['days_left'] ?? PHP_INT_MAX)
@@ -138,9 +158,16 @@ class RegisterController extends Controller
         $history = $this->register->history($unit, $audit);
         $users = User::query()->whereKey($history->pluck('user_id')->filter()->unique()->all())->pluck('name', 'id')->all();
 
+        $request = $this->renewals->latestOf($unit, [$audit->getKey()])->first();
+        $request?->load(['provider' => fn ($query) => $query->withoutGlobalScope(OrganizationScope::class)]);
+        $results = $this->results->pendingOf($unit, $audit);
+
         return [
             ...$this->presenter->line($audit, $this->todayOf($audit->company_id), $this->register->expiringDays($unit)),
             'history' => $history->map(fn ($change) => $this->presenter->change($change, $users))->values(),
+            // Renewals (CMP-2): the latest request with its answer, and results waiting to be accepted.
+            'renewal' => $request === null ? null : $this->presenter->request($request),
+            'results' => $results->map(fn (ProposedResult $result) => $this->presenter->result($result, $audit))->values(),
         ];
     }
 

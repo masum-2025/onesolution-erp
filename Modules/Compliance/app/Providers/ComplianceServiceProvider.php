@@ -40,6 +40,7 @@ class ComplianceServiceProvider extends ServiceProvider
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');
+            Route::middleware('web')->group($root.'/routes/web.php');
         }
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use Modules\Compliance\Connections\AuditResultHandler;
+use Modules\Compliance\Connections\RequestReplyHandler;
 use Modules\Compliance\Dashboard\ComplianceAttention;
 use Modules\Compliance\Dashboard\ExpiringSoon;
 use Modules\Compliance\Dashboard\Standing;
@@ -38,7 +40,8 @@ return [
     'requires' => [],
     'sectors' => ['*'],
     'plans' => ['business', 'enterprise'],
-    'permissions' => ['compliance.view', 'compliance.manage', 'compliance.set_expiry'],
+    // request / confirm: renewals with the providers (CMP-2).
+    'permissions' => ['compliance.view', 'compliance.manage', 'compliance.set_expiry', 'compliance.request', 'compliance.confirm'],
     'rules' => [
         // Days before the expiry day when the people who manage compliance are told (and once more when expired).
         $rule('reminder_days', 'json', [60, 30, 15, 7], ['schema' => ['type' => 'array', 'maxItems' => 10, 'uniqueItems' => true, 'items' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365]], 'sort_order' => 10]),
@@ -66,7 +69,14 @@ return [
             ['code' => 'unannounced', 'name' => ['en' => 'Unannounced', 'bn' => 'আকস্মিক']],
         ], ['schema' => $listSchema(false), 'sort_order' => 40]),
         $rule('import_max_rows', 'integer', 2000, ['schema' => ['minimum' => 10, 'maximum' => 20000], 'sort_order' => 50]),
+        // Renewals (CMP-2): when a request to the provider is due, whether it goes by itself, and
+        // whether a connected provider's result enters the register without a person accepting it.
+        $rule('request_days_before', 'integer', 60, ['schema' => ['minimum' => 1, 'maximum' => 365], 'sort_order' => 60]),
+        $rule('auto_request', 'boolean', false, ['sort_order' => 70]),
+        $rule('auto_apply_results', 'boolean', false, ['sort_order' => 80]),
     ],
+    // What connected providers send back (CMP-2): kinds named after the provider's module.
+    'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class],
     'menu' => [
         [
             'key' => 'compliance',
@@ -78,6 +88,7 @@ return [
             'permission' => 'compliance.view',
             'children' => [
                 ['key' => 'register', 'label' => 'compliance::module.menu_register', 'route' => '/compliance', 'permission' => 'compliance.view'],
+                ['key' => 'renewals', 'label' => 'compliance::module.menu_renewals', 'route' => '/compliance/renewals', 'permission' => 'compliance.view'],
                 ['key' => 'import', 'label' => 'compliance::module.menu_import', 'route' => '/compliance/import', 'permission' => 'compliance.set_expiry'],
             ],
         ],
@@ -99,6 +110,18 @@ return [
             'placeholders' => ['product', 'organization', 'count', 'audits', 'link'],
             'audience' => 'client',
             'path' => '/compliance',
+        ],
+        'compliance.result_received' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'other', 'service', 'link'],
+            'audience' => 'client',
+            'path' => '/compliance/renewals',
+        ],
+        'compliance.renewal_answered' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'other', 'service', 'status', 'planned', 'link'],
+            'audience' => 'client',
+            'path' => '/compliance/renewals',
         ],
     ],
 ];

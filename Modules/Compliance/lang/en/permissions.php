@@ -6,4 +6,6 @@ return [
     'view' => 'See the audit register',
     'manage' => 'Keep the audit register and its lists',
     'set_expiry' => 'Set the official last audit and expiry days',
+    'request' => 'Send and cancel renewal requests to providers',
+    'confirm' => 'Accept or reject audit results providers send into the register',
 ];

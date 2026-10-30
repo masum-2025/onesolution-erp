@@ -14,7 +14,7 @@ import { currentOrganization } from '@/lib/session';
 import { formatDate, formatNumber } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { complianceApi } from '../api';
-import { STATES, counts, grid, stateTone } from '../lib';
+import { STATES, counts, grid, renewalMark, stateTone } from '../lib';
 import AuditDialog from '../components/AuditDialog.vue';
 import AuditDrawer from '../components/AuditDrawer.vue';
 
@@ -58,6 +58,10 @@ function added(line) {
 }
 
 const daysText = (days) => (days === null ? '—' : days < 0 ? t('compliance.days.ago_short', { count: -days }) : t('compliance.days.left_short', { count: days }));
+// Renewal under way (CMP-2): results waiting first, else the open request with its planned day.
+const markText = (mark) => (mark.key === 'results'
+    ? t('compliance.register.results_waiting', { count: mark.count, results: formatNumber(mark.count) })
+    : mark.planned ? t('compliance.renewal.planned_value', { date: formatDate(mark.planned) }) : t(`compliance.renewal_statuses.${mark.key}`));
 const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0]?.depth ?? 0));
 </script>
 
@@ -124,6 +128,7 @@ const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0
                                 <button v-if="cell" type="button" class="flex flex-col items-start gap-0.5 rounded-lg px-2 py-1 text-start transition hover:bg-subtle" @click="openId = cell.id">
                                     <AppBadge :tone="stateTone(cell.state)">{{ t(`compliance.states.${cell.state}`) }}</AppBadge>
                                     <span class="tabular text-[12px] text-muted">{{ daysText(cell.days_left) }}</span>
+                                    <span v-if="renewalMark(cell)" class="text-[11.5px]" :class="renewalMark(cell).key === 'results' ? 'font-medium text-warn' : 'text-brand-text'">{{ markText(renewalMark(cell)) }}</span>
                                 </button>
                                 <button v-else-if="opts.can.add" type="button" class="rounded-lg px-2 py-1 text-[12px] text-faint transition hover:bg-subtle hover:text-fg"
                                     :aria-label="t('compliance.register.add_here', { factory: row.factory.name, service: view.columns[index].name })" @click="add(row.factory.id, view.columns[index].id)">+</button>
@@ -141,6 +146,7 @@ const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0
                         <span class="min-w-0 flex-1">
                             <span class="block truncate text-[14px] font-medium">{{ line.service?.name }}</span>
                             <span class="block truncate text-[12.5px] text-muted">{{ line.factory.name }}<template v-if="line.expires_on"> · {{ formatDate(line.expires_on) }}</template></span>
+                            <span v-if="renewalMark(line)" class="block truncate text-[12px]" :class="renewalMark(line).key === 'results' ? 'font-medium text-warn' : 'text-brand-text'">{{ markText(renewalMark(line)) }}</span>
                         </span>
                         <span class="flex shrink-0 flex-col items-end gap-0.5">
                             <AppBadge :tone="stateTone(line.state)">{{ t(`compliance.states.${line.state}`) }}</AppBadge>

@@ -12,8 +12,11 @@ use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
+use App\Platform\Tenancy\Exceptions\TenancyException;
 use Modules\Compliance\Models\Audit;
+use Modules\Compliance\Models\Provider;
 use Modules\Compliance\Models\ReminderSent;
+use Modules\Compliance\Models\RenewalRequest;
 use Modules\Compliance\Support\Validity;
 
 /**
@@ -64,6 +67,7 @@ class Reminders
 
     public function runFor(Organization $company, ?CarbonImmutable $now = null): int
     {
+        $this->requestRenewals($company, $now);
         $days = $this->daysFor($company);
         if ($days === [] || ! $this->modules->isEnabled('compliance', $company)) {
             return 0;
@@ -114,5 +118,39 @@ class Reminders
         ], $company->partner, $company);
 
         return count($due);
+    }
+
+    /**
+     * With compliance.auto_request on: a renewal request to each connected
+     * provider whose line reaches compliance.request_days_before and has no
+     * open request. One that cannot go (connection paused, factory not
+     * shared) waits for a person; the bell keeps showing it. Returns how many went.
+     */
+    public function requestRenewals(Organization $company, ?CarbonImmutable $now = null): int
+    {
+        $context = $this->contexts->forOrganization($company);
+        if ($this->rules->get('compliance.auto_request', $context) !== true || ! $this->modules->isEnabled('compliance', $company)) {
+            return 0;
+        }
+        $today = $this->place->today($company, $now);
+        $within = (int) $this->rules->get('compliance.request_days_before', $context);
+        $connected = Provider::query()->withoutGlobalScope(OrganizationScope::class)->whereNotNull('connection_id')->pluck('id');
+        $audits = Audit::query()->withoutGlobalScope(OrganizationScope::class)->where('company_id', $company->getKey())
+            ->whereIn('provider_id', $connected->all())->whereNotNull('expires_on')
+            ->whereDate('expires_on', '<=', $today->addDays($within)->toDateString())
+            ->whereNotIn('id', RenewalRequest::query()->withoutGlobalScope(OrganizationScope::class)->whereIn('status', RenewalRequest::OPEN)->select('audit_id'))
+            ->get();
+
+        $sent = 0;
+        foreach ($audits as $audit) {
+            try {
+                app(Renewals::class)->request($audit, null, null, null);
+                $sent++;
+            } catch (TenancyException) {
+                // Not possible as things are: left for a person (shown in the bell).
+            }
+        }
+
+        return $sent;
     }
 }

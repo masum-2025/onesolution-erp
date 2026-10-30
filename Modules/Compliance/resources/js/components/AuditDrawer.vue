@@ -1,17 +1,20 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { CalendarClock, Globe, Save } from 'lucide-vue-next';
+import { CalendarClock, Globe, Save, Send, XCircle } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
+import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { stateTone } from '../lib';
+import { renewalTone, stateTone } from '../lib';
 import DatesDialog from './DatesDialog.vue';
+import RenewalDialog from './RenewalDialog.vue';
+import ResultCard from './ResultCard.vue';
 
 /**
  * One register line: where it stands (days left from the official expiry
@@ -72,6 +75,31 @@ async function save() {
         saving.value = false;
     }
 }
+// Renewal with the provider (CMP-2).
+const renewalOpen = ref(false);
+const cancelling = ref(false);
+async function cancelRenewal() {
+    const answer = await confirmAction({
+        title: t('compliance.renewal.cancel_title'),
+        message: t('compliance.renewal.cancel_text', { provider: line.value.renewal.provider?.name ?? '' }),
+        confirmLabel: t('compliance.renewal.cancel'),
+        danger: true,
+        reason: 'optional',
+    });
+    if (!answer) return;
+    cancelling.value = true;
+    try {
+        await props.calls.cancelRenewal(line.value.renewal.id, line.value.renewal.version, answer.reason);
+        toast.success(t('compliance.renewal.cancelled'));
+        await load();
+        emit('changed');
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        cancelling.value = false;
+    }
+}
+
 function dated(data) {
     datesOpen.value = false;
     set(data);
@@ -111,6 +139,28 @@ const changeText = (change) => Object.entries(change.new ?? {})
             </section>
             <AppButton v-if="line.can.dates" :icon="CalendarClock" @click="datesOpen = true">{{ t('compliance.dates.title') }}</AppButton>
             <p v-else class="text-[12.5px] text-muted">{{ t('compliance.drawer.dates_by') }}</p>
+
+            <!-- Renewal with the provider (CMP-2): the latest request, its answer, and results waiting. -->
+            <section class="space-y-3 rounded-xl border border-line px-4 py-3" :aria-label="t('compliance.renewal.section')">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="text-[13.5px] font-semibold">{{ t('compliance.renewal.section') }}</h3>
+                    <AppButton v-if="line.can.request && !line.renewal?.open" size="sm" :icon="Send" @click="renewalOpen = true">{{ t('compliance.renewal.button') }}</AppButton>
+                </div>
+                <div v-if="line.renewal" class="space-y-1 text-[13px]">
+                    <p class="flex flex-wrap items-center gap-2">
+                        <AppBadge :tone="renewalTone(line.renewal.status)">{{ t(`compliance.renewal_statuses.${line.renewal.status}`) }}</AppBadge>
+                        <span class="text-muted">{{ t('compliance.renewal.asked_on', { date: formatDate(line.renewal.created_at) }) }}</span>
+                    </p>
+                    <p v-if="line.renewal.delivery === 'failed'" class="text-bad">{{ t('compliance.renewal.not_delivered') }}</p>
+                    <p v-if="line.renewal.wanted_by" class="text-fg-2">{{ t('compliance.renewal.wanted_by_value', { date: formatDate(line.renewal.wanted_by) }) }}</p>
+                    <p v-if="line.renewal.planned_on" class="font-medium">{{ t('compliance.renewal.planned_value', { date: formatDate(line.renewal.planned_on) }) }}</p>
+                    <p v-if="line.renewal.reply_note" class="text-fg-2">“{{ line.renewal.reply_note }}”</p>
+                    <p v-if="line.renewal.cancel_reason" class="text-muted">{{ t('compliance.renewal.cancelled_because', { reason: line.renewal.cancel_reason }) }}</p>
+                    <AppButton v-if="line.renewal.can.cancel" size="sm" variant="ghost" class="text-bad" :icon="XCircle" :disabled="cancelling" @click="cancelRenewal">{{ t('compliance.renewal.cancel') }}</AppButton>
+                </div>
+                <p v-else class="text-[12.5px] text-muted">{{ t(line.provider ? 'compliance.renewal.none_yet' : 'compliance.renewal.needs_provider') }}</p>
+                <ResultCard v-for="result in line.results" :key="result.id" :result="result" :calls="calls" @decided="load(); emit('changed')" />
+            </section>
 
             <section v-if="line.can.edit && options" class="grid gap-4 sm:grid-cols-2" :aria-label="t('compliance.drawer.details')">
                 <AppField v-slot="{ id }" :label="t('compliance.fields.provider')" optional>
@@ -159,5 +209,6 @@ const changeText = (change) => Object.entries(change.new ?? {})
             </section>
         </div>
         <DatesDialog :open="datesOpen" :line="line" :months="months" :calls="calls" @close="datesOpen = false" @saved="dated" />
+        <RenewalDialog :open="renewalOpen" :line="line" :calls="calls" @close="renewalOpen = false" @sent="load(); emit('changed')" />
     </AppDrawer>
 </template>

@@ -26,8 +26,11 @@ class ListController extends Controller
         $this->assertKind($kind);
         $unit = $this->unit($organization, 'compliance.view');
 
-        return response()->json(['data' => $this->lists->of($unit, $kind, $request->boolean('all'))
-            ->map(fn ($item) => $this->presenter->item($kind, $item, $unit))->values()]);
+        return response()->json([
+            'data' => $this->lists->of($unit, $kind, $request->boolean('all'))->map(fn ($item) => $this->presenter->item($kind, $item, $unit))->values(),
+            // Providers may be linked to the client's business connections (CMP-2); only their names show.
+            'meta' => $kind === 'providers' ? ['connections' => $this->lists->connectionsOf($unit)] : (object) [],
+        ]);
     }
 
     public function store(ListItemRequest $request, string $organization, string $kind): JsonResponse

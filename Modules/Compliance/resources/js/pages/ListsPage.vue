@@ -35,13 +35,15 @@ watch([kind, showAll], () => list.reload());
 const keeps = computed(() => ['group', 'company'].includes(org.organization_type) && can('compliance.manage'));
 
 const editing = ref(null); // null | 'new' | item
-const form = reactive({ code: '', name: {}, validity_months: '', email: '', phone: '', provider: '', is_active: true });
+const form = reactive({ code: '', name: {}, validity_months: '', email: '', phone: '', provider: '', connection_id: '', is_active: true });
+// The client's business connections a provider may be linked to (CMP-2): renewal requests then go over it.
+const connections = computed(() => list.data.value?.meta?.connections ?? []);
 const errors = ref({});
 const saving = ref(false);
 function edit(item = null) {
     Object.assign(form, {
         code: item?.code ?? '', name: { ...(item?.names ?? {}) }, validity_months: item?.validity_months ?? '',
-        provider: item && kind.value === 'providers' ? item.name : '', email: item?.email ?? '', phone: item?.phone ?? '', is_active: item?.is_active ?? true,
+        provider: item && kind.value === 'providers' ? item.name : '', email: item?.email ?? '', phone: item?.phone ?? '', connection_id: item?.connection_id ?? '', is_active: item?.is_active ?? true,
     });
     errors.value = {};
     editing.value = item ?? 'new';
@@ -50,7 +52,7 @@ async function save() {
     saving.value = true;
     errors.value = {};
     const body = kind.value === 'providers'
-        ? { name: form.provider.trim(), email: form.email.trim() || null, phone: form.phone.trim() || null, is_active: form.is_active }
+        ? { name: form.provider.trim(), email: form.email.trim() || null, phone: form.phone.trim() || null, connection_id: form.connection_id || null, is_active: form.is_active }
         : { code: form.code.trim(), name: form.name, is_active: form.is_active, ...(kind.value === 'services' ? { validity_months: form.validity_months === '' ? null : Number(form.validity_months) } : {}) };
     try {
         if (editing.value === 'new') await calls.addItem(kind.value, body);
@@ -126,6 +128,12 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('compliance.lists.phone')" :error="fieldError('phone')" optional>
                         <input :id="id" v-model="form.phone" type="tel" class="field-input" dir="ltr" maxlength="30" />
+                    </AppField>
+                    <AppField v-slot="{ id }" :label="t('compliance.lists.connection')" :hint="t(connections.length ? 'compliance.lists.connection_hint' : 'compliance.lists.connection_none')" :error="fieldError('connection_id')" optional class="sm:col-span-2">
+                        <select :id="id" v-model="form.connection_id" class="field-input" :disabled="!connections.length">
+                            <option value="">{{ t('compliance.lists.not_connected') }}</option>
+                            <option v-for="connection in connections" :key="connection.id" :value="connection.id">{{ connection.name }}</option>
+                        </select>
                     </AppField>
                 </template>
                 <template v-else>

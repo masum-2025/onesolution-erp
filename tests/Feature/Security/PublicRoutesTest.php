@@ -27,6 +27,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET files/lectures/{organization}/{file}',
     // An expense claim's receipt: signed, five minutes.
     'GET files/expenses/{organization}/{receipt}',
+    // A certificate or report a provider sent with an audit result (Compliance): signed, ten minutes.
+    'GET files/compliance/{organization}/results/{result}/{index}',
     // A job applicant's CV (Recruitment): signed, five minutes.
     'GET files/recruitment/{organization}/{file}',
     // A student's photo (Education): signed, five minutes.

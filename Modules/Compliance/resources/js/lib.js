@@ -36,6 +36,28 @@ export function grid(lines, factories, services, keepEmptyRows = true) {
     return { columns, rows };
 }
 
+/** Badge tone of a renewal request's status (its word always shown next to it). */
+export function renewalTone(status) {
+    return { sent: 'warn', recorded: 'neutral', accepted: 'ok', declined: 'bad', cancelled: 'outline', done: 'ok' }[status] ?? 'neutral';
+}
+
+/**
+ * What a register line shows about its renewal: results waiting first (they
+ * need someone), then an open request's status; nothing once it is closed.
+ */
+export function renewalMark(line) {
+    if (line?.results_pending > 0) return { key: 'results', tone: 'warn', count: line.results_pending };
+    if (line?.renewal && ['sent', 'recorded', 'accepted'].includes(line.renewal.status)) return { key: line.renewal.status, tone: renewalTone(line.renewal.status), planned: line.renewal.planned_on };
+    return null;
+}
+
+/** "mailto:" link with the prepared subject and text, for a provider not on the platform. */
+export function mailtoLink(mail) {
+    if (!mail) return '';
+    // The address as it is (mail apps read "%40" badly), only its plain characters.
+    return `mailto:${(mail.email ?? '').replace(/[^\w.@+-]/g, '')}?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.body)}`;
+}
+
 /** How many of each state, from the register's summary (a missing state is 0). */
 export function counts(summary) {
     return Object.fromEntries(STATES.map((state) => [state, summary?.[state] ?? 0]));

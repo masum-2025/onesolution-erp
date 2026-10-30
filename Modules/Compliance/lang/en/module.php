@@ -5,6 +5,7 @@ return [
     'description' => 'Your factories\' audit register: services, providers, last audit and expiry days, days left, reminders before expiry.',
     'menu' => 'Compliance',
     'menu_register' => 'Audit register',
+    'menu_renewals' => 'Renewals',
     'menu_import' => 'Import',
     'menu_lists' => 'Services, kinds and providers',
 ];

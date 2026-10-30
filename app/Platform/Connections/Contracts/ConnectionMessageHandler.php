@@ -17,7 +17,11 @@ use App\Platform\Connections\ConnectionDelivery;
  */
 interface ConnectionMessageHandler
 {
-    /** "{module}.{kind}", e.g. "compliance.renewal_request". */
+    /**
+     * "{sending module}.{kind}", e.g. "compliance.renewal_request" (the client's
+     * Compliance sends it; the provider's Projects declares this handler). The
+     * sending module must be on at the sender, the declaring one at the receiver.
+     */
     public function key(): string;
 
     /** Who receives it: ConnectionMessage::TO_CLIENT or ConnectionMessage::TO_PROVIDER. */

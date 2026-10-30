@@ -4,6 +4,7 @@ namespace Modules\Compliance\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Connections\Models\Connection;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Enums\OrganizationType;
@@ -74,6 +75,13 @@ class Lists
 
             if ($kind === 'providers') {
                 $item->fill(array_intersect_key($data, array_flip(['name', 'email', 'phone', 'is_active'])));
+                if (array_key_exists('connection_id', $data)) {
+                    $connection = $data['connection_id'] === null ? null : $this->connectionsOf($owner)->firstWhere('id', $data['connection_id']);
+                    if ($data['connection_id'] !== null && $connection === null) {
+                        throw ComplianceException::connectionNotYours();
+                    }
+                    $item->connection_id = $connection['id'] ?? null;
+                }
             } else {
                 if (array_key_exists('code', $data) && $this->codeTaken($owner, $kind, (string) $data['code'], $item->getKey())) {
                     throw ComplianceException::codeTaken();
@@ -91,6 +99,21 @@ class Lists
 
             return $item;
         });
+    }
+
+    /**
+     * Business connections a provider of the lists may be linked to: where the
+     * owner (or a unit above it) is the client and the connection is not ended.
+     * Only the provider's name crosses over.
+     *
+     * @return Collection<int, array{id: string, name: string, status: string}>
+     */
+    public function connectionsOf(Organization $owner): Collection
+    {
+        return Connection::query()->with('provider')->whereIn('client_id', $this->place->listOwners($owner))
+            ->whereIn('status', [Connection::ACTIVE, Connection::PAUSED])->get()
+            ->map(fn (Connection $connection) => ['id' => $connection->getKey(), 'name' => (string) $connection->provider?->displayName(), 'status' => $connection->status])
+            ->sortBy('name')->values();
     }
 
     /** The usual services or kinds of audit (from the rules), those not there yet. Returns how many were added. */
@@ -127,7 +150,7 @@ class Lists
     private function values(string $kind, Model $item): array
     {
         return $kind === 'providers'
-            ? $item->only(['name', 'email', 'phone', 'is_active'])
+            ? $item->only(['name', 'email', 'phone', 'is_active', 'connection_id'])
             : [...$item->only(['code', 'is_active', ...($kind === 'services' ? ['validity_months'] : [])]), 'name' => $item->texts('name')];
     }
 }

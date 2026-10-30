@@ -23,6 +23,22 @@ final class Validity
 
     public const STATES = [self::VALID, self::EXPIRING, self::EXPIRED, self::UNKNOWN];
 
+    /** A plain day (Y-m-d) from another side's message, or null when it is not a real day. */
+    public static function day(mixed $value): ?string
+    {
+        if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return null;
+        }
+        try {
+            $day = CarbonImmutable::createFromFormat('!Y-m-d', $value, 'UTC');
+        } catch (\Throwable) {
+            return null;
+        }
+
+        // 2026-02-31 rolls over to March: not the day that was written.
+        return $day->toDateString() === $value ? $value : null;
+    }
+
     /** Whole days from today to the expiry day: 0 on the day itself, negative once past. */
     public static function daysLeft(?CarbonImmutable $expiresOn, CarbonImmutable $today): ?int
     {

@@ -3,7 +3,8 @@
         "cancel": "Cancel",
         "save": "Save",
         "choose": "Choose…",
-        "none": "None"
+        "none": "None",
+        "done": "Done"
     },
     "states": {
         "expired": "Expired",
@@ -46,7 +47,9 @@
         "empty_title": "The register is empty",
         "empty_text": "Add your factories' audits one by one, or import them from an Excel file.",
         "no_services": "First add the audit services you follow (BSCI, WRAP, ISO…), then your factories' audits.",
-        "add_here": "Add {service} for {factory}"
+        "add_here": "Add {service} for {factory}",
+        "results_waiting_one": "{results} result to check",
+        "results_waiting_other": "{results} results to check"
     },
     "add": {
         "title": "Add an audit",
@@ -77,7 +80,8 @@
         "added": "Added",
         "details": "Details changed",
         "dates": "Dates set",
-        "imported": "Imported"
+        "imported": "Imported",
+        "from_provider": "From the provider's result"
     },
     "lists": {
         "title": "Services, kinds and providers",
@@ -113,7 +117,11 @@
         "validity_hint": "Proposes the expiry day from the last audit.",
         "name": "Name",
         "in_use": "In use",
-        "saved": "Saved."
+        "saved": "Saved.",
+        "connection": "Business connection on the platform",
+        "connection_hint": "Link it to the provider's connection: renewal requests and their results then go over it.",
+        "connection_none": "None of your business connections can be linked. Connect with the provider first (Business connections).",
+        "not_connected": "Not on the platform"
     },
     "import": {
         "title": "Import from Excel",
@@ -148,5 +156,75 @@
         "done_more": "{unchanged} were already the same, {skipped} skipped.",
         "done_toast": "Register imported.",
         "open_register": "Open the register"
+    },
+    "renewal_statuses": {
+        "sent": "Requested",
+        "recorded": "Noted (sent by you)",
+        "accepted": "Accepted",
+        "declined": "Declined",
+        "cancelled": "Cancelled",
+        "done": "Done"
+    },
+    "renewal": {
+        "section": "Renewal",
+        "button": "Request renewal",
+        "title": "Request a renewal",
+        "on_platform": "{provider} is on the platform: they receive the request in their own account and answer it here.",
+        "off_platform": "{provider} is not on the platform: the request is noted here and an email is ready for you to send.",
+        "wanted_by": "Wanted by",
+        "wanted_by_hint": "Optional: the day you need the new certificate by.",
+        "note": "Note to the provider",
+        "send": "Send the request",
+        "note_it": "Note the request",
+        "sent": "Request sent to the provider.",
+        "recorded": "Request noted. Send the email to the provider.",
+        "mail_ready": "Send this to the provider by email (or copy it into a message):",
+        "copy": "Copy",
+        "copied": "Text copied.",
+        "copy_failed": "Could not copy: select the text and copy it by hand.",
+        "open_mail": "Open in email",
+        "asked_on": "Requested {date}",
+        "not_delivered": "It did not reach the provider (their side does not receive renewal requests yet). Contact them directly.",
+        "wanted_by_value": "Wanted by {date}",
+        "planned_value": "Planned for {date}",
+        "cancelled_because": "Cancelled: {reason}",
+        "cancel": "Cancel request",
+        "cancel_title": "Cancel this renewal request?",
+        "cancel_text": "{provider} is told when they are on the platform. You can make a new request later.",
+        "cancelled": "Request cancelled.",
+        "none_yet": "No renewal requested yet.",
+        "needs_provider": "Choose the provider below first: the request goes to them.",
+        "not_receiving": "{provider} is on the platform, but their side does not take renewal requests yet: the request is noted here and an email is ready for you to send."
+    },
+    "results": {
+        "from": "From {from} · {date}",
+        "status_pending": "To check",
+        "status_applied": "Accepted",
+        "status_rejected": "Rejected",
+        "field": "Field",
+        "now": "In the register",
+        "sent": "Sent",
+        "new_line": "This audit is not in your register yet: accepting it adds the line.",
+        "rejected_because": "Rejected: {reason}",
+        "apply": "Accept into the register",
+        "reject": "Reject",
+        "apply_title": "Accept this result?",
+        "apply_text": "The register line takes the dates, result and certificate {from} sent. Days left and reminders follow the new expiry day.",
+        "apply_done": "Result accepted into the register.",
+        "reject_title": "Reject this result?",
+        "reject_text": "The register stays as it is. Say why, so it is clear later.",
+        "reject_done": "Result rejected."
+    },
+    "renewals": {
+        "title": "Renewals",
+        "text": "Renewal requests to your audit providers, their answers, and the results they send for you to check.",
+        "open": "Open",
+        "all": "All",
+        "results_title": "Results to check",
+        "requests_title": "Requests",
+        "decided_title": "Results checked",
+        "none_title": "No renewal requests",
+        "none_text": "Open a line of the register and press \"Request renewal\" to ask its provider.",
+        "expires": "expires {date}"
     }
 }

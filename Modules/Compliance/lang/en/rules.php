@@ -21,4 +21,16 @@ return [
         'label' => 'Rows in one import',
         'description' => 'The most rows one Excel or CSV file may have.',
     ],
+    'request_days_before' => [
+        'label' => 'Ask for renewal before expiry (days)',
+        'description' => 'From this many days before an audit\'s expiry day the register suggests a renewal request to its provider (and sends it, when sending by itself is on).',
+    ],
+    'auto_request' => [
+        'label' => 'Send renewal requests by themselves',
+        'description' => 'At the day above, send the request to a provider connected on the platform without a person pressing the button.',
+    ],
+    'auto_apply_results' => [
+        'label' => 'Take providers\' results in at once',
+        'description' => 'Put the dates and result a connected provider sends straight into the register, without someone of yours accepting them first.',
+    ],
 ];

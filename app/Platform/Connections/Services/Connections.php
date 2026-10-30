@@ -124,8 +124,10 @@ class Connections
         }
         $direction = $this->kinds->handler($kind)->direction();
         $this->assertSides($connection, $direction, $from, $toUnitId);
-        $module = $this->kinds->module($kind);
-        if (! $this->modules->isEnabled('business_network', $from) || ! $this->modules->isEnabled($module, $from)) {
+        // The kind is named after the module that sends it (compliance.renewal_request); the
+        // receiving module (the handler's) is checked at the other side when it is delivered.
+        $sender = strstr($kind, '.', true);
+        if (! $this->modules->isEnabled('business_network', $from) || ! $this->modules->isEnabled($sender, $from)) {
             throw ConnectionException::kindNotAvailable($kind);
         }
         if (strlen((string) json_encode($payload)) > self::MAX_PAYLOAD_BYTES) {

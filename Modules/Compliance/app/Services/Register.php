@@ -81,7 +81,7 @@ class Register
     /**
      * @param  array{service_id: string, provider_id?: string|null, audit_type_id?: string|null, last_audit_on?: string|null, expires_on?: string|null, result?: string|null, certificate_no?: string|null, notes?: string|null, reason?: string|null}  $data
      */
-    public function add(Organization $factory, array $data, bool $mayDate, User $actor, string $kind = 'added'): Audit
+    public function add(Organization $factory, array $data, bool $mayDate, ?User $actor, string $kind = 'added'): Audit
     {
         $this->place->assertFactory($factory);
         $company = $this->place->companyOf($factory);
@@ -116,12 +116,12 @@ class Register
      *
      * @param  array<string, mixed>  $data
      */
-    public function update(Organization $unit, Audit $audit, int $baseVersion, array $data, User $actor): Audit
+    public function update(Organization $unit, Audit $audit, int $baseVersion, array $data, ?User $actor, string $kind = 'details'): Audit
     {
         $factory = Organization::query()->findOrFail($audit->organization_id);
         $this->checkLists($factory, [...$data, 'service_id' => $audit->service_id]);
 
-        return $this->place->transaction($unit, function () use ($audit, $baseVersion, $data, $actor) {
+        return $this->place->transaction($unit, function () use ($audit, $baseVersion, $data, $actor, $kind) {
             $audit = $this->locked($audit, $baseVersion);
             $old = $this->values($audit);
             $audit->fill(array_intersect_key($data, array_flip(['provider_id', 'audit_type_id', 'result', 'certificate_no', 'notes'])));
@@ -130,14 +130,14 @@ class Register
             }
             $audit->version++;
             $audit->save();
-            $this->change($audit, 'details', $old, $this->values($audit), null, $actor);
+            $this->change($audit, $kind, $old, $this->values($audit), $data['reason'] ?? null, $actor);
 
             return $audit;
         });
     }
 
     /** The official last audit and expiry days, with a reason (compliance.set_expiry, checked by the caller). */
-    public function setDates(Organization $unit, Audit $audit, int $baseVersion, ?string $lastAuditOn, ?string $expiresOn, string $reason, User $actor, string $kind = 'dates'): Audit
+    public function setDates(Organization $unit, Audit $audit, int $baseVersion, ?string $lastAuditOn, ?string $expiresOn, string $reason, ?User $actor, string $kind = 'dates'): Audit
     {
         $this->checkOrder($lastAuditOn, $expiresOn);
 
@@ -212,7 +212,7 @@ class Register
      * @param  array<string, mixed>  $old
      * @param  array<string, mixed>  $new
      */
-    private function change(Audit $audit, string $kind, array $old, array $new, ?string $reason, User $actor): void
+    private function change(Audit $audit, string $kind, array $old, array $new, ?string $reason, ?User $actor): void
     {
         AuditChange::inTenantOf($audit->organization_id)->withoutGlobalScope(OrganizationScope::class)->create([
             'organization_id' => $audit->organization_id,
@@ -221,7 +221,7 @@ class Register
             'old' => $old === [] ? null : (array_diff_assoc($old, $new) ?: null),
             'new' => $old === [] ? $new : array_intersect_key($new, array_diff_assoc($old, $new)),
             'reason' => $reason,
-            'user_id' => $actor->getKey(),
+            'user_id' => $actor?->getKey(),
             'created_at' => now(),
         ]);
         $this->audit->record($kind === 'dates' ? 'compliance.dates_set' : "compliance.audit_{$kind}", $audit, old: $old, new: $new, reason: $reason,

@@ -31,6 +31,8 @@ class ListItemRequest extends StrictFormRequest
                 'name' => [$need, 'string', 'min:2', 'max:150'],
                 'email' => ['nullable', 'email', 'max:190'],
                 'phone' => ['nullable', 'string', 'max:30', 'regex:/^\+?[0-9 ()-]{5,30}$/'],
+                // The provider's business connection on the platform (CMP-2): renewal requests go over it.
+                'connection_id' => ['sometimes', 'nullable', 'string', 'size:26'],
             ];
         }
 

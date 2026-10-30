@@ -14,4 +14,11 @@ return [
     'audit_imported' => 'Register line imported',
     'dates_set' => 'Official audit dates set',
     'imported' => 'Audit register imported',
+    'audit_from_provider' => 'Register line changed from a provider\'s result',
+    'renewal_requested' => 'Renewal requested from the provider',
+    'renewal_cancelled' => 'Renewal request cancelled',
+    'renewal_answered' => 'Provider answered a renewal request',
+    'result_received' => 'Audit result received from the provider',
+    'result_applied' => 'Provider\'s result accepted into the register',
+    'result_rejected' => 'Provider\'s result rejected',
 ];

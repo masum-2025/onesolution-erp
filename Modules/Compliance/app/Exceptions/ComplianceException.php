@@ -89,4 +89,47 @@ class ComplianceException extends TenancyException
     {
         return new self('dates_need_permission', 403);
     }
+
+    /** A provider of the lists links only to a connection where this client is the client. */
+    public static function connectionNotYours(): self
+    {
+        return new self('connection_not_yours', 422, [], ['field' => 'connection_id']);
+    }
+
+    /** A renewal request goes to the line's provider: there must be one. */
+    public static function noProvider(): self
+    {
+        return new self('no_provider', 422, [], ['field' => 'provider_id']);
+    }
+
+    public static function requestOpen(): self
+    {
+        return new self('request_open', 409);
+    }
+
+    public static function requestNotFound(): self
+    {
+        return new self('request_not_found', 404);
+    }
+
+    public static function requestClosed(): self
+    {
+        return new self('request_closed', 409);
+    }
+
+    public static function resultNotFound(): self
+    {
+        return new self('result_not_found', 404);
+    }
+
+    public static function resultDecided(): self
+    {
+        return new self('result_decided', 409);
+    }
+
+    /** The result's audit service is not in the lists at the factory. */
+    public static function resultServiceUnknown(string $code): self
+    {
+        return new self('result_service_unknown', 422, ['code' => $code]);
+    }
 }
