@@ -1435,7 +1435,13 @@ is needed; CRM is used for clients when it is on.
   open (`GET`/`POST ''`), `{id}` (GET, PATCH), `{id}/{step}`, `{id}/tasks` (POST),
   `{id}/tasks/order`, `{id}/tasks/{task}` (PATCH), `…/status`, `…/people` (PUT), `…/notes`
   (GET, POST), `templates` (GET, POST), `templates/{id}` (GET, PATCH).
-- **Future:** screens (PRJ-1b); quotations and invoices through CRM and Accounting (PRJ-2);
+- **Screens (PRJ-1b):** `/projects` (counts by status, search, progress of each project),
+  `/projects/:id` (client, manager, days, steps; tasks on a board, one column per status, one
+  under another on phones; `?task=` opens a task's drawer: status, people with the lead's
+  star, notes), `/projects/my-tasks` (overdue, this week, later, no due day),
+  `/projects/templates` (steps with titles per language, days, order). The client field finds
+  CRM clients as you type; a new name is added as a client.
+- **Future:** quotations and invoices through CRM and Accounting (PRJ-2);
   when a client is also connected on the platform, its renewal requests (CMP-2) may arrive as
   new projects (optional). A new sector or country needs no code: templates are data, numbers
   are rules.

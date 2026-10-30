@@ -1,0 +1,170 @@
+{
+    "common": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "edit": "Edit",
+        "none": "None"
+    },
+    "statuses": {
+        "planned": "Planned",
+        "active": "Active",
+        "on_hold": "On hold",
+        "done": "Done",
+        "cancelled": "Cancelled"
+    },
+    "task_statuses": {
+        "todo": "To do",
+        "doing": "Doing",
+        "blocked": "Blocked",
+        "done": "Done"
+    },
+    "priorities": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High"
+    },
+    "fields": {
+        "name": "Project name",
+        "client": "Client",
+        "template": "Template",
+        "service": "Service",
+        "manager": "Manager",
+        "starts_on": "Starts on",
+        "due_on": "Due on",
+        "description": "Description",
+        "title": "Task",
+        "priority": "Priority",
+        "days": "Days",
+        "progress": "Tasks done"
+    },
+    "dialog": {
+        "title": "New project",
+        "edit_title": "Change {code}",
+        "open": "Open the project",
+        "opened": "Project {code} opened.",
+        "saved": "Project {code} saved.",
+        "client_hint": "Type the name: your clients show up to choose from. A new name is added to your clients.",
+        "client_hint_plain": "The client's name.",
+        "client_known": "One of your clients.",
+        "client_new": "A new client: added to your clients when you save.",
+        "template_hint": "Its usual steps become the project's tasks, due from the start day.",
+        "no_template": "No template"
+    },
+    "task": {
+        "title": "Task",
+        "add": "Add a task",
+        "add_title": "Add a task",
+        "edit_title": "Change the task",
+        "added": "Task added.",
+        "saved": "Task saved.",
+        "status": "Status",
+        "due": "Due {date}",
+        "overdue_since": "Overdue: was due {date}",
+        "overdue_short": "Overdue · {date}",
+        "done_by": "Done by {name} on {date}"
+    },
+    "people": {
+        "title": "People",
+        "none": "Nobody here works on projects yet. Give people the projects role first.",
+        "hint": "Tick everyone who works on it; the star marks who leads it (optional).",
+        "lead": "{name} leads it",
+        "leads": "Leads it",
+        "change": "Change people",
+        "saved": "People saved: those added are told.",
+        "nobody": "Nobody is on this task yet."
+    },
+    "notes": {
+        "title": "Notes",
+        "none": "No notes yet.",
+        "add": "Add the note",
+        "placeholder": "Write a note for the others on it…"
+    },
+    "list": {
+        "title": "Projects",
+        "text": "Your projects for clients, with their tasks and who works on them.",
+        "group_reads": "You see every company's projects here. To open or change one, switch to its company or branch.",
+        "summary": "Projects by status",
+        "search": "Search by name, number or client",
+        "none_title": "Nothing matches",
+        "none_text": "No project fits this search or status. Clear it to see all.",
+        "empty_title": "No projects yet",
+        "empty_text": "Open your first project for a client; a template adds its usual tasks.",
+        "progress": "{done} of {total} tasks done",
+        "late": "Late · was due {date}",
+        "overdue_tasks_one": "{tasks} task overdue",
+        "overdue_tasks_other": "{tasks} tasks overdue"
+    },
+    "mine": {
+        "title": "My tasks",
+        "text": "Every task you are on, in projects under way: overdue first.",
+        "with_done": "Show done",
+        "empty_title": "Nothing for you right now",
+        "empty_text": "Tasks given to you show here.",
+        "overdue": "Overdue",
+        "week": "This week",
+        "later": "Later",
+        "none": "No due day"
+    },
+    "board": {
+        "title": "Tasks",
+        "empty": "No tasks yet. Add the first one, or open projects from a template next time.",
+        "empty_read": "No tasks yet.",
+        "column_empty": "Nothing here."
+    },
+    "steps": {
+        "start": "Start",
+        "start_title": "Start {code}?",
+        "start_text": "The project becomes active.",
+        "start_done": "Project started.",
+        "hold": "Put on hold",
+        "hold_title": "Put {code} on hold?",
+        "hold_text": "Say why: it shows on the project. Tasks can still be changed.",
+        "hold_done": "Project on hold.",
+        "resume": "Resume",
+        "resume_title": "Resume {code}?",
+        "resume_text": "The project is active again.",
+        "resume_done": "Project resumed.",
+        "finish": "Finish",
+        "finish_title": "Finish {code}?",
+        "finish_text": "Its tasks can no longer change (reopen it if needed). Tasks not done stay as they are.",
+        "finish_done": "Project finished.",
+        "cancel": "Cancel project",
+        "cancel_title": "Cancel {code}?",
+        "cancel_text": "Nothing is deleted. Say why: it shows on the project.",
+        "cancel_done": "Project cancelled.",
+        "reopen": "Reopen",
+        "reopen_title": "Reopen {code}?",
+        "reopen_text": "The project becomes active again. Say why.",
+        "reopen_done": "Project reopened."
+    },
+    "reason": {
+        "on_hold": "On hold: {reason}",
+        "cancelled": "Cancelled: {reason}",
+        "active": "Reopened: {reason}",
+        "done": "{reason}",
+        "planned": "{reason}"
+    },
+    "templates": {
+        "title": "Templates",
+        "text": "The usual steps of a kind of work. Opening a project from a template adds them as tasks.",
+        "add": "New template",
+        "edit": "Change {name}",
+        "saved": "Template saved.",
+        "show_off": "Show the ones switched off",
+        "empty_title": "No templates yet",
+        "empty_text": "Write down the usual steps once (e.g. a BSCI audit) and open projects from them.",
+        "kept_by": "kept by {name}",
+        "off": "Off",
+        "name": "Template name",
+        "service_hint": "Optional: given to projects opened from it.",
+        "steps_one": "{steps} step",
+        "steps_other": "{steps} steps",
+        "after_days": "Due after (days)",
+        "up": "Move up",
+        "down": "Move down",
+        "remove": "Remove the step",
+        "step_title": "Step",
+        "add_step": "Add a step",
+        "in_use": "In use"
+    }
+}
