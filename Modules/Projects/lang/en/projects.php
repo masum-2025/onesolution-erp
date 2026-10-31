@@ -19,8 +19,14 @@ return [
     'posting_keys' => [
         'services' => 'Project services income',
     ],
+    'portal' => [
+        'subject' => 'Client (projects)',
+        'name' => 'Client',
+        'company_name' => 'Company',
+    ],
     'errors' => [
         'not_workplace' => 'Projects run at a company or a branch that is open. Choose one of them.',
+        'portal_client_not_found' => 'These projects are not shared with you. Open them from your records, or ask the company to share them.',
         'project_not_found' => 'This project was not found here. Open it again from the projects list.',
         'task_not_found' => 'This task was not found in the project. Reload the project.',
         'template_not_found' => 'This template was not found here. Choose one from the list.',

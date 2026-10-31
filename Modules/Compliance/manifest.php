@@ -7,6 +7,7 @@ use Modules\Compliance\Connections\RequestReplyHandler;
 use Modules\Compliance\Dashboard\ComplianceAttention;
 use Modules\Compliance\Dashboard\ExpiringSoon;
 use Modules\Compliance\Dashboard\Standing;
+use Modules\Compliance\Portal\FactorySubjects;
 
 /*
 | Module manifest: read by App\Platform\Modules\ModuleRegistry.
@@ -81,7 +82,11 @@ return [
         $rule('request_days_before', 'integer', 60, ['schema' => ['minimum' => 1, 'maximum' => 365], 'sort_order' => 60]),
         $rule('auto_request', 'boolean', false, ['sort_order' => 70]),
         $rule('auto_apply_results', 'boolean', false, ['sort_order' => 80]),
+        // In the client portal (a buyer or auditor watching a factory): whether certificate numbers show.
+        $rule('portal_shows_certificate_no', 'boolean', true, ['sort_order' => 90]),
     ],
+    // A factory's register shown to people the client invites to its portal (buyers, brands, auditors).
+    'portal_subjects' => [FactorySubjects::class],
     // What connected providers send back (CMP-2): kinds named after the provider's module.
     'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class, QuotationHandler::class, InvoiceHandler::class],
     'menu' => [

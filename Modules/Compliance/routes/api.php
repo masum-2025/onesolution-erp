@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Compliance\Http\Controllers\ImportController;
 use Modules\Compliance\Http\Controllers\ListController;
+use Modules\Compliance\Http\Controllers\PortalRegisterController;
 use Modules\Compliance\Http\Controllers\RegisterController;
 use Modules\Compliance\Http\Controllers\RenewalController;
 
@@ -39,3 +40,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:compliance'])
         });
         Route::post('import', [ImportController::class, 'store'])->middleware('throttle:compliance-imports');
     });
+
+/*
+| A factory's register in the client's portal (B2B2C): portal members only
+| (the API refuses them everything else), with the portal and Compliance on.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:compliance'])
+    ->get('portal/compliance', [PortalRegisterController::class, 'show']);

@@ -89,6 +89,12 @@ class ProjectsException extends TenancyException
     }
 
     /** Quotes need CRM on at the company. */
+    /** A client the portal member is not linked to: the same answer either way. */
+    public static function portalClientNotFound(): self
+    {
+        return new self('portal_client_not_found', 404);
+    }
+
     public static function crmOff(): self
     {
         return new self('crm_off', 422);

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Projects\Http\Controllers\InboxController;
 use Modules\Projects\Http\Controllers\MoneyController;
+use Modules\Projects\Http\Controllers\PortalProjectController;
 use Modules\Projects\Http\Controllers\ProjectController;
 use Modules\Projects\Http\Controllers\TaskController;
 use Modules\Projects\Http\Controllers\TemplateController;
@@ -54,3 +55,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
             Route::post('{project}/{step}', [ProjectController::class, 'step']);
         });
     });
+
+/*
+| A client's projects in the company's portal (B2B2C): portal members only
+| (the API refuses them everything else), with the portal and Projects on.
+*/
+Route::middleware(['auth:sanctum', 'org', 'module:client_portal', 'module:projects'])
+    ->get('portal/projects', [PortalProjectController::class, 'show']);

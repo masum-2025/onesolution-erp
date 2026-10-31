@@ -21,6 +21,17 @@ class Clients
 
     public function __construct(private ContactDirectory $directory) {}
 
+    /**
+     * Contacts by id, with whether each is tagged "client" (unknown ones left out).
+     *
+     * @param  list<string>  $ids
+     * @return array<string, array{id: string, kind: string, name: string, company_name: ?string, phone: ?string, email: ?string, tagged: bool}>
+     */
+    public function many(Organization $company, array $ids): array
+    {
+        return $this->directory->many($company, $ids, self::TAG);
+    }
+
     public function usesCrm(Organization $company): bool
     {
         return $this->directory->available($company);

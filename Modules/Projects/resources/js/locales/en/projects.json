@@ -277,5 +277,16 @@
         "district": "District",
         "kept_in_crm": "Kept in your CRM contacts, marked as a client.",
         "add": "Add and choose"
+    },
+    "portal_page": {
+        "title": "Your projects",
+        "text": "How your work with {org} is going.",
+        "starts": "Starts",
+        "due": "Due",
+        "finished": "Finished",
+        "late": "Past its due day",
+        "progress": "{done} of {total} tasks done",
+        "empty_title": "No projects yet",
+        "empty_text": "When {org} starts work for you, it appears here."
     }
 }

@@ -9,4 +9,6 @@ export default [
     { path: 'compliance/renewals', name: 'compliance-renewals', component: () => import('./pages/RenewalsPage.vue'), meta },
     { path: 'compliance/lists', name: 'compliance-lists', component: () => import('./pages/ListsPage.vue'), meta },
     { path: 'compliance/import', name: 'compliance-import', component: () => import('./pages/ImportPage.vue'), meta },
+    // A factory's register in the client's portal (B2B2C): portal members may open this.
+    { path: 'portal/compliance/:id', name: 'compliance-portal', component: () => import('./pages/PortalRegisterPage.vue'), meta: { ...meta, portal: true } },
 ];

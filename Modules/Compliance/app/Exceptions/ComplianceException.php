@@ -30,6 +30,12 @@ class ComplianceException extends TenancyException
         return new self('audit_not_found', 404);
     }
 
+    /** A factory the portal member is not linked to (or no longer open): the same answer either way. */
+    public static function portalFactoryNotFound(): self
+    {
+        return new self('portal_factory_not_found', 404);
+    }
+
     public static function itemNotFound(): self
     {
         return new self('item_not_found', 404);

@@ -9,7 +9,9 @@ const keys = (object, prefix = '') => Object.entries(object).flatMap(([key, valu
 describe('projects screens', () => {
     it('registers its screens with the app shell, literal paths before the project', () => {
         const routes = moduleRoutes.filter((route) => route.meta.module === 'projects');
-        expect(routes.map((route) => route.name)).toEqual(['projects', 'projects-mine', 'projects-templates', 'project']);
+        expect(routes.map((route) => route.name)).toEqual(['projects', 'projects-mine', 'projects-templates', 'project', 'projects-portal']);
+        // Only the portal page opens for portal members.
+        expect(routes.filter((route) => route.meta.portal).map((route) => route.path)).toEqual(['portal/projects/:id']);
         expect(routes.findIndex((route) => route.path === 'projects/my-tasks')).toBeLessThan(routes.findIndex((route) => route.path === 'projects/:id'));
     });
 

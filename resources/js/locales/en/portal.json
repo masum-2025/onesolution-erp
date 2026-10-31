@@ -12,7 +12,9 @@
         "back": "Back to my records",
         "relation": {
             "guardian": "Guardian",
-            "self": "Your own record"
+            "self": "Your own record",
+            "viewer": "Watching this factory",
+            "client": "Client"
         },
         "empty": "Nothing to show here.",
         "payment_soon": "Online payment will appear here when {org} offers it.",

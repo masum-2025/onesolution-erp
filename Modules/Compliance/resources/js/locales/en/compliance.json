@@ -268,5 +268,13 @@
         "status_partly_paid": "Partly paid",
         "status_paid": "Paid",
         "status_void": "Voided by the provider"
+    },
+    "portal_page": {
+        "title": "Audit register",
+        "text": "Where each factory's audits stand, as {org} keeps them.",
+        "summary": "Audits by standing",
+        "no_lines": "No audits are recorded for this factory yet.",
+        "empty_title": "No factory shared yet",
+        "empty_text": "When {org} shares a factory with you, its audits appear here."
     }
 }

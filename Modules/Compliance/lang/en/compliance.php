@@ -20,10 +20,18 @@ return [
         'cancelled' => 'Cancelled',
         'done' => 'Done',
     ],
+    'portal' => [
+        'subject' => 'Factory (audit register)',
+        'name' => 'Factory',
+        'kind' => 'Kind',
+        'kind_company' => 'Company',
+        'kind_branch' => 'Branch',
+    ],
     'errors' => [
         'not_factory' => 'Choose a company or a branch that is open: audits are kept per factory.',
         'not_list_owner' => 'Lists are kept by a group or a company. This one is kept above: change it there.',
         'audit_not_found' => 'This register line was not found here. Open it again from the register.',
+        'portal_factory_not_found' => 'This factory is not shared with you. Open it from your records, or ask the company to share it.',
         'item_not_found' => 'This item is not in the lists here. Choose one from the list.',
         'already_in_register' => 'This factory already has this audit service in the register. Open that line instead.',
         'code_taken' => 'This code is already used in the list. Choose another one.',

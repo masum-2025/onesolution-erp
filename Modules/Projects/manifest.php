@@ -6,6 +6,7 @@ use Modules\Projects\Connections\RenewalRequestHandler;
 use Modules\Projects\Dashboard\MyTasks;
 use Modules\Projects\Dashboard\ProjectsAttention;
 use Modules\Projects\Dashboard\ProjectsByStatus;
+use Modules\Projects\Portal\ClientSubjects;
 
 /*
 | Module manifest: read by App\Platform\Modules\ModuleRegistry.
@@ -49,7 +50,11 @@ return [
         $rule('max_assignees', 'integer', 10, ['schema' => ['minimum' => 1, 'maximum' => 50], 'sort_order' => 30]),
         // The people of a task are told once when it passes its due day.
         $rule('overdue_alert', 'boolean', true, ['sort_order' => 40]),
+        // In the client portal: whether a client sees the task titles of their projects (else only the counts).
+        $rule('portal_shows_tasks', 'boolean', true, ['sort_order' => 50]),
     ],
+    // A client (CRM contact) following their projects in the company's portal.
+    'portal_subjects' => [ClientSubjects::class],
     'menu' => [
         [
             'key' => 'projects',

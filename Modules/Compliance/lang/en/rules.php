@@ -33,4 +33,8 @@ return [
         'label' => 'Take providers\' results in at once',
         'description' => 'Put the dates and result a connected provider sends straight into the register, without someone of yours accepting them first.',
     ],
+    'portal_shows_certificate_no' => [
+        'label' => 'Show certificate numbers in the portal',
+        'description' => 'People you share a factory with in your portal (buyers, auditors) see the certificate number of each audit.',
+    ],
 ];

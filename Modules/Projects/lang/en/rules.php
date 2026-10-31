@@ -17,4 +17,8 @@ return [
         'label' => 'Tell about overdue tasks',
         'description' => 'Tell a task\'s people once when it passes its due day.',
     ],
+    'portal_shows_tasks' => [
+        'label' => 'Show task titles to clients in the portal',
+        'description' => 'Clients following their projects in your portal see each task\'s title, status and due day. Off: only how many tasks are done.',
+    ],
 ];

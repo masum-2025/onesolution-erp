@@ -9,7 +9,9 @@ const keys = (object, prefix = '') => Object.entries(object).flatMap(([key, valu
 describe('compliance screens', () => {
     it('registers its screens with the app shell', () => {
         const names = moduleRoutes.filter((route) => route.meta.module === 'compliance').map((route) => route.name);
-        expect(names).toEqual(['compliance', 'compliance-renewals', 'compliance-lists', 'compliance-import']);
+        expect(names).toEqual(['compliance', 'compliance-renewals', 'compliance-lists', 'compliance-import', 'compliance-portal']);
+        // Only the portal page opens for portal members.
+        expect(moduleRoutes.filter((route) => route.meta.module === 'compliance' && route.meta.portal).map((route) => route.path)).toEqual(['portal/compliance/:id']);
     });
 
     it('says everything in Bangla and English', () => {

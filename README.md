@@ -1419,6 +1419,33 @@ manifest; nothing outside it changed except shared counts in tests).
   sending module must be on at the sender, the handler's module at the receiver
   (`Connections::send`).
 
+### Register and projects in the client portal
+
+The company shares status with people outside it through the client portal (module
+`client_portal`, invitation by link and code; someone who already has an account, for example
+another company's employee, joins with their own login and gets a separate portal membership).
+
+- **`compliance.factory`** (Compliance): the client invites a buyer, brand or outside auditor
+  (relation `viewer`) to a factory (an open company or branch at or below the portal's
+  organization; a company shows its branches too). `/portal/compliance/{factory}` and
+  `GET /api/portal/compliance?factory=` show each line's service, kind, provider, last audit,
+  expiry day, days left, standing and result. Certificate numbers only while the rule
+  `compliance.portal_shows_certificate_no` is on (default on). Never notes, renewals,
+  quotations, invoices or who changed what.
+- **`projects.client`** (Projects, needs CRM): the provider invites a client (a CRM contact
+  tagged `client`, relation `client`). `/portal/projects/{contact}` and
+  `GET /api/portal/projects?client=` show the client's projects: status, start, due and
+  finish days, past-due flag, tasks done of all, and the task titles with their status and due
+  day while the rule `projects.portal_shows_tasks` is on (default on). Never people,
+  descriptions, notes or money.
+- Both answer only for the member's active links (`PortalAccess`), inside the portal's own
+  organization; anything else is a 404 (`portal_factory_not_found`,
+  `portal_client_not_found`). Off while the module or the portal is off (403). No new table
+  or permission: inviting uses `client_portal.manage`.
+- **Future expansion:** a new sector or country needs no code change (services, kinds and
+  rules are data). A provider keeping a register for clients who are not on the platform
+  ("client sites" under a CRM contact) is a separate, later plan.
+
 ## Projects module (PRJ-1: projects and tasks for clients)
 
 A service company runs projects for its clients. Module `projects` (business, enterprise;
