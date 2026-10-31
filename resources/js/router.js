@@ -21,6 +21,8 @@ const routes = [
     { path: '/forgot', name: 'forgot', component: () => import('./pages/auth/ForgotPage.vue'), meta: { public: true, ns: ['auth', 'identity'] } },
     { path: '/legal/:kind(terms|privacy)', name: 'legal', component: () => import('./pages/auth/LegalPage.vue'), meta: { public: true, ns: ['identity'] } },
     { path: '/welcome', name: 'welcome', component: () => import('./pages/auth/WelcomePage.vue'), meta: { ns: ['identity'] } },
+    // A first password someone else gave: the person's own comes before anything else.
+    { path: '/first-password', name: 'first-password', component: () => import('./pages/auth/FirstPasswordPage.vue'), meta: { ns: ['identity', 'invite'] } },
     { path: '/choose', name: 'choose', component: () => import('./pages/auth/ChooseContextPage.vue'), meta: { ns: ['auth'] } },
     // Joining a client's portal with an invitation link or code (Phase 5C-4), signed in or not.
     // Module pages without the app shell (public ones, like checking a document's QR code).
@@ -232,6 +234,16 @@ router.beforeEach(async (to) => {
     if (!me) {
         await namespaces;
         return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} };
+    }
+
+    // Nothing opens before they choose their own password (the API refuses too: password_change_required).
+    if (me.user?.must_change_password && to.name !== 'first-password') {
+        await loadNamespaces(['core', 'identity', 'invite']);
+        return { name: 'first-password' };
+    }
+    if (!me.user?.must_change_password && to.name === 'first-password') {
+        await namespaces;
+        return homeFor(me.context);
     }
 
     if (to.meta.context && me.context?.type !== to.meta.context) {

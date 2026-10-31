@@ -99,6 +99,22 @@ async function resendLogin() {
         resending.value = false;
     }
 }
+// The company's first password again (it ran out, or they forgot it before choosing their own).
+const resetting = ref(false);
+async function resetFirstLogin() {
+    const confirmed = await confirmAction({ title: t('hrm.first_login.reset_title'), message: t('hrm.first_login.reset_text', { name: employee.value.full_name }), confirmLabel: t('hrm.first_login.reset') });
+    if (!confirmed) return;
+    resetting.value = true;
+    try {
+        const { data } = await hrm.resetFirstLogin(employee.value.id);
+        toast.success(t('hrm.first_login.reset_done'));
+        record.data.value = { data };
+    } catch (error) {
+        toast.error(error.errors?.login?.[0] ?? error.message);
+    } finally {
+        resetting.value = false;
+    }
+}
 const history = ref(null);
 
 async function stepDone(data) {
@@ -175,8 +191,12 @@ const typeLabel = computed(() => opts.value?.employment_types.find((type) => typ
                             <AppBadge v-if="employee.login_invitation" :tone="employee.login_invitation.expired ? 'warn' : 'brand'">
                                 {{ employee.login_invitation.expired ? t('hrm.login.invite_expired') : t('hrm.login.invite_until', { when: formatDateTime(employee.login_invitation.expires_at) }) }}
                             </AppBadge>
+                            <!-- Given with the company's first password: still to choose their own, or run out. -->
+                            <AppBadge v-if="employee.login_state === 'pending'" tone="brand">{{ t('hrm.first_login.state_pending') }}</AppBadge>
+                            <AppBadge v-else-if="employee.login_state === 'expired'" tone="warn">{{ t('hrm.first_login.state_expired') }}</AppBadge>
                             <template v-if="can.manage">
                                 <AppButton v-if="employee.login_invitation" size="sm" variant="ghost" :loading="resending" @click="resendLogin">{{ t('hrm.login.resend') }}</AppButton>
+                                <AppButton v-if="employee.login_state === 'pending' || employee.login_state === 'expired'" size="sm" variant="ghost" :loading="resetting" @click="resetFirstLogin">{{ t('hrm.first_login.reset') }}</AppButton>
                                 <AppButton size="sm" :variant="employee.login ? 'ghost' : 'primary'" @click="linking = true">{{ employee.login ? t('hrm.login.change') : t('hrm.login.give') }}</AppButton>
                                 <AppButton v-if="employee.login" size="sm" variant="ghost" @click="unlink">{{ t('hrm.login.unlink') }}</AppButton>
                             </template>

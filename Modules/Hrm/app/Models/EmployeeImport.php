@@ -25,6 +25,7 @@ class EmployeeImport extends Model
     {
         return [
             'status' => ImportStatus::class,
+            'create_logins' => 'boolean',
             'total_rows' => 'integer',
             'invalid_rows' => 'integer',
             'imported_rows' => 'integer',

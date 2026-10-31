@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import { ArrowLeft, CircleCheck, Download, FileSpreadsheet, FileUp, Play, RotateCcw, X } from 'lucide-vue-next';
+import { ArrowLeft, CircleCheck, Download, FileSpreadsheet, FileUp, KeyRound, Play, RotateCcw, X } from 'lucide-vue-next';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -40,6 +40,9 @@ const checking = ref(false);
 const fileError = ref(null);
 const current = ref(null);
 const skipInvalid = ref(false);
+// Every hired row also gets a login with the company's first password.
+const createLogins = ref(false);
+const loginsError = ref(null);
 const acting = ref(false);
 let timer = null;
 
@@ -80,11 +83,13 @@ async function check() {
 
 async function start() {
     acting.value = true;
+    loginsError.value = null;
     try {
-        current.value = (await hrm.startImport(current.value.id, skipInvalid.value)).data;
+        current.value = (await hrm.startImport(current.value.id, skipInvalid.value, createLogins.value)).data;
         follow();
     } catch (error) {
-        toast.error(error.message);
+        loginsError.value = error.errors?.create_logins?.[0] ?? null;
+        if (!loginsError.value) toast.error(error.message);
     } finally {
         acting.value = false;
     }
@@ -181,6 +186,7 @@ const rowTone = (status) => ({ invalid: 'bad', failed: 'bad', skipped: 'outline'
                         <li><span class="font-mono" dir="ltr">position_code, unit_code, manager_code</span> — {{ t('hrm.import_page.hint_codes') }}</li>
                         <li><span class="font-mono" dir="ltr">department</span> — {{ t('hrm.import_page.hint_department') }}</li>
                         <li><span class="font-mono" dir="ltr">gender</span> — female, male, other, undisclosed</li>
+                        <li><span class="font-mono" dir="ltr">role</span> — {{ t('hrm.import_page.hint_role') }}</li>
                         <li v-for="column in custom" :key="column.key"><span class="font-mono" dir="ltr">{{ column.key }}</span> — {{ column.label }}</li>
                     </ul>
                 </details>
@@ -241,6 +247,20 @@ const rowTone = (status) => ({ invalid: 'bad', failed: 'bad', skipped: 'outline'
                 <CircleCheck class="size-5 text-ok" aria-hidden="true" />
                 {{ t('hrm.import_page.done', { imported: current.imported_rows, failed: current.failed_rows, skipped: current.invalid_rows }) }}
             </p>
+            <p v-if="current.status === 'done' && current.logins" class="flex items-center gap-2 border-b border-line px-5 py-3 text-[13px] text-fg-2" role="status">
+                <KeyRound class="size-4 text-brand-text" aria-hidden="true" />
+                {{ t('hrm.import_page.logins_done', current.logins) }}
+            </p>
+
+            <!-- Logins with the company's first password, for every person hired. -->
+            <div v-if="current.status === 'checked'" class="space-y-1.5 border-b border-line px-5 py-4">
+                <AppSwitch v-model="createLogins" :label="t('hrm.import_page.create_logins')" show-label />
+                <p class="text-[12.5px] text-muted">{{ t('hrm.import_page.create_logins_hint') }}</p>
+                <p v-if="loginsError" class="text-[12.5px] text-bad" role="alert">
+                    {{ loginsError }}
+                    <RouterLink :to="{ name: 'hrm-logins' }" class="font-medium text-brand-text hover:underline">{{ t('hrm.first_login.open_settings') }}</RouterLink>
+                </p>
+            </div>
 
             <div v-if="current.problems?.length" class="max-h-[28rem] overflow-y-auto">
                 <table class="w-full text-start text-[12.5px]">

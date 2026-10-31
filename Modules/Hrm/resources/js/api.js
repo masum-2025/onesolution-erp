@@ -32,6 +32,12 @@ export function hrmApi(organizationId) {
         // A login in one step: an invitation by email (no sign-up), roles, linked.
         inviteLogin: (id, body) => api(`${base}/employees/${id}/invite-login`, { method: 'POST', body }),
         resendLogin: (id) => api(`${base}/employees/${id}/resend-login`, { method: 'POST' }),
+        // Logins with the company's first password (no mail): settings, one, many, again.
+        loginSettings: () => api(`${base}/login-settings`),
+        saveLoginSettings: (body) => api(`${base}/login-settings`, { method: 'PUT', body }),
+        giveFirstLogin: (id, roleIds) => api(`${base}/employees/${id}/first-login`, { method: 'POST', body: roleIds?.length ? { role_ids: roleIds } : {} }),
+        giveFirstLogins: (ids) => api(`${base}/employees/first-logins`, { method: 'POST', body: { employee_ids: ids } }),
+        resetFirstLogin: (id) => api(`${base}/employees/${id}/first-login/reset`, { method: 'POST' }),
         roles: () => api(`/api/organizations/${organizationId}/roles`),
         step: (id, step, body) => api(`${base}/employees/${id}/steps/${step}`, { method: 'POST', body }),
 
@@ -48,7 +54,7 @@ export function hrmApi(organizationId) {
         imports: () => api(`${base}/imports`),
         importFile: (form) => api(`${base}/imports`, { method: 'POST', body: form }),
         importStatus: (id) => api(`${base}/imports/${id}`),
-        startImport: (id, skipInvalid) => api(`${base}/imports/${id}/start`, { method: 'POST', body: { skip_invalid: skipInvalid } }),
+        startImport: (id, skipInvalid, createLogins = false) => api(`${base}/imports/${id}/start`, { method: 'POST', body: { skip_invalid: skipInvalid, create_logins: createLogins } }),
         cancelImport: (id) => api(`${base}/imports/${id}`, { method: 'DELETE' }),
     };
 }

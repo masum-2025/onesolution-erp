@@ -2385,6 +2385,38 @@ a deploy that adds a rule or changes a default never reads a map cached before i
 - Dashboard: "Employees by department" (the six largest, the rest together, and those in no
   department).
 
+### Employee logins with the company's first password
+
+For workers without email (a factory gate). The company chooses one first password and the
+roles new logins get; employees sign in with their phone or email and that password, and must
+choose their own before anything opens.
+
+- Settings: `GET|PUT …/hrm/login-settings` (`hrm.manage` to read; `hrm.manage` +
+  `manageMembers` to change; `two_factor.recent`). Body: `base_version`, optional `password` +
+  `password_confirmation` (10+ characters, letters and numbers; left out = unchanged),
+  `role_ids` (roles usable at the company). Only the hash is kept (`hrm_login_defaults`); the
+  password never comes back. Screen `/hrm/logins` (HRM settings → "Employee logins"). Audit
+  `hrm.login_defaults_changed` (roles and "password changed", never the password).
+- Giving: `POST …/hrm/employees/{employee}/first-login` (optional `role_ids`), many at once
+  `POST …/hrm/employees/first-logins` (`employee_ids`, up to 200; each checked on its own,
+  with what happened to each), again `POST …/employees/{employee}/first-login/reset`. Same
+  rights as inviting (`hrm.manage` + `manageMembers` at the employee's unit). The employee
+  list filters `login=without` and shows `login_state`: none | pending | expired | active.
+- Import: `POST …/imports/{id}/start` with `create_logins: true` gives every hired row a login
+  (refused while no first password is set). Optional column `role` (role name in any language,
+  or key). A login problem never undoes the hire; it shows on the row (`login`: created |
+  linked | failed). `employment_type` also takes the kind's name ("Permanent", "স্থায়ী").
+- Platform (`Identity\Services\InitialPasswords`): `users.must_change_password` and
+  `initial_password_expires_at` (rule `hrm.initial_password_days`, 7). Until the person
+  chooses their own password every context refuses them (`password_change_required`, 403);
+  their account pages stay open (`/first-password` screen). An expired first password is
+  refused at sign-in (`initial_password_expired`). Their own password may not equal the given
+  one. A local number ("017…") is read in the company's country; the employer's phone counts
+  as verified (audit `identity.initial_login_given`, `phone_verified_by: employer`).
+- One person = one login: an existing account (same email or phone) only gets the membership
+  and the "members.added" notice; its password is never set. A reset works only for a login
+  still on its first password with no membership outside the company and no partner console.
+
 ### Future expansion (HRM)
 
 - A new country or sector needs no code: kinds of employment, required details, the id

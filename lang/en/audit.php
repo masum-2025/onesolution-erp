@@ -52,6 +52,8 @@ return [
         'identity_signed_up' => 'Account created (self sign-up)',
         'identity_recovered' => 'Password reset with a code',
         'identity_password_changed' => 'Password changed',
+        'identity_initial_login_given' => 'Login given with a first password',
+        'identity_initial_password_reset' => 'First password given again',
         'identity_password_check_failed' => 'Wrong current password entered',
         'identity_email_changed' => 'Email changed',
         'identity_phone_changed' => 'Phone changed',

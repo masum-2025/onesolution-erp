@@ -8,6 +8,7 @@ return [
     'menu_positions' => 'Designations',
     'menu_fields' => 'Extra fields',
     'menu_import' => 'Import',
+    'menu_logins' => 'Employee logins',
     'menu_org_chart' => 'Org chart',
     'menu_departments' => 'Departments',
     'new_employee' => 'New employee',

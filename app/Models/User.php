@@ -40,6 +40,9 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'marketing_consent_at' => 'datetime',
             'password_changed_at' => 'datetime',
+            // A first password chosen by someone else (InitialPasswords): their own is still to be set.
+            'must_change_password' => 'boolean',
+            'initial_password_expires_at' => 'immutable_datetime',
             'recovered_at' => 'datetime',
             'onboarded_at' => 'datetime',
             // "Delete my account" (Phase 5C-3).

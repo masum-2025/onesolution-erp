@@ -31,6 +31,8 @@ return [
         'no_support_access' => 'You have no approved support access to this client. Request access from the partner console.',
         'support_ended' => 'This support access has ended. Request new access if you still need it.',
         'two_factor_required' => 'This account requires two-step sign-in. Set it up in My account → Security, then open it again.',
+        'password_change_required' => 'You signed in with a first password given to you. Choose your own password first, then you can start working.',
+        'initial_password_expired' => 'The first password you were given has expired. Ask your HR or admin to give you a new one.',
         'read_only_support' => 'Support access is read-only. Ask the client to make this change.',
         'read_only_partner_suspended' => 'Your service provider\'s account is suspended, so this account is read-only for now. You can still view and export your data.',
         'portal_only' => 'This part is for the organization\'s staff. Your portal shows everything you can see here.',

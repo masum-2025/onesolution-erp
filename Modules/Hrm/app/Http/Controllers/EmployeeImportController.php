@@ -67,9 +67,9 @@ class EmployeeImportController extends Controller
     {
         $import = $this->importIn($this->findVisible($organization), $import);
         Gate::authorize('hrm.manage', $this->unitOf($import));
-        $request->validate(['skip_invalid' => ['sometimes', 'boolean']]);
+        $request->validate(['skip_invalid' => ['sometimes', 'boolean'], 'create_logins' => ['sometimes', 'boolean']]);
 
-        $import = $this->importer->start($import, $request->boolean('skip_invalid'), $request->user());
+        $import = $this->importer->start($import, $request->boolean('skip_invalid'), $request->user(), $request->boolean('create_logins'));
 
         return response()->json(['data' => $this->presenter->import($import->refresh(), withRows: true)], 202);
     }

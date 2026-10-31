@@ -127,5 +127,14 @@
         "dialog_text": "We send a notice to your email and phone. You can cancel until the date shown there.",
         "type_delete": "Type DELETE to confirm",
         "confirm": "Delete my account"
+    },
+    "first_password": {
+        "title": "Welcome, {name}",
+        "text": "You signed in with a first password given to you. Choose your own password to start; you sign in with it from now on.",
+        "current": "Password you were given",
+        "current_needed": "Type the password you were given.",
+        "same": "Choose a password of your own, not the one you were given.",
+        "submit": "Save my password and start",
+        "sign_out": "Sign out"
     }
 }

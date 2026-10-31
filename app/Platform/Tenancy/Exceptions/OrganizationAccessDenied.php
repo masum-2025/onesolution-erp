@@ -48,6 +48,12 @@ class OrganizationAccessDenied extends TenancyException
         return new self('two_factor_required', 403);
     }
 
+    /** Signed in with a first password chosen by someone else: their own is to be set first. */
+    public static function passwordChangeRequired(): self
+    {
+        return new self('password_change_required', 403);
+    }
+
     /**
      * A change was tried in a context that may only read (support access,
      * a suspended partner's client in its grace period).

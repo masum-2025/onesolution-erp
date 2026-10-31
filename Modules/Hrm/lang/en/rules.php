@@ -87,7 +87,12 @@ return [
         'label' => 'Document expiry reminders (days before)',
         'description' => 'HR is told this many days before an employee document expires, once for each number. Empty = no reminders.',
     ],
+    'initial_password_days' => [
+        'label' => 'First password works for (days)',
+        'description' => 'Days a first password given to an employee works. After that HR gives a new one; the employee must choose their own at first sign-in anyway.',
+    ],
     'categories' => [
+        'logins' => 'Employee logins',
         'structure' => 'Reporting lines',
         'employment' => 'Employment',
         'numbering' => 'Numbering',

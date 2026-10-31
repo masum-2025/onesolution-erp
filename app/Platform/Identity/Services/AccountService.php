@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The person's own account: name, language, marketing consent, password,
@@ -68,9 +69,13 @@ class AccountService
     public function changePassword(User $user, string $current, string $password, string $keepSessionId): void
     {
         $this->assertPassword($user, $current);
+        // A first password someone else chose is replaced by one of their own, not kept.
+        if ($user->must_change_password && $password === $current) {
+            throw ValidationException::withMessages(['password' => __('identity.errors.same_as_first_password')]);
+        }
 
         DB::transaction(function () use ($user, $password, $keepSessionId) {
-            $user->forceFill(['password' => $password, 'password_changed_at' => now()])->save();
+            $user->forceFill(['password' => $password, 'password_changed_at' => now(), ...InitialPasswords::CLEARED])->save();
             // Everywhere else signs out; this browser stays in.
             $this->sessions->endAll($user, $keepSessionId);
             $user->tokens()->delete();

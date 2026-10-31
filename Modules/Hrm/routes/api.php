@@ -6,6 +6,7 @@ use Modules\Hrm\Http\Controllers\DepartmentController;
 use Modules\Hrm\Http\Controllers\EmployeeController;
 use Modules\Hrm\Http\Controllers\EmployeeDocumentController;
 use Modules\Hrm\Http\Controllers\EmployeeImportController;
+use Modules\Hrm\Http\Controllers\EmployeeLoginController;
 use Modules\Hrm\Http\Controllers\EmploymentStepController;
 use Modules\Hrm\Http\Controllers\OrgChartController;
 use Modules\Hrm\Http\Controllers\PositionController;
@@ -24,6 +25,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
         Route::get('departments', [DepartmentController::class, 'index']);
         Route::get('org-chart', OrgChartController::class);
         Route::get('custom-fields', [CustomFieldController::class, 'index']);
+        Route::get('login-settings', [EmployeeLoginController::class, 'settings']);
         Route::get('imports/columns', [EmployeeImportController::class, 'columns']);
         Route::get('imports', [EmployeeImportController::class, 'index']);
         Route::get('imports/{import}', [EmployeeImportController::class, 'show']);
@@ -48,6 +50,11 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm'])
             // A login in one step: an invitation by email, roles, linked (mail: the platform's invite limits).
             Route::post('employees/{employee}/invite-login', [EmployeeController::class, 'inviteLogin'])->middleware(['throttle:member-invites', 'two_factor.recent']);
             Route::post('employees/{employee}/resend-login', [EmployeeController::class, 'resendLogin'])->middleware('throttle:member-invites');
+            // Logins with the company's first password (no mail): one, many, or the first password again.
+            Route::put('login-settings', [EmployeeLoginController::class, 'saveSettings'])->middleware('two_factor.recent');
+            Route::post('employees/first-logins', [EmployeeLoginController::class, 'giveMany'])->middleware('two_factor.recent');
+            Route::post('employees/{employee}/first-login', [EmployeeLoginController::class, 'give'])->middleware('two_factor.recent');
+            Route::post('employees/{employee}/first-login/reset', [EmployeeLoginController::class, 'reset'])->middleware('two_factor.recent');
             // Unknown steps are refused by the controller, after the organization checks.
             Route::post('employees/{employee}/steps/{step}', EmploymentStepController::class);
             Route::post('employees/{employee}/documents', [EmployeeDocumentController::class, 'store']);

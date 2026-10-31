@@ -4,6 +4,7 @@ namespace App\Platform\Invitations\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Identity\Services\InitialPasswords;
 use App\Platform\Invitations\Models\Invitation;
 use App\Platform\Notifications\Services\Notifier;
 use App\Platform\Tenancy\Actions\AddMember;
@@ -109,7 +110,7 @@ class InvitationService
             $invitation = Invitation::query()->whereKey($invitation->getKey())->lockForUpdate()->firstOrFail();
             $user = $invitation->user;
 
-            $user->forceFill(['password' => $password, 'email_verified_at' => $user->email_verified_at ?? now()])->save();
+            $user->forceFill(['password' => $password, 'email_verified_at' => $user->email_verified_at ?? now(), ...InitialPasswords::CLEARED])->save();
             $invitation->forceFill(['accepted_at' => now()])->save();
             // Other open links for the same person stop working too.
             Invitation::query()->where('user_id', $user->getKey())->whereNull('accepted_at')->update(['accepted_at' => now(), 'updated_at' => now()]);

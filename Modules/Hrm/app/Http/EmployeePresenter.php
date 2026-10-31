@@ -3,6 +3,7 @@
 namespace Modules\Hrm\Http;
 
 use App\Models\User;
+use App\Platform\Identity\Services\InitialPasswords;
 use App\Platform\Invitations\Services\InvitationService;
 use App\Platform\Tenancy\Models\Organization;
 use Modules\Hrm\Models\CustomField;
@@ -12,6 +13,7 @@ use Modules\Hrm\Models\EmployeeImport;
 use Modules\Hrm\Models\EmploymentEvent;
 use Modules\Hrm\Models\ImportRow;
 use Modules\Hrm\Models\Position;
+use Modules\Hrm\Services\EmployeeLogins;
 use Modules\Hrm\Services\Units;
 
 /**
@@ -25,6 +27,9 @@ class EmployeePresenter
 
     /** @var array<string, Organization|null> */
     private array $units = [];
+
+    /** @var array<string, string> by employee id */
+    private array $loginStates = [];
 
     /**
      * @return array<string, mixed>
@@ -44,7 +49,19 @@ class EmployeePresenter
             'status' => $employee->status->value,
             'status_label' => __('hrm::hrm.statuses.'.$employee->status->value),
             'joined_on' => $employee->joined_on->toDateString(),
+            // none | pending (first password not replaced yet) | expired | active
+            'login_state' => $this->loginStates[$employee->getKey()] ??= InitialPasswords::state($employee->user_id === null ? null : User::query()->find($employee->user_id)),
         ];
+    }
+
+    /**
+     * Login states of a page of employees in one query (the list).
+     *
+     * @param  iterable<Employee>  $employees
+     */
+    public function primeLoginStates(iterable $employees): void
+    {
+        $this->loginStates = [...$this->loginStates, ...app(EmployeeLogins::class)->statesOf($employees)];
     }
 
     /**
@@ -182,6 +199,13 @@ class EmployeePresenter
             'invalid_rows' => $import->invalid_rows,
             'imported_rows' => $import->imported_rows,
             'failed_rows' => $import->failed_rows,
+            // Logins with the company's first password for every hired row.
+            'create_logins' => (bool) $import->create_logins,
+            'logins' => $import->create_logins ? [
+                'created' => $import->rows()->where('login', 'created')->count(),
+                'linked' => $import->rows()->where('login', 'linked')->count(),
+                'failed' => $import->rows()->where('login', 'failed')->count(),
+            ] : null,
             'created_at' => $import->created_at?->toIso8601String(),
             'finished_at' => $import->finished_at?->toIso8601String(),
         ];
@@ -193,6 +217,7 @@ class EmployeePresenter
                     'row_no' => $row->row_no,
                     'name' => $row->data['full_name'] ?? null,
                     'status' => $row->status->value,
+                    'login' => $row->login,
                     'errors' => $row->errors,
                 ])->values();
         }

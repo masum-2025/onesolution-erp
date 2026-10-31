@@ -184,6 +184,18 @@ return [
             'category' => 'documents',
             'sort_order' => 75,
         ],
+        [
+            'key' => 'hrm.initial_password_days',
+            'type' => 'integer',
+            // Days a first password given to an employee works before they must ask HR again.
+            'schema' => ['minimum' => 1, 'maximum' => 90],
+            'default' => 7,
+            'label' => 'hrm::rules.initial_password_days.label',
+            'description' => 'hrm::rules.initial_password_days.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'logins',
+            'sort_order' => 120,
+        ],
     ],
     'menu' => [
         [
@@ -229,6 +241,8 @@ return [
         ['key' => 'departments', 'label' => 'hrm::module.menu_departments', 'route' => '/hrm/departments', 'permission' => 'hrm.view'],
         ['key' => 'positions', 'label' => 'hrm::module.menu_positions', 'route' => '/hrm/positions', 'permission' => 'hrm.view'],
         ['key' => 'fields', 'label' => 'hrm::module.menu_fields', 'route' => '/hrm/fields', 'permission' => 'hrm.configure'],
+        // The first password and roles employees' logins are given with.
+        ['key' => 'logins', 'label' => 'hrm::module.menu_logins', 'route' => '/hrm/logins', 'permission' => 'hrm.manage'],
     ]],
     // The header "New" menu.
     'quick_actions' => [

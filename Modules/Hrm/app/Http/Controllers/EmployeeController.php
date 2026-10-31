@@ -56,6 +56,8 @@ class EmployeeController extends Controller
             'status' => ['nullable', 'string', 'in:'.implode(',', array_column(EmployeeStatus::cases(), 'value'))],
             'position_id' => ['nullable', 'string', 'size:26'],
             'unit_id' => ['nullable', 'string', 'size:26'],
+            // "without": employees who have no login yet (to give them one).
+            'login' => ['nullable', 'string', 'in:without'],
             'per_page' => ['nullable', 'integer'],
             'page' => ['nullable', 'integer'],
         ]);
@@ -67,12 +69,15 @@ class EmployeeController extends Controller
             ->whereIn('organization_id', $units)
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
             ->when($request->filled('position_id'), fn ($query) => $query->where('position_id', $request->string('position_id')->toString()))
+            ->when($request->input('login') === 'without', fn ($query) => $query->whereNull('user_id'))
             ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner
                 ->where('full_name', 'like', '%'.$search.'%')
                 ->orWhere('full_name_local', 'like', '%'.$search.'%')
                 ->orWhere('employee_code', 'like', '%'.$search.'%')))
             ->orderBy('full_name')
             ->paginate(PerPage::from($request));
+
+        $this->presenter->primeLoginStates($page->items());
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Employee $employee) => $this->presenter->listItem($employee))->values(),

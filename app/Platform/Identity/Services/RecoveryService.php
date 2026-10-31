@@ -79,6 +79,7 @@ class RecoveryService
                 'password' => $password,
                 'password_changed_at' => now(),
                 'recovered_at' => now(),
+                ...InitialPasswords::CLEARED,
                 // The code proved the address.
                 ...($challenge->channel === 'mail' && $user->email_verified_at === null ? ['email_verified_at' => now()] : []),
             ])->save();

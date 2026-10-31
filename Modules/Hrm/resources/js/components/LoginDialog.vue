@@ -59,6 +59,32 @@ async function sendInvite() {
     }
 }
 
+// A login with the company's first password (no mail; they sign in with their email or phone).
+const firstSettings = ref(null);
+const firstError = ref(null);
+const giving = ref(false);
+async function loadFirstSettings() {
+    try {
+        firstSettings.value = (await props.hrm.loginSettings()).data;
+    } catch {
+        // Without the right to see them, the option is not offered (the server checks anyway).
+        firstSettings.value = null;
+    }
+}
+async function giveFirst() {
+    firstError.value = null;
+    giving.value = true;
+    try {
+        const { data, meta } = await props.hrm.giveFirstLogin(props.employee.id, invite.value.role_id ? [invite.value.role_id] : null);
+        toast.success(meta?.login === 'linked' ? t('hrm.first_login.linked', { name: props.employee.full_name }) : t('hrm.first_login.given', { name: props.employee.full_name }));
+        emit('linked', data);
+    } catch (error) {
+        firstError.value = error.errors?.login?.[0] ?? error.message;
+    } finally {
+        giving.value = false;
+    }
+}
+
 async function find() {
     loading.value = true;
     loadError.value = null;
@@ -76,8 +102,10 @@ watch(() => props.open, (open) => {
     search.value = '';
     invite.value = { email: props.employee.email ?? '', role_id: '' };
     inviteError.value = null;
+    firstError.value = null;
     find();
     if (!roles.value.length) loadRoles();
+    if (!props.employee.login) loadFirstSettings();
 });
 watch(search, () => {
     clearTimeout(timer);
@@ -101,6 +129,26 @@ async function link(user) {
 
 <template>
     <AppDialog :open="open" :title="t('hrm.login.title')" :description="t('hrm.login.text', { name: employee.full_name })" :icon="KeyRound" @close="emit('close')">
+        <!-- New: the company's first password; they choose their own at first sign-in. -->
+        <div v-if="!employee.login && firstSettings" class="mb-4 space-y-3 rounded-xl border border-line p-3.5">
+            <p class="flex items-center gap-2 text-[13.5px] font-semibold text-fg"><KeyRound class="size-4 text-brand-text" aria-hidden="true" />{{ t('hrm.first_login.title') }}</p>
+            <p class="text-[12.5px] text-fg-2">{{ t('hrm.first_login.text', { contact: employee.email || employee.phone || '–', days: firstSettings.days }) }}</p>
+            <p v-if="!firstSettings.password_set" class="text-[12.5px] text-warn">
+                {{ t('hrm.first_login.not_set') }}
+                <RouterLink :to="{ name: 'hrm-logins' }" class="font-medium text-brand-text hover:underline">{{ t('hrm.first_login.open_settings') }}</RouterLink>
+            </p>
+            <template v-else>
+                <label v-if="roles.length" class="block max-w-xs">
+                    <span class="mb-1 block text-[12.5px] font-medium text-fg">{{ t('hrm.login.invite_role') }}</span>
+                    <select v-model="invite.role_id" class="field-input">
+                        <option value="">{{ t('hrm.first_login.default_roles') }}</option>
+                        <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+                    </select>
+                </label>
+                <p v-if="firstError" class="text-[12.5px] text-bad" role="alert">{{ firstError }}</p>
+                <AppButton variant="primary" :icon="KeyRound" :loading="giving" @click="giveFirst">{{ t('hrm.first_login.give') }}</AppButton>
+            </template>
+        </div>
         <!-- New: an invitation to their email, no sign-up for them. -->
         <form v-if="!employee.login" class="mb-5 space-y-3 rounded-xl border border-brand/20 bg-brand-soft/40 p-3.5" @submit.prevent="sendInvite">
             <p class="flex items-center gap-2 text-[13.5px] font-semibold text-fg"><Send class="size-4 text-brand-text" aria-hidden="true" />{{ t('hrm.login.invite_title') }}</p>

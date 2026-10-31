@@ -38,6 +38,13 @@ class AttemptLogin
             ]);
         }
 
+        // A first password someone else chose works only for a while; their own works always.
+        if ($user->must_change_password && $user->initial_password_expires_at !== null && ! $user->initial_password_expires_at->isFuture()) {
+            $this->audit->record(action: 'auth.login_failed', actor: $user, new: ['reason' => 'initial_password_expired']);
+
+            throw ValidationException::withMessages([$field => __('tenancy.errors.initial_password_expired')]);
+        }
+
         // With two-step sign-in the login is recorded once the second step is done (Phase 8-1).
         $this->audit->record(action: $user->hasTwoFactor() ? 'auth.password_accepted' : 'auth.login', actor: $user);
 

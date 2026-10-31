@@ -78,7 +78,7 @@ class ContextResolver
 
         $this->enter($user, $membership, $organization);
         if ($checkSignIn) {
-            $this->signIn->check($user, $this->context);
+            $this->checkSignIn($user);
         }
 
         if ($partner->isSuspended()) {
@@ -148,7 +148,7 @@ class ContextResolver
         $membership->setRelation('user', $user);
 
         $this->enter($user, $membership, $grant->organization, supportView: true);
-        $this->signIn->check($user, $this->context);
+        $this->checkSignIn($user);
         $this->context->restrict(CurrentContext::MODE_READ_ONLY, 'support', $grant->expires_at, $grant);
 
         return $this->context;
@@ -196,7 +196,7 @@ class ContextResolver
 
         $this->enter($user, $membership, $unit, supportView: true);
         if ($checkSignIn) {
-            $this->signIn->check($user, $this->context);
+            $this->checkSignIn($user);
         }
         $until = app(ConnectionGrants::class)->of($connection)->filter(fn ($grant) => $grant->isActive() && $grant->expires_at !== null)->min('expires_at');
         $this->context->actThroughConnection($connection, array_values(array_unique(array_merge(...array_values($granted)))), $until);
@@ -273,9 +273,23 @@ class ContextResolver
 
         $this->context->enterPartner($user, $partnerUser);
         if ($checkSignIn) {
-            $this->signIn->check($user, $this->context);
+            $this->checkSignIn($user);
         }
 
         return $this->context;
+    }
+
+    /**
+     * A first password someone else chose must be replaced before working
+     * anywhere; then what the context requires (two-step sign-in). Their own
+     * account pages need no context, so they can always do it.
+     */
+    private function checkSignIn(User $user): void
+    {
+        if ($user->must_change_password) {
+            throw OrganizationAccessDenied::passwordChangeRequired();
+        }
+
+        $this->signIn->check($user, $this->context);
     }
 }

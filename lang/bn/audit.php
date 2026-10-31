@@ -49,6 +49,8 @@ return [
         'identity_signed_up' => 'অ্যাকাউন্ট খোলা হয়েছে (নিজে সাইন আপ)',
         'identity_recovered' => 'কোড দিয়ে পাসওয়ার্ড রিসেট',
         'identity_password_changed' => 'পাসওয়ার্ড বদল',
+        'identity_initial_login_given' => 'প্রাথমিক পাসওয়ার্ডে লগইন দেওয়া',
+        'identity_initial_password_reset' => 'প্রাথমিক পাসওয়ার্ড আবার দেওয়া',
         'identity_password_check_failed' => 'ভুল বর্তমান পাসওয়ার্ড দেওয়া হয়েছে',
         'identity_email_changed' => 'ইমেইল বদল',
         'identity_phone_changed' => 'ফোন বদল',

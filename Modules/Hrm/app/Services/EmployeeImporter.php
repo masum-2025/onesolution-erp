@@ -3,7 +3,10 @@
 namespace Modules\Hrm\Services;
 
 use App\Models\User;
+use App\Platform\Access\Models\Role;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Localization\LanguageRegistry;
+use App\Platform\Tenancy\Exceptions\TenancyException;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Databases\TenantDatabases;
@@ -14,6 +17,7 @@ use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Modules\Hrm\Enums\EmployeeStatus;
@@ -44,7 +48,12 @@ class EmployeeImporter
         'position_code', 'unit_code', 'department', 'manager_code',
         'address_line1', 'address_city', 'address_district',
         'emergency_name', 'emergency_relation', 'emergency_phone',
+        // The role of the person's login when the import gives logins (empty: the company's default roles).
+        'role',
     ];
+
+    /** Where a row keeps its login's role until it is hired (never a hire field). */
+    private const LOGIN_ROLE = 'login_role_id';
 
     public const REQUIRED_COLUMNS = ['full_name', 'employment_type', 'joined_on'];
 
@@ -73,6 +82,7 @@ class EmployeeImporter
         private RuleContextFactory $contexts,
         private TenantDatabases $databases,
         private AuditLogger $audit,
+        private EmployeeLogins $logins,
     ) {}
 
     /**
@@ -158,11 +168,19 @@ class EmployeeImporter
 
     /**
      * Queues the import. With invalid rows it runs only when told to skip them.
+     * With $createLogins every hired row also gets a login with the company's
+     * first password (which must be set, and the starter may manage members).
      */
-    public function start(EmployeeImport $import, bool $skipInvalid, User $actor): EmployeeImport
+    public function start(EmployeeImport $import, bool $skipInvalid, User $actor, bool $createLogins = false): EmployeeImport
     {
         if ($import->status !== ImportStatus::Checked) {
             throw HrmException::importNotReady(__('hrm::hrm.import_statuses.'.$import->status->value));
+        }
+        if ($createLogins) {
+            Gate::forUser($actor)->authorize('manageMembers', Organization::query()->findOrFail($import->organization_id));
+            if (! $this->logins->ready(Organization::query()->findOrFail($import->company_id))) {
+                throw ValidationException::withMessages(['create_logins' => __('hrm::hrm.validation.no_first_password')]);
+            }
         }
         if ($import->invalid_rows > 0 && ! $skipInvalid) {
             throw HrmException::importHasInvalid();
@@ -179,8 +197,8 @@ class EmployeeImporter
             throw HrmException::importBusy();
         }
 
-        $import->forceFill(['status' => ImportStatus::Queued])->save();
-        $this->audit->record('hrm.import_started', $import, new: ['rows' => $import->total_rows - $import->invalid_rows, 'skipped' => $import->invalid_rows], actor: $actor, organizationId: $import->organization_id);
+        $import->forceFill(['status' => ImportStatus::Queued, 'create_logins' => $createLogins])->save();
+        $this->audit->record('hrm.import_started', $import, new: ['rows' => $import->total_rows - $import->invalid_rows, 'skipped' => $import->invalid_rows, 'create_logins' => $createLogins], actor: $actor, organizationId: $import->organization_id);
 
         ImportEmployees::dispatch($import->getKey(), $import->organization_id, $import->company_id, $actor->getKey());
 
@@ -215,12 +233,15 @@ class EmployeeImporter
         $company = Organization::query()->findOrFail($import->company_id);
         $connection = $this->databases->forOrganization($company);
 
-        $import->rows()->where('status', ImportRowStatus::Valid->value)->orderBy('row_no')->each(function (ImportRow $row) use ($actor, $connection) {
+        $import->rows()->where('status', ImportRowStatus::Valid->value)->orderBy('row_no')->each(function (ImportRow $row) use ($import, $actor, $connection) {
             $data = (array) $row->data;
+            $roleId = $data[self::LOGIN_ROLE] ?? null;
+            unset($data[self::LOGIN_ROLE]);
             $unit = Organization::query()->find($data['organization_id'] ?? null);
+            $employee = null;
 
             try {
-                DB::connection($connection)->transaction(function () use ($row, $data, $unit, $actor) {
+                DB::connection($connection)->transaction(function () use ($row, $data, $unit, $actor, &$employee) {
                     $employee = $this->lifecycle->hire($unit ?? throw HrmException::notCompanyUnit(), $data, $actor);
                     $row->forceFill(['status' => ImportRowStatus::Imported, 'employee_id' => $employee->getKey(), 'data' => null])->save();
                 });
@@ -228,6 +249,11 @@ class EmployeeImporter
                 $row->forceFill(['status' => ImportRowStatus::Failed, 'errors' => $this->columnErrors(array_map(fn (array $messages) => (string) $messages[0], $exception->errors()))])->save();
             } catch (HrmException $exception) {
                 $row->forceFill(['status' => ImportRowStatus::Failed, 'errors' => ['row' => $exception->getMessage()]])->save();
+            }
+
+            // The login after the hire: a problem with it never undoes the hire.
+            if ($employee !== null && $import->create_logins) {
+                $this->giveLogin($row, $employee, $unit, $roleId, $actor);
             }
         }, 100);
 
@@ -237,6 +263,25 @@ class EmployeeImporter
         $this->audit->record('hrm.import_finished', $import, new: [
             'imported_rows' => $import->imported_rows, 'failed_rows' => $import->failed_rows, 'skipped_rows' => $import->invalid_rows,
         ], actor: $actor, organizationId: $import->organization_id);
+    }
+
+    /**
+     * A hired row's login with the first password, if the starter may still
+     * manage members at its unit. What happened is kept on the row.
+     */
+    private function giveLogin(ImportRow $row, Employee $employee, ?Organization $unit, ?string $roleId, User $actor): void
+    {
+        try {
+            if ($unit === null || ! Gate::forUser($actor)->allows('manageMembers', $unit)) {
+                throw ValidationException::withMessages(['login' => __('hrm::hrm.validation.login_no_right')]);
+            }
+            $given = $this->logins->give($employee->fresh(), $actor, $roleId === null ? null : [$roleId]);
+            $row->forceFill(['login' => $given['login']])->save();
+        } catch (ValidationException $exception) {
+            $row->forceFill(['login' => 'failed', 'errors' => ['login' => (string) collect($exception->errors())->flatten()->first()]])->save();
+        } catch (TenancyException $exception) {
+            $row->forceFill(['login' => 'failed', 'errors' => ['login' => $exception->userMessage()]])->save();
+        }
     }
 
     /**
@@ -373,7 +418,7 @@ class EmployeeImporter
             'organization_id' => $unit->getKey(),
             'full_name' => $get('full_name'),
             'full_name_local' => $get('full_name_local'),
-            'employment_type' => $get('employment_type'),
+            'employment_type' => $this->employmentType($get('employment_type')),
             'joined_on' => $this->date($get('joined_on'), 'joined_on', $errors),
             'phone' => $get('phone'),
             'email' => $get('email'),
@@ -429,6 +474,16 @@ class EmployeeImporter
             }
         }
 
+        // The login's role by its name (in any language) or key, among the roles usable at the row's unit.
+        if (($name = $get('role')) !== null) {
+            $roleId = $this->roleIn($lookups['roles'], $unit, $name);
+            if ($roleId === null) {
+                $errors['role'] = __('hrm::hrm.validation.import_role');
+            } else {
+                $data[self::LOGIN_ROLE] = $roleId;
+            }
+        }
+
         return [$data, $errors];
     }
 
@@ -468,7 +523,24 @@ class EmployeeImporter
             ->mapWithKeys(fn ($id, $code) => [mb_strtolower((string) $code) => (string) $id])
             ->all();
 
-        return ['units' => $units, 'departments' => $departments, 'positions' => $positions, 'managers' => $managers];
+        // Roles of the import's unit, its levels above and below (a row's unit may be below it).
+        $roles = Role::query()->whereIn('organization_id', $scope)->get();
+
+        return ['units' => $units, 'departments' => $departments, 'positions' => $positions, 'managers' => $managers, 'roles' => $roles];
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Role>  $roles
+     */
+    private function roleIn($roles, Organization $unit, string $name): ?string
+    {
+        $wanted = mb_strtolower(trim($name));
+        $usable = [$unit->getKey(), ...$unit->ancestorIds()];
+        $found = $roles->filter(fn (Role $role) => in_array($role->organization_id, $usable, true)
+            && ($wanted === mb_strtolower((string) $role->key) || in_array($wanted, array_map(fn ($text) => mb_strtolower(trim((string) $text)), array_filter($role->texts('name'))), true)));
+
+        // The same name twice is no name at all.
+        return $found->count() === 1 ? $found->first()->getKey() : null;
     }
 
     /**
@@ -488,6 +560,33 @@ class EmployeeImporter
         }
 
         return $candidates[0] ?? null;
+    }
+
+    /**
+     * The kind of employment as its key: "Permanent", "PART TIME", "part-time"
+     * or a label in any language ("স্থায়ী") all name the same kind. Anything
+     * else is kept as written, so the check says what is wrong.
+     */
+    private function employmentType(?string $text): ?string
+    {
+        if ($text === null) {
+            return null;
+        }
+
+        $normal = fn (string $value) => preg_replace('/[\s\-]+/u', '_', mb_strtolower(trim($value)));
+        $wanted = $normal($text);
+        foreach (array_keys((array) __('hrm::rules.employment_types.options', [], 'en')) as $key) {
+            if ($wanted === $key) {
+                return $key;
+            }
+            foreach (LanguageRegistry::codes() as $locale) {
+                if ($wanted === $normal(__("hrm::rules.employment_types.options.{$key}", [], $locale))) {
+                    return $key;
+                }
+            }
+        }
+
+        return $text;
     }
 
     /**

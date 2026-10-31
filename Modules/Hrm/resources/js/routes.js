@@ -12,5 +12,6 @@ export default [
     { path: 'hrm/org-chart', name: 'hrm-org-chart', component: () => import('./pages/OrgChartPage.vue'), meta },
     { path: 'hrm/fields', name: 'hrm-fields', component: () => import('./pages/FieldsPage.vue'), meta },
     { path: 'hrm/import', name: 'hrm-import', component: () => import('./pages/ImportPage.vue'), meta },
+    { path: 'hrm/logins', name: 'hrm-logins', component: () => import('./pages/LoginSettingsPage.vue'), meta },
     { path: 'hrm/employees/:id', name: 'hrm-employee', component: () => import('./pages/EmployeePage.vue'), meta },
 ];

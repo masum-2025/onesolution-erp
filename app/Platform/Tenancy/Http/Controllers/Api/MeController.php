@@ -58,6 +58,8 @@ class MeController extends Controller
                 'locale' => $user->locale,
                 'timezone' => $user->timezone,
                 'onboarded' => $user->onboarded_at !== null,
+                // Signed in with a first password someone else chose: the app asks for their own first.
+                'must_change_password' => (bool) $user->must_change_password,
                 // An account deletion is waiting (Phase 5C-3): the app shows it everywhere.
                 'deletion_due_at' => $user->deletion_due_at?->toIso8601String(),
                 // Two-step sign-in (Phase 8-1): whether they have it, and until when the context allows them without it.
