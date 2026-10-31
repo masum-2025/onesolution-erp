@@ -21,6 +21,11 @@ return [
             'body' => '{{ other }} {{ organization }}-এর জন্য {{ number }} কোটেশন পাঠিয়েছে। দেখে গ্রহণ বা প্রত্যাখ্যান করুন; তাদের আপনার উত্তর জানানো হবে।',
             'action' => 'নবায়নের তালিকা খুলুন',
         ],
+        'compliance_invoice_received' => [
+            'subject' => '{{ other }}-এর ইনভয়েস {{ number }}',
+            'body' => '{{ other }} {{ organization }}-এর জন্য {{ number }} ইনভয়েস পাঠিয়েছে। দেখে নিন; হিসাব রাখলে এক চাপে খসড়া bill হিসেবে তুলতে পারবেন।',
+            'action' => 'নবায়নের তালিকা খুলুন',
+        ],
         'compliance_renewal_answered' => [
             'subject' => '{{ other }} আপনার নবায়নের অনুরোধের উত্তর দিয়েছে: {{ status }}',
             'body' => '{{ organization }}-এর {{ service }} নবায়ন: {{ status }}। নির্ধারিত দিন: {{ planned }}।',
@@ -39,6 +44,10 @@ return [
         'compliance_quote_received' => [
             'name' => 'প্রোভাইডারের কোটেশন',
             'description' => 'সংযুক্ত প্রোভাইডার কোটেশন পাঠালে, যাঁরা কোটেশনের উত্তর দেন তাঁদের কাছে।',
+        ],
+        'compliance_invoice_received' => [
+            'name' => 'প্রোভাইডারের ইনভয়েস',
+            'description' => 'সংযুক্ত প্রোভাইডার নতুন ইনভয়েস পাঠালে, যাঁরা প্রোভাইডারের ইনভয়েস দেখেন তাঁদের কাছে।',
         ],
         'compliance_renewal_answered' => [
             'name' => 'নবায়নের অনুরোধের উত্তর',

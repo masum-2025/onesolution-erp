@@ -1,6 +1,7 @@
 <?php
 
 use Modules\Compliance\Connections\AuditResultHandler;
+use Modules\Compliance\Connections\InvoiceHandler;
 use Modules\Compliance\Connections\QuotationHandler;
 use Modules\Compliance\Connections\RequestReplyHandler;
 use Modules\Compliance\Dashboard\ComplianceAttention;
@@ -43,7 +44,11 @@ return [
     'plans' => ['business', 'enterprise'],
     // request / confirm: renewals with the providers (CMP-2).
     // quotes: accept or decline a connected provider's quotations (a money decision).
-    'permissions' => ['compliance.view', 'compliance.manage', 'compliance.set_expiry', 'compliance.request', 'compliance.confirm', 'compliance.quotes'],
+    'permissions' => ['compliance.view', 'compliance.manage', 'compliance.set_expiry', 'compliance.request', 'compliance.confirm', 'compliance.quotes', 'compliance.bills'],
+    // Providers' invoices taken into the books as bills (when Accounting is used).
+    'ledger_accounts' => [
+        'compliance.audit_fees' => ['label' => 'compliance::compliance.posting_keys.audit_fees', 'type' => 'expense'],
+    ],
     'rules' => [
         // Days before the expiry day when the people who manage compliance are told (and once more when expired).
         $rule('reminder_days', 'json', [60, 30, 15, 7], ['schema' => ['type' => 'array', 'maxItems' => 10, 'uniqueItems' => true, 'items' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365]], 'sort_order' => 10]),
@@ -78,7 +83,7 @@ return [
         $rule('auto_apply_results', 'boolean', false, ['sort_order' => 80]),
     ],
     // What connected providers send back (CMP-2): kinds named after the provider's module.
-    'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class, QuotationHandler::class],
+    'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class, QuotationHandler::class, InvoiceHandler::class],
     'menu' => [
         [
             'key' => 'compliance',
@@ -120,6 +125,12 @@ return [
             'path' => '/compliance/renewals',
         ],
         'compliance.quote_received' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'other', 'number', 'link'],
+            'audience' => 'client',
+            'path' => '/compliance/renewals',
+        ],
+        'compliance.invoice_received' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'other', 'number', 'link'],
             'audience' => 'client',

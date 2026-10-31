@@ -21,6 +21,11 @@ Open the register to plan the renewals.',
             'body' => '{{ other }} sent quotation {{ number }} for {{ organization }}. Check it and accept or decline it; they are told your answer.',
             'action' => 'Open renewals',
         ],
+        'compliance_invoice_received' => [
+            'subject' => 'Invoice {{ number }} from {{ other }}',
+            'body' => '{{ other }} sent invoice {{ number }} for {{ organization }}. Check it; when you keep books here you can take it in as a draft bill with one click.',
+            'action' => 'Open renewals',
+        ],
         'compliance_renewal_answered' => [
             'subject' => '{{ other }} answered your renewal request: {{ status }}',
             'body' => 'Renewal of {{ service }} at {{ organization }}: {{ status }}. Planned day: {{ planned }}.',
@@ -39,6 +44,10 @@ Open the register to plan the renewals.',
         'compliance_quote_received' => [
             'name' => 'Quotation from a provider',
             'description' => 'To the people who answer quotations, when a connected provider sends one.',
+        ],
+        'compliance_invoice_received' => [
+            'name' => 'Invoice from a provider',
+            'description' => 'To the people who see providers\' invoices, when a connected provider sends a new one.',
         ],
         'compliance_renewal_answered' => [
             'name' => 'Answer to a renewal request',

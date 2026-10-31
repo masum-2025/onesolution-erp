@@ -9,4 +9,5 @@ return [
     'request' => 'Send and cancel renewal requests to providers',
     'confirm' => 'Accept or reject audit results providers send into the register',
     'quotes' => 'Accept or decline quotations from connected providers',
+    'bills' => 'See connected providers\' invoices and take them into the books as bills',
 ];

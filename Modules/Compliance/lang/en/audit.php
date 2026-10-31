@@ -24,4 +24,7 @@ return [
     'quote_received' => 'Quotation received from the provider',
     'quote_accepted' => 'Provider\'s quotation accepted',
     'quote_declined' => 'Provider\'s quotation declined',
+    'invoice_received' => 'Invoice received from the provider',
+    'invoice_updated' => 'Provider\'s invoice updated (paid or voided)',
+    'invoice_billed' => 'Provider\'s invoice taken into the books',
 ];

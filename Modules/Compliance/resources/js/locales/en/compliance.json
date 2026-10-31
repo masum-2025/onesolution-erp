@@ -250,5 +250,23 @@
         "status_accepted": "Accepted",
         "status_declined": "Declined",
         "status_replaced": "Replaced by a newer one"
+    },
+    "invoices": {
+        "section": "Invoices from providers",
+        "title": "Invoice {number}",
+        "due": "due {date}",
+        "balance": "Still owed",
+        "bill": "Take into the books",
+        "bill_title": "Take invoice {number} into the books?",
+        "bill_text": "A draft bill from {from} for {total} is made in Accounting. Add your input VAT code there, then submit it.",
+        "bill_done": "Draft bill made in Accounting.",
+        "billed_on": "In the books since {date}",
+        "open_bill": "Open the bill",
+        "no_books": "This company does not keep books here, so the invoice stays here only.",
+        "void_after_bill": "The provider voided this invoice after you took it into the books. Check the bill in Accounting.",
+        "status_posted": "Owed",
+        "status_partly_paid": "Partly paid",
+        "status_paid": "Paid",
+        "status_void": "Voided by the provider"
     }
 }

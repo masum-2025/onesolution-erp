@@ -1398,6 +1398,17 @@ manifest; nothing outside it changed except shared counts in tests).
   `compliance.quotes` are told (`compliance.quote_received`) and accept it or decline it with a
   reason (`POST …/quotes/{id}/accept|decline`, `base_version`); the answer goes back
   (`compliance.quote_reply`). Shown first on `/compliance/renewals` and in the line's drawer.
+- **Invoices** (`cmp_invoices`): `projects.invoice` from a connected provider, one copy per
+  invoice as it last came (status and what is still owed follow the provider's books; an older
+  message arriving late changes nothing, `as_of`). People holding the new permission
+  `compliance.bills` are told once (`compliance.invoice_received`). When the factory's company
+  keeps books, "Take into the books" (`POST …/invoices/{id}/bill`, `compliance.bills` and
+  `accounting.buy`, `base_version`) makes one draft bill through Accounting's public `Bills`
+  service: the provider as a vendor found by the connection (`acc_parties.connection_id`), the
+  lines on the new expense posting key `compliance.audit_fees` (general chart 5900; existing
+  books need `accounting:map-postings`), the factory as cost centre; the person adds the input
+  VAT code and submits it. A void invoice is not taken; one voided after it was taken shows a
+  warning. Without Accounting the invoice stays in Compliance only. Nothing goes back.
 - **Rules:** `compliance.request_days_before` (60: the bell suggests a request),
   `compliance.auto_request` (off: the daily run sends to connected providers by itself, once),
   `compliance.auto_apply_results` (off: results enter the register without a person).
@@ -1487,8 +1498,14 @@ is needed; CRM is used for clients when it is on.
   the sender's name (accept: CRM's own accept, with Accounting's draft invoice when books are
   kept; decline: with the reason), shown on the quote (`client_answer`, `client_reason`) and told
   to the sender and the manager (`projects.quote_answered`).
-- **Future:** an invoice could go the same way, into the client's Accounting as a bill. A new
-  sector or country needs no code: templates are data, numbers are rules.
+- **Invoice to a connected client:** a posted invoice of a connected project goes to the client
+  with "Send the invoice" (`POST …/projects/{id}/invoices/{invoice}/send`, `projects.bill` and
+  `accounting.sell`; a draft does not go). `projects.invoice` carries lines, VAT, totals, due day
+  and what is still owed (`Customers::invoiceFull`). Sending again after a payment or a void
+  brings the client's copy up to date (the same state twice is one message; a void one only
+  when it was sent before). An invoice made from an accepted quotation gets its link then.
+- **Future:** the client's payment could come back over the connection as the provider's
+  receipt. A new sector or country needs no code: templates are data, numbers are rules.
 
 ## A client's own payment gateway accounts (Phase 6, first part)
 

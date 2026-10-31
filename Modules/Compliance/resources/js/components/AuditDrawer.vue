@@ -14,6 +14,7 @@ import { t } from '@/lib/i18n';
 import { renewalTone, stateTone } from '../lib';
 import DatesDialog from './DatesDialog.vue';
 import RenewalDialog from './RenewalDialog.vue';
+import InvoiceCard from './InvoiceCard.vue';
 import QuoteCard from './QuoteCard.vue';
 import ResultCard from './ResultCard.vue';
 
@@ -161,6 +162,7 @@ const changeText = (change) => Object.entries(change.new ?? {})
                 </div>
                 <p v-else class="text-[12.5px] text-muted">{{ t(line.provider ? 'compliance.renewal.none_yet' : 'compliance.renewal.needs_provider') }}</p>
                 <QuoteCard v-for="quote in line.quotes ?? []" :key="quote.id" :quote="quote" :calls="calls" @decided="load(); emit('changed')" />
+                <InvoiceCard v-for="invoice in line.invoices ?? []" :key="invoice.id" :invoice="invoice" :calls="calls" @billed="load(); emit('changed')" />
                 <ResultCard v-for="result in line.results" :key="result.id" :result="result" :calls="calls" @decided="load(); emit('changed')" />
             </section>
 

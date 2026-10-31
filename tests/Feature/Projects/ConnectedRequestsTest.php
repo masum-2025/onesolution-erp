@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Connections\Models\Connection;
 use App\Platform\Connections\Services\ConnectionLinks;
@@ -205,6 +206,98 @@ it('sends a quotation to the connected client; its answer is applied in the prov
     // Estimates do not go; nor quotes of a project without a connection.
     $estimate = ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes"), ['kind' => 'estimate', 'lines' => $lines])->assertCreated()->json('data');
     ($this->provider)()->postJson(($this->apex)("{$projectId}/quotes/{$estimate['id']}/send"))->assertStatus(409)->assertJsonPath('code', 'quote_not_sendable');
+});
+
+it('sends a posted invoice to the connected client, who takes it into its books once as a draft bill', function () {
+    foreach ([$this->w->g1, $this->w->g2] as $group) {
+        toggles()->enable($group, 'accounting', 'Test setup');
+    }
+    ($this->prepare)();
+    setUpBooks($this, orgToken($this->apexUser, $this->w->c3), $this->w->c3)->assertCreated();
+    setUpBooks($this, orgToken(createMember($this->w->c1), $this->w->c1), $this->w->c1)->assertCreated();
+    [$line] = ($this->ask)($this->w->b1, 'BSCI');
+    $incoming = ($this->provider)()->getJson(($this->apex)('requests'))->json('data.0');
+    $projectId = ($this->provider)()->postJson(($this->apex)("requests/{$incoming['id']}/accept"), ['starts_on' => '2026-11-10'])->assertCreated()->json('data.project_id');
+    $staff = function (Organization $at, array $permissions, string $name) {
+        $user = createMember($at, MembershipType::Staff, AccessScope::Descendants);
+        giveRoles($user, $at, makeRole($at, $permissions, $name));
+
+        return $user;
+    };
+    $as = fn (User $user, Organization $at) => fn () => $this->asToken(orgToken($user, $at));
+    $biller = $as($staff($this->w->c3, ['projects.view', 'projects.bill', 'accounting.view', 'accounting.sell'], 'Biller'), $this->w->c3);
+    $approver = $as($staff($this->w->c3, ['accounting.view', 'accounting.approve'], 'Approver'), $this->w->c3);
+    $buyerUser = $staff($this->w->c1, ['compliance.view', 'compliance.bills', 'accounting.view', 'accounting.buy'], 'Payables');
+    $buyer = $as($buyerUser, $this->w->c1);
+    $books = fn (Organization $company, string $path) => "/api/organizations/{$company->id}/accounting/{$path}";
+
+    // A draft does not go; posted it does, line by line.
+    $invoice = $biller()->postJson(($this->apex)("{$projectId}/invoices"), ['issue_date' => '2026-10-28', 'lines' => [
+        ['description' => 'BSCI audit', 'quantity_milli' => 1000, 'unit_price_minor' => 4500000], ['description' => 'Travel', 'quantity_milli' => 2000, 'unit_price_minor' => 250000],
+    ]])->assertCreated()->json('data');
+    $biller()->getJson(($this->apex)("{$projectId}/money"))->assertJsonPath('data.can.send_invoice', true);
+    $biller()->postJson(($this->apex)("{$projectId}/invoices/{$invoice['id']}/send"))->assertStatus(409)->assertJsonPath('code', 'invoice_not_sendable');
+    $posted = $biller()->postJson($books($this->w->c3, "documents/{$invoice['id']}/submit"), ['base_version' => 1])->assertOk()->assertJsonPath('data.status', 'posted')->json('data');
+    $biller()->postJson(($this->apex)("{$projectId}/invoices/{$invoice['id']}/send"))->assertOk();
+    $biller()->postJson(($this->apex)("{$projectId}/invoices/{$invoice['id']}/send"))->assertOk();
+    $biller()->getJson(($this->apex)("{$projectId}/money"))->assertJsonPath('data.invoices.0.sent_to_client_at', fn ($at) => $at !== null);
+
+    $received = $buyer()->getJson(($this->client)('renewals'))->assertOk()->json('data.invoices');
+    expect($received)->toHaveCount(1)
+        ->and($received[0])->toMatchArray(['from' => 'C3', 'number' => $posted['number'], 'status' => 'posted', 'total_minor' => 5000000, 'balance_minor' => 5000000, 'currency_code' => 'BDT', 'books' => true, 'bill_id' => null])
+        ->and($received[0]['lines'])->toHaveCount(2)
+        ->and($received[0]['can']['bill'])->toBeTrue();
+    $notices = NotificationDelivery::query()->where('notification_key', 'compliance.invoice_received');
+    expect((clone $notices)->where('user_id', $buyerUser->id)->count())->toBe(1);
+    $told = (clone $notices)->count();
+    ($this->hrac)()->getJson(($this->client)("audits/{$line['id']}"))->assertJsonCount(1, 'data.invoices')->assertJsonPath('data.invoices.0.can.bill', false);
+
+    // Without compliance.bills nobody takes it; then once, as a draft bill from the provider as a vendor, on the factory.
+    ($this->hrac)()->postJson(($this->client)("invoices/{$received[0]['id']}/bill"), ['base_version' => 1])->assertForbidden();
+    $billed = $buyer()->postJson(($this->client)("invoices/{$received[0]['id']}/bill"), ['base_version' => 1])->assertOk()->json('data');
+    expect($billed['bill_id'])->not->toBeNull()->and($billed['can']['bill'])->toBeFalse();
+    $bill = $buyer()->getJson($books($this->w->c1, "documents/{$billed['bill_id']}"))->assertOk()->json('data');
+    expect($bill)->toMatchArray(['type' => 'bill', 'status' => 'draft', 'total_minor' => 5000000, 'reference' => $posted['number']]);
+    $buyer()->postJson(($this->client)("invoices/{$received[0]['id']}/bill"), ['base_version' => 2])->assertStatus(409)->assertJsonPath('code', 'invoice_billed');
+    // Sent twice (each press audited), received once (the same state is one message), billed once.
+    expect(AuditLog::query()->whereIn('action', ['projects.invoice_sent', 'compliance.invoice_received', 'compliance.invoice_billed'])->count())->toBe(4);
+
+    // Voided at the provider and sent again: the client's copy follows; no second notice.
+    $approver()->postJson($books($this->w->c3, "documents/{$invoice['id']}/void"), ['base_version' => $posted['version'], 'reason' => 'Wrong amount'])->assertOk();
+    $biller()->postJson(($this->apex)("{$projectId}/invoices/{$invoice['id']}/send"))->assertOk();
+    $buyer()->getJson(($this->client)('renewals'))->assertJsonPath('data.invoices.0.status', 'void')->assertJsonPath('data.invoices.0.balance_minor', 0);
+    expect((clone $notices)->count())->toBe($told);
+
+    // Another tenant reaches none of it; the provider cannot bill the client's copy.
+    $other = $as(createMember($this->w->c4), $this->w->c4);
+    $other()->getJson(($this->client)('renewals', $this->w->c4))->assertOk()->assertJsonCount(0, 'data.invoices');
+    $other()->postJson(($this->client)("invoices/{$received[0]['id']}/bill"), ['base_version' => 3])->assertNotFound();
+    $biller()->postJson(($this->client)("invoices/{$received[0]['id']}/bill"), ['base_version' => 3])->assertNotFound();
+    $other()->postJson(($this->apex)("{$projectId}/invoices/{$invoice['id']}/send"))->assertNotFound();
+});
+
+it('keeps an invoice in Compliance when the client keeps no books', function () {
+    toggles()->enable($this->w->g2, 'accounting', 'Test setup');
+    ($this->prepare)();
+    setUpBooks($this, orgToken($this->apexUser, $this->w->c3), $this->w->c3)->assertCreated();
+    ($this->ask)($this->w->b1, 'BSCI');
+    $incoming = ($this->provider)()->getJson(($this->apex)('requests'))->json('data.0');
+    $projectId = ($this->provider)()->postJson(($this->apex)("requests/{$incoming['id']}/accept"), ['starts_on' => '2026-11-10'])->assertCreated()->json('data.project_id');
+    $billerUser = createMember($this->w->c3, MembershipType::Staff, AccessScope::Descendants);
+    giveRoles($billerUser, $this->w->c3, makeRole($this->w->c3, ['projects.view', 'projects.bill', 'accounting.view', 'accounting.sell'], 'Biller'));
+    $biller = fn () => $this->asToken(orgToken($billerUser, $this->w->c3));
+    $invoice = $biller()->postJson(($this->apex)("{$projectId}/invoices"), ['issue_date' => '2026-10-28', 'lines' => [['description' => 'Audit', 'quantity_milli' => 1000, 'unit_price_minor' => 100000]]])->assertCreated()->json('data');
+    $biller()->postJson("/api/organizations/{$this->w->c3->id}/accounting/documents/{$invoice['id']}/submit", ['base_version' => 1])->assertOk();
+    $biller()->postJson(($this->apex)("{$projectId}/invoices/{$invoice['id']}/send"))->assertOk();
+
+    $copy = $this->asToken($this->groupOwner)->getJson(($this->client)('renewals', $this->w->g1))->assertOk()->json('data.invoices.0');
+    expect($copy)->toMatchArray(['status' => 'posted', 'books' => false, 'bill_id' => null])->and($copy['can']['bill'])->toBeFalse();
+    $owner = $this->asToken(orgToken(createMember($this->w->c1), $this->w->c1));
+    $owner->postJson(($this->client)("invoices/{$copy['id']}/bill"), ['base_version' => 1])->assertForbidden();
+
+    // Projects off at the provider: nothing goes.
+    toggles()->disable($this->w->g2, 'projects', 'Test');
+    $biller()->postJson(($this->apex)("{$projectId}/invoices/{$invoice['id']}/send"))->assertForbidden();
 });
 
 it('keeps a sent quotation to its client, and stops with either module off', function () {

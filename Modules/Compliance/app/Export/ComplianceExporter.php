@@ -10,6 +10,7 @@ use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\AuditChange;
 use Modules\Compliance\Models\AuditType;
 use Modules\Compliance\Models\Provider;
+use Modules\Compliance\Models\ReceivedInvoice;
 use Modules\Compliance\Models\ReceivedQuote;
 use Modules\Compliance\Models\Service;
 
@@ -44,6 +45,13 @@ class ComplianceExporter implements ExportsModuleData
                 'id' => $quote->getKey(), 'factory_id' => $quote->organization_id, 'from' => $quote->from_name, 'number' => $quote->number,
                 'currency_code' => $quote->currency_code, 'total_minor' => $quote->total_minor, 'lines' => json_encode($quote->lines, JSON_UNESCAPED_UNICODE),
                 'status' => $quote->status, 'reason' => $quote->reason, 'at' => $quote->created_at?->toIso8601String(),
+            ]),
+            // Their invoices, as they last came, and the bill made of each.
+            'provider_invoices' => $this->rows(ReceivedInvoice::class, $organization, $organizationIds, fn (ReceivedInvoice $invoice) => [
+                'id' => $invoice->getKey(), 'factory_id' => $invoice->organization_id, 'from' => $invoice->from_name, 'number' => $invoice->number,
+                'issue_date' => $invoice->issue_date?->toDateString(), 'due_date' => $invoice->due_date?->toDateString(),
+                'currency_code' => $invoice->currency_code, 'total_minor' => $invoice->total_minor, 'balance_minor' => $invoice->balance_minor,
+                'lines' => json_encode($invoice->lines, JSON_UNESCAPED_UNICODE), 'status' => $invoice->provider_status, 'bill_id' => $invoice->bill_id,
             ]),
             'changes' => $this->rows(AuditChange::class, $organization, $organizationIds, fn (AuditChange $change) => [
                 'audit_id' => $change->audit_id, 'kind' => $change->kind, 'old' => json_encode($change->old), 'new' => json_encode($change->new),

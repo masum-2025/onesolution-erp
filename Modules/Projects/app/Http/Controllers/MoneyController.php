@@ -12,6 +12,7 @@ use Modules\Projects\Http\Requests\BillRequest;
 use Modules\Projects\Http\Requests\VersionRequest;
 use Modules\Projects\Models\Project;
 use Modules\Projects\Services\Billing;
+use Modules\Projects\Services\InvoiceExchange;
 use Modules\Projects\Services\ProjectBook;
 use Modules\Projects\Services\QuoteExchange;
 
@@ -25,7 +26,7 @@ class MoneyController extends Controller
 {
     use FindsWorkplace;
 
-    public function __construct(private ProjectBook $projects, private Billing $billing, private QuoteExchange $exchange) {}
+    public function __construct(private ProjectBook $projects, private Billing $billing, private QuoteExchange $exchange, private InvoiceExchange $invoices) {}
 
     public function show(string $organization, string $project): JsonResponse
     {
@@ -56,6 +57,15 @@ class MoneyController extends Controller
     {
         $found = $this->billable($organization, $project, 'crm.edit');
         $link = $this->exchange->send($found, $quote, request()->user());
+
+        return response()->json(['data' => ['sent_at' => $link->sent_at?->toIso8601String()]]);
+    }
+
+    /** A posted invoice to the connected client over the business connection (needs accounting.sell too). */
+    public function sendInvoice(string $organization, string $project, string $invoice): JsonResponse
+    {
+        $found = $this->billable($organization, $project, 'accounting.sell');
+        $link = $this->invoices->send($found, $invoice, request()->user());
 
         return response()->json(['data' => ['sent_at' => $link->sent_at?->toIso8601String()]]);
     }
@@ -99,6 +109,8 @@ class MoneyController extends Controller
                 'client_to_crm' => $bills && $state['crm'] && ! $state['client_in_crm'] && Gate::allows('crm.edit', $company),
                 // Quotations go to a connected client over the business connection.
                 'send_to_client' => $bills && $state['crm'] && $project->connection_id !== null && Gate::allows('crm.edit', $company),
+                // And its posted invoices.
+                'send_invoice' => $bills && $state['books'] && $project->connection_id !== null && Gate::allows('accounting.sell', $company),
             ],
         ];
     }

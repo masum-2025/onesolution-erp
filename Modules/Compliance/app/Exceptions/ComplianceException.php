@@ -100,6 +100,26 @@ class ComplianceException extends TenancyException
         return new self('quote_decided', 409);
     }
 
+    public static function invoiceNotFound(): self
+    {
+        return new self('invoice_not_found', 404);
+    }
+
+    public static function invoiceBilled(): self
+    {
+        return new self('invoice_billed', 409);
+    }
+
+    public static function invoiceVoid(): self
+    {
+        return new self('invoice_void', 409);
+    }
+
+    public static function booksOff(): self
+    {
+        return new self('books_off', 409);
+    }
+
     /** A provider of the lists links only to a connection where this client is the client. */
     public static function connectionNotYours(): self
     {

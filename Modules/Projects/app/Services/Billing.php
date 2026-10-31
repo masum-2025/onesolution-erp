@@ -60,12 +60,10 @@ class Billing
         $company = $this->companyOf($project);
         $links = $this->links($project);
         $quotes = $this->quotations->many($company, $links->where('kind', ProjectLink::QUOTE)->pluck('target_id')->values()->all());
-        // An accepted quotation's invoice is the project's too.
-        $invoiceIds = array_values(array_unique([
-            ...$links->where('kind', ProjectLink::INVOICE)->pluck('target_id')->all(),
-            ...array_filter(array_column($quotes, 'invoice_id')),
-        ]));
-        $invoices = $this->customers->invoices($company, $invoiceIds);
+        $invoices = $this->customers->invoices($company, $this->invoiceIds($links, $quotes));
+        // Sent to the connected client (optional).
+        $invoiceLinks = $links->where('kind', ProjectLink::INVOICE)->keyBy('target_id');
+        $invoices = array_map(fn (array $invoice) => [...$invoice, 'sent_to_client_at' => $invoiceLinks->get($invoice['id'])?->sent_at?->toIso8601String()], $invoices);
         $counted = array_filter($invoices, fn (array $invoice) => ! in_array($invoice['status'], ['void', 'draft', 'rejected', 'pending_approval'], true));
 
         // Sent over the business connection, and the client's answer there (optional).
@@ -87,6 +85,27 @@ class Billing
                 'currency_code' => ($quotes ? reset($quotes)['currency_code'] : null) ?? ($invoices ? reset($invoices)['currency_code'] : null),
             ],
         ];
+    }
+
+    /** Whether the invoice is the project's: made from it, or from one of its accepted quotations. */
+    public function ownsInvoice(Project $project, string $invoiceId): bool
+    {
+        $links = $this->links($project);
+        $quotes = $this->quotations->many($this->companyOf($project), $links->where('kind', ProjectLink::QUOTE)->pluck('target_id')->values()->all());
+
+        return in_array($invoiceId, $this->invoiceIds($links, $quotes), true);
+    }
+
+    /** The invoice's link on the project (made for an invoice that came from a quotation). */
+    public function invoiceLink(Project $project, string $invoiceId, User $actor): ProjectLink
+    {
+        $link = $this->links($project)->where('kind', ProjectLink::INVOICE)->firstWhere('target_id', $invoiceId);
+        if ($link === null) {
+            $this->link($project, ProjectLink::INVOICE, $invoiceId, $actor);
+            $link = $this->links($project)->where('kind', ProjectLink::INVOICE)->firstWhere('target_id', $invoiceId);
+        }
+
+        return $link;
     }
 
     /**
@@ -203,6 +222,21 @@ class Billing
     {
         return ProjectLink::inTenantOf($project->organization_id)->withoutGlobalScope(OrganizationScope::class)
             ->where('project_id', $project->getKey())->orderBy('created_at')->get();
+    }
+
+    /**
+     * The project's invoices: linked to it, and an accepted quotation's invoice.
+     *
+     * @param  Collection<int, ProjectLink>  $links
+     * @param  array<string, array<string, mixed>>  $quotes
+     * @return list<string>
+     */
+    private function invoiceIds(Collection $links, array $quotes): array
+    {
+        return array_values(array_unique([
+            ...$links->where('kind', ProjectLink::INVOICE)->pluck('target_id')->all(),
+            ...array_filter(array_column($quotes, 'invoice_id')),
+        ]));
     }
 
     private function companyOf(Project $project): Organization

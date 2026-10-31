@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'posting_keys' => [
+        'audit_fees' => 'Audit and certification fees (providers\' invoices)',
+    ],
+    // Written on the draft bill made from a provider's invoice.
+    'invoice_bill_note' => 'Invoice :number from :from (over the business connection). VAT on the invoice: :tax; total :total. Add your input VAT code before submitting.',
     'states' => [
         'valid' => 'Valid',
         'expiring' => 'Expiring',
@@ -33,6 +38,10 @@ return [
         'import_has_errors' => ':count row(s) have problems. Fix them, or import only the rows without problems.',
         'quote_not_found' => 'This quotation was not found here. Open it again from renewals.',
         'quote_decided' => 'This quotation was already answered or replaced by a newer one. Reload to see it.',
+        'invoice_not_found' => 'This invoice was not found here. Open it again from renewals.',
+        'invoice_billed' => 'This invoice is already in your books as a bill. Open the bill in Accounting.',
+        'invoice_void' => 'The provider voided this invoice, so it cannot be taken into the books.',
+        'books_off' => 'This company does not keep books here yet (Accounting is off or not set up). Set up Accounting first, or ask the person who manages it.',
         'connection_not_yours' => 'Choose one of your own business connections (Business connections screen) for this provider.',
         'no_provider' => 'Choose who carries out this audit (the provider) on the line first: the request goes to them.',
         'request_open' => 'A renewal request for this line is already open. Wait for the answer or cancel it first.',

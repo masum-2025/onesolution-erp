@@ -42,6 +42,8 @@ return [
         'not_connected_project' => 'Only a project opened from a connected client\'s request can send its result back.',
         'quote_not_of_project' => 'This quotation is not one of this project\'s. Make it from the project\'s money part.',
         'quote_not_sendable' => 'Only a quotation still draft or sent can go to the client (make an estimate a quotation first in CRM).',
+        'invoice_not_of_project' => 'This invoice does not belong to this project. Reload the project.',
+        'invoice_not_sendable' => 'Only a posted invoice can go to the client. Submit it in Accounting first (and have it approved if needed).',
         'connection_closed' => 'The connection with this client is paused or ended: nothing can be sent now.',
         'not_your_task' => 'You can change only the tasks you are on. Ask the project\'s manager.',
     ],

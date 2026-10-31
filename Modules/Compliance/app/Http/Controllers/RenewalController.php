@@ -18,7 +18,10 @@ use Modules\Compliance\Http\Requests\DecisionRequest;
 use Modules\Compliance\Http\Requests\RenewalRequestForm;
 use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\ProposedResult;
+use Modules\Compliance\Models\ReceivedInvoice;
 use Modules\Compliance\Models\ReceivedQuote;
+use Modules\Compliance\Services\Place;
+use Modules\Compliance\Services\ProviderInvoices;
 use Modules\Compliance\Services\Quotes;
 use Modules\Compliance\Services\Register;
 use Modules\Compliance\Services\Renewals;
@@ -41,6 +44,7 @@ class RenewalController extends Controller
         private Renewals $renewals,
         private Results $results,
         private Quotes $quotes,
+        private ProviderInvoices $invoices,
         private CompliancePresenter $presenter,
     ) {}
 
@@ -63,7 +67,21 @@ class RenewalController extends Controller
             'results' => $results->map(fn (ProposedResult $item) => $this->presenter->result($item, $audits->get($item->audit_id)))->values(),
             // Quotations from connected providers (optional, over a business connection).
             'quotes' => $this->quotes->list($unit, $open)->map(fn (ReceivedQuote $item) => $this->presenter->quote($item))->values(),
+            // Their invoices (open: still owed).
+            'invoices' => $this->invoices->list($unit, $open)->map(fn (ReceivedInvoice $item) => $this->presenter->invoice($item))->values(),
         ]]);
+    }
+
+    /** A provider's invoice taken into the books as a draft bill (needs accounting.buy too). */
+    public function billInvoice(DecisionRequest $request, string $organization, string $invoice): JsonResponse
+    {
+        $unit = $this->unit($organization, 'compliance.view');
+        $found = $this->invoices->find($unit, $invoice);
+        $factory = $this->writableFactory($found->organization_id, 'compliance.bills');
+        Gate::authorize('accounting.buy', app(Place::class)->companyOf($factory));
+        $done = $this->invoices->bill($unit, $found, (int) $request->validated('base_version'), $request->user());
+
+        return response()->json(['data' => $this->presenter->invoice($done)]);
     }
 
     /** Accept or decline a provider's quotation; the provider is told at once. */

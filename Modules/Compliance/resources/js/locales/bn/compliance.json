@@ -250,5 +250,23 @@
         "status_accepted": "গৃহীত",
         "status_declined": "প্রত্যাখ্যাত",
         "status_replaced": "নতুন কোটেশন এসেছে"
+    },
+    "invoices": {
+        "section": "প্রোভাইডারের ইনভয়েস",
+        "title": "ইনভয়েস {number}",
+        "due": "{date}-এর মধ্যে দিতে হবে",
+        "balance": "বাকি",
+        "bill": "হিসাবে তুলুন",
+        "bill_title": "ইনভয়েস {number} হিসাবে তুলবেন?",
+        "bill_text": "Accounting-এ {from}-এর নামে {total}-এর একটা খসড়া bill তৈরি হবে। সেখানে input VAT code বসিয়ে submit করুন।",
+        "bill_done": "Accounting-এ খসড়া bill তৈরি হয়েছে।",
+        "billed_on": "{date} থেকে হিসাবে আছে",
+        "open_bill": "bill খুলুন",
+        "no_books": "এই কোম্পানির হিসাব এখানে রাখা হয় না, তাই ইনভয়েস শুধু এখানেই থাকবে।",
+        "void_after_bill": "হিসাবে তোলার পর প্রোভাইডার এই ইনভয়েস বাতিল করেছে। Accounting-এ bill-টি দেখে নিন।",
+        "status_posted": "বাকি আছে",
+        "status_partly_paid": "আংশিক পরিশোধ",
+        "status_paid": "পরিশোধিত",
+        "status_void": "প্রোভাইডার বাতিল করেছে"
     }
 }

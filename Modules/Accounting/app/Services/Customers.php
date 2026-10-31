@@ -9,6 +9,7 @@ use Modules\Accounting\Enums\DocumentStatus;
 use Modules\Accounting\Enums\DocumentType;
 use Modules\Accounting\Exceptions\AccountingException;
 use Modules\Accounting\Models\Document;
+use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\Party;
 use Modules\Accounting\Models\PostingAccount;
 
@@ -129,6 +130,48 @@ class Customers
                 'issue_date' => $invoice->issue_date?->toDateString(),
                 'due_date' => $invoice->due_date?->toDateString(),
             ]])->all();
+    }
+
+    /**
+     * One sales invoice in full, with its lines: what another module sends
+     * on (Projects: to a connected client). Null when unknown.
+     *
+     * @return array{id: string, number: string|null, status: string, issue_date: string|null, due_date: string|null, currency_code: string, prices_include_tax: bool, net_minor: int, tax_minor: int, total_minor: int, balance_minor: int, notes: string|null, lines: list<array{description: string, quantity_milli: int, unit_price_minor: int, net_minor: int, tax_rate_bp: int, tax_minor: int, total_minor: int}>}|null
+     */
+    public function invoiceFull(Organization $company, string $id): ?array
+    {
+        if (! $this->available($company)) {
+            return null;
+        }
+        $invoice = $this->books->query(Document::class, $company)->whereKey($id)->where('type', DocumentType::Invoice->value)->first();
+        if ($invoice === null) {
+            return null;
+        }
+        $lines = $this->books->query(DocumentLine::class, $company)->where('document_id', $invoice->getKey())->orderBy('line_no')->get();
+
+        return [
+            'id' => $invoice->getKey(),
+            'number' => $invoice->number,
+            'status' => $invoice->status->value,
+            'issue_date' => $invoice->issue_date?->toDateString(),
+            'due_date' => $invoice->due_date?->toDateString(),
+            'currency_code' => $invoice->currency_code,
+            'prices_include_tax' => (bool) $invoice->prices_include_tax,
+            'net_minor' => (int) $invoice->net_minor,
+            'tax_minor' => (int) $invoice->tax_minor,
+            'total_minor' => (int) $invoice->total_minor,
+            'balance_minor' => in_array($invoice->status, [DocumentStatus::Posted, DocumentStatus::PartlyPaid], true) ? $invoice->balance() : 0,
+            'notes' => $invoice->notes,
+            'lines' => $lines->map(fn (DocumentLine $line) => [
+                'description' => $line->description,
+                'quantity_milli' => (int) $line->quantity_milli,
+                'unit_price_minor' => (int) $line->unit_price_minor,
+                'net_minor' => (int) $line->amount_minor,
+                'tax_rate_bp' => (int) $line->tax_rate_bp,
+                'tax_minor' => (int) $line->tax_minor,
+                'total_minor' => (int) $line->amount_minor + (int) $line->tax_minor,
+            ])->values()->all(),
+        ];
     }
 
     /** What the contact's customer owes today (0 without books or a customer). */

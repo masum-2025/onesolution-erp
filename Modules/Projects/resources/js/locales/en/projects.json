@@ -219,7 +219,10 @@
         "sent_done": "Quotation sent to the client.",
         "sent_to_client": "Sent to the client {date}",
         "client_accepted": "The client accepted it",
-        "client_declined": "The client declined it"
+        "client_declined": "The client declined it",
+        "send_invoice": "Send the invoice to the client over the connection",
+        "send_invoice_again": "Send again (the client's copy is brought up to date)",
+        "invoice_sent_done": "Invoice sent to the client."
     },
     "requests": {
         "title": "Renewal requests from clients",

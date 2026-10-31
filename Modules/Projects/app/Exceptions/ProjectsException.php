@@ -134,6 +134,16 @@ class ProjectsException extends TenancyException
         return new self('quote_not_sendable', 409);
     }
 
+    public static function invoiceNotOfProject(): self
+    {
+        return new self('invoice_not_of_project', 404);
+    }
+
+    public static function invoiceNotSendable(): self
+    {
+        return new self('invoice_not_sendable', 409);
+    }
+
     public static function connectionClosed(): self
     {
         return new self('connection_closed', 409);

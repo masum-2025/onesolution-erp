@@ -28,6 +28,7 @@ export function projectsApi(organizationId) {
         money: (projectId) => api(`${base}/${projectId}/money`),
         quote: (projectId, kind, lines) => api(`${base}/${projectId}/quotes`, { method: 'POST', body: { kind, lines } }),
         sendQuote: (projectId, quoteId) => api(`${base}/${projectId}/quotes/${quoteId}/send`, { method: 'POST' }),
+        sendInvoice: (projectId, invoiceId) => api(`${base}/${projectId}/invoices/${invoiceId}/send`, { method: 'POST' }),
         invoice: (projectId, issueDate, lines) => api(`${base}/${projectId}/invoices`, { method: 'POST', body: { issue_date: issueDate, lines } }),
         clientToCrm: (projectId, version) => api(`${base}/${projectId}/client/crm`, { method: 'POST', body: { base_version: version } }),
         // Renewal requests from connected clients, and the result sent back (optional, over a connection).

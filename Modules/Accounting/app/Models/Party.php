@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 #[Fillable([
     'organization_id', 'name', 'is_customer', 'is_vendor', 'code', 'phone', 'email', 'address',
-    'tax_number', 'payment_terms_days', 'crm_contact_id', 'is_active', 'version',
+    'tax_number', 'payment_terms_days', 'crm_contact_id', 'connection_id', 'is_active', 'version',
 ])]
 class Party extends Model
 {

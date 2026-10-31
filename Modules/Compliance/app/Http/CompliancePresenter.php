@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Gate;
 use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\AuditChange;
 use Modules\Compliance\Models\ProposedResult;
+use Modules\Compliance\Models\ReceivedInvoice;
 use Modules\Compliance\Models\ReceivedQuote;
 use Modules\Compliance\Models\RenewalRequest;
 use Modules\Compliance\Services\Lists;
+use Modules\Compliance\Services\Place;
+use Modules\Compliance\Services\ProviderInvoices;
 use Modules\Compliance\Services\Renewals;
 use Modules\Compliance\Services\Results;
 use Modules\Compliance\Support\Validity;
@@ -153,6 +156,49 @@ class CompliancePresenter
             'created_at' => $quote->created_at?->toIso8601String(),
             'version' => $quote->version,
             'can' => ['decide' => $writes && $quote->status === ReceivedQuote::PENDING && Gate::allows('compliance.quotes', $factory)],
+        ];
+    }
+
+    /** @var array<string, bool> Factory id => whether its company keeps books here. */
+    private array $books = [];
+
+    /**
+     * An invoice a connected provider sent, and whether it can be taken into
+     * the books here (Accounting kept, not yet taken, not void).
+     *
+     * @return array<string, mixed>
+     */
+    public function invoice(ReceivedInvoice $invoice): array
+    {
+        $factory = $this->unit($invoice->organization_id);
+        $writes = $factory !== null && app(CurrentContext::class)->canWriteTo($factory->getKey());
+        $books = $factory !== null && ($this->books[$factory->getKey()] ??= app(ProviderInvoices::class)->booksKept($factory));
+        $company = $factory === null ? null : app(Place::class)->companyOf($factory);
+
+        return [
+            'id' => $invoice->getKey(),
+            'factory' => ['id' => $invoice->organization_id, 'name' => $factory?->displayName()],
+            'request_id' => $invoice->request_id,
+            'from' => $invoice->from_name,
+            'number' => $invoice->number,
+            'issue_date' => $invoice->issue_date?->toDateString(),
+            'due_date' => $invoice->due_date?->toDateString(),
+            'currency_code' => $invoice->currency_code,
+            'prices_include_tax' => $invoice->prices_include_tax,
+            'net_minor' => $invoice->net_minor,
+            'tax_minor' => $invoice->tax_minor,
+            'total_minor' => $invoice->total_minor,
+            'balance_minor' => $invoice->balance_minor,
+            'lines' => $invoice->lines,
+            'notes' => $invoice->notes,
+            'status' => $invoice->provider_status,
+            'bill_id' => $invoice->bill_id,
+            'billed_at' => $invoice->billed_at?->toIso8601String(),
+            'created_at' => $invoice->created_at?->toIso8601String(),
+            'version' => $invoice->version,
+            'books' => $books,
+            'can' => ['bill' => $writes && $books && $invoice->bill_id === null && $invoice->provider_status !== 'void'
+                && Gate::allows('compliance.bills', $factory) && Gate::allows('accounting.buy', $company)],
         ];
     }
 

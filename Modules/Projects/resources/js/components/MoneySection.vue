@@ -78,6 +78,18 @@ async function sendToClient(quote) {
         sending.value = null;
     }
 }
+async function sendInvoice(invoice) {
+    sending.value = invoice.id;
+    try {
+        await props.calls.sendInvoice(props.project.id, invoice.id);
+        toast.success(t('projects.money.invoice_sent_done'));
+        load();
+    } catch (caught) {
+        toast.error(caught.message);
+    } finally {
+        sending.value = null;
+    }
+}
 function saved() {
     dialog.value.open = false;
     load();
@@ -132,12 +144,20 @@ function saved() {
                     <h3 class="mb-1.5 text-[13px] font-semibold text-fg-2">{{ t('projects.money.invoices') }}</h3>
                     <p v-if="!money.invoices.length" class="text-[12.5px] text-muted">{{ t('projects.money.no_invoices') }}</p>
                     <ul v-else class="divide-y divide-line rounded-xl border border-line">
-                        <li v-for="invoice in money.invoices" :key="invoice.id">
-                            <RouterLink :to="{ name: 'accounting-document', params: { id: invoice.id } }" class="flex items-center gap-2 px-3 py-2 text-[13px] hover:bg-subtle">
-                                <span class="min-w-0 flex-1 truncate"><span class="font-mono" dir="ltr">{{ invoice.number ?? t('projects.money.draft_no_number') }}</span><span class="text-muted"> · {{ formatDate(invoice.issue_date) }}</span></span>
+                        <li v-for="invoice in money.invoices" :key="invoice.id" class="flex items-center gap-2 pe-2">
+                            <RouterLink :to="{ name: 'accounting-document', params: { id: invoice.id } }" class="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 text-[13px] hover:bg-subtle">
+                                <span class="min-w-0 flex-1 truncate">
+                                    <span class="font-mono" dir="ltr">{{ invoice.number ?? t('projects.money.draft_no_number') }}</span><span class="text-muted"> · {{ formatDate(invoice.issue_date) }}</span>
+                                    <span v-if="invoice.sent_to_client_at" class="block truncate text-[12px] text-muted">{{ t('projects.money.sent_to_client', { date: formatDate(invoice.sent_to_client_at) }) }}</span>
+                                </span>
                                 <span class="tabular">{{ formatMoney({ amount: invoice.total_minor, currency: invoice.currency_code }) }}</span>
                                 <AppBadge :tone="tone(invoice.status)">{{ t(`projects.money.statuses.${invoice.status}`) }}</AppBadge>
                             </RouterLink>
+                            <!-- Posted ones go; sent again after a payment or a void, the client's copy follows. -->
+                            <AppButton v-if="money.can.send_invoice && (['posted', 'partly_paid', 'paid'].includes(invoice.status) || (invoice.status === 'void' && invoice.sent_to_client_at))"
+                                size="icon-sm" variant="ghost" :icon="Send" :loading="sending === invoice.id"
+                                :aria-label="t(invoice.sent_to_client_at ? 'projects.money.send_invoice_again' : 'projects.money.send_invoice')"
+                                :title="t(invoice.sent_to_client_at ? 'projects.money.send_invoice_again' : 'projects.money.send_invoice')" @click="sendInvoice(invoice)" />
                         </li>
                     </ul>
                 </div>
