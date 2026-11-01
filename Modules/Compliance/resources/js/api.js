@@ -20,6 +20,8 @@ export function complianceApi(organizationId) {
         requestRenewal: (auditId, body) => api(`${base}/audits/${auditId}/renewal`, { method: 'POST', body }),
         cancelRenewal: (id, version, reason) => api(`${base}/renewals/${id}/cancel`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
         billInvoice: (id, version) => api(`${base}/invoices/${id}/bill`, { method: 'POST', body: { base_version: version } }),
+        // Telling the provider about a payment (op_id: one tap, one advice).
+        adviseInvoice: (id, body) => api(`${base}/invoices/${id}/advices`, { method: 'POST', body }),
         decideQuote: (id, step, version, reason) => api(`${base}/quotes/${id}/${step}`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
         decideResult: (id, step, version, reason) => api(`${base}/results/${id}/${step}`, { method: 'POST', body: { base_version: version, reason: reason || null } }),
 

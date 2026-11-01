@@ -28,6 +28,9 @@ return [
     'result_sent' => 'Audit result sent to the client',
     'quote_sent' => 'Quotation sent to the connected client',
     'invoice_sent' => 'Invoice sent to the connected client',
+    'payment_advice_received' => 'Client said it paid an invoice',
+    'payment_recorded' => 'Client\'s payment recorded as a receipt',
+    'payment_not_received' => 'Client told the payment did not arrive',
     'quote_accepted' => 'Quotation accepted by the client',
     'quote_declined' => 'Quotation declined by the client',
 ];

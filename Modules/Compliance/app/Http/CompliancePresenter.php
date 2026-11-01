@@ -6,11 +6,13 @@ use App\Platform\Connections\ConnectionKinds;
 use App\Platform\Connections\Models\ConnectionMessage;
 use App\Platform\Tenancy\Context\CurrentContext;
 use App\Platform\Tenancy\Models\Organization;
+use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\AuditChange;
+use Modules\Compliance\Models\PaymentAdvice;
 use Modules\Compliance\Models\ProposedResult;
 use Modules\Compliance\Models\ReceivedInvoice;
 use Modules\Compliance\Models\ReceivedQuote;
@@ -174,6 +176,9 @@ class CompliancePresenter
         $writes = $factory !== null && app(CurrentContext::class)->canWriteTo($factory->getKey());
         $books = $factory !== null && ($this->books[$factory->getKey()] ??= app(ProviderInvoices::class)->booksKept($factory));
         $company = $factory === null ? null : app(Place::class)->companyOf($factory);
+        $advices = PaymentAdvice::inTenantOf($invoice->organization_id)->withoutGlobalScope(OrganizationScope::class)->where('invoice_id', $invoice->getKey())
+            ->orderByDesc('paid_on')->orderByDesc('id')->get();
+        $open = max(0, $invoice->balance_minor - (int) $advices->where('status', PaymentAdvice::SENT)->sum('amount_minor'));
 
         return [
             'id' => $invoice->getKey(),
@@ -197,8 +202,25 @@ class CompliancePresenter
             'created_at' => $invoice->created_at?->toIso8601String(),
             'version' => $invoice->version,
             'books' => $books,
-            'can' => ['bill' => $writes && $books && $invoice->bill_id === null && $invoice->provider_status !== 'void'
-                && Gate::allows('compliance.bills', $factory) && Gate::allows('accounting.buy', $company)],
+            'can' => [
+                'bill' => $writes && $books && $invoice->bill_id === null && $invoice->provider_status !== 'void'
+                    && Gate::allows('compliance.bills', $factory) && Gate::allows('accounting.buy', $company),
+                'advise' => $writes && $open > 0 && $invoice->provider_status !== 'void' && Gate::allows('compliance.bills', $factory),
+            ],
+            // Payments told to the provider (newest first) and what is left to tell.
+            'open_minor' => $open,
+            'advices' => $advices->map(fn (PaymentAdvice $advice) => [
+                'id' => $advice->getKey(),
+                'amount_minor' => $advice->amount_minor,
+                'currency_code' => $advice->currency_code,
+                'paid_on' => $advice->paid_on->toDateString(),
+                'method' => $advice->method,
+                'reference' => $advice->reference,
+                'note' => $advice->note,
+                'status' => $advice->status,
+                'reply_reason' => $advice->reply_reason,
+                'replied_at' => $advice->replied_at?->toIso8601String(),
+            ])->values(),
         ];
     }
 

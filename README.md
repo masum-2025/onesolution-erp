@@ -1419,6 +1419,33 @@ manifest; nothing outside it changed except shared counts in tests).
   sending module must be on at the sender, the handler's module at the receiver
   (`Connections::send`).
 
+### Payments told over the connection
+
+The client tells a connected provider that it paid an invoice the provider sent; the
+provider checks the money and records it. The advice itself never posts money.
+
+- **Client (Compliance):** `POST …/compliance/invoices/{id}/advices` (`compliance.bills`;
+  `amount_minor`, `paid_on` not after the company's today, `method`
+  bank/cash/cheque/mobile/other, `reference`, `note`, `op_id`). Part payments are fine; the
+  amount may not exceed what the invoice owes less the advices still waiting
+  (`advice_more_than_owed`). Kept in `cmp_payment_advices` (written once; only the
+  provider's answer is added) and sent as `compliance.payment_advice`. The invoice card shows
+  each advice and its answer; the person who told is notified (`compliance.advice_answered`).
+- **Provider (Projects):** the advice lands on the project of the invoice
+  (`prj_payment_advices`, one per connection and client advice; only for an invoice this very
+  connection carried). The person who sent the invoice and the project's manager are told
+  (`projects.payment_advised`). On the project's money section:
+  `POST …/projects/{project}/advices/{advice}/record` (`projects.bill` + `accounting.sell`;
+  `account_id`, `settled_on`, `base_version`) makes a receipt against the invoice through
+  Accounting's new public `Customers::receiveFor` (op_id `advice-{id}`, the company's approval
+  rules apply); `…/not-received` (`projects.bill`, `reason`) answers that nothing came. Each
+  advice is decided once (`advice_decided`); the answer goes back as `projects.advice_reply`.
+  After a receipt the screen sends the invoice again, so the client's copy shows what is owed.
+- **Accounting:** `Customers::moneyAccounts` (postable asset accounts) and
+  `Customers::receiveFor` for other modules.
+- **Future expansion:** no rule or sector value is involved; any country's currency works
+  (the advice carries the invoice's currency; another currency is refused, `advice_currency`).
+
 ### Register and projects in the client portal
 
 The company shares status with people outside it through the client portal (module

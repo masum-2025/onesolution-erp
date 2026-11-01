@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { counts, expiryFrom, grid, mailtoLink, renewalMark, stateTone } from '../../Modules/Compliance/resources/js/lib';
+import { adviceTone, amountToMinor, counts, expiryFrom, grid, localToday, mailtoLink, renewalMark, stateTone } from '../../Modules/Compliance/resources/js/lib';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Compliance/resources/js/locales/en/compliance.json';
 import bn from '../../Modules/Compliance/resources/js/locales/bn/compliance.json';
@@ -55,5 +55,20 @@ describe('compliance screens', () => {
         expect(stateTone('expired')).toBe('bad');
         expect(stateTone('valid')).toBe('ok');
         expect(counts({ expired: 2 })).toEqual({ expired: 2, expiring: 0, valid: 0, unknown: 0 });
+    });
+});
+
+describe('telling a provider about a payment', () => {
+    it('reads a typed amount in Bangla or Latin digits as minor units', () => {
+        expect(amountToMinor('১,২৫০.৫০', 'BDT')).toBe(125050);
+        expect(amountToMinor('600', 'BDT')).toBe(60000);
+        expect(amountToMinor('0', 'BDT')).toBeNull();
+        expect(amountToMinor('12.345', 'BDT')).toBeNull();
+        expect(amountToMinor('abc', 'BDT')).toBeNull();
+    });
+
+    it('takes today from the reader\'s own clock, and names each answer with a tone', () => {
+        expect(localToday(new Date(2026, 9, 31, 23, 30))).toBe('2026-10-31');
+        expect([adviceTone('sent'), adviceTone('recorded'), adviceTone('not_received')]).toEqual(['warn', 'ok', 'bad']);
     });
 });

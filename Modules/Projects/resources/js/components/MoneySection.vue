@@ -1,15 +1,17 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { FilePlus, Receipt, Send, UserPlus } from 'lucide-vue-next';
+import { BookCheck, FilePlus, Receipt, Send, UserPlus } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
+import { confirmAction } from '@/lib/dialogs';
 import { currentOrganization } from '@/lib/session';
 import { formatDate, formatMoney } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import BillDialog from './BillDialog.vue';
+import RecordAdviceDialog from './RecordAdviceDialog.vue';
 
 /**
  * A project's money, as CRM and Accounting have it now: its quotes and
@@ -94,6 +96,45 @@ function saved() {
     dialog.value.open = false;
     load();
 }
+
+// A connected client's payment advices.
+const recording = ref(null);
+const answering = ref(null);
+const adviceTone = (status) => ({ new: 'warn', recorded: 'ok', not_received: 'bad' }[status] ?? 'neutral');
+async function recorded(advice) {
+    // Posted at once: the client's copy of the invoice follows (sent again); waiting for approval: later, by hand.
+    const invoice = money.value?.invoices.find((item) => item.id === advice.invoice_id);
+    await load();
+    const now = money.value?.invoices.find((item) => item.id === advice.invoice_id);
+    if (invoice?.sent_to_client_at && now && now.balance_minor !== invoice.balance_minor && money.value.can.send_invoice) {
+        try {
+            await props.calls.sendInvoice(props.project.id, advice.invoice_id);
+            load();
+        } catch {
+            // The receipt stands; sending the invoice again stays possible by hand.
+        }
+    }
+}
+async function notReceived(advice) {
+    const answer = await confirmAction({
+        title: t('projects.advices.not_received_title'),
+        message: t('projects.advices.not_received_text', { from: advice.from, amount: formatMoney({ amount: advice.amount_minor, currency: advice.currency_code }) }),
+        confirmLabel: t('projects.advices.not_received'),
+        reason: 'required',
+        danger: true,
+    });
+    if (!answer) return;
+    answering.value = advice.id;
+    try {
+        await props.calls.decideAdvice(props.project.id, advice.id, 'not-received', { base_version: advice.version, reason: answer.reason });
+        toast.success(t('projects.advices.answered'));
+        load();
+    } catch (caught) {
+        toast.error(caught.message);
+    } finally {
+        answering.value = null;
+    }
+}
 </script>
 
 <template>
@@ -162,7 +203,32 @@ function saved() {
                     </ul>
                 </div>
             </div>
+
+            <!-- Payments the connected client says it made: checked, then recorded or answered. -->
+            <div v-if="money.advices?.length">
+                <h3 class="mb-1.5 text-[13px] font-semibold text-fg-2">{{ t('projects.advices.title') }}</h3>
+                <ul class="divide-y divide-line rounded-xl border border-line">
+                    <li v-for="advice in money.advices" :key="advice.id" class="flex flex-wrap items-center gap-2 px-3 py-2 text-[13px]">
+                        <span class="min-w-0 flex-1">
+                            <span class="tabular font-medium">{{ formatMoney({ amount: advice.amount_minor, currency: advice.currency_code }) }}</span>
+                            <span class="text-muted"> · {{ formatDate(advice.paid_on) }} · {{ t(`projects.advices.methods.${advice.method}`) }}</span>
+                            <span class="block truncate text-[12px] text-muted">
+                                {{ t('projects.advices.from', { from: advice.from, number: advice.invoice_number ?? '' }) }}<template v-if="advice.reference"> · <span dir="ltr">{{ advice.reference }}</span></template>
+                            </span>
+                            <span v-if="advice.reason" class="block truncate text-[12px] text-muted">“{{ advice.reason }}”</span>
+                        </span>
+                        <AppBadge :tone="adviceTone(advice.status)">{{ t(`projects.advices.status_${advice.status}`) }}</AppBadge>
+                        <template v-if="advice.status === 'new'">
+                            <AppButton v-if="money.can.answer_payment" size="sm" variant="ghost" :loading="answering === advice.id" @click="notReceived(advice)">{{ t('projects.advices.not_received') }}</AppButton>
+                            <AppButton v-if="money.can.record_payment" size="sm" variant="primary" :icon="BookCheck" @click="recording = advice">{{ t('projects.advices.record') }}</AppButton>
+                        </template>
+                    </li>
+                </ul>
+                <p v-if="money.advices.some((advice) => advice.status === 'new') && !money.can.record_payment" class="mt-1.5 text-[12.5px] text-muted">{{ t('projects.advices.why_record') }}</p>
+            </div>
         </div>
+        <RecordAdviceDialog :open="!!recording" :advice="recording" :accounts="money?.money_accounts ?? []" :project-id="project.id" :today="today" :calls="calls"
+            @close="recording = null" @recorded="recorded" />
         <BillDialog :open="dialog.open" :mode="dialog.mode" :project="project" :currency="currency" :today="today" :calls="calls" @close="dialog.open = false" @saved="saved" />
     </section>
 </template>

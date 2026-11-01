@@ -31,6 +31,11 @@ return [
             'body' => '{{ organization }}-এর {{ service }} নবায়ন: {{ status }}। নির্ধারিত দিন: {{ planned }}।',
             'action' => 'নবায়নের তালিকা খুলুন',
         ],
+        'compliance_advice_answered' => [
+            'subject' => '{{ other }}: {{ answer }} ({{ amount }})',
+            'body' => '{{ organization }}-এর জন্য {{ amount }} পরিশোধের কথা আপনি {{ other }}-কে জানিয়েছিলেন। তাঁদের উত্তর: {{ answer }}।',
+            'action' => 'নবায়নের তালিকা খুলুন',
+        ],
     ],
     'catalog' => [
         'compliance_expiring' => [
@@ -52,6 +57,10 @@ return [
         'compliance_renewal_answered' => [
             'name' => 'নবায়নের অনুরোধের উত্তর',
             'description' => 'প্রোভাইডার অনুরোধ গ্রহণ, প্রত্যাখ্যান বা শেষ করলে, যাঁরা নবায়নের অনুরোধ পাঠান তাঁদের কাছে।',
+        ],
+        'compliance_advice_answered' => [
+            'name' => 'জানানো পরিশোধের উত্তর',
+            'description' => 'সংযুক্ত প্রোভাইডারকে যিনি পরিশোধের কথা জানিয়েছেন তাঁর কাছে, যখন প্রোভাইডার সেটা হিসাবে তোলেন বা বলেন টাকা পাননি।',
         ],
     ],
     'expires_on' => ':date-এ মেয়াদ শেষ',

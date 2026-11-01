@@ -8,10 +8,13 @@ use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Modules\Projects\Http\Controllers\Concerns\FindsWorkplace;
+use Modules\Projects\Http\Requests\AdviceDecisionRequest;
 use Modules\Projects\Http\Requests\BillRequest;
 use Modules\Projects\Http\Requests\VersionRequest;
+use Modules\Projects\Models\PaymentAdvice;
 use Modules\Projects\Models\Project;
 use Modules\Projects\Services\Billing;
+use Modules\Projects\Services\ClientPayments;
 use Modules\Projects\Services\InvoiceExchange;
 use Modules\Projects\Services\ProjectBook;
 use Modules\Projects\Services\QuoteExchange;
@@ -26,14 +29,27 @@ class MoneyController extends Controller
 {
     use FindsWorkplace;
 
-    public function __construct(private ProjectBook $projects, private Billing $billing, private QuoteExchange $exchange, private InvoiceExchange $invoices) {}
+    public function __construct(
+        private ProjectBook $projects,
+        private Billing $billing,
+        private QuoteExchange $exchange,
+        private InvoiceExchange $invoices,
+        private ClientPayments $payments,
+    ) {}
 
     public function show(string $organization, string $project): JsonResponse
     {
         $unit = $this->unit($organization, 'projects.view');
         $found = $this->projects->find($unit, $project);
+        $abilities = $this->abilities($found);
 
-        return response()->json(['data' => [...$this->billing->money($found), ...$this->abilities($found)]]);
+        return response()->json(['data' => [
+            ...$this->billing->money($found),
+            ...$abilities,
+            // Payments a connected client says it made (optional, over a business connection).
+            'advices' => $this->payments->forProject($found)->map(fn (PaymentAdvice $advice) => $this->payments->item($advice))->values(),
+            'money_accounts' => $abilities['can']['record_payment'] ? $this->payments->moneyAccounts($found) : [],
+        ]]);
     }
 
     public function quote(BillRequest $request, string $organization, string $project): JsonResponse
@@ -68,6 +84,31 @@ class MoneyController extends Controller
         $link = $this->invoices->send($found, $invoice, request()->user());
 
         return response()->json(['data' => ['sent_at' => $link->sent_at?->toIso8601String()]]);
+    }
+
+    /**
+     * A connected client's payment advice: recorded as a receipt (needs
+     * accounting.sell too) or answered as not received (projects.bill).
+     */
+    public function decideAdvice(AdviceDecisionRequest $request, string $organization, string $project, string $advice, string $step): JsonResponse
+    {
+        abort_unless(in_array($step, ['record', 'not-received'], true), 404);
+        $unit = $this->unit($organization, 'projects.view');
+        $found = $this->projects->find($unit, $project);
+        $this->writable($found->organization_id, 'projects.bill');
+        $item = $this->payments->find($found, $advice);
+        $done = $step === 'record'
+            ? $this->recordAdvice($request, $found, $item)
+            : $this->payments->notReceived($found, $item, (int) $request->validated('base_version'), $request->validated('reason'), $request->user());
+
+        return response()->json(['data' => $this->payments->item($done)]);
+    }
+
+    private function recordAdvice(AdviceDecisionRequest $request, Project $project, PaymentAdvice $advice): PaymentAdvice
+    {
+        Gate::authorize('accounting.sell', Organization::query()->findOrFail($project->company_id));
+
+        return $this->payments->record($project, $advice, $request->validated(), $request->user());
     }
 
     /** A client typed by name becomes a CRM client (needs crm.edit too). */
@@ -111,6 +152,9 @@ class MoneyController extends Controller
                 'send_to_client' => $bills && $state['crm'] && $project->connection_id !== null && Gate::allows('crm.edit', $company),
                 // And its posted invoices.
                 'send_invoice' => $bills && $state['books'] && $project->connection_id !== null && Gate::allows('accounting.sell', $company),
+                // A connected client's payment advices: recorded as a receipt, or answered "not received".
+                'record_payment' => $bills && $state['books'] && $project->connection_id !== null && Gate::allows('accounting.sell', $company),
+                'answer_payment' => $bills && $project->connection_id !== null,
             ],
         ];
     }

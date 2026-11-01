@@ -12,6 +12,7 @@ return [
     ],
     'no_due' => 'no due day',
     'client_declined' => 'Declined by the client',
+    'advice_memo' => 'Payment :from told about (invoice :number)',
     'quote_answers' => [
         'accepted' => 'accepted',
         'declined' => 'declined',
@@ -26,6 +27,9 @@ return [
     ],
     'errors' => [
         'not_workplace' => 'Projects run at a company or a branch that is open. Choose one of them.',
+        'advice_not_found' => 'This payment advice was not found on this project. Open the project again.',
+        'advice_decided' => 'This payment advice was already answered. Reload to see the answer.',
+        'advice_currency' => 'The client paid in another currency than the invoice. Record it by hand in Accounting.',
         'portal_client_not_found' => 'These projects are not shared with you. Open them from your records, or ask the company to share them.',
         'project_not_found' => 'This project was not found here. Open it again from the projects list.',
         'task_not_found' => 'This task was not found in the project. Reload the project.',

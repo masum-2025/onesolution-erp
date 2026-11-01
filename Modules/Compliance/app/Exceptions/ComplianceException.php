@@ -30,6 +30,27 @@ class ComplianceException extends TenancyException
         return new self('audit_not_found', 404);
     }
 
+    public static function adviceInFuture(): self
+    {
+        return new self('advice_in_future', 422, [], ['field' => 'paid_on']);
+    }
+
+    public static function adviceInvoiceVoid(): self
+    {
+        return new self('advice_invoice_void', 422);
+    }
+
+    public static function invoiceNothingOwed(): self
+    {
+        return new self('invoice_nothing_owed', 422);
+    }
+
+    /** More than the invoice still owes (less the payments already told and not yet answered). */
+    public static function adviceMoreThanOwed(string $open): self
+    {
+        return new self('advice_more_than_owed', 422, ['open' => $open], ['field' => 'amount_minor']);
+    }
+
     /** A factory the portal member is not linked to (or no longer open): the same answer either way. */
     public static function portalFactoryNotFound(): self
     {

@@ -1,5 +1,6 @@
 <?php
 
+use Modules\Projects\Connections\PaymentAdviceHandler;
 use Modules\Projects\Connections\QuoteReplyHandler;
 use Modules\Projects\Connections\RenewalCancelledHandler;
 use Modules\Projects\Connections\RenewalRequestHandler;
@@ -72,7 +73,7 @@ return [
     ],
     'events' => [],
     // Optional, over a business connection: a connected client's Compliance asks for renewals here.
-    'connection_kinds' => [RenewalRequestHandler::class, RenewalCancelledHandler::class, QuoteReplyHandler::class],
+    'connection_kinds' => [RenewalRequestHandler::class, RenewalCancelledHandler::class, QuoteReplyHandler::class, PaymentAdviceHandler::class],
     'is_core' => false,
     'requires_consent' => false,
     'attention' => [ProjectsAttention::class],
@@ -89,6 +90,12 @@ return [
             'placeholders' => ['product', 'organization', 'project', 'task', 'due', 'by', 'link'],
             'audience' => 'client',
             'path' => '/projects/my-tasks',
+        ],
+        'projects.payment_advised' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'project', 'other', 'amount', 'link'],
+            'audience' => 'client',
+            'path' => '/projects',
         ],
         'projects.quote_answered' => [
             'channels' => ['mail'],

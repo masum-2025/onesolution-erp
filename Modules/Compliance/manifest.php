@@ -1,5 +1,6 @@
 <?php
 
+use Modules\Compliance\Connections\AdviceReplyHandler;
 use Modules\Compliance\Connections\AuditResultHandler;
 use Modules\Compliance\Connections\InvoiceHandler;
 use Modules\Compliance\Connections\QuotationHandler;
@@ -88,7 +89,7 @@ return [
     // A factory's register shown to people the client invites to its portal (buyers, brands, auditors).
     'portal_subjects' => [FactorySubjects::class],
     // What connected providers send back (CMP-2): kinds named after the provider's module.
-    'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class, QuotationHandler::class, InvoiceHandler::class],
+    'connection_kinds' => [RequestReplyHandler::class, AuditResultHandler::class, QuotationHandler::class, InvoiceHandler::class, AdviceReplyHandler::class],
     'menu' => [
         [
             'key' => 'compliance',
@@ -144,6 +145,12 @@ return [
         'compliance.renewal_answered' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'organization', 'other', 'service', 'status', 'planned', 'link'],
+            'audience' => 'client',
+            'path' => '/compliance/renewals',
+        ],
+        'compliance.advice_answered' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'organization', 'other', 'amount', 'answer', 'link'],
             'audience' => 'client',
             'path' => '/compliance/renewals',
         ],

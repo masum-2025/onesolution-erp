@@ -7,6 +7,11 @@ return [
             'body' => '{{ by }} gave you a task in {{ project }} ({{ organization }}): {{ task }}. Due: {{ due }}.',
             'action' => 'Open my tasks',
         ],
+        'projects_payment_advised' => [
+            'subject' => '{{ other }} says it paid {{ amount }} ({{ project }})',
+            'body' => '{{ other }} says it paid {{ amount }} on an invoice of {{ project }} ({{ organization }}). Check that the money arrived, then record it or answer that it did not.',
+            'action' => 'Open projects',
+        ],
         'projects_quote_answered' => [
             'subject' => '{{ other }} {{ answer }} the quotation for {{ project }}',
             'body' => '{{ other }} {{ answer }} the quotation of {{ project }} ({{ organization }}). It is updated in CRM; an accepted one has its draft invoice in Accounting.',
@@ -22,6 +27,10 @@ return [
         'projects_task_assigned' => [
             'name' => 'Task given to you',
             'description' => 'To each person added to a project task.',
+        ],
+        'projects_payment_advised' => [
+            'name' => 'Client says it paid',
+            'description' => 'To the person who sent the invoice to a connected client, and the project\'s manager.',
         ],
         'projects_quote_answered' => [
             'name' => 'Client answered a quotation',

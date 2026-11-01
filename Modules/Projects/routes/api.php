@@ -48,6 +48,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:projects'])
             Route::post('{project}/quotes', [MoneyController::class, 'quote'])->name('projects.quote');
             Route::post('{project}/quotes/{quote}/send', [MoneyController::class, 'sendQuote']);
             Route::post('{project}/invoices/{invoice}/send', [MoneyController::class, 'sendInvoice']);
+            // A connected client's payment advice: record or not-received.
+            Route::post('{project}/advices/{advice}/{step}', [MoneyController::class, 'decideAdvice']);
             Route::post('{project}/invoices', [MoneyController::class, 'invoice'])->name('projects.invoice');
             Route::post('{project}/client/crm', [MoneyController::class, 'clientToCrm']);
             Route::post('{project}/result', [InboxController::class, 'result']);

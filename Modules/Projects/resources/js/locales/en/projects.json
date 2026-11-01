@@ -288,5 +288,33 @@
         "progress": "{done} of {total} tasks done",
         "empty_title": "No projects yet",
         "empty_text": "When {org} starts work for you, it appears here."
+    },
+    "advices": {
+        "title": "Payments the client told you about",
+        "from": "From {from} for invoice {number}",
+        "methods": {
+            "bank": "Bank transfer",
+            "cash": "Cash",
+            "cheque": "Cheque",
+            "mobile": "Mobile money",
+            "other": "Other"
+        },
+        "status_new": "To check",
+        "status_recorded": "Recorded",
+        "status_not_received": "Not received",
+        "record": "Record receipt",
+        "record_title": "Record the client's payment",
+        "record_text": "{from} says it paid {amount} on {date}. Record it once you see the money.",
+        "account": "Money came into",
+        "account_hint": "The bank, cash or wallet account where you see this money.",
+        "choose_account": "Choose an account…",
+        "settled_on": "Day it came in",
+        "reference": "Their reference: {reference}",
+        "recorded": "Receipt recorded; the client is told.",
+        "not_received": "Not received",
+        "not_received_title": "Tell the client the money did not arrive?",
+        "not_received_text": "{from} says it paid {amount}. Say what you see (for example, nothing in the bank yet), so they can check.",
+        "answered": "The client is told.",
+        "why_record": "Recording a receipt needs the books here and the right to record receipts in Accounting."
     }
 }

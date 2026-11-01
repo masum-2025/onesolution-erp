@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue';
-import { BookPlus, TriangleAlert } from 'lucide-vue-next';
+import { BanknoteArrowUp, BookPlus, TriangleAlert } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
+import AdviceDialog from './AdviceDialog.vue';
+import { adviceTone } from '../lib';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatDecimal, formatMoney } from '@/lib/format';
 import { toast } from '@/lib/toast';
@@ -21,6 +23,7 @@ const props = defineProps({
 const emit = defineEmits(['billed']);
 
 const busy = ref(false);
+const adviceOpen = ref(false);
 const money = (amount) => formatMoney({ amount, currency: props.invoice.currency_code });
 const quantity = (milli) => formatDecimal((milli / 1000).toString());
 const tone = { posted: 'warn', partly_paid: 'warn', paid: 'ok', void: 'outline' };
@@ -93,8 +96,24 @@ async function bill() {
             · <RouterLink :to="{ name: 'accounting-document', params: { id: invoice.bill_id } }" class="font-medium text-brand-strong hover:underline">{{ t('compliance.invoices.open_bill') }}</RouterLink>
         </p>
         <p v-else-if="!invoice.books && invoice.status !== 'void'" class="px-4 pb-3 text-[12.5px] text-muted">{{ t('compliance.invoices.no_books') }}</p>
-        <footer v-if="invoice.can.bill" class="flex flex-wrap justify-end gap-2 border-t border-line px-4 py-2.5">
-            <AppButton size="sm" variant="primary" :icon="BookPlus" :loading="busy" @click="bill">{{ t('compliance.invoices.bill') }}</AppButton>
+        <!-- Payments told to the provider and its answer. -->
+        <section v-if="invoice.advices?.length" class="border-t border-line px-4 py-2.5">
+            <h3 class="text-[12.5px] font-semibold text-muted">{{ t('compliance.advices.told') }}</h3>
+            <ul class="mt-1.5 space-y-1.5">
+                <li v-for="advice in invoice.advices" :key="advice.id" class="text-[13px]">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="tabular font-medium">{{ money(advice.amount_minor) }}</span>
+                        <span class="text-muted">{{ formatDate(advice.paid_on) }} · {{ t(`compliance.advices.methods.${advice.method}`) }}<template v-if="advice.reference"> · <span dir="ltr">{{ advice.reference }}</span></template></span>
+                        <AppBadge :tone="adviceTone(advice.status)">{{ t(`compliance.advices.status_${advice.status}`) }}</AppBadge>
+                    </div>
+                    <p v-if="advice.reply_reason" class="mt-0.5 text-[12.5px] text-muted">{{ t('compliance.advices.their_reason', { reason: advice.reply_reason }) }}</p>
+                </li>
+            </ul>
+        </section>
+        <footer v-if="invoice.can.bill || invoice.can.advise" class="flex flex-wrap justify-end gap-2 border-t border-line px-4 py-2.5">
+            <AppButton v-if="invoice.can.advise" size="sm" :icon="BanknoteArrowUp" @click="adviceOpen = true">{{ t('compliance.advices.open') }}</AppButton>
+            <AppButton v-if="invoice.can.bill" size="sm" variant="primary" :icon="BookPlus" :loading="busy" @click="bill">{{ t('compliance.invoices.bill') }}</AppButton>
         </footer>
+        <AdviceDialog :open="adviceOpen" :invoice="invoice" :calls="calls" @close="adviceOpen = false" @sent="emit('billed', $event)" />
     </article>
 </template>

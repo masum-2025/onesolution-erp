@@ -20,6 +20,10 @@ return [
         'cancelled' => 'Cancelled',
         'done' => 'Done',
     ],
+    'advice_answers' => [
+        'recorded' => 'payment recorded',
+        'not_received' => 'payment not received',
+    ],
     'portal' => [
         'subject' => 'Factory (audit register)',
         'name' => 'Factory',
@@ -31,6 +35,10 @@ return [
         'not_factory' => 'Choose a company or a branch that is open: audits are kept per factory.',
         'not_list_owner' => 'Lists are kept by a group or a company. This one is kept above: change it there.',
         'audit_not_found' => 'This register line was not found here. Open it again from the register.',
+        'advice_in_future' => 'The day paid cannot be after today. Choose the day the money was sent.',
+        'advice_invoice_void' => 'The provider voided this invoice, so there is nothing to pay on it.',
+        'invoice_nothing_owed' => 'Nothing is left to pay on this invoice (or the payments you told about are still waiting for the provider).',
+        'advice_more_than_owed' => 'That is more than is left to pay on this invoice (:open). Enter :open or less.',
         'portal_factory_not_found' => 'This factory is not shared with you. Open it from your records, or ask the company to share it.',
         'item_not_found' => 'This item is not in the lists here. Choose one from the list.',
         'already_in_register' => 'This factory already has this audit service in the register. Open that line instead.',

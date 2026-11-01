@@ -29,6 +29,8 @@ export function projectsApi(organizationId) {
         quote: (projectId, kind, lines) => api(`${base}/${projectId}/quotes`, { method: 'POST', body: { kind, lines } }),
         sendQuote: (projectId, quoteId) => api(`${base}/${projectId}/quotes/${quoteId}/send`, { method: 'POST' }),
         sendInvoice: (projectId, invoiceId) => api(`${base}/${projectId}/invoices/${invoiceId}/send`, { method: 'POST' }),
+        // A connected client's payment advice: step "record" (account_id, settled_on) or "not-received" (reason).
+        decideAdvice: (projectId, adviceId, step, body) => api(`${base}/${projectId}/advices/${adviceId}/${step}`, { method: 'POST', body }),
         invoice: (projectId, issueDate, lines) => api(`${base}/${projectId}/invoices`, { method: 'POST', body: { issue_date: issueDate, lines } }),
         clientToCrm: (projectId, version) => api(`${base}/${projectId}/client/crm`, { method: 'POST', body: { base_version: version } }),
         // Renewal requests from connected clients, and the result sent back (optional, over a connection).

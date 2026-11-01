@@ -89,6 +89,21 @@ class ProjectsException extends TenancyException
     }
 
     /** Quotes need CRM on at the company. */
+    public static function adviceNotFound(): self
+    {
+        return new self('advice_not_found', 404);
+    }
+
+    public static function adviceDecided(): self
+    {
+        return new self('advice_decided', 409);
+    }
+
+    public static function adviceCurrency(): self
+    {
+        return new self('advice_currency', 422);
+    }
+
     /** A client the portal member is not linked to: the same answer either way. */
     public static function portalClientNotFound(): self
     {

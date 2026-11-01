@@ -276,5 +276,32 @@
         "no_lines": "No audits are recorded for this factory yet.",
         "empty_title": "No factory shared yet",
         "empty_text": "When {org} shares a factory with you, its audits appear here."
+    },
+    "advices": {
+        "open": "Tell them we paid",
+        "title": "Tell the provider about a payment",
+        "text": "To {from} for invoice {number}. Left to tell: {open}.",
+        "amount": "Amount paid ({currency})",
+        "amount_needed": "Enter the amount paid, above zero.",
+        "paid_on": "Day paid",
+        "method": "How it was paid",
+        "methods": {
+            "bank": "Bank transfer",
+            "cash": "Cash",
+            "cheque": "Cheque",
+            "mobile": "Mobile money",
+            "other": "Other"
+        },
+        "reference": "Bank or cheque reference",
+        "reference_hint": "Helps them find the money: a transfer number, cheque number or mobile transaction id.",
+        "note": "Note for them",
+        "no_money_moves": "This only tells them. They check that the money arrived and record it in their books, or answer that it did not.",
+        "send": "Send",
+        "sent": "{from} is told about the payment.",
+        "told": "Payments you told them about",
+        "status_sent": "Waiting for them",
+        "status_recorded": "Recorded by them",
+        "status_not_received": "Not received",
+        "their_reason": "Their answer: {reason}"
     }
 }

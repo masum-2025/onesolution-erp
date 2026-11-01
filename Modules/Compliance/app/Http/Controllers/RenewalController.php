@@ -14,12 +14,14 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Modules\Compliance\Http\CompliancePresenter;
 use Modules\Compliance\Http\Controllers\Concerns\FindsPlace;
+use Modules\Compliance\Http\Requests\AdviceRequest;
 use Modules\Compliance\Http\Requests\DecisionRequest;
 use Modules\Compliance\Http\Requests\RenewalRequestForm;
 use Modules\Compliance\Models\Audit;
 use Modules\Compliance\Models\ProposedResult;
 use Modules\Compliance\Models\ReceivedInvoice;
 use Modules\Compliance\Models\ReceivedQuote;
+use Modules\Compliance\Services\PaymentAdvices;
 use Modules\Compliance\Services\Place;
 use Modules\Compliance\Services\ProviderInvoices;
 use Modules\Compliance\Services\Quotes;
@@ -82,6 +84,17 @@ class RenewalController extends Controller
         $done = $this->invoices->bill($unit, $found, (int) $request->validated('base_version'), $request->user());
 
         return response()->json(['data' => $this->presenter->invoice($done)]);
+    }
+
+    /** Tell the provider an invoice was paid (they check and record it, or say nothing came). */
+    public function adviseInvoice(AdviceRequest $request, string $organization, string $invoice, PaymentAdvices $advices): JsonResponse
+    {
+        $unit = $this->unit($organization, 'compliance.view');
+        $found = $this->invoices->find($unit, $invoice);
+        $this->writableFactory($found->organization_id, 'compliance.bills');
+        $advices->advise($unit, $found, $request->validated(), $request->user());
+
+        return response()->json(['data' => $this->presenter->invoice($found->refresh())], 201);
     }
 
     /** Accept or decline a provider's quotation; the provider is told at once. */

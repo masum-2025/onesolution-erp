@@ -1,9 +1,34 @@
+import { currencyDigits, decimalStringToMinor } from '@/lib/format';
+
 /**
  * Small helpers of the compliance screens. Days left come from the server
  * (worked out from the expiry day and the company's today); these only show them.
  */
 
 export const STATES = ['expired', 'expiring', 'valid', 'unknown'];
+
+/** How a payment was made (told to the provider). */
+export const PAYMENT_METHODS = ['bank', 'cash', 'cheque', 'mobile', 'other'];
+
+const BANGLA = Object.fromEntries([...'০১২৩৪৫৬৭৮৯'].map((digit, index) => [digit, String(index)]));
+
+/** Typed money (Bangla or Latin digits, commas allowed) -> minor units; null unless above zero. */
+export function amountToMinor(text, currency) {
+    const clean = String(text ?? '').trim().replace(/[০-৯]/g, (digit) => BANGLA[digit]).replace(/[,\s]/g, '');
+    if (!/^\d+(\.\d+)?$/.test(clean)) return null;
+    const minor = decimalStringToMinor(clean, currencyDigits(currency));
+    return minor > 0 ? minor : null;
+}
+
+/** Today on the reader's own clock, "YYYY-MM-DD" (not UTC). */
+export function localToday(now = new Date()) {
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+/** Badge tone of a payment told to the provider (its word always shown next to it). */
+export function adviceTone(status) {
+    return { sent: 'warn', recorded: 'ok', not_received: 'bad' }[status] ?? 'neutral';
+}
 
 /** Badge tone of a state; its word is always shown next to it (never colour alone). */
 export function stateTone(state) {

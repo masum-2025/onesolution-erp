@@ -5,9 +5,12 @@ namespace Modules\Accounting\Services;
 use App\Models\User;
 use App\Platform\Modules\ModuleResolver;
 use App\Platform\Tenancy\Models\Organization;
+use Modules\Accounting\Enums\AccountType;
 use Modules\Accounting\Enums\DocumentStatus;
 use Modules\Accounting\Enums\DocumentType;
+use Modules\Accounting\Enums\SettlementType;
 use Modules\Accounting\Exceptions\AccountingException;
+use Modules\Accounting\Models\Account;
 use Modules\Accounting\Models\Document;
 use Modules\Accounting\Models\DocumentLine;
 use Modules\Accounting\Models\Party;
@@ -33,7 +36,52 @@ class Customers
         private Documents $documents,
         private Receivables $receivables,
         private ModuleResolver $modules,
+        private Settlements $settlements,
     ) {}
+
+    /**
+     * Where money can come in (postable asset accounts: cash, bank, wallet),
+     * for a module that records a receipt (Projects: a client said it paid).
+     *
+     * @return list<array{id: string, code: string, name: string}>
+     */
+    public function moneyAccounts(Organization $company): array
+    {
+        if (! $this->available($company)) {
+            return [];
+        }
+
+        return $this->books->query(Account::class, $company)->where('type', AccountType::Asset->value)->orderBy('code')->get()
+            ->filter(fn (Account $account) => $account->isPostable())
+            ->map(fn (Account $account) => ['id' => $account->getKey(), 'code' => $account->code, 'name' => $account->name])
+            ->values()->all();
+    }
+
+    /**
+     * A receipt against one sales invoice, by the company's own rules (posted
+     * at once, or waiting for approval above the company's amount). The same
+     * op_id twice is one receipt.
+     *
+     * @return array{id: string, status: string, amount_minor: int}
+     */
+    public function receiveFor(Organization $company, string $invoiceId, array $data, User $actor): array
+    {
+        $this->assertAvailable($company);
+        $invoice = $this->books->query(Document::class, $company)->whereKey($invoiceId)->where('type', DocumentType::Invoice->value)->first()
+            ?? throw AccountingException::documentNotFound();
+        $receipt = $this->settlements->record($company, SettlementType::Receipt, [
+            'party_id' => $invoice->party_id,
+            'account_id' => $data['account_id'],
+            'amount_minor' => $data['amount_minor'],
+            'settled_on' => $data['settled_on'],
+            'reference' => $data['reference'] ?? null,
+            'memo' => $data['memo'] ?? null,
+            'op_id' => $data['op_id'],
+            'allocations' => [['document_id' => $invoice->getKey(), 'amount_minor' => $data['amount_minor']]],
+        ], $actor);
+
+        return ['id' => $receipt->getKey(), 'status' => $receipt->status->value, 'amount_minor' => (int) $receipt->amount_minor];
+    }
 
     /** Whether the company keeps books now: Accounting on and set up. */
     public function available(Organization $company): bool

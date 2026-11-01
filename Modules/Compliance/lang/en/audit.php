@@ -27,4 +27,7 @@ return [
     'invoice_received' => 'Invoice received from the provider',
     'invoice_updated' => 'Provider\'s invoice updated (paid or voided)',
     'invoice_billed' => 'Provider\'s invoice taken into the books',
+    'payment_advised' => 'Provider told about a payment',
+    'payment_recorded' => 'Provider recorded the payment',
+    'payment_not_received' => 'Provider says the payment did not arrive',
 ];

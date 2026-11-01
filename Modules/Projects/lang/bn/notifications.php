@@ -7,6 +7,11 @@ return [
             'body' => '{{ by }} আপনাকে {{ project }} ({{ organization }})-এ একটা কাজ দিয়েছেন: {{ task }}। শেষ দিন: {{ due }}।',
             'action' => 'আমার কাজ খুলুন',
         ],
+        'projects_payment_advised' => [
+            'subject' => '{{ other }} জানিয়েছে {{ amount }} পরিশোধ করেছে ({{ project }})',
+            'body' => '{{ other }} জানিয়েছে {{ project }} ({{ organization }})-এর একটা ইনভয়েসে {{ amount }} পরিশোধ করেছে। টাকা এসেছে কি না দেখে হিসাবে তুলুন, অথবা জানান যে পৌঁছায়নি।',
+            'action' => 'প্রজেক্ট খুলুন',
+        ],
         'projects_quote_answered' => [
             'subject' => '{{ other }} {{ project }}-এর কোটেশন {{ answer }}',
             'body' => '{{ other }} {{ project }} ({{ organization }})-এর কোটেশন {{ answer }}। সিআরএম-এ হালনাগাদ হয়েছে; গৃহীত হলে অ্যাকাউন্টিং-এ খসড়া ইনভয়েস তৈরি হয়েছে।',
@@ -22,6 +27,10 @@ return [
         'projects_task_assigned' => [
             'name' => 'আপনাকে দেওয়া কাজ',
             'description' => 'প্রজেক্টের কোনো কাজে যোগ করা প্রত্যেককে।',
+        ],
+        'projects_payment_advised' => [
+            'name' => 'ক্লায়েন্ট পরিশোধের কথা জানিয়েছে',
+            'description' => 'সংযুক্ত ক্লায়েন্টকে যিনি ইনভয়েস পাঠিয়েছেন তাঁকে, আর প্রজেক্টের ম্যানেজারকে।',
         ],
         'projects_quote_answered' => [
             'name' => 'কোটেশনে ক্লায়েন্টের উত্তর',

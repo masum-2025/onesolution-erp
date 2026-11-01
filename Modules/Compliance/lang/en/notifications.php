@@ -31,6 +31,11 @@ Open the register to plan the renewals.',
             'body' => 'Renewal of {{ service }} at {{ organization }}: {{ status }}. Planned day: {{ planned }}.',
             'action' => 'Open renewals',
         ],
+        'compliance_advice_answered' => [
+            'subject' => '{{ other }}: {{ answer }} ({{ amount }})',
+            'body' => 'You told {{ other }} about a payment of {{ amount }} for {{ organization }}. Their answer: {{ answer }}.',
+            'action' => 'Open renewals',
+        ],
     ],
     'catalog' => [
         'compliance_expiring' => [
@@ -52,6 +57,10 @@ Open the register to plan the renewals.',
         'compliance_renewal_answered' => [
             'name' => 'Answer to a renewal request',
             'description' => 'To the people who send renewal requests, when the provider accepts, declines or finishes one.',
+        ],
+        'compliance_advice_answered' => [
+            'name' => 'Answer to a payment you told about',
+            'description' => 'To the person who told a connected provider about a payment, when the provider records it or says it did not arrive.',
         ],
     ],
     'expires_on' => 'expires :date',
