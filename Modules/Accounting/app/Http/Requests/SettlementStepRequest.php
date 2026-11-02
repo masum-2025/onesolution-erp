@@ -3,6 +3,7 @@
 namespace Modules\Accounting\Http\Requests;
 
 use App\Platform\Support\Http\StrictFormRequest;
+use Modules\Accounting\Http\Controllers\Concerns\ConfirmsNegativeBalances;
 
 /**
  * A step of a settlement (approve, reject, void, allocate): the version the
@@ -24,6 +25,8 @@ class SettlementStepRequest extends StrictFormRequest
             'allocations.*' => ['array:document_id,amount_minor'],
             'allocations.*.document_id' => ['required', 'string', 'size:26'],
             'allocations.*.amount_minor' => ['required', 'integer', 'min:1', 'max:'.JournalRequest::MAX_AMOUNT],
+            // Posting anyway when a cash, wallet or bank account would go below its floor (a warning).
+            ...ConfirmsNegativeBalances::negativeRules(),
         ];
     }
 }

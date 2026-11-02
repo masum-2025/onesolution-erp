@@ -16,7 +16,7 @@ import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { accountingApi } from '../api';
-import { accountTree } from '../lib';
+import { accountTree, amountText, parseAmount } from '../lib';
 import BooksGate from '../components/BooksGate.vue';
 
 /**
@@ -42,7 +42,12 @@ const groups = computed(() => accountTree(all.value).flat.filter((account) => ac
 const editing = ref(null); // null | 'new' | account
 const saving = ref(false);
 const errors = ref({});
-const form = reactive({ code: '', name_en: '', name_bn: '', parent_id: '', type: '', is_group: false });
+const form = reactive({ code: '', name_en: '', name_bn: '', parent_id: '', type: '', is_group: false, money_kind: '', overdraft: '' });
+const currency = org.settings?.currency_code ?? null;
+// Where money is kept (cash, bank, wallet): only for an asset account that takes entries.
+const moneyKinds = ['cash', 'bank', 'wallet'];
+const typeOf = computed(() => (form.parent_id ? groups.value.find((group) => group.id === form.parent_id)?.type : form.type));
+const holdsMoney = computed(() => typeOf.value === 'asset' && !form.is_group);
 
 function edit(account = null) {
     Object.assign(form, {
@@ -52,6 +57,8 @@ function edit(account = null) {
         parent_id: account?.parent_id ?? '',
         type: account?.parent_id ? '' : (account?.type ?? ''),
         is_group: account?.is_group ?? false,
+        money_kind: account?.money_kind ?? '',
+        overdraft: amountText(account?.overdraft_limit_minor ?? 0, currency),
     });
     errors.value = {};
     editing.value = account ?? 'new';
@@ -64,7 +71,13 @@ async function save() {
         parent_id: form.parent_id || null,
         is_group: form.is_group,
         ...(form.parent_id ? {} : { type: form.type || null }),
+        money_kind: holdsMoney.value ? (form.money_kind || null) : null,
+        overdraft_limit_minor: holdsMoney.value && form.money_kind === 'bank' ? parseAmount(form.overdraft, currency) : 0,
     };
+    if (body.overdraft_limit_minor === null) {
+        errors.value = { overdraft_limit_minor: [t('accounting.accounts.overdraft_invalid')] };
+        return;
+    }
     saving.value = true;
     errors.value = {};
     try {
@@ -95,6 +108,8 @@ function changed(account, body) {
     if ((body.parent_id ?? null) !== (account.parent_id ?? null)) changes.parent_id = body.parent_id;
     if (body.is_group !== account.is_group) changes.is_group = body.is_group;
     if (body.type && body.type !== account.type) changes.type = body.type;
+    if ((body.money_kind ?? null) !== (account.money_kind ?? null)) changes.money_kind = body.money_kind;
+    if (body.overdraft_limit_minor !== (account.overdraft_limit_minor ?? 0)) changes.overdraft_limit_minor = body.overdraft_limit_minor;
     return changes;
 }
 
@@ -154,6 +169,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                         <span class="w-14 shrink-0 font-mono text-[12.5px] text-muted" dir="ltr">{{ account.code }}</span>
                         <span class="min-w-0 flex-1 truncate text-[13.5px]" :class="account.is_group ? 'font-semibold text-fg' : 'text-fg'">{{ account.name }}</span>
                         <span class="hidden text-[12px] text-muted sm:inline">{{ t(`accounting.types.${account.type}`) }}</span>
+                        <AppBadge v-if="account.money_kind" tone="neutral">{{ t(`accounting.accounts.money_kinds.${account.money_kind}`) }}</AppBadge>
                         <AppBadge v-if="account.is_group" tone="outline">{{ t('accounting.accounts.group') }}</AppBadge>
                         <AppBadge v-if="account.status === 'archived'" tone="neutral">{{ t('accounting.accounts.archived') }}</AppBadge>
                         <template v-if="can('accounting.manage')">
@@ -200,6 +216,18 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     <AppSwitch v-model="form.is_group" :label="t('accounting.accounts.is_group')" show-label />
                 </div>
                 <p v-if="fieldError('is_group')" class="text-[12.5px] text-bad sm:col-span-2">{{ fieldError('is_group') }}</p>
+                <!-- Where money is kept: cash and wallets may not go below zero, a bank below its overdraft (company rules). -->
+                <template v-if="holdsMoney">
+                    <AppField v-slot="{ id }" :label="t('accounting.accounts.money_kind')" :hint="t('accounting.accounts.money_kind_hint')" :error="fieldError('money_kind')" optional>
+                        <select :id="id" v-model="form.money_kind" class="field-input">
+                            <option value="">{{ t('accounting.accounts.money_none') }}</option>
+                            <option v-for="kind in moneyKinds" :key="kind" :value="kind">{{ t(`accounting.accounts.money_kinds.${kind}`) }}</option>
+                        </select>
+                    </AppField>
+                    <AppField v-if="form.money_kind === 'bank'" v-slot="{ id }" :label="t('accounting.accounts.overdraft', { currency: currency ?? '' })" :hint="t('accounting.accounts.overdraft_hint')" :error="fieldError('overdraft_limit_minor')" optional>
+                        <input :id="id" v-model="form.overdraft" inputmode="decimal" autocomplete="off" class="field-input tabular" dir="ltr" />
+                    </AppField>
+                </template>
             </form>
             <template #footer>
                 <AppButton variant="ghost" @click="editing = null">{{ t('accounting.common.cancel') }}</AppButton>

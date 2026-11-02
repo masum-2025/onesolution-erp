@@ -49,6 +49,8 @@ class AccountingPresenter
             'parent_id' => $account->parent_id,
             'is_group' => $account->is_group,
             'status' => $account->status->value,
+            'money_kind' => $account->money_kind,
+            'overdraft_limit_minor' => $account->overdraft_limit_minor,
             'version' => $account->version,
         ];
     }

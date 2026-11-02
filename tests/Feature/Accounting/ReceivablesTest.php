@@ -16,6 +16,9 @@ beforeEach(function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-15 06:00:00', 'UTC'));
     $this->w = accountingWorld();
     setUpBooks($this, $this->w->token, $this->w->c1)->assertCreated();
+    // Entries here pay from cash that was never put in; the floor on cash has its own tests (MoneyFloorsTest).
+    trustedOrgRule($this->w->c1, 'accounting.negative_cash_balance', 'allow');
+    trustedOrgRule($this->w->c1, 'accounting.negative_bank_balance', 'allow');
     // Sells and buys; never approves (separation of duties).
     $this->clerk = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['accounting.view', 'accounting.sell', 'accounting.buy'], 'Clerk')), $this->w->c1);
     $this->api = fn (string $path = '') => "/api/organizations/{$this->w->c1->id}/accounting/{$path}";

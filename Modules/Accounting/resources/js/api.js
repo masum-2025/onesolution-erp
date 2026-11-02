@@ -1,4 +1,29 @@
 import { api } from '@/lib/http';
+import { confirmAction } from '@/lib/dialogs';
+import { t } from '@/lib/i18n';
+
+/**
+ * A posting that would take cash, a wallet or a bank below its floor, where
+ * the company's rule warns: the person sees why and posts anyway with a
+ * reason (sent again with allow_negative), or stops. A block, or a cancel,
+ * comes back as the server's error.
+ */
+export async function confirmingFloor(send) {
+    try {
+        return await send({});
+    } catch (error) {
+        if (error?.code !== 'below_floor_warning') throw error;
+        const answer = await confirmAction({
+            title: t('accounting.floor.title'),
+            message: error.message,
+            confirmLabel: t('accounting.floor.post_anyway'),
+            reason: 'required',
+            danger: true,
+        });
+        if (!answer) throw error;
+        return send({ allow_negative: true, negative_reason: answer.reason });
+    }
+}
 
 /**
  * Calls to the Accounting API of a company. The server checks every access
@@ -41,10 +66,10 @@ export function accountingApi(organizationId) {
 
         journals: (query) => api(`${base}/journals`, { query }),
         journal: (id) => api(`${base}/journals/${id}`),
-        createJournal: (body) => api(`${base}/journals`, { method: 'POST', body }),
+        createJournal: (body) => confirmingFloor((extra) => api(`${base}/journals`, { method: 'POST', body: { ...body, ...extra } })),
         updateJournal: (id, body) => api(`${base}/journals/${id}`, { method: 'PATCH', body }),
         deleteJournal: (id, version) => api(`${base}/journals/${id}`, { method: 'DELETE', body: { base_version: version } }),
-        step: (id, step, body) => api(`${base}/journals/${id}/${step}`, { method: 'POST', body }),
+        step: (id, step, body) => confirmingFloor((extra) => api(`${base}/journals/${id}/${step}`, { method: 'POST', body: { ...body, ...extra } })),
 
         report: (name, query) => api(`${base}/reports/${name}`, { query }),
 
@@ -66,7 +91,7 @@ export function accountingApi(organizationId) {
 
         settlements: (query) => api(`${base}/settlements`, { query }),
         settlement: (id) => api(`${base}/settlements/${id}`),
-        createSettlement: (body) => api(`${base}/settlements`, { method: 'POST', body }),
-        settlementStep: (id, step, body) => api(`${base}/settlements/${id}/${step}`, { method: 'POST', body }),
+        createSettlement: (body) => confirmingFloor((extra) => api(`${base}/settlements`, { method: 'POST', body: { ...body, ...extra } })),
+        settlementStep: (id, step, body) => confirmingFloor((extra) => api(`${base}/settlements/${id}/${step}`, { method: 'POST', body: { ...body, ...extra } })),
     };
 }

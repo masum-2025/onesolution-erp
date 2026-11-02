@@ -21,6 +21,8 @@ beforeEach(function () {
     $this->travelTo(CarbonImmutable::parse('2026-10-15 06:00:00', 'UTC'));
     $this->w = accountingWorld();
     setUpBooks($this, $this->w->token, $this->w->c1)->assertCreated();
+    // Entries here pay from cash that was never put in; the floor on cash has its own tests (MoneyFloorsTest).
+    trustedOrgRule($this->w->c1, 'accounting.negative_cash_balance', 'allow');
 });
 
 /** An entry another module would send: opening balances moved between two equity accounts. */

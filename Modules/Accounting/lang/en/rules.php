@@ -76,6 +76,18 @@ return [
         'label' => 'Statement file size (KB)',
         'description' => 'The largest statement file accepted.',
     ],
+    'negative_cash_balance' => [
+        'label' => 'Cash and wallets below zero',
+        'description' => 'When an entry would take cash in hand or a mobile wallet below zero on its date: block it, warn and ask for a reason, or allow it.',
+    ],
+    'negative_bank_balance' => [
+        'label' => 'Bank accounts below their overdraft',
+        'description' => 'When an entry would take a bank account below zero (or below minus its overdraft limit): block it, warn and ask for a reason, or allow it.',
+    ],
+    'require_opening_first' => [
+        'label' => 'Opening balances first',
+        'description' => 'Nothing is posted until the opening balances are, and nothing dated before their day.',
+    ],
     'categories' => [
         'tax' => 'Tax',
         'bank' => 'Bank and cash',

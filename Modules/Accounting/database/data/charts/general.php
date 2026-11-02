@@ -18,9 +18,9 @@ return [
     'accounts' => [
         ['code' => '1000', 'name' => ['en' => 'Assets', 'bn' => 'সম্পদ'], 'type' => 'asset', 'group' => true],
         ['code' => '1100', 'name' => ['en' => 'Current assets', 'bn' => 'চলতি সম্পদ'], 'parent' => '1000', 'group' => true],
-        ['code' => '1110', 'name' => ['en' => 'Cash in hand', 'bn' => 'হাতে নগদ'], 'parent' => '1100'],
-        ['code' => '1120', 'name' => ['en' => 'Bank accounts', 'bn' => 'ব্যাংক হিসাব'], 'parent' => '1100'],
-        ['code' => '1130', 'name' => ['en' => 'Mobile wallets', 'bn' => 'মোবাইল ওয়ালেট'], 'parent' => '1100'],
+        ['code' => '1110', 'name' => ['en' => 'Cash in hand', 'bn' => 'হাতে নগদ'], 'parent' => '1100', 'money' => 'cash'],
+        ['code' => '1120', 'name' => ['en' => 'Bank accounts', 'bn' => 'ব্যাংক হিসাব'], 'parent' => '1100', 'money' => 'bank'],
+        ['code' => '1130', 'name' => ['en' => 'Mobile wallets', 'bn' => 'মোবাইল ওয়ালেট'], 'parent' => '1100', 'money' => 'wallet'],
         ['code' => '1140', 'name' => ['en' => 'Accounts receivable', 'bn' => 'প্রাপ্য হিসাব'], 'parent' => '1100'],
         ['code' => '1150', 'name' => ['en' => 'Inventory', 'bn' => 'মজুদ পণ্য'], 'parent' => '1100'],
         ['code' => '1160', 'name' => ['en' => 'Advances and prepayments', 'bn' => 'অগ্রিম ও অগ্রিম পরিশোধ'], 'parent' => '1100'],

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Gate;
 use Modules\Accounting\Enums\SettlementType;
 use Modules\Accounting\Exceptions\AccountingException;
 use Modules\Accounting\Http\AccountingPresenter;
+use Modules\Accounting\Http\Controllers\Concerns\ConfirmsNegativeBalances;
 use Modules\Accounting\Http\Controllers\Concerns\FindsBooks;
 use Modules\Accounting\Http\Requests\SettlementStepRequest;
 use Modules\Accounting\Services\Settlements;
@@ -18,7 +19,7 @@ use Modules\Accounting\Services\Settlements;
  */
 class SettlementStepController extends Controller
 {
-    use FindsBooks;
+    use ConfirmsNegativeBalances, FindsBooks;
 
     public function __construct(private Settlements $settlements, private AccountingPresenter $presenter) {}
 
@@ -26,6 +27,7 @@ class SettlementStepController extends Controller
     {
         $company = $this->company($organization);
         $found = $this->settlementIn($company, $settlement);
+        $this->confirmNegative($request);
         $permission = match ($step) {
             'approve', 'reject', 'void' => 'accounting.approve',
             'allocate' => $found->type === SettlementType::Receipt ? 'accounting.sell' : 'accounting.buy',

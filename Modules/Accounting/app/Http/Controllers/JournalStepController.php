@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Modules\Accounting\Exceptions\AccountingException;
 use Modules\Accounting\Http\AccountingPresenter;
+use Modules\Accounting\Http\Controllers\Concerns\ConfirmsNegativeBalances;
 use Modules\Accounting\Http\Controllers\Concerns\FindsBooks;
 use Modules\Accounting\Http\Requests\JournalStepRequest;
 use Modules\Accounting\Services\Journals;
@@ -18,7 +19,7 @@ use Modules\Accounting\Services\Journals;
  */
 class JournalStepController extends Controller
 {
-    use FindsBooks;
+    use ConfirmsNegativeBalances, FindsBooks;
 
     private const PERMISSIONS = [
         'submit' => 'accounting.post',
@@ -35,6 +36,7 @@ class JournalStepController extends Controller
         $company = $this->company($organization);
         $found = $this->journalIn($company, $journal);
         Gate::authorize(self::PERMISSIONS[$step] ?? throw AccountingException::unknownStep(), $company);
+        $this->confirmNegative($request);
 
         $version = (int) $request->validated('base_version');
         $actor = $request->user();

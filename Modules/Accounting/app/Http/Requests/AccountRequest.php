@@ -6,6 +6,7 @@ use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Support\Http\StrictFormRequest;
 use Modules\Accounting\Enums\AccountStatus;
 use Modules\Accounting\Enums\AccountType;
+use Modules\Accounting\Models\Account;
 
 /**
  * An account of the chart, named in every language the platform supports.
@@ -31,6 +32,9 @@ class AccountRequest extends StrictFormRequest
             'parent_id' => ['nullable', 'string', 'size:26'],
             'is_group' => ['sometimes', 'boolean'],
             'status' => [$creating ? 'prohibited' : 'sometimes', 'string', 'in:'.implode(',', array_column(AccountStatus::cases(), 'value'))],
+            // Where money is kept (an asset account): cash, bank or wallet; a bank's overdraft in minor units.
+            'money_kind' => ['sometimes', 'nullable', 'string', 'in:'.implode(',', Account::MONEY_KINDS)],
+            'overdraft_limit_minor' => ['sometimes', 'integer', 'min:0', 'max:'.JournalRequest::MAX_AMOUNT],
         ];
     }
 }

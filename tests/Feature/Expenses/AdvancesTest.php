@@ -80,6 +80,8 @@ beforeEach(function () {
         toggles()->enable($this->w->g1, 'accounting', 'Test setup');
         $books = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['accounting.view', 'accounting.manage'], 'Books')), $this->w->c1);
         setUpBooks($this, $books, $this->w->c1)->assertCreated();
+        // Advances are paid from cash that was never put in; the floor on cash has its own tests (MoneyFloorsTest).
+        trustedOrgRule($this->w->c1, 'accounting.negative_cash_balance', 'allow');
 
         return fn (string $code) => collect($this->asToken($books)->getJson("/api/organizations/{$this->w->c1->id}/accounting/reports/trial-balance?as_of=2026-10-31")->json('data.rows'))->firstWhere('code', $code);
     };

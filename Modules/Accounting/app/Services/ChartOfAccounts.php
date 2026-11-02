@@ -73,6 +73,7 @@ class ChartOfAccounts
                     'parent_id' => $row['parent'] === null ? null : $ids[$row['parent']],
                     'code' => $row['code'],
                     'type' => $row['type'],
+                    'money_kind' => $row['group'] ? null : $row['money'],
                     'is_group' => $row['group'],
                     'status' => AccountStatus::Active,
                     'version' => 1,
@@ -121,6 +122,7 @@ class ChartOfAccounts
                 'status' => AccountStatus::Active,
                 'version' => 1,
             ]);
+            $this->applyMoney($account, $data);
             $account->putTexts('name', $data['name'])->save();
 
             $this->audit->record('accounting.account_created', $account, new: $this->auditValues($account), actor: $actor, organizationId: $company->getKey());
@@ -167,6 +169,7 @@ class ChartOfAccounts
                 }
                 $account->status = AccountStatus::from($data['status']);
             }
+            $this->applyMoney($account, $data);
 
             if (! $account->isDirty()) {
                 return $account;
@@ -425,6 +428,32 @@ class ChartOfAccounts
         return [
             'code' => $account->code, 'name' => $account->texts('name'), 'type' => $account->type->value,
             'parent_id' => $account->parent_id, 'is_group' => $account->is_group, 'status' => $account->status->value,
+            'money_kind' => $account->money_kind, 'overdraft_limit_minor' => (int) $account->overdraft_limit_minor,
         ];
+    }
+
+    /**
+     * Where money is kept: only a postable asset account holds money; only a bank
+     * account has an overdraft. Anything else clears them.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function applyMoney(Account $account, array $data): void
+    {
+        if (array_key_exists('money_kind', $data)) {
+            if ($data['money_kind'] !== null && ($account->type !== AccountType::Asset || $account->is_group)) {
+                throw ValidationException::withMessages(['money_kind' => __('accounting::accounting.validation.money_kind_asset')]);
+            }
+            $account->money_kind = $data['money_kind'];
+        }
+        if (array_key_exists('overdraft_limit_minor', $data)) {
+            if ((int) $data['overdraft_limit_minor'] > 0 && $account->money_kind !== 'bank') {
+                throw ValidationException::withMessages(['overdraft_limit_minor' => __('accounting::accounting.validation.overdraft_bank_only')]);
+            }
+            $account->overdraft_limit_minor = (int) $data['overdraft_limit_minor'];
+        }
+        if ($account->money_kind !== 'bank') {
+            $account->overdraft_limit_minor = 0;
+        }
     }
 }

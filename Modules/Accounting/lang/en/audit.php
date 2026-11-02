@@ -52,4 +52,5 @@ return [
     'bank_unmatched' => 'Statement line match undone',
     'reconciled' => 'Account reconciled with its statement',
     'reconciliation_reopened' => 'Reconciliation reopened',
+    'negative_balance_posted' => 'Entry posted although cash, a wallet or a bank went below its floor',
 ];

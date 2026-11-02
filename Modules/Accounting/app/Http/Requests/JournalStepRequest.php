@@ -3,6 +3,7 @@
 namespace Modules\Accounting\Http\Requests;
 
 use App\Platform\Support\Http\StrictFormRequest;
+use Modules\Accounting\Http\Controllers\Concerns\ConfirmsNegativeBalances;
 
 /**
  * A step of a journal (submit, approve, reject, withdraw, reverse): the
@@ -21,6 +22,8 @@ class JournalStepRequest extends StrictFormRequest
             'base_version' => ['required', 'integer', 'min:1'],
             'reason' => [in_array($step, ['reject', 'reverse'], true) ? 'required' : 'prohibited', 'string', 'min:5', 'max:300'],
             'entry_date' => [$step === 'reverse' ? 'nullable' : 'prohibited', 'date_format:Y-m-d'],
+            // Posting anyway when a cash, wallet or bank account would go below its floor (a warning).
+            ...ConfirmsNegativeBalances::negativeRules(),
         ];
     }
 }

@@ -2735,6 +2735,33 @@ and the sidebar lights the entry with the longest matching link.
 - Not yet: direct bank feeds (APIs), several currencies (with 6-2), splitting one book line over
   several statement lines.
 
+### Cash, wallets and banks below zero
+
+Every posting is checked as it is posted (`MoneyFloors`, called by `Posting::post`): a money
+account may not go below its floor on the entry's own date (posted lines up to that date plus
+this entry).
+
+- **Money accounts:** `acc_accounts.money_kind` = `cash` | `bank` | `wallet` (null for every
+  other account) and `overdraft_limit_minor` (bank only). Chart templates mark them
+  (`'money' => …`; general 1110 cash, 1120 bank, 1130 wallet, retail 1115 cash); books set up
+  before were marked by code in the migration. Set on the chart screen ("Holds money",
+  "Overdraft limit"); only a postable asset account holds money.
+- **Floor:** 0 for cash and wallets, minus the overdraft limit for a bank.
+- **Rules:** `accounting.negative_cash_balance` (cash and wallets; default `block`) and
+  `accounting.negative_bank_balance` (default `warn`), each `allow` | `warn` | `block`, set or
+  locked at platform, partner, plan, group or company.
+  - `block`: refused for everyone, other modules' postings too (`below_floor`, 422, with the
+    accounts and their balance after).
+  - `warn`: in Accounting's own screens (journals, receipts and payments, and their approval)
+    the answer is `below_floor_warning` (409); the screen asks for a reason and sends again with
+    `allow_negative` + `negative_reason`. Other modules' postings (Payroll, Expenses, fees) go
+    through. Either way it is audited (`accounting.negative_balance_posted`, with the reason).
+- **Always allowed:** reversals and voids (undoing a mistake), the opening balances and the
+  year-end closing entry.
+- **`accounting.require_opening_first`** (default off): nothing is posted before the opening
+  balances are posted (`opening_first`), nor dated before their day (`before_opening`).
+- The journal screen now says why Save is off (no narration, or debits and credits differ).
+
 ### Future expansion (Accounting)
 
 - A new sector is a new chart file (or none: `general`) and a sector package rule; a new

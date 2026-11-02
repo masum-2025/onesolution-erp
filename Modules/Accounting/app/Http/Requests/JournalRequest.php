@@ -3,6 +3,7 @@
 namespace Modules\Accounting\Http\Requests;
 
 use App\Platform\Support\Http\StrictFormRequest;
+use Modules\Accounting\Http\Controllers\Concerns\ConfirmsNegativeBalances;
 
 /**
  * A journal entry as written: date, narration and lines in minor units
@@ -36,6 +37,8 @@ class JournalRequest extends StrictFormRequest
             'lines.*.credit_minor' => ['nullable', 'integer', 'min:0', 'max:'.self::MAX_AMOUNT],
             'lines.*.memo' => ['nullable', 'string', 'max:255'],
             'submit' => [$creating ? 'sometimes' : 'prohibited', 'boolean'],
+            // Posting anyway when a cash, wallet or bank account would go below its floor (a warning).
+            ...ConfirmsNegativeBalances::negativeRules(),
         ];
     }
 }

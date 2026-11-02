@@ -63,6 +63,8 @@ class ChartTemplates
                 'type' => $type,
                 'group' => (bool) ($account['group'] ?? false),
                 'parent' => $parent,
+                // cash | bank | wallet: where money is kept (negative balance rules).
+                'money' => $account['money'] ?? null,
             ];
         }
 

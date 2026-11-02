@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Modules\Accounting\Enums\JournalStatus;
 use Modules\Accounting\Http\AccountingPresenter;
+use Modules\Accounting\Http\Controllers\Concerns\ConfirmsNegativeBalances;
 use Modules\Accounting\Http\Controllers\Concerns\FindsBooks;
 use Modules\Accounting\Http\Requests\JournalRequest;
 use Modules\Accounting\Models\Journal;
@@ -23,7 +24,7 @@ use Modules\Accounting\Services\Journals;
  */
 class JournalController extends Controller
 {
-    use FindsBooks;
+    use ConfirmsNegativeBalances, FindsBooks;
 
     public function __construct(private Books $books, private Journals $journals, private AccountingPresenter $presenter) {}
 
@@ -76,6 +77,7 @@ class JournalController extends Controller
         $company = $this->company($organization);
         Gate::authorize('accounting.post', $company);
         $data = $request->validated();
+        $this->confirmNegative($request);
 
         // Written and sent together: either both happen or nothing is saved.
         $journal = $this->books->transaction($company, function () use ($company, $data, $request) {
@@ -94,7 +96,7 @@ class JournalController extends Controller
         $found = $this->journalIn($company, $journal);
 
         $data = $request->validated();
-        $updated = $this->journals->update($company, $found, (int) $data['base_version'], array_diff_key($data, ['base_version' => true]), $request->user());
+        $updated = $this->journals->update($company, $found, (int) $data['base_version'], array_diff_key($data, ['base_version' => true, 'allow_negative' => true, 'negative_reason' => true]), $request->user());
 
         return response()->json(['data' => $this->presenter->journal($updated, $company)]);
     }

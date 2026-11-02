@@ -16,10 +16,13 @@ use Modules\Accounting\Enums\AccountType;
  * in every language the client uses. Group accounts are headings; entries go
  * to the others. Never deleted: archived once no longer used.
  */
-#[Fillable(['organization_id', 'parent_id', 'code', 'type', 'is_group', 'status', 'version'])]
+#[Fillable(['organization_id', 'parent_id', 'code', 'type', 'money_kind', 'overdraft_limit_minor', 'is_group', 'status', 'version'])]
 class Account extends Model
 {
     use BelongsToOrganization, HasTranslatedTexts, HasUlids, UsesTenantDatabase;
+
+    /** Where money is kept: postings may not take these below their floor (by rule). */
+    public const MONEY_KINDS = ['cash', 'bank', 'wallet'];
 
     protected $table = 'acc_accounts';
 
@@ -32,6 +35,7 @@ class Account extends Model
             'type' => AccountType::class,
             'status' => AccountStatus::class,
             'is_group' => 'boolean',
+            'overdraft_limit_minor' => 'integer',
             'version' => 'integer',
         ];
     }

@@ -206,7 +206,11 @@ const lineError = (index, field) => fieldError(`lines.${index}.${field}`) ?? (fi
                 </footer>
             </section>
 
-            <div class="flex flex-wrap justify-end gap-2">
+            <div class="flex flex-wrap items-center justify-end gap-2">
+                <!-- Why the buttons are off, in words. -->
+                <p v-if="saving === null && (!form.narration.trim() || !totals.balanced)" class="me-auto text-[12.5px] text-warn" role="status">
+                    {{ !form.narration.trim() ? t('accounting.form.need_narration') : t('accounting.form.need_balance') }}
+                </p>
                 <AppButton variant="ghost" :to="{ name: 'accounting' }">{{ t('accounting.form.cancel') }}</AppButton>
                 <AppButton :loading="saving === 'draft'" :disabled="saving !== null || !form.narration.trim()" @click="save(false)">{{ t('accounting.form.save_draft') }}</AppButton>
                 <AppButton variant="primary" type="submit" :icon="Send" :loading="saving === 'send'" :disabled="saving !== null || !totals.balanced || !form.narration.trim()">{{ t('accounting.form.send') }}</AppButton>

@@ -84,7 +84,9 @@
         "posted": "Posted as {number}.",
         "pending": "Sent for approval.",
         "cancel": "Cancel",
-        "not_editable": "Only drafts and rejected entries can be changed."
+        "not_editable": "Only drafts and rejected entries can be changed.",
+        "need_narration": "Write what happened (narration) to save.",
+        "need_balance": "Debits and credits must be equal to send."
     },
     "journal": {
         "back": "Journal entries",
@@ -156,7 +158,18 @@
         "restored": "Account in use again.",
         "search": "Search by code or name",
         "empty_title": "No accounts",
-        "empty_text": "Set up the books to start with a ready list of accounts."
+        "empty_text": "Set up the books to start with a ready list of accounts.",
+        "money_kind": "Holds money",
+        "money_kind_hint": "Cash and wallets may not go below zero; a bank not below its overdraft (company rules).",
+        "money_none": "No (not a money account)",
+        "money_kinds": {
+            "cash": "Cash",
+            "bank": "Bank",
+            "wallet": "Wallet"
+        },
+        "overdraft": "Overdraft limit ({currency})",
+        "overdraft_hint": "How far the bank lets this account go below zero. Empty or 0: no overdraft.",
+        "overdraft_invalid": "Enter the overdraft as an amount, for example 50000."
     },
     "reports": {
         "title": "Reports",
@@ -674,5 +687,9 @@
         "amount_hint": "Money out written as -100.00 or (100.00).",
         "sample": "The first lines, as they will be read",
         "imported": "{added} lines brought in, {skipped} skipped (already in, nothing moved, or already reconciled)."
+    },
+    "floor": {
+        "title": "Below zero?",
+        "post_anyway": "Post anyway"
     }
 }

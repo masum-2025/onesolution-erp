@@ -264,6 +264,42 @@ return [
             'category' => 'bank',
             'sort_order' => 120,
         ],
+        [
+            // Cash in hand and mobile wallets cannot really go below zero: an entry that would
+            // take one there is refused (block), asked about with a reason (warn), or let through.
+            'key' => 'accounting.negative_cash_balance',
+            'type' => 'enum',
+            'schema' => ['enum' => ['allow', 'warn', 'block']],
+            'default' => 'block',
+            'label' => 'accounting::rules.negative_cash_balance.label',
+            'description' => 'accounting::rules.negative_cash_balance.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'period',
+            'sort_order' => 130,
+        ],
+        [
+            // A bank account below zero, beyond its own overdraft limit (0 = no overdraft).
+            'key' => 'accounting.negative_bank_balance',
+            'type' => 'enum',
+            'schema' => ['enum' => ['allow', 'warn', 'block']],
+            'default' => 'warn',
+            'label' => 'accounting::rules.negative_bank_balance.label',
+            'description' => 'accounting::rules.negative_bank_balance.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'period',
+            'sort_order' => 140,
+        ],
+        [
+            // On: nothing is posted before the opening balances are, nor dated before their day.
+            'key' => 'accounting.require_opening_first',
+            'type' => 'boolean',
+            'default' => false,
+            'label' => 'accounting::rules.require_opening_first.label',
+            'description' => 'accounting::rules.require_opening_first.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'period',
+            'sort_order' => 150,
+        ],
     ],
     'menu' => [
         [

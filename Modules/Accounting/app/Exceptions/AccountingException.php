@@ -138,6 +138,36 @@ class AccountingException extends TenancyException
         return new self('unbalanced', 422, extra: ['debit_minor' => $debit, 'credit_minor' => $credit]);
     }
 
+    /**
+     * A money account would go below its floor and the rule refuses it.
+     *
+     * @param  list<array<string, mixed>>  $accounts
+     */
+    public static function belowFloor(array $accounts, string $date): self
+    {
+        return new self('below_floor', 422, ['account' => $accounts[0]['account'], 'balance' => $accounts[0]['balance'], 'date' => $date], ['accounts' => $accounts, 'entry_date' => $date]);
+    }
+
+    /**
+     * The same, where the rule asks the person to confirm with a reason (allow_negative + negative_reason).
+     *
+     * @param  list<array<string, mixed>>  $accounts
+     */
+    public static function belowFloorWarning(array $accounts, string $date): self
+    {
+        return new self('below_floor_warning', 409, ['account' => $accounts[0]['account'], 'balance' => $accounts[0]['balance'], 'date' => $date], ['accounts' => $accounts, 'entry_date' => $date]);
+    }
+
+    public static function openingFirst(): self
+    {
+        return new self('opening_first', 422);
+    }
+
+    public static function beforeOpening(string $date): self
+    {
+        return new self('before_opening', 422, ['date' => $date]);
+    }
+
     public static function tooFewLines(): self
     {
         return new self('too_few_lines', 422);

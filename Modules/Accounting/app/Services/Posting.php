@@ -27,11 +27,14 @@ class Posting
         private FiscalCalendar $calendar,
         private JournalNumbers $numbers,
         private AuditLogger $audit,
+        private MoneyFloors $floors,
     ) {}
 
     public function post(Organization $company, Journal $journal, ?User $approver, ?User $actor, ?Period $into = null): Journal
     {
         $period = $into ?? $this->calendar->openPeriodFor($company, $journal->entry_date);
+        // Cash, wallets and banks below their floor: refused or confirmed by rule (the period row is locked by now).
+        $this->floors->check($company, $journal, $actor);
         /** @var FiscalYear $year */
         $year = $this->books->query(FiscalYear::class, $company)->findOrFail($period->fiscal_year_id);
 

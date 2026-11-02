@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Modules\Accounting\Enums\SettlementStatus;
 use Modules\Accounting\Enums\SettlementType;
 use Modules\Accounting\Http\AccountingPresenter;
+use Modules\Accounting\Http\Controllers\Concerns\ConfirmsNegativeBalances;
 use Modules\Accounting\Http\Controllers\Concerns\FindsBooks;
 use Modules\Accounting\Http\Requests\SettlementRequest;
 use Modules\Accounting\Models\Party;
@@ -24,7 +25,7 @@ use Modules\Accounting\Services\Settlements;
  */
 class SettlementController extends Controller
 {
-    use FindsBooks;
+    use ConfirmsNegativeBalances, FindsBooks;
 
     public function __construct(private Books $books, private Settlements $settlements, private AccountingPresenter $presenter) {}
 
@@ -73,6 +74,7 @@ class SettlementController extends Controller
     {
         $company = $this->company($organization);
         $data = $request->validated();
+        $this->confirmNegative($request);
         $type = SettlementType::from($data['type']);
         Gate::authorize($type === SettlementType::Receipt ? 'accounting.sell' : 'accounting.buy', $company);
 

@@ -11,6 +11,7 @@ use Modules\Accounting\Charts\ChartTemplates;
 use Modules\Accounting\Console\MapPostingAccounts;
 use Modules\Accounting\Console\SeedTaxCodes;
 use Modules\Accounting\Export\AccountingExporter;
+use Modules\Accounting\Services\MoneyFloors;
 
 /**
  * Accounting: a company's chart of accounts, fiscal years, journals and
@@ -27,6 +28,8 @@ class AccountingServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ChartTemplates::class);
+        // One per request: a confirmed warning (negative balance) belongs to that request only.
+        $this->app->scoped(MoneyFloors::class);
         // The client's data export includes the books (ExportsModuleData).
         $this->app->tag([AccountingExporter::class], 'module.exporters');
     }

@@ -323,3 +323,39 @@ describe('Accounting bank matching', () => {
         expect(moduleRoutes.find((route) => route.name === 'accounting-bank')?.meta.module).toBe('accounting');
     });
 });
+
+describe('posting below a money account\'s floor', () => {
+    it('asks for a reason on a warning and sends again with it; a cancel keeps the error', async () => {
+        const { confirmingFloor } = await import('../../Modules/Accounting/resources/js/api.js');
+        const { dialog, closeDialog } = await import('../../resources/js/lib/dialogs.js');
+        const warning = Object.assign(new Error('1110 Cash in hand would be -500.00'), { code: 'below_floor_warning' });
+        const sent = [];
+        const send = async (extra) => {
+            sent.push(extra);
+            if (!extra.allow_negative) throw warning;
+            return { data: { status: 'posted' } };
+        };
+
+        const posting = confirmingFloor(send);
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(dialog.open).toBe(true);
+        expect(dialog.options.reason).toBe('required');
+        expect(dialog.options.message).toBe(warning.message);
+        closeDialog({ reason: 'Deposit comes tomorrow' });
+        await expect(posting).resolves.toEqual({ data: { status: 'posted' } });
+        expect(sent).toEqual([{}, { allow_negative: true, negative_reason: 'Deposit comes tomorrow' }]);
+
+        const cancelled = confirmingFloor(send);
+        await Promise.resolve();
+        await Promise.resolve();
+        closeDialog(null);
+        await expect(cancelled).rejects.toBe(warning);
+    });
+
+    it('passes a block straight through without asking', async () => {
+        const { confirmingFloor } = await import('../../Modules/Accounting/resources/js/api.js');
+        const block = Object.assign(new Error('below'), { code: 'below_floor' });
+        await expect(confirmingFloor(async () => { throw block; })).rejects.toBe(block);
+    });
+});
