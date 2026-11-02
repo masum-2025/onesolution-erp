@@ -34,7 +34,7 @@ class JobBoard
             'url' => $base,
             'jobs' => $this->openings->public($company)->take($limit)->map(fn (Opening $opening) => [
                 'id' => $opening->getKey(), 'title' => $opening->texts('title'), 'closes_on' => $opening->closes_on?->toDateString(),
-                'url' => "{$base}/jobs/{$opening->getKey()}",
+                'url' => $this->links->to($this->careers->jobPath($slug, $opening), $company->partner, $company),
             ])->values()->all(),
         ];
     }

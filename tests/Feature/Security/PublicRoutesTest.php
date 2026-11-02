@@ -69,6 +69,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     // A job offer (REC-3): its own 48-character link (only the hash kept), read only until a POST answers it
     // once while it stands, no scripts, ten answers an hour per address.
     'GET careers/{slug}/offer/{token}', 'POST careers/{slug}/offer/{token}',
+    // For search engines: a careers page's open jobs (what the page itself shows, same limits) and robots.txt (fixed text).
+    'GET careers/{slug}/sitemap.xml', 'GET robots.txt',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

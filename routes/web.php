@@ -15,6 +15,7 @@ use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
 use App\Platform\Payments\Http\GatewayCallbackController;
 use App\Platform\Portal\Http\Controllers\PortalJoinController;
+use App\Platform\Security\Http\RobotsTxtController;
 use App\Platform\Tenancy\Http\Controllers\SessionController;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -105,6 +106,10 @@ Route::get('internal/tls/ask', TlsAskController::class);
 Route::get('internal/health', HealthController::class)
     ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class])
     ->middleware('throttle:health');
+
+// For search engines: careers pages open; the app, API and files closed (they also answer "noindex").
+Route::get('robots.txt', RobotsTxtController::class)
+    ->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class, TrackUserSession::class]);
 
 // Every other page path boots the app; its router decides what to show.
 Route::get('/{path?}', AppShellController::class)

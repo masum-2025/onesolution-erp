@@ -12,6 +12,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="{{ $robots ?? 'index, follow' }}">
     <title>{{ $title ?? $ui('title', ['company' => $company]) }}</title>
+    @isset($seo)
+        {{-- One address per page and language (the partner's or client's own domain), and the others. --}}
+        <meta name="description" content="{{ $seo['description'] }}">
+        <link rel="canonical" href="{{ $seo['canonical'] }}">
+        @foreach ($seo['alternates'] as $code => $href)
+            <link rel="alternate" hreflang="{{ $code }}" href="{{ $href }}">
+        @endforeach
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="{{ $title ?? $ui('title', ['company' => $company]) }}">
+        <meta property="og:description" content="{{ $seo['description'] }}">
+        <meta property="og:url" content="{{ $seo['canonical'] }}">
+        <meta property="og:site_name" content="{{ $company }}">
+        <meta property="og:locale" content="{{ $locale }}">
+        @if ($seo['image'])
+            <meta property="og:image" content="{{ $seo['image'] }}">
+        @endif
+        {{-- Structured data (JobPosting / Organization): JSON with < > & escaped, so it cannot leave its element; data, never run. --}}
+        <script type="application/ld+json">{{ $seo['json_ld'] }}</script>
+    @endisset
     <style>
         :root { --brand: {{ $color }}; --fg: #16181d; --muted: #5b6270; --line: #e3e6ec; --bg: #f6f7fb; --card: #ffffff; --bad: #b42318; --ok: #067647; }
         * { box-sizing: border-box; }

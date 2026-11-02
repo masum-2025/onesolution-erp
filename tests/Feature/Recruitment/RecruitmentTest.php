@@ -110,7 +110,7 @@ it('takes an application on the careers page only once the email is confirmed', 
     $page = $this->get('/careers/c1-jobs?lang=en')->assertOk()->assertSee('Accounts officer')->assertDontSee('Internal post')->assertSee('25,000 BDT');
     expect($page->headers->get('Content-Security-Policy'))->toContain("script-src 'none'");
     $this->get("/careers/c1-jobs/jobs/{$hidden['id']}")->assertNotFound();
-    $this->get("/careers/c1-jobs/jobs/{$job['id']}?lang=bn")->assertOk()->assertSee('হিসাব কর্মকর্তা')->assertSee('name="t"', false);
+    $this->get("/careers/c1-jobs/jobs/accounts-officer-{$job['id']}?lang=bn")->assertOk()->assertSee('হিসাব কর্মকর্তা')->assertSee('name="t"', false);
 
     // Robots: the hidden field filled, or a form sent within seconds: told it went, nothing kept.
     ($this->apply)($job, ['website' => 'http://spam.test'])->assertRedirect();
@@ -120,7 +120,7 @@ it('takes an application on the careers page only once the email is confirmed', 
     ($this->apply)($job, [], UploadedFile::fake()->create('virus.exe', 10, 'application/x-msdownload'))->assertStatus(422)->assertSee('Only PDF and Word files');
     expect(Application::query()->withoutGlobalScopes()->count())->toBe(0);
 
-    ($this->apply)($job)->assertRedirect("/careers/c1-jobs/jobs/{$job['id']}?lang=en&applied=1#apply");
+    ($this->apply)($job)->assertRedirect("/careers/c1-jobs/jobs/accounts-officer-{$job['id']}?lang=en&applied=1#apply");
     $candidate = Candidate::query()->withoutGlobalScopes()->sole();
     expect($candidate->email)->toBe('sadia@example.test')
         ->and(DB::table('rec_candidates')->value('email'))->not->toContain('sadia')
@@ -148,6 +148,45 @@ it('takes an application on the careers page only once the email is confirmed', 
     expect($detail['cover_note'])->toBe('Five years in accounts.')->and($detail['files'])->toHaveCount(1);
     $this->get($detail['files'][0]['url'])->assertOk()->assertHeader('Content-Type', 'application/pdf');
     $this->get(str_replace('signature=', 'signature=0', $detail['files'][0]['url']))->assertForbidden();
+});
+
+it('gives search engines one address per job, its posting, a sitemap, and drops closed jobs', function () {
+    $job = ($this->opening)(['employment_type' => 'permanent', 'closes_on' => '2026-11-30']);
+    ($this->careers)();
+    $path = "/careers/c1-jobs/jobs/accounts-officer-{$job['id']}";
+
+    // Older or differently written addresses move to the one address for good, keeping the language.
+    $this->get("/careers/c1-jobs/jobs/{$job['id']}?lang=bn")->assertStatus(301)->assertRedirect("{$path}?lang=bn");
+    $this->get("/careers/c1-jobs/jobs/old-words-{$job['id']}")->assertStatus(301)->assertRedirect($path);
+
+    $page = $this->get("{$path}?lang=en")->assertOk()
+        ->assertSee('<link rel="canonical" href="'.config('app.url')."{$path}?lang=en\">", false)
+        ->assertSee('hreflang="bn"', false)->assertSee('hreflang="x-default"', false)
+        ->assertSee('<meta name="description" content="Keep the books. Work with the team.">', false)
+        ->assertSee('property="og:title"', false);
+    expect($page->headers->get('X-Robots-Tag'))->toBeNull();
+    preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $page->getContent(), $found);
+    expect(json_decode($found[1], true))->toMatchArray([
+        '@type' => 'JobPosting', 'title' => 'Accounts officer', 'employmentType' => 'FULL_TIME', 'validThrough' => '2026-11-30T23:59:59',
+        'directApply' => true, 'url' => config('app.url').$path,
+    ])->and(json_decode($found[1], true)['baseSalary']['value'])->toMatchArray(['minValue' => '25000.00', 'maxValue' => '35000.00', 'unitText' => 'MONTH']);
+    $this->get('/careers/c1-jobs?lang=en')->assertSee("href=\"{$path}?lang=en\"", false)->assertSee('"@type":"Organization"', false);
+
+    $this->get('/careers/c1-jobs/sitemap.xml')->assertOk()->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
+        ->assertSee('<loc>'.config('app.url').'/careers/c1-jobs</loc>', false)->assertSee('<loc>'.config('app.url').$path.'</loc>', false);
+
+    // A closed job is gone (410, never indexed); an internal one stays unknown (404).
+    $this->asToken($this->hr)->postJson(($this->api)("openings/{$job['id']}/close"), ['base_version' => $job['version']])->assertOk();
+    $gone = $this->get($path)->assertStatus(410);
+    expect($gone->headers->get('X-Robots-Tag'))->toBe('noindex, nofollow');
+    $this->get('/careers/c1-jobs/sitemap.xml')->assertDontSee($job['id']);
+    $hidden = ($this->opening)(['title' => ['en' => 'Internal post'], 'is_public' => false]);
+    $this->get("/careers/c1-jobs/jobs/{$hidden['id']}")->assertNotFound();
+
+    // The app, its API and robots.txt: search engines kept out of everything but public pages.
+    expect($this->get('/login')->headers->get('X-Robots-Tag'))->toBe('noindex, nofollow')
+        ->and($this->getJson('/api/me')->headers->get('X-Robots-Tag'))->toBe('noindex, nofollow');
+    $this->get('/robots.txt')->assertOk()->assertSee('Allow: /careers/')->assertSee('Disallow: /api/');
 });
 
 it('limits applications per email and turns public applying off by rule', function () {

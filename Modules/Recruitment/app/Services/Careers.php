@@ -8,7 +8,9 @@ use App\Platform\Sites\SiteAddress;
 use App\Platform\Sites\SiteResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Recruitment\Exceptions\RecruitmentException;
+use Modules\Recruitment\Models\Opening;
 
 /**
  * The public careers page of a company: its address "/careers/{slug}" (a
@@ -31,6 +33,25 @@ class Careers
     public function slug(Organization $company): ?string
     {
         return SiteAddress::query()->where('organization_id', $company->getKey())->where('module', self::MODULE)->value('slug');
+    }
+
+    /**
+     * A job's one address for people and search engines: its title in words, then its id
+     * ("/careers/acme/jobs/accounts-officer-01j…"). The words follow the English title (the
+     * same address in every language); a title without Latin letters leaves only the id.
+     */
+    public function jobPath(string $slug, Opening $opening): string
+    {
+        $titles = $opening->texts('title');
+        $words = rtrim(Str::limit(Str::slug((string) ($titles['en'] ?? reset($titles) ?: '')), 60, ''), '-');
+
+        return "/careers/{$slug}/jobs/".ltrim($words.'-'.$opening->getKey(), '-');
+    }
+
+    /** The opening id at the end of a job address part ("accounts-officer-01j…" or the bare id), or null. */
+    public function openingId(string $part): ?string
+    {
+        return preg_match('/(?:^|-)([0-9a-hjkmnp-tv-z]{26})$/i', $part, $found) === 1 ? strtolower($found[1]) : null;
     }
 
     /** The company of a careers address, or null. */

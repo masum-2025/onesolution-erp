@@ -19,6 +19,10 @@ $public = [StartSession::class, ShareErrorsFromSession::class, PreventRequestFor
 
 Route::get('careers/{slug}', [PublicCareersController::class, 'index'])
     ->where('slug', SiteResolver::SLUG_PATTERN)->withoutMiddleware($public)->name('recruitment.careers');
+// The careers page and its open jobs for search engines.
+Route::get('careers/{slug}/sitemap.xml', [PublicCareersController::class, 'sitemap'])
+    ->where('slug', SiteResolver::SLUG_PATTERN)->withoutMiddleware($public)->name('recruitment.careers.sitemap');
+// A job: "/jobs/{title words}-{id}" (older "/jobs/{id}" moves there).
 Route::get('careers/{slug}/jobs/{opening}', [PublicCareersController::class, 'show'])
     ->where('slug', SiteResolver::SLUG_PATTERN)->withoutMiddleware($public)->name('recruitment.careers.job');
 Route::post('careers/{slug}/jobs/{opening}/apply', [PublicCareersController::class, 'apply'])

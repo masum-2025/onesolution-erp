@@ -3284,6 +3284,18 @@ plans (not starter). People's details are encrypted; an email is found again by 
   person presses the button on the page the mail links to (`recruitment.confirm`; a mail scanner
   opening the link confirms nothing; 48 hours). Then the people managing recruitment where the job
   is are told (`recruitment.applied`, no name or contact in the mail).
+- **Search engines**: a job has one address `/careers/{slug}/jobs/{english-title-words}-{id}`
+  (`Careers::jobPath`); the bare id or other words move there with a 301 (language kept). Job and
+  careers pages carry a description, canonical (on the partner's or client's own domain, via
+  `LinkBuilder`), hreflang for every language plus x-default, Open Graph, and JSON-LD
+  (`JobPosting`: type from `hrm.employment_types`, closing day, salary as monthly amounts only when
+  shown; `Organization` on the list). `/careers/{slug}/sitemap.xml` lists the page and its open
+  jobs. A public job that closed, was filled or passed its closing day answers 410 (internal jobs
+  stay 404). Confirmation, offer and error pages are `noindex`.
+- **Everything else is kept out**: every response outside `careers/*` and `s/*` carries
+  `X-Robots-Tag: noindex, nofollow` (BaselineSecurityHeaders); `/robots.txt` is served by the app
+  (allows `/careers/` and `/s/`, closes `/api/`, files, sessions, callbacks). The old static
+  `public/robots.txt` is gone: it hid the robots.txt of schools' own sites.
 - **Working on applications** (`recruitment.manage` where the job is): add someone by hand (same
   `op_id` = same application), move between stages and rate, reject (a reason; tell the person with
   `recruitment.not_selected` when chosen) or mark withdrawn; scheduled interviews are cancelled when

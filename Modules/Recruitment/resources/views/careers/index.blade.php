@@ -18,7 +18,7 @@
                 <ul class="jobs">
                     @foreach ($jobs as $job)
                         <li>
-                            <a class="card job" href="/careers/{{ $slug }}/jobs/{{ $job['id'] }}?lang={{ $locale }}">
+                            <a class="card job" href="{{ $job['path'] }}?lang={{ $locale }}">
                                 <span>
                                     <h2>{{ $job['title'] }}</h2>
                                     <span class="meta">

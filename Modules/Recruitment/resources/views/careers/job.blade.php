@@ -36,7 +36,7 @@
                     <p class="muted">{{ $ui('check_mail_text') }}</p>
                 </div>
             @else
-                <form method="post" action="/careers/{{ $slug }}/jobs/{{ $job['id'] }}/apply" enctype="multipart/form-data" novalidate>
+                <form method="post" action="{{ $job['path'] }}/apply" enctype="multipart/form-data" novalidate>
                     @if (! empty($form['errors']['form']))
                         <p class="alert" role="alert">{{ $form['errors']['form'][0] }}</p>
                     @endif
