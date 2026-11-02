@@ -2,6 +2,8 @@
 
 use App\Platform\Access\Http\Controllers\PermissionController;
 use App\Platform\Access\Http\Controllers\RoleController;
+use App\Platform\Addons\Http\AddonController;
+use App\Platform\Addons\Http\PartnerAddonController;
 use App\Platform\Appearance\Http\AppearanceController;
 use App\Platform\Attention\Http\AttentionController;
 use App\Platform\Audit\Http\AdvancedAuditController;
@@ -313,6 +315,17 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
         Route::post('organizations/{organization}/billing/keep-plan', [SelfServeBillingController::class, 'keepPlan']);
     });
 
+    // Add-on store: modules an account tries or buys beyond its plan (at its top organization).
+    Route::get('organizations/{organization}/addons', [AddonController::class, 'index']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        // Any key shape reaches the controller: the organization is checked first, an unknown module is refused there.
+        $addon = '[a-z0-9_]{2,50}';
+        Route::post('organizations/{organization}/addons/{module}/trial', [AddonController::class, 'trial'])->where('module', $addon);
+        Route::post('organizations/{organization}/addons/{module}/buy', [AddonController::class, 'buy'])->where('module', $addon)->middleware('two_factor.recent');
+        Route::post('organizations/{organization}/addons/{module}/cancel', [AddonController::class, 'cancel'])->where('module', $addon);
+        Route::post('organizations/{organization}/addons/{module}/resume', [AddonController::class, 'resume'])->where('module', $addon);
+    });
+
     // Plan usage and sector packages (Phase 5)
     Route::get('organizations/{organization}/usage', UsageController::class);
     Route::post('organizations/{organization}/sector-package', [SectorPackageController::class, 'store'])
@@ -409,6 +422,16 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
         Route::post('plans', [PartnerPlansController::class, 'store']);
         Route::patch('plans/{plan}', [PartnerPlansController::class, 'update']);
         Route::post('plans/{plan}/archive', [PartnerPlansController::class, 'archive']);
+    });
+
+    // Add-ons: the partner's own prices for its clients, and a client's add-ons started or cancelled for it.
+    Route::get('addons', [PartnerAddonController::class, 'index']);
+    Route::get('clients/{client}/addons', [PartnerAddonController::class, 'forClient']);
+    Route::middleware('throttle:tenancy-sensitive')->group(function () {
+        $addon = '[a-z0-9_]{2,50}';
+        Route::put('addons/{module}', [PartnerAddonController::class, 'update'])->where('module', $addon);
+        Route::post('clients/{client}/addons/{module}/buy', [PartnerAddonController::class, 'buyFor'])->where('module', $addon)->middleware('two_factor.recent');
+        Route::post('clients/{client}/addons/{module}/cancel', [PartnerAddonController::class, 'cancelFor'])->where('module', $addon);
     });
 
     Route::get('organizations/{organization}/plan-preview', [PartnerPlanController::class, 'preview']);

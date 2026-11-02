@@ -28,6 +28,8 @@ final readonly class ResolvedModule
         public array $blockedBy,
         /** The partner locked the module for all of its clients. */
         public bool $lockedByPartner = false,
+        /** Available through an add-on the account bought, not through its plan. */
+        public bool $viaAddon = false,
     ) {}
 
     public function isLockedByAncestor(): bool
@@ -52,6 +54,7 @@ final readonly class ResolvedModule
             'locked_here' => $this->lockedHere,
             'blocked_by' => $this->blockedBy,
             'locked_by_partner' => $this->lockedByPartner,
+            'via_addon' => $this->viaAddon,
         ];
     }
 
@@ -72,6 +75,7 @@ final readonly class ResolvedModule
             lockedHere: $data['locked_here'],
             blockedBy: $data['blocked_by'],
             lockedByPartner: (bool) ($data['locked_by_partner'] ?? false),
+            viaAddon: (bool) ($data['via_addon'] ?? false),
         );
     }
 }

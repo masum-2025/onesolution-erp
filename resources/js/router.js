@@ -57,6 +57,8 @@ const routes = [
             { path: 'branding', name: 'brand', component: () => import('./pages/brand/ClientBrandPage.vue'), meta: { context: 'organization', ns: ['brand'] } },
             { path: 'provider', name: 'provider', component: () => import('./pages/provider/ProviderPage.vue'), meta: { context: 'organization', ns: ['provider'] } },
             { path: 'billing', name: 'billing', component: () => import('./pages/billing/BillingPage.vue'), meta: { context: 'organization', ns: ['billing'] } },
+            // The add-on store: modules beyond the plan, tried or bought by the account.
+            { path: 'addons', name: 'addons', component: () => import('./pages/addons/AddonStorePage.vue'), meta: { context: 'organization', ns: ['addons'] } },
             { path: 'billing/invoices/:id', name: 'invoice', component: () => import('./pages/billing/InvoicePage.vue'), meta: { context: 'organization', ns: ['billing'] } },
             // B2B2C portal (Phase 5C-4): a member's own records, and the client's side.
             { path: 'portal', name: 'portal-home', component: () => import('./pages/portal/PortalHomePage.vue'), meta: { context: 'organization', portal: true, ns: ['portal'] } },
@@ -102,6 +104,12 @@ const routes = [
                 name: 'partner-plans',
                 component: () => import('./pages/partner/PartnerPlansPage.vue'),
                 meta: { context: 'partner', ns: ['partner', 'billing'] },
+            },
+            {
+                path: 'partner/addons',
+                name: 'partner-addons',
+                component: () => import('./pages/partner/PartnerAddonsPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'addons'] },
             },
             {
                 path: 'partner/billing',

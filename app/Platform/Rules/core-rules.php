@@ -871,6 +871,40 @@ return [
         'category' => 'exports',
         'sort_order' => 183,
     ],
+    // Add-on store: modules an account buys beyond its plan (prices: addons:price, the partner console).
+    [
+        'key' => 'billing.addons_enabled',
+        'type' => 'boolean',
+        'default' => true,
+        'label' => 'rules.core.billing_addons_enabled.label',
+        'description' => 'rules.core.billing_addons_enabled.description',
+        'overridable_levels' => ['platform', 'partner', 'plan', 'group'],
+        'category' => 'billing',
+        'sort_order' => 190,
+    ],
+    [
+        'key' => 'billing.addon_self_purchase',
+        'type' => 'boolean',
+        // false: only the partner starts add-ons for its clients (partner console).
+        'default' => true,
+        'label' => 'rules.core.billing_addon_self_purchase.label',
+        'description' => 'rules.core.billing_addon_self_purchase.description',
+        'overridable_levels' => ['platform', 'partner', 'plan'],
+        'category' => 'billing',
+        'sort_order' => 191,
+    ],
+    [
+        'key' => 'billing.addon_trial_days',
+        'type' => 'integer',
+        // 0 = no trial. PLACEHOLDER.
+        'schema' => ['minimum' => 0, 'maximum' => 60],
+        'default' => 14,
+        'label' => 'rules.core.billing_addon_trial_days.label',
+        'description' => 'rules.core.billing_addon_trial_days.description',
+        'overridable_levels' => ['platform', 'partner', 'plan'],
+        'category' => 'billing',
+        'sort_order' => 192,
+    ],
     // Languages and wording (LANG-1). Base texts ship in files; the platform adds
     // languages and every level may reword texts in the database, inside these limits.
     [

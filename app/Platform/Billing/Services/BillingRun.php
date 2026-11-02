@@ -2,8 +2,11 @@
 
 namespace App\Platform\Billing\Services;
 
+use App\Platform\Addons\AddonPriceBook;
+use App\Platform\Addons\Models\OrganizationAddon;
 use App\Platform\Billing\Models\Invoice;
 use App\Platform\Billing\Models\WholesalePrice;
+use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Packaging\Models\Subscription;
 use App\Platform\Packaging\Services\SubscriptionService;
 use App\Platform\Packaging\Services\UsageLimiter;
@@ -23,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  *
  * - Wholesale partners: one invoice to the partner, in its billing currency,
  *   with a line per active client (per client, or per staff seat) at our
- *   wholesale price.
+ *   wholesale price, and a line per add-on the client bought.
  * - Clients of direct and revenue-share partners: an invoice per client
  *   whose subscription period starts this month (monthly, or yearly on its
  *   anniversary month), at its partner plan's or our list price, carrying the
@@ -47,6 +50,8 @@ class BillingRun
         private LineTexts $texts,
         private RuleResolver $rules,
         private RuleContextFactory $contexts,
+        private AddonPriceBook $addonPrices,
+        private ModuleRegistry $modules,
     ) {}
 
     public function run(CarbonImmutable $month, ?Partner $only = null): BillingRunResult
@@ -113,6 +118,8 @@ class BillingRun
                 'quantity' => $quantity,
                 'unit_amount_minor' => $price->amount_minor,
             ];
+
+            array_push($lines, ...$this->wholesaleAddons($partner, $root, $currency, $month, $result));
         }
 
         if ($lines === []) {
@@ -134,6 +141,52 @@ class BillingRun
             periodStart: $month,
             periodEnd: $month->endOfMonth()->startOfDay(),
         ), $result);
+    }
+
+    /**
+     * A line per add-on the client had bought before the month began (not
+     * trials), at our add-on wholesale price.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function wholesaleAddons(Partner $partner, Organization $root, string $currency, CarbonImmutable $month, BillingRunResult $result): array
+    {
+        $lines = [];
+        $addons = OrganizationAddon::query()
+            ->where('organization_id', $root->getKey())
+            ->where('status', OrganizationAddon::ACTIVE)
+            ->whereNotNull('period_start')
+            ->orderBy('module_key')
+            ->get();
+
+        foreach ($addons as $addon) {
+            // Its current month started before this one: bought before the month began (no proration).
+            if (! $this->modules->has($addon->module_key) || ! $addon->period_start->lessThan($month)) {
+                continue;
+            }
+
+            $module = $this->modules->get($addon->module_key);
+            $price = $this->addonPrices->wholesalePrice($partner, $addon->module_key, $currency, $month);
+            if ($price === null) {
+                $result->skip($partner->name, __('billing.run.no_addon_price', ['client' => $root->displayName(), 'module' => $module->label(), 'currency' => $currency]));
+
+                continue;
+            }
+
+            $lines[] = [
+                'organization_id' => $root->getKey(),
+                'plan_key' => null,
+                'description' => $this->texts->make('wholesale_addon', fn (string $locale) => [
+                    'client' => $this->texts->name($root->texts('name'), $locale),
+                    'module' => $module->label($locale),
+                    'month' => $this->texts->month($month, $locale),
+                ]),
+                'quantity' => 1,
+                'unit_amount_minor' => $price,
+            ];
+        }
+
+        return $lines;
     }
 
     private function clients(Partner $partner, CarbonImmutable $month, BillingRunResult $result): void

@@ -23,6 +23,8 @@ return [
     // Frozen on invoices when issued.
     'lines' => [
         'wholesale_client' => ':client: :plan plan, :month',
+        'wholesale_addon' => ':client: :module add-on, :month',
+        'addon_monthly' => ':module add-on, monthly, :from to :to',
         'wholesale_seats' => ':client: :plan plan, staff users, :month',
         'subscription_monthly' => ':plan plan, monthly, :from to :to',
         'subscription_yearly' => ':plan plan, yearly, :from to :to',
@@ -32,6 +34,7 @@ return [
     // Billing run report (operators).
     'run' => [
         'no_wholesale_price' => 'no wholesale price for :client on plan :plan in :currency',
+        'no_addon_price' => 'no wholesale price for :client\'s :module add-on in :currency',
         'no_client_price' => ':client has no price in :currency per :period; set one on its plan',
     ],
 ];

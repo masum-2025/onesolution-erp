@@ -22,7 +22,7 @@ return [
         'key' => 'administrator',
         'sector' => null,
         'permissions' => [
-            'organizations.*', 'members.manage', 'roles.manage', 'modules.manage', 'rules.edit.*',
+            'organizations.*', 'members.manage', 'roles.manage', 'modules.manage', 'rules.edit.*', 'addons.buy',
             '*.view', '*.manage', '*.use', '*.export',
             // Phase 8-1: ask for / approve a member's two-step sign-in reset (two different admins).
             'security.mfa_reset',

@@ -4,6 +4,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import {
     ArrowRightLeft,
     Blocks,
+    PackagePlus,
     Building,
     ChevronDown,
     ChevronsLeft,
@@ -72,6 +73,7 @@ const platformSections = computed(() => {
                     { to: '/partner/organizations', label: t('core.nav.clients'), icon: Handshake },
                     { to: '/partner/plans', label: t('core.nav.partner_plans'), icon: Package },
                     ...(['owner', 'billing'].includes(context?.role) ? [{ to: '/partner/billing', label: t('core.nav.partner_billing'), icon: Receipt }] : []),
+                    { to: '/partner/addons', label: t('core.nav.partner_addons'), icon: PackagePlus },
                     { to: '/partner/support', label: t('core.nav.partner_support'), icon: LifeBuoy },
                     { to: '/partner/transfers', label: t('core.nav.partner_transfers'), icon: ArrowRightLeft },
                     { to: '/partner/legal', label: t('core.nav.partner_legal'), icon: FileText },
@@ -122,6 +124,7 @@ const platformSections = computed(() => {
             items: [
                 ...(can('support.approve') ? [{ to: '/support-access', label: t('core.nav.support_access'), icon: LifeBuoy }] : []),
                 ...(can('billing.view') ? [{ to: '/billing', label: t('core.nav.billing'), icon: Receipt }] : []),
+                ...(can('billing.view') || can('addons.buy') ? [{ to: '/addons', label: t('core.nav.addons'), icon: PackagePlus }] : []),
                 ...(can('audit.view') ? [{ to: '/audit-log', label: t('core.nav.audit_log'), icon: ScrollText }] : []),
                 ...(can('branding.manage') && context?.account_owner ? [{ to: '/branding', label: t('core.nav.brand'), icon: Palette }] : []),
                 { to: '/provider', label: t('core.nav.provider'), icon: Building, count: context?.legal_pending || 0 },

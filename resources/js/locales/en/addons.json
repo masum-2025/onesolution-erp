@@ -1,0 +1,81 @@
+{
+    "title": "Add-on store",
+    "text": "Modules beyond your plan. Try one free, or add it month by month; cancel any time and its data stays.",
+    "search": "Search modules",
+    "closed": "The add-on store is closed for this account. Ask your provider if you need another module.",
+    "ask_provider": "Add-ons for this account are started by {provider}. Contact them to add a module.",
+    "your_provider": "your provider",
+    "view_only": "You can see the store. Only the account owner or an administrator can add or cancel modules.",
+    "empty_title": "Nothing here",
+    "empty_text": "No module matches. Clear the search or pick another filter.",
+    "per_month": "{price} a month",
+    "price_provider": "Your provider bills you for this",
+    "price_provider_set": "{price} a month, billed by your provider",
+    "billed_by_provider": "Billed by your provider",
+    "trial_until": "Free trial until {date}",
+    "renews_on": "Paid until {date}, then renews",
+    "ends_on": "Ends on {date}",
+    "in_plan_on": "In your plan, and on.",
+    "in_plan_off": "In your plan. Turn it on under Modules.",
+    "needs": "Needs {names} first.",
+    "filter": {
+        "all": "All ({count})",
+        "for_sale": "Can be added ({count})",
+        "added": "Added ({count})",
+        "in_plan": "In my plan ({count})"
+    },
+    "status": {
+        "for_sale": "Can be added",
+        "trial": "On trial",
+        "active": "Added",
+        "in_plan": "In plan",
+        "unavailable": "Not available"
+    },
+    "actions": {
+        "buy": "Add",
+        "trial": "Start trial",
+        "trial_days": "Try {days} days free",
+        "end_trial": "End trial",
+        "cancel": "Cancel",
+        "resume": "Keep it",
+        "open_modules": "Go to Modules"
+    },
+    "confirm": {
+        "trial_title": "Try {name} free?",
+        "trial_text": "It turns on for your whole account for {days} days, free. Each module can be tried once. When the trial ends it turns off unless you add it; your data stays.",
+        "buy_title": "Add {name}?",
+        "buy_text": "It turns on at once for your whole account. {price}, from today, month by month. The first month's invoice will be under Billing.",
+        "buy_provider_text": "It turns on at once for your whole account. {provider} bills you for it.",
+        "cancel_title": "Cancel {name}?",
+        "cancel_text": "It stays on until {date}, then turns off. Its data is kept, and you can add it again later.",
+        "cancel_trial_text": "The trial ends now and the module turns off. Its data is kept.",
+        "resume_title": "Keep {name}?",
+        "resume_text": "It carries on month by month as before."
+    },
+    "partner": {
+        "title": "Add-on prices",
+        "text": "Modules your clients can add beyond their plan. Leave a price empty to use the platform's; your own price applies to new months from today.",
+        "empty_title": "No add-ons to offer",
+        "empty_text": "The platform has not priced any add-on you may offer yet.",
+        "columns": {
+            "module": "Module",
+            "platform": "Platform price / month",
+            "own": "Your price / month",
+            "wholesale": "You pay us / client / month"
+        },
+        "uses_platform": "Platform's price",
+        "no_wholesale": "Not for sale yet",
+        "save": "Save",
+        "reset": "Use platform's price",
+        "save_title": "{name}: your price in {currency}",
+        "save_text": "Your clients will pay {price} a month from their next month on.",
+        "reset_text": "Your clients will pay the platform's price ({price}) from their next month on.",
+        "client_title": "A client's add-ons",
+        "client_text": "Add or cancel a module for one client, for example when your clients do not buy add-ons themselves.",
+        "client": "Client",
+        "pick_client": "Choose a client",
+        "client_nothing": "Nothing can be added for this client.",
+        "buy_title": "Add {name} for {client}?",
+        "buy_text": "It turns on at once for {client}'s whole account and is billed month by month."
+    }
+}

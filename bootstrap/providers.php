@@ -1,6 +1,7 @@
 <?php
 
 use App\Platform\Access\AccessServiceProvider;
+use App\Platform\Addons\AddonsServiceProvider;
 use App\Platform\Analytics\AnalyticsServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
 use App\Platform\Billing\BillingServiceProvider;
@@ -39,6 +40,7 @@ return [
     DataExportServiceProvider::class,
     PageExportsServiceProvider::class,
     BillingServiceProvider::class,
+    AddonsServiceProvider::class,
     PaymentsServiceProvider::class,
     NotificationsServiceProvider::class,
     TransfersServiceProvider::class,

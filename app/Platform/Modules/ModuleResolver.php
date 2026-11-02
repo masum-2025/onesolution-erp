@@ -2,6 +2,7 @@
 
 namespace App\Platform\Modules;
 
+use App\Platform\Addons\Models\OrganizationAddon;
 use App\Platform\Modules\Enums\ModuleState;
 use App\Platform\Modules\Enums\ResolutionReason;
 use App\Platform\Modules\Models\ModuleConsent;
@@ -22,8 +23,8 @@ use Illuminate\Support\Collection;
  * Decides whether a module is enabled for an organization.
  *
  *  1. Available: the organization's plan (and the partner plan the client is
- *     on, which may leave modules out) and sector allow it, and consent
- *     exists when the module requires it.
+ *     on, which may leave modules out) or an add-on the account bought, and
+ *     the sector allow it, and consent exists when the module requires it.
  *  2. State: the topmost ancestor lock wins; otherwise the nearest level that
  *     is not "inherit"; otherwise disabled (core modules: enabled).
  *  3. Every required module must itself resolve enabled.
@@ -108,6 +109,13 @@ class ModuleResolver
             ->whereIn('id', Subscription::query()->select('partner_plan_id')->where('organization_id', $chain->first()->getKey()))
             ->value('modules');
 
+        // Add-ons the account bought (on trial or paid) stand in for the plan.
+        $addons = OrganizationAddon::query()
+            ->where('organization_id', $chain->first()->getKey())
+            ->whereIn('status', OrganizationAddon::RUNNING)
+            ->pluck('module_key')
+            ->flip();
+
         $rows = OrganizationModule::query()
             ->whereIn('organization_id', $chainIds)
             ->get()
@@ -162,10 +170,13 @@ class ModuleResolver
                 fn (string $required) => ! $resolved[$required]->enabled,
             ));
 
+            $inPlan = $module->allowsPlan($plan) && $this->plans->includes($plan, $key)
+                && ($module->isCore || ! is_array($partnerPlanModules) || in_array($key, $partnerPlanModules, true));
+            $viaAddon = ! $inPlan && $addons->has($key) && $module->sellable;
+
             $reason = match (true) {
-                // The plan must include the module, and the module must allow the plan.
-                ! $module->allowsPlan($plan) || ! $this->plans->includes($plan, $key) => ResolutionReason::NotInPlan,
-                ! $module->isCore && is_array($partnerPlanModules) && ! in_array($key, $partnerPlanModules, true) => ResolutionReason::NotInPlan,
+                // The plan must include the module, and the module must allow the plan (or the account bought it).
+                ! $inPlan && ! $viaAddon => ResolutionReason::NotInPlan,
                 ! $module->isCore && is_array($offered) && ! in_array($key, $offered, true) => ResolutionReason::NotOffered,
                 ! $module->allowsSector($sector) => ResolutionReason::SectorNotAllowed,
                 $module->requiresConsent && ! $consented->has($key) => ResolutionReason::ConsentMissing,
@@ -193,6 +204,7 @@ class ModuleResolver
                 lockedHere: (bool) $byOrganization->get($organization->getKey())?->locked,
                 blockedBy: $blockedBy,
                 lockedByPartner: $partnerLock,
+                viaAddon: $viaAddon,
             );
         }
 

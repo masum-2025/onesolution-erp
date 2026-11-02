@@ -5,6 +5,8 @@ use App\Platform\Access\Models\MembershipRole;
 use App\Platform\Access\Models\Permission;
 use App\Platform\Access\Models\Role;
 use App\Platform\Access\Models\RoleTemplate;
+use App\Platform\Addons\Models\AddonPrice;
+use App\Platform\Addons\Models\OrganizationAddon;
 use App\Platform\Audit\AuditLog;
 use App\Platform\Audit\Exports\AuditExport;
 use App\Platform\Billing\Models\Commission;
@@ -52,7 +54,6 @@ use App\Platform\Packaging\Models\Subscription;
 use App\Platform\PartnerApi\Models\PartnerApiKey;
 use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Partners\Models\PartnerDomain;
-use App\Platform\Sites\SiteAddress;
 use App\Platform\Partners\Models\PartnerModule;
 use App\Platform\Payments\Models\GatewayEvent;
 use App\Platform\Payments\Models\Payment;
@@ -61,6 +62,7 @@ use App\Platform\Portal\Models\PortalLink;
 use App\Platform\Rules\Models\RuleDefinitionRecord;
 use App\Platform\Rules\Models\RuleValue;
 use App\Platform\Rules\Models\RuleValueHistory;
+use App\Platform\Sites\SiteAddress;
 use App\Platform\SupportAccess\Models\SupportGrant;
 use App\Platform\Tenancy\Concerns\BelongsToOrganization;
 use App\Platform\Tenancy\Databases\TenantMove;
@@ -139,6 +141,11 @@ const PLATFORM_MODELS = [
     PartnerPlanPrice::class,
     Subscription::class,
     WholesalePrice::class,
+    // Add-ons: prices are platform or partner data; an account's add-ons are read
+    // by the daily cycle and the billing run across accounts, always filtered by
+    // the organization or partner taken from the context (like subscriptions).
+    AddonPrice::class,
+    OrganizationAddon::class,
     Invoice::class,
     InvoiceLine::class,
     Commission::class,

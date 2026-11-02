@@ -133,6 +133,10 @@ final class ModuleRegistry
             }
         }
 
+        if (isset($manifest['addon']) && (! is_array($manifest['addon']) || ! is_bool($manifest['addon']['sellable'] ?? true))) {
+            throw InvalidModuleManifest::because($key, 'addon must be an array like [\'sellable\' => false]');
+        }
+
         if (in_array($key, $manifest['requires'] ?? [], true)) {
             throw InvalidModuleManifest::because($key, 'a module cannot require itself');
         }

@@ -22,6 +22,8 @@ return [
 
     'lines' => [
         'wholesale_client' => ':client: :plan প্ল্যান, :month',
+        'wholesale_addon' => ':client: :module অ্যাড-অন, :month',
+        'addon_monthly' => ':module অ্যাড-অন, মাসিক, :from থেকে :to',
         'wholesale_seats' => ':client: :plan প্ল্যান, কর্মী-ব্যবহারকারী, :month',
         'subscription_monthly' => ':plan প্ল্যান, মাসিক, :from থেকে :to',
         'subscription_yearly' => ':plan প্ল্যান, বার্ষিক, :from থেকে :to',
@@ -30,6 +32,7 @@ return [
 
     'run' => [
         'no_wholesale_price' => ':client-এর :plan প্ল্যানের :currency-তে হোলসেল দাম নেই',
+        'no_addon_price' => ':client-এর :module অ্যাড-অনের :currency-তে হোলসেল দাম নেই',
         'no_client_price' => ':client-এর :currency-তে :period দাম নেই; প্ল্যানে দাম দিন',
     ],
 ];

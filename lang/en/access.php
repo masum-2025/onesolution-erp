@@ -52,6 +52,7 @@ return [
         'data_export' => 'Export all data',
         'billing_view' => 'See plan and invoices',
         'billing_manage' => 'Buy and pay for the plan',
+        'addons_buy' => 'Try, buy and cancel add-on modules',
         'branding_manage' => 'Change the organization\'s brand',
     ],
 

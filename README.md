@@ -686,6 +686,58 @@ Invoices open as a printable page ("Print or save as PDF").
   currency conversion for payouts (with the multi_currency module); branded invoice
   emails (5B-3b).
 
+## Add-on store (modules beyond the plan)
+
+Code: `app/Platform/Addons`. The platform (tenancy, sign-in, roles, rules, modules,
+billing, audit, security, languages, portal) is always there; every business module can
+also be bought by an account as an add-on when its plan does not include it. Clients never
+upload code: the platform deploys every module (its tables exist in every tenant database),
+and buying one only grants and bills the right to it, then turns it on at the top
+organization. Branches and companies below switch it on or off as usual.
+
+| | |
+|---|---|
+| Who buys | `addons.buy` at the account's top organization (administrator template); `billing.view` sees the store |
+| Trial | `billing.addon_trial_days` (default 14, 0 = none), once per module and account |
+| Bought | on at once; month by month from that day; cancel = runs to the end of the paid month |
+| Ended | module off, data kept (deleting it is the separate module purge) |
+| Needs | required modules must be on, in the plan or bought first (`missing` in the error) |
+| Rules | `billing.addons_enabled` (store open), `billing.addon_self_purchase` (off: only the partner starts add-ons, from its console) |
+
+Billing: a client of a direct or revenue-share partner gets an invoice per add-on month
+(`addon_monthly` line, due after `billing.payment_terms_days`, commission as usual) and pays
+it like any other invoice (online for self-serve accounts). A wholesale partner's client gets
+no invoice from us: the partner's monthly invoice carries a line per add-on bought before
+the month began, at our add-on wholesale price. `addons:cycle` (daily) ends finished trials
+and cancellations and bills the next month; it is safe to repeat.
+
+Prices (`addon_prices`, monthly, minor units, never edited, replaced by a newer row):
+platform list and wholesale prices from `database/seeders/data/addon-prices.php`
+(**placeholders**); a partner sets its own list price per currency in its console. A module
+without a price is not for sale; a module can opt out with `'addon' => ['sellable' => false]`
+in its manifest.
+
+```bash
+php artisan addons:sync-prices
+php artisan addons:price projects BDT 80000 --kind=wholesale [--partner=acme] [--from=2027-01-01] --reason="2027 contract"
+php artisan addons:cycle
+```
+
+| method | path | who |
+|---|---|---|
+| GET | /api/organizations/{id}/addons | `billing.view`, `modules.manage` or `addons.buy` at the top |
+| POST | /api/organizations/{id}/addons/{module}/trial, /buy (step-up), /cancel, /resume | `addons.buy`; `op_id` on trial and buy |
+| GET / PUT | /api/partner/addons, /api/partner/addons/{module} | all / owner, billing |
+| GET / POST | /api/partner/clients/{id}/addons, /addons/{module}/buy, /cancel | all / owner, billing |
+
+Screens: Add-on store (`/addons`) for the account, Add-on prices (`/partner/addons`) for the
+partner, including one client's add-ons. Audited: `addons.trial_started`, `addons.bought`,
+`addons.cancelled`, `addons.resumed`, `addons.ended`, `addons.price_set`.
+
+Future: a new country or partner needs only prices (data file, command or partner console),
+no code. Open: per-seat add-on prices, yearly add-on periods, proration for a wholesale
+partner's first month (it starts with the next full month, like plans).
+
 ## Branded email and SMS (Phase 5B-3b)
 
 Code: `app/Platform/Notifications`. Platform events reach the people who can act on

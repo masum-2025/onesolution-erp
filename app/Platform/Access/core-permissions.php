@@ -26,6 +26,8 @@ return [
     ['key' => 'billing.view', 'group' => 'billing'],
     // Phase 5C-2: buy, pay for and change a self-serve plan.
     ['key' => 'billing.manage', 'group' => 'billing'],
+    // Add-on store: try, buy and cancel modules beyond the plan.
+    ['key' => 'addons.buy', 'group' => 'billing'],
     // Phase 5B-5: the client's own brand (where its partner allows it).
     ['key' => 'branding.manage', 'group' => 'organization'],
     // Phase 8-1: reset a member's two-step sign-in (lost phone); a second admin approves.

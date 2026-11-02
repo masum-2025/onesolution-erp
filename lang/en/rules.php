@@ -81,6 +81,18 @@ return [
             'label' => 'Rows in one export',
             'description' => 'The most rows one export may hold.',
         ],
+        'billing_addons_enabled' => [
+            'label' => 'Add-on store open',
+            'description' => 'Whether accounts can see and buy modules beyond their plan.',
+        ],
+        'billing_addon_self_purchase' => [
+            'label' => 'Clients buy add-ons themselves',
+            'description' => 'Off: only the provider starts add-ons for its clients.',
+        ],
+        'billing_addon_trial_days' => [
+            'label' => 'Add-on trial days',
+            'description' => 'How long an add-on can be tried free, once per module (0 = no trial).',
+        ],
         'ui_accent' => [
             'label' => 'Highlight color',
             'description' => 'Color of buttons and the selected page. brand = your brand color. Lock it to keep it the same for everyone below.',

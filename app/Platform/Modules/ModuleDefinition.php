@@ -64,6 +64,8 @@ final readonly class ModuleDefinition
         public array $portalPages = [],
         // Messages it receives over business connections (NET-1): ConnectionMessageHandler classes.
         public array $connectionKinds = [],
+        // Whether an account may buy it as an add-on beyond its plan (manifest addon.sellable; a price must exist too).
+        public bool $sellable = true,
     ) {}
 
     /**
@@ -98,6 +100,7 @@ final readonly class ModuleDefinition
             ledgerAccounts: $manifest['ledger_accounts'] ?? [],
             portalPages: array_values($manifest['portal_pages'] ?? []),
             connectionKinds: array_values($manifest['connection_kinds'] ?? []),
+            sellable: ! ($manifest['is_core'] ?? false) && (bool) ($manifest['addon']['sellable'] ?? true),
         );
     }
 
