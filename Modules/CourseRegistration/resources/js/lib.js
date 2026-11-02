@@ -1,3 +1,7 @@
+import { newOpId } from '@/lib/billing';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { newOpId };
 /**
  * Small helpers of the course registration screens, kept free of
  * components so they can be tested. Credits are hundredths (300 = 3).
@@ -77,11 +81,6 @@ export function byLevel(offerings, rank = () => 0) {
         group.offerings.sort((a, b) => (a.subject?.code ?? '').localeCompare(b.subject?.code ?? '') || a.group_name.localeCompare(b.group_name));
     }
     return [...groups.values()].sort((a, b) => (a.level_id === null) - (b.level_id === null) || rank(a.level_id) - rank(b.level_id));
-}
-
-/** A fresh id for a write that is safe to send twice. */
-export function newOpId() {
-    return globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
 /**

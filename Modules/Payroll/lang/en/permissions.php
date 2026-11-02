@@ -6,4 +6,5 @@ return [
     'view' => 'View Payroll',
     'run' => 'Run Payroll',
     'approve' => 'Approve Payroll',
+    'export' => 'Export or print Payroll pages',
 ];

@@ -1,4 +1,9 @@
-import { currencyDigits, decimalStringToMinor, formatMoney, minorToDecimalString } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
+import { amountToMinor, cleanNumber, minorToText } from '@/lib/numbers';
+import { newOpId } from '@/lib/billing';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { amountToMinor, cleanNumber, minorToText, newOpId };
 
 /**
  * Recruitment helpers for the screens: typed salaries as integer minor
@@ -6,24 +11,6 @@ import { currencyDigits, decimalStringToMinor, formatMoney, minorToDecimalString
  * into the company's stages for the board, and what each status looks
  * like. The server checks and works out everything again.
  */
-
-const BANGLA = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
-
-/** "১,২৫০.৫" -> "1250.5" */
-export function cleanNumber(text) {
-    return String(text ?? '').trim().replace(/[০-৯]/g, (digit) => BANGLA[digit]).replace(/[,\s]/g, '');
-}
-
-/** Typed money -> minor units; null when empty or not an amount at or above zero. */
-export function amountToMinor(text, currency) {
-    const clean = cleanNumber(text);
-    if (clean === '' || !/^\d+(\.\d+)?$/.test(clean)) return null;
-    return decimalStringToMinor(clean, currencyDigits(currency));
-}
-
-export function minorToText(minor, currency) {
-    return minor === null || minor === undefined ? '' : minorToDecimalString(minor, currencyDigits(currency));
-}
 
 /** "৳25,000.00 – ৳35,000.00", one end alone, or '' when neither. */
 export function salaryText(opening) {
@@ -77,7 +64,3 @@ export function nextSlot(now = new Date()) {
     return `${dayOf(1, now)}T10:00`;
 }
 
-/** A new id for one sending (the same id again is the same application). */
-export function newOpId() {
-    return `recruitment-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}

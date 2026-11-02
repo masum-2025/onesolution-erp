@@ -4,6 +4,7 @@ use App\Platform\Access\AccessServiceProvider;
 use App\Platform\Analytics\AnalyticsServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
 use App\Platform\Billing\BillingServiceProvider;
+use App\Platform\Connections\ConnectionsServiceProvider;
 use App\Platform\Countries\CountriesServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
 use App\Platform\Identity\IdentityServiceProvider;
@@ -13,10 +14,10 @@ use App\Platform\Monitoring\MonitoringServiceProvider;
 use App\Platform\Notifications\NotificationsServiceProvider;
 use App\Platform\Offline\OfflineServiceProvider;
 use App\Platform\Packaging\PackagingServiceProvider;
+use App\Platform\PageExports\PageExportsServiceProvider;
 use App\Platform\PartnerApi\PartnerApiServiceProvider;
 use App\Platform\Partners\PartnersServiceProvider;
 use App\Platform\Payments\PaymentsServiceProvider;
-use App\Platform\Connections\ConnectionsServiceProvider;
 use App\Platform\Portal\PortalServiceProvider;
 use App\Platform\Rules\RulesServiceProvider;
 use App\Platform\Security\SecurityServiceProvider;
@@ -36,6 +37,7 @@ return [
     AccessServiceProvider::class,
     SupportAccessServiceProvider::class,
     DataExportServiceProvider::class,
+    PageExportsServiceProvider::class,
     BillingServiceProvider::class,
     PaymentsServiceProvider::class,
     NotificationsServiceProvider::class,

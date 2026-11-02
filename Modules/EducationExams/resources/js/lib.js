@@ -1,18 +1,12 @@
+import { latinDigits } from '@/lib/numbers';
 /**
  * The arithmetic of marks on screen, with integers only, as the server
  * does it (ExamMath): marks in hundredths, percentages in basis points,
  * grade points in hundredths, half up. Typed numbers may use Bangla digits.
  */
-const BANGLA_DIGITS = '০১২৩৪৫৬৭৮৯';
-
 /** "৮২.৫" -> "82.5": Bangla digits to English, spaces and commas dropped. */
 export function normalizeNumberText(text) {
-    return Array.from(String(text ?? ''))
-        .map((char) => {
-            const index = BANGLA_DIGITS.indexOf(char);
-            return index >= 0 ? String(index) : char;
-        })
-        .join('')
+    return latinDigits(text)
         .replace(/[\s,_']/g, '');
 }
 

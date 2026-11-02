@@ -41,7 +41,7 @@ return [
     [
         'key' => 'accountant',
         'sector' => null,
-        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'accounting.reconcile', 'payroll.view', 'payroll.run', 'custom_reports.view', 'education_fees.view', 'education_fees.bill', 'education_fees.collect', 'expenses.pay', 'expenses.claim'],
+        'permissions' => ['accounting.view', 'accounting.post', 'accounting.manage', 'accounting.sell', 'accounting.buy', 'accounting.tax', 'accounting.reconcile', 'payroll.view', 'payroll.run', 'payroll.export', 'custom_reports.view', 'education_fees.view', 'education_fees.bill', 'education_fees.collect', 'expenses.pay', 'expenses.claim'],
     ],
     [
         'key' => 'finance_approver',

@@ -1,4 +1,4 @@
-import { currencyDigits, decimalStringToMinor } from '@/lib/format';
+import { amountToMinor as readAmount } from '@/lib/numbers';
 
 /**
  * Small helpers of the compliance screens. Days left come from the server
@@ -10,13 +10,9 @@ export const STATES = ['expired', 'expiring', 'valid', 'unknown'];
 /** How a payment was made (told to the provider). */
 export const PAYMENT_METHODS = ['bank', 'cash', 'cheque', 'mobile', 'other'];
 
-const BANGLA = Object.fromEntries([...'০১২৩৪৫৬৭৮৯'].map((digit, index) => [digit, String(index)]));
-
-/** Typed money (Bangla or Latin digits, commas allowed) -> minor units; null unless above zero. */
+/** Typed money (the shared reader) -> minor units; null unless above zero (a payment is never nothing). */
 export function amountToMinor(text, currency) {
-    const clean = String(text ?? '').trim().replace(/[০-৯]/g, (digit) => BANGLA[digit]).replace(/[,\s]/g, '');
-    if (!/^\d+(\.\d+)?$/.test(clean)) return null;
-    const minor = decimalStringToMinor(clean, currencyDigits(currency));
+    const minor = readAmount(text, currency);
     return minor > 0 ? minor : null;
 }
 

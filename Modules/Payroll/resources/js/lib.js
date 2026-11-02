@@ -1,4 +1,8 @@
-import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalString } from '@/lib/format';
+import { formatNumber } from '@/lib/format';
+import { amountToMinor, cleanNumber, minorToText } from '@/lib/numbers';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { amountToMinor, cleanNumber, minorToText };
 
 /**
  * Payroll helpers for the screens: amounts typed as text become integer
@@ -6,28 +10,6 @@ import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalStrin
  * basis points, and an approved month becomes the bank's CSV file. The
  * server works every slip out; nothing here calculates pay.
  */
-
-const BANGLA = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
-
-/** "১,২৫,০০০.৫০" -> "125000.50": Latin digits, no separators or spaces. */
-export function cleanNumber(text) {
-    return String(text ?? '')
-        .replace(/[০-৯]/g, (digit) => BANGLA[digit])
-        .replace(/[,\s ]/g, '')
-        .trim();
-}
-
-/** Typed money -> minor units of the currency; null when it is not an amount above or at zero. */
-export function amountToMinor(text, currency) {
-    const clean = cleanNumber(text);
-    if (clean === '' || clean.startsWith('-')) return null;
-    return decimalStringToMinor(clean, currencyDigits(currency));
-}
-
-/** Minor units -> the text of an amount field ("30000.00"; empty for null). */
-export function minorToText(minor, currency) {
-    return minor === null || minor === undefined ? '' : minorToDecimalString(minor, currencyDigits(currency));
-}
 
 /** "12.5" (%) -> 1250 basis points; null when not a percentage from 0 to 1000 with at most 2 decimals. */
 export function percentToBp(text) {

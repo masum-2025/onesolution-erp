@@ -1,4 +1,5 @@
 import { currencyDigits, decimalStringToMinor, minorToDecimalString } from '@/lib/format';
+import { latinDigits } from '@/lib/numbers';
 
 /**
  * Small Accounting helpers for the screens (tested in tests/js/accounting.test.js).
@@ -6,16 +7,9 @@ import { currencyDigits, decimalStringToMinor, minorToDecimalString } from '@/li
  * floats). The server checks everything again.
  */
 
-const BANGLA_DIGITS = '০১২৩৪৫৬৭৮৯';
-
 /** "১,২৫০.৫০" or "1,250.50" -> "1250.50": Bangla digits to ASCII, group separators and spaces removed. */
 export function normalizeAmountText(text) {
-    return Array.from(String(text ?? ''))
-        .map((char) => {
-            const index = BANGLA_DIGITS.indexOf(char);
-            return index >= 0 ? String(index) : char;
-        })
-        .join('')
+    return latinDigits(text)
         .replace(/[\s,_']/g, '')
         .replace(/^৳|^\p{Sc}/u, '');
 }

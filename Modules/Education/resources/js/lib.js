@@ -1,3 +1,7 @@
+import { newOpId } from '@/lib/billing';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { newOpId };
 /**
  * Small helpers of the education screens, kept free of components so they
  * can be tested.
@@ -139,11 +143,6 @@ export function stepOfError(keys, steps) {
         if (step) return step.key;
     }
     return steps[0]?.key ?? null;
-}
-
-/** A fresh id for a write that is safe to send twice. */
-export function newOpId() {
-    return globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
 /** Decisions an application can take next, as the server allows them (admitting is its own step). */

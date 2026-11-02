@@ -256,5 +256,23 @@
         "label": "Create something new",
         "button": "New",
         "heading": "Create"
+    },
+    "export": {
+        "menu": "Export",
+        "formats": {
+            "pdf": "PDF",
+            "xlsx": "Excel (XLSX)",
+            "csv": "CSV",
+            "docx": "Word (DOCX)"
+        },
+        "pdf_hint": "Opens print: choose \"Save as PDF\"",
+        "print": "Print",
+        "done": "File ready: see your downloads.",
+        "as_of": "As of {date}",
+        "printed_on": "Printed on {date}"
+    },
+    "footer": {
+        "terms": "Terms",
+        "privacy": "Privacy"
     }
 }

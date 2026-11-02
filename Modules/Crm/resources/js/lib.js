@@ -1,4 +1,8 @@
-import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalString } from '@/lib/format';
+import { formatNumber } from '@/lib/format';
+import { amountToMinor, cleanNumber, minorToText } from '@/lib/numbers';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { amountToMinor, cleanNumber, minorToText };
 
 /**
  * CRM helpers for the screens: typed amounts and quantities as integer
@@ -7,24 +11,6 @@ import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalStrin
  * prices again), extra-field values to and from inputs, and a small CSV
  * reader for imports.
  */
-
-const BANGLA = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
-
-/** "১,২৫০.৫" -> "1250.5" */
-export function cleanNumber(text) {
-    return String(text ?? '').trim().replace(/[০-৯]/g, (digit) => BANGLA[digit]).replace(/[,\s]/g, '');
-}
-
-/** Typed money -> minor units; null when not an amount at or above zero. */
-export function amountToMinor(text, currency) {
-    const clean = cleanNumber(text);
-    if (clean === '' || !/^\d+(\.\d+)?$/.test(clean)) return null;
-    return decimalStringToMinor(clean, currencyDigits(currency));
-}
-
-export function minorToText(minor, currency) {
-    return minor === null || minor === undefined ? '' : minorToDecimalString(minor, currencyDigits(currency));
-}
 
 /** "2.5" -> 2500 thousandths; null when not a quantity above zero with at most 3 decimals. */
 export function quantityToMilli(text) {

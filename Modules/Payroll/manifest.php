@@ -17,7 +17,8 @@ return [
     'requires' => ['hrm', 'attendance'],
     'sectors' => ['*'],
     'plans' => ['*'],
-    'permissions' => ['payroll.view', 'payroll.run', 'payroll.approve'],
+    // export: download or print payroll pages (salaries are sensitive; others only see them on screen).
+    'permissions' => ['payroll.view', 'payroll.run', 'payroll.approve', 'payroll.export'],
     // Whoever runs payroll must not approve it (default of access.separation_of_duties).
     'separation_of_duties' => [['payroll.run', 'payroll.approve']],
     'rules' => [

@@ -13,6 +13,7 @@ return [
         'support_accessed' => 'সাপোর্ট কর্মী একটি পেজ খুলেছেন',
         'data_export_requested' => 'ডেটা এক্সপোর্ট চাওয়া হয়েছে',
         'data_export_downloaded' => 'ডেটা এক্সপোর্ট ডাউনলোড হয়েছে',
+        'page_exported' => 'পাতা এক্সপোর্ট বা প্রিন্ট করা হয়েছে',
         'auth_context_entered' => 'এই প্রতিষ্ঠানে সাইন ইন',
         'organization_created' => 'ইউনিট তৈরি',
         'organization_updated' => 'ইউনিট পরিবর্তন',

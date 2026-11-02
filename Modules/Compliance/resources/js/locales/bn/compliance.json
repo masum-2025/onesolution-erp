@@ -303,5 +303,8 @@
         "status_recorded": "তাঁরা হিসাবে তুলেছেন",
         "status_not_received": "পৌঁছায়নি",
         "their_reason": "তাঁদের উত্তর: {reason}"
+    },
+    "export": {
+        "days_left": "বাকি দিন"
     }
 }

@@ -1,15 +1,12 @@
-import { currencyDigits, decimalStringToMinor, minorToDecimalString } from './format';
+import { currencyDigits, minorToDecimalString } from './format';
 
 /*
  * Billing helpers. Amounts stay integer minor units end to end; text typed
  * by a person ("7000.50") is converted with string math, never floats.
  */
 
-/** "7000.50" in BDT -> 700050; null when it is not a valid, non-negative amount. */
-export function amountToMinor(text, currency) {
-    const minor = decimalStringToMinor(String(text ?? '').replace(/,/g, ''), currencyDigits(currency));
-    return minor === null || minor < 0 ? null : minor;
-}
+/** "7000.50" in BDT -> 700050; null when it is not a valid, non-negative amount (the shared reader). */
+export { amountToMinor } from './numbers';
 
 /** 700050 in BDT -> "7000.50" (for an input field). */
 export function minorToAmount(minor, currency) {

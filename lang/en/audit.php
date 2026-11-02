@@ -16,6 +16,7 @@ return [
         'support_accessed' => 'Support staff opened a page',
         'data_export_requested' => 'Data export requested',
         'data_export_downloaded' => 'Data export downloaded',
+        'page_exported' => 'Page exported or printed',
         'auth_context_entered' => 'Signed in to this organization',
         'organization_created' => 'Unit created',
         'organization_updated' => 'Unit changed',

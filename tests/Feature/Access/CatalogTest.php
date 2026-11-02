@@ -37,7 +37,7 @@ it('names every role template in Bangla and English', function () {
 it('expands template patterns', function () {
     $catalog = app(PermissionCatalog::class);
 
-    expect($catalog->expand(['payroll.*', '!payroll.approve']))->toBe(['payroll.view', 'payroll.run'])
+    expect($catalog->expand(['payroll.*', '!payroll.approve']))->toBe(['payroll.view', 'payroll.run', 'payroll.export'])
         ->and($catalog->expand(['*.view']))->toContain('hrm.view', 'crm.view')->not->toContain('hrm.manage')
         ->and($catalog->expand(['unknown.thing']))->toBe([]);
 });

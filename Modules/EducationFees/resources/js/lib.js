@@ -1,4 +1,9 @@
 import { currencyDigits, decimalStringToMinor, minorToDecimalString } from '@/lib/format';
+import { newOpId } from '@/lib/billing';
+import { latinDigits } from '@/lib/numbers';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { newOpId };
 
 /**
  * Small helpers of the fee screens, kept free of components so they can be
@@ -6,16 +11,9 @@ import { currencyDigits, decimalStringToMinor, minorToDecimalString } from '@/li
  * (never floats). The server checks everything again.
  */
 
-const BANGLA_DIGITS = '০১২৩৪৫৬৭৮৯';
-
 /** "১,২৫০.৫০" or "৳ 1,250.50" -> "1250.50": Bangla digits to ASCII, separators, spaces and the sign removed. */
 export function normalizeAmountText(text) {
-    return Array.from(String(text ?? ''))
-        .map((char) => {
-            const index = BANGLA_DIGITS.indexOf(char);
-            return index >= 0 ? String(index) : char;
-        })
-        .join('')
+    return latinDigits(text)
         .replace(/[\s,_']/g, '')
         .replace(/^\p{Sc}/u, '');
 }
@@ -101,7 +99,3 @@ export function parsePercent(text) {
     return bp > 0 && bp <= 10000 ? bp : null;
 }
 
-/** A fresh id for one tap (the server keeps the first and answers the same to a repeat). */
-export function newOpId() {
-    return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}

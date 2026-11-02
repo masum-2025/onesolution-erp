@@ -1,4 +1,8 @@
-import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalString } from '@/lib/format';
+import { decimalStringToMinor, formatNumber, minorToDecimalString } from '@/lib/format';
+import { amountToMinor, cleanNumber, minorToText } from '@/lib/numbers';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { amountToMinor, cleanNumber, minorToText };
 
 /**
  * Inventory helpers for the screens: quantities typed as text become
@@ -6,16 +10,6 @@ import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalStrin
  * decimals than the unit allows), money becomes minor units. The server
  * works out every value; nothing here values stock.
  */
-
-const BANGLA = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
-
-/** "১,২৫০.৫" -> "1250.5" */
-export function cleanNumber(text) {
-    return String(text ?? '')
-        .replace(/[০-৯]/g, (digit) => BANGLA[digit])
-        .replace(/[,\s ]/g, '')
-        .trim();
-}
 
 /** Typed quantity -> thousandths; null when not a number or with more decimals than the unit allows. */
 export function quantityToMilli(text, decimals = 3, { signed = false } = {}) {
@@ -37,18 +31,6 @@ export function milliToText(milli) {
 export function formatQuantity(milli) {
     if (milli === null || milli === undefined) return '—';
     return milliToText(milli).replace(/\d/g, (digit) => formatNumber(Number(digit)));
-}
-
-/** Typed money -> minor units of the currency; null when not an amount at or above zero. */
-export function amountToMinor(text, currency) {
-    const clean = cleanNumber(text);
-    if (clean === '' || clean.startsWith('-')) return null;
-    return decimalStringToMinor(clean, currencyDigits(currency));
-}
-
-/** Minor units -> the text of an amount field. */
-export function minorToText(minor, currency) {
-    return minor === null || minor === undefined ? '' : minorToDecimalString(minor, currencyDigits(currency));
 }
 
 /** Tone of a document's or count's status badge. */

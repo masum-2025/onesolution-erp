@@ -4892,6 +4892,21 @@ lazy routes (`meta: { context, ns, module }`) and `locales/{locale}/{ns}.json` i
 The source checks in `FrontendSourceTest` (no `v-html`, logical CSS, matching `en`/`bn` keys)
 cover module files too.
 
+### Shared UI, export and print
+
+Modules build screens from one set of shared pieces (`import { … } from '@/ui'`), so a change in
+one file reaches every module: `PageFrame` (title, width, loading/error/empty, Export/Print),
+`MoneyInput`, `DateInput`, `StatusBadge`, and the helpers in `resources/js/lib/numbers.js` (the
+only Bangla digit table and number reader) and `lib/dates.js`. The app frame (header, sidebar,
+`AppFooter`) stays in `resources/js/layouts`. Every list page can export PDF (through print, so
+Bangla joins correctly), XLSX, CSV and DOCX, and print; the server decides what is offered
+(`GET /api/page-exports`), checks and audits each export (`POST /api/page-exports`,
+`page_exported`, 30 a minute), by rules `ui.export_formats`, `ui.print_enabled`,
+`ui.export_modules_off`, `ui.export_max_rows`; a module declaring `{module}.export` (Payroll:
+`payroll.export`) limits export to holders. Step A moved Accounting journals, the Compliance
+register and the Projects list; the rest follow module by module. Details:
+[docs/frontend-ui.md](docs/frontend-ui.md).
+
 ### Future expansion (frontend)
 
 - New language: add `resources/js/locales/{locale}/*.json` and the locale in

@@ -1,4 +1,8 @@
 import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalString } from '@/lib/format';
+import { amountToMinor, cleanNumber, minorToText } from '@/lib/numbers';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { amountToMinor, cleanNumber, minorToText };
 
 /**
  * Point of sale helpers. The cart is worked out exactly as the server does
@@ -6,30 +10,9 @@ import { currencyDigits, decimalStringToMinor, formatNumber, minorToDecimalStrin
  * server works it out again and its numbers are the ones kept.
  */
 
-const BANGLA = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
 const WHOLE = 10000;
 
 const half = (value, by) => Math.floor((value + Math.floor(by / 2)) / by);
-
-/** "১,২৫০.৫" -> "1250.5" */
-export function cleanNumber(text) {
-    return String(text ?? '')
-        .replace(/[০-৯]/g, (digit) => BANGLA[digit])
-        .replace(/[,\s ]/g, '')
-        .trim();
-}
-
-/** Typed money -> minor units; null when not an amount at or above zero. */
-export function amountToMinor(text, currency) {
-    const clean = cleanNumber(text);
-    if (clean === '' || clean.startsWith('-')) return null;
-    return decimalStringToMinor(clean, currencyDigits(currency));
-}
-
-/** Minor units -> an amount field's text. */
-export function minorToText(minor, currency) {
-    return minor === null || minor === undefined ? '' : minorToDecimalString(minor, currencyDigits(currency));
-}
 
 /** Typed quantity -> thousandths, no more decimals than the unit allows; null otherwise. */
 export function quantityToMilli(text, decimals = 0) {

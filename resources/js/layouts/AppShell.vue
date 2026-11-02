@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { Clock } from 'lucide-vue-next';
 import SidebarNav from './SidebarNav.vue';
 import AppHeader from './AppHeader.vue';
+import AppFooter from './AppFooter.vue';
 import ModeBanner from './ModeBanner.vue';
 import LegalBanner from './LegalBanner.vue';
 import DeletionBanner from './DeletionBanner.vue';
@@ -12,7 +13,6 @@ import AppDrawer from '@/components/AppDrawer.vue';
 import AppButton from '@/components/AppButton.vue';
 import CommandPalette from '@/components/CommandPalette.vue';
 import { api } from '@/lib/http';
-import { brand } from '@/lib/brand';
 import { loadMenu } from '@/lib/menu';
 import { on } from '@/lib/events';
 import { can, currentOrganization, enterContext, hasOfflineData, isPortalMember, session } from '@/lib/session';
@@ -189,10 +189,8 @@ watch(() => route.path, () => (mobileNav.value = false));
                 </div>
             </main>
 
-            <!-- "Powered by" (branding.show_powered_by) at the foot of every page. -->
-            <footer v-if="!focus && brand.powered_by" class="px-4 pb-5 pt-2 text-center text-[12px] text-faint print:hidden">
-                {{ t('core.powered_by', { name: brand.powered_by }) }}
-            </footer>
+            <!-- The foot of every page: brand, terms and privacy, "powered by" (one file for all modules). -->
+            <AppFooter v-if="!focus" />
         </div>
 
         <CommandPalette :open="palette" @close="palette = false" />

@@ -1,4 +1,8 @@
 import { formatNumber } from '@/lib/format';
+import { newOpId } from '@/lib/billing';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { newOpId };
 
 /**
  * Leave helpers for the screens. The server keeps every amount in half
@@ -45,7 +49,3 @@ export function covers(request, date) {
     return request.from_date <= date && request.to_date >= date;
 }
 
-/** A new id for one sending of a request (the same id again is the same request). */
-export function newOpId() {
-    return `leave-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}

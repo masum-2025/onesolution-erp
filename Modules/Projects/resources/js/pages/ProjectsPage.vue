@@ -2,12 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { FolderKanban, LayoutTemplate, ListTodo, Plus, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
-import AppBadge from '@/components/AppBadge.vue';
-import AppButton from '@/components/AppButton.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
+import { AppBadge, AppButton, EmptyState, ErrorState, PageFrame, SkeletonRows } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { formatDate, formatNumber } from '@/lib/format';
@@ -48,21 +43,39 @@ function opened(project) {
     opening.value = false;
     router.push({ name: 'project', params: { id: project.id } });
 }
+
+// Export and print: the projects the filters show, one row each.
+const exported = computed(() => ({
+    module: 'projects',
+    page: 'projects.list',
+    columns: [
+        { key: 'code', label: t('projects.export.code') },
+        { key: 'name', label: t('projects.export.name') },
+        { key: 'client', label: t('projects.export.client'), value: (project) => project.client?.name },
+        { key: 'manager', label: t('projects.export.manager'), value: (project) => project.manager?.name },
+        { key: 'unit', label: t('projects.export.unit'), value: (project) => project.unit?.name },
+        { key: 'status', label: t('projects.export.status'), value: (project) => t(`projects.statuses.${project.status}`) },
+        { key: 'due_on', label: t('projects.export.due_on'), type: 'date' },
+        { key: 'done', label: t('projects.export.tasks_done'), type: 'number', value: (project) => project.tasks?.done },
+        { key: 'total', label: t('projects.export.tasks_total'), type: 'number', value: (project) => project.tasks?.total },
+    ],
+    rows: projects.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('projects.list.title')" :description="t('projects.list.text')">
-            <template #actions>
+    <PageFrame :title="t('projects.list.title')" :description="t('projects.list.text')" width="full" :export="exported">
+        <template #actions>
+            <span class="contents print:hidden">
                 <AppButton v-if="opts?.can.templates" variant="ghost" :icon="LayoutTemplate" :to="{ name: 'projects-templates' }">{{ t('projects.templates.title') }}</AppButton>
                 <AppButton :icon="ListTodo" :to="{ name: 'projects-mine' }">{{ t('projects.mine.title') }}</AppButton>
                 <AppButton v-if="opts?.can.open" variant="primary" :icon="Plus" @click="opening = true">{{ t('projects.dialog.title') }}</AppButton>
-            </template>
-        </PageHeader>
+            </span>
+        </template>
 
         <p v-if="opts?.reads_only" class="mb-4 rounded-xl border border-line bg-subtle px-4 py-3 text-[13px] text-fg-2">{{ t('projects.list.group_reads') }}</p>
 
-        <RequestsSection v-if="opts" :options="opts" :calls="calls" :highlight="route.query.requests === '1'" @changed="list.reload()" />
+        <RequestsSection v-if="opts" class="print:hidden" :options="opts" :calls="calls" :highlight="route.query.requests === '1'" @changed="list.reload()" />
 
         <section class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-5" :aria-label="t('projects.list.summary')">
             <button v-for="key in STATUSES" :key="key" type="button" class="card px-4 py-3 text-start transition hover:bg-subtle/60"
@@ -72,7 +85,7 @@ function opened(project) {
             </button>
         </section>
 
-        <div class="relative mb-4 sm:w-80">
+        <div class="relative mb-4 print:hidden sm:w-80">
             <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
             <label class="sr-only" for="project-search">{{ t('projects.list.search') }}</label>
             <input id="project-search" v-model="q" type="search" class="field-input ps-9" :placeholder="t('projects.list.search')" maxlength="100" />
@@ -109,5 +122,5 @@ function opened(project) {
         </section>
 
         <ProjectDialog :open="opening" :options="opts" :calls="calls" @close="opening = false" @saved="opened" />
-    </div>
+    </PageFrame>
 </template>

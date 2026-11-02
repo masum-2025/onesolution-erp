@@ -2,14 +2,8 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { BookOpen, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, FilePlus, FolderTree, Landmark, Search, Settings2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
-import AppBadge from '@/components/AppBadge.vue';
-import AppButton from '@/components/AppButton.vue';
-import AppField from '@/components/AppField.vue';
-import AppMenu from '@/components/AppMenu.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
+import { AppBadge, AppButton, AppField, AppMenu, EmptyState, ErrorState, PageFrame, SkeletonRows } from '@/ui';
+import { fetchPages } from '@/lib/pageExport';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { can, currentOrganization } from '@/lib/session';
@@ -90,23 +84,38 @@ function clear() {
     from.value = '';
     to.value = '';
 }
+
+// Export and print: every entry the filters find (not only this page), as the list shows them.
+const exported = computed(() => ({
+    module: 'accounting',
+    page: approvals.value ? 'accounting.approvals' : 'accounting.journals',
+    columns: [
+        { key: 'number', label: t('accounting.export.number') },
+        { key: 'entry_date', label: t('accounting.export.date'), type: 'date' },
+        { key: 'narration', label: t('accounting.export.narration') },
+        { key: 'total_minor', label: t('accounting.export.total'), type: 'money', currency: org.settings?.currency_code },
+        { key: 'status', label: t('accounting.export.status'), value: (journal) => t(`accounting.statuses.${journal.status}`) },
+        { key: 'source', label: t('accounting.export.source'), value: (journal) => journal.source?.module ?? '' },
+    ],
+    fetchAll: (maxRows) => fetchPages((number) => books.journals({
+        q: search.value.trim(), status: approvals.value ? 'pending_approval' : status.value, from: from.value, to: to.value, page: number, per_page: 100,
+    }), maxRows),
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="approvals ? t('accounting.approvals.title') : t('accounting.title')" :description="approvals ? t('accounting.approvals.text') : t('accounting.text')">
-            <template #actions>
-                <AppMenu :items="more" :label="t('accounting.more')">
-                    <template #trigger="{ toggle, attrs }">
-                        <AppButton :icon-end="ChevronDown" v-bind="attrs" @click="toggle(false)">{{ t('accounting.more') }}</AppButton>
-                    </template>
-                </AppMenu>
-                <AppButton v-if="can('accounting.post')" variant="primary" :to="{ name: 'accounting-journal-new' }" :icon="FilePlus">{{ t('accounting.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="approvals ? t('accounting.approvals.title') : t('accounting.title')" :description="approvals ? t('accounting.approvals.text') : t('accounting.text')" width="full" :export="exported">
+        <template #actions>
+            <AppMenu :items="more" :label="t('accounting.more')" class="print:hidden">
+                <template #trigger="{ toggle, attrs }">
+                    <AppButton :icon-end="ChevronDown" v-bind="attrs" @click="toggle(false)">{{ t('accounting.more') }}</AppButton>
+                </template>
+            </AppMenu>
+            <AppButton v-if="can('accounting.post')" variant="primary" class="print:hidden" :to="{ name: 'accounting-journal-new' }" :icon="FilePlus">{{ t('accounting.new') }}</AppButton>
+        </template>
 
         <BooksGate>
-            <div v-if="!approvals" class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_12rem_10rem_10rem_auto] lg:items-end">
+            <div v-if="!approvals" class="mb-5 grid gap-3 print:hidden sm:grid-cols-2 lg:grid-cols-[1fr_12rem_10rem_10rem_auto] lg:items-end">
                 <AppField v-slot="{ id }" :label="t('accounting.filters.search')" sr-only-label>
                     <div class="relative">
                         <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
@@ -164,7 +173,7 @@ function clear() {
                     </ul>
                 </template>
 
-                <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+                <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                     <span class="tabular text-[12.5px] text-muted">{{ t('accounting.list.page', { page: formatNumber(meta.page), pages: formatNumber(meta.last_page) }) }}</span>
                     <div class="flex gap-2">
                         <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.page <= 1" @click="go(meta.page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -173,5 +182,5 @@ function clear() {
                 </footer>
             </section>
         </BooksGate>
-    </div>
+    </PageFrame>
 </template>

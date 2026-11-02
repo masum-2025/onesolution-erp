@@ -2,13 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { FileUp, ListChecks, Plus, ShieldCheck, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
-import AppBadge from '@/components/AppBadge.vue';
-import AppButton from '@/components/AppButton.vue';
-import AppField from '@/components/AppField.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
+import { AppBadge, AppButton, AppField, EmptyState, ErrorState, PageFrame, SkeletonRows } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { formatDate, formatNumber } from '@/lib/format';
@@ -63,17 +57,36 @@ const markText = (mark) => (mark.key === 'results'
     ? t('compliance.register.results_waiting', { count: mark.count, results: formatNumber(mark.count) })
     : mark.planned ? t('compliance.renewal.planned_value', { date: formatDate(mark.planned) }) : t(`compliance.renewal_statuses.${mark.key}`));
 const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0]?.depth ?? 0));
+
+// Export and print: the lines the filters show, one row each.
+const exported = computed(() => ({
+    module: 'compliance',
+    page: 'compliance.register',
+    columns: [
+        { key: 'factory', label: t('compliance.fields.factory'), value: (line) => line.factory?.name },
+        { key: 'service', label: t('compliance.fields.service'), value: (line) => line.service?.name },
+        { key: 'audit_type', label: t('compliance.fields.audit_type'), value: (line) => line.audit_type?.name },
+        { key: 'provider', label: t('compliance.fields.provider'), value: (line) => line.provider?.name },
+        { key: 'last_audit_on', label: t('compliance.fields.last_audit_on'), type: 'date' },
+        { key: 'expires_on', label: t('compliance.fields.expires_on'), type: 'date' },
+        { key: 'days_left', label: t('compliance.export.days_left'), type: 'number' },
+        { key: 'state', label: t('compliance.fields.state'), value: (line) => t(`compliance.states.${line.state}`) },
+        { key: 'result', label: t('compliance.fields.result') },
+        { key: 'certificate_no', label: t('compliance.fields.certificate_no') },
+    ],
+    rows: lines.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('compliance.register.title')" :description="t('compliance.register.text')">
-            <template #actions>
+    <PageFrame :title="t('compliance.register.title')" :description="t('compliance.register.text')" width="full" :export="exported">
+        <template #actions>
+            <span class="contents print:hidden">
                 <AppButton v-if="opts?.can.lists" variant="ghost" :icon="ListChecks" :to="{ name: 'compliance-lists' }">{{ t('compliance.lists.title') }}</AppButton>
                 <AppButton v-if="opts?.can.import" :icon="FileUp" :to="{ name: 'compliance-import' }">{{ t('compliance.import.title') }}</AppButton>
                 <AppButton v-if="opts?.can.add" variant="primary" :icon="Plus" @click="add()">{{ t('compliance.add.title') }}</AppButton>
-            </template>
-        </PageHeader>
+            </span>
+        </template>
 
         <p v-if="opts?.reads_only" class="mb-4 rounded-xl border border-line bg-subtle px-4 py-3 text-[13px] text-fg-2">{{ t('compliance.register.group_reads') }}</p>
 
@@ -86,7 +99,7 @@ const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0
             </button>
         </section>
 
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div class="mb-4 flex flex-col gap-3 print:hidden sm:flex-row sm:items-end">
             <AppField v-slot="{ id }" :label="t('compliance.fields.factory')" sr-only-label class="sm:w-64">
                 <select :id="id" v-model="unit" class="field-input">
                     <option value="">{{ t('compliance.register.all_factories') }}</option>
@@ -113,7 +126,7 @@ const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0
         </section>
         <template v-else>
             <!-- Wide screens: factories down, services across. -->
-            <section class="card hidden overflow-x-auto md:block">
+            <section class="card hidden overflow-x-auto md:block print:block">
                 <table class="w-full min-w-max text-[13px]">
                     <thead>
                         <tr class="border-b border-line text-start text-[12px] text-muted">
@@ -140,7 +153,7 @@ const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0
             </section>
 
             <!-- Phones: the most urgent first. -->
-            <ul class="card divide-y divide-line md:hidden">
+            <ul class="card divide-y divide-line md:hidden print:hidden">
                 <li v-for="line in lines" :key="line.id">
                     <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-start" @click="openId = line.id">
                         <span class="min-w-0 flex-1">
@@ -159,5 +172,5 @@ const indent = (factory) => Math.max(0, factory.depth - (opts.value?.factories[0
 
         <AuditDrawer :open="openId !== null" :audit-id="openId" :options="opts" :calls="calls" @close="openId = null" @changed="list.reload()" />
         <AuditDialog :open="adding" :options="opts" :preset="preset" :calls="calls" @close="adding = false" @saved="added" />
-    </div>
+    </PageFrame>
 </template>

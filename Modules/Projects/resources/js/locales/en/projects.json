@@ -316,5 +316,16 @@
         "not_received_text": "{from} says it paid {amount}. Say what you see (for example, nothing in the bank yet), so they can check.",
         "answered": "The client is told.",
         "why_record": "Recording a receipt needs the books here and the right to record receipts in Accounting."
+    },
+    "export": {
+        "code": "Code",
+        "name": "Project",
+        "client": "Client",
+        "manager": "Manager",
+        "unit": "Unit",
+        "status": "Status",
+        "due_on": "Due",
+        "tasks_done": "Tasks done",
+        "tasks_total": "Tasks"
     }
 }

@@ -256,5 +256,23 @@
         "label": "নতুন কিছু তৈরি করুন",
         "button": "নতুন",
         "heading": "তৈরি করুন"
+    },
+    "export": {
+        "menu": "এক্সপোর্ট",
+        "formats": {
+            "pdf": "PDF",
+            "xlsx": "Excel (XLSX)",
+            "csv": "CSV",
+            "docx": "Word (DOCX)"
+        },
+        "pdf_hint": "প্রিন্ট খুলবে: \"Save as PDF\" বেছে নিন",
+        "print": "প্রিন্ট",
+        "done": "ফাইল তৈরি: ডাউনলোড ফোল্ডারে দেখুন।",
+        "as_of": "{date} পর্যন্ত",
+        "printed_on": "{date} তারিখে প্রিন্ট করা"
+    },
+    "footer": {
+        "terms": "শর্তাবলি",
+        "privacy": "গোপনীয়তা"
     }
 }

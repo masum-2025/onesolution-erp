@@ -1,5 +1,10 @@
 import { i18n } from '@/lib/i18n';
-import { currencyDigits, decimalStringToMinor, formatMoney, formatNumber, localeTag, minorToDecimalString } from '@/lib/format';
+import { formatMoney, formatNumber, localeTag } from '@/lib/format';
+import { amountToMinor, cleanNumber, minorToText } from '@/lib/numbers';
+import { newOpId } from '@/lib/billing';
+
+// Shared helpers, passed on so this module's screens keep importing them from here.
+export { amountToMinor, cleanNumber, minorToText, newOpId };
 
 /**
  * Expenses helpers for the screens: typed amounts as integer minor units
@@ -7,24 +12,6 @@ import { currencyDigits, decimalStringToMinor, formatMoney, formatNumber, locale
  * mileage worked out exactly as the server does (to preview; the server
  * works it out again), and what each status looks like.
  */
-
-const BANGLA = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
-
-/** "১,২৫০.৫" -> "1250.5" */
-export function cleanNumber(text) {
-    return String(text ?? '').trim().replace(/[০-৯]/g, (digit) => BANGLA[digit]).replace(/[,\s]/g, '');
-}
-
-/** Typed money -> minor units; null when not an amount at or above zero. */
-export function amountToMinor(text, currency) {
-    const clean = cleanNumber(text);
-    if (clean === '' || !/^\d+(\.\d+)?$/.test(clean)) return null;
-    return decimalStringToMinor(clean, currencyDigits(currency));
-}
-
-export function minorToText(minor, currency) {
-    return minor === null || minor === undefined ? '' : minorToDecimalString(minor, currencyDigits(currency));
-}
 
 /** 64000 BDT -> "৳640.00" in the reader's language. */
 export function amountText(minor, currency) {
@@ -101,7 +88,3 @@ export function advanceTone(status) {
     return { submitted: 'warn', approved: 'brand', rejected: 'bad', paid: 'brand', settled: 'ok', withdrawn: 'neutral' }[status] ?? 'neutral';
 }
 
-/** A new id for one sending of a claim (the same id again is the same claim). */
-export function newOpId() {
-    return `expenses-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}

@@ -39,6 +39,29 @@ it('only touches browser storage through the preferences helper', function () {
     }
 });
 
+it('reads typed numbers through the shared helpers, never through a module\'s own copy', function () {
+    // One Bangla digit table and one reader for typed numbers (resources/js/lib/numbers.js);
+    // modules import them (or @/ui), so a change there reaches every money and number field.
+    foreach (frontendFiles() as $file) {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $file->getRelativePathname());
+        if ($path === 'lib/numbers.js') {
+            continue;
+        }
+        expect($file->getContents())->not->toMatch('/০১২৩৪৫৬৭৮৯|function (cleanNumber|minorToText|latinDigits)\(/', $path);
+    }
+});
+
+it('frames export and print through the shared menu, never a module\'s own file writer', function () {
+    // CSV, XLSX and DOCX are built in lib/pageExport.js only (rules, audit, formula guard).
+    foreach (frontendFiles() as $file) {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', $file->getRelativePathname());
+        if ($path === 'lib/pageExport.js') {
+            continue;
+        }
+        expect($file->getContents())->not->toMatch("/from 'write-excel-file|import\\('write-excel-file|from 'docx'|import\\('docx'\\)/", $path);
+    }
+});
+
 it('uses logical instead of physical left/right utilities', function () {
     foreach (frontendFiles() as $file) {
         expect($file->getContents())->not->toMatch('/\b(?:ml|mr|pl|pr|left|right)-(?:\d|\[|px|auto)|\btext-(?:left|right)\b|\bborder-[lr]\b|\brounded-[lr]-/', $file->getRelativePathname());

@@ -41,6 +41,7 @@ use App\Platform\Packaging\Http\Controllers\CatalogController;
 use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
 use App\Platform\Packaging\Http\Controllers\SectorPackageController;
 use App\Platform\Packaging\Http\Controllers\UsageController;
+use App\Platform\PageExports\Http\PageExportController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiKeyController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiV1Controller;
 use App\Platform\Partners\Http\Controllers\PartnerBrandController;
@@ -326,6 +327,9 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
     Route::get('modules/{module}/dashboard', [ModuleDashboardController::class, 'index'])->where('module', '[a-z][a-z0-9_]{1,49}');
     Route::get('modules/{module}/dashboard/{widget}', [ModuleDashboardController::class, 'show'])->where(['module' => '[a-z][a-z0-9_]{1,49}', 'widget' => '[a-z][a-z0-9_]{1,49}']);
     Route::get('modules/{module}/settings', ModuleSettingsController::class)->where('module', '[a-z][a-z0-9_]{1,49}');
+    // Export and print on module pages: what a module's pages may offer, and one export checked and audited.
+    Route::get('page-exports', [PageExportController::class, 'show']);
+    Route::post('page-exports', [PageExportController::class, 'store'])->middleware('throttle:page-export');
     Route::get('organizations/{organization}/modules', [ModuleController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
         Route::post('organizations/{organization}/modules/{module}/enable', [ModuleController::class, 'enable']);

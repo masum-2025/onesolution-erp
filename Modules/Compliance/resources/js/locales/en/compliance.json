@@ -303,5 +303,8 @@
         "status_recorded": "Recorded by them",
         "status_not_received": "Not received",
         "their_reason": "Their answer: {reason}"
+    },
+    "export": {
+        "days_left": "Days left"
     }
 }

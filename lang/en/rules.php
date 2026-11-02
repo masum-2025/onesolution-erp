@@ -65,6 +65,22 @@ return [
             'description' => 'Colours of forms in the side panel: brand tint = a faint wash of the brand colour around a white card, light grey = grey around the card, grey card = white around a light grey card, green and white = light green around the card, one colour = no card. Use the allowed list to turn templates on or off for everyone below; lock it to give everyone the same.',
             'options' => ['brand_wash' => 'Brand tint', 'soft' => 'Light grey', 'grey_card' => 'Grey card', 'mint' => 'Green and white', 'plain' => 'One colour'],
         ],
+        'ui_export_formats' => [
+            'label' => 'Export formats',
+            'description' => 'Which files people may download from module pages: PDF (through printing), Excel (XLSX), CSV, Word (DOCX). Empty: no export.',
+        ],
+        'ui_print_enabled' => [
+            'label' => 'Print',
+            'description' => 'Whether module pages offer a print button.',
+        ],
+        'ui_export_modules_off' => [
+            'label' => 'Modules without export',
+            'description' => 'Module keys (for example payroll) whose pages offer no export or print.',
+        ],
+        'ui_export_max_rows' => [
+            'label' => 'Rows in one export',
+            'description' => 'The most rows one export may hold.',
+        ],
         'ui_accent' => [
             'label' => 'Highlight color',
             'description' => 'Color of buttons and the selected page. brand = your brand color. Lock it to keep it the same for everyone below.',
@@ -308,6 +324,7 @@ return [
     'categories' => [
         'language' => 'Language and wording',
         'appearance' => 'Look and feel',
+        'exports' => 'Export and print',
         'organization' => 'Organization',
         'security' => 'Security',
         'data' => 'Data',

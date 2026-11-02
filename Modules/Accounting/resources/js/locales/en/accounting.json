@@ -691,5 +691,13 @@
     "floor": {
         "title": "Below zero?",
         "post_anyway": "Post anyway"
+    },
+    "export": {
+        "number": "Number",
+        "date": "Date",
+        "narration": "Narration",
+        "total": "Amount",
+        "status": "Status",
+        "source": "From module"
     }
 }
