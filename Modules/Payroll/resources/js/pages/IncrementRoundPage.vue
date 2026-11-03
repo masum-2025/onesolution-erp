@@ -9,6 +9,7 @@ import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
+import EmptyState from '@/components/EmptyState.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { textIn } from '@/lib/texts';
@@ -160,8 +161,14 @@ async function saveLine(back = false) {
                 </AppField>
             </section>
 
+            <section v-if="!(round.lines ?? []).length" class="card">
+                <EmptyState :icon="TrendingUp" :title="t('payroll.increments.no_lines')" :text="t('payroll.increments.no_lines_text')" compact>
+                    <AppButton :to="{ name: 'payroll-employees' }">{{ t('payroll.employees.title') }}</AppButton>
+                </EmptyState>
+            </section>
+
             <!-- Wide screens: a table. -->
-            <section class="card hidden overflow-x-auto md:block print:block">
+            <section v-else class="card hidden overflow-x-auto md:block print:block">
                 <table class="w-full text-[13.5px]">
                     <thead class="border-b border-line text-[12px] text-muted">
                         <tr>
@@ -198,7 +205,7 @@ async function saveLine(back = false) {
             </section>
 
             <!-- Phones: a list. -->
-            <ul class="card divide-y divide-line md:hidden print:hidden">
+            <ul v-if="(round.lines ?? []).length" class="card divide-y divide-line md:hidden print:hidden">
                 <li v-for="line in lines" :key="line.id" class="flex items-center gap-3 px-4 py-3" :class="line.excluded ? 'opacity-60' : ''">
                     <span class="min-w-0 flex-1">
                         <span class="block text-[14px] font-medium">{{ line.employee_name }}</span>

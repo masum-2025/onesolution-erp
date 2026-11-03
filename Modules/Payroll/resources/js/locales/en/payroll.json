@@ -509,6 +509,8 @@
         "preview": "New basic: {amount}",
         "leave_out": "Leave out of this round",
         "back_to_rule": "Back to the rule",
-        "saved": "Saved."
+        "saved": "Saved.",
+        "no_lines": "Nobody employed on this day has a salary yet",
+        "no_lines_text": "Set salaries on the Employees page of Payroll, then fill this round again."
     }
 }
