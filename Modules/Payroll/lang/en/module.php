@@ -12,6 +12,7 @@ return [
     'portal_slips' => 'My payslips',
     'menu_loans' => 'Loans and advances',
     'menu_bonuses' => 'Festival bonuses',
+    'menu_increments' => 'Increments',
     'menu_settlements' => 'Final settlements',
     'menu_fund' => 'Provident fund',
 ];

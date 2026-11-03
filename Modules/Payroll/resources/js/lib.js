@@ -35,6 +35,21 @@ export function runTone(status) {
     return { draft: 'neutral', pending_approval: 'warn', approved: 'brand', paid: 'ok' }[status] ?? 'neutral';
 }
 
+/** Tone of an increment round's status badge (always next to its label). */
+export function incrementTone(status) {
+    return { draft: 'neutral', pending_approval: 'warn', approved: 'brand', applied: 'ok', cancelled: 'neutral' }[status] ?? 'neutral';
+}
+
+/**
+ * A basic raised by a rate (basis points), rounded half up as the server
+ * does: a preview while typing a rate by hand (the server works it out).
+ */
+export function raiseBy(basicMinor, rateBp) {
+    const basic = Math.trunc(Number(basicMinor) || 0);
+    const rate = Math.trunc(Number(rateBp) || 0);
+    return basic + Math.floor((basic * rate + 5000) / 10000);
+}
+
 /** Tone of a loan's status badge. */
 export function loanTone(status) {
     return { pending_approval: 'warn', active: 'brand', closed: 'ok', rejected: 'bad', cancelled: 'neutral' }[status] ?? 'neutral';

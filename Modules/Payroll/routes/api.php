@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Payroll\Http\Controllers\BonusController;
+use Modules\Payroll\Http\Controllers\IncrementController;
 use Modules\Payroll\Http\Controllers\LoanController;
 use Modules\Payroll\Http\Controllers\MeController;
 use Modules\Payroll\Http\Controllers\PfController;
@@ -42,6 +43,10 @@ Route::middleware(['auth:sanctum', 'org', 'module:payroll'])
         Route::get('loans/{loan}', [LoanController::class, 'show']);
         Route::get('bonuses', [BonusController::class, 'index']);
         Route::get('bonuses/{bonus}', [BonusController::class, 'show']);
+        // Salary increments (PAY-4): the cycles a round can follow first, then the rounds.
+        Route::get('increments/sources', [IncrementController::class, 'sources']);
+        Route::get('increments', [IncrementController::class, 'index']);
+        Route::get('increments/{round}', [IncrementController::class, 'show']);
 
         Route::middleware('throttle:tenancy-sensitive')->group(function () {
             Route::post('components', [SetupController::class, 'storeComponent']);
@@ -65,6 +70,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:payroll'])
             Route::patch('bonuses/{bonus}/lines/{line}', [BonusController::class, 'updateLine']);
             Route::delete('bonuses/{bonus}', [BonusController::class, 'destroy']);
             Route::post('bonuses/{bonus}/{step}', [BonusController::class, 'step']);
+            Route::post('increments', [IncrementController::class, 'store']);
+            Route::patch('increments/{round}/lines/{line}', [IncrementController::class, 'updateLine']);
+            Route::post('increments/{round}/{step}', [IncrementController::class, 'step']);
             Route::post('settlements', [SettlementController::class, 'store']);
             Route::post('settlements/{settlement}/lines', [SettlementController::class, 'addLine']);
             Route::delete('settlements/{settlement}/lines/{line}', [SettlementController::class, 'removeLine']);

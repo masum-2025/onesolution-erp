@@ -7,6 +7,8 @@ use Modules\Payroll\Models\Adjustment;
 use Modules\Payroll\Models\BonusLine;
 use Modules\Payroll\Models\BonusRun;
 use Modules\Payroll\Models\Component;
+use Modules\Payroll\Models\IncrementLine;
+use Modules\Payroll\Models\IncrementRound;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\PaymentDetail;
 use Modules\Payroll\Models\PfEntry;
@@ -192,6 +194,32 @@ class PayrollPresenter
      *
      * @return array<string, mixed>
      */
+    /**
+     * @param  array<string, bool>  $can
+     * @return array<string, mixed>
+     */
+    public function increment(IncrementRound $round, array $can = [], ?int $approvals = null, ?int $needed = null): array
+    {
+        return [
+            'id' => $round->getKey(), 'title' => $round->title, 'titles' => $round->texts('title'), 'cycle_id' => $round->cycle_id,
+            'effective_from' => $round->effective_from->toDateString(), 'status' => $round->status, 'currency' => $round->currency_code,
+            'employees' => $round->employees, 'current_minor' => $round->current_minor, 'new_minor' => $round->new_minor,
+            'reject_reason' => $round->reject_reason, 'submitted_at' => $round->submitted_at?->toIso8601String(),
+            'approved_at' => $round->approved_at?->toIso8601String(), 'applied_at' => $round->applied_at?->toIso8601String(), 'version' => $round->version,
+            ...($approvals === null ? [] : ['approvals' => $approvals, 'approvals_needed' => $needed]),
+            ...($can === [] ? [] : ['can' => $can]),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function incrementLine(IncrementLine $line): array
+    {
+        return $line->only(['id', 'employee_id', 'employee_code', 'employee_name', 'unit_id', 'current_minor', 'score', 'band', 'rate_bp', 'rate_source',
+            'new_minor', 'reason', 'excluded', 'applied_salary_id', 'problem']);
+    }
+
     public function bonusLine(BonusLine $line, ?BonusRun $bonus = null): array
     {
         return [

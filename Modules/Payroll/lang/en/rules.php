@@ -116,7 +116,20 @@ return [
         'label' => 'Gratuity (days of basic per year)',
         'description' => 'Days of the basic for each whole year of service (a month counts as 30 days). 0 = no gratuity.',
     ],
+    'increment_by_band' => [
+        'label' => 'Increment by appraisal band (%)',
+        'description' => 'The salary increment suggested for each appraisal band, as a percentage of the basic (band key: percent). People without a band get none unless set by hand.',
+    ],
+    'increment_max_percent' => [
+        'label' => 'Highest increment (% of basic)',
+        'description' => 'No increment above this share of the basic, from the band or set by hand.',
+    ],
+    'increment_round_to' => [
+        'label' => 'Round new basics to',
+        'description' => 'New basics from the bands are rounded to the nearest multiple of this amount (never below the basic now). Empty: not rounded.',
+    ],
     'categories' => [
+        'increment' => 'Salary increments',
         'fund' => 'Provident fund',
         'leaving' => 'Leaving',
         'loans' => 'Loans and advances',

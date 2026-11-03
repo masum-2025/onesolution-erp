@@ -429,5 +429,86 @@
         "service_months": "Months of service",
         "gross": "Before tax",
         "not_paid": "Not paid because"
+    },
+    "increments": {
+        "title": "Salary increments",
+        "text": "Raise basics from a day, usually after an appraisal: rates from the bands, or set by hand. Approved by other people, then applied.",
+        "open": "New increment round",
+        "name": "Name",
+        "effective_from": "From",
+        "effective_from_hint": "The new basics start this day. Not in a month already sent or approved.",
+        "cycle": "Appraisal",
+        "cycle_hint": "Its bands suggest each rate. Without one, set rates by hand.",
+        "no_cycle": "No appraisal (rates by hand)",
+        "empty": "No increment rounds yet",
+        "empty_text": "Open one after an appraisal cycle closes.",
+        "opened": "Increment round opened.",
+        "people": "{count} raised",
+        "statuses": {
+            "draft": "Draft",
+            "pending_approval": "Waiting for approval",
+            "approved": "Approved",
+            "applied": "Applied",
+            "cancelled": "Cancelled"
+        },
+        "steps": {
+            "fill": "Fill again",
+            "submit": "Send for approval",
+            "approve": "Approve",
+            "reject": "Send back",
+            "apply": "Apply",
+            "cancel": "Cancel round"
+        },
+        "done": {
+            "fill": "Filled again from the appraisal and rules.",
+            "submit": "Sent for approval.",
+            "approve": "Approved.",
+            "reject": "Sent back.",
+            "apply": "New basics set.",
+            "cancel": "Round cancelled."
+        },
+        "confirm": {
+            "apply_title": "Apply {title}?",
+            "apply_text": "The basic of {count} people changes from {date}. Each is audited; they are told without the amount.",
+            "cancel_title": "Cancel {title}?",
+            "cancel_text": "The round is kept but nothing will be applied.",
+            "reject_title": "Send {title} back?"
+        },
+        "levels": "{done} of {needed} approvals",
+        "reject_reason": "Sent back: {reason}",
+        "columns": {
+            "employee": "Employee",
+            "band": "Band",
+            "now": "Basic now",
+            "rate": "Rate",
+            "new": "New basic",
+            "raise": "Raise"
+        },
+        "totals": "Monthly basics {from} → {to} (+{raise})",
+        "filter_band": "Band",
+        "all_bands": "All bands",
+        "no_band": "No band",
+        "from_rule": "From the rule",
+        "by_hand": "Set by hand",
+        "none": "No rate",
+        "left_out": "Left out",
+        "problems": {
+            "salary_changed": "Salary changed meanwhile: not applied",
+            "structure_off": "Pay structure switched off: not applied"
+        },
+        "applied": "Applied",
+        "change": "Change",
+        "change_title": "Increment for {name}",
+        "how": "Set",
+        "how_rate": "A rate",
+        "how_amount": "A new basic",
+        "rate": "Rate (%)",
+        "new_basic": "New basic",
+        "reason": "Reason",
+        "reason_hint": "Why this person differs from the rule.",
+        "preview": "New basic: {amount}",
+        "leave_out": "Leave out of this round",
+        "back_to_rule": "Back to the rule",
+        "saved": "Saved."
     }
 }

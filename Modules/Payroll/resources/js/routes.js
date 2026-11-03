@@ -19,6 +19,8 @@ export default [
     { path: 'payroll/loans/:id', name: 'payroll-loan', component: () => import('./pages/LoanPage.vue'), meta },
     { path: 'payroll/bonuses', name: 'payroll-bonuses', component: () => import('./pages/BonusesPage.vue'), meta },
     { path: 'payroll/bonuses/:id', name: 'payroll-bonus', component: () => import('./pages/BonusPage.vue'), meta },
+    { path: 'payroll/increments', name: 'payroll-increments', component: () => import('./pages/IncrementsPage.vue'), meta },
+    { path: 'payroll/increments/:id', name: 'payroll-increment', component: () => import('./pages/IncrementRoundPage.vue'), meta },
     { path: 'payroll/settlements', name: 'payroll-settlements', component: () => import('./pages/SettlementsPage.vue'), meta },
     { path: 'payroll/settlements/:id', name: 'payroll-settlement', component: () => import('./pages/SettlementPage.vue'), meta },
     { path: 'payroll/settlements/:id/print', name: 'payroll-settlement-print', component: () => import('./pages/SettlementSlipPage.vue'), meta: { ...meta, slip: 'staff' } },

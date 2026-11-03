@@ -11,6 +11,8 @@ use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Support\Facades\Gate;
 use Modules\Payroll\Models\BonusRun;
+use Modules\Payroll\Models\IncrementApproval;
+use Modules\Payroll\Models\IncrementRound;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\Run;
 use Modules\Payroll\Models\RunApproval;
@@ -58,6 +60,11 @@ final class PayrollWidgets implements AttentionProvider, DashboardWidget
             ->where(fn ($query) => $query->whereNull('submitted_by')->orWhere('submitted_by', '!=', $me))
             ->where(fn ($query) => $query->whereNull('created_by')->orWhere('created_by', '!=', $me))->count();
 
+        $approvedRounds = $payrolls->query(IncrementApproval::class, $company)->where('user_id', $me)->pluck('round_id')->all();
+        $increments = $payrolls->query(IncrementRound::class, $company)->where('status', IncrementRound::PENDING)->whereNotIn('id', $approvedRounds)
+            ->where(fn ($query) => $query->whereNull('submitted_by')->orWhere('submitted_by', '!=', $me))
+            ->where(fn ($query) => $query->whereNull('created_by')->orWhere('created_by', '!=', $me))->count();
+
         $settlements = $payrolls->query(Settlement::class, $company)->where('status', Settlement::PENDING)
             ->where(fn ($query) => $query->whereNull('submitted_by')->orWhere('submitted_by', '!=', $me))
             ->where(fn ($query) => $query->whereNull('created_by')->orWhere('created_by', '!=', $me))->count();
@@ -68,6 +75,7 @@ final class PayrollWidgets implements AttentionProvider, DashboardWidget
             $count === 0 ? null : new AttentionItem('payroll.runs_waiting', __('payroll::dashboard.attention'), $count, '/payroll', 'warn'),
             $loans === 0 ? null : new AttentionItem('payroll.loans_waiting', __('payroll::dashboard.attention_loans'), $loans, '/payroll/loans', 'warn'),
             $bonuses === 0 ? null : new AttentionItem('payroll.bonuses_waiting', __('payroll::dashboard.attention_bonuses'), $bonuses, '/payroll/bonuses', 'warn'),
+            $increments === 0 ? null : new AttentionItem('payroll.increments_waiting', __('payroll::dashboard.attention_increments'), $increments, '/payroll/increments', 'warn'),
         ]));
     }
 

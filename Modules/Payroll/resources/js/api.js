@@ -52,6 +52,14 @@ export function payrollApi(organizationId) {
         deleteBonus: (id, version) => api(`${base}/bonuses/${id}`, { method: 'DELETE', body: { base_version: version } }),
         bonusBankFile: (id) => api(`${base}/bonuses/${id}/bank-file`),
 
+        // Salary increments (PAY-4).
+        incrementSources: () => api(`${base}/increments/sources`),
+        increments: () => api(`${base}/increments`),
+        increment: (id) => api(`${base}/increments/${id}`),
+        openIncrement: (body) => api(`${base}/increments`, { method: 'POST', body }),
+        incrementStep: (id, step, body) => api(`${base}/increments/${id}/${step}`, { method: 'POST', body }),
+        changeIncrementLine: (id, lineId, body) => api(`${base}/increments/${id}/lines/${lineId}`, { method: 'PATCH', body }),
+
         fund: () => api(`${base}/fund`),
         myFund: () => api(`${base}/me/fund`),
         settlements: () => api(`${base}/settlements`),

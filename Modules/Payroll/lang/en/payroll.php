@@ -26,6 +26,9 @@ return [
         'own_loan' => 'Another person has to approve a loan you asked for.',
         'month_locked' => 'The payroll of :period is sent or approved already; its instalments cannot change.',
         'bonus_not_found' => 'Bonus not found. Reload the list.',
+        'increment_not_found' => 'Increment round not found. Reload the list.',
+        'increment_month_locked' => 'The payroll of :period or a later month is sent or approved already. Choose a day after the last approved month.',
+        'increment_empty' => 'Nobody gets an increment in this round yet. Set rates, or fill it again from the appraisal.',
         'settlement_not_found' => 'Settlement not found. Reload the list.',
         'not_leaving' => 'This employee has no exit day yet. Record the exit in HR first.',
         'settlement_exists' => 'This employee already has a final settlement. Open it from the list.',
@@ -35,6 +38,10 @@ return [
     ],
 
     'validation' => [
+        'increment_cycle' => 'Choose a finished appraisal cycle of this company, or none.',
+        'increment_reason' => 'Say why this rate or amount is set by hand.',
+        'increment_below' => 'The new basic cannot be lower than the basic now.',
+        'increment_max' => 'No increment above :max% of the basic here (company rule).',
         'code_taken' => 'Another item of this company already has this code.',
         'component' => 'Choose an active component of this company, each once.',
         'item_value' => 'Give the amount for a fixed item, or the share of the basic for the others.',
@@ -50,6 +57,9 @@ return [
     ],
 
     // Narration of the journals payroll posts.
+    'increments' => [
+        'salary_reason' => 'Increment: :title',
+    ],
     'narration' => [
         'run' => 'Salaries :period',
         'payment' => 'Salaries :period paid',

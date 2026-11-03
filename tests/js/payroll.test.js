@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { amountToMinor, bankCsv, bpToPercent, cleanNumber, firstRecoveryMonth, installmentOf, installmentTone, loanTone, minorToText, nextPeriod, percentToBp, runTone, settlementBasis, settlementSections, sortBonusLines, sortSlips } from '../../Modules/Payroll/resources/js/lib.js';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { amountToMinor, bankCsv, bpToPercent, cleanNumber, firstRecoveryMonth, incrementTone, installmentOf, installmentTone, loanTone, minorToText, nextPeriod, percentToBp, raiseBy, runTone, settlementBasis, settlementSections, sortBonusLines, sortSlips } from '../../Modules/Payroll/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Payroll/resources/js/locales/en/payroll.json';
 import bn from '../../Modules/Payroll/resources/js/locales/bn/payroll.json';
@@ -137,5 +139,39 @@ describe('Payroll fund and final settlement screens', () => {
         }
         const parts = settlementSections([{ kind: 'earning' }, { kind: 'deduction' }, { kind: 'info' }, { kind: 'earning' }]);
         expect([parts.earnings.length, parts.deductions.length, parts.info.length]).toEqual([2, 1, 1]);
+    });
+});
+
+describe('Payroll salary increment screens', () => {
+    it('registers the rounds and one round', () => {
+        const names = moduleRoutes.filter((route) => route.meta.module === 'payroll').map((route) => route.name);
+        expect(names).toEqual(expect.arrayContaining(['payroll-increments', 'payroll-increment']));
+    });
+
+    it('previews a raise as the server rounds it (half up, whole minor units)', () => {
+        expect(raiseBy(3003000, 1000)).toBe(3303300);
+        expect(raiseBy(2500000, 800)).toBe(2700000);
+        expect(raiseBy(1005, 50)).toBe(1010); // 5.025 -> 5
+        expect(raiseBy(1010, 50)).toBe(1015); // 5.05 -> 5
+        expect(raiseBy(4000000, 0)).toBe(4000000);
+    });
+
+    it('words every status, problem and key in both languages', () => {
+        for (const status of ['draft', 'pending_approval', 'approved', 'applied', 'cancelled']) {
+            expect(en.increments.statuses[status]).toBeTruthy();
+            expect(bn.increments.statuses[status]).toBeTruthy();
+            expect(incrementTone(status)).toBeTruthy();
+        }
+        expect(incrementTone('applied')).toBe('ok');
+        for (const problem of ['salary_changed', 'structure_off']) expect(bn.increments.problems[problem]).toBeTruthy();
+        for (const step of ['fill', 'submit', 'approve', 'reject', 'apply', 'cancel']) {
+            expect(bn.increments.steps[step]).toBeTruthy();
+            expect(en.increments.done[step]).toBeTruthy();
+        }
+        const known = new Set(keys(en));
+        const dir = join(__dirname, '../../Modules/Payroll/resources/js/pages');
+        const used = ['IncrementsPage.vue', 'IncrementRoundPage.vue'].flatMap((name) => [...readFileSync(join(dir, name), 'utf8').matchAll(/t\('payroll\.([a-z_.]+)'/g)].map((match) => match[1]));
+        expect(used.length).toBeGreaterThan(30);
+        expect(used.filter((key) => !known.has(key))).toEqual([]);
     });
 });

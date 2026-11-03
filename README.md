@@ -3574,6 +3574,34 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
   Books set up earlier have no 2160: add "Provident fund payable" and choose it under Accounting >
   Posting accounts before the first month with the fund is approved.
 
+### Salary increments (PAY-4)
+
+- A round (`pay_increment_rounds`, `pay_increment_lines`, `pay_increment_approvals`) raises basics
+  from a day (`effective_from`), usually after an appraisal cycle. `POST …/payroll/increments`
+  (title per language, the day, optionally `cycle_id` from `GET …/increments/sources`) fills a
+  line for everyone employed that day with a salary: the band from the cycle, the rate from rule
+  `payroll.increment_by_band` (band key → percent, placeholders 10/7/5/2/0) capped by
+  `payroll.increment_max_percent` (20), the new basic rounded by `payroll.increment_round_to`
+  (BD placeholder 100 taka, never below the basic now). People without a band get nothing unless
+  set by hand.
+- `PATCH …/increments/{round}/lines/{line}`: leave out, or a rate (`rate_bp`) or a new basic
+  (`new_minor`) by hand with a reason (never below the basic now, never above the cap); both
+  null puts the line back on the rule. `POST …/increments/{round}/{step}`: `fill` (again; hand
+  lines stay), `submit`, `approve` (each level a different person who neither made nor sent it,
+  `payroll.salary_approval_levels`), `reject` (with a reason), `apply`, `cancel`.
+- Applying sets each new basic as a salary from the day (`Salaries::assign`, audited one by one as
+  `payroll.salary_set`); a line whose salary changed meanwhile, or whose structure was switched
+  off, is held with its reason. The people with a login get `payroll.salary_revised` without any
+  amount. A month whose payroll (or a later one) is sent or approved cannot be a round's day: no
+  arrears in this step.
+- Appraisals fills Payroll's `PerformanceSource` contract (tag `payroll.performance_sources`):
+  closed cycles, the bands, each finished review's score and band; nothing else leaves it, nothing
+  where it is off (rates are then set by hand). Appraisal managers without `payroll.view` see no
+  salaries. The bell tells approvers of rounds waiting for them.
+- Screens: `/payroll/increments`, `/payroll/increments/{id}` (table on wide screens, a list on
+  phones, filter by band, where each rate comes from, export and print).
+- After deploy: migrate, `rules:sync`, `db:seed --class=RulesSeeder` (BD rounding).
+
 ### Future expansion (Payroll)
 
 - A new country sets its rules (over-time base and multiplier, monthly hours, tax slabs); a new

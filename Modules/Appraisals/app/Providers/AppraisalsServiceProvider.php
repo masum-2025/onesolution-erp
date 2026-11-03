@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Appraisals\Console\RemindReviews;
 use Modules\Appraisals\Export\AppraisalsExporter;
+use Modules\Appraisals\Payroll\PerformanceFromAppraisals;
+use Modules\Payroll\Contracts\PerformanceSource;
 
 /**
  * Appraisals: review cycles of a company's people (HRM's employees and
@@ -25,6 +27,10 @@ class AppraisalsServiceProvider extends ServiceProvider
     {
         // The client's data export includes appraisals (ExportsModuleData).
         $this->app->tag([AppraisalsExporter::class], 'module.exporters');
+        // Scores and bands suggest salary increments (Payroll's PerformanceSource), when Payroll is installed.
+        if (interface_exists(PerformanceSource::class)) {
+            $this->app->tag([PerformanceFromAppraisals::class], 'payroll.performance_sources');
+        }
         $this->commands([RemindReviews::class]);
     }
 

@@ -10,6 +10,7 @@ return [
     'attention' => 'Payroll to approve',
     'attention_loans' => 'Loans to approve',
     'attention_bonuses' => 'Festival bonuses to approve',
+    'attention_increments' => 'Salary increments to approve',
     'attention_settlements_due' => 'People who left without a final settlement',
     'attention_settlements' => 'Final settlements to approve',
 ];

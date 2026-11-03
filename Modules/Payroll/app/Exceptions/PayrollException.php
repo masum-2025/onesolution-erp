@@ -155,6 +155,22 @@ class PayrollException extends TenancyException
         return new self('settlement_stale', 409);
     }
 
+    public static function incrementNotFound(): self
+    {
+        return new self('increment_not_found', 404);
+    }
+
+    /** An increment from a month whose payroll (or a later one) is sent or approved: it would change paid history. */
+    public static function incrementMonthLocked(string $period): self
+    {
+        return new self('increment_month_locked', 409, ['period' => $period]);
+    }
+
+    public static function incrementEmpty(): self
+    {
+        return new self('increment_empty', 409);
+    }
+
     public static function unknownStep(): self
     {
         return new self('unknown_step', 404);

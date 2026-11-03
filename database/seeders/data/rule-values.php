@@ -90,6 +90,12 @@ return [
         'reason' => 'Bangladesh Labour Rules 2015, r.111(5): festival bonus after one year of continuous service. Verify with an adviser.',
     ],
     [
+        'key' => 'payroll.increment_round_to',
+        'country' => 'BD',
+        'value' => ['amount' => 10000, 'currency' => 'BDT'],
+        'reason' => 'Placeholder: new basics from increments rounded to the nearest 100 taka (common practice, not a law). Change per company.',
+    ],
+    [
         'key' => 'payroll.bonus_percent_of_basic',
         'country' => 'BD',
         'value' => '100',
