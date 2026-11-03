@@ -2,11 +2,9 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, CirclePause, CirclePlay, CircleCheck, PenLine, Plus, RotateCcw, Send, XCircle } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { confirmAction } from '@/lib/dialogs';
@@ -114,26 +112,22 @@ function taskSaved(task) {
 </script>
 
 <template>
-    <div>
-        <SkeletonRows v-if="data.loading.value && !project" :rows="6" />
-        <ErrorState v-else-if="data.error.value" :error="data.error.value" @retry="data.reload()" />
-        <template v-else-if="project">
-            <PageHeader :title="project.name">
-                <template #eyebrow>
-                    <p class="mb-1 flex flex-wrap items-center gap-2 text-[12.5px] text-muted">
-                        <RouterLink :to="{ name: 'projects' }" class="inline-flex items-center gap-1 hover:text-fg"><ArrowLeft class="size-3.5 rtl:rotate-180" aria-hidden="true" />{{ t('projects.list.title') }}</RouterLink>
-                        <span class="font-mono" dir="ltr">{{ project.code }}</span>
-                        <AppBadge :tone="projectTone(project.status)">{{ t(`projects.statuses.${project.status}`) }}</AppBadge>
-                        <AppBadge v-if="project.connected" tone="outline">{{ t('projects.result.connected') }}</AppBadge>
-                    </p>
-                </template>
-                <template #actions>
-                    <AppButton v-if="project.can.edit" variant="ghost" :icon="PenLine" @click="editing = true">{{ t('projects.common.edit') }}</AppButton>
-                    <AppButton v-if="project.can.send_result" :icon="Send" @click="sendingResult = true">{{ t('projects.result.button') }}</AppButton>
-                    <AppButton v-for="name in project.can.steps" :key="name" :variant="name === 'cancel' ? 'ghost' : 'secondary'" :class="name === 'cancel' ? 'text-bad' : ''"
-                        :icon="STEP_ICONS[name]" :disabled="busy" @click="step(name)">{{ t(`projects.steps.${name}`) }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="project ? project.name : ''" :resource="data" :skeleton-rows="6" width="full">
+        <template #eyebrow>
+            <p class="mb-1 flex flex-wrap items-center gap-2 text-[12.5px] text-muted">
+                <RouterLink :to="{ name: 'projects' }" class="inline-flex items-center gap-1 hover:text-fg"><ArrowLeft class="size-3.5 rtl:rotate-180" aria-hidden="true" />{{ t('projects.list.title') }}</RouterLink>
+                <span class="font-mono" dir="ltr">{{ project.code }}</span>
+                <AppBadge :tone="projectTone(project.status)">{{ t(`projects.statuses.${project.status}`) }}</AppBadge>
+                <AppBadge v-if="project.connected" tone="outline">{{ t('projects.result.connected') }}</AppBadge>
+            </p>
+        </template>
+        <template #actions>
+            <AppButton v-if="project.can.edit" variant="ghost" :icon="PenLine" @click="editing = true">{{ t('projects.common.edit') }}</AppButton>
+            <AppButton v-if="project.can.send_result" :icon="Send" @click="sendingResult = true">{{ t('projects.result.button') }}</AppButton>
+            <AppButton v-for="name in project.can.steps" :key="name" :variant="name === 'cancel' ? 'ghost' : 'secondary'" :class="name === 'cancel' ? 'text-bad' : ''"
+                :icon="STEP_ICONS[name]" :disabled="busy" @click="step(name)">{{ t(`projects.steps.${name}`) }}</AppButton>
+        </template>
+        <template v-if="project">
 
             <section class="card mb-5 grid grid-cols-2 gap-x-6 gap-y-3 px-5 py-4 text-[13.5px] lg:grid-cols-5">
                 <div><p class="text-[12px] text-muted">{{ t('projects.fields.client') }}</p><p class="font-medium">{{ project.client.name }}</p></div>
@@ -186,5 +180,5 @@ function taskSaved(task) {
         <TaskDialog v-if="project" :open="taskDialog.open" :project-id="project.id" :task="taskDialog.task" :options="opts" :calls="calls" @close="taskDialog = { open: false, task: null }" @saved="taskSaved" />
         <TaskDrawer v-if="project" :open="!!openTask && !taskDialog.open" :task="openTask" :project-id="project.id" :options="opts" :calls="calls"
             @close="openTaskId = null" @changed="taskChanged" @edit="(task) => (taskDialog = { open: true, task })" />
-    </div>
+    </PageFrame>
 </template>

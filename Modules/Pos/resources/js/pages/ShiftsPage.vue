@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Clock } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -27,11 +27,25 @@ watch(status, () => {
 const registers = useResource(() => pos.registers());
 const registerName = (id) => (registers.data.value?.data ?? []).find((row) => row.id === id)?.name ?? '';
 const shifts = computed(() => list.data.value?.data ?? []);
+
+// Export and print: the shifts of the status picked, their takings and the cash short or over.
+const exported = computed(() => ({
+    module: 'pos',
+    page: 'pos.shifts',
+    columns: [
+        { key: 'register', label: t('pos.export.counter'), value: (shift) => registerName(shift.register_id) },
+        { key: 'opened_at', label: t('pos.export.opened'), value: (shift) => formatDateTime(shift.opened_at) },
+        { key: 'closed_at', label: t('pos.export.closed'), value: (shift) => (shift.closed_at ? formatDateTime(shift.closed_at) : '') },
+        { key: 'status', label: t('pos.export.status'), value: (shift) => t(`pos.shift_status.${shift.status}`) },
+        { key: 'takings', label: t('pos.reports.columns.amount'), type: 'money', value: (shift) => shift.sales_minor - shift.returns_minor },
+        { key: 'variance_minor', label: t('pos.export.variance'), type: 'money' },
+    ],
+    rows: shifts.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('pos.shifts.title')" :description="t('pos.shifts.text')" />
+    <PageFrame :title="t('pos.shifts.title')" :description="t('pos.shifts.text')" width="full" :export="exported">
         <select v-model="status" class="field-input mb-4 w-auto" :aria-label="t('pos.shifts.status')">
             <option value="">{{ t('pos.shifts.all') }}</option>
             <option v-for="value in ['open', 'pending_review', 'closed']" :key="value" :value="value">{{ t(`pos.shift_status.${value}`) }}</option>
@@ -54,5 +68,5 @@ const shifts = computed(() => list.data.value?.data ?? []);
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

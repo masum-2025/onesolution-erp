@@ -121,5 +121,13 @@
         "end_title": "End the connection with {name}?",
         "end_text": "This cannot be undone: nothing more can be sent. What each side received stays theirs. The other side is told your reason.",
         "end_done": "Connection ended."
+    },
+    "export": {
+        "name": "Organization",
+        "status": "Status",
+        "since": "Connected since",
+        "modules": "Modules shared",
+        "last_used": "Last used",
+        "note": "Note"
     }
 }

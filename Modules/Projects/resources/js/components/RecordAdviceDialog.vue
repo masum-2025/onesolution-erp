@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { BookCheck } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -63,7 +64,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('projects.advices.settled_on')" :error="fieldError('settled_on')">
-                <input :id="id" v-model="form.settled_on" type="date" :max="today || undefined" class="field-input" />
+                <DateInput :id="id" v-model="form.settled_on" :max="today || undefined" />
             </AppField>
             <p v-if="advice.reference" class="text-[12.5px] text-muted">{{ t('projects.advices.reference', { reference: advice.reference }) }}</p>
         </form>

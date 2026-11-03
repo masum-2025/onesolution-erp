@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowDownToLine, ArrowRightLeft, ArrowUpFromLine, ClipboardList, Package, Search, SlidersHorizontal } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
@@ -54,24 +54,38 @@ const actions = [
     { type: 'transfer', icon: ArrowRightLeft },
     { type: 'adjustment', icon: SlidersHorizontal },
 ];
+
+// Export and print: the stock shown (warehouse, low stock and search as picked), at cost.
+const exported = computed(() => ({
+    module: 'inventory',
+    page: 'inventory.stock',
+    columns: [
+        { key: 'sku', label: t('inventory.export.sku'), value: (row) => row.item.sku },
+        { key: 'item', label: t('inventory.export.item'), value: (row) => row.item.name },
+        { key: 'warehouse', label: t('inventory.common.warehouse'), value: (row) => row.warehouse?.name ?? '' },
+        { key: 'quantity_milli', label: t('inventory.export.quantity'), type: 'number', value: (row) => row.quantity_milli / 1000 },
+        { key: 'unit', label: t('inventory.export.unit'), value: (row) => unitsById.value[row.item.unit_id]?.name ?? '' },
+        { key: 'unit_cost_minor', label: t('inventory.export.unit_cost'), type: 'money', currency: currency.value },
+        { key: 'value_minor', label: t('inventory.stock.value'), type: 'money', currency: currency.value },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('inventory.stock.title')" :description="t('inventory.stock.text')">
-            <template #actions>
-                <div class="flex flex-wrap gap-2">
-                    <template v-if="can('inventory.manage')">
-                        <AppButton v-for="action in actions" :key="action.type" :variant="action.type === 'receipt' ? 'primary' : 'secondary'" :icon="action.icon" :to="{ name: 'inventory-document-new', params: { type: action.type } }">
-                            {{ t(`inventory.types.${action.type}`) }}
-                        </AppButton>
-                    </template>
-                    <AppButton variant="ghost" :icon="ClipboardList" :to="{ name: 'inventory-counts' }">{{ t('inventory.counts.title') }}</AppButton>
-                </div>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('inventory.stock.title')" :description="t('inventory.stock.text')" width="full" :export="exported">
+        <template #actions>
+            <div class="flex flex-wrap gap-2">
+                <template v-if="can('inventory.manage')">
+                    <AppButton v-for="action in actions" :key="action.type" :variant="action.type === 'receipt' ? 'primary' : 'secondary'" :icon="action.icon" :to="{ name: 'inventory-document-new', params: { type: action.type } }">
+                        {{ t(`inventory.types.${action.type}`) }}
+                    </AppButton>
+                </template>
+                <AppButton variant="ghost" :icon="ClipboardList" :to="{ name: 'inventory-counts' }">{{ t('inventory.counts.title') }}</AppButton>
+            </div>
+        </template>
 
-        <section class="card mb-5 flex flex-wrap items-end gap-4 p-5">
+        <section class="card mb-5 flex flex-wrap items-end gap-4 p-5 print:hidden">
             <div class="min-w-0 flex-1">
                 <p class="text-[12.5px] text-muted">{{ t('inventory.stock.value') }}</p>
                 <p class="tabular text-[22px] font-semibold text-brand-text">{{ list.error.value ? '—' : formatMoney({ amount: list.data.value?.meta?.value_minor ?? 0, currency }) }}</p>
@@ -86,7 +100,7 @@ const actions = [
             <AppSwitch v-model="low" :label="t('inventory.stock.only_low')" show-label />
         </section>
 
-        <div class="relative mb-4 max-w-sm">
+        <div class="relative mb-4 max-w-sm print:hidden">
             <Search class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
             <input v-model="search" type="search" class="field-input ps-9" :placeholder="t('inventory.stock.search')" :aria-label="t('inventory.stock.search')" />
         </div>
@@ -110,5 +124,5 @@ const actions = [
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

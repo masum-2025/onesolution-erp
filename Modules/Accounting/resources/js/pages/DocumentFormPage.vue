@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Plus, Send, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -153,14 +153,12 @@ const ready = computed(() => form.party_id && !totals.value.invalid && totals.va
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t(editingId ? 'accounting.documents.title_edit' : 'accounting.documents.title_new', { kind })" :description="t('accounting.documents.form_text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="editingId ? { name: 'accounting-document', params: { id: editingId } } : { name: side === 'sales' ? 'accounting-sales' : 'accounting-purchases' }" :icon="ArrowLeft">
-                    {{ t('accounting.common.back') }}
-                </AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t(editingId ? 'accounting.documents.title_edit' : 'accounting.documents.title_new', { kind })" :description="t('accounting.documents.form_text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="editingId ? { name: 'accounting-document', params: { id: editingId } } : { name: side === 'sales' ? 'accounting-sales' : 'accounting-purchases' }" :icon="ArrowLeft">
+                {{ t('accounting.common.back') }}
+            </AppButton>
+        </template>
 
         <section v-if="loading" class="card"><SkeletonRows :rows="6" /></section>
         <section v-else-if="loadError" class="card"><ErrorState compact :error="loadError" @retry="load" /></section>
@@ -174,10 +172,10 @@ const ready = computed(() => form.party_id && !totals.value.invalid && totals.va
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.documents.issue_date')" :error="fieldError('issue_date')">
-                    <input :id="id" v-model="form.issue_date" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.issue_date" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.documents.due_date')" :hint="t('accounting.documents.due_hint')" :error="fieldError('due_date')" optional>
-                    <input :id="id" v-model="form.due_date" type="date" class="field-input" :min="form.issue_date" />
+                    <DateInput :id="id" v-model="form.due_date" :min="form.issue_date" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.documents.reference')" :error="fieldError('reference')" optional class="sm:col-span-2">
                     <input :id="id" v-model="form.reference" class="field-input" maxlength="100" />
@@ -249,5 +247,5 @@ const ready = computed(() => form.party_id && !totals.value.invalid && totals.va
                 <AppButton variant="primary" type="submit" :icon="Send" :loading="saving === 'send'" :disabled="saving !== null || !ready">{{ t('accounting.documents.send') }}</AppButton>
             </div>
         </form>
-    </div>
+    </PageFrame>
 </template>

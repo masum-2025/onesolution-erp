@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { ArrowLeft, CalendarCheck, CalendarPlus, CalendarRange, Check, Lock, LockOpen, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -133,13 +133,11 @@ async function decide(year, name) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.fiscal.title')" :description="t('accounting.fiscal.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
-                <AppButton v-if="can('accounting.manage')" variant="primary" :icon="CalendarPlus" :loading="busy === 'year'" @click="addYear">{{ t('accounting.fiscal.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.fiscal.title')" :description="t('accounting.fiscal.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
+            <AppButton v-if="can('accounting.manage')" variant="primary" :icon="CalendarPlus" :loading="busy === 'year'" @click="addYear">{{ t('accounting.fiscal.add') }}</AppButton>
+        </template>
 
         <BooksGate>
             <section v-if="list.loading.value && !list.data.value" class="card"><SkeletonRows :rows="6" /></section>
@@ -207,5 +205,5 @@ async function decide(year, name) {
                 </section>
             </div>
         </BooksGate>
-    </div>
+    </PageFrame>
 </template>

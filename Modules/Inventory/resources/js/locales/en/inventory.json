@@ -354,5 +354,26 @@
         "fewer": "One label less of {item}",
         "more": "One label more of {item}",
         "preview": "How they will print:"
+    },
+    "export": {
+        "sku": "SKU",
+        "item": "Item",
+        "barcode": "Barcode",
+        "unit": "Unit",
+        "category": "Category",
+        "sale_price": "Sale price",
+        "status": "Status",
+        "on": "In use",
+        "quantity": "Quantity",
+        "unit_cost": "Unit cost",
+        "number": "Number",
+        "type": "Type",
+        "date": "Date",
+        "to_warehouse": "To warehouse",
+        "counterparty": "Supplier or customer",
+        "value": "Value",
+        "variance": "Short or over",
+        "batch": "Batch",
+        "expires_on": "Expires on"
     }
 }

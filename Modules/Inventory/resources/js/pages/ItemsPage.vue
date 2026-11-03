@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Package, Plus, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -32,17 +32,31 @@ const categoryName = (id) => (categories.data.value?.data ?? []).find((category)
 const items = computed(() => list.data.value?.data ?? []);
 const currency = computed(() => list.data.value?.meta?.currency);
 const adding = reactive({ open: false });
+
+// Export and print: the items the search and category find.
+const exported = computed(() => ({
+    module: 'inventory',
+    page: 'inventory.items',
+    columns: [
+        { key: 'sku', label: t('inventory.export.sku') },
+        { key: 'name', label: t('inventory.export.item') },
+        { key: 'barcode', label: t('inventory.export.barcode') },
+        { key: 'unit', label: t('inventory.export.unit'), value: (item) => unitName(item.unit_id) },
+        { key: 'category', label: t('inventory.export.category'), value: (item) => categoryName(item.category_id) },
+        { key: 'sale_price_minor', label: t('inventory.export.sale_price'), type: 'money', currency: currency.value },
+        { key: 'is_active', label: t('inventory.export.status'), value: (item) => (item.is_active === false ? t('inventory.common.off') : t('inventory.export.on')) },
+    ],
+    rows: items.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('inventory.items.title')" :description="t('inventory.items.text')">
-            <template #actions>
-                <AppButton v-if="can('inventory.manage')" variant="primary" :icon="Plus" @click="adding.open = true">{{ t('inventory.items.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('inventory.items.title')" :description="t('inventory.items.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('inventory.manage')" variant="primary" :icon="Plus" @click="adding.open = true">{{ t('inventory.items.add') }}</AppButton>
+        </template>
 
-        <div class="mb-4 flex flex-wrap gap-3">
+        <div class="mb-4 flex flex-wrap gap-3 print:hidden">
             <div class="relative min-w-0 max-w-sm flex-1">
                 <Search class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
                 <input v-model="search" type="search" class="field-input ps-9" :placeholder="t('inventory.items.search')" :aria-label="t('inventory.items.search')" />
@@ -77,5 +91,5 @@ const adding = reactive({ open: false });
         </section>
 
         <ItemDialog v-if="adding.open" :currency="currency" @close="adding.open = false" @saved="adding.open = false; list.reload()" />
-    </div>
+    </PageFrame>
 </template>

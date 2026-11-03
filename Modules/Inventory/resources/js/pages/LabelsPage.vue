@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { Minus, Plus, Printer, Search, Tags } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -65,13 +65,11 @@ const printPage = () => window.print();
 </script>
 
 <template>
-    <div>
+    <PageFrame :title="t('inventory.labels.title')" :description="t('inventory.labels.text')" width="full" own-paper>
+        <template #actions>
+            <AppButton variant="primary" :icon="Printer" :disabled="!count" @click="printPage">{{ t('inventory.labels.print', { count: formatNumber(count) }) }}</AppButton>
+        </template>
         <div class="print:hidden">
-            <PageHeader :title="t('inventory.labels.title')" :description="t('inventory.labels.text')">
-                <template #actions>
-                    <AppButton variant="primary" :icon="Printer" :disabled="!count" @click="printPage">{{ t('inventory.labels.print', { count: formatNumber(count) }) }}</AppButton>
-                </template>
-            </PageHeader>
 
             <section class="card mb-5 grid gap-4 p-5 sm:grid-cols-2">
                 <AppField v-slot="{ id }" :label="t('inventory.labels.find')">
@@ -118,7 +116,7 @@ const printPage = () => window.print();
                 <p class="label-foot"><span class="font-mono">{{ label.code }}</span><b>{{ price(label.item) }}</b></p>
             </article>
         </div>
-    </div>
+    </PageFrame>
 </template>
 
 <style scoped>

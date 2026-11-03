@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ListPlus, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -73,12 +73,10 @@ async function save() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('factory_erp.fields.title')" :description="t('factory_erp.fields.text')">
-            <template #actions>
-                <AppButton v-if="can('factory_erp.manage')" variant="primary" :icon="Plus" @click="open()">{{ t('factory_erp.fields.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('factory_erp.fields.title')" :description="t('factory_erp.fields.text')" width="full">
+        <template #actions>
+            <AppButton v-if="can('factory_erp.manage')" variant="primary" :icon="Plus" @click="open()">{{ t('factory_erp.fields.add') }}</AppButton>
+        </template>
         <AppSegmented v-model="entity" class="mb-4" :label="t('factory_erp.fields.for')" :options="ENTITIES.map((value) => ({ value, label: t(`factory_erp.entities.${value}`) }))" />
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -139,5 +137,5 @@ async function save() {
                 <AppButton variant="primary" type="submit" form="factory-field" :loading="saving" :disabled="!form.label.en?.trim()">{{ t('factory_erp.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

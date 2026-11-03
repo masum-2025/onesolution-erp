@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ClipboardList } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -89,7 +90,7 @@ async function save() {
                 <input :id="id" v-model="form.po_number" class="field-input font-mono" dir="ltr" maxlength="60" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('factory_erp.fields_.ship_on')" :error="errors.ship_on?.[0] ?? null">
-                <input :id="id" v-model="form.ship_on" type="date" class="field-input" :min="setup.data.value?.today" />
+                <DateInput :id="id" v-model="form.ship_on" :min="setup.data.value?.today" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('factory_erp.fields_.currency')" :error="errors.currency?.[0] ?? null">
                 <input :id="id" v-model="form.currency" class="field-input font-mono uppercase" dir="ltr" maxlength="3" @input="form.currency = form.currency.toUpperCase()" />

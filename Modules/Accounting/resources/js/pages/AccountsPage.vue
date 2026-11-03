@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Archive, ArchiveRestore, ArrowLeft, FolderTree, PenLine, Plus, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -138,19 +138,32 @@ function toggleArchived(value) {
 }
 
 const fieldError = (name) => errors.value[name]?.[0] ?? null;
+
+// Export and print: the chart of accounts shown (search and archived as picked), groups and all.
+const exported = computed(() => ({
+    module: 'accounting',
+    page: 'accounting.accounts',
+    columns: [
+        { key: 'code', label: t('accounting.export.code') },
+        { key: 'name', label: t('accounting.export.name') },
+        { key: 'type', label: t('accounting.export.type'), value: (account) => t(`accounting.types.${account.type}`) },
+        { key: 'money_kind', label: t('accounting.export.money_kind'), value: (account) => (account.money_kind ? t(`accounting.accounts.money_kinds.${account.money_kind}`) : '') },
+        { key: 'is_group', label: t('accounting.accounts.group'), value: (account) => (account.is_group ? t('accounting.export.yes') : '') },
+        { key: 'status', label: t('accounting.export.status'), value: (account) => (account.status === 'archived' ? t('accounting.accounts.archived') : t('accounting.export.active')) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.accounts.title')" :description="t('accounting.accounts.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
-                <AppButton v-if="can('accounting.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('accounting.accounts.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.accounts.title')" :description="t('accounting.accounts.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
+            <AppButton v-if="can('accounting.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('accounting.accounts.add') }}</AppButton>
+        </template>
 
         <BooksGate>
-            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="mb-4 flex flex-col gap-3 print:hidden sm:flex-row sm:items-center">
                 <AppField v-slot="{ id }" :label="t('accounting.accounts.search')" sr-only-label class="flex-1">
                     <div class="relative">
                         <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
@@ -234,5 +247,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="accounting-account" :loading="saving" :disabled="!form.code.trim() || !form.name_en.trim()">{{ t('accounting.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

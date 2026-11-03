@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, CircleCheck, CircleAlert, Plus, Send, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -133,12 +133,10 @@ const lineError = (index, field) => fieldError(`lines.${index}.${field}`) ?? (fi
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="editingId ? t('accounting.form.title_edit') : t('accounting.form.title_new')" :description="t('accounting.form.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="editingId ? { name: 'accounting-journal', params: { id: editingId } } : { name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="editingId ? t('accounting.form.title_edit') : t('accounting.form.title_new')" :description="t('accounting.form.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="editingId ? { name: 'accounting-journal', params: { id: editingId } } : { name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
+        </template>
 
         <section v-if="loading" class="card"><SkeletonRows :rows="6" /></section>
         <section v-else-if="loadError" class="card"><ErrorState compact :error="loadError" @retry="load" /></section>
@@ -146,7 +144,7 @@ const lineError = (index, field) => fieldError(`lines.${index}.${field}`) ?? (fi
         <form v-else class="grid gap-5" novalidate @submit.prevent="save(true)">
             <section class="card grid gap-4 p-5 sm:grid-cols-[12rem_1fr]">
                 <AppField v-slot="{ id }" :label="t('accounting.form.date')" :error="fieldError('entry_date')">
-                    <input :id="id" v-model="form.entry_date" type="date" class="field-input" required />
+                    <DateInput :id="id" v-model="form.entry_date" required />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.form.narration')" :hint="t('accounting.form.narration_hint')" :error="fieldError('narration')">
                     <input :id="id" v-model="form.narration" class="field-input" maxlength="500" required />
@@ -216,5 +214,5 @@ const lineError = (index, field) => fieldError(`lines.${index}.${field}`) ?? (fi
                 <AppButton variant="primary" type="submit" :icon="Send" :loading="saving === 'send'" :disabled="saving !== null || !totals.balanced || !form.narration.trim()">{{ t('accounting.form.send') }}</AppButton>
             </div>
         </form>
-    </div>
+    </PageFrame>
 </template>

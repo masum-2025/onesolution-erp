@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ClipboardList, Plus, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -11,6 +11,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { fetchPages } from '@/lib/pageExport';
 import { currentOrganization } from '@/lib/session';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { t } from '@/lib/i18n';
@@ -61,17 +62,33 @@ watch([() => route.query.new, () => setup.data.value], ([value, data]) => {
         router.replace({ query: { ...route.query, new: undefined } });
     }
 }, { immediate: true });
+
+// Export and print: every order of the tab and search (all pages; "open" leaves shipped and cancelled out).
+const exported = computed(() => ({
+    module: 'factory_erp',
+    page: 'factory_erp.orders',
+    columns: [
+        { key: 'number', label: t('factory_erp.export.number') },
+        { key: 'po_number', label: t('factory_erp.export.po') },
+        { key: 'buyer', label: t('factory_erp.export.buyer'), value: (order) => meta.value.buyers?.[order.buyer_id]?.name ?? '' },
+        { key: 'style', label: t('factory_erp.export.style'), value: (order) => [meta.value.styles?.[order.style_id]?.code, meta.value.styles?.[order.style_id]?.name].filter(Boolean).join(' · ') },
+        { key: 'pieces', label: t('factory_erp.export.pieces'), type: 'number' },
+        { key: 'value_minor', label: t('factory_erp.export.value'), type: 'money' },
+        { key: 'ship_on', label: t('factory_erp.export.ship_on'), type: 'date' },
+        { key: 'status', label: t('factory_erp.export.status'), value: (order) => t(`factory_erp.statuses.${order.status}`) },
+    ],
+    fetchAll: async (maxRows) => (await fetchPages((number) => api.orders({ status: status.value === 'open' ? '' : status.value, q: search.value.trim(), page: number, per_page: 100 }), maxRows))
+        .filter((order) => status.value !== 'open' || !['shipped', 'cancelled'].includes(order.status)),
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('factory_erp.orders.title')" :description="t('factory_erp.orders.text')">
-            <template v-if="setup.can('merchandise')" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="making = true">{{ t('factory_erp.orders.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('factory_erp.orders.title')" :description="t('factory_erp.orders.text')" width="full" :export="exported">
+        <template v-if="setup.can('merchandise')" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="making = true">{{ t('factory_erp.orders.new') }}</AppButton>
+        </template>
 
-        <div class="mb-3 overflow-x-auto"><AppTabs v-model="status" :tabs="tabs" :label="t('factory_erp.orders.title')" /></div>
+        <div class="mb-3 overflow-x-auto print:hidden"><AppTabs v-model="status" :tabs="tabs" :label="t('factory_erp.orders.title')" /></div>
         <AppField v-slot="{ id }" :label="t('factory_erp.orders.search')" sr-only-label class="mb-4 sm:w-96">
             <span class="relative block">
                 <Search class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
@@ -108,7 +125,7 @@ watch([() => route.query.new, () => setup.data.value], ([value, data]) => {
                     </RouterLink>
                 </li>
             </ul>
-            <nav v-if="meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3" :aria-label="t('factory_erp.pages')">
+            <nav v-if="meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden" :aria-label="t('factory_erp.pages')">
                 <AppButton size="sm" variant="ghost" :disabled="page <= 1" @click="page--; list.reload()">{{ t('factory_erp.previous') }}</AppButton>
                 <span class="tabular text-[12.5px] text-muted">{{ t('factory_erp.page', { page, pages: meta.last_page }) }}</span>
                 <AppButton size="sm" variant="ghost" :disabled="page >= meta.last_page" @click="page++; list.reload()">{{ t('factory_erp.next') }}</AppButton>
@@ -116,5 +133,5 @@ watch([() => route.query.new, () => setup.data.value], ([value, data]) => {
         </section>
 
         <OrderDialog :open="making" @close="making = false" />
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Plus, Search, Shirt } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -42,15 +42,29 @@ function saved(style) {
     making.value = false;
     router.push({ name: 'fac-style', params: { id: style.id } });
 }
+
+// Export and print: the styles the search finds.
+const exported = computed(() => ({
+    module: 'factory_erp',
+    page: 'factory_erp.styles',
+    columns: [
+        { key: 'code', label: t('factory_erp.export.code') },
+        { key: 'name', label: t('factory_erp.export.name') },
+        { key: 'buyer', label: t('factory_erp.export.buyer'), value: (style) => buyers.value[style.buyer_id]?.name ?? '' },
+        { key: 'product_type', label: t('factory_erp.export.product_type') },
+        { key: 'sizes', label: t('factory_erp.export.sizes'), value: (style) => style.sizes.join(', ') },
+        { key: 'colors', label: t('factory_erp.export.colors'), value: (style) => (style.colors ?? []).join(', ') },
+        { key: 'is_active', label: t('factory_erp.export.status'), value: (style) => (style.is_active ? t('factory_erp.export.on') : t('factory_erp.off')) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('factory_erp.styles.title')" :description="t('factory_erp.styles.text')">
-            <template v-if="setup.can('merchandise')" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="making = true">{{ t('factory_erp.styles.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('factory_erp.styles.title')" :description="t('factory_erp.styles.text')" width="full" :export="exported">
+        <template v-if="setup.can('merchandise')" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="making = true">{{ t('factory_erp.styles.new') }}</AppButton>
+        </template>
         <AppField v-slot="{ id }" :label="t('factory_erp.styles.search')" sr-only-label class="mb-4 sm:w-96">
             <span class="relative block">
                 <Search class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
@@ -82,5 +96,5 @@ function saved(style) {
         </section>
 
         <StyleDialog :open="making" @close="making = false" @saved="saved" @conflict="making = false" />
-    </div>
+    </PageFrame>
 </template>

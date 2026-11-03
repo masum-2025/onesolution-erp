@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Ban, BookOpen, Check, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -86,12 +86,10 @@ async function allocate() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="record ? `${t(`accounting.kinds.${record.type}`)} ${record.number ?? ''}` : ''" :description="record?.party_name ?? ''">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: record?.type === 'payment' ? 'accounting-payments' : 'accounting-receipts' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="record ? `${t(`accounting.kinds.${record.type}`)} ${record.number ?? ''}` : ''" :description="record?.party_name ?? ''" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: record?.type === 'payment' ? 'accounting-payments' : 'accounting-receipts' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
+        </template>
 
         <section v-if="entry.loading.value && !record" class="card"><SkeletonRows :rows="5" /></section>
         <section v-else-if="entry.error.value" class="card"><ErrorState compact :error="entry.error.value" @retry="entry.reload()" /></section>
@@ -148,5 +146,5 @@ async function allocate() {
                 <AppButton variant="primary" :loading="busy === 'allocate'" @click="allocate">{{ t('accounting.settlements.allocate') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

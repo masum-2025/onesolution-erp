@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from 'vue';
 import { Save } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import { confirmAction } from '@/lib/dialogs';
@@ -103,7 +104,7 @@ async function save(module) {
                     </fieldset>
                     <label class="flex flex-wrap items-center gap-2 ps-7 text-[13px] text-fg-2">
                         {{ t('business_network.grants.until') }}
-                        <input v-model="drafts[module.module].expiresOn" type="date" :min="today" class="field-input w-auto py-1" />
+                        <DateInput v-model="drafts[module.module].expiresOn" :min="today" class="w-auto py-1" />
                         <span class="text-[12px] text-muted">{{ t('business_network.grants.until_hint') }}</span>
                     </label>
                 </template>

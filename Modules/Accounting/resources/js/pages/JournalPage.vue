@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Check, PenLine, Printer, Send, Trash2, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -124,13 +124,11 @@ async function remove() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="journal?.narration ?? t('accounting.journal.entry')" :description="journal ? (journal.number ?? t('accounting.list.no_number')) : ''">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
-                <AppButton v-if="journal?.status === 'posted'" variant="ghost" :icon="Printer" class="print:hidden" @click="printPage">{{ t('accounting.reports.print') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="journal?.narration ?? t('accounting.journal.entry')" :description="journal ? (journal.number ?? t('accounting.list.no_number')) : ''" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
+            <AppButton v-if="journal?.status === 'posted'" variant="ghost" :icon="Printer" class="print:hidden" @click="printPage">{{ t('accounting.reports.print') }}</AppButton>
+        </template>
 
         <section v-if="entry.loading.value && !journal" class="card"><SkeletonRows :rows="6" /></section>
         <section v-else-if="entry.error.value" class="card"><ErrorState compact :error="entry.error.value" @retry="entry.reload()" /></section>
@@ -213,7 +211,7 @@ async function remove() {
         <AppDialog :open="reverseOpen" :title="t('accounting.journal.reverse_title')" :description="t('accounting.journal.reverse_text')" tone="warn" @close="reverseOpen = false">
             <form id="accounting-reverse" class="grid gap-4" novalidate @submit.prevent="submitReverse">
                 <AppField v-slot="{ id }" :label="t('accounting.journal.reverse_date')" :error="reverseErrors.entry_date?.[0] ?? null">
-                    <input :id="id" v-model="reverse.entry_date" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="reverse.entry_date" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.journal.reason')" :error="reverseErrors.reason?.[0] ?? null">
                     <textarea :id="id" v-model="reverse.reason" class="field-input min-h-20" maxlength="300" />
@@ -224,5 +222,5 @@ async function remove() {
                 <AppButton variant="primary" type="submit" form="accounting-reverse" :loading="busy === 'reverse'" :disabled="reverse.reason.trim().length < 5">{{ t('accounting.journal.steps.reverse') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

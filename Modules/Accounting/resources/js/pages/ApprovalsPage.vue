@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CheckCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppTabs from '@/components/AppTabs.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -46,8 +46,7 @@ const row = (item) =>
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.approvals.title')" :description="t('accounting.approvals.text')" />
+    <PageFrame :title="t('accounting.approvals.title')" :description="t('accounting.approvals.text')" width="full">
         <BooksGate>
             <AppTabs v-model="tab" :tabs="tabs" :label="t('accounting.approvals.title')" class="mb-4" />
             <section class="card">
@@ -67,5 +66,5 @@ const row = (item) =>
                 </ul>
             </section>
         </BooksGate>
-    </div>
+    </PageFrame>
 </template>

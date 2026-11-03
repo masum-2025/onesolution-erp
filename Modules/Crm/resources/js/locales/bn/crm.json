@@ -311,5 +311,20 @@
         "empty": "ফাইলে কোনো সারি নেই।",
         "too_big": "ফাইল খুব বড় (সর্বোচ্চ ২ MB)।",
         "columns": "কলাম: name, phone, email, company_name, tags (; দিয়ে আলাদা), source, আর আপনার বাড়তি ঘর তাদের key দিয়ে।"
+    },
+    "export": {
+        "deal": "ডিল",
+        "contact": "গ্রাহক",
+        "stage": "ধাপ",
+        "value": "মূল্য",
+        "expected_on": "প্রত্যাশিত তারিখ",
+        "lost_reason": "হারানোর কারণ",
+        "number": "নম্বর",
+        "date": "তারিখ",
+        "subject": "বিষয়",
+        "kind": "ধরন",
+        "phone": "ফোন",
+        "when": "কখন",
+        "note": "নোট"
     }
 }

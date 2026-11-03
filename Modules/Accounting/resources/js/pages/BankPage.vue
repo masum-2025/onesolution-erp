@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Check, CheckCheck, FilePlus, FileUp, Landmark, Link2, Scale, Trash2, Unlink } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -196,14 +196,12 @@ const tone = (status) => ({ matched: 'ok', reconciled: 'neutral', unmatched: 'wa
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.bank.title')" :description="t('accounting.bank.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
-                <AppButton v-if="desk && meta.can_reconcile" variant="secondary" :icon="FileUp" @click="showImport = true">{{ t('accounting.bank.import') }}</AppButton>
-                <AppButton v-if="desk && meta.can_reconcile" variant="primary" :icon="Scale" @click="openReconcile">{{ t('accounting.bank.reconcile') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.bank.title')" :description="t('accounting.bank.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
+            <AppButton v-if="desk && meta.can_reconcile" variant="secondary" :icon="FileUp" @click="showImport = true">{{ t('accounting.bank.import') }}</AppButton>
+            <AppButton v-if="desk && meta.can_reconcile" variant="primary" :icon="Scale" @click="openReconcile">{{ t('accounting.bank.reconcile') }}</AppButton>
+        </template>
 
         <BooksGate>
             <section v-if="loading" class="card"><SkeletonRows :rows="6" /></section>
@@ -359,7 +357,7 @@ const tone = (status) => ({ matched: 'ok', reconciled: 'neutral', unmatched: 'wa
         <AppDialog :open="reconciling" :title="t('accounting.bank.reconcile_title')" :description="t('accounting.bank.reconcile_text')" size="lg" :icon="Scale" @close="reconciling = false">
             <form id="accounting-bank-check" class="grid gap-4 sm:grid-cols-3" novalidate @submit.prevent="runCheck">
                 <AppField v-slot="{ id }" :label="t('accounting.bank.statement_date')" :error="checkError('statement_date')">
-                    <input :id="id" v-model="statement.date" type="date" class="field-input" @change="check = null" />
+                    <DateInput :id="id" v-model="statement.date" @change="check = null" />
                 </AppField>
                 <AppField v-if="!latest" v-slot="{ id }" :label="t('accounting.bank.opening_balance')" :hint="t('accounting.bank.opening_hint')" :error="checkError('opening_balance_minor')">
                     <input :id="id" v-model="statement.opening" inputmode="decimal" class="field-input tabular text-end" dir="ltr" @input="check = null" />
@@ -389,5 +387,5 @@ const tone = (status) => ({ matched: 'ok', reconciled: 'neutral', unmatched: 'wa
                 <AppButton variant="primary" :icon="Scale" :loading="busy === 'finish'" :disabled="!check?.can_finish" @click="finish">{{ t('accounting.bank.finish') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

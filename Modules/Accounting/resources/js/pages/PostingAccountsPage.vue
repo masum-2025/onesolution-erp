@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { ArrowLeft, Cable } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -47,12 +47,10 @@ async function choose(item, accountId) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.posting.title')" :description="t('accounting.posting.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.posting.title')" :description="t('accounting.posting.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
+        </template>
 
         <BooksGate>
             <section class="card">
@@ -79,5 +77,5 @@ async function choose(item, accountId) {
                 </ul>
             </section>
         </BooksGate>
-    </div>
+    </PageFrame>
 </template>

@@ -1,9 +1,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { BarChart3, Download, Printer } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
-import AppButton from '@/components/AppButton.vue';
+import { BarChart3 } from 'lucide-vue-next';
+import { DateInput, PageFrame } from '@/ui';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -14,7 +13,7 @@ import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { t } from '@/lib/i18n';
 import { inventoryApi } from '../api';
-import { downloadText, formatQuantity, milliForCsv, minorToText, toCsv } from '../lib';
+import { formatQuantity } from '../lib';
 
 /**
  * Stock reports for the warehouses this unit sees: value on a day, what to
@@ -59,34 +58,52 @@ const day = (date) => (date ? formatDate(`${date}T00:00:00Z`, { dateStyle: 'medi
 const total = computed(() => rows.value.reduce((sum, row) => sum + (row.value_minor ?? 0), 0));
 // What the reorder list would cost at today's average cost (an estimate; the supplier's price decides).
 const orderTotal = computed(() => rows.value.reduce((sum, row) => sum + Math.floor((row.order_milli * row.unit_cost_minor + 500) / 1000), 0));
-const printPage = () => window.print();
 const kindLabel = (kind) => t(`inventory.reports.kinds.${kind}`);
 
-function saveCsv() {
-    const name = (id) => itemOf(id)?.name ?? '';
-    const sku = (id) => itemOf(id)?.sku ?? '';
-    const place = (id) => warehouseOf(id)?.code ?? '';
-    const head = (keys) => keys.map((key) => t(`inventory.reports.columns.${key}`));
-    const amount = (minor) => minorToText(minor, meta.value.currency);
-    const sheets = {
-        valuation: [head(['sku', 'item', 'warehouse', 'quantity', 'value']), ...rows.value.map((row) => [sku(row.item_id), name(row.item_id), place(row.warehouse_id), milliForCsv(row.quantity_milli), amount(row.value_minor)])],
-        reorder: [head(['sku', 'item', 'warehouse', 'quantity', 'level', 'order', 'cost']), ...rows.value.map((row) => [sku(row.item_id), name(row.item_id), place(row.warehouse_id), milliForCsv(row.quantity_milli), milliForCsv(row.reorder_level_milli), milliForCsv(row.order_milli), amount(row.unit_cost_minor)])],
-        slow: [head(['sku', 'item', 'warehouse', 'quantity', 'value', 'last_out', 'idle_days']), ...rows.value.map((row) => [sku(row.item_id), name(row.item_id), place(row.warehouse_id), milliForCsv(row.quantity_milli), amount(row.value_minor), row.last_out_on ?? '', row.idle_days ?? ''])],
-        ledger: [head(['date', 'kind', 'warehouse', 'quantity', 'value', 'balance', 'balance_value']), ...rows.value.map((row) => [row.moved_on, kindLabel(row.kind), place(row.warehouse_id), milliForCsv(row.quantity_milli), amount(row.value_minor), milliForCsv(row.balance_milli), amount(row.balance_minor)])],
-    };
-    const stamp = report.value === 'ledger' ? `${sku(filters.value.item_id)}-${meta.value.from}-${meta.value.to}` : (meta.value.as_of ?? meta.value.today);
-    downloadText(`stock-${report.value}-${stamp}.csv`, toCsv(sheets[report.value]));
-}
+// Export and print: the report shown, as its table reads (the total as the last row).
+const exported = computed(() => {
+    if (!ready.value || !rows.value.length) return null;
+    const cur = meta.value.currency;
+    const quantity = (key, label) => ({ key, label, type: 'number', value: (row) => (row[key] === null || row[key] === undefined ? null : row[key] / 1000) });
+    const columns = report.value === 'ledger'
+        ? [
+            { key: 'moved_on', label: t('inventory.reports.columns.date'), type: 'date' },
+            { key: 'kind', label: t('inventory.reports.columns.kind'), value: (row) => (row.kind ? kindLabel(row.kind) : '') },
+            { key: 'warehouse', label: t('inventory.reports.columns.warehouse'), value: (row) => warehouseOf(row.warehouse_id)?.name ?? '' },
+            quantity('quantity_milli', t('inventory.reports.columns.quantity')),
+            { key: 'value_minor', label: t('inventory.reports.columns.value'), type: 'money', currency: cur },
+            quantity('balance_milli', t('inventory.reports.columns.balance')),
+            { key: 'balance_minor', label: t('inventory.reports.columns.balance_value'), type: 'money', currency: cur },
+        ]
+        : [
+            { key: 'item', label: t('inventory.reports.columns.item'), value: (row) => (row.item_id ? itemOf(row.item_id)?.name ?? '' : row.item) },
+            { key: 'sku', label: t('inventory.export.sku'), value: (row) => (row.item_id ? itemOf(row.item_id)?.sku ?? '' : '') },
+            { key: 'warehouse', label: t('inventory.reports.columns.warehouse'), value: (row) => (row.warehouse_id ? warehouseOf(row.warehouse_id)?.name ?? '' : '') },
+            quantity('quantity_milli', t('inventory.reports.columns.quantity')),
+            ...(report.value === 'reorder'
+                ? [
+                    quantity('reorder_level_milli', t('inventory.reports.columns.level')),
+                    quantity('order_milli', t('inventory.reports.columns.order')),
+                    { key: 'unit_cost_minor', label: t('inventory.reports.columns.cost'), type: 'money', currency: cur },
+                    { key: 'order_value_minor', label: t('inventory.reports.columns.value'), type: 'money', currency: cur },
+                ]
+                : [{ key: 'value_minor', label: t('inventory.reports.columns.value'), type: 'money', currency: cur }]),
+            ...(report.value === 'slow'
+                ? [{ key: 'last_out_on', label: t('inventory.reports.columns.last_out'), type: 'date' }, { key: 'idle_days', label: t('inventory.reports.columns.idle_days'), type: 'number' }]
+                : []),
+        ];
+    const lines = report.value === 'reorder'
+        ? rows.value.map((row) => ({ ...row, order_value_minor: Math.floor((row.order_milli * row.unit_cost_minor + 500) / 1000) }))
+        : rows.value;
+    const totals = report.value === 'ledger'
+        ? []
+        : [{ item: t(report.value === 'reorder' ? 'inventory.reports.order_total' : 'inventory.reports.total'), value_minor: total.value, order_value_minor: orderTotal.value }];
+    return { module: 'inventory', page: `inventory.report.${report.value}`, columns, rows: [...lines, ...totals] };
+});
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('inventory.reports.title')" :description="t(`inventory.reports.help.${report}`)">
-            <template #actions>
-                <AppButton v-if="report === 'reorder' && rows.length" variant="ghost" :icon="Printer" class="print:hidden" @click="printPage">{{ t('inventory.reports.print') }}</AppButton>
-                <AppButton variant="secondary" :icon="Download" :disabled="!rows.length" class="print:hidden" @click="saveCsv">{{ t('inventory.reports.csv') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('inventory.reports.title')" :description="t(`inventory.reports.help.${report}`)" width="full" :export="exported">
 
         <section class="card mb-5 grid gap-4 p-5 print:hidden">
             <AppSegmented v-model="report" size="sm" :label="t('inventory.reports.title')" :options="REPORTS.map((value) => ({ value, label: t(`inventory.reports.names.${value}`) }))" />
@@ -98,7 +115,7 @@ function saveCsv() {
                     </select>
                 </AppField>
                 <AppField v-if="report === 'valuation'" v-slot="{ id }" :label="t('inventory.reports.as_of')" :hint="t('inventory.reports.as_of_hint')">
-                    <input :id="id" v-model="filters.as_of" type="date" class="field-input" :max="meta.today" />
+                    <DateInput :id="id" v-model="filters.as_of" :max="meta.today" />
                 </AppField>
                 <AppField v-if="report === 'slow'" v-slot="{ id }" :label="t('inventory.reports.days')">
                     <select :id="id" v-model="filters.days" class="field-input">
@@ -113,10 +130,10 @@ function saveCsv() {
                         </select>
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('inventory.reports.from')">
-                        <input :id="id" v-model="filters.from" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="filters.from" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('inventory.reports.to')">
-                        <input :id="id" v-model="filters.to" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="filters.to" />
                     </AppField>
                 </template>
             </div>
@@ -190,5 +207,5 @@ function saveCsv() {
                 </div>
             </template>
         </section>
-    </div>
+    </PageFrame>
 </template>

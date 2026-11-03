@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ClipboardList, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -49,15 +49,27 @@ async function save() {
         saving.value = false;
     }
 }
+
+// Export and print: the stock counts and what each found short or over.
+const exported = computed(() => ({
+    module: 'inventory',
+    page: 'inventory.counts',
+    columns: [
+        { key: 'number', label: t('inventory.export.number') },
+        { key: 'warehouse', label: t('inventory.common.warehouse'), value: (count) => warehouseName(count.warehouse_id) },
+        { key: 'counted_on', label: t('inventory.export.date'), type: 'date' },
+        { key: 'status', label: t('inventory.export.status'), value: (count) => t(`inventory.status.${count.status}`) },
+        { key: 'variance_value_minor', label: t('inventory.export.variance'), type: 'money', value: (count) => (count.status === 'posted' ? count.variance_value_minor : null) },
+    ],
+    rows: counts.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('inventory.counts.title')" :description="t('inventory.counts.text')">
-            <template #actions>
-                <AppButton v-if="can('inventory.manage')" variant="primary" :icon="Plus" @click="open">{{ t('inventory.counts.open') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('inventory.counts.title')" :description="t('inventory.counts.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('inventory.manage')" variant="primary" :icon="Plus" @click="open">{{ t('inventory.counts.open') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -91,7 +103,7 @@ async function save() {
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('inventory.counts.day')">
-                    <input :id="id" v-model="form.counted_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.counted_on" />
                 </AppField>
             </form>
             <template #footer>
@@ -99,5 +111,5 @@ async function save() {
                 <AppButton variant="primary" type="submit" form="inventory-count-open" :loading="saving" :disabled="!form.warehouse_id || !form.counted_on">{{ t('inventory.counts.open') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

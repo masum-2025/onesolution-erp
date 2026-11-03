@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Ban, Lock, Save, Ticket, UsersRound } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -97,15 +97,31 @@ async function voidTicket() {
         saving.value = false;
     }
 }
+
+// Export and print: the day's piece tickets (voided ones marked), what each pays.
+const exported = computed(() => (day.items.length ? {
+    module: 'factory_erp',
+    page: 'factory_erp.tickets',
+    columns: [
+        { key: 'employee', label: t('factory_erp.export.employee'), value: (item) => person(item.employee_id)?.name ?? '' },
+        { key: 'code', label: t('factory_erp.export.code'), value: (item) => person(item.employee_id)?.code ?? '' },
+        { key: 'operation_name', label: t('factory_erp.export.operation') },
+        { key: 'order', label: t('factory_erp.export.number'), value: (item) => orderNumber(item.order_id) },
+        { key: 'pieces', label: t('factory_erp.export.pieces'), type: 'number' },
+        { key: 'rate_minor', label: t('factory_erp.export.rate'), type: 'money', currency: day.currency },
+        { key: 'rate_per', label: t('factory_erp.export.rate_per'), type: 'number' },
+        { key: 'amount_minor', label: t('factory_erp.export.value'), type: 'money', currency: day.currency },
+        { key: 'voided', label: t('factory_erp.cutting.void_badge'), value: (item) => (item.voided_at ? item.void_reason ?? '' : '') },
+    ],
+    rows: day.items,
+} : null));
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('factory_erp.tickets.title')" :description="t('factory_erp.tickets.text')">
-            <template #actions>
-                <input v-model="day.date" type="date" class="field-input w-40" :max="today" :aria-label="t('factory_erp.issues.day')" @change="load()" />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('factory_erp.tickets.title')" :description="t('factory_erp.tickets.text')" width="md" :export="exported">
+        <template #actions>
+            <DateInput v-model="day.date" class="w-40" :max="today" :aria-label="t('factory_erp.issues.day')" @change="load()" />
+        </template>
         <SkeletonRows v-if="day.loading && !day.orders.length && !day.items.length" :rows="6" />
         <ErrorState v-else-if="day.error" :error="day.error" @retry="load()" />
         <section v-else-if="!day.hrm" class="card"><EmptyState :icon="UsersRound" :title="t('factory_erp.tickets.no_hrm_title')" :text="t('factory_erp.tickets.no_hrm_text')" /></section>
@@ -190,5 +206,5 @@ async function voidTicket() {
                 <AppButton variant="danger" :loading="saving" :disabled="reason.trim().length < 3" @click="voidTicket">{{ t('factory_erp.cutting.void') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

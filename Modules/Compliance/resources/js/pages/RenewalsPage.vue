@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { RefreshCw } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -38,11 +38,27 @@ const quotes = computed(() => [...(data.data.value?.data.quotes ?? [])].sort((a,
 const invoices = computed(() => data.data.value?.data.invoices ?? []);
 const decided = computed(() => (data.data.value?.data.results ?? []).filter((result) => result.status !== 'pending'));
 const openId = ref(null);
+
+// Export and print: the renewal requests (open ones or all, as picked).
+const exported = computed(() => ({
+    module: 'compliance',
+    page: 'compliance.renewals',
+    columns: [
+        { key: 'factory', label: t('compliance.fields.factory'), value: (request) => request.factory?.name ?? '' },
+        { key: 'service', label: t('compliance.fields.service'), value: (request) => request.service?.name ?? '' },
+        { key: 'provider', label: t('compliance.fields.provider'), value: (request) => request.provider?.name ?? '' },
+        { key: 'created_at', label: t('compliance.export.asked_on'), value: (request) => formatDate(request.created_at) },
+        { key: 'expires_on', label: t('compliance.fields.expires_on'), type: 'date' },
+        { key: 'planned_on', label: t('compliance.export.planned_on'), type: 'date' },
+        { key: 'status', label: t('compliance.fields.state'), value: (request) => t(`compliance.renewal_statuses.${request.status}`) },
+        { key: 'delivery', label: t('compliance.export.delivery'), value: (request) => (request.delivery === 'failed' ? t('compliance.renewal.not_delivered') : '') },
+    ],
+    rows: requests.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('compliance.renewals.title')" :description="t('compliance.renewals.text')" />
+    <PageFrame :title="t('compliance.renewals.title')" :description="t('compliance.renewals.text')" width="full" :export="exported">
 
         <SkeletonRows v-if="data.loading.value && !data.data.value" :rows="5" />
         <ErrorState v-else-if="data.error.value" :error="data.error.value" @retry="data.reload()" />
@@ -101,5 +117,5 @@ const openId = ref(null);
         </template>
 
         <AuditDrawer :open="openId !== null" :audit-id="openId" :calls="calls" @close="openId = null" @changed="data.reload()" />
-    </div>
+    </PageFrame>
 </template>

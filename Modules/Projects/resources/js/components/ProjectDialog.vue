@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -108,10 +109,10 @@ const fieldError = (...names) => names.map((name) => errors.value[name]?.[0]).fi
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('projects.fields.starts_on')" :error="fieldError('starts_on')">
-                <input :id="id" v-model="form.starts_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.starts_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('projects.fields.due_on')" :error="fieldError('due_on')" optional>
-                <input :id="id" v-model="form.due_on" type="date" :min="form.starts_on || undefined" class="field-input" />
+                <DateInput :id="id" v-model="form.due_on" :min="form.starts_on || undefined" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('projects.fields.description')" :error="fieldError('description')" optional class="sm:col-span-2">
                 <textarea :id="id" v-model="form.description" rows="3" class="field-input" maxlength="5000"></textarea>

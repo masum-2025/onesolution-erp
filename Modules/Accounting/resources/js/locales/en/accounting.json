@@ -698,6 +698,20 @@
         "narration": "Narration",
         "total": "Amount",
         "status": "Status",
-        "source": "From module"
+        "source": "From module",
+        "code": "Code",
+        "name": "Name",
+        "type": "Type",
+        "money_kind": "Money kept as",
+        "yes": "Yes",
+        "active": "Active",
+        "phone": "Phone",
+        "email": "Email",
+        "party": "Customer or vendor",
+        "due_date": "Due date",
+        "reference": "Reference",
+        "rate": "Rate (%)",
+        "applies_to": "Applies to",
+        "part": "Section"
     }
 }

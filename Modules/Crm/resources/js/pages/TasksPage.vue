@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CheckCircle2, Circle, ListChecks, Phone } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -51,19 +51,32 @@ const label = (value) => {
     const count = value === 'overdue' ? meta.value.overdue : value === 'today' ? meta.value.today : null;
     return count ? `${t(`crm.tasks.${value}`)} (${formatNumber(count)})` : t(`crm.tasks.${value}`);
 };
+
+// Export and print: the follow-ups of the view and person picked.
+const exported = computed(() => ({
+    module: 'crm',
+    page: 'crm.tasks',
+    columns: [
+        { key: 'subject', label: t('crm.export.subject') },
+        { key: 'kind', label: t('crm.export.kind'), value: (task) => t(`crm.activity_kinds.${task.kind}`) },
+        { key: 'contact_name', label: t('crm.export.contact') },
+        { key: 'contact_phone', label: t('crm.export.phone'), value: (task) => (task.contact_phone ? phoneText(task.contact_phone) : '') },
+        { key: 'when', label: t('crm.export.when'), value: (task) => formatDateTime(task.done_at ?? task.due_at) },
+        { key: 'body', label: t('crm.export.note') },
+    ],
+    rows: tasks.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('crm.tasks.title')" :description="t('crm.tasks.text')">
-            <template #actions>
-                <select v-if="can('crm.manage')" v-model="person" class="field-input w-auto" :aria-label="t('crm.tasks.person')">
-                    <option value="">{{ t('crm.tasks.mine') }}</option>
-                    <option v-for="row in (setup.data.value?.people ?? []).filter((row) => row.id !== session.me?.user?.id)" :key="row.id" :value="row.id">{{ row.name }}</option>
-                </select>
-            </template>
-        </PageHeader>
-        <AppSegmented v-model="when" class="mb-4" :label="t('crm.tasks.title')" :options="['overdue', 'today', 'upcoming', 'done'].map((value) => ({ value, label: label(value) }))" />
+    <PageFrame :title="t('crm.tasks.title')" :description="t('crm.tasks.text')" width="full" :export="exported">
+        <template #actions>
+            <select v-if="can('crm.manage')" v-model="person" class="field-input w-auto" :aria-label="t('crm.tasks.person')">
+                <option value="">{{ t('crm.tasks.mine') }}</option>
+                <option v-for="row in (setup.data.value?.people ?? []).filter((row) => row.id !== session.me?.user?.id)" :key="row.id" :value="row.id">{{ row.name }}</option>
+            </select>
+        </template>
+        <AppSegmented v-model="when" class="mb-4 print:hidden" :label="t('crm.tasks.title')" :options="['overdue', 'today', 'upcoming', 'done'].map((value) => ({ value, label: label(value) }))" />
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -91,5 +104,5 @@ const label = (value) => {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

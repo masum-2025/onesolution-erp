@@ -2,12 +2,10 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Landmark, Lock, Save, SearchX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { confirmAction } from '@/lib/dialogs';
@@ -76,21 +74,18 @@ const toggleOrder = (id) => {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'fac-lcs' }" :icon="ArrowLeft" class="mb-3">{{ t('factory_erp.lcs.title') }}</AppButton>
-        <SkeletonRows v-if="view.loading.value && !lc" :rows="8" />
-        <section v-else-if="view.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('factory_erp.lcs.not_found')" /></section>
-        <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
-        <template v-else-if="lc">
-            <PageHeader :title="lc.number" :description="`${meta.buyer?.name ?? ''} · ${lc.issuing_bank}`">
-                <template #eyebrow>
-                    <AppBadge class="mb-2" :tone="open ? 'ok' : 'neutral'" dot>{{ t(`factory_erp.lcs.statuses.${lc.status}`) }}</AppBadge>
-                </template>
-                <template v-if="canEdit" #actions>
-                    <AppButton :icon="Lock" @click="close">{{ t('factory_erp.lcs.close') }}</AppButton>
-                    <AppButton variant="primary" :icon="Save" :loading="busy" :disabled="!body" @click="save()">{{ t('factory_erp.save') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="lc ? lc.number : ''" :description="lc ? `${meta.buyer?.name ?? ''} · ${lc.issuing_bank}` : ''" :resource="view" :not-found="{ icon: SearchX, title: t('factory_erp.lcs.not_found') }" :skeleton-rows="8" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'fac-lcs' }" :icon="ArrowLeft" class="mb-3">{{ t('factory_erp.lcs.title') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <AppBadge class="mb-2" :tone="open ? 'ok' : 'neutral'" dot>{{ t(`factory_erp.lcs.statuses.${lc.status}`) }}</AppBadge>
+        </template>
+        <template v-if="canEdit" #actions>
+            <AppButton :icon="Lock" @click="close">{{ t('factory_erp.lcs.close') }}</AppButton>
+            <AppButton variant="primary" :icon="Save" :loading="busy" :disabled="!body" @click="save()">{{ t('factory_erp.save') }}</AppButton>
+        </template>
+        <template v-if="lc">
 
             <section class="card mb-5 p-5">
                 <div class="flex flex-wrap items-end justify-between gap-3">
@@ -143,5 +138,5 @@ const toggleOrder = (id) => {
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

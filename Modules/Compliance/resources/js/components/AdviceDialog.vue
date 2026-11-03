@@ -1,14 +1,15 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { Send } from 'lucide-vue-next';
+import { DateInput, MoneyInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import { newOpId } from '@/lib/billing';
-import { formatMoney, minorToDecimalString, currencyDigits } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { PAYMENT_METHODS, amountToMinor, localToday } from '../lib';
+import { PAYMENT_METHODS, localToday } from '../lib';
 
 /**
  * Tell the provider an invoice was paid: how much, when, how and the bank
@@ -22,7 +23,7 @@ const props = defineProps({
 });
 const emit = defineEmits(['close', 'sent']);
 
-const form = reactive({ amount: '', paid_on: '', method: 'bank', reference: '', note: '' });
+const form = reactive({ amount_minor: null, paid_on: '', method: 'bank', reference: '', note: '' });
 const errors = ref({});
 const saving = ref(false);
 const today = localToday();
@@ -30,14 +31,14 @@ const today = localToday();
 let opId = null;
 watch(() => props.open, (open) => {
     if (!open || !props.invoice) return;
-    Object.assign(form, { amount: minorToDecimalString(props.invoice.open_minor, currencyDigits(props.invoice.currency_code)), paid_on: today, method: 'bank', reference: '', note: '' });
+    Object.assign(form, { amount_minor: props.invoice.open_minor, paid_on: today, method: 'bank', reference: '', note: '' });
     errors.value = {};
     opId = newOpId();
 });
 const money = (amount) => formatMoney({ amount, currency: props.invoice?.currency_code });
 
 async function send() {
-    const amount = amountToMinor(form.amount, props.invoice.currency_code);
+    const amount = form.amount_minor;
     errors.value = amount === null ? { amount_minor: [t('compliance.advices.amount_needed')] } : {};
     if (amount === null) return;
     saving.value = true;
@@ -66,10 +67,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
         <form v-if="invoice" id="compliance-advice" class="space-y-4" novalidate @submit.prevent="send">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <AppField v-slot="{ id }" :label="t('compliance.advices.amount', { currency: invoice.currency_code })" :error="fieldError('amount_minor')">
-                    <input :id="id" v-model="form.amount" inputmode="decimal" autocomplete="off" class="field-input tabular" dir="ltr" />
+                    <MoneyInput :id="id" v-model="form.amount_minor" :currency="invoice?.currency_code" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('compliance.advices.paid_on')" :error="fieldError('paid_on')">
-                    <input :id="id" v-model="form.paid_on" type="date" :max="today" class="field-input" />
+                    <DateInput :id="id" v-model="form.paid_on" :max="today" />
                 </AppField>
             </div>
             <AppField v-slot="{ id }" :label="t('compliance.advices.method')" :error="fieldError('method')">

@@ -2,11 +2,9 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Check, Save, ScanBarcode, Search, Send, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
@@ -114,29 +112,26 @@ async function step(name) {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'inventory-counts' }" :icon="ArrowLeft" class="mb-3">{{ t('inventory.counts.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !count" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="count">
-            <PageHeader :title="`${warehouseName} · ${count.number}`" :description="t('inventory.counts.page_text', { date: formatDate(`${count.counted_on}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' }) })">
-                <template #eyebrow>
-                    <span class="mb-2 flex items-center gap-2">
-                        <AppBadge :tone="statusTone(count.status)" dot>{{ t(`inventory.status.${count.status}`) }}</AppBadge>
-                        <span class="text-[12.5px] text-muted">{{ t('inventory.counts.progress', { done: formatNumber(done), total: formatNumber(lines.length) }) }}</span>
-                    </span>
-                </template>
-                <template #actions>
-                    <div class="flex flex-wrap gap-2">
-                        <AppButton v-if="count.can.record" variant="secondary" :icon="Save" :loading="busy === 'save'" @click="saveCounts">{{ t('inventory.common.save') }}</AppButton>
-                        <AppButton v-if="count.can.submit" variant="primary" :icon="Send" :loading="busy === 'submit'" @click="step('submit')">{{ t('inventory.counts.steps.submit') }}</AppButton>
-                        <AppButton v-if="count.can.approve" variant="primary" :icon="Check" :loading="busy === 'approve'" @click="step('approve')">{{ t('inventory.counts.steps.approve') }}</AppButton>
-                        <AppButton v-if="count.can.reject" variant="ghost" :icon="X" @click="step('reject')">{{ t('inventory.counts.steps.reject') }}</AppButton>
-                        <AppButton v-if="count.can.cancel" variant="ghost" :icon="X" @click="step('cancel')">{{ t('inventory.counts.steps.cancel') }}</AppButton>
-                    </div>
-                </template>
-            </PageHeader>
+    <PageFrame :title="count ? `${warehouseName} · ${count.number}` : ''" :description="count ? t('inventory.counts.page_text', { date: formatDate(`${count.counted_on}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' }) }) : ''" :resource="record" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'inventory-counts' }" :icon="ArrowLeft" class="mb-3">{{ t('inventory.counts.title') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex items-center gap-2">
+                <AppBadge :tone="statusTone(count.status)" dot>{{ t(`inventory.status.${count.status}`) }}</AppBadge>
+                <span class="text-[12.5px] text-muted">{{ t('inventory.counts.progress', { done: formatNumber(done), total: formatNumber(lines.length) }) }}</span>
+            </span>
+        </template>
+        <template #actions>
+            <div class="flex flex-wrap gap-2">
+                <AppButton v-if="count.can.record" variant="secondary" :icon="Save" :loading="busy === 'save'" @click="saveCounts">{{ t('inventory.common.save') }}</AppButton>
+                <AppButton v-if="count.can.submit" variant="primary" :icon="Send" :loading="busy === 'submit'" @click="step('submit')">{{ t('inventory.counts.steps.submit') }}</AppButton>
+                <AppButton v-if="count.can.approve" variant="primary" :icon="Check" :loading="busy === 'approve'" @click="step('approve')">{{ t('inventory.counts.steps.approve') }}</AppButton>
+                <AppButton v-if="count.can.reject" variant="ghost" :icon="X" @click="step('reject')">{{ t('inventory.counts.steps.reject') }}</AppButton>
+                <AppButton v-if="count.can.cancel" variant="ghost" :icon="X" @click="step('cancel')">{{ t('inventory.counts.steps.cancel') }}</AppButton>
+            </div>
+        </template>
+        <template v-if="count">
 
             <p v-if="count.reject_reason && count.status === 'counting'" class="mb-4 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn" role="status">{{ t('inventory.document.sent_back', { reason: count.reject_reason }) }}</p>
             <p v-if="count.status === 'posted'" class="mb-4 rounded-xl bg-subtle px-4 py-3 text-[13px]" role="status">{{ t('inventory.counts.posted', { amount: formatMoney({ amount: count.variance_value_minor, currency: count.currency }) }) }}</p>
@@ -169,5 +164,5 @@ async function step(name) {
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

@@ -3,13 +3,11 @@ import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, ChevronDown, CopyPlus, Plus, Printer, Save, SearchX, Ship, Trash2 } from 'lucide-vue-next';
 import AppMenu from '@/components/AppMenu.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { brand } from '@/lib/brand';
@@ -159,30 +157,27 @@ const invoiceRows = computed(() => {
 </script>
 
 <template>
-    <div>
-        <AppButton v-if="shipment" variant="ghost" size="sm" :to="{ name: 'fac-order', params: { id: shipment.order_id }, query: { tab: 'shipments' } }" :icon="ArrowLeft" class="mb-3 print:hidden">
-            {{ meta.order?.number }}
-        </AppButton>
-        <SkeletonRows v-if="view.loading.value && !shipment" :rows="8" />
-        <section v-else-if="view.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('factory_erp.shipments.not_found')" /></section>
-        <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
-        <template v-else-if="shipment">
-            <PageHeader :title="shipment.number" :description="`${meta.order?.number} · ${meta.style?.code} · ${meta.buyer?.name ?? ''}`" class="print:hidden">
-                <template #eyebrow>
-                    <AppBadge class="mb-2" :tone="shipment.status === 'shipped' ? 'ok' : 'neutral'" dot>{{ t(`factory_erp.shipments.statuses.${shipment.status}`) }}</AppBadge>
+    <PageFrame :title="shipment ? shipment.number : ''" :description="shipment ? `${meta.order?.number} · ${meta.style?.code} · ${meta.buyer?.name ?? ''}` : ''" :resource="view" :not-found="{ icon: SearchX, title: t('factory_erp.shipments.not_found') }" :skeleton-rows="8" width="full" own-paper>
+        <template #before>
+            <AppButton v-if="shipment" variant="ghost" size="sm" :to="{ name: 'fac-order', params: { id: shipment.order_id }, query: { tab: 'shipments' } }" :icon="ArrowLeft" class="mb-3 print:hidden">
+                {{ meta.order?.number }}
+            </AppButton>
+        </template>
+        <template #eyebrow>
+            <AppBadge class="mb-2" :tone="shipment.status === 'shipped' ? 'ok' : 'neutral'" dot>{{ t(`factory_erp.shipments.statuses.${shipment.status}`) }}</AppBadge>
+        </template>
+        <template #actions>
+            <select v-model="paperLocale" class="field-input w-36" :aria-label="t('factory_erp.shipments.paper_language')" :title="t('factory_erp.shipments.paper_language')">
+                <option v-for="code in i18n.locales" :key="code" :value="code">{{ languageName(code) }}</option>
+            </select>
+            <AppMenu :items="printItems" :label="t('factory_erp.shipments.print')">
+                <template #trigger="{ toggle, attrs }">
+                    <AppButton :icon="Printer" :icon-end="ChevronDown" v-bind="attrs" @click="toggle(false)">{{ t('factory_erp.shipments.print') }}</AppButton>
                 </template>
-                <template #actions>
-                    <select v-model="paperLocale" class="field-input w-36" :aria-label="t('factory_erp.shipments.paper_language')" :title="t('factory_erp.shipments.paper_language')">
-                        <option v-for="code in i18n.locales" :key="code" :value="code">{{ languageName(code) }}</option>
-                    </select>
-                    <AppMenu :items="printItems" :label="t('factory_erp.shipments.print')">
-                        <template #trigger="{ toggle, attrs }">
-                            <AppButton :icon="Printer" :icon-end="ChevronDown" v-bind="attrs" @click="toggle(false)">{{ t('factory_erp.shipments.print') }}</AppButton>
-                        </template>
-                    </AppMenu>
-                    <AppButton v-if="draft && setup.can('issue')" variant="primary" :icon="Ship" :loading="busy" :disabled="!shipment.pieces" @click="ship">{{ t('factory_erp.shipments.ship') }}</AppButton>
-                </template>
-            </PageHeader>
+            </AppMenu>
+            <AppButton v-if="draft && setup.can('issue')" variant="primary" :icon="Ship" :loading="busy" :disabled="!shipment.pieces" @click="ship">{{ t('factory_erp.shipments.ship') }}</AppButton>
+        </template>
+        <template v-if="shipment">
 
             <p v-if="shipment.status === 'shipped'" class="mb-4 rounded-xl bg-ok-soft px-4 py-3 text-[13px] text-ok print:hidden">
                 {{ shipment.invoice_id ? t('factory_erp.shipments.shipped_note_invoice') : t('factory_erp.shipments.shipped_note') }}
@@ -213,7 +208,7 @@ const invoiceRows = computed(() => {
                         <input :id="id" v-model="form.export_permit_no" class="field-input font-mono" dir="ltr" :disabled="!canEdit" maxlength="60" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('factory_erp.shipments.permit_on', { permit: permit.label })">
-                        <input :id="id" v-model="form.export_permit_on" type="date" class="field-input" :disabled="!canEdit" />
+                        <DateInput :id="id" v-model="form.export_permit_on" :disabled="!canEdit" />
                     </AppField>
                     <AppField v-slot="{ id }" class="sm:col-span-3" :label="t('factory_erp.issues.note')">
                         <input :id="id" v-model="form.note" class="field-input" :disabled="!canEdit" maxlength="500" />
@@ -380,5 +375,5 @@ const invoiceRows = computed(() => {
                 <p v-if="shipment.note && (paper === 'packing' || paper === 'invoice')" class="mt-3">{{ shipment.note }}</p>
             </article>
         </template>
-    </div>
+    </PageFrame>
 </template>

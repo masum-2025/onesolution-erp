@@ -1,9 +1,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { BarChart3, Download } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
-import AppButton from '@/components/AppButton.vue';
+import { BarChart3 } from 'lucide-vue-next';
+import { DateInput, PageFrame } from '@/ui';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -14,14 +13,13 @@ import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { t } from '@/lib/i18n';
 import { posApi } from '../api';
-import { downloadText, milliForCsv, toCsv } from '@/lib/csv';
-import { formatQuantity, minorToText, reportRange } from '../lib';
+import { formatQuantity, reportRange } from '../lib';
 
 /**
  * Takings at the counters for supervisors and managers: today, the last 7
  * or 30 days, this month, or chosen days; one counter or all. Totals on
  * top, then by day, hour, cashier, payment method and item, each with a
- * bar for its share. The whole report saves as CSV.
+ * bar for its share. Export and print through the page's menu.
  */
 const pos = posApi(currentOrganization().id);
 const route = useRoute();
@@ -58,44 +56,47 @@ const share = (amount, rows) => `${Math.max(2, Math.round((Math.abs(amount) * 10
 const hours = computed(() => (data.value?.hours ?? []).filter((row) => row.count > 0 || row.amount !== 0));
 const registerName = (id) => (registers.data.value?.data ?? []).find((row) => row.id === id)?.name ?? '';
 
-function saveCsv() {
+// Export and print (audited, by the company's export rules): the whole report as one table,
+// each row named by its part (totals, by day, cashier, payment method, item).
+const exported = computed(() => {
     const report = data.value;
-    const amount = (minor) => minorToText(minor, report.currency);
-    const rows = [
-        [t('pos.reports.title'), `${report.from} – ${report.to}`, registerId.value ? registerName(registerId.value) : t('pos.reports.all_counters')],
-        [],
-        ...tiles.value.map((tile) => [t(`pos.reports.tiles.${tile.key}`), amount(report.totals[tile.key])]),
-        [],
-        [t('pos.reports.by_day'), t('pos.reports.columns.amount'), t('pos.reports.columns.receipts')], ...report.days.map((row) => [row.date, amount(row.amount), row.count]),
-        [],
-        [t('pos.reports.by_cashier'), t('pos.reports.columns.amount'), t('pos.reports.columns.receipts'), t('pos.reports.columns.returns')], ...report.cashiers.map((row) => [row.name ?? '', amount(row.amount), row.count, row.returns]),
-        [],
-        [t('pos.reports.by_method'), t('pos.reports.columns.amount')], ...report.methods.map((row) => [t(`pos.methods.${row.method}`), amount(row.amount)]),
-        [],
-        [t('pos.reports.by_item'), 'SKU', t('pos.reports.columns.quantity'), t('pos.reports.columns.amount'), t('pos.reports.columns.margin')],
-        ...report.items.map((row) => [row.name, row.sku, milliForCsv(row.quantity_milli), amount(row.amount), amount(row.net - row.cost)]),
-    ];
-    downloadText(`pos-takings-${report.from}-${report.to}.csv`, toCsv(rows));
-}
+    if (!report) return null;
+    const part = (key, rows) => rows.map((row) => ({ part: t(key), ...row }));
+    return {
+        module: 'pos',
+        page: 'pos.takings',
+        columns: [
+            { key: 'part', label: t('pos.export.part') },
+            { key: 'name', label: t('pos.export.name') },
+            { key: 'sku', label: 'SKU' },
+            { key: 'quantity', label: t('pos.reports.columns.quantity'), type: 'number' },
+            { key: 'count', label: t('pos.reports.columns.receipts'), type: 'number' },
+            { key: 'returns', label: t('pos.reports.columns.returns'), type: 'number' },
+            { key: 'amount', label: t('pos.reports.columns.amount'), type: 'money', currency: report.currency },
+            { key: 'margin', label: t('pos.reports.columns.margin'), type: 'money', currency: report.currency },
+        ],
+        rows: [
+            ...part('pos.export.totals', tiles.value.map((tile) => ({ name: t(`pos.reports.tiles.${tile.key}`), amount: report.totals[tile.key] }))),
+            ...part('pos.reports.by_day', report.days.map((row) => ({ name: row.date, amount: row.amount, count: row.count }))),
+            ...part('pos.reports.by_cashier', report.cashiers.map((row) => ({ name: row.name ?? '', amount: row.amount, count: row.count, returns: row.returns }))),
+            ...part('pos.reports.by_method', report.methods.map((row) => ({ name: t(`pos.methods.${row.method}`), amount: row.amount }))),
+            ...part('pos.reports.by_item', report.items.map((row) => ({ name: row.name, sku: row.sku, quantity: row.quantity_milli / 1000, amount: row.amount, margin: row.net - row.cost }))),
+        ],
+    };
+});
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('pos.reports.title')" :description="t('pos.reports.text')">
-            <template #actions>
-                <AppButton variant="secondary" :icon="Download" :disabled="!data" @click="saveCsv">{{ t('pos.reports.csv') }}</AppButton>
-            </template>
-        </PageHeader>
-
-        <section class="card mb-5 grid gap-4 p-5">
+    <PageFrame :title="t('pos.reports.title')" :description="t('pos.reports.text')" width="full" :export="exported">
+        <section class="card mb-5 grid gap-4 p-5 print:hidden">
             <AppSegmented v-model="preset" size="sm" :label="t('pos.reports.period')" :options="['today', 'week', 'month30', 'this_month', 'custom'].map((value) => ({ value, label: t(`pos.reports.presets.${value}`) }))" />
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <template v-if="preset === 'custom'">
                     <AppField v-slot="{ id }" :label="t('pos.reports.from')">
-                        <input :id="id" v-model="custom.from" type="date" class="field-input" :max="today" />
+                        <DateInput :id="id" v-model="custom.from" :max="today" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('pos.reports.to')">
-                        <input :id="id" v-model="custom.to" type="date" class="field-input" :max="today" />
+                        <DateInput :id="id" v-model="custom.to" :max="today" />
                     </AppField>
                 </template>
                 <AppField v-slot="{ id }" :label="t('pos.till.counter')">
@@ -197,5 +198,5 @@ function saveCsv() {
                 </div>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

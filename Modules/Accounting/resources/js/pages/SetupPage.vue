@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, BookCheck, Sparkles } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -54,12 +54,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.setup.title')" :description="t('accounting.setup.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.setup.title')" :description="t('accounting.setup.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
+        </template>
 
         <section v-if="status.loading.value && !setup" class="card"><SkeletonRows :rows="4" /></section>
         <section v-else-if="status.error.value" class="card"><ErrorState compact :error="status.error.value" @retry="status.reload()" /></section>
@@ -91,7 +89,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             </fieldset>
 
             <AppField v-slot="{ id }" :label="t('accounting.setup.first_year')" :hint="t('accounting.setup.first_year_hint', { date: setup.fiscal_year_start })" :error="fieldError('first_year_starts_on')" optional class="sm:max-w-xs">
-                <input :id="id" v-model="form.first_year_starts_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.first_year_starts_on" />
             </AppField>
 
             <p class="text-[13px] text-muted">{{ t('accounting.setup.currency', { currency: currencyName(setup.currency) }) }}</p>
@@ -100,5 +98,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" :loading="saving" :disabled="!form.template">{{ t('accounting.setup.start') }}</AppButton>
             </div>
         </form>
-    </div>
+    </PageFrame>
 </template>

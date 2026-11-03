@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ListTodo } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppSwitch from '@/components/AppSwitch.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -37,12 +37,10 @@ const openTask = computed(() => tasks.value.find((task) => task.id === openId.va
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('projects.mine.title')" :description="t('projects.mine.text')">
-            <template #actions>
-                <AppSwitch v-model="withDone" :label="t('projects.mine.with_done')" show-label />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('projects.mine.title')" :description="t('projects.mine.text')" width="full">
+        <template #actions>
+            <AppSwitch v-model="withDone" :label="t('projects.mine.with_done')" show-label />
+        </template>
 
         <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
         <ErrorState v-else-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
@@ -64,5 +62,5 @@ const openTask = computed(() => tasks.value.find((task) => task.id === openId.va
 
         <TaskDrawer v-if="openTask" :open="!!openTask" :task="openTask" :project-id="openTask.project.id" :options="opts" :calls="calls"
             @close="openId = null" @changed="list.reload()" @edit="(task) => router.push({ name: 'project', params: { id: task.project_id }, query: { task: task.id } })" />
-    </div>
+    </PageFrame>
 </template>

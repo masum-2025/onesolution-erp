@@ -219,5 +219,22 @@
             "receipts": "Receipts",
             "returns": "Returns"
         }
+    },
+    "export": {
+        "part": "Part",
+        "name": "Name",
+        "totals": "Totals",
+        "number": "Number",
+        "when": "When",
+        "counter": "Counter",
+        "customer": "Customer",
+        "kind": "Kind",
+        "sale": "Sale",
+        "review": "To review",
+        "yes": "Yes",
+        "opened": "Opened",
+        "closed": "Closed",
+        "status": "Status",
+        "variance": "Cash short or over"
     }
 }

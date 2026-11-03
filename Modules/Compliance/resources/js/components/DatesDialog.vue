@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { CalendarCheck } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -58,10 +59,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
     <AppDialog :open="open" :title="t('compliance.dates.title')" :description="line ? `${line.factory.name} · ${line.service?.name}` : ''" @close="emit('close')">
         <form id="compliance-dates" class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">
             <AppField v-slot="{ id }" :label="t('compliance.fields.last_audit_on')" :error="fieldError('last_audit_on')" optional>
-                <input :id="id" v-model="form.last_audit_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.last_audit_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('compliance.fields.expires_on')" :error="fieldError('expires_on')" optional>
-                <input :id="id" v-model="form.expires_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.expires_on" />
             </AppField>
             <p v-if="proposed && proposed !== form.expires_on" class="flex flex-wrap items-center gap-2 rounded-lg bg-subtle px-3 py-2 text-[13px] sm:col-span-2">
                 <span>{{ t('compliance.dates.proposed', { date: formatDate(proposed), months: months }) }}</span>

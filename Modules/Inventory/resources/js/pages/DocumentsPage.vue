@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowDownToLine, ArrowRightLeft, ArrowUpFromLine, FileStack, SlidersHorizontal } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -32,21 +32,36 @@ const warehouseName = (id) => (warehouses.data.value?.data ?? []).find((row) => 
 const documents = computed(() => list.data.value?.data ?? []);
 const typeOptions = computed(() => [{ value: '', label: t('inventory.documents.all') }, ...DOCUMENT_TYPES.map((value) => ({ value, label: t(`inventory.types.${value}`) }))]);
 const icons = { receipt: ArrowDownToLine, issue: ArrowUpFromLine, transfer: ArrowRightLeft, adjustment: SlidersHorizontal };
+
+// Export and print: the stock documents of the type and status picked.
+const exported = computed(() => ({
+    module: 'inventory',
+    page: 'inventory.documents',
+    columns: [
+        { key: 'number', label: t('inventory.export.number') },
+        { key: 'type', label: t('inventory.export.type'), value: (document) => t(`inventory.types.${document.type}`) },
+        { key: 'document_date', label: t('inventory.export.date'), type: 'date' },
+        { key: 'warehouse', label: t('inventory.common.warehouse'), value: (document) => warehouseName(document.warehouse_id) },
+        { key: 'to_warehouse', label: t('inventory.export.to_warehouse'), value: (document) => (document.to_warehouse_id ? warehouseName(document.to_warehouse_id) : '') },
+        { key: 'counterparty', label: t('inventory.export.counterparty') },
+        { key: 'status', label: t('inventory.export.status'), value: (document) => t(`inventory.status.${document.status}`) },
+        { key: 'value_minor', label: t('inventory.export.value'), type: 'money', value: (document) => (document.status === 'draft' ? null : Math.abs(document.value_minor)) },
+    ],
+    rows: documents.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('inventory.documents.title')" :description="t('inventory.documents.text')">
-            <template #actions>
-                <div v-if="can('inventory.manage')" class="flex flex-wrap gap-2">
-                    <AppButton v-for="value in DOCUMENT_TYPES" :key="value" :variant="value === 'receipt' ? 'primary' : 'secondary'" :icon="icons[value]" :to="{ name: 'inventory-document-new', params: { type: value } }">
-                        {{ t(`inventory.types.${value}`) }}
-                    </AppButton>
-                </div>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('inventory.documents.title')" :description="t('inventory.documents.text')" width="full" :export="exported">
+        <template #actions>
+            <div v-if="can('inventory.manage')" class="flex flex-wrap gap-2">
+                <AppButton v-for="value in DOCUMENT_TYPES" :key="value" :variant="value === 'receipt' ? 'primary' : 'secondary'" :icon="icons[value]" :to="{ name: 'inventory-document-new', params: { type: value } }">
+                    {{ t(`inventory.types.${value}`) }}
+                </AppButton>
+            </div>
+        </template>
 
-        <div class="mb-4 flex flex-wrap items-center gap-3">
+        <div class="mb-4 flex flex-wrap items-center gap-3 print:hidden">
             <AppSegmented v-model="type" :options="typeOptions" :label="t('inventory.documents.filter')" />
             <select v-model="status" class="field-input w-auto" :aria-label="t('inventory.documents.status')">
                 <option value="">{{ t('inventory.documents.any_status') }}</option>
@@ -75,5 +90,5 @@ const icons = { receipt: ArrowDownToLine, issue: ArrowUpFromLine, transfer: Arro
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

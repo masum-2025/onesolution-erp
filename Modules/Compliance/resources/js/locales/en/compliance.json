@@ -305,6 +305,9 @@
         "their_reason": "Their answer: {reason}"
     },
     "export": {
-        "days_left": "Days left"
+        "days_left": "Days left",
+        "asked_on": "Asked on",
+        "planned_on": "Planned for",
+        "delivery": "Delivery"
     }
 }

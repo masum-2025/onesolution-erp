@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { CalendarClock } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -20,11 +20,24 @@ const items = useResource(() => inventory.list('items'));
 const itemOf = (id) => (items.data.value?.data ?? []).find((item) => item.id === id);
 const batches = computed(() => list.data.value?.data ?? []);
 const today = new Date().toISOString().slice(0, 10);
+
+// Export and print: the batches expired or expiring soon.
+const exported = computed(() => ({
+    module: 'inventory',
+    page: 'inventory.expiring',
+    columns: [
+        { key: 'item', label: t('inventory.export.item'), value: (batch) => itemOf(batch.item_id)?.name ?? '' },
+        { key: 'number', label: t('inventory.export.batch') },
+        { key: 'expires_on', label: t('inventory.export.expires_on'), type: 'date' },
+        { key: 'state', label: t('inventory.export.status'), value: (batch) => t(batch.expires_on < today ? 'inventory.expiring.expired' : 'inventory.expiring.soon') },
+        { key: 'quantity_milli', label: t('inventory.export.quantity'), type: 'number', value: (batch) => batch.quantity_milli / 1000 },
+    ],
+    rows: batches.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('inventory.expiring.title')" :description="t('inventory.expiring.text', { days: formatNumber(list.data.value?.meta?.days ?? 0) })" />
+    <PageFrame :title="t('inventory.expiring.title')" :description="t('inventory.expiring.text', { days: formatNumber(list.data.value?.meta?.days ?? 0) })" width="full" :export="exported">
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
             <ErrorState v-else-if="list.error.value" compact :error="list.error.value" @retry="list.reload()" />
@@ -42,5 +55,5 @@ const today = new Date().toISOString().slice(0, 10);
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

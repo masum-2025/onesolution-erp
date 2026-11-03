@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { GitBranch, Plus, Star } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -66,12 +66,10 @@ async function save() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('crm.pipelines.title')" :description="t('crm.pipelines.text')">
-            <template #actions>
-                <AppButton v-if="can('crm.manage')" variant="primary" :icon="Plus" @click="open('pipeline', null)">{{ t('crm.pipelines.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('crm.pipelines.title')" :description="t('crm.pipelines.text')" width="full">
+        <template #actions>
+            <AppButton v-if="can('crm.manage')" variant="primary" :icon="Plus" @click="open('pipeline', null)">{{ t('crm.pipelines.add') }}</AppButton>
+        </template>
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="6" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
         <div v-else class="grid gap-5">
@@ -121,5 +119,5 @@ async function save() {
                 <AppButton variant="primary" type="submit" form="crm-pipeline" :loading="saving" :disabled="!form.name.en?.trim()">{{ t('crm.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Plus, Ship } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -92,7 +93,7 @@ async function make() {
         <AppDialog :open="making" :icon="Ship" :title="t('factory_erp.shipments.new_title', { number: order.number })" :description="t('factory_erp.shipments.new_text')" @close="making = false">
             <div class="grid gap-3 sm:grid-cols-2">
                 <AppField v-slot="{ id }" :label="t('factory_erp.shipments.ship_on')">
-                    <input :id="id" v-model="form.ship_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.ship_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('factory_erp.shipments.mode')">
                     <select :id="id" v-model="form.mode" class="field-input">

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { PackageMinus, PackagePlus } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -104,7 +105,7 @@ async function send(allowOver = false) {
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('factory_erp.issues.day')">
-                <input :id="id" v-model="issuedOn" type="date" class="field-input" :max="setup.data.value?.today" />
+                <DateInput :id="id" v-model="issuedOn" :max="setup.data.value?.today" />
             </AppField>
         </div>
         <p v-if="!setup.warehouses.value.length" class="mt-3 rounded-xl bg-warn-soft px-3 py-2 text-[13px] text-warn">{{ t('factory_erp.issues.no_store') }}</p>

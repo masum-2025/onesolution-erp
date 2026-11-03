@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Banknote, Ban, BookOpen, Check, PenLine, Printer, Send, Trash2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -123,13 +123,11 @@ function printPage() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="document ? `${kind} ${document.number ?? ''}` : ''" :description="document?.party_name ?? ''" class="print:hidden">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: document && sideOf(document.type) === 'purchases' ? 'accounting-purchases' : 'accounting-sales' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
-                <AppButton v-if="document?.number" :icon="Printer" @click="printPage">{{ t('accounting.documents.print') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="document ? `${kind} ${document.number ?? ''}` : ''" :description="document?.party_name ?? ''" class="print:hidden" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: document && sideOf(document.type) === 'purchases' ? 'accounting-purchases' : 'accounting-sales' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
+            <AppButton v-if="document?.number" :icon="Printer" @click="printPage">{{ t('accounting.documents.print') }}</AppButton>
+        </template>
 
         <section v-if="entry.loading.value && !document" class="card"><SkeletonRows :rows="6" /></section>
         <section v-else-if="entry.error.value" class="card"><ErrorState compact :error="entry.error.value" @retry="entry.reload()" /></section>
@@ -261,5 +259,5 @@ function printPage() {
                 <AppButton variant="primary" :loading="busy === 'apply'" @click="apply">{{ t('accounting.documents.apply') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

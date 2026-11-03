@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Copy, KeyRound, Network, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -99,18 +99,31 @@ async function confirmAccept() {
         accept.busy = false;
     }
 }
+
+// Export and print: the connections of the side shown (clients or providers).
+const exported = computed(() => ({
+    module: 'business_network',
+    page: `business_network.${part.value}`,
+    columns: [
+        { key: 'other', label: t('business_network.export.name'), value: (row) => row.other ?? row.note ?? t('business_network.list.waiting') },
+        { key: 'status', label: t('business_network.export.status'), value: (row) => t(`business_network.status.${row.status}`) },
+        { key: 'accepted_at', label: t('business_network.export.since'), value: (row) => (row.accepted_at ? formatDate(row.accepted_at) : '') },
+        { key: 'modules', label: t('business_network.export.modules'), type: 'number', value: (row) => row.modules?.length ?? 0 },
+        { key: 'last_used_at', label: t('business_network.export.last_used'), value: (row) => (row.last_used_at ? formatDate(row.last_used_at) : '') },
+        { key: 'note', label: t('business_network.export.note') },
+    ],
+    rows: shown.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('business_network.title')" :description="t('business_network.text')">
-            <template #actions>
-                <AppButton v-if="meta.can_accept" :icon="KeyRound" @click="startAccept">{{ t('business_network.accept.button') }}</AppButton>
-                <AppButton v-if="meta.can_invite" variant="primary" :icon="Plus" @click="startInvite">{{ t('business_network.invite.button') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('business_network.title')" :description="t('business_network.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="meta.can_accept" :icon="KeyRound" @click="startAccept">{{ t('business_network.accept.button') }}</AppButton>
+            <AppButton v-if="meta.can_invite" variant="primary" :icon="Plus" @click="startInvite">{{ t('business_network.invite.button') }}</AppButton>
+        </template>
 
-        <div class="mb-4">
+        <div class="mb-4 print:hidden">
             <AppSegmented v-model="part" size="sm" :label="t('business_network.title')" :options="parts" />
         </div>
 
@@ -180,5 +193,5 @@ async function confirmAccept() {
                     :disabled="accept.preview ? !accept.units.length : accept.code.trim().length < 12">{{ accept.preview ? t('business_network.accept.confirm') : t('business_network.accept.look_up') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

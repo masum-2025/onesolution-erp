@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import { ArrowLeft, Check, FileText, Plus, Save, Send, Trash2, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -178,13 +178,11 @@ const kindLines = (kind) => (opening.value?.lines ?? []).filter((line) => line.k
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.opening.title')" :description="t('accounting.opening.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting-fiscal-years' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
-                <AppButton v-if="opening?.journal_id" variant="secondary" :icon="FileText" :to="{ name: 'accounting-journal', params: { id: opening.journal_id } }">{{ t('accounting.opening.open_journal') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.opening.title')" :description="t('accounting.opening.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting-fiscal-years' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
+            <AppButton v-if="opening?.journal_id" variant="secondary" :icon="FileText" :to="{ name: 'accounting-journal', params: { id: opening.journal_id } }">{{ t('accounting.opening.open_journal') }}</AppButton>
+        </template>
 
         <BooksGate>
             <section v-if="loading" class="card"><SkeletonRows :rows="6" /></section>
@@ -209,7 +207,7 @@ const kindLines = (kind) => (opening.value?.lines ?? []).filter((line) => line.k
                 <form v-if="writable" class="grid gap-5" novalidate @submit.prevent="save(true)">
                     <section class="card grid gap-4 p-5 sm:grid-cols-2">
                         <AppField v-slot="{ id }" :label="t('accounting.opening.date')" :hint="t('accounting.opening.date_hint')" :error="fieldError('opening_date')">
-                            <input :id="id" v-model="form.opening_date" type="date" class="field-input" required />
+                            <DateInput :id="id" v-model="form.opening_date" required />
                         </AppField>
                     </section>
 
@@ -269,10 +267,10 @@ const kindLines = (kind) => (opening.value?.lines ?? []).filter((line) => line.k
                                     <input :id="id" v-model="row.reference" class="field-input" maxlength="100" />
                                 </AppField>
                                 <AppField v-slot="{ id }" :label="t('accounting.opening.issue_date')">
-                                    <input :id="id" v-model="row.issue_date" type="date" class="field-input" :max="form.opening_date || undefined" />
+                                    <DateInput :id="id" v-model="row.issue_date" :max="form.opening_date || undefined" />
                                 </AppField>
                                 <AppField v-slot="{ id }" :label="t('accounting.opening.due_date')" optional>
-                                    <input :id="id" v-model="row.due_date" type="date" class="field-input" :min="row.issue_date || undefined" />
+                                    <DateInput :id="id" v-model="row.due_date" :min="row.issue_date || undefined" />
                                 </AppField>
                                 <AppField v-slot="{ id }" :label="t('accounting.opening.amount')">
                                     <input :id="id" v-model="row.amount" inputmode="decimal" class="field-input tabular text-end" dir="ltr" autocomplete="off" />
@@ -342,5 +340,5 @@ const kindLines = (kind) => (opening.value?.lines ?? []).filter((line) => line.k
                 <section v-else class="card px-5 py-8 text-center text-[13.5px] text-muted">{{ t('accounting.opening.none_yet') }}</section>
             </div>
         </BooksGate>
-    </div>
+    </PageFrame>
 </template>

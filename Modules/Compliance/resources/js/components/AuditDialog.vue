@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -86,10 +87,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
             </AppField>
             <template v-if="options.can.dates">
                 <AppField v-slot="{ id }" :label="t('compliance.fields.last_audit_on')" :error="fieldError('last_audit_on')" optional>
-                    <input :id="id" v-model="form.last_audit_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.last_audit_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('compliance.fields.expires_on')" :hint="months ? t('compliance.add.expiry_hint', { months }) : ''" :error="fieldError('expires_on')" optional>
-                    <input :id="id" v-model="form.expires_on" type="date" class="field-input" @input="touchedExpiry = true" />
+                    <DateInput :id="id" v-model="form.expires_on" @input="touchedExpiry = true" />
                 </AppField>
             </template>
             <p v-else class="rounded-lg bg-subtle px-3 py-2 text-[13px] text-fg-2 sm:col-span-2">{{ t('compliance.add.no_dates') }}</p>

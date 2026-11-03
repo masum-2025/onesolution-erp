@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Check, Inbox, X } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -127,10 +128,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('projects.requests.starts_on')" :hint="t('projects.requests.starts_on_hint')" :error="fieldError('starts_on')">
-                    <input :id="id" v-model="form.starts_on" type="date" :min="options?.today" class="field-input" />
+                    <DateInput :id="id" v-model="form.starts_on" :min="options?.today" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('projects.fields.due_on')" :error="fieldError('due_on')" optional>
-                    <input :id="id" v-model="form.due_on" type="date" :min="form.starts_on || undefined" class="field-input" />
+                    <DateInput :id="id" v-model="form.due_on" :min="form.starts_on || undefined" />
                 </AppField>
             </form>
             <template #footer>

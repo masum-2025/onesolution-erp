@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Banknote, FilePlus, PenLine, Printer } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -60,13 +60,11 @@ const kinds = computed(() => (side.value === 'sales' ? ['invoice', 'credit_note'
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="party?.name ?? ''" :description="party ? [party.code, party.phone, party.email].filter(Boolean).join(' · ') : ''">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: party?.is_customer ? 'accounting-customers' : 'accounting-vendors' }" :icon="ArrowLeft" class="print:hidden">{{ t('accounting.common.back') }}</AppButton>
-                <AppButton v-if="party && (can('accounting.sell') || can('accounting.buy'))" :icon="PenLine" class="print:hidden" @click="editing = true">{{ t('accounting.parties.edit') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="party?.name ?? ''" :description="party ? [party.code, party.phone, party.email].filter(Boolean).join(' · ') : ''" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: party?.is_customer ? 'accounting-customers' : 'accounting-vendors' }" :icon="ArrowLeft" class="print:hidden">{{ t('accounting.common.back') }}</AppButton>
+            <AppButton v-if="party && (can('accounting.sell') || can('accounting.buy'))" :icon="PenLine" class="print:hidden" @click="editing = true">{{ t('accounting.parties.edit') }}</AppButton>
+        </template>
 
         <section v-if="entry.loading.value && !party" class="card"><SkeletonRows :rows="5" /></section>
         <section v-else-if="entry.error.value" class="card"><ErrorState compact :error="entry.error.value" @retry="entry.reload()" /></section>
@@ -126,8 +124,8 @@ const kinds = computed(() => (side.value === 'sales' ? ['invoice', 'credit_note'
 
             <section v-else class="card overflow-x-auto">
                 <form class="flex flex-wrap items-end gap-3 border-b border-line px-5 py-4 print:hidden" @submit.prevent="statement.reload()">
-                    <AppField v-slot="{ id }" :label="t('accounting.reports.from')"><input :id="id" v-model="range.from" type="date" class="field-input" /></AppField>
-                    <AppField v-slot="{ id }" :label="t('accounting.reports.to')"><input :id="id" v-model="range.to" type="date" class="field-input" :min="range.from" /></AppField>
+                    <AppField v-slot="{ id }" :label="t('accounting.reports.from')"><DateInput :id="id" v-model="range.from" /></AppField>
+                    <AppField v-slot="{ id }" :label="t('accounting.reports.to')"><DateInput :id="id" v-model="range.to" :min="range.from" /></AppField>
                     <AppButton variant="primary" type="submit" :loading="statement.loading.value">{{ t('accounting.reports.show') }}</AppButton>
                     <AppButton :icon="Printer" :disabled="!statement.data.value" @click="printPage">{{ t('accounting.parties.print') }}</AppButton>
                 </form>
@@ -171,5 +169,5 @@ const kinds = computed(() => (side.value === 'sales' ? ['invoice', 'credit_note'
         </div>
 
         <PartyDialog :open="editing" :party="party" :role="party?.is_customer ? 'customers' : 'vendors'" @close="editing = false" @saved="entry.reload()" />
-    </div>
+    </PageFrame>
 </template>

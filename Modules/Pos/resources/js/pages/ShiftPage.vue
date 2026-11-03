@@ -2,20 +2,18 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Banknote, CheckCheck, Lock } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { MoneyInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDateTime, formatMoney, formatNumber } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { posApi } from '../api';
-import { amountToMinor, shiftTone } from '../lib';
+import { shiftTone } from '../lib';
 
 /**
  * One shift and its Z report: takings by method, sales and returns, VAT,
@@ -33,9 +31,9 @@ const registers = useResource(() => pos.registers());
 const registerName = computed(() => (registers.data.value?.data ?? []).find((row) => row.id === shift.value?.register_id)?.name ?? '');
 
 const closing = ref(false);
-const counted = ref('');
+const counted = ref(null);
 const note = ref('');
-const countedMinor = computed(() => amountToMinor(counted.value, shift.value?.currency));
+const countedMinor = computed(() => counted.value);
 const difference = computed(() => (countedMinor.value === null ? null : countedMinor.value - (report.value?.expected_cash_minor ?? 0)));
 const busy = ref(false);
 async function close() {
@@ -70,19 +68,16 @@ async function review() {
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <AppButton variant="ghost" size="sm" :to="{ name: 'pos-shifts' }" :icon="ArrowLeft" class="mb-3">{{ t('pos.shifts.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !shift" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="shift">
-            <PageHeader :title="registerName" :description="t('pos.shift.text', { from: formatDateTime(shift.opened_at), to: shift.closed_at ? formatDateTime(shift.closed_at) : t('pos.shift.now') })">
-                <template #eyebrow><span class="mb-2 flex"><AppBadge :tone="shiftTone(shift.status)" dot>{{ t(`pos.shift_status.${shift.status}`) }}</AppBadge></span></template>
-                <template #actions>
-                    <AppButton v-if="shift.can.close" variant="primary" :icon="Lock" @click="counted = ''; note = ''; closing = true">{{ t('pos.shift.close') }}</AppButton>
-                    <AppButton v-if="shift.can.review" variant="primary" :icon="CheckCheck" @click="reviewNote = ''; reviewing = true">{{ t('pos.shift.review') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="shift ? registerName : ''" :description="shift ? t('pos.shift.text', { from: formatDateTime(shift.opened_at), to: shift.closed_at ? formatDateTime(shift.closed_at) : t('pos.shift.now') }) : ''" :resource="record" :skeleton-rows="6" width="md">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'pos-shifts' }" :icon="ArrowLeft" class="mb-3">{{ t('pos.shifts.title') }}</AppButton>
+        </template>
+        <template #eyebrow><span class="mb-2 flex"><AppBadge :tone="shiftTone(shift.status)" dot>{{ t(`pos.shift_status.${shift.status}`) }}</AppBadge></span></template>
+        <template #actions>
+            <AppButton v-if="shift.can.close" variant="primary" :icon="Lock" @click="counted = null; note = ''; closing = true">{{ t('pos.shift.close') }}</AppButton>
+            <AppButton v-if="shift.can.review" variant="primary" :icon="CheckCheck" @click="reviewNote = ''; reviewing = true">{{ t('pos.shift.review') }}</AppButton>
+        </template>
+        <template v-if="shift">
 
             <section class="card mb-5 grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
                 <div><p class="text-[12.5px] text-muted">{{ t('pos.shift.sales') }}</p><p class="tabular text-[18px] font-semibold">{{ money(report.sales_minor) }}</p><p class="text-[12px] text-muted">{{ t('pos.shift.count', { count: formatNumber(report.sales) }) }}</p></div>
@@ -117,7 +112,7 @@ async function review() {
         <AppDialog :open="closing" :title="t('pos.shift.close')" :description="t('pos.shift.close_text')" :icon="Lock" @close="closing = false">
             <form id="pos-close" class="grid gap-4" novalidate @submit.prevent="close">
                 <AppField v-slot="{ id }" :label="t('pos.shift.counted')">
-                    <input :id="id" v-model="counted" autofocus inputmode="decimal" class="field-input h-12 tabular text-end text-[18px]" dir="ltr" placeholder="0.00" />
+                    <MoneyInput :id="id" v-model="counted" :currency="shift?.currency" autofocus class="h-12 text-end text-[18px]" placeholder="0.00" />
                 </AppField>
                 <div class="grid grid-cols-2 gap-3 text-center">
                     <div class="rounded-xl bg-subtle px-3 py-2.5"><p class="text-[12px] text-muted">{{ t('pos.shift.expected') }}</p><p class="tabular text-[16px] font-semibold">{{ money(report?.expected_cash_minor ?? 0) }}</p></div>
@@ -146,5 +141,5 @@ async function review() {
                 <AppButton variant="primary" type="submit" form="pos-review" :loading="busy" :disabled="reviewNote.trim().length < 5">{{ t('pos.shift.review') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

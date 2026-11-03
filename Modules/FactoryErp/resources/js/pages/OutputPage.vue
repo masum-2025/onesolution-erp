@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Ban, CloudOff, Gauge, Plus, Save } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -197,11 +197,26 @@ async function voidEntry() {
         saving.value = false;
     }
 }
+
+// Export and print: the day's output entries (voided ones marked).
+const exported = computed(() => (day.entries.length ? {
+    module: 'factory_erp',
+    page: 'factory_erp.output',
+    columns: [
+        { key: 'hour', label: t('factory_erp.export.hour'), value: (entry) => (entry.hour === null ? '' : hourText(entry.hour)) },
+        { key: 'line', label: t('factory_erp.export.line'), value: (entry) => lineCode(entry.line_id) },
+        { key: 'order', label: t('factory_erp.export.number'), value: (entry) => orderNumber(entry.order_id) },
+        { key: 'good', label: t('factory_erp.output.good'), type: 'number' },
+        { key: 'rejects', label: t('factory_erp.output.rejects'), type: 'number' },
+        { key: 'sizes', label: t('factory_erp.export.sizes'), value: (entry) => entry.lines.map((line) => `${line.size}/${line.color} ${line.good}`).join(', ') },
+        { key: 'voided', label: t('factory_erp.cutting.void_badge'), value: (entry) => (entry.voided_at ? entry.void_reason ?? '' : '') },
+    ],
+    rows: day.entries,
+} : null));
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('factory_erp.output.title')" :description="t('factory_erp.output.text')" />
+    <PageFrame :title="t('factory_erp.output.title')" :description="t('factory_erp.output.text')" width="md" :export="exported">
         <p v-if="day.offline" class="mb-4 flex items-center gap-2 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn"><CloudOff class="size-4 shrink-0" aria-hidden="true" />{{ t('factory_erp.output.offline_note') }}</p>
 
         <SkeletonRows v-if="day.loading && !day.lines.length" :rows="6" />
@@ -321,5 +336,5 @@ async function voidEntry() {
                 <AppButton variant="danger" :loading="saving" :disabled="reason.trim().length < 3" @click="voidEntry">{{ t('factory_erp.cutting.void') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

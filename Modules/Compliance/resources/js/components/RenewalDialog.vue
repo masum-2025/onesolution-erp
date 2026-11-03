@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Copy, Mail, Send } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -70,7 +71,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
         <form v-if="!mail" id="compliance-renewal" class="space-y-4" novalidate @submit.prevent="send">
             <p class="rounded-lg bg-subtle px-3 py-2 text-[13px]">{{ t(`compliance.renewal.${reach}`, { provider: line?.provider?.name ?? '' }) }}</p>
             <AppField v-slot="{ id }" :label="t('compliance.renewal.wanted_by')" :hint="t('compliance.renewal.wanted_by_hint')" :error="fieldError('wanted_by')" optional>
-                <input :id="id" v-model="form.wanted_by" type="date" :min="today" class="field-input" />
+                <DateInput :id="id" v-model="form.wanted_by" :min="today" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('compliance.renewal.note')" :error="fieldError('note')" optional>
                 <textarea :id="id" v-model="form.note" rows="3" class="field-input" maxlength="1000"></textarea>

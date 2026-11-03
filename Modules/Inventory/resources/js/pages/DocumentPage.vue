@@ -2,12 +2,11 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Check, FileText, PackageCheck, Plus, ScanBarcode, Send, Trash2, Truck, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { api } from '@/lib/http';
@@ -229,29 +228,25 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'inventory-documents' }" :icon="ArrowLeft" class="mb-3">{{ t('inventory.documents.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !document && !isNew" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else>
-            <PageHeader :title="isNew ? t(`inventory.document.new.${type}`) : `${t(`inventory.types.${type}`)} ${document?.number ?? ''}`" :description="t(`inventory.document.help.${type}`)">
-                <template v-if="document" #eyebrow>
-                    <span class="mb-2 flex"><AppBadge :tone="statusTone(document.status)" dot>{{ t(`inventory.status.${document.status}`) }}</AppBadge></span>
-                </template>
-                <template v-if="document" #actions>
-                    <div class="flex flex-wrap gap-2">
-                        <AppButton v-if="document.can.post" variant="primary" :icon="Check" :loading="busy === 'post'" @click="step('post')">{{ t('inventory.document.steps.post') }}</AppButton>
-                        <AppButton v-if="document.can.dispatch" variant="primary" :icon="Truck" :loading="busy === 'dispatch'" @click="step('dispatch')">{{ t('inventory.document.steps.dispatch') }}</AppButton>
-                        <AppButton v-if="document.can.receive" variant="primary" :icon="PackageCheck" :loading="busy === 'receive'" @click="step('receive')">{{ t('inventory.document.steps.receive') }}</AppButton>
-                        <AppButton v-if="document.can.approve" variant="primary" :icon="Check" :loading="busy === 'approve'" @click="step('approve')">{{ t('inventory.document.steps.approve') }}</AppButton>
-                        <AppButton v-if="document.can.reject" variant="ghost" :icon="X" @click="step('reject')">{{ t('inventory.document.steps.reject') }}</AppButton>
-                        <AppButton v-if="document.can.cancel" variant="ghost" :icon="X" @click="step('cancel')">{{ t('inventory.document.steps.cancel') }}</AppButton>
-                        <AppButton v-if="document.can.bill" variant="secondary" :icon="FileText" @click="startBill">{{ t('inventory.document.steps.bill') }}</AppButton>
-                        <AppButton v-if="document.can.edit" variant="ghost" :icon="Trash2" :aria-label="t('inventory.common.delete')" @click="remove" />
-                    </div>
-                </template>
-            </PageHeader>
+    <PageFrame :title="isNew || document ? isNew ? t(`inventory.document.new.${type}`) : `${t(`inventory.types.${type}`)} ${document?.number ?? ''}` : ''" :description="t(`inventory.document.help.${type}`)" :resource="record" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'inventory-documents' }" :icon="ArrowLeft" class="mb-3">{{ t('inventory.documents.title') }}</AppButton>
+        </template>
+        <template v-if="document" #eyebrow>
+            <span class="mb-2 flex"><AppBadge :tone="statusTone(document.status)" dot>{{ t(`inventory.status.${document.status}`) }}</AppBadge></span>
+        </template>
+        <template v-if="document" #actions>
+            <div class="flex flex-wrap gap-2">
+                <AppButton v-if="document.can.post" variant="primary" :icon="Check" :loading="busy === 'post'" @click="step('post')">{{ t('inventory.document.steps.post') }}</AppButton>
+                <AppButton v-if="document.can.dispatch" variant="primary" :icon="Truck" :loading="busy === 'dispatch'" @click="step('dispatch')">{{ t('inventory.document.steps.dispatch') }}</AppButton>
+                <AppButton v-if="document.can.receive" variant="primary" :icon="PackageCheck" :loading="busy === 'receive'" @click="step('receive')">{{ t('inventory.document.steps.receive') }}</AppButton>
+                <AppButton v-if="document.can.approve" variant="primary" :icon="Check" :loading="busy === 'approve'" @click="step('approve')">{{ t('inventory.document.steps.approve') }}</AppButton>
+                <AppButton v-if="document.can.reject" variant="ghost" :icon="X" @click="step('reject')">{{ t('inventory.document.steps.reject') }}</AppButton>
+                <AppButton v-if="document.can.cancel" variant="ghost" :icon="X" @click="step('cancel')">{{ t('inventory.document.steps.cancel') }}</AppButton>
+                <AppButton v-if="document.can.bill" variant="secondary" :icon="FileText" @click="startBill">{{ t('inventory.document.steps.bill') }}</AppButton>
+                <AppButton v-if="document.can.edit" variant="ghost" :icon="Trash2" :aria-label="t('inventory.common.delete')" @click="remove" />
+            </div>
+        </template>
 
             <p v-if="document?.reject_reason && document.status === 'draft'" class="mb-4 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn" role="status">{{ t('inventory.document.sent_back', { reason: document.reject_reason }) }}</p>
             <p v-if="document?.bill_id" class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-subtle px-4 py-3 text-[13px]" role="status">
@@ -275,7 +270,7 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
                         </select>
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('inventory.document.date')" :error="errors.document_date?.[0]">
-                        <input :id="id" v-model="form.document_date" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="form.document_date" />
                     </AppField>
                     <template v-if="['receipt', 'issue'].includes(type)">
                         <AppField v-slot="{ id }" :label="t(`inventory.document.counterparty_${type}`)" :error="errors.counterparty?.[0]" optional>
@@ -308,7 +303,7 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
                                 </select>
                                 <div v-if="itemOf(line.item_id)?.track_batches" class="mt-2 grid grid-cols-2 gap-2">
                                     <input v-model="line.batch_number" class="field-input font-mono" dir="ltr" maxlength="60" :placeholder="t('inventory.document.batch')" :aria-label="t('inventory.document.batch')" />
-                                    <input v-if="type !== 'issue' && type !== 'transfer'" v-model="line.expires_on" type="date" class="field-input" :aria-label="t('inventory.document.expires')" />
+                                    <DateInput v-if="type !== 'issue' && type !== 'transfer'" v-model="line.expires_on" :aria-label="t('inventory.document.expires')" />
                                 </div>
                                 <p v-if="errors[`lines.${index}`] || errors[`lines.${index}.quantity_milli`] || errors[`lines.${index}.item_id`] || errors[`lines.${index}.batch_number`]" class="mt-1 text-[12px] text-bad">
                                     {{ (errors[`lines.${index}`] ?? errors[`lines.${index}.quantity_milli`] ?? errors[`lines.${index}.item_id`] ?? errors[`lines.${index}.batch_number`])[0] }}
@@ -362,7 +357,6 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
                     </ul>
                 </section>
             </template>
-        </template>
         <AppDialog :open="billing" :title="t('inventory.document.bill.title')" :description="t('inventory.document.bill.text')" :icon="FileText" @close="billing = false">
             <SkeletonRows v-if="vendors === null" :rows="2" />
             <p v-else-if="!vendors.length" class="rounded-xl bg-subtle px-4 py-3 text-[13px] text-muted">{{ t('inventory.document.bill.none') }}</p>
@@ -374,7 +368,7 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('inventory.document.bill.date')">
-                    <input :id="id" v-model="bill.issue_date" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="bill.issue_date" />
                 </AppField>
             </form>
             <template #footer>
@@ -382,5 +376,5 @@ const showCost = computed(() => ['receipt', 'adjustment'].includes(type.value));
                 <AppButton variant="primary" type="submit" form="inventory-bill" :icon="FileText" :loading="busy === 'bill'" :disabled="!bill.party_id">{{ t('inventory.document.steps.bill') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

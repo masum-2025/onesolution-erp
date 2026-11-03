@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { DateInput } from '@/ui';
 import AppField from '@/components/AppField.vue';
 import { t } from '@/lib/i18n';
 import BuyerPicker from './BuyerPicker.vue';
@@ -35,7 +36,7 @@ const toggle = (key) => {
             <input :id="id" v-model="form.number" class="field-input font-mono" dir="ltr" maxlength="60" :disabled="disabled" placeholder="LC-0042/26" />
         </AppField>
         <AppField v-slot="{ id }" :label="t('factory_erp.lcs.issued_on')">
-            <input :id="id" v-model="form.issued_on" type="date" class="field-input" :disabled="disabled" />
+            <DateInput :id="id" v-model="form.issued_on" :disabled="disabled" />
         </AppField>
         <AppField v-slot="{ id }" :label="t('factory_erp.lcs.payment_days')" :hint="t('factory_erp.lcs.payment_days_hint')">
             <input :id="id" v-model="form.payment_days" inputmode="numeric" class="field-input tabular" :disabled="disabled" />
@@ -56,10 +57,10 @@ const toggle = (key) => {
             <input :id="id" v-model="form.tolerance" inputmode="decimal" class="field-input tabular" dir="ltr" :disabled="disabled" placeholder="5" />
         </AppField>
         <AppField v-slot="{ id }" :label="t('factory_erp.lcs.latest_ship_on')" :error="errors.latest_ship_on?.[0] ?? null">
-            <input :id="id" v-model="form.latest_ship_on" type="date" class="field-input" :disabled="disabled" />
+            <DateInput :id="id" v-model="form.latest_ship_on" :disabled="disabled" />
         </AppField>
         <AppField v-slot="{ id }" :label="t('factory_erp.lcs.expires_on')">
-            <input :id="id" v-model="form.expires_on" type="date" class="field-input" :disabled="disabled" />
+            <DateInput :id="id" v-model="form.expires_on" :disabled="disabled" />
         </AppField>
         <div class="flex flex-col justify-end gap-2 text-[13px]">
             <label class="flex items-center gap-2"><input v-model="form.partial_allowed" type="checkbox" class="size-4 accent-brand" :disabled="disabled" />{{ t('factory_erp.lcs.partial_allowed') }}</label>

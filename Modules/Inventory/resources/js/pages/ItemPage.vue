@@ -2,11 +2,9 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, History, PenLine, Tags, Warehouse } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatMoney } from '@/lib/format';
 import { can, currentOrganization } from '@/lib/session';
@@ -32,25 +30,22 @@ const editing = ref(false);
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'inventory-items' }" :icon="ArrowLeft" class="mb-3">{{ t('inventory.items.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !item" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="item">
-            <PageHeader :title="item.name" :description="item.description ?? ''">
-                <template #eyebrow>
-                    <span class="mb-2 flex flex-wrap items-center gap-2">
-                        <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ item.sku }}<template v-if="item.barcode"> · {{ item.barcode }}</template></span>
-                        <AppBadge v-if="item.kind === 'non_stock'" tone="neutral">{{ t('inventory.kinds.non_stock') }}</AppBadge>
-                        <AppBadge v-if="!item.is_active" tone="neutral">{{ t('inventory.common.off') }}</AppBadge>
-                    </span>
-                </template>
-                <template #actions>
-                    <AppButton v-if="item.sale_price_minor !== null" variant="ghost" :icon="Tags" :to="{ name: 'inventory-labels', query: { items: item.id } }">{{ t('inventory.labels.title') }}</AppButton>
-                    <AppButton v-if="can('inventory.manage')" variant="secondary" :icon="PenLine" @click="editing = true">{{ t('inventory.common.edit') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="item ? item.name : ''" :description="item ? item.description ?? '' : ''" :resource="record" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'inventory-items' }" :icon="ArrowLeft" class="mb-3">{{ t('inventory.items.title') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex flex-wrap items-center gap-2">
+                <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ item.sku }}<template v-if="item.barcode"> · {{ item.barcode }}</template></span>
+                <AppBadge v-if="item.kind === 'non_stock'" tone="neutral">{{ t('inventory.kinds.non_stock') }}</AppBadge>
+                <AppBadge v-if="!item.is_active" tone="neutral">{{ t('inventory.common.off') }}</AppBadge>
+            </span>
+        </template>
+        <template #actions>
+            <AppButton v-if="item.sale_price_minor !== null" variant="ghost" :icon="Tags" :to="{ name: 'inventory-labels', query: { items: item.id } }">{{ t('inventory.labels.title') }}</AppButton>
+            <AppButton v-if="can('inventory.manage')" variant="secondary" :icon="PenLine" @click="editing = true">{{ t('inventory.common.edit') }}</AppButton>
+        </template>
+        <template v-if="item">
 
             <section class="card mb-5 grid grid-cols-2 gap-4 p-5 sm:grid-cols-4">
                 <div><p class="text-[12.5px] text-muted">{{ t('inventory.item.on_hand') }}</p><p class="tabular text-[18px] font-semibold">{{ formatQuantity(total) }} {{ unitName }}</p></div>
@@ -100,5 +95,5 @@ const editing = ref(false);
         </template>
 
         <ItemDialog v-if="editing && item" :item="item" :currency="currency" @close="editing = false" @saved="editing = false; record.reload()" />
-    </div>
+    </PageFrame>
 </template>

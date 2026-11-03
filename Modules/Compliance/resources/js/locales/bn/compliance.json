@@ -305,6 +305,9 @@
         "their_reason": "তাঁদের উত্তর: {reason}"
     },
     "export": {
-        "days_left": "বাকি দিন"
+        "days_left": "বাকি দিন",
+        "asked_on": "অনুরোধের তারিখ",
+        "planned_on": "পরিকল্পিত তারিখ",
+        "delivery": "পৌঁছানো"
     }
 }

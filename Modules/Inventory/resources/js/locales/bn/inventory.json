@@ -354,5 +354,26 @@
         "fewer": "{item}-এর একটি লেবেল কম",
         "more": "{item}-এর একটি লেবেল বেশি",
         "preview": "যেভাবে প্রিন্ট হবে:"
+    },
+    "export": {
+        "sku": "SKU",
+        "item": "পণ্য",
+        "barcode": "বারকোড",
+        "unit": "একক",
+        "category": "শ্রেণি",
+        "sale_price": "বিক্রয়মূল্য",
+        "status": "অবস্থা",
+        "on": "চালু",
+        "quantity": "পরিমাণ",
+        "unit_cost": "একক খরচ",
+        "number": "নম্বর",
+        "type": "ধরন",
+        "date": "তারিখ",
+        "to_warehouse": "যে গুদামে",
+        "counterparty": "সরবরাহকারী বা গ্রাহক",
+        "value": "মূল্য",
+        "variance": "কম বা বেশি",
+        "batch": "ব্যাচ",
+        "expires_on": "মেয়াদ শেষ"
     }
 }

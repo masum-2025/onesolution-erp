@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Handshake, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -75,19 +75,32 @@ function drop(stage) {
 }
 const adding = ref(false);
 const editing = ref(null);
+
+// Export and print: the deals of the pipeline shown, stage by stage.
+const exported = computed(() => (pipeline.value ? {
+    module: 'crm',
+    page: 'crm.deals',
+    columns: [
+        { key: 'title', label: t('crm.export.deal') },
+        { key: 'contact', label: t('crm.export.contact'), value: (deal) => deal.contact_company || deal.contact_name || '' },
+        { key: 'stage', label: t('crm.export.stage'), value: (deal) => stages.value.find((stage) => stage.id === deal.stage_id)?.name ?? '' },
+        { key: 'value_minor', label: t('crm.export.value'), type: 'money', currency: setup.currency.value },
+        { key: 'expected_on', label: t('crm.export.expected_on'), type: 'date' },
+        { key: 'lost_reason', label: t('crm.export.lost_reason') },
+    ],
+    rows: columns.value.flatMap((column) => column.cards),
+} : null));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('crm.deals.title')" :description="t('crm.deals.text', { amount: money(openTotal) })">
-            <template #actions>
-                <select v-if="pipelines.length > 1" v-model="pipelineId" class="field-input w-auto" :aria-label="t('crm.deals.pipeline')">
-                    <option v-for="row in pipelines" :key="row.id" :value="row.id">{{ row.name }}</option>
-                </select>
-                <AppSwitch v-model="mine" :label="t('crm.deals.mine')" show-label />
-                <AppButton v-if="can('crm.edit')" variant="primary" :icon="Plus" @click="adding = true">{{ t('crm.deals.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('crm.deals.title')" :description="t('crm.deals.text', { amount: money(openTotal) })" width="full" :export="exported">
+        <template #actions>
+            <select v-if="pipelines.length > 1" v-model="pipelineId" class="field-input w-auto" :aria-label="t('crm.deals.pipeline')">
+                <option v-for="row in pipelines" :key="row.id" :value="row.id">{{ row.name }}</option>
+            </select>
+            <AppSwitch v-model="mine" :label="t('crm.deals.mine')" show-label />
+            <AppButton v-if="can('crm.edit')" variant="primary" :icon="Plus" @click="adding = true">{{ t('crm.deals.add') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="(board.loading.value && !board.data.value) || setup.loading.value" :rows="6" />
         <ErrorState v-else-if="board.error.value || setup.error.value" :error="board.error.value ?? setup.error.value" @retry="board.reload()" />
@@ -132,5 +145,5 @@ const editing = ref(null);
 
         <DealDialog v-if="adding" :pipeline-id="pipeline?.id" @close="adding = false" @saved="adding = false; board.reload()" />
         <DealDialog v-if="editing" :deal="editing" @close="editing = null" @saved="editing = null; board.reload()" />
-    </div>
+    </PageFrame>
 </template>

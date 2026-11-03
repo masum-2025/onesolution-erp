@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Download, FileUp, Plus, Search, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -92,19 +92,17 @@ const exportHref = computed(() => crm.exportUrl({ q: filters.value.q, tag: filte
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('crm.contacts.title')" :description="t('crm.contacts.text')">
-            <template #actions>
-                <a v-if="can('crm.export')" :href="exportHref" download class="inline-flex h-9 items-center gap-2 rounded-[9px] px-3.5 text-[13.5px] font-medium text-fg-2 hover:bg-subtle hover:text-fg">
-                    <Download class="size-4" aria-hidden="true" />{{ t('crm.contacts.export') }}
-                </a>
-                <label v-if="can('crm.edit')" class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[9px] border border-line-strong bg-surface px-3.5 text-[13.5px] font-medium shadow-xs hover:bg-subtle focus-within:ring-2 focus-within:ring-brand">
-                    <FileUp class="size-4" aria-hidden="true" />{{ t('crm.contacts.import') }}
-                    <input type="file" accept=".csv,text/csv" class="sr-only" @change="pickFile" />
-                </label>
-                <AppButton v-if="can('crm.edit')" variant="primary" :icon="Plus" @click="adding = true">{{ t('crm.contacts.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('crm.contacts.title')" :description="t('crm.contacts.text')" width="full">
+        <template #actions>
+            <a v-if="can('crm.export')" :href="exportHref" download class="inline-flex h-9 items-center gap-2 rounded-[9px] px-3.5 text-[13.5px] font-medium text-fg-2 hover:bg-subtle hover:text-fg">
+                <Download class="size-4" aria-hidden="true" />{{ t('crm.contacts.export') }}
+            </a>
+            <label v-if="can('crm.edit')" class="inline-flex h-9 cursor-pointer items-center gap-2 rounded-[9px] border border-line-strong bg-surface px-3.5 text-[13.5px] font-medium shadow-xs hover:bg-subtle focus-within:ring-2 focus-within:ring-brand">
+                <FileUp class="size-4" aria-hidden="true" />{{ t('crm.contacts.import') }}
+                <input type="file" accept=".csv,text/csv" class="sr-only" @change="pickFile" />
+            </label>
+            <AppButton v-if="can('crm.edit')" variant="primary" :icon="Plus" @click="adding = true">{{ t('crm.contacts.add') }}</AppButton>
+        </template>
 
         <section class="card mb-5 grid gap-3 p-4 sm:grid-cols-[minmax(0,2fr)_1fr_1fr_auto] sm:items-center">
             <label class="relative block">
@@ -172,5 +170,5 @@ const exportHref = computed(() => crm.exportUrl({ q: filters.value.q, tag: filte
                 <AppButton variant="primary" :loading="importBusy" :disabled="!importCheck?.ok" @click="runImport(true)">{{ t('crm.import.make', { count: formatNumber(importCheck?.ok ?? 0) }) }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

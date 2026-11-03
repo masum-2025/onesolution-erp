@@ -2,15 +2,12 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, CheckCheck, Factory, Save, SearchX, Ship, XCircle } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import AppTabs from '@/components/AppTabs.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { confirmAction } from '@/lib/dialogs';
@@ -107,23 +104,20 @@ const fields = computed(() => setup.fields('order').filter((field) => order.valu
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'fac-orders' }" :icon="ArrowLeft" class="mb-3">{{ t('factory_erp.orders.back') }}</AppButton>
-        <SkeletonRows v-if="view.loading.value && !order" :rows="8" />
-        <section v-else-if="view.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('factory_erp.orders.not_found')" /></section>
-        <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
-        <template v-else-if="order">
-            <PageHeader :title="order.number" :description="`${style?.code ?? ''} · ${style?.name ?? ''}`">
-                <template #eyebrow>
-                    <AppBadge class="mb-2" :tone="orderTone(order.status)" dot>{{ t(`factory_erp.statuses.${order.status}`) }}</AppBadge>
-                </template>
-                <template v-if="setup.can('merchandise')" #actions>
-                    <AppButton v-if="order.status === 'draft'" variant="primary" :icon="CheckCheck" :disabled="dirty" @click="step('confirm')">{{ t('factory_erp.steps.confirm') }}</AppButton>
-                    <AppButton v-if="order.status === 'confirmed'" variant="primary" :icon="Factory" :disabled="dirty" @click="step('start')">{{ t('factory_erp.steps.start') }}</AppButton>
-                    <AppButton v-if="order.status === 'in_production'" variant="primary" :icon="Ship" @click="step('ship')">{{ t('factory_erp.steps.ship') }}</AppButton>
-                    <AppButton v-if="['draft', 'confirmed'].includes(order.status)" variant="danger-soft" :icon="XCircle" @click="cancelling = true; reason = ''">{{ t('factory_erp.steps.cancel') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="order ? order.number : ''" :description="order ? `${style?.code ?? ''} · ${style?.name ?? ''}` : ''" :resource="view" :not-found="{ icon: SearchX, title: t('factory_erp.orders.not_found') }" :skeleton-rows="8" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'fac-orders' }" :icon="ArrowLeft" class="mb-3">{{ t('factory_erp.orders.back') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <AppBadge class="mb-2" :tone="orderTone(order.status)" dot>{{ t(`factory_erp.statuses.${order.status}`) }}</AppBadge>
+        </template>
+        <template v-if="setup.can('merchandise')" #actions>
+            <AppButton v-if="order.status === 'draft'" variant="primary" :icon="CheckCheck" :disabled="dirty" @click="step('confirm')">{{ t('factory_erp.steps.confirm') }}</AppButton>
+            <AppButton v-if="order.status === 'confirmed'" variant="primary" :icon="Factory" :disabled="dirty" @click="step('start')">{{ t('factory_erp.steps.start') }}</AppButton>
+            <AppButton v-if="order.status === 'in_production'" variant="primary" :icon="Ship" @click="step('ship')">{{ t('factory_erp.steps.ship') }}</AppButton>
+            <AppButton v-if="['draft', 'confirmed'].includes(order.status)" variant="danger-soft" :icon="XCircle" @click="cancelling = true; reason = ''">{{ t('factory_erp.steps.cancel') }}</AppButton>
+        </template>
+        <template v-if="order">
 
             <p v-if="order.status === 'cancelled'" class="mb-4 rounded-xl bg-bad-soft px-4 py-3 text-[13px] text-bad">{{ t('factory_erp.orders.cancelled_because', { reason: order.cancelled_reason }) }}</p>
 
@@ -167,5 +161,5 @@ const fields = computed(() => setup.fields('order').filter((field) => order.valu
                 </template>
             </AppDialog>
         </template>
-    </div>
+    </PageFrame>
 </template>

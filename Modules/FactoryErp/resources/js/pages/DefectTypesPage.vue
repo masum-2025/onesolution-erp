@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Pencil, Plus, ShieldAlert } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -65,12 +65,10 @@ async function save() {
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('factory_erp.defects.title')" :description="t('factory_erp.defects.text')">
-            <template v-if="canManage" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="open(null)">{{ t('factory_erp.defects.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('factory_erp.defects.title')" :description="t('factory_erp.defects.text')" width="md">
+        <template v-if="canManage" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="open(null)">{{ t('factory_erp.defects.new') }}</AppButton>
+        </template>
         <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
         <ErrorState v-else-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
         <section v-else-if="!types.length" class="card"><EmptyState :icon="ShieldAlert" :title="t('factory_erp.defects.empty_title')" /></section>
@@ -99,5 +97,5 @@ async function save() {
                 <AppButton variant="primary" :loading="busy" :disabled="!ready" @click="save">{{ t('factory_erp.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

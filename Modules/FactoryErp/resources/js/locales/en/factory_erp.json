@@ -612,5 +612,35 @@
             "certificate_body": "We hereby certify that the goods under commercial invoice no. {invoice} have been shipped as per L/C no. {lc} dated {date}, and that one full set of non-negotiable documents has been sent to {buyer}.",
             "checklist_intro": "Documents presented under L/C no. {lc} to {bank}:"
         }
+    },
+    "export": {
+        "number": "Order",
+        "po": "Buyer PO",
+        "buyer": "Buyer",
+        "style": "Style",
+        "pieces": "Pieces",
+        "value": "Amount",
+        "ship_on": "Ship on",
+        "status": "Status",
+        "code": "Code",
+        "name": "Name",
+        "product_type": "Product",
+        "sizes": "Sizes",
+        "colors": "Colours",
+        "on": "In use",
+        "bank": "Issuing bank",
+        "shipped": "Shipped",
+        "expires_on": "Expires on",
+        "employee": "Worker",
+        "operation": "Operation",
+        "rate": "Rate",
+        "rate_per": "Pieces per rate",
+        "hour": "Hour",
+        "line": "Line",
+        "check": "Check",
+        "checked": "Checked",
+        "dhu": "DHU (%)",
+        "result": "Result",
+        "by_type": "Defects by kind"
     }
 }

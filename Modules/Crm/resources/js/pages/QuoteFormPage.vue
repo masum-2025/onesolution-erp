@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, ChevronDown, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -32,6 +32,8 @@ const editingId = computed(() => (route.name === 'crm-quote-edit' ? route.params
 const loading = ref(false);
 const loadError = ref(null);
 const existing = ref(null);
+// The form is up (not loading, nothing failed): its title shows.
+const formShown = computed(() => !loading.value && !setup.loading.value && !loadError.value && !setup.error.value);
 const kind = computed(() => existing.value?.kind ?? route.params.kind ?? 'quotation');
 const currency = computed(() => setup.currency.value);
 const quoteFields = computed(() => setup.fields('quote'));
@@ -154,16 +156,16 @@ async function save() {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="existing ? { name: 'crm-quote', params: { id: existing.id } } : { name: 'crm-quotes' }" :icon="ArrowLeft" class="mb-3">{{ t('crm.quotes.title') }}</AppButton>
+    <PageFrame :title="formShown ? existing ? t('crm.quotes.edit', { number: existing.number }) : t(`crm.quotes.new_${kind}`) : ''" :description="t(`crm.quotes.help_${kind}`)" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="existing ? { name: 'crm-quote', params: { id: existing.id } } : { name: 'crm-quotes' }" :icon="ArrowLeft" class="mb-3">{{ t('crm.quotes.title') }}</AppButton>
+        </template>
+        <template #actions>
+            <AppButton variant="primary" type="submit" form="crm-quote" :loading="saving" :disabled="!form.contact_id || !form.lines.length">{{ t('crm.common.save') }}</AppButton>
+        </template>
         <SkeletonRows v-if="loading || setup.loading.value" :rows="8" />
         <ErrorState v-else-if="loadError || setup.error.value" :error="loadError ?? setup.error.value" @retry="load" />
         <form v-else id="crm-quote" novalidate @submit.prevent="save">
-            <PageHeader :title="existing ? t('crm.quotes.edit', { number: existing.number }) : t(`crm.quotes.new_${kind}`)" :description="t(`crm.quotes.help_${kind}`)">
-                <template #actions>
-                    <AppButton variant="primary" type="submit" :loading="saving" :disabled="!form.contact_id || !form.lines.length">{{ t('crm.common.save') }}</AppButton>
-                </template>
-            </PageHeader>
 
             <section class="card mb-5 grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
                 <AppField v-slot="{ id }" :label="t('crm.quotes.customer')" :error="errors.contact_id?.[0]" class="sm:col-span-2">
@@ -185,10 +187,10 @@ async function save() {
                     <input :id="id" v-model="form.subject" class="field-input" maxlength="150" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('crm.quotes.issue_date')" :hint="t('crm.quotes.today_hint')" :error="errors.issue_date?.[0]" optional>
-                    <input :id="id" v-model="form.issue_date" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.issue_date" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('crm.quotes.valid_until')" :hint="t('crm.quotes.valid_hint')" :error="errors.valid_until?.[0]" optional>
-                    <input :id="id" v-model="form.valid_until" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.valid_until" />
                 </AppField>
                 <div v-if="quoteFields.length" class="sm:col-span-2 lg:col-span-4">
                     <ExtraFields v-model="form.extra" :fields="quoteFields" :errors="errors" :currency="currency" />
@@ -251,5 +253,5 @@ async function save() {
                 </AppField>
             </section>
         </form>
-    </div>
+    </PageFrame>
 </template>

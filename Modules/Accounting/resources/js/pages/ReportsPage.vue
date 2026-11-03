@@ -1,8 +1,8 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, CircleAlert, CircleCheck, Landmark, Printer } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { ArrowLeft, CircleAlert, CircleCheck, Landmark } from 'lucide-vue-next';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import AppTabs from '@/components/AppTabs.vue';
@@ -86,10 +86,6 @@ async function show() {
     }
 }
 
-function printPage() {
-    window.print();
-}
-
 /** Column titles of the aging report from the company's limits (e.g. 30, 60, 90). */
 function bucketLabel(key) {
     if (key === 'current') return t('accounting.aging.current');
@@ -100,16 +96,78 @@ function bucketLabel(key) {
 }
 
 const sheetBalanced = computed(() => report.value && tab.value === 'balance-sheet' && report.value.assets.total_minor === report.value.total_liabilities_and_equity_minor);
+
+// Export and print: the report shown, as its table reads (totals as the last rows).
+function reportSheet(kind, data) {
+    const cur = data.currency;
+    const money = (key, label) => ({ key, label, type: 'money', currency: cur });
+    const account = [{ key: 'code', label: t('accounting.export.code') }, { key: 'name', label: t('accounting.reports.account_col') }];
+    const total = t('accounting.reports.total');
+    if (kind === 'trial-balance') {
+        return {
+            columns: [...account, money('debit_minor', t('accounting.reports.debit')), money('credit_minor', t('accounting.reports.credit'))],
+            rows: [...data.rows, { name: total, debit_minor: data.total_debit_minor, credit_minor: data.total_credit_minor }],
+        };
+    }
+    if (kind === 'profit-loss' || kind === 'balance-sheet') {
+        const parts = kind === 'profit-loss'
+            ? [['income', t('accounting.reports.income')], ['expense', t('accounting.reports.expenses')]]
+            : [['assets', t('accounting.reports.assets')], ['liabilities', t('accounting.reports.liabilities')], ['equity', t('accounting.reports.equity')]];
+        const rows = parts.flatMap(([key, label]) => [
+            ...data[key].rows.map((row) => ({ ...row, part: label })),
+            { part: label, name: total, amount_minor: data[key].total_minor },
+        ]);
+        if (kind === 'profit-loss') rows.push({ name: data.net_profit_minor < 0 ? t('accounting.reports.net_loss') : t('accounting.reports.net_profit'), amount_minor: data.net_profit_minor });
+        else rows.push({ part: t('accounting.reports.equity'), name: t('accounting.reports.earnings'), amount_minor: data.earnings_to_date_minor }, { name: t('accounting.reports.liabilities_equity'), amount_minor: data.total_liabilities_and_equity_minor });
+        return { columns: [{ key: 'part', label: t('accounting.export.part') }, ...account, money('amount_minor', t('accounting.export.total'))], rows };
+    }
+    if (kind === 'aging') {
+        return {
+            columns: [
+                { key: 'party_name', label: t('accounting.aging.party') },
+                ...data.buckets.map((bucket) => ({ key: bucket, label: bucketLabel(bucket), type: 'money', currency: cur, value: (row) => row.buckets[bucket] ?? null })),
+                money('credits_minor', t('accounting.aging.credits')),
+                money('net_minor', t('accounting.aging.net')),
+            ],
+            rows: [...data.rows.map((row) => ({ ...row, credits_minor: row.credits_minor ? -row.credits_minor : null })), { party_name: total, buckets: data.totals.buckets, credits_minor: -data.totals.credits_minor, net_minor: data.totals.net_minor }],
+        };
+    }
+    if (kind === 'vat') {
+        return {
+            columns: [
+                { key: 'name', label: t('accounting.tax.report.code'), value: (row) => row.name ?? t('accounting.tax.report.no_tax') },
+                money('sales_taxable_minor', `${t('accounting.tax.report.sales')}: ${t('accounting.tax.report.taxable')}`),
+                money('output_tax_minor', t('accounting.tax.report.output')),
+                money('purchases_taxable_minor', `${t('accounting.tax.report.purchases')}: ${t('accounting.tax.report.taxable')}`),
+                money('input_tax_minor', t('accounting.tax.report.input')),
+            ],
+            rows: [
+                ...data.rows,
+                { name: total, output_tax_minor: data.output_tax_minor, input_tax_minor: data.input_tax_minor },
+                { name: data.payable_minor < 0 ? t('accounting.tax.report.refundable') : t('accounting.tax.report.payable'), output_tax_minor: Math.abs(data.payable_minor) },
+            ],
+        };
+    }
+    return {
+        columns: [
+            { key: 'entry_date', label: t('accounting.reports.date'), type: 'date' },
+            { key: 'number', label: t('accounting.export.number') },
+            { key: 'narration', label: t('accounting.reports.narration'), value: (row) => [row.narration, row.memo].filter(Boolean).join(' · ') },
+            money('debit_minor', t('accounting.reports.debit')),
+            money('credit_minor', t('accounting.reports.credit')),
+            money('balance_minor', t('accounting.reports.balance')),
+        ],
+        rows: [{ narration: t('accounting.reports.opening'), balance_minor: data.opening_minor }, ...data.rows, { narration: t('accounting.reports.closing'), balance_minor: data.closing_minor }],
+    };
+}
+const exported = computed(() => (report.value ? { module: 'accounting', page: `accounting.report.${tab.value}`, ...reportSheet(tab.value, report.value) } : null));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.reports.title')" :description="t('accounting.reports.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft" class="print:hidden">{{ t('accounting.journal.back') }}</AppButton>
-                <AppButton :icon="Printer" :disabled="!report" class="print:hidden" @click="printPage">{{ t('accounting.reports.print') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.reports.title')" :description="t('accounting.reports.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft" class="print:hidden">{{ t('accounting.journal.back') }}</AppButton>
+        </template>
 
         <BooksGate>
             <AppTabs v-model="tab" :tabs="tabs" :label="t('accounting.reports.title')" class="mb-4 print:hidden" />
@@ -123,14 +181,14 @@ const sheetBalanced = computed(() => report.value && tab.value === 'balance-shee
                 </AppField>
                 <template v-if="ranged">
                     <AppField v-slot="{ id }" :label="t('accounting.reports.from')">
-                        <input :id="id" v-model="filters.from" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="filters.from" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('accounting.reports.to')">
-                        <input :id="id" v-model="filters.to" type="date" class="field-input" :min="filters.from" />
+                        <DateInput :id="id" v-model="filters.to" :min="filters.from" />
                     </AppField>
                 </template>
                 <AppField v-else v-slot="{ id }" :label="t('accounting.reports.as_of')">
-                    <input :id="id" v-model="filters.as_of" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="filters.as_of" />
                 </AppField>
                 <AppField v-if="tab === 'aging'" v-slot="{ id }" :label="t('accounting.aging.side')">
                     <select :id="id" v-model="filters.side" class="field-input">
@@ -341,5 +399,5 @@ const sheetBalanced = computed(() => report.value && tab.value === 'balance-shee
                 </table>
             </section>
         </BooksGate>
-    </div>
+    </PageFrame>
 </template>

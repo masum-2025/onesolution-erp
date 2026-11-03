@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { Boxes, PenLine, Plus, Ruler, Warehouse } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -87,12 +87,10 @@ const detail = (row) => {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t(`inventory.setup.${kind}.title`)" :description="t(`inventory.setup.${kind}.text`)">
-            <template #actions>
-                <AppButton v-if="can('inventory.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t(`inventory.setup.${kind}.add`) }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t(`inventory.setup.${kind}.title`)" :description="t(`inventory.setup.${kind}.text`)" width="full">
+        <template #actions>
+            <AppButton v-if="can('inventory.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t(`inventory.setup.${kind}.add`) }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -144,5 +142,5 @@ const detail = (row) => {
                 <AppButton variant="primary" type="submit" form="inventory-setup" :loading="saving" :disabled="!form.code.trim() || !form.name.en?.trim()">{{ t('inventory.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

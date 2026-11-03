@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Landmark, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -69,16 +69,30 @@ async function make() {
         busy.value = false;
     }
 }
+
+// Export and print: the letters of credit of the status picked, and how much of each is shipped.
+const exported = computed(() => ({
+    module: 'factory_erp',
+    page: 'factory_erp.lcs',
+    columns: [
+        { key: 'number', label: t('factory_erp.export.number') },
+        { key: 'buyer', label: t('factory_erp.export.buyer'), value: (lc) => buyerName(lc.buyer_id) },
+        { key: 'issuing_bank', label: t('factory_erp.export.bank') },
+        { key: 'amount_minor', label: t('factory_erp.export.value'), type: 'money' },
+        { key: 'shipped', label: t('factory_erp.export.shipped'), type: 'money', value: (lc) => lc.usage?.shipped ?? 0 },
+        { key: 'expires_on', label: t('factory_erp.export.expires_on'), type: 'date' },
+        { key: 'status', label: t('factory_erp.export.status'), value: (lc) => t(`factory_erp.lcs.statuses.${lc.status}`) },
+    ],
+    rows: items.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('factory_erp.lcs.title')" :description="t('factory_erp.lcs.text')">
-            <template v-if="setup.can('merchandise')" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="start">{{ t('factory_erp.lcs.new') }}</AppButton>
-            </template>
-        </PageHeader>
-        <AppSegmented v-model="status" :options="statuses" class="mb-4" @update:model-value="list.reload()" />
+    <PageFrame :title="t('factory_erp.lcs.title')" :description="t('factory_erp.lcs.text')" width="full" :export="exported">
+        <template v-if="setup.can('merchandise')" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="start">{{ t('factory_erp.lcs.new') }}</AppButton>
+        </template>
+        <AppSegmented v-model="status" :options="statuses" class="mb-4 print:hidden" @update:model-value="list.reload()" />
         <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
         <ErrorState v-else-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
         <section v-else-if="!items.length" class="card"><EmptyState :icon="Landmark" :title="t('factory_erp.lcs.empty_title')" :text="t('factory_erp.lcs.empty_text')" /></section>
@@ -107,5 +121,5 @@ async function make() {
                 </AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

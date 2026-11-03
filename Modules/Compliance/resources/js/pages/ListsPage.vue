@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { ArrowLeft, Globe, ListPlus, PenLine, Plus, ShieldCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -80,14 +80,12 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('compliance.lists.title')" :description="t('compliance.lists.text')">
-            <template #actions>
-                <AppButton variant="ghost" :icon="ArrowLeft" :to="{ name: 'compliance' }">{{ t('compliance.register.title') }}</AppButton>
-                <AppButton v-if="keeps && kind !== 'providers'" :icon="ListPlus" @click="addDefaults">{{ t('compliance.lists.defaults') }}</AppButton>
-                <AppButton v-if="keeps" variant="primary" :icon="Plus" @click="edit()">{{ t(`compliance.lists.add_${kind}`) }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('compliance.lists.title')" :description="t('compliance.lists.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :icon="ArrowLeft" :to="{ name: 'compliance' }">{{ t('compliance.register.title') }}</AppButton>
+            <AppButton v-if="keeps && kind !== 'providers'" :icon="ListPlus" @click="addDefaults">{{ t('compliance.lists.defaults') }}</AppButton>
+            <AppButton v-if="keeps" variant="primary" :icon="Plus" @click="edit()">{{ t(`compliance.lists.add_${kind}`) }}</AppButton>
+        </template>
 
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <AppSegmented v-model="kind" size="sm" :label="t('compliance.lists.title')" :options="kinds" />
@@ -156,5 +154,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="compliance-item" :loading="saving">{{ t('compliance.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

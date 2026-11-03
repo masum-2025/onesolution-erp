@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { BookOpen, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, FilePlus, FolderTree, Landmark, Search, Settings2, X } from 'lucide-vue-next';
-import { AppBadge, AppButton, AppField, AppMenu, EmptyState, ErrorState, PageFrame, SkeletonRows } from '@/ui';
+import { AppBadge, AppButton, AppField, AppMenu, DateInput, EmptyState, ErrorState, PageFrame, SkeletonRows } from '@/ui';
 import { fetchPages } from '@/lib/pageExport';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
@@ -129,10 +129,10 @@ const exported = computed(() => ({
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.filters.from')">
-                    <input :id="id" v-model="from" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="from" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.filters.to')">
-                    <input :id="id" v-model="to" type="date" class="field-input" :min="from || undefined" />
+                    <DateInput :id="id" v-model="to" :min="from || undefined" />
                 </AppField>
                 <AppButton v-if="filtering" variant="ghost" :icon="X" @click="clear">{{ t('accounting.filters.clear') }}</AppButton>
             </div>

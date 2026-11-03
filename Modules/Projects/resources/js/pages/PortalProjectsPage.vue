@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { CheckCircle2, Circle, KanbanSquare } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -26,8 +26,7 @@ const counts = (project) => ({ total: project.tasks_total, done: project.tasks_d
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('projects.portal_page.title')" :description="data ? t('projects.portal_page.text', { org: data.organization }) : ''" />
+    <PageFrame :title="t('projects.portal_page.title')" :description="data ? t('projects.portal_page.text', { org: data.organization }) : ''" width="md">
         <SkeletonRows v-if="resource.loading.value && !data" :rows="4" />
         <ErrorState v-else-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
         <template v-else-if="data">
@@ -83,5 +82,5 @@ const counts = (project) => ({ total: project.tasks_total, done: project.tasks_d
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

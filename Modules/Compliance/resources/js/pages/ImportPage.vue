@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { ArrowLeft, CheckCircle2, Download, FileSpreadsheet, Upload } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import { currentOrganization } from '@/lib/session';
@@ -59,12 +59,10 @@ async function importNow(skipInvalid) {
 </script>
 
 <template>
-    <div class="mx-auto max-w-4xl">
-        <PageHeader :title="t('compliance.import.title')" :description="t('compliance.import.text')">
-            <template #actions>
-                <AppButton variant="ghost" :icon="ArrowLeft" :to="{ name: 'compliance' }">{{ t('compliance.register.title') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('compliance.import.title')" :description="t('compliance.import.text')" width="full" class="mx-auto max-w-4xl">
+        <template #actions>
+            <AppButton variant="ghost" :icon="ArrowLeft" :to="{ name: 'compliance' }">{{ t('compliance.register.title') }}</AppButton>
+        </template>
 
         <section class="card mb-4 space-y-4 p-5">
             <ol class="space-y-1.5 text-[13.5px] text-fg-2">
@@ -120,5 +118,5 @@ async function importNow(skipInvalid) {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

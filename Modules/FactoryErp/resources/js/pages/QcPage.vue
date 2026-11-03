@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Ban, Minus, Plus, Save, ShieldCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -107,11 +107,29 @@ async function voidCheck() {
         saving.value = false;
     }
 }
+
+// Export and print: the day's checks, end of line and final (voided ones marked).
+const exported = computed(() => (day.items.length ? {
+    module: 'factory_erp',
+    page: 'factory_erp.qc',
+    columns: [
+        { key: 'kind', label: t('factory_erp.export.check'), value: (item) => t(`factory_erp.qc.${item.kind}`) },
+        { key: 'hour', label: t('factory_erp.export.hour'), value: (item) => (item.hour === null || item.hour === undefined ? '' : hourText(item.hour)) },
+        { key: 'line', label: t('factory_erp.export.line'), value: (item) => (item.kind === 'endline' ? lineCode(item.line_id) : '') },
+        { key: 'order', label: t('factory_erp.export.number'), value: (item) => orderNumber(item.order_id) },
+        { key: 'checked', label: t('factory_erp.export.checked'), type: 'number' },
+        { key: 'defects', label: t('factory_erp.qc.defects'), type: 'number' },
+        { key: 'dhu', label: t('factory_erp.export.dhu'), type: 'number', value: (item) => (item.kind === 'endline' && item.dhu_bp !== null && item.dhu_bp !== undefined ? Number(dhuText(item.dhu_bp)) : null) },
+        { key: 'result', label: t('factory_erp.export.result'), value: (item) => (item.kind === 'final' ? t(`factory_erp.qc.result_${item.result}`) : '') },
+        { key: 'by_type', label: t('factory_erp.export.by_type'), value: (item) => item.by_type.map((row) => `${typeName(row.defect_type_id)} ${row.count}`).join(', ') },
+        { key: 'voided', label: t('factory_erp.cutting.void_badge'), value: (item) => (item.voided_at ? item.void_reason ?? '' : '') },
+    ],
+    rows: day.items,
+} : null));
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('factory_erp.qc.title')" :description="t('factory_erp.qc.text')" />
+    <PageFrame :title="t('factory_erp.qc.title')" :description="t('factory_erp.qc.text')" width="md" :export="exported">
         <SkeletonRows v-if="day.loading && !day.types.length" :rows="6" />
         <ErrorState v-else-if="day.error" :error="day.error" @retry="load()" />
         <section v-else-if="!day.orders.length" class="card"><EmptyState :icon="ShieldCheck" :title="t('factory_erp.output.no_orders_title')" :text="t('factory_erp.output.no_orders_text')" /></section>
@@ -201,5 +219,5 @@ async function voidCheck() {
                 <AppButton variant="danger" :loading="saving" :disabled="reason.trim().length < 3" @click="voidCheck">{{ t('factory_erp.cutting.void') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

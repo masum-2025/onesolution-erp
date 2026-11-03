@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ChevronRight, ReceiptText } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -24,8 +24,7 @@ const money = (amount) => formatMoney({ amount, currency: data.value?.currency }
 </script>
 
 <template>
-    <div class="mx-auto max-w-2xl">
-        <PageHeader :title="t('accounting.portal_page.title')" :description="data ? t('accounting.portal_page.text', { org: data.organization }) : ''" />
+    <PageFrame :title="t('accounting.portal_page.title')" :description="data ? t('accounting.portal_page.text', { org: data.organization }) : ''" width="full" class="mx-auto max-w-2xl">
         <SkeletonRows v-if="resource.loading.value && !data" :rows="4" />
         <ErrorState v-else-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
         <template v-else-if="data">
@@ -54,5 +53,5 @@ const money = (amount) => formatMoney({ amount, currency: data.value?.currency }
                 </li>
             </ul>
         </template>
-    </div>
+    </PageFrame>
 </template>

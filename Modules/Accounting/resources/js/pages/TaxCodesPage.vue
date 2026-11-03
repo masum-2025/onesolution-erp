@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowLeft, Percent, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -85,16 +85,29 @@ async function save() {
 }
 
 const fieldError = (name) => errors.value[name]?.[0] ?? null;
+
+// Export and print: the tax codes.
+const exported = computed(() => ({
+    module: 'accounting',
+    page: 'accounting.tax_codes',
+    columns: [
+        { key: 'code', label: t('accounting.export.code') },
+        { key: 'name', label: t('accounting.export.name') },
+        { key: 'rate_bp', label: t('accounting.export.rate'), type: 'number', value: (code) => code.rate_bp / 100 },
+        { key: 'kind', label: t('accounting.export.type'), value: (code) => t(`accounting.tax.kinds.${code.kind}`) },
+        { key: 'applies_to', label: t('accounting.export.applies_to'), value: (code) => t(`accounting.tax.sides.${code.applies_to}`) },
+        { key: 'is_active', label: t('accounting.export.status'), value: (code) => (code.is_active ? t('accounting.export.active') : t('accounting.tax.off')) },
+    ],
+    rows: codes.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('accounting.tax.title')" :description="t('accounting.tax.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
-                <AppButton v-if="can('accounting.tax')" variant="primary" :icon="Plus" @click="edit()">{{ t('accounting.tax.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('accounting.tax.title')" :description="t('accounting.tax.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'accounting' }" :icon="ArrowLeft">{{ t('accounting.journal.back') }}</AppButton>
+            <AppButton v-if="can('accounting.tax')" variant="primary" :icon="Plus" @click="edit()">{{ t('accounting.tax.add') }}</AppButton>
+        </template>
 
         <BooksGate>
             <section class="card">
@@ -152,5 +165,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="accounting-tax-code" :loading="saving" :disabled="!form.code.trim() || !form.name_en.trim() || form.rate === ''">{{ t('accounting.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Send } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -104,12 +104,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t(`accounting.settlements.new_${type}`)" :description="t(`accounting.settlements.${type === 'receipt' ? 'receipts' : 'payments'}_text`)">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: type === 'receipt' ? 'accounting-receipts' : 'accounting-payments' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t(`accounting.settlements.new_${type}`)" :description="t(`accounting.settlements.${type === 'receipt' ? 'receipts' : 'payments'}_text`)" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: type === 'receipt' ? 'accounting-receipts' : 'accounting-payments' }" :icon="ArrowLeft">{{ t('accounting.common.back') }}</AppButton>
+        </template>
 
         <section v-if="loading" class="card"><SkeletonRows :rows="6" /></section>
         <section v-else-if="loadError" class="card"><ErrorState compact :error="loadError" /></section>
@@ -123,7 +121,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.settlements.date')" :error="fieldError('settled_on')">
-                    <input :id="id" v-model="form.settled_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.settled_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('accounting.settlements.amount')" :error="fieldError('amount_minor') ?? (form.amount && amount === null ? t('accounting.form.invalid_amount') : null)">
                     <input :id="id" v-model="form.amount" inputmode="decimal" class="field-input tabular text-end" dir="ltr" autocomplete="off" />
@@ -153,5 +151,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" :icon="Send" :loading="saving" :disabled="!form.party_id || !form.account_id || !amount">{{ t(`accounting.settlements.new_${type}`) }}</AppButton>
             </div>
         </form>
-    </div>
+    </PageFrame>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { PenLine, Plus, Store } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -64,12 +64,10 @@ function toggleMethod(method) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('pos.registers.title')" :description="t('pos.registers.text')">
-            <template #actions>
-                <AppButton v-if="can('pos.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('pos.registers.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('pos.registers.title')" :description="t('pos.registers.text')" width="full">
+        <template #actions>
+            <AppButton v-if="can('pos.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('pos.registers.add') }}</AppButton>
+        </template>
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="3" />
             <ErrorState v-else-if="list.error.value" compact :error="list.error.value" @retry="list.reload()" />
@@ -120,5 +118,5 @@ function toggleMethod(method) {
                 <AppButton variant="primary" type="submit" form="pos-register" :loading="saving" :disabled="!form.code.trim() || !form.name.en?.trim() || !form.payment_methods.length">{{ t('pos.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

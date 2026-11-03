@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { FileText, Plus, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -34,17 +34,31 @@ watch([kind, status, search], () => {
 });
 const quotes = computed(() => list.data.value?.data ?? []);
 const day = (date) => formatDate(`${date}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' });
+
+// Export and print: the estimates and quotations the filters find.
+const exported = computed(() => ({
+    module: 'crm',
+    page: 'crm.quotes',
+    columns: [
+        { key: 'number', label: t('crm.export.number') },
+        { key: 'kind', label: t('crm.quotes.kind'), value: (quote) => t(`crm.quote_kinds.${quote.kind}`) },
+        { key: 'contact', label: t('crm.export.contact'), value: (quote) => quote.contact_company || quote.contact_name || '' },
+        { key: 'issue_date', label: t('crm.export.date'), type: 'date' },
+        { key: 'subject', label: t('crm.export.subject') },
+        { key: 'total_minor', label: t('crm.export.value'), type: 'money' },
+        { key: 'status', label: t('crm.quotes.status'), value: (quote) => t(quote.expired ? 'crm.quote_status.expired' : `crm.quote_status.${quote.status}`) },
+    ],
+    rows: quotes.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('crm.quotes.title')" :description="t('crm.quotes.text')">
-            <template #actions>
-                <AppButton v-if="can('crm.edit')" variant="secondary" :icon="Plus" :to="{ name: 'crm-quote-new', params: { kind: 'estimate' } }">{{ t('crm.quotes.new_estimate') }}</AppButton>
-                <AppButton v-if="can('crm.edit')" variant="primary" :icon="Plus" :to="{ name: 'crm-quote-new', params: { kind: 'quotation' } }">{{ t('crm.quotes.new_quotation') }}</AppButton>
-            </template>
-        </PageHeader>
-        <section class="card mb-5 grid gap-3 p-4 md:grid-cols-[auto_1fr_auto] md:items-center">
+    <PageFrame :title="t('crm.quotes.title')" :description="t('crm.quotes.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('crm.edit')" variant="secondary" :icon="Plus" :to="{ name: 'crm-quote-new', params: { kind: 'estimate' } }">{{ t('crm.quotes.new_estimate') }}</AppButton>
+            <AppButton v-if="can('crm.edit')" variant="primary" :icon="Plus" :to="{ name: 'crm-quote-new', params: { kind: 'quotation' } }">{{ t('crm.quotes.new_quotation') }}</AppButton>
+        </template>
+        <section class="card mb-5 grid gap-3 p-4 print:hidden md:grid-cols-[auto_1fr_auto] md:items-center">
             <AppSegmented v-model="kind" size="sm" :label="t('crm.quotes.kind')" :options="[{ value: '', label: t('crm.quotes.all') }, { value: 'estimate', label: t('crm.quote_kinds.estimate') }, { value: 'quotation', label: t('crm.quote_kinds.quotation') }]" />
             <label class="relative block">
                 <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
@@ -72,5 +86,5 @@ const day = (date) => formatDate(`${date}T00:00:00Z`, { dateStyle: 'medium', tim
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

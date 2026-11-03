@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Plus, Trash2 } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -72,7 +73,7 @@ const lineError = (index) => Object.entries(errors.value).find(([key]) => key.st
         <form id="bill-form" class="space-y-4" novalidate @submit.prevent="save">
             <AppSegmented v-if="mode === 'quote'" v-model="form.kind" size="sm" :label="t('projects.money.kind')" :options="kinds" />
             <AppField v-else v-slot="{ id }" :label="t('projects.money.issue_date')" :error="errors.issue_date?.[0]">
-                <input :id="id" v-model="form.issue_date" type="date" class="field-input sm:w-56" />
+                <DateInput :id="id" v-model="form.issue_date" class="sm:w-56" />
             </AppField>
             <fieldset>
                 <legend class="mb-2 text-[13px] font-medium text-fg-2">{{ t('projects.money.lines') }}</legend>

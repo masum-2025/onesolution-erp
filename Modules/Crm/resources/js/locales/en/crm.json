@@ -311,5 +311,20 @@
         "empty": "The file has no rows.",
         "too_big": "The file is too big (2 MB at most).",
         "columns": "Columns: name, phone, email, company_name, tags (separated by ;), source, and your extra fields by their key."
+    },
+    "export": {
+        "deal": "Deal",
+        "contact": "Customer",
+        "stage": "Stage",
+        "value": "Value",
+        "expected_on": "Expected on",
+        "lost_reason": "Why lost",
+        "number": "Number",
+        "date": "Date",
+        "subject": "Subject",
+        "kind": "Kind",
+        "phone": "Phone",
+        "when": "When",
+        "note": "Note"
     }
 }

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Handshake } from 'lucide-vue-next';
+import { DateInput, MoneyInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -8,7 +9,7 @@ import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { crmApi } from '../api';
-import { amountToMinor, fieldToInput, fieldsToApi, minorToText } from '../lib';
+import { fieldToInput, fieldsToApi } from '../lib';
 import { useCrmSetup } from '../setup';
 import ExtraFields from './ExtraFields.vue';
 
@@ -22,7 +23,7 @@ const pipelines = computed(() => (setup.data.value?.pipelines ?? []).filter((pip
 const form = reactive({
     contact_id: props.contactId ?? props.deal?.contact_id ?? '',
     title: props.deal?.title ?? '',
-    value: minorToText(props.deal?.value_minor ?? null, setup.currency.value),
+    value_minor: props.deal?.value_minor ?? null,
     expected_on: props.deal?.expected_on ?? '',
     pipeline_id: props.deal?.pipeline_id ?? props.pipelineId ?? pipelines.value.find((pipeline) => pipeline.is_default)?.id ?? pipelines.value[0]?.id ?? '',
     stage_id: '',
@@ -37,9 +38,10 @@ async function findContacts() {
 }
 const errors = ref({});
 const saving = ref(false);
+const valueBad = ref(false);
 
 async function save() {
-    const value = form.value.trim() === '' ? 0 : amountToMinor(form.value, setup.currency.value);
+    const value = valueBad.value ? null : form.value_minor ?? 0;
     const extra = fieldsToApi(fields, form.extra, setup.currency.value);
     if (value === null || Object.keys(extra.errors).length) {
         errors.value = { ...(value === null ? { value_minor: [t('crm.validation.amount')] } : {}), ...Object.fromEntries(Object.keys(extra.errors).map((key) => [`extra.${key}`, [t('crm.validation.amount')]])) };
@@ -80,10 +82,10 @@ async function save() {
                 <input :id="id" v-model="form.title" class="field-input" maxlength="150" :placeholder="t('crm.deals.title_hint')" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('crm.deals.value')" :error="errors.value_minor?.[0]" optional>
-                <input :id="id" v-model="form.value" inputmode="decimal" class="field-input tabular text-end" dir="ltr" :placeholder="setup.currency.value" />
+                <MoneyInput :id="id" v-model="form.value_minor" v-model:invalid="valueBad" :currency="setup.currency.value" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('crm.deals.expected_on')" :error="errors.expected_on?.[0]" optional>
-                <input :id="id" v-model="form.expected_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.expected_on" />
             </AppField>
             <template v-if="!deal">
                 <AppField v-if="pipelines.length > 1" v-slot="{ id }" :label="t('crm.deals.pipeline')" :error="errors.pipeline_id?.[0]">

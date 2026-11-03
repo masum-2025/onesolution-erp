@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Package } from 'lucide-vue-next';
+import { MoneyInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -11,7 +12,7 @@ import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { inventoryApi } from '../api';
-import { amountToMinor, milliToText, minorToText, quantityToMilli } from '../lib';
+import { milliToText, quantityToMilli } from '../lib';
 
 /**
  * Add or change an item: SKU, barcode, name in each language, unit,
@@ -34,7 +35,7 @@ const form = reactive({
     category_id: props.item?.category_id ?? '',
     kind: props.item?.kind ?? 'stock',
     track_batches: props.item?.track_batches ?? false,
-    price: minorToText(props.item?.sale_price_minor ?? null, props.currency),
+    sale_price_minor: props.item?.sale_price_minor ?? null,
     reorder: milliToText(props.item?.reorder_level_milli ?? null),
     reorder_quantity: milliToText(props.item?.reorder_quantity_milli ?? null),
     description: props.item?.description ?? '',
@@ -42,11 +43,12 @@ const form = reactive({
 });
 const errors = ref({});
 const saving = ref(false);
+const priceBad = ref(false);
 
 async function save() {
     const bad = {};
-    const price = form.price.trim() === '' ? null : amountToMinor(form.price, props.currency);
-    if (form.price.trim() !== '' && price === null) bad.sale_price_minor = [t('inventory.validation.amount')];
+    const price = form.sale_price_minor;
+    if (priceBad.value) bad.sale_price_minor = [t('inventory.validation.amount')];
     const reorder = form.reorder.trim() === '' ? null : quantityToMilli(form.reorder, unitDecimals.value);
     if (form.reorder.trim() !== '' && reorder === null) bad.reorder_level_milli = [t('inventory.validation.quantity', { decimals: unitDecimals.value })];
     const reorderQuantity = form.reorder_quantity.trim() === '' ? null : quantityToMilli(form.reorder_quantity, unitDecimals.value);
@@ -108,7 +110,7 @@ async function save() {
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('inventory.items.price')" :error="errors.sale_price_minor?.[0]" optional>
-                <input :id="id" v-model="form.price" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                <MoneyInput :id="id" v-model="form.sale_price_minor" v-model:invalid="priceBad" :currency="currency" />
             </AppField>
             <template v-if="form.kind === 'stock'">
                 <AppField v-slot="{ id }" :label="t('inventory.items.reorder')" :hint="t('inventory.items.reorder_hint')" :error="errors.reorder_level_milli?.[0]" optional>

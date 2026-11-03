@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { ArrowDown, ArrowLeft, ArrowUp, LayoutTemplate, PenLine, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -87,13 +87,11 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('projects.templates.title')" :description="t('projects.templates.text')">
-            <template #actions>
-                <AppButton variant="ghost" :icon="ArrowLeft" :to="{ name: 'projects' }">{{ t('projects.list.title') }}</AppButton>
-                <AppButton v-if="keeps" variant="primary" :icon="Plus" @click="edit()">{{ t('projects.templates.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('projects.templates.title')" :description="t('projects.templates.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :icon="ArrowLeft" :to="{ name: 'projects' }">{{ t('projects.list.title') }}</AppButton>
+            <AppButton v-if="keeps" variant="primary" :icon="Plus" @click="edit()">{{ t('projects.templates.add') }}</AppButton>
+        </template>
 
         <div class="mb-4 flex justify-end">
             <AppSwitch v-model="showAll" :label="t('projects.templates.show_off')" show-label />
@@ -152,5 +150,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="template-form" :loading="saving">{{ t('projects.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

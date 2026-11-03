@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ChevronLeft, ChevronRight, Search, UserPlus, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
@@ -11,6 +11,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { fetchPages } from '@/lib/pageExport';
 import { formatNumber } from '@/lib/format';
 import { can, currentOrganization } from '@/lib/session';
 import { t } from '@/lib/i18n';
@@ -54,20 +55,32 @@ function go(to) {
     page.value = to;
     list.reload();
 }
+
+// Export and print: every customer or vendor the search finds (not only this page).
+const exported = computed(() => ({
+    module: 'accounting',
+    page: `accounting.${role.value}`,
+    columns: [
+        { key: 'code', label: t('accounting.export.code') },
+        { key: 'name', label: t('accounting.export.name') },
+        { key: 'phone', label: t('accounting.export.phone') },
+        { key: 'email', label: t('accounting.export.email') },
+        { key: 'is_active', label: t('accounting.export.status'), value: (party) => (party.is_active === false ? t('accounting.parties.inactive') : t('accounting.export.active')) },
+    ],
+    fetchAll: (maxRows) => fetchPages((number) => books.parties({ role: role.value, q: search.value.trim(), inactive: inactive.value ? 1 : undefined, page: number, per_page: 100 }), maxRows),
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t(`accounting.parties.${role}`)" :description="t(`accounting.parties.${role}_text`)">
-            <template #actions>
-                <AppButton v-if="writer" variant="primary" :icon="UserPlus" @click="Object.assign(dialog, { open: true, party: null })">
-                    {{ t(role === 'customers' ? 'accounting.parties.add_customer' : 'accounting.parties.add_vendor') }}
-                </AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t(`accounting.parties.${role}`)" :description="t(`accounting.parties.${role}_text`)" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="writer" variant="primary" :icon="UserPlus" @click="Object.assign(dialog, { open: true, party: null })">
+                {{ t(role === 'customers' ? 'accounting.parties.add_customer' : 'accounting.parties.add_vendor') }}
+            </AppButton>
+        </template>
 
         <BooksGate>
-            <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="mb-4 flex flex-col gap-3 print:hidden sm:flex-row sm:items-center">
                 <AppField v-slot="{ id }" :label="t('accounting.parties.search')" sr-only-label class="flex-1">
                     <div class="relative">
                         <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
@@ -104,7 +117,7 @@ function go(to) {
                         </RouterLink>
                     </li>
                 </ul>
-                <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+                <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                     <span class="tabular text-[12.5px] text-muted">{{ t('accounting.list.page', { page: formatNumber(meta.page), pages: formatNumber(meta.last_page) }) }}</span>
                     <div class="flex gap-2">
                         <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.page <= 1" @click="go(meta.page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -115,5 +128,5 @@ function go(to) {
         </BooksGate>
 
         <PartyDialog :open="dialog.open" :party="dialog.party" :role="role" @close="dialog.open = false" @saved="list.reload()" />
-    </div>
+    </PageFrame>
 </template>

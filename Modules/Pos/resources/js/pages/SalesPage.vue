@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Printer, ReceiptText, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -35,13 +35,29 @@ watch([day, review], () => {
 const registers = useResource(() => pos.registers());
 const registerName = (id) => (registers.data.value?.data ?? []).find((row) => row.id === id)?.name ?? '';
 const sales = computed(() => list.data.value?.data ?? []);
+
+// Export and print: the sales of the day, review and search picked (returns as minus amounts).
+const exported = computed(() => ({
+    module: 'pos',
+    page: 'pos.sales',
+    columns: [
+        { key: 'number', label: t('pos.export.number') },
+        { key: 'sold_at', label: t('pos.export.when'), value: (sale) => formatDateTime(sale.sold_at) },
+        { key: 'register', label: t('pos.export.counter'), value: (sale) => registerName(sale.register_id) },
+        { key: 'customer_name', label: t('pos.export.customer') },
+        { key: 'kind', label: t('pos.export.kind'), value: (sale) => (sale.kind === 'return' ? t('pos.sales.return') : t('pos.export.sale')) },
+        { key: 'total_minor', label: t('pos.reports.columns.amount'), type: 'money', value: (sale) => (sale.kind === 'return' ? -sale.total_minor : sale.total_minor) },
+        { key: 'review_reason', label: t('pos.export.review'), value: (sale) => (sale.review_reason ? t(`pos.review.${sale.review_reason}`) : '') },
+        { key: 'offline', label: t('pos.receipt.offline'), value: (sale) => (sale.offline ? t('pos.export.yes') : '') },
+    ],
+    rows: sales.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('pos.sales.title')" :description="t('pos.sales.text')" />
-        <section class="card mb-4 flex flex-wrap items-end gap-4 p-4">
-            <label class="grid gap-1 text-[12.5px] text-muted">{{ t('pos.sales.day') }}<input v-model="day" type="date" class="field-input" /></label>
+    <PageFrame :title="t('pos.sales.title')" :description="t('pos.sales.text')" width="full" :export="exported">
+        <section class="card mb-4 flex flex-wrap items-end gap-4 p-4 print:hidden">
+            <label class="grid gap-1 text-[12.5px] text-muted">{{ t('pos.sales.day') }}<DateInput v-model="day" /></label>
             <div class="relative min-w-0 max-w-xs flex-1">
                 <Search class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
                 <input v-model="number" class="field-input ps-9 font-mono" dir="ltr" :placeholder="t('pos.sales.number_or_phone')" :aria-label="t('pos.sales.number')" @keydown.enter="list.reload()" />
@@ -70,5 +86,5 @@ const sales = computed(() => list.data.value?.data ?? []);
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { Send } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -51,10 +52,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
     <AppDialog :open="open" :title="t('projects.result.title')" :description="project ? `${project.code} · ${project.client.name}` : ''" @close="emit('close')">
         <form id="result-form" class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="send">
             <AppField v-slot="{ id }" :label="t('projects.result.last_audit_on')" :error="fieldError('last_audit_on')" optional>
-                <input :id="id" v-model="form.last_audit_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.last_audit_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('projects.result.expires_on')" :error="fieldError('expires_on')" optional>
-                <input :id="id" v-model="form.expires_on" type="date" :min="form.last_audit_on || undefined" class="field-input" />
+                <DateInput :id="id" v-model="form.expires_on" :min="form.last_audit_on || undefined" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('projects.result.result')" :error="fieldError('result')" optional>
                 <input :id="id" v-model="form.result" class="field-input" maxlength="60" />

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { PackageCheck, Warehouse } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -177,7 +178,7 @@ async function take() {
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('factory_erp.issues.day')">
-                    <input :id="id" v-model="receivedOn" type="date" class="field-input" :max="setup.data.value?.today" />
+                    <DateInput :id="id" v-model="receivedOn" :max="setup.data.value?.today" />
                 </AppField>
             </div>
             <div class="mt-4 flex items-center justify-between gap-3">

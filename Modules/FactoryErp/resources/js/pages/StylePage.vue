@@ -2,12 +2,9 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, ClipboardList, PenLine, SearchX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
 import { formatMoney, formatNumber } from '@/lib/format';
@@ -38,18 +35,15 @@ function bomSaved(data) {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'fac-styles' }" :icon="ArrowLeft" class="mb-3">{{ t('factory_erp.styles.back') }}</AppButton>
-        <SkeletonRows v-if="view.loading.value && !style" :rows="6" />
-        <section v-else-if="view.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('factory_erp.styles.not_found')" /></section>
-        <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
-        <template v-else-if="style">
-            <PageHeader :title="`${style.code} · ${style.name}`" :description="buyer?.name ?? ''">
-                <template v-if="setup.can('merchandise')" #actions>
-                    <AppButton :icon="PenLine" @click="editing = true">{{ t('factory_erp.styles.edit') }}</AppButton>
-                    <AppButton variant="primary" :icon="ClipboardList" @click="ordering = true">{{ t('factory_erp.orders.new') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="style ? `${style.code} · ${style.name}` : ''" :description="style ? buyer?.name ?? '' : ''" :resource="view" :not-found="{ icon: SearchX, title: t('factory_erp.styles.not_found') }" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'fac-styles' }" :icon="ArrowLeft" class="mb-3">{{ t('factory_erp.styles.back') }}</AppButton>
+        </template>
+        <template v-if="setup.can('merchandise')" #actions>
+            <AppButton :icon="PenLine" @click="editing = true">{{ t('factory_erp.styles.edit') }}</AppButton>
+            <AppButton variant="primary" :icon="ClipboardList" @click="ordering = true">{{ t('factory_erp.orders.new') }}</AppButton>
+        </template>
+        <template v-if="style">
 
             <div class="card mb-5 grid grid-cols-1 gap-x-6 gap-y-3 p-5 text-[13.5px] sm:grid-cols-3">
                 <div><p class="text-muted">{{ t('factory_erp.fields_.sizes') }}</p><p class="font-medium" dir="ltr">{{ style.sizes.join(' · ') }}</p></div>
@@ -66,5 +60,5 @@ function bomSaved(data) {
             <StyleDialog :open="editing" :style="style" @close="editing = false" @saved="editing = false; view.reload()" @conflict="editing = false; view.reload()" />
             <OrderDialog :open="ordering" :style-id="style.id" @close="ordering = false" />
         </template>
-    </div>
+    </PageFrame>
 </template>

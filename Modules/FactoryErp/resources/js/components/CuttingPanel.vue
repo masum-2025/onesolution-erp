@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Ban, Scissors } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -169,7 +170,7 @@ async function voidLay() {
 
         <AppDialog :open="making" :icon="Scissors" :title="t('factory_erp.cutting.new_title', { number: order.number })" :description="t('factory_erp.cutting.new_text', { percent: formatNumber(allowanceBp / 100) })" @close="making = false">
             <AppField v-slot="{ id }" :label="t('factory_erp.cutting.day')">
-                <input :id="id" v-model="cutOn" type="date" class="field-input sm:w-48" :max="setup.data.value?.today" />
+                <DateInput :id="id" v-model="cutOn" class="sm:w-48" :max="setup.data.value?.today" />
             </AppField>
             <div class="mt-3 rounded-xl border border-line p-2">
                 <SizeColorSheet v-model="sheet" :sizes="style.sizes" :colors="style.colors" />
