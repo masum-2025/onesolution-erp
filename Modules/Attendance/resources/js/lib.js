@@ -87,6 +87,28 @@ export function dayGrid(days) {
     return grid;
 }
 
+/**
+ * Every day a days list holds, all its pages (they go by employees, meta.employees and per_page),
+ * for export: query is what the page asks (from, to); stops past maxRows + 1 days.
+ */
+export async function allDays(fetchDays, query, maxRows = 5000) {
+    const days = [];
+    for (let page = 1; page <= 200 && days.length <= maxRows; page += 1) {
+        const response = await fetchDays({ ...query, page });
+        days.push(...(response.data ?? []));
+        const meta = response.meta ?? {};
+        if (page * (meta.per_page || 50) >= (meta.employees ?? 0)) break;
+    }
+    return days;
+}
+
+/** The people in a list of days, one each, by name: [{ id, name, code }]. */
+export function dayPeople(days) {
+    const seen = new Map();
+    for (const day of days ?? []) if (!seen.has(day.employee_id)) seen.set(day.employee_id, { id: day.employee_id, name: day.employee_name, code: day.employee_code });
+    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 /** Counts of each status among days (for summary chips). */
 export function statusCounts(days) {
     const counts = Object.fromEntries(STATUSES.map((status) => [status, 0]));

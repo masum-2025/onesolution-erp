@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Check, ClipboardCheck, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -32,6 +32,22 @@ watch(status, () => list.reload());
 
 const time = (iso) => (iso ? formatDate(iso, { dateStyle: 'short', timeStyle: 'short' }) : '—');
 
+// Export and print: the requests of the status picked.
+const exported = computed(() => ({
+    module: 'attendance',
+    page: 'attendance.corrections',
+    columns: [
+        { key: 'employee_name', label: t('attendance.month.employee') },
+        { key: 'work_date', label: t('attendance.export.date'), type: 'date' },
+        { key: 'in_at', label: t('attendance.export.in'), value: (item) => (item.in_at ? time(item.in_at) : '') },
+        { key: 'out_at', label: t('attendance.export.out'), value: (item) => (item.out_at ? time(item.out_at) : '') },
+        { key: 'reason', label: t('attendance.export.reason') },
+        { key: 'status', label: t('attendance.export.status'), value: (item) => t(`attendance.correction.status.${item.status}`) },
+        { key: 'decision_note', label: t('attendance.export.note') },
+    ],
+    rows: items.value,
+}));
+
 async function decide(item, step) {
     const confirmed = await confirmAction({
         title: t(`attendance.corrections.${step}_title`, { name: item.employee_name }),
@@ -56,17 +72,15 @@ async function decide(item, step) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.corrections.title')" :description="t('attendance.corrections.text')">
-            <template #actions>
-                <AppSegmented
-                    v-model="status"
-                    size="sm"
-                    :label="t('attendance.corrections.title')"
-                    :options="['pending', 'approved', 'rejected'].map((value) => ({ value, label: t(`attendance.correction.status.${value}`) }))"
-                />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.corrections.title')" :description="t('attendance.corrections.text')" width="full" :export="exported">
+        <template #actions>
+            <AppSegmented
+                v-model="status"
+                size="sm"
+                :label="t('attendance.corrections.title')"
+                :options="['pending', 'approved', 'rejected'].map((value) => ({ value, label: t(`attendance.correction.status.${value}`) }))"
+            />
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -93,5 +107,5 @@ async function decide(item, step) {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

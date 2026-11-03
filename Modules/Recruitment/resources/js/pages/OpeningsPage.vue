@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { Briefcase, Globe, Lock, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -40,6 +40,25 @@ watch(status, () => list.reload());
 
 const options = useResource(() => calls.options());
 const stages = computed(() => options.data.value?.data?.stages ?? []);
+
+// Export and print: the jobs of the status picked, with how many are at each step.
+const exported = computed(() => ({
+    module: 'recruitment',
+    page: 'recruitment.openings',
+    columns: [
+        { key: 'title', label: t('recruitment.export.job') },
+        { key: 'unit_name', label: t('recruitment.export.unit') },
+        { key: 'position', label: t('recruitment.export.position'), value: (item) => (item.position ? nameIn(item.position.title, i18n.locale) : '') },
+        { key: 'status', label: t('recruitment.export.status'), value: (item) => t(`recruitment.opening_status.${item.status}`) },
+        { key: 'is_public', label: t('recruitment.export.shown'), value: (item) => (item.is_public ? t('recruitment.openings.public') : t('recruitment.openings.internal')) },
+        { key: 'vacancies', label: t('recruitment.export.vacancies'), type: 'number' },
+        { key: 'hired_count', label: t('recruitment.export.hired'), type: 'number' },
+        { key: 'salary', label: t('recruitment.export.salary'), value: (item) => salaryText(item) },
+        { key: 'closes_on', label: t('recruitment.export.closes_on'), type: 'date' },
+        ...stages.value.map((stage) => ({ key: `stage_${stage.key}`, label: nameIn(stage.name, i18n.locale), type: 'number', value: (item) => item.stage_counts?.[stage.key] ?? 0 })),
+    ],
+    rows: items.value,
+}));
 
 const editing = ref(null); // 'new' | an opening
 onMounted(() => {
@@ -79,13 +98,11 @@ const statuses = computed(() => ['open', 'draft', 'closed', 'filled', 'all'].map
 </script>
 
 <template>
-    <div class="space-y-5">
-        <PageHeader :title="t('recruitment.openings.title')" :description="t('recruitment.openings.text')">
-            <template #actions>
-                <AppSegmented v-model="status" size="sm" :label="t('recruitment.openings.title')" :options="statuses" />
-                <AppButton v-if="canManage" variant="primary" :icon="Plus" @click="editing = 'new'">{{ t('recruitment.openings.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('recruitment.openings.title')" :description="t('recruitment.openings.text')" width="full" class="space-y-5" :export="exported">
+        <template #actions>
+            <AppSegmented v-model="status" size="sm" :label="t('recruitment.openings.title')" :options="statuses" />
+            <AppButton v-if="canManage" variant="primary" :icon="Plus" @click="editing = 'new'">{{ t('recruitment.openings.new') }}</AppButton>
+        </template>
 
         <p v-if="noAddress && canManage" class="rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-[13.5px]">
             {{ t('recruitment.openings.no_address') }}
@@ -138,5 +155,5 @@ const statuses = computed(() => ['open', 'draft', 'closed', 'filled', 'all'].map
             @close="editing = null"
             @saved="saved"
         />
-    </div>
+    </PageFrame>
 </template>

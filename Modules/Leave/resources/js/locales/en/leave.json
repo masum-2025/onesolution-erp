@@ -174,5 +174,18 @@
         "title": "My leave",
         "text": "What is left and your requests.",
         "empty": "No leave to show."
+    },
+    "export": {
+        "code": "Code",
+        "employee": "Employee",
+        "from": "From",
+        "to": "To",
+        "days": "Days",
+        "unpaid_days": "Unpaid days",
+        "reason": "Reason",
+        "status": "Status",
+        "note": "Decision note",
+        "year": "Leave year",
+        "pay_on": "Paid with the salary of"
     }
 }

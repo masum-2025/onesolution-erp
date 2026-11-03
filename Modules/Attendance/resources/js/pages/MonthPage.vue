@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { ChevronLeft, ChevronRight, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -11,7 +11,7 @@ import { formatDate, formatNumber } from '@/lib/format';
 import { can, currentOrganization, session } from '@/lib/session';
 import { t } from '@/lib/i18n';
 import { attendanceApi } from '../api';
-import { dayGrid, localDateTime, monthDates, shiftMonth, STATUSES } from '../lib';
+import { allDays, dayGrid, dayPeople, localDateTime, monthDates, shiftMonth, STATUSES } from '../lib';
 import CorrectionDialog from '../components/CorrectionDialog.vue';
 import DayDrawer from '../components/DayDrawer.vue';
 
@@ -30,13 +30,27 @@ const list = useResource(() => (dates.value.length
     ? attendance.days({ from: dates.value[0], to: dates.value[dates.value.length - 1], page: page.value })
     : Promise.resolve({ data: [], meta: { employees: 0, per_page: 50 } })));
 const grid = computed(() => dayGrid(list.data.value?.data));
-const people = computed(() => {
-    const seen = new Map();
-    for (const day of list.data.value?.data ?? []) if (!seen.has(day.employee_id)) seen.set(day.employee_id, { id: day.employee_id, name: day.employee_name, code: day.employee_code });
-    return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
-});
+const people = computed(() => dayPeople(list.data.value?.data));
 const pages = computed(() => Math.max(1, Math.ceil((list.data.value?.meta.employees ?? 0) / (list.data.value?.meta.per_page ?? 50))));
-const attended = (id) => Object.values(grid.value[id] ?? {}).filter((day) => ['present', 'late', 'half_day', 'incomplete'].includes(day.status)).length;
+const attendedIn = (days) => Object.values(days ?? {}).filter((day) => ['present', 'late', 'half_day', 'incomplete'].includes(day.status)).length;
+const attended = (id) => attendedIn(grid.value[id]);
+
+// Export and print: everyone (every page), one row each, a column per day with its letter.
+const exported = computed(() => ({
+    module: 'attendance',
+    page: 'attendance.month',
+    columns: [
+        { key: 'code', label: t('attendance.export.code') },
+        { key: 'name', label: t('attendance.month.employee') },
+        ...dates.value.map((date) => ({ key: date, label: formatNumber(Number(date.slice(8))), value: (row) => (row.days[date] ? t(`attendance.short.${row.days[date].status}`) : '') })),
+        { key: 'attended', label: t('attendance.month.attended'), type: 'number' },
+    ],
+    fetchAll: async (maxRows) => {
+        const days = dates.value.length ? await allDays(attendance.days, { from: dates.value[0], to: dates.value[dates.value.length - 1] }, maxRows * dates.value.length) : [];
+        const byPerson = dayGrid(days);
+        return dayPeople(days).map((person) => ({ ...person, days: byPerson[person.id] ?? {}, attended: attendedIn(byPerson[person.id]) }));
+    },
+}));
 
 watch([month, page], () => list.reload());
 
@@ -64,16 +78,14 @@ function openDay(person, date) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.month.title')" :description="t('attendance.month.text', { unit: org.name })">
-            <template #actions>
-                <div class="flex items-center gap-1">
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('attendance.common.previous_month')" @click="month = shiftMonth(month, -1); page = 1" />
-                    <span class="min-w-32 text-center text-[14px] font-semibold">{{ formatDate(`${month}-01T00:00:00Z`, { month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</span>
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('attendance.common.next_month')" :disabled="month >= today.slice(0, 7)" @click="month = shiftMonth(month, 1); page = 1" />
-                </div>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.month.title')" :description="t('attendance.month.text', { unit: org.name })" width="full" :export="exported">
+        <template #actions>
+            <div class="flex items-center gap-1">
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('attendance.common.previous_month')" @click="month = shiftMonth(month, -1); page = 1" />
+                <span class="min-w-32 text-center text-[14px] font-semibold">{{ formatDate(`${month}-01T00:00:00Z`, { month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</span>
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('attendance.common.next_month')" :disabled="month >= today.slice(0, 7)" @click="month = shiftMonth(month, 1); page = 1" />
+            </div>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="6" />
@@ -116,11 +128,11 @@ function openDay(person, date) {
                     {{ t(`attendance.status.${status}`) }}
                 </span>
                 <span class="flex-1"></span>
-                <template v-if="pages > 1">
+                <span v-if="pages > 1" class="contents print:hidden">
                     <AppButton size="sm" variant="ghost" :disabled="page <= 1" @click="page--">{{ t('attendance.common.previous') }}</AppButton>
                     <span>{{ t('attendance.common.page', { page: formatNumber(page), pages: formatNumber(pages) }) }}</span>
                     <AppButton size="sm" variant="ghost" :disabled="page >= pages" @click="page++">{{ t('attendance.common.next') }}</AppButton>
-                </template>
+                </span>
             </footer>
         </section>
 
@@ -133,5 +145,5 @@ function openDay(person, date) {
             @close="correcting = null"
             @sent="correcting = null"
         />
-    </div>
+    </PageFrame>
 </template>

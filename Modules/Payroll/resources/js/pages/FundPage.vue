@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { PiggyBank } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -18,11 +18,25 @@ const rows = computed(() => list.data.value?.data ?? []);
 const currency = computed(() => list.data.value?.meta?.currency);
 const money = (amount) => formatMoney({ amount, currency: currency.value });
 const month = (period) => (period ? formatDate(`${period}-01T00:00:00Z`, { month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—');
+
+// Export and print (payroll.export): each member's share of the fund.
+const exported = computed(() => ({
+    module: 'payroll',
+    page: 'payroll.fund',
+    columns: [
+        { key: 'employee_code', label: t('payroll.export.code') },
+        { key: 'employee_name', label: t('payroll.export.employee') },
+        { key: 'employee_minor', label: t('payroll.export.own_share'), type: 'money', currency: currency.value },
+        { key: 'employer_minor', label: t('payroll.export.company_share'), type: 'money', currency: currency.value },
+        { key: 'total', label: t('payroll.export.total'), type: 'money', currency: currency.value, value: (row) => row.employee_minor + row.employer_minor },
+        { key: 'last_period', label: t('payroll.export.last_month'), value: (row) => (row.last_period ? month(row.last_period) : '') },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.fund.title')" :description="t('payroll.fund.text')" />
+    <PageFrame :title="t('payroll.fund.title')" :description="t('payroll.fund.text')" width="full" :export="exported">
 
         <section v-if="rows.length" class="card mb-5 p-5">
             <p class="text-[12.5px] text-muted">{{ t('payroll.fund.total') }}</p>
@@ -45,5 +59,5 @@ const month = (period) => (period ? formatDate(`${period}-01T00:00:00Z`, { month
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

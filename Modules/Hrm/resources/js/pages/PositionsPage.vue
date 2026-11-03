@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowLeft, Briefcase, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -26,6 +26,20 @@ const hrm = hrmApi(org.id);
 const showAll = ref(false);
 const list = useResource(() => hrm.positions(showAll.value));
 const positions = computed(() => list.data.value?.data ?? []);
+
+// Export and print (hrm.export): the designations shown.
+const exported = computed(() => ({
+    module: 'hrm',
+    page: 'hrm.positions',
+    columns: [
+        { key: 'title', label: t('hrm.export.position') },
+        { key: 'code', label: t('hrm.export.code') },
+        { key: 'grade', label: t('hrm.positions.grade') },
+        { key: 'employees', label: t('hrm.export.people'), type: 'number', value: (position) => position.employees ?? 0 },
+        { key: 'is_active', label: t('hrm.export.status'), value: (position) => (position.is_active ? t('hrm.export.open') : t('hrm.positions.inactive')) },
+    ],
+    rows: positions.value,
+}));
 
 const editing = ref(null); // null | 'new' | position
 const saving = ref(false);
@@ -83,15 +97,13 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('hrm.positions.title')" :description="t('hrm.positions.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
-                <AppButton v-if="can('hrm.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('hrm.positions.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.positions.title')" :description="t('hrm.positions.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
+            <AppButton v-if="can('hrm.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('hrm.positions.add') }}</AppButton>
+        </template>
 
-        <div class="mb-4 flex justify-end">
+        <div class="mb-4 flex justify-end print:hidden">
             <AppSwitch :model-value="showAll" :label="t('hrm.positions.show_all')" show-label @update:model-value="toggleAll" />
         </div>
 
@@ -139,5 +151,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="hrm-position" :loading="saving" :disabled="!form.title_en.trim()">{{ t('hrm.positions.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

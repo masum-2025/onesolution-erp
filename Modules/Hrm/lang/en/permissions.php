@@ -8,4 +8,5 @@ return [
     'view_sensitive' => 'See full national and tax ids',
     'exit' => 'Give notice and end employment',
     'configure' => 'Set up extra employee fields',
+    'export' => 'Export or print Human Resources pages',
 ];

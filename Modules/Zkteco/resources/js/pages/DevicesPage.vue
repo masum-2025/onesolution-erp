@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { AlertTriangle, Ban, CheckCircle2, Fingerprint, Monitor, Pencil, Plug, Plus, RefreshCw, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -10,7 +10,7 @@ import SkeletonRows from '@/components/SkeletonRows.vue';
 import { currentOrganization } from '@/lib/session';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
-import { formatNumber, formatRelative } from '@/lib/format';
+import { formatDate, formatNumber, formatRelative } from '@/lib/format';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { zktecoApi } from '../api';
@@ -38,6 +38,32 @@ const bridges = computed(() => bridgeList.data.value?.data ?? []);
 const liveBridges = computed(() => bridges.value.filter((bridge) => !bridge.revoked_at));
 const bridgeName = (id) => bridges.value.find((bridge) => bridge.id === id)?.name ?? '';
 const bridgeDialog = ref(false);
+
+// Export and print: the devices and how each is doing, as the cards show them.
+const stateOf = (device) => {
+    if (!device.is_active) return t('zkteco.devices.off');
+    if (device.last_error) return t('zkteco.devices.not_answering');
+    return device.last_synced_at ? t('zkteco.devices.working') : t('zkteco.devices.not_read');
+};
+const exported = computed(() => ({
+    module: 'zkteco',
+    page: 'zkteco.devices',
+    columns: [
+        { key: 'name', label: t('zkteco.export.name') },
+        { key: 'address', label: t('zkteco.export.address'), value: (device) => `${device.host}:${device.port}` },
+        { key: 'protocol', label: t('zkteco.export.protocol'), value: (device) => device.protocol.toUpperCase() },
+        { key: 'unit', label: t('zkteco.export.unit'), value: (device) => unitName(device.unit_id) },
+        { key: 'model', label: t('zkteco.export.model') },
+        { key: 'serial', label: t('zkteco.export.serial') },
+        { key: 'state', label: t('zkteco.export.state'), value: stateOf },
+        { key: 'users_count', label: t('zkteco.devices.users'), type: 'number' },
+        { key: 'logs_count', label: t('zkteco.devices.logs'), type: 'number' },
+        { key: 'waiting', label: t('zkteco.devices.waiting'), type: 'number' },
+        { key: 'last_synced_at', label: t('zkteco.export.last_read'), value: (device) => (device.last_synced_at ? formatDate(device.last_synced_at, { dateStyle: 'medium', timeStyle: 'short' }) : '') },
+        { key: 'import_from', label: t('zkteco.export.from'), type: 'date' },
+    ],
+    rows: devices.value,
+}));
 // A bridge that has not called for this long is shown as silent (it runs every minute).
 const SILENT_MINUTES = 10;
 const silent = (bridge) => !bridge.last_seen_at || Date.now() - Date.parse(bridge.last_seen_at) > SILENT_MINUTES * 60 * 1000;
@@ -81,12 +107,10 @@ function saved() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('zkteco.devices.title')" :description="t('zkteco.devices.text')">
-            <template #actions>
-                <AppButton v-if="can('manage')" variant="primary" :icon="Plus" @click="dialog = { open: true, device: null }">{{ t('zkteco.device.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('zkteco.devices.title')" :description="t('zkteco.devices.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('manage')" variant="primary" :icon="Plus" @click="dialog = { open: true, device: null }">{{ t('zkteco.device.add') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="(list.loading.value && !list.data.value) || (setup.loading.value && !setup.data.value)" :rows="3" />
         <ErrorState v-else-if="list.error.value || setup.error.value" :error="list.error.value || setup.error.value" @retry="list.reload(); setup.reload()" />
@@ -164,5 +188,5 @@ function saved() {
 
         <DeviceDialog v-if="setup.data.value" :open="dialog.open" :device="dialog.device" :setup="setup.data.value.data" :api="api" :today="setup.data.value.data.today" :bridges="liveBridges" @close="dialog = { open: false, device: null }" @saved="saved" />
         <BridgeDialog v-if="setup.data.value" :open="bridgeDialog" :setup="setup.data.value.data" :api="api" :program="bridgeList.data.value?.meta?.program ?? null" @close="bridgeDialog = false" @made="bridgeList.reload()" />
-    </div>
+    </PageFrame>
 </template>

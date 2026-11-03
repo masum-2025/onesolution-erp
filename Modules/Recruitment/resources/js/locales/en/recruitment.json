@@ -291,5 +291,27 @@
             "respond_by": "answer by",
             "today": "today"
         }
+    },
+    "export": {
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone",
+        "status": "Status",
+        "rating": "Rating",
+        "score": "Interview score",
+        "source": "Came through",
+        "job": "Job",
+        "unit": "Branch",
+        "position": "Designation",
+        "shown": "Shown",
+        "vacancies": "Places",
+        "hired": "Hired",
+        "salary": "Salary",
+        "closes_on": "Closes on",
+        "group": "List",
+        "when": "When",
+        "mode": "How",
+        "place": "Where",
+        "feedback": "Feedback"
     }
 }

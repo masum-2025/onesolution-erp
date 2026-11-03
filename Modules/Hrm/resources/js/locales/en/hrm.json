@@ -407,5 +407,16 @@
         "many_done_title": "Logins given",
         "many_done": "{created} new logins, {linked} people who had an account, {failed} not given.",
         "many_done_hint": "Tell each person their first password in person, never by group message."
+    },
+    "export": {
+        "code": "Code",
+        "name": "Name",
+        "position": "Designation",
+        "department": "Department",
+        "branch": "Branch",
+        "joined_on": "Joining date",
+        "status": "Status",
+        "people": "People",
+        "open": "Open"
     }
 }

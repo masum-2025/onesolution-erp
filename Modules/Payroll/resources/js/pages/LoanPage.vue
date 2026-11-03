@@ -2,13 +2,11 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Check, PauseCircle, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
@@ -92,27 +90,24 @@ async function unskip(row) {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-loans' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.loans.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !loan" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="loan">
-            <PageHeader :title="loan.employee_name" :description="t('payroll.loan.text', { kind: t(`payroll.loan_kinds.${loan.kind}`), date: day(loan.paid_out_on) })">
-                <template #eyebrow>
-                    <span class="mb-2 flex items-center gap-2">
-                        <AppBadge :tone="loanTone(loan.status)" dot>{{ t(`payroll.loan_status.${loan.status}`) }}</AppBadge>
-                        <span class="font-mono text-[12px] text-muted" dir="ltr">{{ loan.employee_code }}</span>
-                    </span>
-                </template>
-                <template #actions>
-                    <div class="flex flex-wrap gap-2">
-                        <AppButton v-if="loan.can.approve" variant="primary" :icon="Check" :loading="busy === 'approve'" @click="decide('approve')">{{ t('payroll.loan.steps.approve') }}</AppButton>
-                        <AppButton v-if="loan.can.reject" variant="ghost" :icon="X" @click="decide('reject')">{{ t('payroll.loan.steps.reject') }}</AppButton>
-                        <AppButton v-if="loan.can.cancel" variant="ghost" :icon="X" :loading="busy === 'cancel'" @click="decide('cancel')">{{ t('payroll.loan.steps.cancel') }}</AppButton>
-                    </div>
-                </template>
-            </PageHeader>
+    <PageFrame :title="loan ? loan.employee_name : ''" :description="loan ? t('payroll.loan.text', { kind: t(`payroll.loan_kinds.${loan.kind}`), date: day(loan.paid_out_on) }) : ''" :resource="record" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-loans' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.loans.title') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex items-center gap-2">
+                <AppBadge :tone="loanTone(loan.status)" dot>{{ t(`payroll.loan_status.${loan.status}`) }}</AppBadge>
+                <span class="font-mono text-[12px] text-muted" dir="ltr">{{ loan.employee_code }}</span>
+            </span>
+        </template>
+        <template #actions>
+            <div class="flex flex-wrap gap-2">
+                <AppButton v-if="loan.can.approve" variant="primary" :icon="Check" :loading="busy === 'approve'" @click="decide('approve')">{{ t('payroll.loan.steps.approve') }}</AppButton>
+                <AppButton v-if="loan.can.reject" variant="ghost" :icon="X" @click="decide('reject')">{{ t('payroll.loan.steps.reject') }}</AppButton>
+                <AppButton v-if="loan.can.cancel" variant="ghost" :icon="X" :loading="busy === 'cancel'" @click="decide('cancel')">{{ t('payroll.loan.steps.cancel') }}</AppButton>
+            </div>
+        </template>
+        <template v-if="loan">
 
             <p v-if="loan.decision_note" class="mb-4 rounded-xl bg-subtle px-4 py-3 text-[13px] text-muted">{{ t('payroll.loan.note', { note: loan.decision_note }) }}</p>
 
@@ -163,5 +158,5 @@ async function unskip(row) {
                 <AppButton variant="primary" type="submit" form="payroll-skip" :loading="busy === 'skip'" :disabled="reason.trim().length < 5">{{ t('payroll.loan.skip') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

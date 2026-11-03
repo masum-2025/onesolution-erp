@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, ArrowRight, Check, Plus, UserPlus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -143,12 +143,10 @@ function fieldError(name) {
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('hrm.hire_page.title')" :description="t('hrm.hire_page.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.hire_page.title')" :description="t('hrm.hire_page.text')" width="md">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
+        </template>
 
         <ol class="mb-5 grid grid-cols-3 gap-2" :aria-label="t('hrm.hire_page.title')">
             <li v-for="(key, index) in stepKeys" :key="key" class="flex items-center gap-2 rounded-xl px-3 py-2 text-[12.5px]" :class="index === step ? 'bg-brand-soft font-medium text-brand-text' : 'bg-subtle text-muted'" :aria-current="index === step ? 'step' : undefined">
@@ -180,7 +178,7 @@ function fieldError(name) {
                         <input :id="id" v-model="form.email" type="email" class="field-input" dir="ltr" autocomplete="email" maxlength="190" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('hrm.fields.date_of_birth')" :error="fieldError('date_of_birth')" :optional="!required.has('date_of_birth')">
-                        <input :id="id" v-model="form.date_of_birth" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="form.date_of_birth" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('hrm.fields.gender')" :error="fieldError('gender')" :optional="!required.has('gender')">
                         <select :id="id" v-model="form.gender" class="field-input">
@@ -239,7 +237,7 @@ function fieldError(name) {
                         </select>
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('hrm.fields.joined_on')" :error="fieldError('joined_on')">
-                        <input :id="id" v-model="form.joined_on" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="form.joined_on" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('hrm.fields.position')" :error="fieldError('position_id')" optional>
                         <div class="flex gap-2">
@@ -305,5 +303,5 @@ function fieldError(name) {
                 <AppButton variant="primary" type="submit" form="hrm-new-position" :loading="newPosition.saving" :disabled="!newPosition.en.trim()">{{ t('hrm.positions.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

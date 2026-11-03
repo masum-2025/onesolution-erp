@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { PenLine } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -64,7 +65,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
     <AppDialog :open="open" :title="t('attendance.correction.title')" :description="employeeName ? t('attendance.correction.for', { name: employeeName }) : t('attendance.correction.text')" :icon="PenLine" @close="emit('close')">
         <form id="attendance-correction" class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">
             <AppField v-slot="{ id }" :label="t('attendance.correction.day')" :error="fieldError('work_date')" class="sm:col-span-2">
-                <input :id="id" v-model="form.work_date" type="date" class="field-input" required />
+                <DateInput :id="id" v-model="form.work_date" required />
             </AppField>
             <AppField v-slot="{ id }" :label="t('attendance.correction.in')" :error="fieldError('in_at')" optional>
                 <input :id="id" v-model="form.in_time" type="time" class="field-input" />

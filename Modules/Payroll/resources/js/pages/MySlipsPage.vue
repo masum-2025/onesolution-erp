@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ChevronRight, DoorOpen, Gift, HandCoins, PiggyBank, ReceiptText } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -41,8 +41,7 @@ const left = (loan) => (loan.schedule ?? []).filter((row) => ['due', 'planned'].
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl space-y-6">
-        <PageHeader :title="t('payroll.mine.title')" :description="t('payroll.mine.text')" />
+    <PageFrame :title="t('payroll.mine.title')" :description="t('payroll.mine.text')" width="md" class="space-y-6">
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -133,5 +132,5 @@ const left = (loan) => (loan.schedule ?? []).filter((row) => ['due', 'planned'].
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { HandCoins, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, MoneyInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -17,7 +17,7 @@ import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { payrollApi } from '../api';
-import { amountToMinor, firstRecoveryMonth, installmentOf, loanTone } from '../lib';
+import { firstRecoveryMonth, installmentOf, loanTone } from '../lib';
 
 /**
  * Loans and advances: waiting for approval first, running ones with what
@@ -40,16 +40,16 @@ const asking = ref(false);
 const employees = useResource(() => payroll.employees(''), { immediate: false });
 const people = computed(() => (employees.data.value?.data ?? []).filter((person) => person.status !== 'exited'));
 const today = new Date().toISOString().slice(0, 10);
-const form = reactive({ employee_id: '', kind: 'loan', amount: '', installments: 6, paid_out_on: today, start_period: firstRecoveryMonth(today), reason: '' });
+const form = reactive({ employee_id: '', kind: 'loan', principal_minor: null, installments: 6, paid_out_on: today, start_period: firstRecoveryMonth(today), reason: '' });
 const errors = ref({});
 const saving = ref(false);
 const preview = computed(() => {
-    const amount = amountToMinor(form.amount, currency.value);
+    const amount = form.principal_minor;
     return amount ? installmentOf(amount, form.installments) : null;
 });
 
 function ask() {
-    Object.assign(form, { employee_id: '', kind: 'loan', amount: '', installments: 6, paid_out_on: today, start_period: firstRecoveryMonth(today), reason: '' });
+    Object.assign(form, { employee_id: '', kind: 'loan', principal_minor: null, installments: 6, paid_out_on: today, start_period: firstRecoveryMonth(today), reason: '' });
     errors.value = {};
     asking.value = true;
     if (!employees.data.value) employees.reload();
@@ -62,7 +62,7 @@ watch(() => form.paid_out_on, (day) => {
 });
 
 async function save() {
-    const principal = amountToMinor(form.amount, currency.value);
+    const principal = form.principal_minor;
     if (!principal) {
         errors.value = { principal_minor: [t('payroll.run.bad_amount')] };
         return;
@@ -85,17 +85,32 @@ async function save() {
 }
 
 const month = (period) => formatDate(`${period}-01T00:00:00Z`, { month: 'short', year: 'numeric', timeZone: 'UTC' });
+
+// Export and print (payroll.export): the loans and advances of the status picked.
+const exported = computed(() => ({
+    module: 'payroll',
+    page: 'payroll.loans',
+    columns: [
+        { key: 'employee_code', label: t('payroll.export.code') },
+        { key: 'employee_name', label: t('payroll.export.employee') },
+        { key: 'kind', label: t('payroll.run.kind'), value: (loan) => t(`payroll.loan_kinds.${loan.kind}`) },
+        { key: 'principal_minor', label: t('payroll.run.amount'), type: 'money' },
+        { key: 'installment_minor', label: t('payroll.export.installment'), type: 'money' },
+        { key: 'start_period', label: t('payroll.loans.start_period'), value: (loan) => month(loan.start_period) },
+        { key: 'balance_minor', label: t('payroll.loans.left'), type: 'money' },
+        { key: 'status', label: t('payroll.export.status'), value: (loan) => t(`payroll.loan_status.${loan.status}`) },
+    ],
+    rows: loans.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.loans.title')" :description="t('payroll.loans.text')">
-            <template #actions>
-                <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="ask">{{ t('payroll.loans.ask') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('payroll.loans.title')" :description="t('payroll.loans.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="ask">{{ t('payroll.loans.ask') }}</AppButton>
+        </template>
 
-        <AppSegmented v-model="status" :options="filters" class="mb-4" :label="t('payroll.loans.filter')" />
+        <AppSegmented v-model="status" :options="filters" class="mb-4 print:hidden" :label="t('payroll.loans.filter')" />
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -136,13 +151,13 @@ const month = (period) => formatDate(`${period}-01T00:00:00Z`, { month: 'short',
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.run.amount')" :error="errors.principal_minor?.[0]">
-                    <input :id="id" v-model="form.amount" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                    <MoneyInput :id="id" v-model="form.principal_minor" :currency="currency" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.loans.installments')" :error="errors.installments?.[0]" :hint="preview ? t('payroll.loans.each', { amount: money(preview) }) : ''">
                     <input :id="id" v-model.number="form.installments" type="number" min="1" max="120" class="field-input tabular text-end" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.loans.paid_out_on')" :error="errors.paid_out_on?.[0]">
-                    <input :id="id" v-model="form.paid_out_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.paid_out_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.loans.start_period')" :error="errors.start_period?.[0]">
                     <input :id="id" v-model="form.start_period" type="month" class="field-input" />
@@ -154,8 +169,8 @@ const month = (period) => formatDate(`${period}-01T00:00:00Z`, { month: 'short',
             <p class="mt-3 text-[12.5px] text-muted">{{ t('payroll.loans.needs_approval') }}</p>
             <template #footer>
                 <AppButton variant="ghost" @click="asking = false">{{ t('payroll.common.cancel') }}</AppButton>
-                <AppButton variant="primary" type="submit" form="payroll-loan" :loading="saving" :disabled="!form.employee_id || !form.amount || !form.paid_out_on || !form.start_period">{{ t('payroll.loans.send') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="payroll-loan" :loading="saving" :disabled="!form.employee_id || !form.principal_minor || !form.paid_out_on || !form.start_period">{{ t('payroll.loans.send') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

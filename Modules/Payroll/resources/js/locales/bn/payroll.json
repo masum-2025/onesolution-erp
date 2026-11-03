@@ -405,5 +405,29 @@
             "delete_title": "{name}-এর চূড়ান্ত হিসাব মুছবেন?",
             "delete_text": "খসড়াটি মুছে যাবে; আবার শুরু করা যাবে।"
         }
+    },
+    "export": {
+        "code": "কোড",
+        "employee": "কর্মী",
+        "status": "অবস্থা",
+        "payment_method": "যেভাবে পরিশোধ",
+        "basic": "মূল বেতন",
+        "month": "মাস",
+        "people": "কর্মী",
+        "net": "নিট বেতন",
+        "title": "নাম",
+        "date": "তারিখ",
+        "left_on": "চাকরি ছাড়ার দিন",
+        "own_share": "নিজের অংশ",
+        "company_share": "প্রতিষ্ঠানের অংশ",
+        "total": "মোট",
+        "last_month": "শেষ মাস",
+        "installment": "প্রতি মাসে",
+        "on": "চালু",
+        "absent_days": "অনুপস্থিত দিন",
+        "problem": "সমস্যা",
+        "service_months": "চাকরির মাস",
+        "gross": "করের আগে",
+        "not_paid": "যে কারণে দেওয়া হয়নি"
     }
 }

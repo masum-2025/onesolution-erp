@@ -1,12 +1,13 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { HandCoins } from 'lucide-vue-next';
+import { DateInput, MoneyInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { amountText, amountToMinor, newOpId } from '../lib';
+import { amountText, newOpId } from '../lib';
 
 /** Asking for an advance: how much, what for, by when it will be settled (else the rule's days after it is paid). Sent for approval at once. */
 const props = defineProps({
@@ -18,15 +19,16 @@ const props = defineProps({
 });
 const emit = defineEmits(['close', 'sent']);
 
-const form = reactive({ amount: '', purpose: '', settle_by: '' });
+const form = reactive({ amount_minor: null, purpose: '', settle_by: '' });
+const amountBad = ref(false);
 const errors = ref({});
 const saving = ref(false);
 let opId = newOpId();
-const minor = computed(() => amountToMinor(form.amount, props.currency));
+const minor = computed(() => form.amount_minor);
 
 watch(() => props.open, (open) => {
     if (!open) return;
-    Object.assign(form, { amount: '', purpose: '', settle_by: '' });
+    Object.assign(form, { amount_minor: null, purpose: '', settle_by: '' });
     errors.value = {};
     opId = newOpId();
 });
@@ -50,11 +52,11 @@ async function save() {
 <template>
     <AppDialog :open="open" :title="t('expenses.advance.ask_title')" :description="t('expenses.advance.ask_text', { max: amountText(max, currency) })" :icon="HandCoins" @close="emit('close')">
         <form id="expenses-advance" class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">
-            <AppField v-slot="{ id }" :label="t('expenses.advance.amount', { currency })" :error="errors.amount_minor?.[0] ?? (form.amount && minor === null ? t('expenses.advance.amount_bad') : null)">
-                <input :id="id" v-model="form.amount" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+            <AppField v-slot="{ id }" :label="t('expenses.advance.amount', { currency })" :error="errors.amount_minor?.[0] ?? (amountBad ? t('expenses.advance.amount_bad') : null)">
+                <MoneyInput :id="id" v-model="form.amount_minor" v-model:invalid="amountBad" :currency="currency" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('expenses.advance.settle_by')" :hint="t('expenses.advance.settle_by_hint')" :error="errors.settle_by?.[0]" optional>
-                <input :id="id" v-model="form.settle_by" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.settle_by" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('expenses.advance.purpose')" :error="errors.purpose?.[0]" class="sm:col-span-2">
                 <input :id="id" v-model="form.purpose" class="field-input" maxlength="300" :placeholder="t('expenses.advance.purpose_hint')" />

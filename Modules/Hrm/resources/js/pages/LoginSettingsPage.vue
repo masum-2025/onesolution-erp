@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { ArrowLeft, Eye, EyeOff, KeyRound, ShieldCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -62,12 +62,10 @@ async function save() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('hrm.first_login.page_title')" :description="t('hrm.first_login.page_text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.first_login.page_title')" :description="t('hrm.first_login.page_text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="settings.loading.value && !data" :rows="4" />
         <ErrorState v-else-if="settings.error.value" :error="settings.error.value" @retry="settings.reload()" />
@@ -124,5 +122,5 @@ async function save() {
                 <p>{{ t('hrm.first_login.how_4') }}</p>
             </aside>
         </form>
-    </div>
+    </PageFrame>
 </template>

@@ -1,4 +1,4 @@
-import { i18n } from '@/lib/i18n';
+import { i18n, t } from '@/lib/i18n';
 import { formatMoney, formatNumber, localeTag } from '@/lib/format';
 import { amountToMinor, cleanNumber, minorToText } from '@/lib/numbers';
 import { newOpId } from '@/lib/billing';
@@ -88,3 +88,31 @@ export function advanceTone(status) {
     return { submitted: 'warn', approved: 'brand', rejected: 'bad', paid: 'brand', settled: 'ok', withdrawn: 'neutral' }[status] ?? 'neutral';
 }
 
+
+/** Export columns of a list of claims (what ClaimRows shows). */
+export function claimColumns() {
+    return [
+        { key: 'number', label: t('expenses.export.number') },
+        { key: 'code', label: t('expenses.export.code'), value: (item) => item.employee?.code ?? '' },
+        { key: 'employee', label: t('expenses.export.employee'), value: (item) => item.employee?.name ?? '' },
+        { key: 'title', label: t('expenses.export.title') },
+        { key: 'submitted_at', label: t('expenses.export.submitted_on'), type: 'date', value: (item) => (item.submitted_at ? dayOf(new Date(item.submitted_at)) : null) },
+        { key: 'line_count', label: t('expenses.export.lines'), type: 'number' },
+        { key: 'total_minor', label: t('expenses.export.total'), type: 'money' },
+        { key: 'status', label: t('expenses.export.status'), value: (item) => t(`expenses.status.${item.status}`) },
+    ];
+}
+
+/** Export columns of a list of advances. */
+export function advanceColumns() {
+    return [
+        { key: 'number', label: t('expenses.export.number') },
+        { key: 'code', label: t('expenses.export.code'), value: (item) => item.employee?.code ?? '' },
+        { key: 'employee', label: t('expenses.export.employee'), value: (item) => item.employee?.name ?? '' },
+        { key: 'purpose', label: t('expenses.advance.purpose') },
+        { key: 'amount_minor', label: t('expenses.export.total'), type: 'money' },
+        { key: 'outstanding_minor', label: t('expenses.export.left'), type: 'money' },
+        { key: 'settle_by', label: t('expenses.advance.settle_by'), type: 'date' },
+        { key: 'status', label: t('expenses.export.status'), value: (item) => t(`expenses.advance_status.${item.status}`) },
+    ];
+}

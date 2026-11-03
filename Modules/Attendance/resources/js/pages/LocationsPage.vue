@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowLeft, Crosshair, MapPin, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -97,13 +97,11 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.locations.title')" :description="t('attendance.locations.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
-                <AppButton v-if="can('attendance.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('attendance.locations.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.locations.title')" :description="t('attendance.locations.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
+            <AppButton v-if="can('attendance.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('attendance.locations.add') }}</AppButton>
+        </template>
 
         <p class="mb-4 rounded-xl px-4 py-3 text-[13px]" :class="required ? 'bg-brand-soft text-brand-text' : 'bg-subtle text-muted'" role="status">
             {{ required ? t('attendance.locations.required_on', { unit: org.name }) : t('attendance.locations.required_off', { unit: org.name }) }}
@@ -155,5 +153,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="attendance-location" :loading="saving" :disabled="form.name.trim().length < 2 || !form.latitude || !form.longitude">{{ t('attendance.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -2,11 +2,9 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { Check, CheckCheck, Plus, Save, Send, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatDateTime, formatNumber } from '@/lib/format';
@@ -103,16 +101,12 @@ const shown = (item, which) => item[`${which}_rating`] !== null && item[`${which
 </script>
 
 <template>
-    <div class="space-y-5">
-        <ErrorState v-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
-        <SkeletonRows v-else-if="!review" :rows="6" />
-        <template v-else>
-            <PageHeader :title="review.employee.name" :description="`${review.cycle.name}${review.manager_name ? ' · ' + t('appraisals.rows.manager', { name: review.manager_name }) : ''}`">
-                <template #actions>
-                    <AppBadge :tone="stageTone(review.stage)">{{ t(`appraisals.stages.${review.stage}`) }}</AppBadge>
-                    <AppButton v-if="can.send_back" variant="ghost" :icon="Undo2" :loading="busy" @click="sendBack">{{ t('appraisals.review.send_back') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="review ? review.employee.name : ''" :description="review ? `${review.cycle.name}${review.manager_name ? ' · ' + t('appraisals.rows.manager', { name: review.manager_name }) : ''}` : ''" :resource="view" :skeleton-rows="6" width="full" class="space-y-5">
+        <template #actions>
+            <AppBadge :tone="stageTone(review.stage)">{{ t(`appraisals.stages.${review.stage}`) }}</AppBadge>
+            <AppButton v-if="can.send_back" variant="ghost" :icon="Undo2" :loading="busy" @click="sendBack">{{ t('appraisals.review.send_back') }}</AppButton>
+        </template>
+        <template v-if="review">
 
             <!-- Where it stands. -->
             <ol class="flex flex-wrap gap-2" :aria-label="t('appraisals.review.steps')">
@@ -226,5 +220,5 @@ const shown = (item, which) => item[`${which}_rating`] !== null && item[`${which
                 </ol>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

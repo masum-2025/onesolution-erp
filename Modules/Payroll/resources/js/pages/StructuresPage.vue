@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowLeft, Layers, PenLine, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -38,6 +38,19 @@ function describe(item) {
     const value = item.calc === 'fixed' ? formatMoney({ amount: item.amount_minor ?? 0, currency: currency.value }) : t('payroll.structures.of_basic', { percent: percentText(item.rate_bp ?? 0) });
     return `${componentOf(item.component_id)?.name ?? '—'} ${value}`;
 }
+
+// Export and print (payroll.export): the pay structures and what each adds to the basic.
+const exported = computed(() => ({
+    module: 'payroll',
+    page: 'payroll.structures',
+    columns: [
+        { key: 'code', label: t('payroll.export.code') },
+        { key: 'name', label: t('payroll.export.title') },
+        { key: 'items', label: t('payroll.structures.items'), value: (structure) => (structure.items.length ? [t('payroll.structures.basic'), ...structure.items.map(describe)].join(' · ') : t('payroll.structures.basic_only')) },
+        { key: 'is_active', label: t('payroll.export.status'), value: (structure) => (structure.is_active ? t('payroll.export.on') : t('payroll.common.off')) },
+    ],
+    rows: structures.value,
+}));
 
 const editing = ref(null);
 const saving = ref(false);
@@ -103,13 +116,11 @@ const itemError = (index) => errors.value[`items.${index}`]?.[0] ?? errors.value
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.structures.title')" :description="t('payroll.structures.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'payroll-employees' }" :icon="ArrowLeft">{{ t('payroll.common.back') }}</AppButton>
-                <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="edit()">{{ t('payroll.structures.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('payroll.structures.title')" :description="t('payroll.structures.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'payroll-employees' }" :icon="ArrowLeft">{{ t('payroll.common.back') }}</AppButton>
+            <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="edit()">{{ t('payroll.structures.add') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -175,5 +186,5 @@ const itemError = (index) => errors.value[`items.${index}`]?.[0] ?? errors.value
                 </AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

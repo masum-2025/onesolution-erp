@@ -1,13 +1,14 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { FileText, Paperclip, Plus, Save, Send, Trash2, X } from 'lucide-vue-next';
+import { DateInput, MoneyInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppField from '@/components/AppField.vue';
 import { confirmAction } from '@/lib/dialogs';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
-import { amountText, amountToMinor, dayOf, kmToTenths, mileageAmount, minorToText, nameIn, needsReceipt, newOpId, tenthsToKm } from '../lib';
+import { amountText, dayOf, kmToTenths, mileageAmount, nameIn, needsReceipt, newOpId, tenthsToKm } from '../lib';
 
 /**
  * Writing one's own claim: a title, the expenses (day, kind, what for, the
@@ -45,7 +46,7 @@ let nextKey = 1;
 
 const today = () => dayOf();
 const kindOf = (id) => props.categories.find((item) => item.id === id) ?? null;
-const blankLine = () => ({ key: nextKey++, id: null, spent_on: today(), category_id: props.categories[0]?.id ?? '', description: '', amount: '', km: '', per_diem_code: props.perDiemRates[0]?.code ?? '', days: '' });
+const blankLine = () => ({ key: nextKey++, id: null, spent_on: today(), category_id: props.categories[0]?.id ?? '', description: '', amount_minor: null, km: '', per_diem_code: props.perDiemRates[0]?.code ?? '', days: '' });
 const rateOf = (code) => props.perDiemRates.find((rate) => rate.code === code)?.amount_minor ?? 0;
 
 function load(claim) {
@@ -55,7 +56,7 @@ function load(claim) {
     form.lines = claim
         ? claim.lines.map((line) => ({
             key: nextKey++, id: line.id, spent_on: line.spent_on, category_id: line.category_id, description: line.description,
-            amount: line.mileage || line.per_diem ? '' : minorToText(line.amount_minor, props.currency), km: line.mileage ? tenthsToKm(line.distance_tenths) : '',
+            amount_minor: line.mileage || line.per_diem ? null : line.amount_minor, km: line.mileage ? tenthsToKm(line.distance_tenths) : '',
             per_diem_code: line.per_diem_code ?? props.perDiemRates[0]?.code ?? '', days: line.days ?? '',
         }))
         : [blankLine()];
@@ -73,7 +74,7 @@ function amountOf(line) {
     const kind = kindOf(line.category_id);
     if (kind?.per_diem) return (Number.parseInt(line.days, 10) || 0) * rateOf(line.per_diem_code);
     if (kind?.mileage) return mileageAmount(kmToTenths(line.km), props.limits.mileage_rate);
-    return amountToMinor(line.amount, props.currency) ?? 0;
+    return line.amount_minor ?? 0;
 }
 const total = computed(() => form.lines.reduce((sum, line) => sum + amountOf(line), 0));
 const receiptsOf = (line) => (current.value?.receipts ?? []).filter((receipt) => line.id && receipt.line_id === line.id);
@@ -97,7 +98,7 @@ function body() {
                 spent_on: line.spent_on,
                 category_id: line.category_id,
                 description: line.description.trim(),
-                amount_minor: mileage || perDiem ? null : amountToMinor(line.amount, props.currency),
+                amount_minor: mileage || perDiem ? null : line.amount_minor,
                 distance_tenths: mileage ? kmToTenths(line.km) : null,
                 per_diem_code: perDiem ? line.per_diem_code : null,
                 days: perDiem ? Number.parseInt(line.days, 10) || null : null,
@@ -231,7 +232,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                             </select>
                         </AppField>
                         <AppField v-slot="{ id }" :label="t('expenses.editor.spent_on')" :error="fieldError(`lines.${index}.spent_on`)">
-                            <input :id="id" v-model="line.spent_on" type="date" class="field-input" :min="oldest" :max="today()" />
+                            <DateInput :id="id" v-model="line.spent_on" :min="oldest" :max="today()" />
                         </AppField>
                         <AppField v-slot="{ id }" :label="t('expenses.editor.description')" :error="fieldError(`lines.${index}.description`)" class="sm:col-span-2">
                             <input :id="id" v-model="line.description" class="field-input" maxlength="300" :placeholder="t('expenses.editor.description_hint')" />
@@ -255,7 +256,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                             </p>
                         </template>
                         <AppField v-else v-slot="{ id }" :label="t('expenses.editor.amount', { currency })" :error="fieldError(`lines.${index}.amount_minor`)">
-                            <input :id="id" v-model="line.amount" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                            <MoneyInput :id="id" v-model="line.amount_minor" :currency="currency" />
                         </AppField>
                     </div>
 

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -23,16 +23,14 @@ const time = (iso) => (iso ? formatDate(iso, { timeStyle: 'short' }) : '—');
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.portal.title')" :description="t('attendance.portal.text')">
-            <template #actions>
-                <div class="flex items-center gap-1">
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('attendance.common.previous_month')" @click="month = shiftMonth(month, -1)" />
-                    <span class="min-w-32 text-center text-[14px] font-semibold">{{ formatDate(`${month}-01T00:00:00Z`, { month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</span>
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('attendance.common.next_month')" @click="month = shiftMonth(month, 1)" />
-                </div>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.portal.title')" :description="t('attendance.portal.text')" width="full">
+        <template #actions>
+            <div class="flex items-center gap-1">
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('attendance.common.previous_month')" @click="month = shiftMonth(month, -1)" />
+                <span class="min-w-32 text-center text-[14px] font-semibold">{{ formatDate(`${month}-01T00:00:00Z`, { month: 'long', year: 'numeric', timeZone: 'UTC' }) }}</span>
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('attendance.common.next_month')" @click="month = shiftMonth(month, 1)" />
+            </div>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -48,5 +46,5 @@ const time = (iso) => (iso ? formatDate(iso, { timeStyle: 'short' }) : '—');
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

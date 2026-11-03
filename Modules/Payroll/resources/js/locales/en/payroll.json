@@ -405,5 +405,29 @@
             "delete_title": "Delete the settlement of {name}?",
             "delete_text": "The draft goes; you can start it again."
         }
+    },
+    "export": {
+        "code": "Code",
+        "employee": "Employee",
+        "status": "Status",
+        "payment_method": "Paid by",
+        "basic": "Basic",
+        "month": "Month",
+        "people": "People",
+        "net": "Net pay",
+        "title": "Name",
+        "date": "Date",
+        "left_on": "Left on",
+        "own_share": "Own share",
+        "company_share": "Company share",
+        "total": "Total",
+        "last_month": "Last month",
+        "installment": "Each month",
+        "on": "On",
+        "absent_days": "Days absent",
+        "problem": "Problem",
+        "service_months": "Months of service",
+        "gross": "Before tax",
+        "not_paid": "Not paid because"
     }
 }

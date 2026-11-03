@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { ArrowLeft, ListPlus, PenLine, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -111,13 +111,11 @@ const optionsError = computed(() => fieldError('options') ?? Object.entries(erro
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('hrm.fields_page.title')" :description="t('hrm.fields_page.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
-                <AppButton v-if="canConfigure" variant="primary" :icon="Plus" :disabled="atLimit" @click="edit()">{{ t('hrm.fields_page.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.fields_page.title')" :description="t('hrm.fields_page.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
+            <AppButton v-if="canConfigure" variant="primary" :icon="Plus" :disabled="atLimit" @click="edit()">{{ t('hrm.fields_page.add') }}</AppButton>
+        </template>
 
         <p v-if="meta" class="mb-4 text-[12.5px] text-muted" role="status">
             {{ t('hrm.fields_page.in_use', { count: meta.in_use, max: meta.max }) }}
@@ -208,5 +206,5 @@ const optionsError = computed(() => fieldError('options') ?? Object.entries(erro
                 </AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

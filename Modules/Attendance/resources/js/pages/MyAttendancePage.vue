@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { ChevronLeft, ChevronRight, CloudOff, Fingerprint, LogIn, LogOut, MapPin, PenLine, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -110,12 +110,10 @@ function sent() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.me.title')" :description="t('attendance.me.text')">
-            <template v-if="data" #actions>
-                <AppButton variant="secondary" :icon="PenLine" @click="asking = new Date().toISOString().slice(0, 10)">{{ t('attendance.me.ask') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.me.title')" :description="t('attendance.me.text')" width="full">
+        <template v-if="data" #actions>
+            <AppButton variant="secondary" :icon="PenLine" @click="asking = new Date().toISOString().slice(0, 10)">{{ t('attendance.me.ask') }}</AppButton>
+        </template>
 
         <section v-if="me.loading.value && !data" class="card"><SkeletonRows :rows="4" /></section>
         <section v-else-if="me.error.value?.code === 'not_linked'" class="card">
@@ -203,5 +201,5 @@ function sent() {
         </div>
 
         <CorrectionDialog :open="asking !== null" :date="asking ?? ''" :send="(body) => attendance.askMine(body)" @close="asking = null" @sent="sent" />
-    </div>
+    </PageFrame>
 </template>

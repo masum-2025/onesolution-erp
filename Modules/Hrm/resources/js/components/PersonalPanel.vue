@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Eye, EyeOff, PenLine } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import { formatDate } from '@/lib/format';
@@ -121,7 +122,7 @@ function customText(field) {
                 <input :id="id" v-model="form.email" type="email" class="field-input" dir="ltr" maxlength="190" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('hrm.fields.date_of_birth')" :error="fieldError('date_of_birth')" optional>
-                <input :id="id" v-model="form.date_of_birth" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.date_of_birth" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('hrm.fields.gender')" :error="fieldError('gender')" optional>
                 <select :id="id" v-model="form.gender" class="field-input">

@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { ArrowLeft, Network } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -26,12 +26,10 @@ const total = computed(() => top.data.value?.meta.total ?? 0);
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('hrm.org_chart.title')" :description="t('hrm.org_chart.text')">
-            <template #actions>
-                <AppButton to="/hrm" :icon="ArrowLeft">{{ t('hrm.org_chart.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.org_chart.title')" :description="t('hrm.org_chart.text')" width="full">
+        <template #actions>
+            <AppButton to="/hrm" :icon="ArrowLeft">{{ t('hrm.org_chart.back') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="top.loading.value && !top.data.value" :rows="4" />
         <ErrorState v-else-if="top.error.value" :error="top.error.value" @retry="top.reload()" />
@@ -46,5 +44,5 @@ const total = computed(() => top.data.value?.meta.total ?? 0);
             </ul>
             <p v-if="total > people.length" class="mt-3 text-[12.5px] text-muted">{{ t('hrm.org_chart.more', { count: total - people.length, shown: formatNumber(total - people.length) }) }}</p>
         </template>
-    </div>
+    </PageFrame>
 </template>

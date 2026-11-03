@@ -2,14 +2,12 @@
 import { computed, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Calculator, Check, Download, Gift, PenLine, Send, Trash2, Wallet, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, MoneyInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
@@ -18,7 +16,7 @@ import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { payrollApi } from '../api';
 import { saveBankFile } from '../bank';
-import { amountToMinor, minorToText, percentText, runTone, sortBonusLines } from '../lib';
+import { percentText, runTone, sortBonusLines } from '../lib';
 
 /**
  * One festival bonus: totals, every employee (paid first; why the others
@@ -37,6 +35,23 @@ const lines = computed(() => sortBonusLines(bonus.value?.lines));
 const money = (amount) => formatMoney({ amount, currency: bonus.value?.currency });
 const day = (value) => formatDate(`${value}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' });
 const busy = ref(null);
+
+// Export and print (payroll.export): the bonus of each person, as the list shows it.
+const exported = computed(() => (bonus.value ? {
+    module: 'payroll',
+    page: 'payroll.bonus',
+    columns: [
+        { key: 'employee_code', label: t('payroll.export.code') },
+        { key: 'employee_name', label: t('payroll.export.employee') },
+        { key: 'service_months', label: t('payroll.export.service_months'), type: 'number' },
+        { key: 'basic_minor', label: t('payroll.export.basic'), type: 'money', currency: bonus.value.currency },
+        { key: 'gross_minor', label: t('payroll.export.gross'), type: 'money', currency: bonus.value.currency },
+        { key: 'tax_minor', label: t('payroll.slip.tax'), type: 'money', currency: bonus.value.currency },
+        { key: 'net_minor', label: t('payroll.export.net'), type: 'money', currency: bonus.value.currency },
+        { key: 'not_paid_reason', label: t('payroll.export.not_paid'), value: (item) => (item.not_paid_reason ? t(`payroll.bonus.reasons.${item.not_paid_reason}`) : '') },
+    ],
+    rows: lines.value,
+} : null));
 
 async function step(name, body = {}) {
     busy.value = name;
@@ -85,15 +100,15 @@ async function remove() {
 
 // One line by hand.
 const editing = ref(null);
-const line = reactive({ excluded: false, byHand: false, amount: '' });
+const line = reactive({ excluded: false, byHand: false, amount_minor: null });
 const lineError = ref(null);
 function edit(item) {
-    Object.assign(line, { excluded: item.excluded, byHand: item.override_minor !== null, amount: minorToText(item.override_minor, bonus.value.currency) });
+    Object.assign(line, { excluded: item.excluded, byHand: item.override_minor !== null, amount_minor: item.override_minor });
     lineError.value = null;
     editing.value = item;
 }
 async function saveLine() {
-    const amount = line.byHand ? amountToMinor(line.amount, bonus.value.currency) : null;
+    const amount = line.byHand ? line.amount_minor : null;
     if (line.byHand && amount === null) {
         lineError.value = t('payroll.run.bad_amount');
         return;
@@ -125,28 +140,25 @@ async function bankFile() {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-bonuses' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.bonuses.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !bonus" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="bonus">
-            <PageHeader :title="bonus.title" :description="t('payroll.bonus.text', { date: day(bonus.bonus_on), percent: percentText(bonus.rate_bp) })">
-                <template #eyebrow>
-                    <span class="mb-2 flex"><AppBadge :tone="runTone(bonus.status)" dot>{{ t(`payroll.status.${bonus.status}`) }}</AppBadge></span>
-                </template>
-                <template #actions>
-                    <div class="flex flex-wrap gap-2">
-                        <AppButton v-if="bonus.can.calculate" variant="secondary" :icon="Calculator" :loading="busy === 'calculate'" @click="step('calculate')">{{ t('payroll.run.steps.calculate') }}</AppButton>
-                        <AppButton v-if="bonus.can.submit" variant="primary" :icon="Send" @click="confirmStep('submit')">{{ t('payroll.run.steps.submit') }}</AppButton>
-                        <AppButton v-if="bonus.can.approve" variant="primary" :icon="Check" @click="confirmStep('approve')">{{ t('payroll.run.steps.approve') }}</AppButton>
-                        <AppButton v-if="bonus.can.reject" variant="ghost" :icon="X" @click="confirmStep('reject')">{{ t('payroll.run.steps.reject') }}</AppButton>
-                        <AppButton v-if="bonus.can.pay" variant="primary" :icon="Wallet" @click="paidOn = new Date().toISOString().slice(0, 10); paying = true">{{ t('payroll.run.steps.pay') }}</AppButton>
-                        <AppButton v-if="bonus.can.bank_file" variant="secondary" :icon="Download" :loading="busy === 'bank'" @click="bankFile">{{ t('payroll.bank.take') }}</AppButton>
-                        <AppButton v-if="bonus.can.delete" variant="ghost" :icon="Trash2" :aria-label="t('payroll.run.steps.delete')" @click="remove" />
-                    </div>
-                </template>
-            </PageHeader>
+    <PageFrame :title="bonus ? bonus.title : ''" :description="bonus ? t('payroll.bonus.text', { date: day(bonus.bonus_on), percent: percentText(bonus.rate_bp) }) : ''" :resource="record" :export="exported" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-bonuses' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.bonuses.title') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex"><AppBadge :tone="runTone(bonus.status)" dot>{{ t(`payroll.status.${bonus.status}`) }}</AppBadge></span>
+        </template>
+        <template #actions>
+            <div class="flex flex-wrap gap-2">
+                <AppButton v-if="bonus.can.calculate" variant="secondary" :icon="Calculator" :loading="busy === 'calculate'" @click="step('calculate')">{{ t('payroll.run.steps.calculate') }}</AppButton>
+                <AppButton v-if="bonus.can.submit" variant="primary" :icon="Send" @click="confirmStep('submit')">{{ t('payroll.run.steps.submit') }}</AppButton>
+                <AppButton v-if="bonus.can.approve" variant="primary" :icon="Check" @click="confirmStep('approve')">{{ t('payroll.run.steps.approve') }}</AppButton>
+                <AppButton v-if="bonus.can.reject" variant="ghost" :icon="X" @click="confirmStep('reject')">{{ t('payroll.run.steps.reject') }}</AppButton>
+                <AppButton v-if="bonus.can.pay" variant="primary" :icon="Wallet" @click="paidOn = new Date().toISOString().slice(0, 10); paying = true">{{ t('payroll.run.steps.pay') }}</AppButton>
+                <AppButton v-if="bonus.can.bank_file" variant="secondary" :icon="Download" :loading="busy === 'bank'" @click="bankFile">{{ t('payroll.bank.take') }}</AppButton>
+                <AppButton v-if="bonus.can.delete" variant="ghost" :icon="Trash2" :aria-label="t('payroll.run.steps.delete')" @click="remove" />
+            </div>
+        </template>
+        <template v-if="bonus">
 
             <p v-if="bonus.reject_reason && bonus.status === 'draft'" class="mb-4 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn" role="status">{{ t('payroll.run.sent_back', { reason: bonus.reject_reason }) }}</p>
             <p v-if="bonus.status === 'draft' && !bonus.calculated_at" class="mb-4 rounded-xl bg-subtle px-4 py-3 text-[13px] text-muted" role="status">{{ t('payroll.bonus.needs_calculation') }}</p>
@@ -186,7 +198,7 @@ async function bankFile() {
                 <template v-if="!line.excluded">
                     <AppSwitch v-model="line.byHand" :label="t('payroll.bonus.set_by_hand')" show-label />
                     <AppField v-if="line.byHand" v-slot="{ id }" :label="t('payroll.run.amount')" :error="lineError">
-                        <input :id="id" v-model="line.amount" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                        <MoneyInput :id="id" v-model="line.amount_minor" :currency="bonus?.currency" />
                     </AppField>
                 </template>
                 <p v-if="lineError && !line.byHand" class="text-[12.5px] text-bad">{{ lineError }}</p>
@@ -200,7 +212,7 @@ async function bankFile() {
         <AppDialog :open="paying" :title="t('payroll.run.steps.pay')" :description="t('payroll.run.pay_text', { amount: bonus ? money(bonus.net_minor) : '' })" :icon="Wallet" @close="paying = false">
             <form id="payroll-bonus-pay" novalidate @submit.prevent="pay">
                 <AppField v-slot="{ id }" :label="t('payroll.run.paid_on')">
-                    <input :id="id" v-model="paidOn" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="paidOn" />
                 </AppField>
             </form>
             <template #footer>
@@ -208,5 +220,5 @@ async function bankFile() {
                 <AppButton variant="primary" type="submit" form="payroll-bonus-pay" :loading="busy === 'pay'" :disabled="!paidOn">{{ t('payroll.run.steps.pay') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

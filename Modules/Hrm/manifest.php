@@ -32,6 +32,8 @@ return [
         'hrm.exit',
         // Extra employee fields: what the organization asks about everyone.
         'hrm.configure',
+        // Download or print HRM pages (people's details; others only see them on screen).
+        'hrm.export',
     ],
     'rules' => [
         [

@@ -2,13 +2,11 @@
 import { computed, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, Calculator, Check, Download, Plus, Printer, Send, Trash2, Wallet, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, MoneyInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
@@ -17,7 +15,7 @@ import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { payrollApi } from '../api';
 import { saveBankFile } from '../bank';
-import { amountToMinor, runTone, settlementBasis, settlementSections } from '../lib';
+import { runTone, settlementBasis, settlementSections } from '../lib';
 
 /**
  * One final settlement: service, each line with how it was worked out
@@ -93,15 +91,15 @@ async function remove() {
 
 // A line by hand.
 const adding = ref(false);
-const line = reactive({ kind: 'earning', label: '', amount: '', taxable: true });
+const line = reactive({ kind: 'earning', label: '', amount_minor: null, taxable: true });
 const lineErrors = ref({});
 function addLine() {
-    Object.assign(line, { kind: 'earning', label: '', amount: '', taxable: true });
+    Object.assign(line, { kind: 'earning', label: '', amount_minor: null, taxable: true });
     lineErrors.value = {};
     adding.value = true;
 }
 async function saveLine() {
-    const amount = amountToMinor(line.amount, settlement.value.currency);
+    const amount = line.amount_minor;
     if (!amount) {
         lineErrors.value = { amount_minor: [t('payroll.run.bad_amount')] };
         return;
@@ -142,32 +140,29 @@ async function bankFile() {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-settlements' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.settlements.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !settlement" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="settlement">
-            <PageHeader :title="settlement.employee_name" :description="t('payroll.settlement.text', { joined: day(settlement.joined_on), left: day(settlement.left_on), years: formatNumber(settlement.service_years), months: formatNumber(settlement.service_months) })">
-                <template #eyebrow>
-                    <span class="mb-2 flex items-center gap-2">
-                        <AppBadge :tone="runTone(settlement.status)" dot>{{ t(`payroll.status.${settlement.status}`) }}</AppBadge>
-                        <span class="whitespace-nowrap font-mono text-[12px] text-muted" dir="ltr">{{ settlement.employee_code }}</span>
-                    </span>
-                </template>
-                <template #actions>
-                    <div class="flex flex-wrap gap-2">
-                        <AppButton v-if="settlement.can.calculate" variant="secondary" :icon="Calculator" :loading="busy === 'calculate'" @click="step('calculate')">{{ t('payroll.run.steps.calculate') }}</AppButton>
-                        <AppButton v-if="settlement.can.submit" variant="primary" :icon="Send" @click="confirmStep('submit')">{{ t('payroll.run.steps.submit') }}</AppButton>
-                        <AppButton v-if="settlement.can.approve" variant="primary" :icon="Check" @click="confirmStep('approve')">{{ t('payroll.run.steps.approve') }}</AppButton>
-                        <AppButton v-if="settlement.can.reject" variant="ghost" :icon="X" @click="confirmStep('reject')">{{ t('payroll.run.steps.reject') }}</AppButton>
-                        <AppButton v-if="settlement.can.pay" variant="primary" :icon="Wallet" @click="paidOn = new Date().toISOString().slice(0, 10); paying = true">{{ t('payroll.run.steps.pay') }}</AppButton>
-                        <AppButton v-if="settlement.can.bank_file" variant="secondary" :icon="Download" :loading="busy === 'bank'" @click="bankFile">{{ t('payroll.bank.take') }}</AppButton>
-                        <AppButton variant="ghost" :icon="Printer" :to="{ name: 'payroll-settlement-print', params: { id: settlement.id } }" :aria-label="t('payroll.slip.print')" />
-                        <AppButton v-if="settlement.can.delete" variant="ghost" :icon="Trash2" :aria-label="t('payroll.run.steps.delete')" @click="remove" />
-                    </div>
-                </template>
-            </PageHeader>
+    <PageFrame :title="settlement ? settlement.employee_name : ''" :description="settlement ? t('payroll.settlement.text', { joined: day(settlement.joined_on), left: day(settlement.left_on), years: formatNumber(settlement.service_years), months: formatNumber(settlement.service_months) }) : ''" :resource="record" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-settlements' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.settlements.title') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex items-center gap-2">
+                <AppBadge :tone="runTone(settlement.status)" dot>{{ t(`payroll.status.${settlement.status}`) }}</AppBadge>
+                <span class="whitespace-nowrap font-mono text-[12px] text-muted" dir="ltr">{{ settlement.employee_code }}</span>
+            </span>
+        </template>
+        <template #actions>
+            <div class="flex flex-wrap gap-2">
+                <AppButton v-if="settlement.can.calculate" variant="secondary" :icon="Calculator" :loading="busy === 'calculate'" @click="step('calculate')">{{ t('payroll.run.steps.calculate') }}</AppButton>
+                <AppButton v-if="settlement.can.submit" variant="primary" :icon="Send" @click="confirmStep('submit')">{{ t('payroll.run.steps.submit') }}</AppButton>
+                <AppButton v-if="settlement.can.approve" variant="primary" :icon="Check" @click="confirmStep('approve')">{{ t('payroll.run.steps.approve') }}</AppButton>
+                <AppButton v-if="settlement.can.reject" variant="ghost" :icon="X" @click="confirmStep('reject')">{{ t('payroll.run.steps.reject') }}</AppButton>
+                <AppButton v-if="settlement.can.pay" variant="primary" :icon="Wallet" @click="paidOn = new Date().toISOString().slice(0, 10); paying = true">{{ t('payroll.run.steps.pay') }}</AppButton>
+                <AppButton v-if="settlement.can.bank_file" variant="secondary" :icon="Download" :loading="busy === 'bank'" @click="bankFile">{{ t('payroll.bank.take') }}</AppButton>
+                <AppButton variant="ghost" :icon="Printer" :to="{ name: 'payroll-settlement-print', params: { id: settlement.id } }" :aria-label="t('payroll.slip.print')" />
+                <AppButton v-if="settlement.can.delete" variant="ghost" :icon="Trash2" :aria-label="t('payroll.run.steps.delete')" @click="remove" />
+            </div>
+        </template>
+        <template v-if="settlement">
 
             <p v-if="settlement.reject_reason && settlement.status === 'draft'" class="mb-4 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn" role="status">{{ t('payroll.run.sent_back', { reason: settlement.reject_reason }) }}</p>
             <p v-if="settlement.net_minor < 0" class="mb-4 rounded-xl bg-bad-soft px-4 py-3 text-[13px] text-bad" role="alert">{{ t('payroll.settlement.owed', { amount: money(-settlement.net_minor) }) }}</p>
@@ -210,7 +205,7 @@ async function bankFile() {
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.run.amount')" :error="lineErrors.amount_minor?.[0]">
-                    <input :id="id" v-model="line.amount" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                    <MoneyInput :id="id" v-model="line.amount_minor" :currency="settlement?.currency" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.run.label')" :error="lineErrors.label?.[0]" class="sm:col-span-2">
                     <input :id="id" v-model="line.label" class="field-input" maxlength="120" :placeholder="t('payroll.settlement.label_hint')" />
@@ -219,14 +214,14 @@ async function bankFile() {
             </form>
             <template #footer>
                 <AppButton variant="ghost" @click="adding = false">{{ t('payroll.common.cancel') }}</AppButton>
-                <AppButton variant="primary" type="submit" form="payroll-settlement-line" :loading="busy === 'line'" :disabled="!line.label.trim() || !line.amount">{{ t('payroll.common.save') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="payroll-settlement-line" :loading="busy === 'line'" :disabled="!line.label.trim() || !line.amount_minor">{{ t('payroll.common.save') }}</AppButton>
             </template>
         </AppDialog>
 
         <AppDialog :open="paying" :title="t('payroll.run.steps.pay')" :description="t('payroll.run.pay_text', { amount: settlement ? money(settlement.net_minor) : '' })" :icon="Wallet" @close="paying = false">
             <form id="payroll-settlement-pay" novalidate @submit.prevent="pay">
                 <AppField v-slot="{ id }" :label="t('payroll.run.paid_on')">
-                    <input :id="id" v-model="paidOn" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="paidOn" />
                 </AppField>
             </form>
             <template #footer>
@@ -234,5 +229,5 @@ async function bankFile() {
                 <AppButton variant="primary" type="submit" form="payroll-settlement-pay" :loading="busy === 'pay'" :disabled="!paidOn">{{ t('payroll.run.steps.pay') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

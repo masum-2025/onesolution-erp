@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { CalendarPlus } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -89,10 +90,10 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('leave.ask.from')" :error="fieldError('from_date')">
-                <input :id="id" v-model="form.from_date" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.from_date" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('leave.ask.to')" :error="fieldError('to_date')">
-                <input :id="id" v-model="form.to_date" type="date" class="field-input" :min="form.from_date" />
+                <DateInput :id="id" v-model="form.to_date" :min="form.from_date" />
             </AppField>
             <fieldset v-if="type?.half_day" class="flex flex-wrap gap-x-6 gap-y-2 sm:col-span-2">
                 <legend class="sr-only">{{ t('leave.ask.halves') }}</legend>

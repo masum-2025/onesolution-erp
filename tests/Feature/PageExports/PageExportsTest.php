@@ -71,6 +71,27 @@ it('asks for the module\'s export permission where it declares one (payroll)', f
     ($this->send)(['module' => 'payroll', 'page' => 'payroll.runs'], $exporter)->assertCreated();
 });
 
+it('asks for hrm.export on HRM pages: people\'s details', function () {
+    toggles()->enable($this->w->g1, 'hrm', 'Test setup');
+    $viewer = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view', 'hrm.manage'], 'HR viewer')), $this->w->c1);
+    $exporter = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view', 'hrm.export'], 'HR exporter')), $this->w->c1);
+
+    ($this->as)($viewer)->getJson('/api/page-exports?module=hrm')->assertJsonPath('data.formats', [])->assertJsonPath('data.print', false);
+    ($this->send)(['module' => 'hrm', 'page' => 'hrm.employees'], $viewer)->assertForbidden();
+    ($this->as)($exporter)->getJson('/api/page-exports?module=hrm')->assertJsonPath('data.print', true);
+    ($this->send)(['module' => 'hrm', 'page' => 'hrm.employees'], $exporter)->assertCreated();
+
+    toggles()->disable($this->w->c1, 'hrm', 'Test');
+    ($this->as)($exporter)->getJson('/api/page-exports?module=hrm')->assertJsonPath('data.formats', []);
+    ($this->send)(['module' => 'hrm', 'page' => 'hrm.employees'], $exporter)->assertForbidden();
+    expect(AuditLog::query()->where('action', 'page_exported')->pluck('organization_id')->all())->toBe([$this->w->c1->id]);
+
+    // Other HR modules without their own export permission: anyone who sees the page.
+    toggles()->enable($this->w->c1, 'hrm', 'Test setup');
+    toggles()->enable($this->w->g1, 'attendance', 'Test setup');
+    ($this->as)($viewer)->getJson('/api/page-exports?module=attendance')->assertJsonPath('data.print', true);
+});
+
 it('keeps each organization to its own rules and its own audit', function () {
     trustedOrgRule($this->w->c2, 'ui.export_modules_off', ['accounting']);
     // C2's switch does not reach C1.

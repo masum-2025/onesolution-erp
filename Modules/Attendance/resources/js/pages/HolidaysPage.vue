@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { ArrowLeft, CalendarHeart, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -29,6 +29,18 @@ const year = ref(new Date().getFullYear());
 const list = useResource(() => attendance.holidays(year.value));
 const holidays = computed(() => list.data.value?.data ?? []);
 watch(year, () => list.reload());
+
+// Export and print: the year's holidays.
+const exported = computed(() => ({
+    module: 'attendance',
+    page: 'attendance.holidays',
+    columns: [
+        { key: 'on', label: t('attendance.holidays.date'), type: 'date' },
+        { key: 'name', label: t('attendance.holidays.name') },
+        { key: 'unit_name', label: t('attendance.export.only_at') },
+    ],
+    rows: holidays.value,
+}));
 
 const adding = ref(false);
 const saving = ref(false);
@@ -76,18 +88,16 @@ async function remove(holiday) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.holidays.title')" :description="t('attendance.holidays.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
-                <div class="flex items-center gap-1">
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('attendance.holidays.previous_year')" @click="year--" />
-                    <span class="tabular min-w-14 text-center text-[14px] font-semibold">{{ formatNumber(year, { useGrouping: false }) }}</span>
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('attendance.holidays.next_year')" @click="year++" />
-                </div>
-                <AppButton v-if="can('attendance.manage')" variant="primary" :icon="Plus" @click="add">{{ t('attendance.holidays.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.holidays.title')" :description="t('attendance.holidays.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
+            <div class="flex items-center gap-1">
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('attendance.holidays.previous_year')" @click="year--" />
+                <span class="tabular min-w-14 text-center text-[14px] font-semibold">{{ formatNumber(year, { useGrouping: false }) }}</span>
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('attendance.holidays.next_year')" @click="year++" />
+            </div>
+            <AppButton v-if="can('attendance.manage')" variant="primary" :icon="Plus" @click="add">{{ t('attendance.holidays.add') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -106,7 +116,7 @@ async function remove(holiday) {
         <AppDialog :open="adding" :title="t('attendance.holidays.add')" @close="adding = false">
             <form id="attendance-holiday" class="grid gap-4" novalidate @submit.prevent="save">
                 <AppField v-slot="{ id }" :label="t('attendance.holidays.date')" :error="errors.on?.[0]">
-                    <input :id="id" v-model="form.on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.on" />
                 </AppField>
                 <TranslatedFields v-model="form.name" :label="t('attendance.holidays.name')" :errors="errors" required :maxlength="80" />
                 <AppSwitch v-if="isUnit" v-model="form.onlyHere" :label="t('attendance.holidays.only_here', { unit: org.name })" show-label />
@@ -116,5 +126,5 @@ async function remove(holiday) {
                 <AppButton variant="primary" type="submit" form="attendance-holiday" :loading="saving" :disabled="!form.on || !form.name.en?.trim()">{{ t('attendance.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

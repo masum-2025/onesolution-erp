@@ -1,4 +1,5 @@
 <script setup>
+import { DateInput } from '@/ui';
 import AppField from '@/components/AppField.vue';
 import { t } from '@/lib/i18n';
 
@@ -41,7 +42,7 @@ const errorOf = (key) => props.errors?.[`custom.${key}`]?.[0] ?? null;
             <option value="yes">{{ t('hrm.custom.yes') }}</option>
             <option value="no">{{ t('hrm.custom.no') }}</option>
         </select>
-        <input v-else-if="field.type === 'date'" :id="id" :value="modelValue[field.key] ?? ''" type="date" class="field-input" @input="update(field.key, $event.target.value)" />
+        <DateInput v-else-if="field.type === 'date'" :id="id" :model-value="modelValue[field.key] ?? ''" @update:model-value="update(field.key, $event)" />
         <input
             v-else-if="field.type === 'number'"
             :id="id"

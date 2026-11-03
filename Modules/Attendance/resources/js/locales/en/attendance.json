@@ -235,5 +235,16 @@
         "not_employed": "{count} lines fell on days the person was not employed.",
         "unknown": "Codes not of people here: {codes}",
         "close": "Close"
+    },
+    "export": {
+        "code": "Code",
+        "status": "Status",
+        "date": "Date",
+        "in": "In",
+        "out": "Out",
+        "worked": "Worked",
+        "reason": "Reason",
+        "note": "Decision note",
+        "only_at": "Only at"
     }
 }

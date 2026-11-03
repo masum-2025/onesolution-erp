@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -101,7 +102,7 @@ async function save() {
                 </AppField>
             </div>
             <AppField :label="t('zkteco.device.import_from')" :hint="t('zkteco.device.import_from_hint')" :error="errors.import_from?.[0]">
-                <template #default="{ id, describedby }"><input :id="id" v-model="form.import_from" type="date" class="field-input w-auto" :aria-describedby="describedby" required /></template>
+                <template #default="{ id, describedby }"><DateInput :id="id" v-model="form.import_from" class="w-auto" :aria-describedby="describedby" required /></template>
             </AppField>
             <AppSwitch v-if="device" v-model="form.is_active" :label="t('zkteco.device.active')" show-label />
         </form>

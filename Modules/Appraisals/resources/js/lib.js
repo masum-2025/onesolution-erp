@@ -1,4 +1,5 @@
 import { formatNumber } from '@/lib/format';
+import { t } from '@/lib/i18n';
 
 /**
  * Appraisal helpers for the screens. The server keeps scores in whole
@@ -17,6 +18,19 @@ export function stagesOf(cycle) {
 export function scoreText(score) {
     if (score === null || score === undefined) return '—';
     return `${formatNumber(score / 10, { maximumFractionDigits: 1 })}%`;
+}
+
+/** Export columns of a list of reviews (what ReviewRows shows): person, cycle, manager, step, due date, score. */
+export function reviewColumns() {
+    return [
+        { key: 'code', label: t('appraisals.export.code'), value: (item) => item.employee?.code ?? '' },
+        { key: 'name', label: t('appraisals.export.employee'), value: (item) => item.employee?.name ?? '' },
+        { key: 'cycle_name', label: t('appraisals.export.cycle') },
+        { key: 'manager_name', label: t('appraisals.export.manager') },
+        { key: 'stage', label: t('appraisals.export.stage'), value: (item) => t(`appraisals.stages.${item.stage}`) },
+        { key: 'due', label: t('appraisals.export.due'), type: 'date' },
+        { key: 'score', label: t('appraisals.export.score'), type: 'number', value: (item) => (item.score === null || item.score === undefined ? null : item.score / 10) },
+    ];
 }
 
 /** The sum of goal weights typed in (blank or not a number counts 0). */

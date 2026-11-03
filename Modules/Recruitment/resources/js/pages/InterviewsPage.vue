@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { CalendarClock, Star } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -34,6 +34,22 @@ const groups = computed(() => [
     { key: 'past', items: past.value },
 ].filter((group) => group.items.length));
 
+// Export and print: one's interviews, in the groups shown.
+const exported = computed(() => ({
+    module: 'recruitment',
+    page: 'recruitment.interviews',
+    columns: [
+        { key: 'group', label: t('recruitment.export.group'), value: (item) => t(`recruitment.mine.${item.group}`) },
+        { key: 'name', label: t('recruitment.export.name') },
+        { key: 'opening_title', label: t('recruitment.export.job') },
+        { key: 'local', label: t('recruitment.export.when') },
+        { key: 'mode', label: t('recruitment.export.mode'), value: (item) => t(`recruitment.modes.${item.mode}`) },
+        { key: 'place', label: t('recruitment.export.place') },
+        { key: 'feedback_given', label: t('recruitment.export.feedback'), value: (item) => (item.feedback_given ? t('recruitment.mine.given') : '') },
+    ],
+    rows: groups.value.flatMap((group) => group.items.map((item) => ({ ...item, group: group.key }))),
+}));
+
 const giving = ref(null);
 const viewing = ref(null);
 function saved() {
@@ -43,8 +59,7 @@ function saved() {
 </script>
 
 <template>
-    <div class="space-y-5">
-        <PageHeader :title="t('recruitment.mine.title')" :description="t('recruitment.mine.text')" />
+    <PageFrame :title="t('recruitment.mine.title')" :description="t('recruitment.mine.text')" width="full" class="space-y-5" :export="exported">
 
         <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
         <ErrorState v-else-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
@@ -74,5 +89,5 @@ function saved() {
 
         <FeedbackDialog :open="giving !== null" :interview="giving" :name="giving?.name ?? ''" :calls="calls" @close="giving = null" @saved="saved" />
         <ApplicationDrawer :open="viewing !== null" :application-id="viewing" :calls="calls" @close="viewing = null" @changed="list.reload()" />
-    </div>
+    </PageFrame>
 </template>

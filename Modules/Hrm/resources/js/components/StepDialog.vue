@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -82,7 +83,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
     <AppDialog :open="open" :title="step ? t(`hrm.steps.${step}`) : ''" :description="employee.full_name" :tone="step === 'exit' ? 'bad' : 'brand'" @close="emit('close')">
         <form id="hrm-step" class="space-y-4" novalidate @submit.prevent="submit">
             <AppField v-slot="{ id }" :label="dateLabel" :error="fieldError('on')">
-                <input :id="id" v-model="form.on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.on" />
             </AppField>
 
             <UnitPicker v-if="needsUnit" v-model="form.to_organization_id" :units="units" :place-label="t('hrm.steps.to_unit')" :error="fieldError('to_organization_id')" :optional="step !== 'transfer'" />
@@ -102,7 +103,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 :error="fieldError('exits_on')"
                 optional
             >
-                <input :id="id" v-model="form.exits_on" type="date" class="field-input" :min="form.on || undefined" />
+                <DateInput :id="id" v-model="form.exits_on" :min="form.on || undefined" />
             </AppField>
 
             <AppField v-slot="{ id }" :label="t('hrm.steps.reason')" :error="fieldError('reason')" :optional="step !== 'exit'" :hint="step === 'exit' ? t('hrm.steps.reason_required') : ''">

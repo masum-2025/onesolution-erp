@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -44,16 +44,14 @@ const title = computed(() => formatDate(`${month.value}-01T00:00:00Z`, { month: 
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('leave.calendar.title')" :description="t('leave.calendar.text')">
-            <template #actions>
-                <div class="flex items-center gap-1">
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('leave.calendar.previous')" @click="month = shiftMonth(month, -1)" />
-                    <span class="min-w-36 text-center text-[14px] font-medium" aria-live="polite">{{ title }}</span>
-                    <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('leave.calendar.next')" @click="month = shiftMonth(month, 1)" />
-                </div>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('leave.calendar.title')" :description="t('leave.calendar.text')" width="full">
+        <template #actions>
+            <div class="flex items-center gap-1">
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronLeft" :aria-label="t('leave.calendar.previous')" @click="month = shiftMonth(month, -1)" />
+                <span class="min-w-36 text-center text-[14px] font-medium" aria-live="polite">{{ title }}</span>
+                <AppButton size="icon-sm" variant="ghost" :icon="ChevronRight" :aria-label="t('leave.calendar.next')" @click="month = shiftMonth(month, 1)" />
+            </div>
+        </template>
 
         <section class="card overflow-hidden">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -92,5 +90,5 @@ const title = computed(() => formatDate(`${month.value}-01T00:00:00Z`, { month: 
                 <span>{{ t('leave.calendar.days_off_note') }}</span>
             </p>
         </section>
-    </div>
+    </PageFrame>
 </template>

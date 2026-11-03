@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { CalendarRange, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -61,12 +61,10 @@ function saved() {
 </script>
 
 <template>
-    <div class="space-y-5">
-        <PageHeader :title="t('appraisals.cycles.title')" :description="t('appraisals.cycles.text')">
-            <template v-if="canManage" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="editing = 'new'">{{ t('appraisals.cycles.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('appraisals.cycles.title')" :description="t('appraisals.cycles.text')" width="full" class="space-y-5">
+        <template v-if="canManage" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="editing = 'new'">{{ t('appraisals.cycles.new') }}</AppButton>
+        </template>
         <ErrorState v-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
         <SkeletonRows v-else-if="!list.data.value" :rows="3" />
         <section v-else-if="!items.length" class="card">
@@ -97,5 +95,5 @@ function saved() {
             </li>
         </ul>
         <CycleEditor :open="editing !== null" :cycle="editing === 'new' ? null : editing" :options="options.data.value?.data ?? {}" :calls="calls" @close="editing = null" @saved="saved" />
-    </div>
+    </PageFrame>
 </template>

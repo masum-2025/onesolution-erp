@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { ArrowLeft, CalendarClock, Search, Star, UserPlus, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -44,6 +44,24 @@ const items = computed(() => {
     return (list.data.value?.data ?? []).filter((item) => !q || `${item.name} ${item.email} ${item.phone ?? ''}`.toLowerCase().includes(q));
 });
 const columns = computed(() => byStage(items.value, stages.value));
+
+// Export and print: the applicants of the view and search shown, what the cards show.
+const stageName = (key) => nameIn(stages.value.find((stage) => stage.key === key)?.name, i18n.locale) || key;
+const exported = computed(() => (job.value ? {
+    module: 'recruitment',
+    page: 'recruitment.pipeline',
+    columns: [
+        { key: 'name', label: t('recruitment.export.name') },
+        { key: 'email', label: t('recruitment.export.email') },
+        { key: 'phone', label: t('recruitment.export.phone') },
+        { key: 'stage', label: t('recruitment.drawer.stage'), value: (item) => stageName(item.stage) },
+        { key: 'status', label: t('recruitment.export.status'), value: (item) => t(`recruitment.status.${item.status}`) },
+        { key: 'rating', label: t('recruitment.export.rating'), type: 'number' },
+        { key: 'average_score', label: t('recruitment.export.score'), type: 'number' },
+        { key: 'source', label: t('recruitment.export.source'), value: (item) => t(`recruitment.sources.${item.source}`) },
+    ],
+    rows: items.value,
+} : null));
 const phoneStage = ref(null);
 watch(stages, (value) => {
     if (!phoneStage.value && value.length) phoneStage.value = value[0].key;
@@ -84,19 +102,15 @@ const views = computed(() => ['active', 'hired', 'rejected', 'withdrawn'].map((v
 </script>
 
 <template>
-    <div class="space-y-5">
-        <ErrorState v-if="opening.error.value" :error="opening.error.value" @retry="opening.reload()" />
-        <SkeletonRows v-else-if="!job" :rows="3" />
-        <template v-else>
-            <PageHeader :title="job.title" :description="`${job.unit_name} · ${t('recruitment.openings.places', { hired: formatNumber(job.hired_count), needed: formatNumber(job.vacancies) })}`">
-                <template #actions>
-                    <AppBadge :tone="openingTone(job.status)">{{ t(`recruitment.opening_status.${job.status}`) }}</AppBadge>
-                    <AppButton v-if="canManage && !['filled'].includes(job.status)" variant="primary" :icon="UserPlus" @click="adding = true">{{ t('recruitment.pipeline.add') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="job ? job.title : ''" :description="job ? `${job.unit_name} · ${t('recruitment.openings.places', { hired: formatNumber(job.hired_count), needed: formatNumber(job.vacancies) })}` : ''" :resource="opening" :export="exported" :skeleton-rows="3" width="full" class="space-y-5">
+        <template #actions>
+            <AppBadge :tone="openingTone(job.status)">{{ t(`recruitment.opening_status.${job.status}`) }}</AppBadge>
+            <AppButton v-if="canManage && !['filled'].includes(job.status)" variant="primary" :icon="UserPlus" @click="adding = true">{{ t('recruitment.pipeline.add') }}</AppButton>
+        </template>
+        <template v-if="job">
             <RouterLink to="/recruitment/openings" class="inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg"><ArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />{{ t('recruitment.pipeline.back') }}</RouterLink>
 
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-wrap items-center gap-3 print:hidden">
                 <div class="max-w-full overflow-x-auto">
                     <AppSegmented v-model="view" size="sm" :label="t('recruitment.pipeline.view')" :options="views" />
                 </div>
@@ -184,5 +198,5 @@ const views = computed(() => ['active', 'hired', 'rejected', 'withdrawn'].map((v
 
         <AddCandidateDialog :open="adding" :opening-id="job?.id ?? null" :calls="calls" @close="adding = false" @added="(data) => { adding = false; changed(); viewing = data.id; }" />
         <ApplicationDrawer :open="viewing !== null" :application-id="viewing" :opening="job" :employment-types="employmentTypes" :calls="calls" @close="viewing = null" @changed="changed" />
-    </div>
+    </PageFrame>
 </template>

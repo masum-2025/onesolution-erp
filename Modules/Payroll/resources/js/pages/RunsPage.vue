@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Banknote, CalendarPlus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -51,15 +51,26 @@ async function save() {
 }
 
 const monthName = (value) => formatDate(`${value}-01T00:00:00Z`, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+// Export and print (payroll.export): the months run.
+const exported = computed(() => ({
+    module: 'payroll',
+    page: 'payroll.runs',
+    columns: [
+        { key: 'period', label: t('payroll.export.month'), value: (run) => monthName(run.period) },
+        { key: 'employees', label: t('payroll.export.people'), type: 'number' },
+        { key: 'status', label: t('payroll.export.status'), value: (run) => t(`payroll.status.${run.status}`) },
+        { key: 'net_minor', label: t('payroll.export.net'), type: 'money' },
+    ],
+    rows: runs.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.runs.title')" :description="t('payroll.runs.text')">
-            <template #actions>
-                <AppButton v-if="can('payroll.run')" variant="primary" :icon="CalendarPlus" @click="open">{{ t('payroll.runs.open') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('payroll.runs.title')" :description="t('payroll.runs.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('payroll.run')" variant="primary" :icon="CalendarPlus" @click="open">{{ t('payroll.runs.open') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -90,5 +101,5 @@ const monthName = (value) => formatDate(`${value}-01T00:00:00Z`, { month: 'long'
                 <AppButton variant="primary" type="submit" form="payroll-open" :loading="saving" :disabled="!period">{{ t('payroll.runs.open') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

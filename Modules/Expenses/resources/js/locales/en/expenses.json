@@ -248,5 +248,16 @@
         "empty_paid": "No advances out",
         "empty_overdue": "No advance is past its day",
         "empty_all": "No advances yet"
+    },
+    "export": {
+        "number": "Number",
+        "code": "Code",
+        "employee": "Employee",
+        "title": "Title",
+        "submitted_on": "Sent on",
+        "lines": "Lines",
+        "total": "Amount",
+        "left": "Left to settle",
+        "status": "Status"
     }
 }

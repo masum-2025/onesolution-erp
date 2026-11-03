@@ -2,13 +2,10 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTabs from '@/components/AppTabs.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
@@ -133,38 +130,31 @@ const typeLabel = computed(() => opts.value?.employment_types.find((type) => typ
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'hrm' }" :icon="ArrowLeft" class="mb-3">{{ t('hrm.profile.back') }}</AppButton>
-
-        <SkeletonRows v-if="record.loading.value && !employee" :rows="6" avatar />
-        <section v-else-if="record.error.value?.status === 404" class="card">
-            <EmptyState :icon="UserX" :title="t('hrm.profile.not_found')" />
-        </section>
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="employee">
-            <PageHeader :title="employee.full_name" :description="employee.full_name_local ?? ''">
-                <template #eyebrow>
-                    <span class="mb-2 flex items-center gap-2.5">
-                        <span class="grid size-9 place-items-center rounded-full bg-brand-soft text-[12.5px] font-semibold text-brand-text" aria-hidden="true">{{ initials(employee.full_name) }}</span>
-                        <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ employee.employee_code }}</span>
-                        <AppBadge :tone="statusTone(employee.status)" dot>{{ t(`hrm.statuses.${employee.status}`) }}</AppBadge>
-                    </span>
-                </template>
-                <template v-if="steps.length" #actions>
-                    <div class="flex flex-wrap gap-2" role="group" :aria-label="t('hrm.profile.steps_title')">
-                        <AppButton
-                            v-for="step in steps"
-                            :key="step"
-                            size="sm"
-                            :variant="step === 'exit' ? 'danger-soft' : step === 'confirm' || step === 'rehire' ? 'primary' : 'secondary'"
-                            @click="openStep = step"
-                        >
-                            {{ t(`hrm.steps.${step}`) }}
-                        </AppButton>
-                    </div>
-                </template>
-            </PageHeader>
+    <PageFrame :title="employee ? employee.full_name : ''" :description="employee ? employee.full_name_local ?? '' : ''" :resource="record" :not-found="{ icon: UserX, title: t('hrm.profile.not_found') }" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'hrm' }" :icon="ArrowLeft" class="mb-3">{{ t('hrm.profile.back') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex items-center gap-2.5">
+                <span class="grid size-9 place-items-center rounded-full bg-brand-soft text-[12.5px] font-semibold text-brand-text" aria-hidden="true">{{ initials(employee.full_name) }}</span>
+                <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ employee.employee_code }}</span>
+                <AppBadge :tone="statusTone(employee.status)" dot>{{ t(`hrm.statuses.${employee.status}`) }}</AppBadge>
+            </span>
+        </template>
+        <template v-if="steps.length" #actions>
+            <div class="flex flex-wrap gap-2" role="group" :aria-label="t('hrm.profile.steps_title')">
+                <AppButton
+                    v-for="step in steps"
+                    :key="step"
+                    size="sm"
+                    :variant="step === 'exit' ? 'danger-soft' : step === 'confirm' || step === 'rehire' ? 'primary' : 'secondary'"
+                    @click="openStep = step"
+                >
+                    {{ t(`hrm.steps.${step}`) }}
+                </AppButton>
+            </div>
+        </template>
+        <template v-if="employee">
 
             <div class="mb-5">
                 <AppTabs v-model="tab" :tabs="tabs" :label="employee.full_name" />
@@ -213,5 +203,5 @@ const typeLabel = computed(() => opts.value?.employment_types.find((type) => typ
             <LoginDialog :open="linking" :employee="employee" :hrm="hrm" @close="linking = false" @linked="linked" @conflict="reload" />
             <StepDialog :open="openStep !== null" :step="openStep" :employee="employee" :hrm="hrm" :options="opts" @close="openStep = null" @done="stepDone" @conflict="reload" />
         </template>
-    </div>
+    </PageFrame>
 </template>

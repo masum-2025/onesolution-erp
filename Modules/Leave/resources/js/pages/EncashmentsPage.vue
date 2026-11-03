@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Banknote, Check, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -28,6 +28,24 @@ const status = ref('pending');
 const list = useResource(() => leave.encashments(status.value === 'all' ? undefined : status.value));
 const items = computed(() => list.data.value?.data ?? []);
 const busy = ref(null);
+
+// Export and print: the pay-outs of the status picked.
+const exported = computed(() => ({
+    module: 'leave',
+    page: 'leave.encashments',
+    columns: [
+        { key: 'employee_code', label: t('leave.export.code') },
+        { key: 'employee_name', label: t('leave.export.employee') },
+        { key: 'type_name', label: t('leave.balances.type') },
+        { key: 'halves', label: t('leave.export.days'), type: 'number', value: (item) => item.halves / 2 },
+        { key: 'leave_year', label: t('leave.export.year'), value: (item) => String(item.leave_year) },
+        { key: 'reason', label: t('leave.export.reason') },
+        { key: 'pay_on', label: t('leave.export.pay_on'), type: 'date' },
+        { key: 'status', label: t('leave.export.status'), value: (item) => t(`leave.status.${item.status}`) },
+        { key: 'decision_note', label: t('leave.export.note') },
+    ],
+    rows: items.value,
+}));
 watch(status, () => list.reload());
 
 async function decide(item, step) {
@@ -54,17 +72,15 @@ async function decide(item, step) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('leave.encash.title')" :description="t('leave.encash.text')">
-            <template #actions>
-                <AppSegmented
-                    v-model="status"
-                    size="sm"
-                    :label="t('leave.encash.title')"
-                    :options="['pending', 'approved', 'rejected', 'all'].map((value) => ({ value, label: value === 'all' ? t('leave.common.all') : t(`leave.status.${value}`) }))"
-                />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('leave.encash.title')" :description="t('leave.encash.text')" width="full" :export="exported">
+        <template #actions>
+            <AppSegmented
+                v-model="status"
+                size="sm"
+                :label="t('leave.encash.title')"
+                :options="['pending', 'approved', 'rejected', 'all'].map((value) => ({ value, label: value === 'all' ? t('leave.common.all') : t(`leave.status.${value}`) }))"
+            />
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -92,5 +108,5 @@ async function decide(item, step) {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

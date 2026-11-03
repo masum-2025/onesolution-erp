@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Ban, CalendarCheck, CalendarPlus, Check, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -38,6 +38,25 @@ watch(status, () => list.reload());
 const date = (value) => formatDate(`${value}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' });
 const range = (item) => (item.from_date === item.to_date ? date(item.from_date) : `${date(item.from_date)} – ${date(item.to_date)}`);
 
+// Export and print: the requests of the status picked (days as numbers: a half day is 0.5).
+const exported = computed(() => ({
+    module: 'leave',
+    page: 'leave.requests',
+    columns: [
+        { key: 'employee_code', label: t('leave.export.code') },
+        { key: 'employee_name', label: t('leave.export.employee') },
+        { key: 'type_name', label: t('leave.balances.type') },
+        { key: 'from_date', label: t('leave.export.from'), type: 'date' },
+        { key: 'to_date', label: t('leave.export.to'), type: 'date' },
+        { key: 'halves', label: t('leave.export.days'), type: 'number', value: (item) => item.halves / 2 },
+        { key: 'unpaid_halves', label: t('leave.export.unpaid_days'), type: 'number', value: (item) => (item.unpaid_halves ?? 0) / 2 },
+        { key: 'reason', label: t('leave.export.reason') },
+        { key: 'status', label: t('leave.export.status'), value: (item) => t(`leave.status.${item.status}`) },
+        { key: 'decision_note', label: t('leave.export.note') },
+    ],
+    rows: items.value,
+}));
+
 async function step(item, name) {
     const confirmed = await confirmAction({
         title: t(`leave.requests.${name}_title`, { name: item.employee_name }),
@@ -62,18 +81,16 @@ async function step(item, name) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('leave.requests.title')" :description="t('leave.requests.text')">
-            <template #actions>
-                <AppSegmented
-                    v-model="status"
-                    size="sm"
-                    :label="t('leave.requests.title')"
-                    :options="['pending', 'approved', 'rejected', 'cancelled', 'all'].map((value) => ({ value, label: value === 'all' ? t('leave.common.all') : t(`leave.status.${value}`) }))"
-                />
-                <AppButton v-if="can('leave.manage') && types.length" variant="primary" :icon="CalendarPlus" @click="asking = true">{{ t('leave.requests.ask_for') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('leave.requests.title')" :description="t('leave.requests.text')" width="full" :export="exported">
+        <template #actions>
+            <AppSegmented
+                v-model="status"
+                size="sm"
+                :label="t('leave.requests.title')"
+                :options="['pending', 'approved', 'rejected', 'cancelled', 'all'].map((value) => ({ value, label: value === 'all' ? t('leave.common.all') : t(`leave.status.${value}`) }))"
+            />
+            <AppButton v-if="can('leave.manage') && types.length" variant="primary" :icon="CalendarPlus" @click="asking = true">{{ t('leave.requests.ask_for') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -117,5 +134,5 @@ async function step(item, name) {
         </section>
 
         <AskLeaveDialog :open="asking" :types="types" :send="leave.askFor" :people="leave.people" @close="asking = false" @sent="asking = false; list.reload()" />
-    </div>
+    </PageFrame>
 </template>

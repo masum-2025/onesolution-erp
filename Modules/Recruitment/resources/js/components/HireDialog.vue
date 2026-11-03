@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { BadgeCheck } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -66,7 +67,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
     <AppDialog :open="open" :title="t('recruitment.hire.title')" :description="application ? t('recruitment.hire.text', { name: application.name }) : ''" :icon="BadgeCheck" @close="emit('close')">
         <form id="recruitment-hire" class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">
             <AppField v-slot="{ id }" :label="t('recruitment.hire.joined_on')" :error="fieldError('joined_on')">
-                <input :id="id" v-model="form.joined_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.joined_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('recruitment.editor.employment_type')" :error="fieldError('employment_type')">
                 <select :id="id" v-model="form.employment_type" class="field-input">

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ArrowLeft, CircleCheck, Download, FileSpreadsheet, FileUp, KeyRound, Play, RotateCcw, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -160,12 +160,10 @@ const rowTone = (status) => ({ invalid: 'bad', failed: 'bad', skipped: 'outline'
 </script>
 
 <template>
-    <div class="mx-auto max-w-4xl">
-        <PageHeader :title="t('hrm.import_page.title')" :description="t('hrm.import_page.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.import_page.title')" :description="t('hrm.import_page.text')" width="full" class="mx-auto max-w-4xl">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
+        </template>
 
         <!-- 1. Choose a file -->
         <section v-if="!current" class="card p-5 sm:p-6">
@@ -322,5 +320,5 @@ const rowTone = (status) => ({ invalid: 'bad', failed: 'bad', skipped: 'outline'
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

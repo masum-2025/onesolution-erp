@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { CalendarOff, ListPlus, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -112,13 +112,11 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('leave.types.title')" :description="t('leave.types.text')">
-            <template v-if="canManage" #actions>
-                <AppButton :icon="ListPlus" :loading="adding" @click="addDefaults">{{ t('leave.types.add_defaults') }}</AppButton>
-                <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('leave.types.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('leave.types.title')" :description="t('leave.types.text')" width="full">
+        <template v-if="canManage" #actions>
+            <AppButton :icon="ListPlus" :loading="adding" @click="addDefaults">{{ t('leave.types.add_defaults') }}</AppButton>
+            <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('leave.types.add') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -190,5 +188,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="leave-type" :loading="saving" :disabled="!form.code.trim() || !form.name.en?.trim()">{{ t('leave.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

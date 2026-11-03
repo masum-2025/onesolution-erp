@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { CircleAlert, ExternalLink, FileText, Paperclip, Trash2, TriangleAlert, Upload } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -114,7 +115,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <input :id="id" ref="fileInput" type="file" class="field-input" accept="application/pdf,image/jpeg,image/png,image/webp" @change="form.file = $event.target.files[0] ?? null" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('hrm.documents.expires_on')" :error="fieldError('expires_on')" optional>
-                <input :id="id" v-model="form.expires_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.expires_on" />
             </AppField>
             <div class="flex justify-end gap-2 sm:col-span-2">
                 <AppButton variant="ghost" @click="adding = false">{{ t('hrm.profile.cancel') }}</AppButton>

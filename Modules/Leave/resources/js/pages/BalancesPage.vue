@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Banknote, ChevronLeft, ChevronRight, Scale, SlidersHorizontal } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -53,6 +53,23 @@ watch(person, () => {
     year.value = null;
     load();
 });
+
+// Export and print: the person's balances in the year shown (once someone is picked).
+const exported = computed(() => (person.value && rows.value?.length ? {
+    module: 'leave',
+    page: 'leave.balances',
+    columns: [
+        { key: 'employee', label: t('leave.export.employee'), value: () => person.value.name },
+        { key: 'year', label: t('leave.export.year'), value: () => String(year.value ?? '') },
+        { key: 'name', label: t('leave.balances.type') },
+        { key: 'given_halves', label: t('leave.balances.given'), type: 'number', value: (row) => row.given_halves / 2 },
+        { key: 'taken_halves', label: t('leave.balances.taken'), type: 'number', value: (row) => row.taken_halves / 2 },
+        { key: 'encashed_halves', label: t('leave.balances.paid_out'), type: 'number', value: (row) => row.encashed_halves / 2 },
+        { key: 'waiting_halves', label: t('leave.balances.waiting'), type: 'number', value: (row) => row.waiting_halves / 2 },
+        { key: 'available_halves', label: t('leave.balances.left'), type: 'number', value: (row) => row.available_halves / 2 },
+    ],
+    rows: rows.value,
+} : null));
 
 function changeYear(by) {
     year.value += by;
@@ -118,10 +135,8 @@ async function sendPayOut() {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('leave.balances.title')" :description="t('leave.balances.text')" />
-
-        <section class="card p-5 sm:p-6">
+    <PageFrame :title="t('leave.balances.title')" :description="t('leave.balances.text')" width="full" class="space-y-6" :export="exported">
+        <section class="card p-5 sm:p-6 print:hidden">
             <EmployeePicker v-model="person" :search="leave.people" :label="t('leave.balances.person')" />
         </section>
 
@@ -210,5 +225,5 @@ async function sendPayOut() {
                 <AppButton variant="primary" type="submit" form="leave-pay-out" :loading="saving" :disabled="daysToHalves(pay.days) <= 0 || pay.reason.trim().length < 3">{{ t('leave.balances.pay_out_send') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

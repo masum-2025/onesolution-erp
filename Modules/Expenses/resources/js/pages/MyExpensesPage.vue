@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { HandCoins, Plus, ReceiptText, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -69,12 +69,10 @@ const when = (item) => formatDate(item.submitted_at ?? item.created_at, { dateSt
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('expenses.me.title')" :description="t('expenses.me.text')">
-            <template v-if="data && kinds.length" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="startNew">{{ t('expenses.me.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('expenses.me.title')" :description="t('expenses.me.text')" width="full" class="space-y-6">
+        <template v-if="data && kinds.length" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="startNew">{{ t('expenses.me.new') }}</AppButton>
+        </template>
 
         <section v-if="me.error.value?.code === 'not_linked'" class="card">
             <EmptyState :icon="UserX" :title="t('expenses.me.not_linked')" :text="t('expenses.me.not_linked_text')" />
@@ -171,5 +169,5 @@ const when = (item) => formatDate(item.submitted_at ?? item.created_at, { dateSt
         <ClaimDetail :open="viewing !== null" :claim-id="viewing" own :calls="calls" @close="viewing = null" @changed="me.reload()" @edit="editFromDetail" />
         <AdvanceDialog :open="asking" :currency="data?.currency ?? 'BDT'" :max="data?.limits?.advance_max_open ?? 0" :calls="calls" @close="asking = false" @sent="asking = false; me.reload()" />
         <AdvanceDrawer :open="advanceOpen !== null" :advance-id="advanceOpen" own :calls="calls" @close="advanceOpen = null" @changed="me.reload()" />
-    </div>
+    </PageFrame>
 </template>

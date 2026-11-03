@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { CheckCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -10,6 +10,7 @@ import { currentOrganization } from '@/lib/session';
 import { t } from '@/lib/i18n';
 import ClaimDetail from '../components/ClaimDetail.vue';
 import ClaimRows from '../components/ClaimRows.vue';
+import { claimColumns } from '../lib';
 import { expensesApi } from '../api';
 
 /**
@@ -22,12 +23,14 @@ const org = currentOrganization();
 const calls = expensesApi(org.id);
 const list = useResource(() => calls.claims({ waiting: 1 }));
 const items = computed(() => list.data.value?.data ?? []);
+
+// Export and print: the claims waiting for oneself.
+const exported = computed(() => ({ module: 'expenses', page: 'expenses.approvals', columns: claimColumns(), rows: items.value }));
 const viewing = ref(null);
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('expenses.approvals.title')" :description="t('expenses.approvals.text')" />
+    <PageFrame :title="t('expenses.approvals.title')" :description="t('expenses.approvals.text')" width="full" :export="exported">
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -37,5 +40,5 @@ const viewing = ref(null);
         </section>
 
         <ClaimDetail :open="viewing !== null" :claim-id="viewing" :calls="calls" :payroll="!!list.data.value?.meta?.payroll" @close="viewing = null" @changed="list.reload()" />
-    </div>
+    </PageFrame>
 </template>

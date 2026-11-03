@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ListPlus, PenLine, Plus, Sparkles } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -74,13 +74,11 @@ async function save() {
 </script>
 
 <template>
-    <div class="space-y-5">
-        <PageHeader :title="t('appraisals.competencies.title')" :description="t('appraisals.competencies.text')">
-            <template v-if="canManage" #actions>
-                <AppButton :icon="ListPlus" :loading="adding" @click="addDefaults">{{ t('appraisals.competencies.add_defaults') }}</AppButton>
-                <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('appraisals.competencies.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('appraisals.competencies.title')" :description="t('appraisals.competencies.text')" width="full" class="space-y-5">
+        <template v-if="canManage" #actions>
+            <AppButton :icon="ListPlus" :loading="adding" @click="addDefaults">{{ t('appraisals.competencies.add_defaults') }}</AppButton>
+            <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('appraisals.competencies.add') }}</AppButton>
+        </template>
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
             <ErrorState v-else-if="list.error.value" compact :error="list.error.value" @retry="list.reload()" />
@@ -110,5 +108,5 @@ async function save() {
                 <AppButton variant="primary" type="submit" form="appraisals-competency" :loading="saving" :disabled="!form.code.trim() || !form.name.en?.trim()">{{ t('appraisals.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

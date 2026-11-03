@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { ReceiptText } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -18,8 +18,7 @@ const people = computed(() => view.data.value?.data ?? []);
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('expenses.portal.title')" :description="t('expenses.portal.text')" />
+    <PageFrame :title="t('expenses.portal.title')" :description="t('expenses.portal.text')" width="full" class="space-y-6">
 
         <SkeletonRows v-if="view.loading.value && !view.data.value" :rows="4" />
         <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
@@ -47,5 +46,5 @@ const people = computed(() => view.data.value?.data ?? []);
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

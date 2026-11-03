@@ -22,22 +22,33 @@ import { t } from '@/lib/i18n';
  *
  * resource: a useResource() result (its loading, error and reload are used).
  * The content shows once there is data (or at once without a resource).
+ *
+ * A record's page (its title comes with its data): the header shows once the
+ * title is there, a back link goes in #before, and notFound ({ icon, title })
+ * answers a 404:
+ *
+ *   <PageFrame :title="employee?.full_name ?? ''" :resource="record" :not-found="{ icon: UserX, title: … }">
+ *       <template #before><AppButton … :icon="ArrowLeft">Back</AppButton></template>
  */
 const props = defineProps({
-    title: { type: String, required: true },
+    title: { type: String, default: '' },
     description: { type: String, default: '' },
     // md (forms, a record), lg (most lists), xl (wide tables), full
     width: { type: String, default: 'lg' },
     resource: { type: Object, default: null },
     empty: { type: Object, default: null },
     export: { type: Object, default: null },
+    notFound: { type: Object, default: null },
     skeletonRows: { type: Number, default: 5 },
+    // The page lays out its own paper (labels, a shipment sheet): no header, name or date on it.
+    ownPaper: Boolean,
 });
 
 const widths = { md: 'max-w-3xl', lg: 'max-w-5xl', xl: 'max-w-7xl', full: '' };
 const loading = computed(() => props.resource && props.resource.loading.value && !props.resource.data.value);
 const failed = computed(() => props.resource?.error.value ?? null);
 const ready = computed(() => !props.resource || !!props.resource.data.value);
+const missing = computed(() => !!props.notFound && failed.value?.status === 404);
 const exportOptions = computed(() => (props.export ? { title: props.title, ...props.export } : null));
 const organization = computed(() => currentOrganization()?.name ?? '');
 const today = formatDate(new Date().toISOString());
@@ -46,19 +57,26 @@ const today = formatDate(new Date().toISOString());
 <template>
     <div class="mx-auto" :class="widths[width] ?? widths.lg">
         <!-- On paper: who, what and when, instead of the app's frame. -->
-        <div class="mb-4 hidden border-b border-line pb-3 print:block">
+        <div v-if="!ownPaper" class="mb-4 hidden border-b border-line pb-3 print:block">
             <p class="text-[13px] text-muted">{{ organization }}</p>
             <p class="text-[12px] text-muted">{{ t('core.export.printed_on', { date: today }) }}</p>
         </div>
-        <PageHeader :title="title" :description="description">
+        <slot name="before" />
+        <PageHeader v-if="title" :title="title" :description="description" :class="ownPaper ? 'print:hidden' : ''">
             <template v-if="$slots.eyebrow" #eyebrow><slot name="eyebrow" /></template>
+            <!-- Buttons are for the screen: never on paper. -->
             <template v-if="$slots.actions || exportOptions" #actions>
-                <slot name="actions" />
-                <ExportMenu v-if="exportOptions" :options="exportOptions" />
+                <span class="contents print:hidden">
+                    <slot name="actions" />
+                    <ExportMenu v-if="exportOptions" :options="exportOptions" />
+                </span>
             </template>
         </PageHeader>
         <slot name="top" />
         <SkeletonRows v-if="loading" :rows="skeletonRows" />
+        <section v-else-if="missing" class="card">
+            <EmptyState :icon="notFound.icon" :title="notFound.title" :text="notFound.text ?? ''" />
+        </section>
         <ErrorState v-else-if="failed && !ready" :error="failed" @retry="resource.reload()" />
         <template v-else-if="ready">
             <EmptyState v-if="empty?.when" :icon="empty.icon" :title="empty.title" :text="empty.text ?? ''" />

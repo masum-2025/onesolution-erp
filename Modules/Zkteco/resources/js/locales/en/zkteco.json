@@ -110,5 +110,16 @@
         "wrong_comm_key": "Its comm key is different. Type the one set on the device.",
         "refused": "It refused the connection. Try again in a minute, or restart the device.",
         "read_failed": "It stopped answering while sending its logs. Try again."
+    },
+    "export": {
+        "name": "Device",
+        "address": "Address",
+        "protocol": "Protocol",
+        "unit": "Branch",
+        "model": "Model",
+        "serial": "Serial number",
+        "state": "State",
+        "last_read": "Last read",
+        "from": "Punches from"
     }
 }

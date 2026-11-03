@@ -4,6 +4,7 @@
     "history": { "goals": "Started", "goals_sent": "Goals sent", "self": "Goals approved", "manager": "Ready for the manager", "acknowledge": "Manager review done", "done": "Acknowledged" },
     "cycle_status": { "draft": "Draft", "open": "Open", "closed": "Closed" },
     "rows": { "manager": "Manager: {name}", "due": "By {date}", "goals_sent": "goals sent" },
+    "export": { "code": "Code", "employee": "Employee", "cycle": "Cycle", "manager": "Manager", "stage": "Step", "due": "Due by", "score": "Score (%)" },
     "me": {
         "title": "My appraisal",
         "text": "Your goals, your self review and your result, cycle by cycle.",

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Save } from 'lucide-vue-next';
+import { DateInput, MoneyInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppField from '@/components/AppField.vue';
@@ -9,7 +10,7 @@ import TranslatedFields from '@/components/TranslatedFields.vue';
 import { textsFor } from '@/lib/texts';
 import { toast } from '@/lib/toast';
 import { has, i18n, t } from '@/lib/i18n';
-import { amountToMinor, minorToText, nameIn } from '../lib';
+import { nameIn } from '../lib';
 
 /**
  * A job opening: its title and description per language, the unit and
@@ -30,7 +31,7 @@ const emit = defineEmits(['close', 'saved']);
 
 const blank = () => ({
     title: textsFor({}), description: textsFor({}), unit_id: '', position_id: '', employment_type: '', vacancies: 1,
-    salary_min: '', salary_max: '', show_salary: false, is_public: true, closes_on: '',
+    salary_min_minor: null, salary_max_minor: null, show_salary: false, is_public: true, closes_on: '',
 });
 const form = reactive(blank());
 const errors = ref({});
@@ -42,20 +43,22 @@ watch(() => props.open, (open) => {
     const item = props.opening;
     Object.assign(form, blank(), item ? {
         title: textsFor(item.titles), description: textsFor(item.descriptions ?? {}), unit_id: item.unit_id, position_id: item.position_id ?? '',
-        employment_type: item.employment_type ?? '', vacancies: item.vacancies, salary_min: minorToText(item.salary_min_minor, money.value),
-        salary_max: minorToText(item.salary_max_minor, money.value), show_salary: item.show_salary, is_public: item.is_public, closes_on: item.closes_on ?? '',
+        employment_type: item.employment_type ?? '', vacancies: item.vacancies, salary_min_minor: item.salary_min_minor,
+        salary_max_minor: item.salary_max_minor, show_salary: item.show_salary, is_public: item.is_public, closes_on: item.closes_on ?? '',
     } : { unit_id: props.options.units?.[0]?.id ?? '' });
     errors.value = {};
 });
 
 const clean = (texts) => Object.fromEntries(Object.entries(texts).filter(([, value]) => value?.trim()));
-const salaryBad = computed(() => (form.salary_min !== '' && amountToMinor(form.salary_min, money.value) === null) || (form.salary_max !== '' && amountToMinor(form.salary_max, money.value) === null));
+const minBad = ref(false);
+const maxBad = ref(false);
+const salaryBad = computed(() => minBad.value || maxBad.value);
 
 async function save() {
     const body = {
         title: clean(form.title), description: clean(form.description), unit_id: form.unit_id, position_id: form.position_id || null,
         employment_type: form.employment_type || null, vacancies: Number(form.vacancies) || 1,
-        salary_min_minor: amountToMinor(form.salary_min, money.value), salary_max_minor: amountToMinor(form.salary_max, money.value),
+        salary_min_minor: form.salary_min_minor, salary_max_minor: form.salary_max_minor,
         show_salary: form.show_salary, is_public: form.is_public, closes_on: form.closes_on || null,
     };
     saving.value = true;
@@ -107,13 +110,13 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     <input :id="id" v-model.number="form.vacancies" type="number" min="1" max="500" class="field-input tabular text-end" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('recruitment.editor.salary_min', { currency: money })" :error="fieldError('salary_min_minor')" optional>
-                    <input :id="id" v-model="form.salary_min" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                    <MoneyInput :id="id" v-model="form.salary_min_minor" v-model:invalid="minBad" :currency="money" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('recruitment.editor.salary_max', { currency: money })" :error="fieldError('salary_max_minor') ?? (salaryBad ? t('recruitment.editor.salary_bad') : null)" optional>
-                    <input :id="id" v-model="form.salary_max" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                    <MoneyInput :id="id" v-model="form.salary_max_minor" v-model:invalid="maxBad" :currency="money" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('recruitment.editor.closes_on')" :hint="t('recruitment.editor.closes_hint')" :error="fieldError('closes_on')" optional>
-                    <input :id="id" v-model="form.closes_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.closes_on" />
                 </AppField>
             </div>
             <div class="grid gap-3 sm:grid-cols-2">

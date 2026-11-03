@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowLeft, Minus, PenLine, Plus, Tags } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -80,13 +80,11 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.components.title')" :description="t('payroll.components.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'payroll-employees' }" :icon="ArrowLeft">{{ t('payroll.common.back') }}</AppButton>
-                <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="edit()">{{ t('payroll.components.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('payroll.components.title')" :description="t('payroll.components.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'payroll-employees' }" :icon="ArrowLeft">{{ t('payroll.common.back') }}</AppButton>
+            <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="edit()">{{ t('payroll.components.add') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -139,5 +137,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <AppButton variant="primary" type="submit" form="payroll-component" :loading="saving" :disabled="!form.code.trim() || !form.name.en?.trim()">{{ t('payroll.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

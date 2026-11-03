@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Save } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
 import AppField from '@/components/AppField.vue';
@@ -81,23 +82,23 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 </AppField>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <AppField v-slot="{ id }" :label="t('appraisals.editor.period_from')" :error="fieldError('period_from')">
-                        <input :id="id" v-model="form.period_from" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="form.period_from" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('appraisals.editor.period_to')" :error="fieldError('period_to')">
-                        <input :id="id" v-model="form.period_to" type="date" class="field-input" :min="form.period_from" />
+                        <DateInput :id="id" v-model="form.period_to" :min="form.period_from" />
                     </AppField>
                 </div>
             </template>
             <fieldset class="grid gap-4 sm:grid-cols-3">
                 <legend class="mb-2 text-[13px] font-semibold text-fg-2">{{ t('appraisals.editor.last_days') }}</legend>
                 <AppField v-slot="{ id }" :label="t('appraisals.stages.goals')" :error="fieldError('goals_due')">
-                    <input :id="id" v-model="form.goals_due" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.goals_due" />
                 </AppField>
                 <AppField v-if="withSelf" v-slot="{ id }" :label="t('appraisals.stages.self')" :error="fieldError('self_due')">
-                    <input :id="id" v-model="form.self_due" type="date" class="field-input" :min="form.goals_due" />
+                    <DateInput :id="id" v-model="form.self_due" :min="form.goals_due" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('appraisals.stages.manager')" :error="fieldError('manager_due')">
-                    <input :id="id" v-model="form.manager_due" type="date" class="field-input" :min="form.self_due || form.goals_due" />
+                    <DateInput :id="id" v-model="form.manager_due" :min="form.self_due || form.goals_due" />
                 </AppField>
             </fieldset>
             <p class="text-[12.5px] text-muted">{{ t('appraisals.editor.hint') }}</p>

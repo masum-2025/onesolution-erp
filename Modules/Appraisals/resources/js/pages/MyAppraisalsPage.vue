@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Star, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -19,8 +19,7 @@ const items = computed(() => list.data.value?.data ?? []);
 </script>
 
 <template>
-    <div class="space-y-5">
-        <PageHeader :title="t('appraisals.me.title')" :description="t('appraisals.me.text')" />
+    <PageFrame :title="t('appraisals.me.title')" :description="t('appraisals.me.text')" width="full" class="space-y-5">
         <section v-if="list.error.value?.code === 'not_linked'" class="card">
             <EmptyState :icon="UserX" :title="t('appraisals.me.not_linked')" :text="t('appraisals.me.not_linked_text')" />
         </section>
@@ -30,5 +29,5 @@ const items = computed(() => list.data.value?.data ?? []);
             <EmptyState v-if="!items.length" :icon="Star" :title="t('appraisals.me.empty')" :text="t('appraisals.me.empty_text')" compact />
             <ReviewRows v-else :items="items" by="cycle" />
         </section>
-    </div>
+    </PageFrame>
 </template>

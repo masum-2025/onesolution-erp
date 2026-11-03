@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { DoorOpen, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -24,6 +24,20 @@ const list = useResource(() => payroll.settlements());
 const settlements = computed(() => list.data.value?.data ?? []);
 const due = computed(() => list.data.value?.meta?.due ?? []);
 const day = (value) => formatDate(`${value}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' });
+
+// Export and print (payroll.export): the final settlements.
+const exported = computed(() => ({
+    module: 'payroll',
+    page: 'payroll.settlements',
+    columns: [
+        { key: 'employee_code', label: t('payroll.export.code') },
+        { key: 'employee_name', label: t('payroll.export.employee') },
+        { key: 'left_on', label: t('payroll.export.left_on'), type: 'date' },
+        { key: 'status', label: t('payroll.export.status'), value: (item) => t(`payroll.status.${item.status}`) },
+        { key: 'net_minor', label: t('payroll.export.net'), type: 'money' },
+    ],
+    rows: settlements.value,
+}));
 const starting = ref(null);
 
 async function start(person) {
@@ -41,8 +55,7 @@ async function start(person) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.settlements.title')" :description="t('payroll.settlements.text')" />
+    <PageFrame :title="t('payroll.settlements.title')" :description="t('payroll.settlements.text')" width="full" :export="exported">
 
         <section v-if="due.length" class="card mb-5">
             <header class="border-b border-line px-5 py-3">
@@ -77,5 +90,5 @@ async function start(person) {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

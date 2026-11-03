@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Briefcase, ChevronDown, ChevronLeft, ChevronRight, FileUp, KeyRound, ListPlus, Network, Search, UserPlus, Users, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -12,6 +12,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { fetchPages } from '@/lib/pageExport';
 import { formatDate, formatNumber } from '@/lib/format';
 import { can, currentOrganization } from '@/lib/session';
 import { confirmAction } from '@/lib/dialogs';
@@ -56,6 +57,24 @@ const list = useResource(() => hrm.employees({ q: search.value.trim(), status: s
 const employees = computed(() => list.data.value?.data ?? []);
 const meta = computed(() => list.data.value?.meta ?? null);
 const filtering = computed(() => search.value.trim() !== '' || status.value !== '' || unit.value !== '' || position.value !== '' || login.value !== '');
+
+// Export and print (hrm.export): everyone the filters find, as the list shows them (ids stay masked).
+const exported = computed(() => ({
+    module: 'hrm',
+    page: 'hrm.employees',
+    columns: [
+        { key: 'employee_code', label: t('hrm.export.code') },
+        { key: 'full_name', label: t('hrm.export.name') },
+        { key: 'position', label: t('hrm.export.position'), value: (employee) => employee.position?.title ?? '' },
+        { key: 'department', label: t('hrm.export.department'), value: (employee) => employee.department?.name ?? '' },
+        { key: 'branch', label: t('hrm.export.branch'), value: (employee) => employee.branch?.name ?? employee.unit?.name ?? '' },
+        { key: 'joined_on', label: t('hrm.export.joined_on'), type: 'date' },
+        { key: 'status', label: t('hrm.export.status'), value: (employee) => t(`hrm.statuses.${employee.status}`) },
+    ],
+    fetchAll: (maxRows) => fetchPages((number) => hrm.employees({
+        q: search.value.trim(), status: status.value, unit_id: unit.value || undefined, position_id: position.value || undefined, login: login.value || undefined, page: number, per_page: 100,
+    }), maxRows),
+}));
 
 // Logins with the company's first password for the people ticked (people without one, still working).
 const picking = computed(() => login.value === 'without' && can('hrm.manage'));
@@ -125,19 +144,17 @@ function clear() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('hrm.title')" :description="t('hrm.text')">
-            <template #actions>
-                <AppMenu :items="more" :label="t('hrm.more')">
-                    <template #trigger="{ toggle, attrs }">
-                        <AppButton :icon-end="ChevronDown" v-bind="attrs" @click="toggle(false)">{{ t('hrm.more') }}</AppButton>
-                    </template>
-                </AppMenu>
-                <AppButton v-if="can('hrm.manage')" variant="primary" :to="{ name: 'hrm-hire' }" :icon="UserPlus">{{ t('hrm.hire') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.title')" :description="t('hrm.text')" width="full" :export="exported">
+        <template #actions>
+            <AppMenu :items="more" :label="t('hrm.more')">
+                <template #trigger="{ toggle, attrs }">
+                    <AppButton :icon-end="ChevronDown" v-bind="attrs" @click="toggle(false)">{{ t('hrm.more') }}</AppButton>
+                </template>
+            </AppMenu>
+            <AppButton v-if="can('hrm.manage')" variant="primary" :to="{ name: 'hrm-hire' }" :icon="UserPlus">{{ t('hrm.hire') }}</AppButton>
+        </template>
 
-        <div class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end">
+        <div class="mb-5 flex flex-col gap-3 print:hidden lg:flex-row lg:items-end">
             <AppField v-slot="{ id }" :label="t('hrm.search')" sr-only-label class="flex-1">
                 <div class="relative">
                     <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
@@ -229,7 +246,7 @@ function clear() {
                 </ul>
             </template>
 
-            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                 <span class="tabular text-[12.5px] text-muted">{{ t('hrm.list.page', { page: formatNumber(meta.page), pages: formatNumber(meta.last_page) }) }}</span>
                 <div class="flex gap-2">
                     <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.page <= 1" @click="go(meta.page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -254,5 +271,5 @@ function clear() {
                 <AppButton variant="primary" @click="outcome = null">{{ t('hrm.login.close') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

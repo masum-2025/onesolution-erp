@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowLeft, Clock, Moon, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -87,13 +87,11 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.shifts.title')" :description="t('attendance.shifts.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
-                <AppButton v-if="can('attendance.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('attendance.shifts.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.shifts.title')" :description="t('attendance.shifts.text')" width="full">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
+            <AppButton v-if="can('attendance.manage')" variant="primary" :icon="Plus" @click="edit()">{{ t('attendance.shifts.add') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -146,5 +144,5 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
                 </AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

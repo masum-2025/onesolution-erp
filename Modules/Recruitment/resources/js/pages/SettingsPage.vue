@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Copy, ExternalLink, Save } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -61,8 +61,7 @@ async function copy() {
 </script>
 
 <template>
-    <div class="space-y-5">
-        <PageHeader :title="t('recruitment.settings.title')" :description="t('recruitment.settings.text')" />
+    <PageFrame :title="t('recruitment.settings.title')" :description="t('recruitment.settings.text')" width="full" class="space-y-5">
 
         <ErrorState v-if="careers.error.value" :error="careers.error.value" @retry="careers.reload()" />
         <SkeletonRows v-else-if="!data" :rows="3" />
@@ -104,5 +103,5 @@ async function copy() {
                 <p class="text-[12.5px] text-muted">{{ t('recruitment.settings.rules_hint') }}</p>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

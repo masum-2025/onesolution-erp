@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { HandCoins, ReceiptText, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -16,7 +16,7 @@ import AdvanceDrawer from '../components/AdvanceDrawer.vue';
 import ClaimDetail from '../components/ClaimDetail.vue';
 import ClaimRows from '../components/ClaimRows.vue';
 import { expensesApi } from '../api';
-import { advanceTone, amountText } from '../lib';
+import { advanceColumns, advanceTone, amountText, claimColumns } from '../lib';
 
 /**
  * Every sent claim of the unit's people, for the finance people and those
@@ -58,17 +58,20 @@ const views = computed(() => ['approved', 'mine', 'submitted', 'paid', 'rejected
 const advanceViews = computed(() => ['waiting', 'approved', 'paid', 'overdue', 'all'].map((value) => ({ value, label: t(`expenses.advance.view_${value}`) })));
 const parts = computed(() => [{ value: 'claims', label: t('expenses.claims.part_claims') }, { value: 'advances', label: t('expenses.claims.part_advances') }]);
 const day = (value) => formatDate(`${value}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' });
+
+// Export and print: the claims or the advances shown (the view and search picked).
+const exported = computed(() => (part.value === 'claims'
+    ? { module: 'expenses', page: 'expenses.claims', columns: claimColumns(), rows: items.value }
+    : { module: 'expenses', page: 'expenses.advances', columns: advanceColumns(), rows: advances.value }));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('expenses.claims.title')" :description="t('expenses.claims.text')">
-            <template #actions>
-                <AppSegmented v-model="part" size="sm" :label="t('expenses.claims.title')" :options="parts" />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('expenses.claims.title')" :description="t('expenses.claims.text')" width="full" :export="exported">
+        <template #actions>
+            <AppSegmented v-model="part" size="sm" :label="t('expenses.claims.title')" :options="parts" />
+        </template>
 
-        <div class="mb-4 flex flex-wrap items-center gap-3">
+        <div class="mb-4 flex flex-wrap items-center gap-3 print:hidden">
             <div class="max-w-full overflow-x-auto">
                 <AppSegmented v-if="part === 'claims'" v-model="view" size="sm" :label="t('expenses.claims.part_claims')" :options="views" />
                 <AppSegmented v-else v-model="advanceView" size="sm" :label="t('expenses.claims.part_advances')" :options="advanceViews" />
@@ -114,5 +117,5 @@ const day = (value) => formatDate(`${value}T00:00:00Z`, { dateStyle: 'medium', t
 
         <ClaimDetail :open="viewing !== null" :claim-id="viewing" :calls="calls" :payroll="!!list.data.value?.meta?.payroll" @close="viewing = null" @changed="list.reload()" />
         <AdvanceDrawer :open="advanceOpen !== null" :advance-id="advanceOpen" :payroll="!!list.data.value?.meta?.payroll" :calls="calls" @close="advanceOpen = null" @changed="advanceList.reload()" />
-    </div>
+    </PageFrame>
 </template>

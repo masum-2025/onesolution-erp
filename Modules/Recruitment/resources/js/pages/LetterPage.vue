@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { Save } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -68,12 +68,10 @@ async function save() {
 </script>
 
 <template>
-    <div class="space-y-5">
-        <PageHeader :title="t('recruitment.letter.title')" :description="t('recruitment.letter.text')">
-            <template v-if="data?.can_manage" #actions>
-                <AppButton variant="primary" :icon="Save" :loading="saving" :disabled="!body.en?.trim()" @click="save">{{ t('recruitment.common.save') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('recruitment.letter.title')" :description="t('recruitment.letter.text')" width="full" class="space-y-5">
+        <template v-if="data?.can_manage" #actions>
+            <AppButton variant="primary" :icon="Save" :loading="saving" :disabled="!body.en?.trim()" @click="save">{{ t('recruitment.common.save') }}</AppButton>
+        </template>
 
         <ErrorState v-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
         <SkeletonRows v-else-if="!data" :rows="6" />
@@ -101,5 +99,5 @@ async function save() {
                 <p class="mt-2 text-[12.5px] text-muted">{{ t('recruitment.letter.sample_hint') }}</p>
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

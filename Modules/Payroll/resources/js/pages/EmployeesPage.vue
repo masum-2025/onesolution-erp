@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Layers, Search, Tags, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -22,6 +22,21 @@ const employees = computed(() => list.data.value?.data ?? []);
 const currency = computed(() => list.data.value?.meta?.currency);
 const missing = computed(() => employees.value.filter((employee) => employee.basic_minor === null).length);
 
+// Export and print (payroll.export): the people shown with their pay set-up.
+const exported = computed(() => ({
+    module: 'payroll',
+    page: 'payroll.employees',
+    columns: [
+        { key: 'code', label: t('payroll.export.code') },
+        { key: 'name', label: t('payroll.export.employee') },
+        { key: 'structure', label: t('payroll.structures.title'), value: (employee) => employee.structure ?? t('payroll.employees.no_structure') },
+        { key: 'payment_method', label: t('payroll.export.payment_method'), value: (employee) => (employee.payment_method ? t(`payroll.methods.${employee.payment_method}`) : t('payroll.employees.no_payment')) },
+        { key: 'basic_minor', label: t('payroll.export.basic'), type: 'money', currency: currency.value },
+        { key: 'status', label: t('payroll.export.status'), value: (employee) => t(`payroll.employees.status.${employee.status}`) },
+    ],
+    rows: employees.value,
+}));
+
 let timer = null;
 watch(search, () => {
     clearTimeout(timer);
@@ -30,13 +45,11 @@ watch(search, () => {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.employees.title')" :description="t('payroll.employees.text')">
-            <template #actions>
-                <AppButton v-if="can('payroll.view')" variant="ghost" :icon="Tags" :to="{ name: 'payroll-components' }">{{ t('payroll.components.title') }}</AppButton>
-                <AppButton v-if="can('payroll.view')" variant="ghost" :icon="Layers" :to="{ name: 'payroll-structures' }">{{ t('payroll.structures.title') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('payroll.employees.title')" :description="t('payroll.employees.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('payroll.view')" variant="ghost" :icon="Tags" :to="{ name: 'payroll-components' }">{{ t('payroll.components.title') }}</AppButton>
+            <AppButton v-if="can('payroll.view')" variant="ghost" :icon="Layers" :to="{ name: 'payroll-structures' }">{{ t('payroll.structures.title') }}</AppButton>
+        </template>
 
         <div class="relative mb-4 max-w-sm">
             <Search class="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-muted" aria-hidden="true" />
@@ -66,5 +79,5 @@ watch(search, () => {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

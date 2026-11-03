@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Archive, ArchiveRestore, ArrowLeft, Layers, Network, PenLine, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -35,6 +35,19 @@ const places = computed(() => (list.data.value?.data ?? []).map((place) => ({
 const managed = computed(() => places.value.filter((place) => place.can_manage && place.status === 'active'));
 const anyDepartment = computed(() => places.value.some((place) => place.departments.length));
 const anyClosed = computed(() => places.value.some((place) => place.departments.some((department) => department.status !== 'active')));
+
+// Export and print (hrm.export): one row per department shown, under its branch.
+const exported = computed(() => ({
+    module: 'hrm',
+    page: 'hrm.departments',
+    columns: [
+        { key: 'branch', label: t('hrm.export.branch') },
+        { key: 'name', label: t('hrm.export.department') },
+        { key: 'employees', label: t('hrm.export.people'), type: 'number' },
+        { key: 'status', label: t('hrm.export.status'), value: (row) => (row.status === 'active' ? t('hrm.export.open') : t('hrm.departments.closed_badge')) },
+    ],
+    rows: places.value.flatMap((place) => place.shown.map((department) => ({ ...department, branch: place.name }))),
+}));
 
 // One dialog: a new department at a branch, a new one at every branch, or a new name.
 const editing = ref(null); // null | { mode: 'new', placeId } | { mode: 'all' } | { mode: 'rename', department }
@@ -101,14 +114,12 @@ const missingCount = computed(() => managed.value.filter((place) => !place.depar
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('hrm.departments.title')" :description="t('hrm.departments.text')">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
-                <AppButton v-if="managed.length > 1" :icon="Layers" @click="open('all')">{{ t('hrm.departments.add_all') }}</AppButton>
-                <AppButton v-if="managed.length" variant="primary" :icon="Plus" @click="open('new')">{{ t('hrm.departments.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('hrm.departments.title')" :description="t('hrm.departments.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'hrm' }" :icon="ArrowLeft">{{ t('hrm.profile.back') }}</AppButton>
+            <AppButton v-if="managed.length > 1" :icon="Layers" @click="open('all')">{{ t('hrm.departments.add_all') }}</AppButton>
+            <AppButton v-if="managed.length" variant="primary" :icon="Plus" @click="open('new')">{{ t('hrm.departments.add') }}</AppButton>
+        </template>
 
         <div v-if="anyClosed" class="mb-4 flex justify-end">
             <AppSwitch v-model="showClosed" :label="t('hrm.departments.show_closed')" show-label />
@@ -178,5 +189,5 @@ const missingCount = computed(() => managed.value.filter((place) => !place.depar
                     :disabled="!form.name_en.trim() || (editing?.mode === 'new' && !form.place_id) || (editing?.mode === 'all' && !missingCount)">{{ t('hrm.departments.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

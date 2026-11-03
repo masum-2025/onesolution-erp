@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { CalendarOff, CalendarPlus, UserX, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -63,12 +63,10 @@ async function withdraw(item) {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('leave.me.title')" :description="data ? t('leave.me.year', { year: formatNumber(data.year, { useGrouping: false }) }) : t('leave.me.text')">
-            <template v-if="data?.can_request && types.length" #actions>
-                <AppButton variant="primary" :icon="CalendarPlus" @click="asking = true">{{ t('leave.me.ask') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('leave.me.title')" :description="data ? t('leave.me.year', { year: formatNumber(data.year, { useGrouping: false }) }) : t('leave.me.text')" width="full" class="space-y-6">
+        <template v-if="data?.can_request && types.length" #actions>
+            <AppButton variant="primary" :icon="CalendarPlus" @click="asking = true">{{ t('leave.me.ask') }}</AppButton>
+        </template>
 
         <section v-if="me.error.value?.code === 'not_linked'" class="card">
             <EmptyState :icon="UserX" :title="t('leave.me.not_linked')" :text="t('leave.me.not_linked_text')" />
@@ -122,5 +120,5 @@ async function withdraw(item) {
         </template>
 
         <AskLeaveDialog :open="asking" :types="types" :available="available" :send="leave.askMine" @close="asking = false" @sent="asking = false; me.reload()" />
-    </div>
+    </PageFrame>
 </template>

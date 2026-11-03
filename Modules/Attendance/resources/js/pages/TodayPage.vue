@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { CalendarDays, ClipboardCheck, HardDriveUpload, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -13,7 +13,7 @@ import { formatDate, formatNumber } from '@/lib/format';
 import { can, currentOrganization, session } from '@/lib/session';
 import { t } from '@/lib/i18n';
 import { attendanceApi } from '../api';
-import { dayTone, durationParts, localDateTime, STATUSES, statusCounts } from '../lib';
+import { allDays, dayTone, durationParts, localDateTime, STATUSES, statusCounts } from '../lib';
 import CorrectionDialog from '../components/CorrectionDialog.vue';
 import DayDrawer from '../components/DayDrawer.vue';
 import DeviceImportDialog from '../components/DeviceImportDialog.vue';
@@ -44,21 +44,38 @@ const correcting = ref(null);
 const importing = ref(false);
 const time = (iso) => (iso ? formatDate(iso, { timeStyle: 'short' }) : '—');
 const duration = (minutes) => t('attendance.duration', durationParts(minutes));
+
+// Export and print: everyone on this day (every page) with the status picked.
+const exported = computed(() => ({
+    module: 'attendance',
+    page: 'attendance.today',
+    columns: [
+        { key: 'employee_code', label: t('attendance.export.code') },
+        { key: 'employee_name', label: t('attendance.month.employee') },
+        { key: 'status', label: t('attendance.export.status'), value: (day) => t(`attendance.status.${day.status}`) },
+        { key: 'first_in_at', label: t('attendance.export.in'), value: (day) => (day.first_in_at ? time(day.first_in_at) : '') },
+        { key: 'last_out_at', label: t('attendance.export.out'), value: (day) => (day.last_out_at ? time(day.last_out_at) : '') },
+        { key: 'worked_minutes', label: t('attendance.export.worked'), value: (day) => (day.worked_minutes ? duration(day.worked_minutes) : '') },
+    ],
+    fetchAll: async (maxRows) => {
+        const all = await allDays(attendance.days, { from: date.value, to: date.value }, maxRows);
+        return filter.value === 'all' ? all : all.filter((day) => day.status === filter.value);
+    },
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.today.title')" :description="t('attendance.today.text', { unit: org.name })">
-            <template #actions>
-                <AppButton variant="secondary" :icon="CalendarDays" :to="{ name: 'attendance-month' }">{{ t('attendance.month.title') }}</AppButton>
-                <AppButton v-if="can('attendance.manage')" variant="secondary" :icon="HardDriveUpload" @click="importing = true">{{ t('attendance.device.title') }}</AppButton>
-                <AppButton v-if="can('attendance.correct')" variant="secondary" :icon="ClipboardCheck" :to="{ name: 'attendance-corrections' }">{{ t('attendance.corrections.title') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.today.title')" :description="t('attendance.today.text', { unit: org.name })" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="secondary" :icon="CalendarDays" :to="{ name: 'attendance-month' }">{{ t('attendance.month.title') }}</AppButton>
+            <AppButton v-if="can('attendance.manage')" variant="secondary" :icon="HardDriveUpload" @click="importing = true">{{ t('attendance.device.title') }}</AppButton>
+            <AppButton v-if="can('attendance.correct')" variant="secondary" :icon="ClipboardCheck" :to="{ name: 'attendance-corrections' }">{{ t('attendance.corrections.title') }}</AppButton>
+        </template>
 
-        <section class="card mb-5 flex flex-wrap items-end gap-4 p-5">
+        <p class="mb-3 hidden text-[13px] print:block">{{ t('attendance.today.date') }}: {{ formatDate(`${date}T00:00:00Z`, { dateStyle: 'medium', timeZone: 'UTC' }) }}</p>
+        <section class="card mb-5 flex flex-wrap items-end gap-4 p-5 print:hidden">
             <AppField v-slot="{ id }" :label="t('attendance.today.date')" class="w-44">
-                <input :id="id" v-model="date" type="date" class="field-input" @change="page = 1" />
+                <DateInput :id="id" v-model="date" @change="page = 1" />
             </AppField>
             <div class="flex flex-wrap gap-2" role="group" :aria-label="t('attendance.today.filter')">
                 <button
@@ -93,7 +110,7 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
                     </button>
                 </li>
             </ul>
-            <footer v-if="pages > 1" class="flex items-center justify-between border-t border-line px-5 py-3 text-[13px]">
+            <footer v-if="pages > 1" class="flex items-center justify-between border-t border-line px-5 py-3 text-[13px] print:hidden">
                 <AppButton size="sm" variant="ghost" :disabled="page <= 1" @click="page--">{{ t('attendance.common.previous') }}</AppButton>
                 <span class="text-muted">{{ t('attendance.common.page', { page: formatNumber(page), pages: formatNumber(pages) }) }}</span>
                 <AppButton size="sm" variant="ghost" :disabled="page >= pages" @click="page++">{{ t('attendance.common.next') }}</AppButton>
@@ -110,5 +127,5 @@ const duration = (minutes) => t('attendance.duration', durationParts(minutes));
             @close="correcting = null"
             @sent="correcting = null"
         />
-    </div>
+    </PageFrame>
 </template>

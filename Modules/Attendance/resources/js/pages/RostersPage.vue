@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowLeft, CalendarClock, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -60,17 +60,27 @@ const shiftLabel = (id) => {
     const shift = shiftById.value[id];
     return shift ? `${shift.name} · ${shiftHours(shift).from}–${shiftHours(shift).to}` : t('attendance.rosters.no_shift');
 };
+
+// Export and print: everyone here with today's shift.
+const exported = computed(() => ({
+    module: 'attendance',
+    page: 'attendance.rosters',
+    columns: [
+        { key: 'employee_code', label: t('attendance.export.code') },
+        { key: 'employee_name', label: t('attendance.month.employee') },
+        { key: 'shift_id', label: t('attendance.rosters.shift'), value: (row) => shiftLabel(row.shift_id) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('attendance.rosters.title')" :description="t('attendance.rosters.text', { unit: org.name })">
-            <template #actions>
-                <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('attendance.rosters.title')" :description="t('attendance.rosters.text', { unit: org.name })" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="ghost" :to="{ name: 'attendance' }" :icon="ArrowLeft">{{ t('attendance.common.back') }}</AppButton>
+        </template>
 
-        <form v-if="can('attendance.manage')" class="card mb-5 grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_11rem_auto] sm:items-end" novalidate @submit.prevent="assign">
+        <form v-if="can('attendance.manage')" class="card mb-5 grid gap-4 p-5 print:hidden sm:grid-cols-[minmax(0,1fr)_11rem_auto] sm:items-end" novalidate @submit.prevent="assign">
             <AppField v-slot="{ id }" :label="t('attendance.rosters.shift')" :error="errors.shift_id?.[0]">
                 <select :id="id" v-model="form.shift_id" class="field-input">
                     <option value="">{{ t('attendance.rosters.no_shift') }}</option>
@@ -78,7 +88,7 @@ const shiftLabel = (id) => {
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('attendance.rosters.from')" :error="errors.from?.[0]">
-                <input :id="id" v-model="form.from" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.from" />
             </AppField>
             <AppButton type="submit" variant="primary" :icon="CalendarClock" :loading="saving" :disabled="!chosen.length || !form.from">
                 {{ t('attendance.rosters.assign', { count: formatNumber(chosen.length) }) }}
@@ -108,5 +118,5 @@ const shiftLabel = (id) => {
                 </ul>
             </template>
         </section>
-    </div>
+    </PageFrame>
 </template>

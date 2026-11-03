@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Gift, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -25,6 +25,20 @@ const payroll = payrollApi(org.id);
 const router = useRouter();
 const list = useResource(() => payroll.bonuses());
 const bonuses = computed(() => list.data.value?.data ?? []);
+
+// Export and print (payroll.export): the bonuses run.
+const exported = computed(() => ({
+    module: 'payroll',
+    page: 'payroll.bonuses',
+    columns: [
+        { key: 'title', label: t('payroll.export.title') },
+        { key: 'bonus_on', label: t('payroll.export.date'), type: 'date' },
+        { key: 'employees', label: t('payroll.export.people'), type: 'number' },
+        { key: 'status', label: t('payroll.export.status'), value: (bonus) => t(`payroll.status.${bonus.status}`) },
+        { key: 'net_minor', label: t('payroll.export.net'), type: 'money' },
+    ],
+    rows: bonuses.value,
+}));
 
 const opening = ref(false);
 const form = reactive({ title: { en: '', bn: '' }, bonus_on: '', percent: '' });
@@ -59,12 +73,10 @@ async function save() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payroll.bonuses.title')" :description="t('payroll.bonuses.text')">
-            <template #actions>
-                <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="open">{{ t('payroll.bonuses.open') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('payroll.bonuses.title')" :description="t('payroll.bonuses.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('payroll.run')" variant="primary" :icon="Plus" @click="open">{{ t('payroll.bonuses.open') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="4" />
@@ -91,7 +103,7 @@ async function save() {
                     <TranslatedFields v-model="form.title" :label="t('payroll.bonuses.name')" :errors="errors" error-prefix="title" required :maxlength="80" />
                 </div>
                 <AppField v-slot="{ id }" :label="t('payroll.bonuses.bonus_on')" :hint="t('payroll.bonuses.bonus_on_hint')" :error="errors.bonus_on?.[0]">
-                    <input :id="id" v-model="form.bonus_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.bonus_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.bonuses.percent')" :hint="t('payroll.bonuses.percent_hint')" :error="errors.rate_bp?.[0]" optional>
                     <input :id="id" v-model="form.percent" inputmode="decimal" class="field-input tabular text-end" dir="ltr" placeholder="%" />
@@ -102,5 +114,5 @@ async function save() {
                 <AppButton variant="primary" type="submit" form="payroll-bonus" :loading="saving" :disabled="!form.title.en?.trim() || !form.bonus_on">{{ t('payroll.bonuses.open') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

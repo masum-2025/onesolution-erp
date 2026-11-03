@@ -2,20 +2,17 @@
 import { computed, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Banknote, History, Landmark, PenLine } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, MoneyInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatMoney } from '@/lib/format';
 import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { payrollApi } from '../api';
-import { amountToMinor, minorToText } from '../lib';
 
 /**
  * One employee's pay: salary history (a new salary from a day closes the
@@ -38,16 +35,16 @@ const current = computed(() => (data.value?.salaries ?? []).find((salary) => sal
 
 // A new salary.
 const salaryOpen = ref(false);
-const salary = reactive({ structure_id: '', basic: '', effective_from: today, reason: '' });
+const salary = reactive({ structure_id: '', basic_minor: null, effective_from: today, reason: '' });
 const salaryErrors = ref({});
 const saving = ref(false);
 function editSalary() {
-    Object.assign(salary, { structure_id: current.value?.structure_id ?? structures.value[0]?.id ?? '', basic: minorToText(current.value?.basic_minor ?? null, currency.value), effective_from: today, reason: '' });
+    Object.assign(salary, { structure_id: current.value?.structure_id ?? structures.value[0]?.id ?? '', basic_minor: current.value?.basic_minor ?? null, effective_from: today, reason: '' });
     salaryErrors.value = {};
     salaryOpen.value = true;
 }
 async function saveSalary() {
-    const basic = amountToMinor(salary.basic, currency.value);
+    const basic = salary.basic_minor;
     if (basic === null) {
         salaryErrors.value = { basic_minor: [t('payroll.run.bad_amount')] };
         return;
@@ -102,15 +99,12 @@ async function savePayment() {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-employees' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.employees.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !data" :rows="6" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="data">
-            <PageHeader :title="data.employee.name" :description="t('payroll.pay.text')">
-                <template #eyebrow><span class="mb-1 block font-mono text-[12.5px] text-muted" dir="ltr">{{ data.employee.code }}</span></template>
-            </PageHeader>
+    <PageFrame :title="data ? data.employee.name : ''" :description="data ? t('payroll.pay.text') : ''" :resource="record" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'payroll-employees' }" :icon="ArrowLeft" class="mb-3">{{ t('payroll.employees.title') }}</AppButton>
+        </template>
+        <template #eyebrow><span class="mb-1 block font-mono text-[12.5px] text-muted" dir="ltr">{{ data.employee.code }}</span></template>
+        <template v-if="data">
 
             <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <section class="card">
@@ -176,10 +170,10 @@ async function savePayment() {
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.pay.basic')" :error="salaryErrors.basic_minor?.[0]">
-                    <input :id="id" v-model="salary.basic" inputmode="decimal" class="field-input tabular text-end" dir="ltr" />
+                    <MoneyInput :id="id" v-model="salary.basic_minor" :currency="currency" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.pay.effective_from')" :error="salaryErrors.effective_from?.[0]">
-                    <input :id="id" v-model="salary.effective_from" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="salary.effective_from" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('payroll.pay.reason')" :error="salaryErrors.reason?.[0]" optional class="sm:col-span-2">
                     <input :id="id" v-model="salary.reason" class="field-input" maxlength="300" :placeholder="t('payroll.pay.reason_hint')" />
@@ -187,7 +181,7 @@ async function savePayment() {
             </form>
             <template #footer>
                 <AppButton variant="ghost" @click="salaryOpen = false">{{ t('payroll.common.cancel') }}</AppButton>
-                <AppButton variant="primary" type="submit" form="payroll-salary" :loading="saving" :disabled="!salary.structure_id || !salary.basic || !salary.effective_from">{{ t('payroll.common.save') }}</AppButton>
+                <AppButton variant="primary" type="submit" form="payroll-salary" :loading="saving" :disabled="!salary.structure_id || salary.basic_minor === null || !salary.effective_from">{{ t('payroll.common.save') }}</AppButton>
             </template>
         </AppDialog>
 
@@ -218,5 +212,5 @@ async function savePayment() {
                 <AppButton variant="primary" type="submit" form="payroll-payment" :loading="saving">{{ t('payroll.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>
