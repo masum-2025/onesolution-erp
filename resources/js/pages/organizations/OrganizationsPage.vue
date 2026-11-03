@@ -89,7 +89,7 @@ const exported = computed(() => ({
 
         <section class="card overflow-hidden">
             <header class="flex flex-col gap-3 border-b border-line px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-                <div class="relative w-full sm:max-w-xs">
+                <div class="relative w-full print:hidden sm:max-w-xs">
                     <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
                     <input v-model="query" type="search" class="field-input h-9 min-h-9 ps-9" :placeholder="t('orgs.index.search')" :aria-label="t('orgs.index.search')" />
                 </div>
