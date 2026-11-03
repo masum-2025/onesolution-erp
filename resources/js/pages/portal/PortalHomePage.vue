@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router';
 import { ChevronRight, Hourglass, UserRound } from 'lucide-vue-next';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
@@ -19,8 +19,7 @@ const data = computed(() => portal.data.value);
 </script>
 
 <template>
-    <div class="mx-auto max-w-2xl">
-        <PageHeader :title="t('portal.home.title')" :description="data ? t('portal.home.text', { org: data.organization }) : ''" />
+    <PageFrame :title="t('portal.home.title')" :description="data ? t('portal.home.text', { org: data.organization }) : ''" width="full" class="mx-auto max-w-2xl">
 
         <SkeletonRows v-if="portal.loading.value && !data" :rows="3" avatar />
         <ErrorState v-else-if="portal.error.value" :error="portal.error.value" @retry="portal.reload()" />
@@ -57,5 +56,5 @@ const data = computed(() => portal.data.value);
                 </li>
             </ul>
         </template>
-    </div>
+    </PageFrame>
 </template>

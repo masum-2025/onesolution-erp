@@ -62,10 +62,11 @@ it('frames export and print through the shared menu, never a module\'s own file 
     }
 });
 
-it('draws every module page in the shared page frame, never its own header', function () {
-    // PageFrame: title, the loading / error / empty states, export and print in one place (step B).
-    $pages = (new Finder)->files()->in(glob(base_path('Modules/*/resources/js/pages'), GLOB_ONLYDIR))->name('*.vue');
-    expect(iterator_count($pages))->toBeGreaterThan(150);
+it('draws every page in the shared page frame, never its own header', function () {
+    // PageFrame: title, the loading / error / empty states, export and print in one place
+    // (step B: module pages; step C: the platform's own and the partner console's).
+    $pages = (new Finder)->files()->in([resource_path('js/pages'), ...glob(base_path('Modules/*/resources/js/pages'), GLOB_ONLYDIR)])->name('*.vue');
+    expect(iterator_count($pages))->toBeGreaterThan(250);
     foreach ($pages as $file) {
         expect($file->getContents())->not->toMatch('/\bPageHeader\b/', $file->getRelativePathname());
     }

@@ -19,8 +19,8 @@ const props = defineProps({
 
 const allowed = ref({ formats: [], print: false });
 const busy = ref(false);
-watch(() => props.options.module, async (module) => {
-    allowed.value = await exportSettings(module);
+watch(() => [props.options.module, props.options.page], async ([module, page]) => {
+    allowed.value = await exportSettings(module, page);
 }, { immediate: true });
 
 const icons = { pdf: FileType, xlsx: FileSpreadsheet, csv: Sheet, docx: FileText };

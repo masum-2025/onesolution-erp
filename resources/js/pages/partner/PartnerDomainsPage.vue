@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Copy, Globe, Lock, Plus, RefreshCw, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -103,12 +103,10 @@ async function copy(text) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('partner.domains.title')" :description="t('partner.domains.text')">
-            <template #actions>
-                <AppButton v-if="canEdit" variant="primary" :icon="Plus" @click="openAdd">{{ t('partner.domains.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('partner.domains.title')" :description="t('partner.domains.text')" width="full">
+        <template #actions>
+            <AppButton v-if="canEdit" variant="primary" :icon="Plus" @click="openAdd">{{ t('partner.domains.add') }}</AppButton>
+        </template>
 
         <p v-if="!canEdit" class="mb-4 flex items-center gap-2 rounded-xl bg-subtle p-3.5 text-[13px] text-fg-2">
             <Lock class="size-4 shrink-0 text-muted" aria-hidden="true" />{{ t('partner.domains.read_only') }}
@@ -176,5 +174,5 @@ async function copy(text) {
                 <AppButton type="submit" form="domain-form" variant="primary" :loading="saving">{{ t('partner.domains.add') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Blocks, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppSegmented from '@/components/AppSegmented.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -209,12 +209,10 @@ async function purge(module) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('modules.title')" :description="t('modules.text')">
-            <template #actions>
-                <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('modules.title')" :description="t('modules.text')" width="full">
+        <template #actions>
+            <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" />
+        </template>
 
         <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <AppSegmented v-model="filter" :options="filters" :label="t('modules.filter.label')" />
@@ -251,5 +249,5 @@ async function purge(module) {
         </div>
 
         <p v-if="!manageable && modules.data.value" class="mt-6 text-center text-[12.5px] text-muted">{{ t('modules.read_only') }}</p>
-    </div>
+    </PageFrame>
 </template>

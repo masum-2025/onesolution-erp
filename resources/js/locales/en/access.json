@@ -105,5 +105,12 @@
     },
     "errors": {
         "version_conflict": "Someone else changed this role while you were editing. Reload it to see their changes, then apply yours again."
+    },
+    "export": {
+        "name": "Role",
+        "description": "What it is for",
+        "made_at": "Made at",
+        "permissions": "Permissions",
+        "members": "People holding it"
     }
 }

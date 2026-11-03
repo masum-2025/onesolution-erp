@@ -68,6 +68,13 @@ minute per person). Rules: `ui.export_formats`, `ui.print_enabled`, `ui.export_m
 permission `{module}.export` (Payroll, HRM) offers export only to people holding it. Only the rows
 the page itself may show are exported (same API, same permissions; masked ids stay masked).
 
+The platform's own pages use `module: 'core.{page}'`: each exports only for the permission it
+needs, from `PageExports::CORE_PAGES` (organizations, roles, approvals, support access). Partner
+console pages use `module: 'partner'` with `page: 'partner.{page}'`: asked of
+`/api/partner/page-exports`, allowed by partner role (`PageExports::PARTNER_PAGES`), the
+partner's own rules decide, audited on the partner. API keys export their name, prefix and dates,
+never a key; roles export how many hold each, never who.
+
 Not exported on purpose: record and form pages, portal and "my" pages, pages with their own
 paper (receipts, slips, marksheets, report cards, letters, labels), the teacher feedback results
 (answers under the round's minimum stay hidden), and lists that already have their own server

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { Settings, Sparkles } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -35,15 +35,13 @@ const SPAN = { 1: '', 2: 'md:col-span-2', 3: 'md:col-span-2 xl:col-span-3' };
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="module?.name ?? t('dashboard.title')" :description="module?.description ?? ''">
-            <template #eyebrow>
-                <p class="mb-1 text-[12px] font-semibold tracking-[0.08em] text-brand-text uppercase">{{ t('dashboard.title') }}</p>
-            </template>
-            <template #actions>
-                <AppButton :to="`/m/${moduleKey}/settings`" :icon="Settings">{{ t('dashboard.settings') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="module?.name ?? t('dashboard.title')" :description="module?.description ?? ''" width="full">
+        <template #eyebrow>
+            <p class="mb-1 text-[12px] font-semibold tracking-[0.08em] text-brand-text uppercase">{{ t('dashboard.title') }}</p>
+        </template>
+        <template #actions>
+            <AppButton :to="`/m/${moduleKey}/settings`" :icon="Settings">{{ t('dashboard.settings') }}</AppButton>
+        </template>
 
         <div v-if="dashboard.loading.value && !dashboard.data.value" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3" role="status" :aria-label="t('core.states.loading')">
             <div v-for="n in 3" :key="n" class="skeleton h-44 rounded-2xl" />
@@ -59,5 +57,5 @@ const SPAN = { 1: '', 2: 'md:col-span-2', 3: 'md:col-span-2 xl:col-span-3' };
                 <AppButton :to="`/m/${moduleKey}/settings`" :icon="Settings">{{ t('dashboard.settings') }}</AppButton>
             </EmptyState>
         </div>
-    </div>
+    </PageFrame>
 </template>

@@ -852,7 +852,8 @@ return [
     [
         'key' => 'ui.export_modules_off',
         'type' => 'json',
-        'schema' => ['type' => 'array', 'uniqueItems' => true, 'maxItems' => 100, 'items' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{1,49}$']],
+        // Module keys, or a platform page ("core.roles") or partner console page ("partner.billing").
+        'schema' => ['type' => 'array', 'uniqueItems' => true, 'maxItems' => 100, 'items' => ['type' => 'string', 'pattern' => '^(?:core\.|partner\.)?[a-z][a-z0-9_]{1,49}$']],
         'default' => [],
         'label' => 'rules.core.ui_export_modules_off.label',
         'description' => 'rules.core.ui_export_modules_off.description',

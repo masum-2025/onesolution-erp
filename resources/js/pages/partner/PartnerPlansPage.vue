@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Archive, Info, Package, Pencil, Plus, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -54,12 +54,10 @@ const money = (amount, currency) => formatMoney({ amount, currency });
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('billing.plans.title')" :description="t('billing.plans.text')">
-            <template #actions>
-                <AppButton v-if="canEdit" variant="primary" :icon="Plus" @click="editing = null">{{ t('billing.plans.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('billing.plans.title')" :description="t('billing.plans.text')" width="full">
+        <template #actions>
+            <AppButton v-if="canEdit" variant="primary" :icon="Plus" @click="editing = null">{{ t('billing.plans.new') }}</AppButton>
+        </template>
 
         <p v-if="mode" class="mb-5 flex items-start gap-2.5 rounded-xl border border-line bg-surface p-3.5 text-[13px] text-fg-2">
             <Info class="mt-0.5 size-4 shrink-0 text-brand-text" aria-hidden="true" />
@@ -123,5 +121,5 @@ const money = (amount, currency) => formatMoney({ amount, currency });
             @close="editing = undefined"
             @saved="saved"
         />
-    </div>
+    </PageFrame>
 </template>

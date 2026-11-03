@@ -189,5 +189,15 @@
         "approved": "Change approved.",
         "rejected": "Change rejected.",
         "no_access": "Reviewing changes needs the \"Approve setting changes\" permission."
+    },
+    "export": {
+        "rule": "Rule",
+        "where": "Where",
+        "mode": "How",
+        "value": "Value",
+        "from": "From",
+        "asked_by": "Asked by",
+        "asked_on": "Asked on",
+        "reason": "Reason"
     }
 }

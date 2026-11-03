@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Plus, Trash2 } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
 import { currencyDigits, decimalStringToMinor, localeTag, minorToDecimalString, parseDuration } from '@/lib/format';
@@ -357,14 +358,13 @@ defineExpose({ error });
                 <option v-for="n in daysInMonth" :key="n" :value="String(n).padStart(2, '0')">{{ n }}</option>
             </select>
         </div>
-        <input
+        <DateInput
             v-else-if="type === 'date'"
             :id="id"
-            :value="draft"
-            type="date"
-            class="field-input max-w-48"
+            :model-value="draft ?? ''"
+            class="max-w-48"
             :aria-describedby="describedby"
-            @input="publish($event.target.value || undefined, $event.target.value ? null : t('rules.input.required'))"
+            @update:model-value="(day) => publish(day || undefined, day ? null : t('rules.input.required'))"
         />
 
         <!-- table -->

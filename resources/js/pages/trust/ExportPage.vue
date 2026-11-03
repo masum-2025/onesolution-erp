@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, watch } from 'vue';
 import { Download, FileArchive, Loader2, RefreshCw } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -62,12 +62,10 @@ const rows = (item) => Object.values(item.datasets ?? {}).reduce((sum, count) =>
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('trust.export.title')" :description="t('trust.export.text')">
-            <template #actions>
-                <AppButton v-if="can('data.export')" variant="primary" :icon="FileArchive" :disabled="working" @click="request">{{ t('trust.export.request') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('trust.export.title')" :description="t('trust.export.text')" width="full">
+        <template #actions>
+            <AppButton v-if="can('data.export')" variant="primary" :icon="FileArchive" :disabled="working" @click="request">{{ t('trust.export.request') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="exports.loading.value && !exports.data.value" :rows="3" />
@@ -100,5 +98,5 @@ const rows = (item) => Object.values(item.datasets ?? {}).reduce((sum, count) =>
         </section>
 
         <p class="mt-4 text-[12.5px] leading-relaxed text-muted">{{ t('trust.export.formats') }}</p>
-    </div>
+    </PageFrame>
 </template>

@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router';
 import { CircleCheck, CircleX, ExternalLink, Hourglass, Loader2, ShieldQuestion } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
 import { formatMoney } from '@/lib/format';
@@ -68,8 +68,7 @@ onBeforeUnmount(() => clearTimeout(timer));
 </script>
 
 <template>
-    <div class="mx-auto max-w-lg">
-        <PageHeader :title="t('billing.payment.title')" />
+    <PageFrame :title="t('billing.payment.title')" width="full" class="mx-auto max-w-lg">
 
         <SkeletonRows v-if="!payment && !error" :rows="2" />
         <ErrorState v-else-if="error && !payment" :error="error" @retry="load" />
@@ -106,5 +105,5 @@ onBeforeUnmount(() => clearTimeout(timer));
                 <AppButton to="/billing">{{ t('billing.payment.to_billing') }}</AppButton>
             </div>
         </section>
-    </div>
+    </PageFrame>
 </template>

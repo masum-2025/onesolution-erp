@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Copy, CornerDownRight, Eye, FilePlus2, KeyRound, LayoutTemplate, Lock, MoreHorizontal, PenLine, Plus, Search, ShieldOff, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -162,16 +162,28 @@ const templateGroups = computed(() => {
         { key: 'general', label: t('access.create.general'), items: list.filter((template) => !template.sector) },
     ].filter((group) => group.items.length);
 });
+
+// Export and print (roles.manage): the roles shown, how many hold each (never who: their names stay here).
+const exported = computed(() => ({
+    module: 'core.roles',
+    page: 'core.roles',
+    columns: [
+        { key: 'name', label: t('access.export.name') },
+        { key: 'description', label: t('access.export.description') },
+        { key: 'organization', label: t('access.export.made_at'), value: (role) => role.organization?.name ?? '' },
+        { key: 'permissions', label: t('access.export.permissions'), type: 'number', value: (role) => role.permissions?.length ?? 0 },
+        { key: 'members_count', label: t('access.export.members'), type: 'number' },
+    ],
+    rows: shown.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('access.title')" :description="t('access.text')">
-            <template #actions>
-                <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" />
-                <AppButton v-if="manageable && !noAccess" variant="primary" :icon="Plus" @click="startCreate">{{ t('access.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('access.title')" :description="t('access.text')" width="full" :export="exported">
+        <template #actions>
+            <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" />
+            <AppButton v-if="manageable && !noAccess" variant="primary" :icon="Plus" @click="startCreate">{{ t('access.new') }}</AppButton>
+        </template>
 
         <EmptyState v-if="noAccess" :icon="ShieldOff" :title="t('access.title')" :text="t('access.no_access')" />
 
@@ -274,5 +286,5 @@ const templateGroups = computed(() => {
             @saved="afterSave"
             @reload="reloadEdited"
         />
-    </div>
+    </PageFrame>
 </template>

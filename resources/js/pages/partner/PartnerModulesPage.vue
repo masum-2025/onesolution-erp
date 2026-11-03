@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Blocks, Lock, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
@@ -60,8 +60,7 @@ async function change(module, state, lock) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('partner.modules.title')" :description="t('partner.modules.text')" />
+    <PageFrame :title="t('partner.modules.title')" :description="t('partner.modules.text')" width="full">
 
         <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="relative w-full sm:max-w-xs">
@@ -109,5 +108,5 @@ async function change(module, state, lock) {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

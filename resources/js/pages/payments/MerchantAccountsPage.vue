@@ -9,7 +9,7 @@ import AppSegmented from '@/components/AppSegmented.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
@@ -142,8 +142,7 @@ async function submitForm() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('payments.merchant.title')" :description="t('payments.merchant.text')" />
+    <PageFrame :title="t('payments.merchant.title')" :description="t('payments.merchant.text')" width="full">
 
         <SkeletonRows v-if="resource.loading.value && !data" :rows="4" />
         <ErrorState v-else-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
@@ -306,5 +305,5 @@ async function submitForm() {
                 <AppButton type="submit" form="merchant-password" variant="primary" :loading="confirm.saving">{{ t('payments.password.confirm') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

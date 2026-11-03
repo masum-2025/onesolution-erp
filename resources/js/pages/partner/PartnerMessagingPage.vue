@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { AtSign, CircleCheck, CircleX, Copy, Lock, MessageSquareText, RefreshCw, Send, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -92,12 +92,10 @@ async function copy(text) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('messaging.title')" :description="t('messaging.text')">
-            <template #actions>
-                <AppButton to="/partner/templates" :icon="MessageSquareText">{{ t('messaging.edit_wording') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('messaging.title')" :description="t('messaging.text')" width="full">
+        <template #actions>
+            <AppButton to="/partner/templates" :icon="MessageSquareText">{{ t('messaging.edit_wording') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="state.loading.value && !data" :rows="5" />
         <ErrorState v-else-if="state.error.value" :error="state.error.value" @retry="state.reload()" />
@@ -239,5 +237,5 @@ async function copy(text) {
                 </div>
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

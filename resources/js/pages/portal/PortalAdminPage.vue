@@ -9,7 +9,7 @@ import AppSegmented from '@/components/AppSegmented.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
@@ -161,12 +161,10 @@ async function copy(text) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('portal.admin.title')" :description="t('portal.admin.text')">
-            <template v-if="data?.can_manage && data.kinds.length" #actions>
-                <AppButton variant="primary" :icon="UserPlus" @click="openInvite">{{ t('portal.admin.invite') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('portal.admin.title')" :description="t('portal.admin.text')" width="full">
+        <template v-if="data?.can_manage && data.kinds.length" #actions>
+            <AppButton variant="primary" :icon="UserPlus" @click="openInvite">{{ t('portal.admin.invite') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="portal.loading.value && !data" :rows="5" />
         <ErrorState v-else-if="portal.error.value" :error="portal.error.value" @retry="portal.reload()" />
@@ -333,5 +331,5 @@ async function copy(text) {
                 <AppButton variant="primary" @click="created = null">{{ t('portal.admin.created.done') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

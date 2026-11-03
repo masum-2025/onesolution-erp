@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ChevronsDownUp, ChevronsUpDown, Network, Plus, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -67,15 +67,25 @@ function onCreated(created) {
     list.reload();
     router.push(`/organizations/${created.id}`);
 }
+
+// Export and print (organizations.manage): every unit one may see here, where each sits.
+const exported = computed(() => ({
+    module: 'core.organizations',
+    page: 'core.organizations',
+    columns: [
+        { key: 'display_name', label: t('orgs.export.name') },
+        { key: 'type', label: t('orgs.export.type'), value: (item) => t(`core.org_types.${item.type}`) },
+        { key: 'path', label: t('orgs.export.path'), value: (item) => (Array.isArray(item.path) ? item.path.join(' › ') : item.path ?? '') },
+    ],
+    rows: list.data.value ?? [],
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('orgs.index.title')" :description="t('orgs.index.text')">
-            <template #actions>
-                <AppButton v-if="can('organizations.manage')" variant="primary" :icon="Plus" @click="creating = true">{{ t('orgs.index.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('orgs.index.title')" :description="t('orgs.index.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="can('organizations.manage')" variant="primary" :icon="Plus" @click="creating = true">{{ t('orgs.index.add') }}</AppButton>
+        </template>
 
         <section class="card overflow-hidden">
             <header class="flex flex-col gap-3 border-b border-line px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
@@ -124,5 +134,5 @@ function onCreated(created) {
             @close="creating = false"
             @saved="onCreated"
         />
-    </div>
+    </PageFrame>
 </template>

@@ -4968,7 +4968,10 @@ Bangla joins correctly), XLSX, CSV and DOCX, and print; the server decides what 
 `page_exported`, 30 a minute), by rules `ui.export_formats`, `ui.print_enabled`,
 `ui.export_modules_off`, `ui.export_max_rows`; a module declaring `{module}.export` limits export
 to holders (`payroll.export`, `hrm.export`: people's details; ids stay masked as on screen).
-Every module page uses `PageFrame` (step B, kept by `FrontendSourceTest`): about 85 list pages
+Every page uses `PageFrame` (module pages in step B, the platform's own and the partner console's
+in step C; kept by `FrontendSourceTest`). The platform's lists export as `core.{page}` by the
+permission each page needs, and the partner console's as `partner.{page}` by partner role, with
+the partner's own rules (`/api/partner/page-exports`). Module pages: about 85 list pages
 export what they show (every page of a paged list), record pages show their header once the
 record is there, and pages that lay out their own paper (labels, shipment sheets) say
 `own-paper`. Old page-level CSV and print buttons (POS takings, stock reports, fee dues and

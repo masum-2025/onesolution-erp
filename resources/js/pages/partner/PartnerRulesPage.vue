@@ -1,5 +1,5 @@
 <script setup>
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import RulesBrowser from '../rules/RulesBrowser.vue';
 import { partnerRules } from '@/lib/rulesApi';
 import { session } from '@/lib/session';
@@ -9,8 +9,7 @@ const adapter = partnerRules();
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('partner.rules.title')" :description="t('partner.rules.text')" />
+    <PageFrame :title="t('partner.rules.title')" :description="t('partner.rules.text')" width="full">
         <RulesBrowser :adapter="adapter" :scope-name="session.me?.context?.name ?? ''" />
-    </div>
+    </PageFrame>
 </template>

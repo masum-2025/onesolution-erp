@@ -75,7 +75,7 @@ return [
         ],
         'ui_export_modules_off' => [
             'label' => 'যে মডিউলে এক্সপোর্ট নেই',
-            'description' => 'যেসব মডিউলের (যেমন payroll) পাতায় এক্সপোর্ট বা প্রিন্ট থাকবে না, তাদের key।',
+            'description' => 'যেসব মডিউলের (যেমন payroll) পাতায় এক্সপোর্ট বা প্রিন্ট থাকবে না, তাদের key; মূল পাতাও (core.roles) বা পার্টনার কনসোলের পাতাও (partner.billing) দেওয়া যায়।',
         ],
         'ui_export_max_rows' => [
             'label' => 'এক এক্সপোর্টে সারি',

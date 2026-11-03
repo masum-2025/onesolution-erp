@@ -19,11 +19,15 @@ export const FORMATS = ['pdf', 'xlsx', 'csv', 'docx'];
 
 const settingsCache = new Map();
 
-/** What this module's pages may offer here: { formats, print, max_rows } (asked once per organization and module). */
-export function exportSettings(module) {
-    const key = `${currentOrganization()?.id ?? ''}:${module}`;
+/**
+ * What this module's pages may offer here: { formats, print, max_rows } (asked once per organization
+ * and module). module "partner": a partner console page, asked of the partner console by its page.
+ */
+export function exportSettings(module, page = null) {
+    const partner = module === 'partner';
+    const key = partner ? `partner:${page}` : `${currentOrganization()?.id ?? ''}:${module}`;
     if (!settingsCache.has(key)) {
-        settingsCache.set(key, api('/api/page-exports', { query: { module } })
+        settingsCache.set(key, (partner ? api('/api/partner/page-exports', { query: { page } }) : api('/api/page-exports', { query: { module } }))
             .then((response) => response.data)
             .catch(() => {
                 settingsCache.delete(key);
@@ -143,14 +147,18 @@ async function toDocx(columns, rows, { title, subtitle }) {
  * Throws the server's refusal (its message says what to do) before anything is built.
  */
 export async function runExport(format, options) {
+    // Checked and audited by the server first: the partner console's own pages there, the rest here.
+    const record = (rows) => (options.module === 'partner'
+        ? api('/api/partner/page-exports', { method: 'POST', body: { page: options.page, format, rows } })
+        : api('/api/page-exports', { method: 'POST', body: { module: options.module, page: options.page, format, rows } }));
     if (format === 'pdf' || format === 'print') {
-        await api('/api/page-exports', { method: 'POST', body: { module: options.module, page: options.page, format, rows: options.rows?.length ?? 0 } });
+        await record(options.rows?.length ?? 0);
         window.print();
         return;
     }
     // fetchAll(maxRows): no more is read than the company's rule lets one export hold.
-    const rows = options.fetchAll ? await options.fetchAll((await exportSettings(options.module)).max_rows || 5000) : (options.rows ?? []);
-    await api('/api/page-exports', { method: 'POST', body: { module: options.module, page: options.page, format, rows: rows.length } });
+    const rows = options.fetchAll ? await options.fetchAll((await exportSettings(options.module, options.page)).max_rows || 5000) : (options.rows ?? []);
+    await record(rows.length);
     const subtitle = options.subtitle ?? t('core.export.as_of', { date: formatDate(new Date().toISOString()) });
 
     if (format === 'csv') {

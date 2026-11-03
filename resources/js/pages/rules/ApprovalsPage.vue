@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Check, ShieldCheck, ShieldX, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -70,15 +70,30 @@ function reload() {
     approvals.reload();
     rules.reload();
 }
+
+// Export and print (rules.approve): the rule changes waiting for a second person.
+const exported = computed(() => ({
+    module: 'core.approvals',
+    page: 'core.approvals',
+    columns: [
+        { key: 'label', label: t('rules.export.rule'), value: (item) => item.label ?? item.rule },
+        { key: 'scope', label: t('rules.export.where'), value: (item) => `${t(`core.levels.${item.scope.level}`)}: ${item.scope.name}` },
+        { key: 'mode', label: t('rules.export.mode'), value: (item) => t(`rules.modes.${item.mode}`) },
+        { key: 'value', label: t('rules.export.value'), value: (item) => display(item) },
+        { key: 'effective_from', label: t('rules.export.from'), value: (item) => (item.effective_from ? formatDateTime(item.effective_from) : '') },
+        { key: 'requested_by', label: t('rules.export.asked_by'), value: (item) => item.requested_by?.name ?? '' },
+        { key: 'created_at', label: t('rules.export.asked_on'), value: (item) => formatDateTime(item.created_at) },
+        { key: 'reason', label: t('rules.export.reason') },
+    ],
+    rows: approvals.data.value ?? [],
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('rules.approvals.title')" :description="t('rules.approvals.text')">
-            <template #actions>
-                <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" @update:model-value="reload" />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('rules.approvals.title')" :description="t('rules.approvals.text')" width="full" :export="exported">
+        <template #actions>
+            <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" @update:model-value="reload" />
+        </template>
 
         <div v-if="approvals.loading.value && !approvals.data.value" class="card overflow-hidden"><SkeletonRows :rows="3" avatar /></div>
         <ErrorState v-else-if="approvals.error.value" :error="approvals.error.value" @retry="reload" />
@@ -134,5 +149,5 @@ function reload() {
             <ShieldX class="size-4" aria-hidden="true" />
             {{ t('rules.approvals.no_access') }}
         </p>
-    </div>
+    </PageFrame>
 </template>

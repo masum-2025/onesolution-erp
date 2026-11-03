@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Check, Copy, KeyRound, Plus, Trash2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -94,15 +94,28 @@ async function decide(transfer, accept) {
         toast.error(error.message);
     }
 }
+
+// Export and print (partner owner or sales): the client moves of the direction shown.
+const exported = computed(() => ({
+    module: 'partner',
+    page: 'partner.transfers',
+    columns: [
+        { key: 'client', label: t('partner.export.client'), value: (transfer) => transfer.client?.name ?? '' },
+        { key: 'from', label: t('partner.export.from'), value: (transfer) => transfer.from?.name ?? '' },
+        { key: 'created_at', label: t('partner.export.date'), value: (transfer) => formatDateTime(transfer.created_at) },
+        { key: 'modules_off', label: t('partner.export.modules_off'), type: 'number', value: (transfer) => transfer.summary?.modules_off?.length ?? 0 },
+        { key: 'reason', label: t('partner.export.reason') },
+        { key: 'status', label: t('partner.export.status'), value: (transfer) => t(`provider.move.status.${transfer.status}`) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('provider.partner.title')" :description="t('provider.partner.text')">
-            <template #actions>
-                <AppButton v-if="list.data.value?.can_create_codes" variant="primary" :icon="Plus" @click="creating = true">{{ t('provider.partner.new_code') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('provider.partner.title')" :description="t('provider.partner.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="list.data.value?.can_create_codes" variant="primary" :icon="Plus" @click="creating = true">{{ t('provider.partner.new_code') }}</AppButton>
+        </template>
 
         <section class="card mb-6">
             <div class="px-5 pt-2"><AppTabs v-model="direction" :tabs="tabs" :label="t('provider.partner.title')" /></div>
@@ -171,5 +184,5 @@ async function decide(transfer, accept) {
                 <AppButton v-if="!created" type="submit" form="code-form" variant="primary" :loading="saving">{{ t('provider.partner.create') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

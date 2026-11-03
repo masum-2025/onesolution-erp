@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { FileText, Globe, Upload } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -93,8 +93,7 @@ async function publish() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('provider.legal.title')" :description="t('provider.legal.text')" />
+    <PageFrame :title="t('provider.legal.title')" :description="t('provider.legal.text')" width="full">
 
         <SkeletonRows v-if="docs.loading.value && !docs.data.value" :rows="3" />
         <ErrorState v-else-if="docs.error.value" :error="docs.error.value" @retry="docs.reload()" />
@@ -157,5 +156,5 @@ async function publish() {
                 <AppButton type="submit" form="legal-form" variant="primary" :loading="saving">{{ t('provider.legal.publish') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

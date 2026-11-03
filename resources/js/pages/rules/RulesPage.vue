@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ShieldCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import OrgPicker from '@/components/OrgPicker.vue';
 import RulesBrowser from './RulesBrowser.vue';
@@ -32,14 +32,12 @@ watch(
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('rules.title')" :description="t('rules.text')">
-            <template #actions>
-                <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" />
-                <AppButton v-if="can('rules.approve')" to="/approvals" :icon="ShieldCheck">{{ t('core.nav.approvals') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('rules.title')" :description="t('rules.text')" width="full">
+        <template #actions>
+            <OrgPicker v-model="orgId" compact :label="t('core.org_picker.scope')" />
+            <AppButton v-if="can('rules.approve')" to="/approvals" :icon="ShieldCheck">{{ t('core.nav.approvals') }}</AppButton>
+        </template>
 
         <RulesBrowser :adapter="adapter" :scope-name="orgName" />
-    </div>
+    </PageFrame>
 </template>

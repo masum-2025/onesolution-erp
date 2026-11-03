@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { ImageUp, Lock, Palette, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -94,8 +94,7 @@ async function removeLogo() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('brand.title')" :description="t('brand.text')" />
+    <PageFrame :title="t('brand.title')" :description="t('brand.text')" width="full">
 
         <SkeletonRows v-if="brand.loading.value && !data" :rows="4" />
         <ErrorState v-else-if="brand.error.value" :error="brand.error.value" @retry="brand.reload()" />
@@ -151,5 +150,5 @@ async function removeLogo() {
                 </div>
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

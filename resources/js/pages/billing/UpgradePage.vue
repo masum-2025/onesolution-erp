@@ -8,7 +8,7 @@ import TranslatedFields from '@/components/TranslatedFields.vue';
 import { cleanTexts, textsFor } from '@/lib/texts';
 import AppSegmented from '@/components/AppSegmented.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
@@ -80,8 +80,7 @@ async function submit() {
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('billing.upgrade.title')" :description="t('billing.upgrade.text')" />
+    <PageFrame :title="t('billing.upgrade.title')" :description="t('billing.upgrade.text')" width="md">
 
         <SkeletonRows v-if="preview.loading.value && !data" :rows="4" />
         <ErrorState v-else-if="preview.error.value" :error="preview.error.value" @retry="preview.reload()" />
@@ -160,5 +159,5 @@ async function submit() {
                 <AppButton type="submit" variant="primary" :loading="saving">{{ t('billing.upgrade.submit') }}</AppButton>
             </div>
         </form>
-    </div>
+    </PageFrame>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Coins, HandCoins, Receipt, Wallet } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppTabs from '@/components/AppTabs.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -69,11 +69,41 @@ const cards = computed(() => {
             : []),
     ];
 });
+
+// Export and print (partner owner or billing): the tab shown, invoices, commissions or payouts.
+const exported = computed(() => {
+    if (!tab.value || !rows.value.length) return null;
+    const money = (key, label) => ({ key, label, type: 'money' });
+    const columns = {
+        commissions: [
+            { key: 'client', label: t('partner.export.client') },
+            { key: 'invoice', label: t('partner.export.invoice'), value: (row) => row.invoice?.number ?? '' },
+            money('base_minor', t('partner.export.base')),
+            { key: 'rate_bp', label: t('partner.export.rate'), type: 'number', value: (row) => row.rate_bp / 100 },
+            money('amount_minor', t('partner.export.amount')),
+            { key: 'created_at', label: t('partner.export.date'), value: (row) => formatDate(row.created_at) },
+            { key: 'status', label: t('partner.export.status'), value: (row) => t(`billing.commission_status.${row.status}`) },
+        ],
+        payouts: [
+            { key: 'paid_at', label: t('partner.export.date'), value: (row) => formatDate(row.paid_at) },
+            { key: 'reference', label: t('partner.export.reference') },
+            { key: 'commissions', label: t('partner.export.commissions'), type: 'number' },
+            money('amount_minor', t('partner.export.amount')),
+        ],
+    }[tab.value] ?? [
+        { key: 'number', label: t('partner.export.invoice') },
+        ...(tab.value === 'clients' ? [{ key: 'buyer', label: t('partner.export.client'), value: (invoice) => invoice.buyer?.name ?? invoice.buyer ?? '' }] : []),
+        { key: 'issued_at', label: t('partner.export.date'), value: (invoice) => (invoice.issued_at ? formatDate(invoice.issued_at) : '') },
+        { key: 'due_at', label: t('partner.export.due'), value: (invoice) => (invoice.due_at ? formatDate(invoice.due_at) : '') },
+        money('total_minor', t('partner.export.amount')),
+        { key: 'status', label: t('partner.export.status'), value: (invoice) => t(`billing.status.${invoice.status}`) },
+    ];
+    return { module: 'partner', page: 'partner.billing', columns, rows: rows.value };
+});
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('billing.partner.title')" :description="mode ? t(`billing.partner.text_${mode}`) : ''" />
+    <PageFrame :title="t('billing.partner.title')" :description="mode ? t(`billing.partner.text_${mode}`) : ''" width="full" :export="exported">
 
         <SkeletonRows v-if="summary.loading.value && !summary.data.value" :rows="3" />
         <ErrorState v-else-if="summary.error.value" :error="summary.error.value" @retry="summary.reload()" />
@@ -129,5 +159,5 @@ const cards = computed(() => {
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { LifeBuoy, LogIn, Plus, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -64,15 +64,30 @@ async function cancel(grant) {
         busy.value = null;
     }
 }
+
+// Export and print (partner owner or support): the support access asked, never a client's own data.
+const exported = computed(() => ({
+    module: 'partner',
+    page: 'partner.support',
+    columns: [
+        { key: 'organization', label: t('partner.export.client'), value: (grant) => grant.organization?.name ?? '' },
+        { key: 'requested_by', label: t('partner.export.asked_by'), value: (grant) => grant.requested_by?.name ?? '' },
+        { key: 'requested_at', label: t('partner.export.date'), value: (grant) => formatDateTime(grant.requested_at) },
+        { key: 'severity', label: t('partner.export.severity'), value: (grant) => t(`trust.support.severity.${grant.severity}`) },
+        { key: 'duration_minutes', label: t('partner.export.minutes'), type: 'number' },
+        { key: 'reason', label: t('partner.export.reason') },
+        { key: 'status', label: t('partner.export.status'), value: (grant) => t(`trust.support.status.${grant.status}`) },
+        { key: 'decided_by', label: t('partner.export.decided_by'), value: (grant) => grant.decided_by?.name ?? '' },
+    ],
+    rows: list.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('trust.partner.title')" :description="t('trust.partner.text')">
-            <template #actions>
-                <AppButton v-if="canRequest" variant="primary" :icon="Plus" @click="asking = true">{{ t('trust.partner.request') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('trust.partner.title')" :description="t('trust.partner.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="canRequest" variant="primary" :icon="Plus" @click="asking = true">{{ t('trust.partner.request') }}</AppButton>
+        </template>
 
         <section class="card">
             <SkeletonRows v-if="grants.loading.value && !grants.data.value" :rows="4" />
@@ -106,5 +121,5 @@ async function cancel(grant) {
         </section>
 
         <SupportRequestDialog :open="asking" @close="asking = false" @requested="grants.reload()" />
-    </div>
+    </PageFrame>
 </template>

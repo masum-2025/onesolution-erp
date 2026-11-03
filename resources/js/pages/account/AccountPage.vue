@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { KeyRound, Laptop, Lock, Mail, MonitorSmartphone, Smartphone, UserRound } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -145,8 +145,7 @@ function deviceName(item) {
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <PageHeader :title="t('identity.account.title')" :description="t('identity.account.text')" />
+    <PageFrame :title="t('identity.account.title')" :description="t('identity.account.text')" width="md">
 
         <SkeletonRows v-if="account.loading.value && !me" :rows="6" />
         <ErrorState v-else-if="account.error.value" :error="account.error.value" @retry="account.reload()" />
@@ -272,5 +271,5 @@ function deviceName(item) {
             </template>
         </AppDialog>
         <ContactDialog :open="contact.open" :channel="contact.channel" :countries="me?.options.phone_countries ?? []" @close="contact.open = false" @saved="contactSaved" />
-    </div>
+    </PageFrame>
 </template>

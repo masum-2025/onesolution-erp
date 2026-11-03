@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -91,7 +92,7 @@ const errorOf = (field) => errors.value[field.column]?.[0] ?? (checked.value[fie
                         <option v-if="!field.required" value="">—</option>
                         <option v-for="(name, value) in setup.employees ?? {}" :key="value" :value="value">{{ name }}</option>
                     </select>
-                    <input v-else-if="field.type === 'date'" :id="id" v-model="inputs[field.name]" type="date" class="field-input" />
+                    <DateInput v-else-if="field.type === 'date'" :id="id" v-model="inputs[field.name]" />
                     <input v-else-if="['integer', 'quantity', 'money'].includes(field.type)" :id="id" v-model="inputs[field.name]" inputmode="decimal" class="field-input tabular" dir="ltr" />
                     <input v-else :id="id" v-model="inputs[field.name]" class="field-input" :maxlength="field.max ?? 150" />
                 </AppField>

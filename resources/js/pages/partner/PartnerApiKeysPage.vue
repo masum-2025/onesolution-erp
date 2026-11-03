@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { Copy, KeyRound, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -83,15 +83,29 @@ const example = computed(
   -d '{"name":{"en":"Sunrise School"},"sector_key":"school","plan":"business",
        "owner_email":"head@sunrise.test","owner_name":"Head Teacher","country_code":"BD"}'`,
 );
+
+// Export and print (partner owner): the keys by name, prefix and dates; the key itself is never here.
+const exported = computed(() => ({
+    module: 'partner',
+    page: 'partner.api_keys',
+    columns: [
+        { key: 'name', label: t('partner.export.name') },
+        { key: 'prefix', label: t('partner.export.prefix') },
+        { key: 'scopes', label: t('partner.export.scopes'), value: (key) => (key.scopes ?? []).join(', ') },
+        { key: 'created_by', label: t('partner.export.made_by') },
+        { key: 'last_used_at', label: t('partner.export.last_used'), value: (key) => (key.last_used_at ? formatDateTime(key.last_used_at) : '') },
+        { key: 'expires_at', label: t('partner.export.expires'), value: (key) => (key.expires_at ? formatDate(key.expires_at) : '') },
+        { key: 'status', label: t('partner.export.status'), value: (key) => t(`partner.api.status.${key.status}`) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('partner.api.title')" :description="t('partner.api.text')">
-            <template #actions>
-                <AppButton variant="primary" :icon="Plus" @click="openCreate">{{ t('partner.api.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('partner.api.title')" :description="t('partner.api.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="primary" :icon="Plus" @click="openCreate">{{ t('partner.api.new') }}</AppButton>
+        </template>
 
         <section class="card mb-6">
             <SkeletonRows v-if="keys.loading.value && !keys.data.value" :rows="3" />
@@ -163,5 +177,5 @@ const example = computed(
                 <AppButton v-if="!created" type="submit" form="api-key-form" variant="primary" :loading="saving" :disabled="!form.name.trim() || !form.scopes.length">{{ t('partner.api.create') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

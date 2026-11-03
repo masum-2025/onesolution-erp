@@ -75,7 +75,7 @@ return [
         ],
         'ui_export_modules_off' => [
             'label' => 'Modules without export',
-            'description' => 'Module keys (for example payroll) whose pages offer no export or print.',
+            'description' => 'Module keys (for example payroll) whose pages offer no export or print; also a platform page (core.roles) or a partner console page (partner.billing).',
         ],
         'ui_export_max_rows' => [
             'label' => 'Rows in one export',

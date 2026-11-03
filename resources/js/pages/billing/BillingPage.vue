@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { CalendarClock, Package, Receipt } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -34,8 +34,7 @@ const nextInvoice = computed(() => {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('billing.client.title')" :description="selfServe ? t('billing.self.text') : t('billing.client.text')" />
+    <PageFrame :title="t('billing.client.title')" :description="selfServe ? t('billing.self.text') : t('billing.client.text')" width="full">
 
         <SelfServePanel v-if="selfServe" @changed="billing.reload()" />
 
@@ -72,5 +71,5 @@ const nextInvoice = computed(() => {
                 <InvoiceList v-else :invoices="data.invoices" base="/billing/invoices" />
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { CircleAlert, CircleCheck, ImagePlus, Lock, Plus, Trash2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
@@ -153,14 +153,12 @@ async function togglePoweredBy(show) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('partner.brand.title')" :description="t('partner.brand.text')">
-            <template #actions>
-                <AppButton v-if="canEdit" variant="primary" :loading="saving" :disabled="!dirty || !!primaryProblem || !!secondaryProblem" @click="save">
-                    {{ t('core.actions.save') }}
-                </AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('partner.brand.title')" :description="t('partner.brand.text')" width="full">
+        <template #actions>
+            <AppButton v-if="canEdit" variant="primary" :loading="saving" :disabled="!dirty || !!primaryProblem || !!secondaryProblem" @click="save">
+                {{ t('core.actions.save') }}
+            </AppButton>
+        </template>
 
         <div v-if="brand.loading.value && !data" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]" role="status" :aria-label="t('core.states.loading')">
             <div class="skeleton h-96 rounded-2xl" />
@@ -383,5 +381,5 @@ async function togglePoweredBy(show) {
                 </div>
             </aside>
         </div>
-    </div>
+    </PageFrame>
 </template>

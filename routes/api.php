@@ -44,6 +44,7 @@ use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
 use App\Platform\Packaging\Http\Controllers\SectorPackageController;
 use App\Platform\Packaging\Http\Controllers\UsageController;
 use App\Platform\PageExports\Http\PageExportController;
+use App\Platform\PageExports\Http\PartnerPageExportController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiKeyController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiV1Controller;
 use App\Platform\Partners\Http\Controllers\PartnerBrandController;
@@ -382,6 +383,9 @@ Route::middleware(['auth:sanctum', 'org'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(function () {
+    // Export and print on partner console pages: by partner role and the partner's rules, audited (step C).
+    Route::get('page-exports', [PartnerPageExportController::class, 'show']);
+    Route::post('page-exports', [PartnerPageExportController::class, 'store'])->middleware('throttle:page-export');
     Route::get('organizations', [PartnerOrganizationController::class, 'index']);
     Route::get('organizations/{organization}', [PartnerOrganizationController::class, 'show']);
     // Break-glass support access (Phase 5B-2).

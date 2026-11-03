@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { AppWindow, Check, CircleAlert, CircleCheck, Lock, Monitor, Moon, RotateCcw, Sun, TriangleAlert } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -101,12 +101,10 @@ const themeOptions = computed(() => [
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('appearance.title')" :description="t('appearance.description')">
-            <template v-if="hasOwnChoice" #actions>
-                <AppButton :icon="RotateCcw" :loading="saving === 'reset'" @click="reset">{{ t('appearance.reset') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('appearance.title')" :description="t('appearance.description')" width="full" class="space-y-6">
+        <template v-if="hasOwnChoice" #actions>
+            <AppButton :icon="RotateCcw" :loading="saving === 'reset'" @click="reset">{{ t('appearance.reset') }}</AppButton>
+        </template>
 
         <!-- Template -->
         <section class="card p-5 sm:p-6" aria-labelledby="look-template">
@@ -311,7 +309,7 @@ const themeOptions = computed(() => [
                         <input :id="id" class="field-input" :placeholder="t('appearance.dialog.sample_name_hint')" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('appearance.dialog.sample_date')" optional>
-                        <input :id="id" type="date" class="field-input" />
+                        <DateInput :id="id" />
                     </AppField>
                 </div>
                 <template #footer>
@@ -384,7 +382,7 @@ const themeOptions = computed(() => [
                         <input :id="id" class="field-input" :placeholder="t('appearance.dialog.sample_name_hint')" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('appearance.dialog.sample_date')" optional>
-                        <input :id="id" type="date" class="field-input" />
+                        <DateInput :id="id" />
                     </AppField>
                 </div>
                 <template #footer>
@@ -480,5 +478,5 @@ const themeOptions = computed(() => [
                 </div>
             </div>
         </section>
-    </div>
+    </PageFrame>
 </template>

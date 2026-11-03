@@ -2,14 +2,12 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, RotateCcw, Save } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import AppTabs from '@/components/AppTabs.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
@@ -117,14 +115,11 @@ async function reset() {
 </script>
 
 <template>
-    <div>
-        <AppButton class="mb-3" variant="ghost" size="sm" :icon="ArrowLeft" to="/partner/templates">{{ t('messaging.templates.back') }}</AppButton>
-
-        <SkeletonRows v-if="template.loading.value && !data" :rows="6" />
-        <ErrorState v-else-if="template.error.value" :error="template.error.value" @retry="template.reload()" />
-
-        <template v-else-if="data">
-            <PageHeader :title="data.name" :description="data.description" />
+    <PageFrame :title="data ? data.name : ''" :description="data ? data.description : ''" :resource="template" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton class="mb-3" variant="ghost" size="sm" :icon="ArrowLeft" to="/partner/templates">{{ t('messaging.templates.back') }}</AppButton>
+        </template>
+        <template v-if="data">
 
             <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <AppTabs v-model="channel" :tabs="channels" :label="t('messaging.templates.channel')" />
@@ -204,5 +199,5 @@ async function reset() {
                 </section>
             </div>
         </template>
-    </div>
+    </PageFrame>
 </template>

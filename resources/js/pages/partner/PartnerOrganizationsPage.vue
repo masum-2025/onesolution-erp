@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { ArrowRightLeft, Building2, ChevronLeft, ChevronRight, Gauge, Pause, Play, Plus, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -83,15 +83,38 @@ async function toggleStatus(org) {
         toast.error(error.message);
     }
 }
+
+// Export and print (partner owner or sales): every client account (all pages), the search as typed.
+const exported = computed(() => ({
+    module: 'partner',
+    page: 'partner.clients',
+    columns: [
+        { key: 'display_name', label: t('partner.export.name') },
+        { key: 'type', label: t('partner.export.type'), value: (org) => t(`core.org_types.${org.type}`) },
+        { key: 'country_code', label: t('partner.export.country') },
+        { key: 'subscription_plan', label: t('partner.export.plan'), value: (org) => org.subscription_plan?.name ?? org.subscription_plan ?? '' },
+        { key: 'status', label: t('partner.export.status'), value: (org) => t(`orgs.status.${org.status}`) },
+        { key: 'created_at', label: t('partner.export.since'), value: (org) => (org.created_at ? formatDate(org.created_at) : '') },
+    ],
+    fetchAll: async (maxRows) => {
+        const needle = query.value.trim().toLocaleLowerCase();
+        const all = [];
+        for (let number = 1; number <= 500 && all.length <= maxRows; number += 1) {
+            const response = await api('/api/partner/organizations', { query: { page: number, per_page: 100 } });
+            all.push(...(response.data ?? []));
+            const last = response.meta?.last_page ?? 1;
+            if ((response.meta?.current_page ?? response.meta?.page ?? last) >= last) break;
+        }
+        return all.filter((org) => !needle || org.display_name.toLocaleLowerCase().includes(needle)).slice(0, maxRows + 1);
+    },
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('partner.clients.title')" :description="t('partner.clients.text')">
-            <template #actions>
-                <AppButton v-if="canCreate" variant="primary" :icon="Plus" @click="creating = true">{{ t('partner.clients.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('partner.clients.title')" :description="t('partner.clients.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="canCreate" variant="primary" :icon="Plus" @click="creating = true">{{ t('partner.clients.new') }}</AppButton>
+        </template>
 
         <section class="card overflow-hidden">
             <header class="flex flex-col gap-3 border-b border-line px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
@@ -154,7 +177,7 @@ async function toggleStatus(org) {
                 </table>
             </div>
 
-            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                 <span class="tabular text-[12.5px] text-muted">{{ t('partner.clients.page', { page: formatNumber(meta.current_page), pages: formatNumber(meta.last_page) }) }}</span>
                 <div class="flex gap-2">
                     <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.current_page <= 1" @click="go(meta.current_page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -166,5 +189,5 @@ async function toggleStatus(org) {
         <PlanChangeDialog :open="!!changing" :client="changing" @close="changing = null" @changed="planChanged" />
         <ClientCreateDialog :open="creating" @close="creating = false" @created="created" />
         <ClientLimitsDialog :open="!!limitsFor" :client="limitsFor" @close="limitsFor = null" />
-    </div>
+    </PageFrame>
 </template>

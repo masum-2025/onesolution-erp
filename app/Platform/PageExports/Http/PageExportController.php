@@ -18,7 +18,7 @@ class PageExportController extends Controller
 
     public function show(Request $request): JsonResponse
     {
-        $request->validate(['module' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]{1,49}$/']]);
+        $request->validate(['module' => ['required', 'string', 'regex:/^(?:core\.)?[a-z][a-z0-9_]{1,49}$/']]);
 
         return response()->json(['data' => $this->exports->settings($this->context->organization(), $request->string('module')->toString())]);
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Platform\Audit\AuditLog;
+use App\Platform\Tenancy\Enums\PartnerUserRole;
 use Carbon\CarbonImmutable;
 
 /*
@@ -98,4 +99,55 @@ it('keeps each organization to its own rules and its own audit', function () {
     ($this->as)()->getJson('/api/page-exports?module=accounting')->assertJsonPath('data.print', true);
     ($this->send)([])->assertCreated();
     expect(AuditLog::query()->where('action', 'page_exported')->sole()->organization_id)->toBe($this->w->c1->id);
+});
+
+it('lets the platform\'s own pages export only for people holding what the page needs (step C)', function () {
+    $roleKeeper = orgToken(staffWithRoles($this->w->c1, makeRole($this->w->c1, ['roles.manage'], 'Role keeper')), $this->w->c1);
+
+    // The accountant may not manage roles: nothing offered, nothing taken.
+    ($this->as)()->getJson('/api/page-exports?module=core.roles')->assertJsonPath('data.formats', [])->assertJsonPath('data.print', false);
+    ($this->send)(['module' => 'core.roles', 'page' => 'core.roles'])->assertForbidden();
+
+    ($this->as)($roleKeeper)->getJson('/api/page-exports?module=core.roles')->assertJsonPath('data.print', true);
+    ($this->send)(['module' => 'core.roles', 'page' => 'core.roles'], $roleKeeper)->assertCreated();
+    // A page not on the platform's list offers nothing, whoever asks.
+    ($this->as)($roleKeeper)->getJson('/api/page-exports?module=core.secrets')->assertJsonPath('data.formats', []);
+    ($this->as)($roleKeeper)->getJson('/api/page-exports?module=core.Roles')->assertUnprocessable();
+
+    trustedOrgRule($this->w->c1, 'ui.export_modules_off', ['core.roles']);
+    ($this->send)(['module' => 'core.roles', 'page' => 'core.roles', 'format' => 'csv'], $roleKeeper)->assertForbidden();
+    expect(AuditLog::query()->where('action', 'page_exported')->sole()->new_values)->toMatchArray(['module' => 'core.roles', 'page' => 'core.roles']);
+});
+
+it('lets partner console pages export by partner role and the partner\'s own rules, audited on the partner (step C)', function () {
+    $owner = partnerToken(createPartnerStaff($this->w->partnerA, PartnerUserRole::Owner), $this->w->partnerA);
+    $support = partnerToken(createPartnerStaff($this->w->partnerA, PartnerUserRole::Support), $this->w->partnerA);
+    $otherOwner = partnerToken(createPartnerStaff($this->w->partnerB, PartnerUserRole::Owner), $this->w->partnerB);
+    $send = fn (string $token, array $data) => ($this->as)($token)->postJson('/api/partner/page-exports', ['page' => 'partner.billing', 'format' => 'xlsx', 'rows' => 10, ...$data]);
+
+    ($this->as)($owner)->getJson('/api/partner/page-exports?page=partner.billing')->assertOk()->assertJsonPath('data.print', true);
+    // Support staff may not see billing: nothing offered there, but their own support page exports.
+    ($this->as)($support)->getJson('/api/partner/page-exports?page=partner.billing')->assertJsonPath('data.formats', []);
+    $send($support, [])->assertForbidden();
+    ($this->as)($support)->getJson('/api/partner/page-exports?page=partner.support')->assertJsonPath('data.print', true);
+    // API keys: the owner only.
+    ($this->as)($support)->getJson('/api/partner/page-exports?page=partner.api_keys')->assertJsonPath('data.formats', []);
+
+    // The partner's own rules decide; another partner's do not reach it.
+    partnerRule($this->w->partnerB, 'ui.export_formats', ['csv']);
+    $send($owner, [])->assertCreated();
+    partnerRule($this->w->partnerA, 'ui.export_formats', ['csv']);
+    $send($owner, [])->assertForbidden()->assertJsonPath('code', 'page_format_off');
+    $send($otherOwner, ['format' => 'csv'])->assertCreated();
+
+    $logged = AuditLog::query()->where('action', 'page_exported')->orderBy('created_at')->get();
+    expect($logged->pluck('partner_id')->all())->toBe([$this->w->partnerA->id, $this->w->partnerB->id])
+        ->and($logged->pluck('organization_id')->unique()->all())->toBe([null])
+        ->and($logged[0]->new_values)->toMatchArray(['module' => 'partner', 'page' => 'partner.billing', 'format' => 'xlsx']);
+
+    // Only known pages and the expected fields.
+    $send($owner, ['page' => 'partner.secrets'])->assertUnprocessable()->assertJsonValidationErrors('page');
+    $send($owner, ['partner_id' => $this->w->partnerB->id])->assertUnprocessable();
+    // Not a partner's console: the organization token does not reach it.
+    ($this->as)()->getJson('/api/partner/page-exports?page=partner.billing')->assertForbidden();
 });

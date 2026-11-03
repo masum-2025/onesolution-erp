@@ -3,9 +3,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, CreditCard } from 'lucide-vue-next';
 import AppButton from '@/components/AppButton.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
+import { PageFrame } from '@/ui';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
 import { currentOrganization } from '@/lib/session';
@@ -22,23 +20,19 @@ const data = computed(() => record.data.value);
 </script>
 
 <template>
-    <div class="mx-auto max-w-2xl">
-        <AppButton class="mb-4" variant="ghost" size="sm" :icon="ArrowLeft" to="/portal">{{ t('portal.record.back') }}</AppButton>
-
-        <SkeletonRows v-if="record.loading.value && !data" :rows="4" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="data">
-            <PageHeader :title="data.name" :description="`${data.kind} · ${t(`portal.record.relation.${data.relation}`)}`">
-                <!-- A module with its own screen for the record (e.g. a customer's invoices). -->
-                <template v-if="data.page || data.pages?.length" #actions>
-                    <div class="flex flex-wrap gap-2">
-                        <AppButton v-if="data.page" variant="primary" :to="data.page">{{ t('portal.record.open') }}</AppButton>
-                        <!-- Other modules' screens for this record (an employee's payslips, attendance). -->
-                        <AppButton v-for="page in data.pages ?? []" :key="page.to" :variant="data.page ? 'secondary' : 'primary'" :to="page.to">{{ page.label }}</AppButton>
-                    </div>
-                </template>
-            </PageHeader>
+    <PageFrame :title="data ? data.name : ''" :description="data ? `${data.kind} · ${t(`portal.record.relation.${data.relation}`)}` : ''" :resource="record" :skeleton-rows="4" width="full" class="mx-auto max-w-2xl">
+        <template #before>
+            <AppButton class="mb-4" variant="ghost" size="sm" :icon="ArrowLeft" to="/portal">{{ t('portal.record.back') }}</AppButton>
+        </template>
+        <!-- A module with its own screen for the record (e.g. a customer's invoices). -->
+        <template v-if="data.page || data.pages?.length" #actions>
+            <div class="flex flex-wrap gap-2">
+                <AppButton v-if="data.page" variant="primary" :to="data.page">{{ t('portal.record.open') }}</AppButton>
+                <!-- Other modules' screens for this record (an employee's payslips, attendance). -->
+                <AppButton v-for="page in data.pages ?? []" :key="page.to" :variant="data.page ? 'secondary' : 'primary'" :to="page.to">{{ page.label }}</AppButton>
+            </div>
+        </template>
+        <template v-if="data">
 
             <section class="card">
                 <p v-if="!data.fields.length" class="px-5 py-6 text-[13.5px] text-muted">{{ t('portal.record.empty') }}</p>
@@ -54,5 +48,5 @@ const data = computed(() => record.data.value);
                 <CreditCard class="size-4" aria-hidden="true" />{{ t('portal.record.payment_soon', { org: org?.name ?? '' }) }}
             </p>
         </template>
-    </div>
+    </PageFrame>
 </template>

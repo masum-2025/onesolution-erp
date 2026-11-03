@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowRight, Blocks, LayoutDashboard, SlidersHorizontal } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import RulesBrowser from '@/pages/rules/RulesBrowser.vue';
@@ -28,13 +28,11 @@ const adapter = computed(() => organizationRules(org.id, { module: moduleKey.val
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="data ? t('dashboard.settings_title', { module: data.module.name }) : t('dashboard.settings')" :description="t('dashboard.settings_text')">
-            <template #actions>
-                <AppButton :to="`/m/${moduleKey}`" :icon="LayoutDashboard">{{ t('dashboard.title') }}</AppButton>
-                <AppButton v-if="data?.can_manage_modules" to="/modules" :icon="Blocks">{{ t('dashboard.on_off') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="data ? t('dashboard.settings_title', { module: data.module.name }) : t('dashboard.settings')" :description="t('dashboard.settings_text')" width="full">
+        <template #actions>
+            <AppButton :to="`/m/${moduleKey}`" :icon="LayoutDashboard">{{ t('dashboard.title') }}</AppButton>
+            <AppButton v-if="data?.can_manage_modules" to="/modules" :icon="Blocks">{{ t('dashboard.on_off') }}</AppButton>
+        </template>
 
         <ErrorState v-if="settings.error.value" :error="settings.error.value" @retry="settings.reload()" />
         <div v-else-if="!data" class="skeleton h-24 rounded-2xl" role="status" :aria-label="t('core.states.loading')" />
@@ -64,5 +62,5 @@ const adapter = computed(() => organizationRules(org.id, { module: moduleKey.val
                 <RulesBrowser v-else :adapter="adapter" :scope-name="org.name" single />
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

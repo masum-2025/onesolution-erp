@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { ChevronRight, Mail, MessageSquare } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -19,8 +19,7 @@ const rows = computed(() => list.data.value?.data ?? []);
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('messaging.templates.title')" :description="t('messaging.templates.text')" />
+    <PageFrame :title="t('messaging.templates.title')" :description="t('messaging.templates.text')" width="full">
 
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
@@ -44,5 +43,5 @@ const rows = computed(() => list.data.value?.data ?? []);
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

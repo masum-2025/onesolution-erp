@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -68,10 +69,10 @@ async function download(item) {
     <div class="space-y-5">
         <form class="card grid gap-4 px-5 py-4 sm:grid-cols-4 sm:items-end" @submit.prevent="request">
             <AppField v-slot="{ id, describedby }" :label="t('trust.audit.filters.from')" :error="errors.from?.[0]">
-                <input :id="id" v-model="form.from" type="date" class="field-input" :aria-describedby="describedby" required />
+                <DateInput :id="id" v-model="form.from" :aria-describedby="describedby" required />
             </AppField>
             <AppField v-slot="{ id, describedby }" :label="t('trust.audit.filters.to')" :error="errors.to?.[0]">
-                <input :id="id" v-model="form.to" type="date" class="field-input" :aria-describedby="describedby" required />
+                <DateInput :id="id" v-model="form.to" :aria-describedby="describedby" required />
             </AppField>
             <AppField v-slot="{ id }" :label="t('trust.audit.filters.area')">
                 <select :id="id" v-model="form.action" class="field-input">

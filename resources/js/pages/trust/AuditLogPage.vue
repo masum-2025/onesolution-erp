@@ -2,7 +2,7 @@
 import { computed, defineAsyncComponent, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeft, ChevronRight, LifeBuoy, ScrollText, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -82,8 +82,7 @@ function details(entry) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('trust.audit.title')" :description="t('trust.audit.text')" />
+    <PageFrame :title="t('trust.audit.title')" :description="t('trust.audit.text')" width="full">
 
         <div v-if="tabs.length > 1" class="mb-5">
             <AppTabs v-model="tab" :tabs="tabs" :label="t('trust.audit.title')" />
@@ -97,10 +96,10 @@ function details(entry) {
                 <AppSegmented v-model="filters.filter" :options="kinds" :label="t('trust.audit.filter.label')" />
                 <div class="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-3 lg:max-w-xl">
                     <AppField v-slot="{ id }" :label="t('trust.audit.filters.from')">
-                        <input :id="id" v-model.lazy="filters.from" type="date" class="field-input" />
+                        <DateInput :id="id" v-model.lazy="filters.from" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('trust.audit.filters.to')">
-                        <input :id="id" v-model.lazy="filters.to" type="date" class="field-input" :min="filters.from || undefined" />
+                        <DateInput :id="id" v-model.lazy="filters.to" :min="filters.from || undefined" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('trust.audit.filters.area')" class="col-span-2 sm:col-span-1">
                         <select :id="id" v-model="filters.action" class="field-input">
@@ -166,5 +165,5 @@ function details(entry) {
                 </footer>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

@@ -4,7 +4,7 @@ import { Banknote, Laptop, PauseCircle, Smartphone } from 'lucide-vue-next';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
@@ -71,8 +71,7 @@ async function discard(held) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('offline.admin.title')" :description="t('offline.admin.text')" />
+    <PageFrame :title="t('offline.admin.title')" :description="t('offline.admin.text')" width="full">
 
         <SkeletonRows v-if="state.loading.value && !data" :rows="5" />
         <ErrorState v-else-if="state.error.value" :error="state.error.value" @retry="state.reload()" />
@@ -122,5 +121,5 @@ async function discard(held) {
                 </ul>
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

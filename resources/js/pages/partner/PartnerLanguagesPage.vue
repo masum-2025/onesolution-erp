@@ -7,7 +7,7 @@ import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
 import ErrorState from '@/components/ErrorState.vue';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import WordingEditor from '@/components/WordingEditor.vue';
 import { api } from '@/lib/http';
@@ -91,12 +91,10 @@ const statusTone = { draft: 'warn', published: 'ok', disabled: 'outline' };
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('languages.title')" :description="level === 'platform' ? t('languages.platform_description') : t('languages.partner_description')">
-            <template v-if="data?.platform" #actions>
-                <AppSegmented v-model="level" :options="levelOptions" :label="t('languages.level')" size="sm" />
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('languages.title')" :description="level === 'platform' ? t('languages.platform_description') : t('languages.partner_description')" width="full">
+        <template v-if="data?.platform" #actions>
+            <AppSegmented v-model="level" :options="levelOptions" :label="t('languages.level')" size="sm" />
+        </template>
 
         <SkeletonRows v-if="state.loading.value && !data" :rows="6" />
         <ErrorState v-else-if="state.error.value" :error="state.error.value" @retry="state.reload()" />
@@ -181,5 +179,5 @@ const statusTone = { draft: 'warn', published: 'ok', disabled: 'outline' };
                 <AppButton type="submit" form="language-form" variant="primary" :loading="saving">{{ t('languages.add_language') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

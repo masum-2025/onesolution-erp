@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Check, LifeBuoy, ShieldOff, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -59,15 +59,30 @@ async function act(grant, action) {
         busy.value = null;
     }
 }
+
+// Export and print (support.approve): every support access asked of this organization, and what became of it.
+const exported = computed(() => ({
+    module: 'core.support_access',
+    page: 'core.support_access',
+    columns: [
+        { key: 'partner', label: t('trust.support_export.partner'), value: (grant) => grant.partner?.name ?? '' },
+        { key: 'requested_by', label: t('trust.support_export.asked_by'), value: (grant) => grant.requested_by?.name ?? '' },
+        { key: 'requested_at', label: t('trust.support_export.asked_on'), value: (grant) => formatDateTime(grant.requested_at) },
+        { key: 'severity', label: t('trust.support_export.severity'), value: (grant) => t(`trust.support.severity.${grant.severity}`) },
+        { key: 'duration_minutes', label: t('trust.support_export.minutes'), type: 'number' },
+        { key: 'reason', label: t('trust.support_export.reason') },
+        { key: 'status', label: t('trust.support_export.status'), value: (grant) => t(`trust.support.status.${grant.status}`) },
+        { key: 'decision_reason', label: t('trust.support_export.decision') },
+    ],
+    rows: list.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('trust.support.title')" :description="t('trust.support.text', { minutes: formatNumber(grants.data.value?.max_minutes ?? 120) })">
-            <template #actions>
-                <AppButton to="/audit-log">{{ t('trust.support.see_log') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('trust.support.title')" :description="t('trust.support.text', { minutes: formatNumber(grants.data.value?.max_minutes ?? 120) })" width="full" :export="exported">
+        <template #actions>
+            <AppButton to="/audit-log">{{ t('trust.support.see_log') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="grants.loading.value && !grants.data.value" :rows="3" />
         <ErrorState v-else-if="grants.error.value" :error="grants.error.value" @retry="grants.reload()" />
@@ -106,5 +121,5 @@ async function act(grant, action) {
                 </ul>
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

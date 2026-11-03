@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowRightLeft, CircleAlert, CircleCheck, FileText, Mail, Phone, PowerOff, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -93,8 +93,7 @@ const STATUS_TONES = { awaiting_partner: 'warn', completed: 'ok', rejected: 'bad
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('provider.title')" :description="t('provider.text')" />
+    <PageFrame :title="t('provider.title')" :description="t('provider.text')" width="full">
 
         <SkeletonRows v-if="provider.loading.value && !data" :rows="5" />
         <ErrorState v-else-if="provider.error.value" :error="provider.error.value" @retry="provider.reload()" />
@@ -203,5 +202,5 @@ const STATUS_TONES = { awaiting_partner: 'warn', completed: 'ok', rejected: 'bad
         </div>
 
         <LegalDocumentDialog :open="reading !== null" :organization-id="data?.organization.id ?? org.id" :kind="reading" @close="reading = null" @accepted="accepted" />
-    </div>
+    </PageFrame>
 </template>

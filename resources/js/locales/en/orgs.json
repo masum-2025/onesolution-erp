@@ -153,5 +153,10 @@
             "reject": "Reject",
             "needs_other": "Another admin must decide"
         }
+    },
+    "export": {
+        "name": "Name",
+        "type": "Kind",
+        "path": "Under"
     }
 }

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { ArrowRight, Blocks, CheckCheck, Network, PenLine, ShieldCheck, SlidersHorizontal, UserPlus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import SourceBadge from '@/components/SourceBadge.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import DashboardWidget from '@/components/dashboard/DashboardWidget.vue';
@@ -108,12 +108,10 @@ const actions = computed(() =>
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="greeting" :description="t('home.subtitle', { org: org.name, type: t(`core.org_types.${org.organization_type}`) })">
-            <template #eyebrow>
-                <p class="mb-1 text-[12.5px] font-medium text-muted">{{ today }}</p>
-            </template>
-        </PageHeader>
+    <PageFrame :title="greeting" :description="t('home.subtitle', { org: org.name, type: t(`core.org_types.${org.organization_type}`) })" width="full">
+        <template #eyebrow>
+            <p class="mb-1 text-[12.5px] font-medium text-muted">{{ today }}</p>
+        </template>
 
         <!-- Headline numbers of the modules that are on -->
         <section v-if="overview.data.value?.length || (overview.loading.value && !overview.data.value)" class="mb-6" :aria-label="t('dashboard.overview')">
@@ -231,5 +229,5 @@ const actions = computed(() =>
                 </dl>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

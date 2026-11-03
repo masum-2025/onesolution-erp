@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Languages, Lock } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -30,12 +30,10 @@ const refresh = () => loadMe();
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('languages.title')" :description="t('languages.description')">
-            <template v-if="data" #eyebrow>
-                <p class="mb-1 text-[12.5px] font-medium text-muted">{{ data.organization.name }}</p>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('languages.title')" :description="t('languages.description')" width="full">
+        <template v-if="data" #eyebrow>
+            <p class="mb-1 text-[12.5px] font-medium text-muted">{{ data.organization.name }}</p>
+        </template>
 
         <SkeletonRows v-if="state.loading.value && !data" :rows="6" />
         <ErrorState v-else-if="state.error.value" :error="state.error.value" @retry="state.reload()" />
@@ -44,5 +42,5 @@ const refresh = () => loadMe();
             <EmptyState v-else-if="!data.own_wording" :icon="Lock" :title="t('languages.title')" :text="t('languages.own_wording_off')" />
             <WordingEditor v-else :base="`/api/organizations/${data.organization.id}/translations`" :languages="data.languages" can-edit @changed="refresh" />
         </template>
-    </div>
+    </PageFrame>
 </template>
