@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { BellRing, Download, PartyPopper } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { BellRing, PartyPopper } from 'lucide-vue-next';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSwitch from '@/components/AppSwitch.vue';
@@ -9,7 +9,6 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
-import { downloadText, toCsv } from '@/lib/csv';
 import { confirmAction } from '@/lib/dialogs';
 import { toast } from '@/lib/toast';
 import { currentOrganization } from '@/lib/session';
@@ -17,11 +16,10 @@ import { textIn } from '@/lib/texts';
 import { t } from '@/lib/i18n';
 import { feesApi } from '../api';
 import { useFeesSetup } from '../setup';
-import { amountText } from '../lib';
 
 /**
  * Who owes in a session (a class), most overdue first: what each owes, how
- * much is overdue and for how long; saved as CSV for calls or letters.
+ * much is overdue and for how long; exported (the page's menu) for calls or letters.
  */
 const api = feesApi(currentOrganization().id);
 const setup = useFeesSetup();
@@ -40,13 +38,6 @@ const levelName = (id) => {
     const level = setup.data.value?.levels.find((item) => item.id === id);
     return level ? `${textIn(level.program?.name)} · ${textIn(level.name)}` : '';
 };
-
-function download() {
-    const currency = setup.currency.value;
-    const header = ['code', 'name', 'class', 'bills', 'owed', 'overdue', 'oldest', 'days'].map((key) => t(`education_fees.dues.csv_columns.${key}`));
-    const lines = rows.value.map((row) => [row.student.code, row.student.name, levelName(row.level_id), row.bills, amountText(row.owed_minor, currency) || '0', amountText(row.overdue_minor, currency) || '0', row.oldest_due ?? '', row.days_overdue]);
-    downloadText(`dues-${new Date().toISOString().slice(0, 10)}.csv`, toCsv([header, ...lines]));
-}
 
 // Reminding everyone listed (once a day each; the server skips the rest).
 const reminding = ref(false);
@@ -67,16 +58,30 @@ async function remind() {
         reminding.value = false;
     }
 }
+
+// Export and print (audited, by the school's export rules): who owes what, as listed.
+const exported = computed(() => ({
+    module: 'education_fees',
+    page: 'education_fees.dues',
+    columns: [
+        { key: 'code', label: t('education_fees.dues.csv_columns.code'), value: (row) => row.student.code },
+        { key: 'name', label: t('education_fees.dues.csv_columns.name'), value: (row) => row.student.name },
+        { key: 'class', label: t('education_fees.dues.csv_columns.class'), value: (row) => levelName(row.level_id) },
+        { key: 'bills', label: t('education_fees.dues.csv_columns.bills'), type: 'number' },
+        { key: 'owed_minor', label: t('education_fees.dues.csv_columns.owed'), type: 'money', currency: setup.currency.value },
+        { key: 'overdue_minor', label: t('education_fees.dues.csv_columns.overdue'), type: 'money', currency: setup.currency.value },
+        { key: 'oldest_due', label: t('education_fees.dues.csv_columns.oldest'), type: 'date' },
+        { key: 'days_overdue', label: t('education_fees.dues.csv_columns.days'), type: 'number' },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.dues.title')" :description="t('education_fees.dues.text')">
-            <template #actions>
-                <AppButton v-if="setup.can('bill')" :icon="BellRing" :loading="reminding" :disabled="!rows.length" @click="remind">{{ t('education_fees.dues.remind') }}</AppButton>
-                <AppButton :icon="Download" :disabled="!rows.length" @click="download">{{ t('education_fees.dues.csv') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_fees.dues.title')" :description="t('education_fees.dues.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="setup.can('bill')" :icon="BellRing" :loading="reminding" :disabled="!rows.length" @click="remind">{{ t('education_fees.dues.remind') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="5" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -120,5 +125,5 @@ async function remind() {
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

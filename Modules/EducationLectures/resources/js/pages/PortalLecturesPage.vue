@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { BookOpen, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -43,8 +43,7 @@ function choose(id) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_lectures.portal.title')" :description="meta.student ? t('education_lectures.portal.text', { name: meta.student.name }) : ''" />
+    <PageFrame :title="t('education_lectures.portal.title')" :description="meta.student ? t('education_lectures.portal.text', { name: meta.student.name }) : ''" width="full">
 
         <SkeletonRows v-if="view.loading.value && !view.data.value" :rows="5" />
         <section v-else-if="view.error.value?.status === 404" class="card">
@@ -78,5 +77,5 @@ function choose(id) {
                 </nav>
             </div>
         </template>
-    </div>
+    </PageFrame>
 </template>

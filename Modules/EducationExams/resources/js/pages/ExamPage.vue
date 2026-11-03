@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Calculator, Check, ClipboardList, FileText, ListPlus, Lock, LockOpen, Megaphone, Pencil, Play, Plus, Printer, Send, Trash2, Undo2, UserRoundCog } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -290,26 +290,25 @@ async function assign() {
 </script>
 
 <template>
-    <div>
-        <RouterLink :to="{ name: 'exams-list' }" class="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
-            <ArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />{{ t('education_exams.list.title') }}
-        </RouterLink>
-
+    <PageFrame :title="exam ? textIn(exam.name) : ''" :description="exam ? [setup.sessionName(exam.session_id), t(`education_exams.kinds.${exam.kind}`), dateRange(exam.starts_on, exam.ends_on), setup.schemeName(exam.grading_scheme_id)].filter(Boolean).join(' · ') : ''" width="full">
+        <template #before>
+            <RouterLink :to="{ name: 'exams-list' }" class="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
+                <ArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />{{ t('education_exams.list.title') }}
+            </RouterLink>
+        </template>
+        <template #actions>
+            <AppBadge :tone="examTone[exam.status]" dot>{{ t(`education_exams.exam_statuses.${exam.status}`) }}</AppBadge>
+            <template v-if="manage">
+                <AppButton :icon="Pencil" @click="editingExam = true">{{ t('education_exams.exam.edit') }}</AppButton>
+                <AppButton v-for="next in nextStatuses(exam.status)" :key="next" :variant="next === 'marking' ? 'primary' : 'secondary'"
+                    :icon="next === 'marking' && exam.status === 'closed' ? LockOpen : STATUS_ACTION[next].icon" :loading="moving" @click="move(next)">
+                    {{ t(`education_exams.status_change.${next === 'marking' && exam.status === 'closed' ? 'reopen' : next}.button`) }}
+                </AppButton>
+            </template>
+        </template>
         <SkeletonRows v-if="record.loading.value && !exam" :rows="6" />
         <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
         <template v-else-if="exam">
-            <PageHeader :title="textIn(exam.name)" :description="[setup.sessionName(exam.session_id), t(`education_exams.kinds.${exam.kind}`), dateRange(exam.starts_on, exam.ends_on), setup.schemeName(exam.grading_scheme_id)].filter(Boolean).join(' · ')">
-                <template #actions>
-                    <AppBadge :tone="examTone[exam.status]" dot>{{ t(`education_exams.exam_statuses.${exam.status}`) }}</AppBadge>
-                    <template v-if="manage">
-                        <AppButton :icon="Pencil" @click="editingExam = true">{{ t('education_exams.exam.edit') }}</AppButton>
-                        <AppButton v-for="next in nextStatuses(exam.status)" :key="next" :variant="next === 'marking' ? 'primary' : 'secondary'"
-                            :icon="next === 'marking' && exam.status === 'closed' ? LockOpen : STATUS_ACTION[next].icon" :loading="moving" @click="move(next)">
-                            {{ t(`education_exams.status_change.${next === 'marking' && exam.status === 'closed' ? 'reopen' : next}.button`) }}
-                        </AppButton>
-                    </template>
-                </template>
-            </PageHeader>
 
             <p v-if="exam.status === 'draft' && manage" class="mb-4 rounded-lg bg-brand-soft px-4 py-3 text-[13px] text-fg">{{ t('education_exams.exam.draft_hint') }}</p>
             <p v-if="setup.rules.value.moderation_required !== undefined && exam.status === 'marking'" class="mb-4 text-[12.5px] text-muted">
@@ -452,5 +451,5 @@ async function assign() {
                 </template>
             </AppDialog>
         </template>
-    </div>
+    </PageFrame>
 </template>

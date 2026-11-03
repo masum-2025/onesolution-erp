@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Download, Inbox, MessageSquareText, NotebookPen, Phone, Search, UserPlus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -11,7 +11,7 @@ import AppTabs from '@/components/AppTabs.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
-import { formatNumber, formatRelative } from '@/lib/format';
+import { formatDate, formatNumber, formatRelative } from '@/lib/format';
 import { t } from '@/lib/i18n';
 import { can } from '@/lib/session';
 import { textIn } from '@/lib/texts';
@@ -112,17 +112,32 @@ async function download() {
         downloading.value = false;
     }
 }
+
+// Export and print: the admission enquiries of the tab and search, to call back.
+const exported = computed(() => ({
+    module: 'edu_website',
+    page: 'edu_website.enquiries',
+    columns: [
+        { key: 'student_name', label: t('edu_website.export.student') },
+        { key: 'guardian_name', label: t('edu_website.export.guardian') },
+        { key: 'phone', label: t('edu_website.export.phone') },
+        { key: 'level', label: t('edu_website.export.level'), value: (enquiry) => textIn(enquiry.level_name) },
+        { key: 'message', label: t('edu_website.export.message') },
+        { key: 'created_at', label: t('edu_website.export.sent_on'), value: (enquiry) => formatDate(enquiry.created_at) },
+        { key: 'status', label: t('edu_website.export.status'), value: (enquiry) => t(`edu_website.enquiries.status_${enquiry.status}`) },
+        { key: 'note', label: t('edu_website.export.note') },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('edu_website.enquiries.title')" :description="t('edu_website.enquiries.text')">
-            <template #actions>
-                <AppButton :icon="Download" :loading="downloading" :disabled="!rows.length" @click="download">{{ t('edu_website.enquiries.download') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('edu_website.enquiries.title')" :description="t('edu_website.enquiries.text')" width="full" class="space-y-6" :export="exported">
+        <template #actions>
+            <AppButton :icon="Download" :loading="downloading" :disabled="!rows.length" @click="download">{{ t('edu_website.enquiries.download') }}</AppButton>
+        </template>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3 print:hidden">
             <AppTabs v-model="status" :tabs="tabs" :label="t('edu_website.enquiries.title')" />
             <label class="relative ms-auto w-full sm:w-72">
                 <span class="sr-only">{{ t('edu_website.enquiries.search') }}</span>
@@ -178,5 +193,5 @@ async function download() {
                 <AppButton variant="primary" :loading="saving" @click="saveNote">{{ t('edu_website.common.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

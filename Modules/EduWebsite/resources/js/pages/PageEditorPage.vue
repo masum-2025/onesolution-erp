@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowDown, ArrowLeft, ArrowUp, Eye, FileQuestion, LayoutTemplate, PenLine, Plus, Save, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppDrawer from '@/components/AppDrawer.vue';
@@ -134,11 +134,16 @@ async function preview() {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <RouterLink to="/website/pages" class="inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
-            <ArrowLeft class="size-4" aria-hidden="true" />{{ t('edu_website.pages.title') }}
-        </RouterLink>
-
+    <PageFrame :title="page ? pick(page.title) : ''" :description="page ? t('edu_website.editor.text') : ''" width="full" class="space-y-6">
+        <template #before>
+            <RouterLink to="/website/pages" class="inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
+                <ArrowLeft class="size-4" aria-hidden="true" />{{ t('edu_website.pages.title') }}
+            </RouterLink>
+        </template>
+        <template #actions>
+            <AppButton v-if="canManage" :icon="Eye" @click="preview">{{ t('edu_website.overview.preview') }}</AppButton>
+            <AppButton v-if="canManage" variant="primary" :icon="Plus" @click="choosing = true">{{ t('edu_website.editor.add') }}</AppButton>
+        </template>
         <ErrorState v-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
         <SkeletonRows v-else-if="!list.data.value" :rows="5" />
         <section v-else-if="!page" class="card">
@@ -148,12 +153,6 @@ async function preview() {
         </section>
 
         <template v-else>
-            <PageHeader :title="pick(page.title)" :description="t('edu_website.editor.text')">
-                <template #actions>
-                    <AppButton v-if="canManage" :icon="Eye" @click="preview">{{ t('edu_website.overview.preview') }}</AppButton>
-                    <AppButton v-if="canManage" variant="primary" :icon="Plus" @click="choosing = true">{{ t('edu_website.editor.add') }}</AppButton>
-                </template>
-            </PageHeader>
 
             <p v-if="!canManage" class="rounded-lg bg-subtle px-4 py-3 text-[13px] text-fg-2">{{ t('edu_website.common.view_only') }}</p>
 
@@ -218,5 +217,5 @@ async function preview() {
                 </div>
             </template>
         </AppDrawer>
-    </div>
+    </PageFrame>
 </template>

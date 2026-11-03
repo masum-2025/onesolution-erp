@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowRight, BookOpen, CalendarPlus, ClipboardCheck, FileText, LayoutGrid, ListPlus, Settings2, TriangleAlert, UserPlus, Users, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -100,20 +100,18 @@ function saved(student) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education.overview.title')" :description="setup.data.value?.institution?.name ?? t('education.overview.text')">
-            <template v-if="!needsSetup" #actions>
-                <label class="flex items-center gap-2">
-                    <span class="sr-only">{{ t('education.overview.session') }}</span>
-                    <select v-model="sessionId" class="field-input h-9 w-auto min-w-44">
-                        <option v-for="session in sessions" :key="session.id" :value="session.id">
-                            {{ textIn(session.name) }}{{ session.status === 'open' ? '' : ` · ${t(`education.session_statuses.${session.status}`)}` }}
-                        </option>
-                    </select>
-                </label>
-                <AppButton v-if="setup.can('admit')" variant="primary" :icon="UserPlus" @click="adding = true">{{ t('education.students.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.overview.title')" :description="setup.data.value?.institution?.name ?? t('education.overview.text')" width="full">
+        <template v-if="!needsSetup" #actions>
+            <label class="flex items-center gap-2">
+                <span class="sr-only">{{ t('education.overview.session') }}</span>
+                <select v-model="sessionId" class="field-input h-9 w-auto min-w-44">
+                    <option v-for="session in sessions" :key="session.id" :value="session.id">
+                        {{ textIn(session.name) }}{{ session.status === 'open' ? '' : ` · ${t(`education.session_statuses.${session.status}`)}` }}
+                    </option>
+                </select>
+            </label>
+            <AppButton v-if="setup.can('admit')" variant="primary" :icon="UserPlus" @click="adding = true">{{ t('education.students.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="6" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -225,5 +223,5 @@ function saved(student) {
 
         <StudentDialog :open="adding" :start="{ session_id: sessionId }" @close="adding = false" @saved="saved" />
         <StructureDialog :open="editing !== null" :kind="editing?.kind" :start="editing?.start ?? {}" @close="editing = null" @saved="editing = null; overview.reload()" />
-    </div>
+    </PageFrame>
 </template>

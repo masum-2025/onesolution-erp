@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { FileText } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppTabs from '@/components/AppTabs.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -25,12 +25,28 @@ const query = () => ({ open: { status: 'open' }, overdue: { overdue: 1 }, paid: 
 const list = useResource(() => api.bills(query()));
 watch(tab, () => list.reload());
 const rows = computed(() => list.data.value?.data ?? []);
+
+// Export and print: the bills of the tab picked (what is left to pay on open ones).
+const exported = computed(() => ({
+    module: 'education_fees',
+    page: 'education_fees.bills',
+    columns: [
+        { key: 'number', label: t('education_fees.export.number') },
+        { key: 'code', label: t('education_fees.dues.csv_columns.code'), value: (bill) => bill.student?.code ?? '' },
+        { key: 'name', label: t('education_fees.dues.csv_columns.name'), value: (bill) => bill.student?.name ?? '' },
+        { key: 'title', label: t('education_fees.export.bill'), value: (bill) => billTitle(bill) },
+        { key: 'due_date', label: t('education_fees.export.due_date'), type: 'date' },
+        { key: 'total_minor', label: t('education_fees.export.total'), type: 'money', currency: setup.currency.value },
+        { key: 'balance_minor', label: t('education_fees.export.balance'), type: 'money', currency: setup.currency.value },
+        { key: 'status', label: t('education_fees.export.status'), value: (bill) => t(`education_fees.bill_states.${bill.status}`) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.bills.title')" :description="t('education_fees.bills.text')" />
-        <div class="mb-4 overflow-x-auto"><AppTabs v-model="tab" :tabs="tabs" :label="t('education_fees.bills.title')" /></div>
+    <PageFrame :title="t('education_fees.bills.title')" :description="t('education_fees.bills.text')" width="full" :export="exported">
+        <div class="mb-4 overflow-x-auto print:hidden"><AppTabs v-model="tab" :tabs="tabs" :label="t('education_fees.bills.title')" /></div>
         <section class="card">
             <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="6" />
             <ErrorState v-else-if="list.error.value" compact :error="list.error.value" @retry="list.reload()" />
@@ -48,5 +64,5 @@ const rows = computed(() => list.data.value?.data ?? []);
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

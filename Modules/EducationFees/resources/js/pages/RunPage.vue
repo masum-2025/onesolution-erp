@@ -2,12 +2,9 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, CheckCheck, Info, RefreshCw, SearchX, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { currentOrganization } from '@/lib/session';
@@ -64,24 +61,19 @@ async function act(name) {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'fees-runs' }" :icon="ArrowLeft" class="mb-3">{{ t('education_fees.run.back') }}</AppButton>
-
-        <SkeletonRows v-if="record.loading.value && !run" :rows="8" />
-        <section v-else-if="record.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('education_fees.run.not_found')" /></section>
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="run">
-            <PageHeader :title="runTitle(run)" :description="`${setup.sessionName(run.session_id)} · ${day(run.issue_date)} · ${t('education_fees.counter.due', { date: day(run.due_date) })}`">
-                <template #eyebrow>
-                    <span class="mb-2 inline-flex"><AppBadge :tone="tone[run.status]" dot>{{ t(`education_fees.run_statuses.${run.status}`) }}</AppBadge></span>
-                </template>
-                <template v-if="run.status === 'draft' && setup.can('bill')" #actions>
-                    <AppButton variant="danger-soft" :icon="Trash2" :loading="busy === 'cancel'" @click="act('cancel')">{{ t('education_fees.run.cancel') }}</AppButton>
-                    <AppButton :icon="RefreshCw" :loading="busy === 'refresh'" @click="act('refresh')">{{ t('education_fees.run.refresh') }}</AppButton>
-                    <AppButton variant="primary" :icon="CheckCheck" :loading="busy === 'finalize'" @click="act('finalize')">{{ t('education_fees.run.finalize') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="run ? runTitle(run) : ''" :description="run ? `${setup.sessionName(run.session_id)} · ${day(run.issue_date)} · ${t('education_fees.counter.due', { date: day(run.due_date) })}` : ''" :resource="record" :not-found="{ icon: SearchX, title: t('education_fees.run.not_found') }" :skeleton-rows="8" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'fees-runs' }" :icon="ArrowLeft" class="mb-3">{{ t('education_fees.run.back') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 inline-flex"><AppBadge :tone="tone[run.status]" dot>{{ t(`education_fees.run_statuses.${run.status}`) }}</AppBadge></span>
+        </template>
+        <template v-if="run.status === 'draft' && setup.can('bill')" #actions>
+            <AppButton variant="danger-soft" :icon="Trash2" :loading="busy === 'cancel'" @click="act('cancel')">{{ t('education_fees.run.cancel') }}</AppButton>
+            <AppButton :icon="RefreshCw" :loading="busy === 'refresh'" @click="act('refresh')">{{ t('education_fees.run.refresh') }}</AppButton>
+            <AppButton variant="primary" :icon="CheckCheck" :loading="busy === 'finalize'" @click="act('finalize')">{{ t('education_fees.run.finalize') }}</AppButton>
+        </template>
+        <template v-if="run">
 
             <div class="mb-5 space-y-2">
                 <p v-if="run.status === 'draft'" class="flex items-start gap-2 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-fg"><Info class="mt-0.5 size-4 shrink-0 text-warn" aria-hidden="true" />{{ t('education_fees.run.draft_note') }}</p>
@@ -120,5 +112,5 @@ async function act(name) {
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

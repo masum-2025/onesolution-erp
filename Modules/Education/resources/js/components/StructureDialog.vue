@@ -1,5 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -246,10 +247,10 @@ const title = computed(() => (props.kind ? t(`education.structure.${editing.valu
                     <input :id="id" v-model="form.name" class="field-input" maxlength="40" autofocus />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.structure.form.starts_on')" :error="fieldError('starts_on')">
-                    <input :id="id" v-model="form.starts_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.starts_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.structure.form.ends_on')" :error="fieldError('ends_on')">
-                    <input :id="id" v-model="form.ends_on" type="date" class="field-input" :min="form.starts_on || undefined" />
+                    <DateInput :id="id" v-model="form.ends_on" :min="form.starts_on || undefined" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.structure.form.status')" :error="fieldError('status')">
                     <select :id="id" v-model="form.status" class="field-input">
@@ -279,10 +280,10 @@ const title = computed(() => (props.kind ? t(`education.structure.${editing.valu
                     </select>
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.structure.form.starts_on')" :error="fieldError('starts_on')">
-                    <input :id="id" v-model="form.starts_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.starts_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.structure.form.ends_on')" :error="fieldError('ends_on')">
-                    <input :id="id" v-model="form.ends_on" type="date" class="field-input" :min="form.starts_on || undefined" />
+                    <DateInput :id="id" v-model="form.ends_on" :min="form.starts_on || undefined" />
                 </AppField>
             </div>
 

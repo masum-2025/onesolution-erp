@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, Award, Check, IdCard, ImagePlus, Mail, Plus, Sparkles } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -125,13 +125,13 @@ const statusTone = { draft: 'neutral', active: 'ok', retired: 'outline' };
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education-documents' }" :icon="ArrowLeft" class="mb-3">{{ t('education.designs.back') }}</AppButton>
-        <PageHeader :title="t('education.designs.title')" :description="t('education.designs.text')">
-            <template v-if="canDesign" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="openNew">{{ t('education.designs.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.designs.title')" :description="t('education.designs.text')" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education-documents' }" :icon="ArrowLeft" class="mb-3">{{ t('education.designs.back') }}</AppButton>
+        </template>
+        <template v-if="canDesign" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="openNew">{{ t('education.designs.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
         <ErrorState v-else-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
@@ -254,5 +254,5 @@ const statusTone = { draft: 'neutral', active: 'ok', retired: 'outline' };
                 <AppButton variant="primary" type="submit" form="education-asset" :loading="saving" :disabled="!asset.file || !asset.name.trim()">{{ t('education.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

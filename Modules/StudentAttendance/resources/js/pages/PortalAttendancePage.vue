@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import { t } from '@/lib/i18n';
 import { portalAttendanceApi } from '../api';
@@ -26,11 +26,10 @@ function failed(error) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('student_attendance.portal.title')" :description="student ? t('student_attendance.portal.text', { name: student.name }) : ''" />
+    <PageFrame :title="t('student_attendance.portal.title')" :description="student ? t('student_attendance.portal.text', { name: student.name }) : ''" width="full">
         <section v-if="missing" class="card">
             <EmptyState :icon="UserX" :title="t('student_attendance.portal.no_student')" :text="missing.message" />
         </section>
         <StudentAttendanceTab v-else :load="load" @loaded="(data) => (student = data?.student ?? null)" @failed="failed" />
-    </div>
+    </PageFrame>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { BadgePercent } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -80,10 +81,10 @@ async function save() {
                 <input :id="id" v-model="form.reason" class="field-input" maxlength="300" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_fees.discount.starts_on')" :error="errors.starts_on?.[0] ?? null">
-                <input :id="id" v-model="form.starts_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.starts_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_fees.discount.ends_on')" :error="errors.ends_on?.[0] ?? null">
-                <input :id="id" v-model="form.ends_on" type="date" class="field-input" :min="form.starts_on" />
+                <DateInput :id="id" v-model="form.ends_on" :min="form.starts_on" />
             </AppField>
         </form>
         <template #footer>

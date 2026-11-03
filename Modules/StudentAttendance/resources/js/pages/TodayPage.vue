@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { CalendarOff, Check, ChevronLeft, ChevronRight, ClipboardList, CloudOff, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -54,20 +54,31 @@ const takenCount = computed(() => cards.value.filter((card) => card.taken).lengt
 const offDay = computed(() => cards.value.find((card) => card.row.day_off.weekend || card.row.day_off.holiday)?.row.day_off ?? null);
 const sheetLink = (sectionId, periodId = null) => ({ name: 'student-attendance-sheet', params: { section: sectionId, date: date.value }, query: periodId ? { period: periodId } : {} });
 const sectionName = (section) => [textIn(section.level ?? {}), section.name].filter(Boolean).join(' · ');
+
+// Export and print: each section on this day, whether its attendance is taken and how many were absent.
+const exported = computed(() => (day.data.value ? {
+    module: 'student_attendance',
+    page: 'student_attendance.today',
+    columns: [
+        { key: 'section', label: t('student_attendance.export.section'), value: (card) => sectionName(card.section) },
+        { key: 'taken', label: t('student_attendance.export.taken'), value: (card) => (card.taken ? t('student_attendance.export.yes') : t('student_attendance.export.no')) },
+        { key: 'periods', label: t('student_attendance.export.periods'), value: (card) => (card.periods.length ? `${card.periods.filter((period) => period.sheet).length}/${card.periods.length}` : '') },
+        { key: 'absent', label: t('student_attendance.export.absent'), type: 'number' },
+    ],
+    rows: cards.value,
+} : null));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('student_attendance.today.title')" :description="t('student_attendance.today.text')">
-            <template #actions>
-                <div class="flex items-center gap-1.5" role="group" :aria-label="t('student_attendance.today.day')">
-                    <AppButton size="icon" variant="ghost" :icon="ChevronLeft" :aria-label="t('student_attendance.today.previous_day')" @click="date = addDays(date, -1)" />
-                    <input v-model="date" type="date" class="field-input w-auto" :max="setup.today.value" :aria-label="t('student_attendance.today.day')" />
-                    <AppButton size="icon" variant="ghost" :icon="ChevronRight" :aria-label="t('student_attendance.today.next_day')" :disabled="isToday" @click="date = addDays(date, 1)" />
-                    <AppButton v-if="!isToday" size="sm" @click="date = setup.today.value">{{ t('student_attendance.today.back_to_today') }}</AppButton>
-                </div>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('student_attendance.today.title')" :description="t('student_attendance.today.text')" width="full" :export="exported">
+        <template #actions>
+            <div class="flex items-center gap-1.5" role="group" :aria-label="t('student_attendance.today.day')">
+                <AppButton size="icon" variant="ghost" :icon="ChevronLeft" :aria-label="t('student_attendance.today.previous_day')" @click="date = addDays(date, -1)" />
+                <DateInput v-model="date" class="w-auto" :max="setup.today.value" :aria-label="t('student_attendance.today.day')" />
+                <AppButton size="icon" variant="ghost" :icon="ChevronRight" :aria-label="t('student_attendance.today.next_day')" :disabled="isToday" @click="date = addDays(date, 1)" />
+                <AppButton v-if="!isToday" size="sm" @click="date = setup.today.value">{{ t('student_attendance.today.back_to_today') }}</AppButton>
+            </div>
+        </template>
 
         <p v-if="offline.pending > 0" class="mb-4 flex items-center gap-2 rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn" role="status">
             <CloudOff class="size-4 shrink-0" aria-hidden="true" />{{ t('student_attendance.today.waiting_offline', { count: formatNumber(offline.pending) }) }}
@@ -133,5 +144,5 @@ const sectionName = (section) => [textIn(section.level ?? {}), section.name].fil
                 </li>
             </ul>
         </template>
-    </div>
+    </PageFrame>
 </template>

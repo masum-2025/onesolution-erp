@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, ArrowRightLeft, IdCard, ListOrdered, PenLine, SearchX, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -74,9 +74,15 @@ const listNames = computed(() => (section.value ? ['shift', 'medium', 'stream'].
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education-sections', query: section ? { session: section.session_id } : {} }" :icon="ArrowLeft" class="mb-3">{{ t('education.section.back') }}</AppButton>
-
+    <PageFrame :title="section ? `${setup.levelText(section.level_id)} · ${section.name}` : ''" :description="section ? setup.sessionText(section.session_id) : ''" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education-sections', query: section ? { session: section.session_id } : {} }" :icon="ArrowLeft" class="mb-3">{{ t('education.section.back') }}</AppButton>
+        </template>
+        <template #actions>
+            <AppButton v-if="setup.can('issue_documents') && data.students.length" size="sm" :icon="IdCard" @click="issuing = true">{{ t('education.section_documents.issue') }}</AppButton>
+            <AppButton v-if="setup.can('manage')" size="sm" :icon="PenLine" @click="editing = true">{{ t('education.edit') }}</AppButton>
+            <AppButton v-if="canEdit && data.students.length" size="sm" variant="primary" :icon="ListOrdered" :loading="numbering" @click="numberRolls">{{ t('education.section.number_rolls') }}</AppButton>
+        </template>
         <SkeletonRows v-if="roster.loading.value && !data" :rows="8" avatar />
         <section v-else-if="roster.error.value?.status === 404" class="card">
             <EmptyState :icon="SearchX" :title="t('education.section.not_found')" />
@@ -84,13 +90,6 @@ const listNames = computed(() => (section.value ? ['shift', 'medium', 'stream'].
         <ErrorState v-else-if="roster.error.value" :error="roster.error.value" @retry="roster.reload()" />
 
         <template v-else-if="section">
-            <PageHeader :title="`${setup.levelText(section.level_id)} · ${section.name}`" :description="setup.sessionText(section.session_id)">
-                <template #actions>
-                    <AppButton v-if="setup.can('issue_documents') && data.students.length" size="sm" :icon="IdCard" @click="issuing = true">{{ t('education.section_documents.issue') }}</AppButton>
-                    <AppButton v-if="setup.can('manage')" size="sm" :icon="PenLine" @click="editing = true">{{ t('education.edit') }}</AppButton>
-                    <AppButton v-if="canEdit && data.students.length" size="sm" variant="primary" :icon="ListOrdered" :loading="numbering" @click="numberRolls">{{ t('education.section.number_rolls') }}</AppButton>
-                </template>
-            </PageHeader>
 
             <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div class="card p-4 sm:col-span-1">
@@ -133,5 +132,5 @@ const listNames = computed(() => (section.value ? ['shift', 'medium', 'stream'].
             <IssueDialog :open="issuing" :students="data.students.map((item) => ({ id: item.student_id, name: item.name }))" kind="id_card" :education="education" @close="issuing = false" @issued="issued" />
             <StructureDialog :open="editing" kind="sections" :record="section" @close="editing = false" @saved="done" @conflict="done" />
         </template>
-    </div>
+    </PageFrame>
 </template>

@@ -2,14 +2,11 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Check, CircleAlert, ListChecks, RotateCcw, Save, SearchX, Send, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate } from '@/lib/format';
 import { currentOrganization, session } from '@/lib/session';
@@ -178,40 +175,33 @@ const toneOf = { promote: 'ok', graduate: 'brand', repeat: 'warn', leave: 'bad' 
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education-promotions' }" :icon="ArrowLeft" class="mb-3">{{ t('education.promotion.back') }}</AppButton>
-
-        <SkeletonRows v-if="record.loading.value && !batch" :rows="8" avatar />
-        <section v-else-if="record.error.value?.status === 404" class="card">
-            <EmptyState :icon="SearchX" :title="t('education.promotion.not_found')" />
-        </section>
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="batch">
-            <PageHeader :title="setup.levelText(batch.level_id)" :description="t('education.promotions.from_to', { from: setup.sessionText(batch.from_session_id), to: setup.sessionText(batch.to_session_id) })">
-                <template #eyebrow>
-                    <span class="mb-2 flex flex-wrap items-center gap-2.5">
-                        <span class="grid size-9 place-items-center rounded-xl bg-brand-soft text-brand-text" aria-hidden="true"><ListChecks class="size-[18px]" /></span>
-                        <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ batch.number }}</span>
-                        <AppBadge :tone="promotionTone(batch.status)" dot>{{ t(`education.promotion_statuses.${batch.status}`) }}</AppBadge>
-                        <span v-if="people(batch.created_by)" class="text-[12px] text-faint">{{ t('education.promotions.made_by', { name: people(batch.created_by) }) }}</span>
-                    </span>
-                </template>
-                <template #actions>
-                    <template v-if="editable">
-                        <AppButton size="sm" variant="danger-soft" :icon="X" :loading="stepping === 'cancel'" @click="step('cancel')">{{ t('education.promotion.cancel') }}</AppButton>
-                        <AppButton v-if="changed" size="sm" :icon="Save" :loading="saving" @click="save">{{ t('education.promotion.save') }}</AppButton>
-                        <AppButton size="sm" variant="primary" :icon="Send" :disabled="changed" :loading="stepping === 'submit'" @click="step('submit')">
-                            {{ setup.data.value?.rules?.promotion_approval ? t('education.promotion.submit') : t('education.promotion.submit_apply') }}
-                        </AppButton>
-                    </template>
-                    <template v-if="batch.status === 'pending_approval' && setup.can('approve_promotion') && !mine">
-                        <AppButton size="sm" variant="danger-soft" :icon="RotateCcw" @click="openReject">{{ t('education.promotion.reject') }}</AppButton>
-                        <AppButton size="sm" variant="primary" :icon="Check" :loading="stepping === 'approve'" @click="step('approve')">{{ t('education.promotion.approve') }}</AppButton>
-                    </template>
-                    <AppButton v-if="batch.status === 'applied' && setup.can('promote')" size="sm" variant="danger-soft" :icon="Undo2" :loading="stepping === 'undo'" @click="step('undo')">{{ t('education.promotion.undo') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="batch ? setup.levelText(batch.level_id) : ''" :description="batch ? t('education.promotions.from_to', { from: setup.sessionText(batch.from_session_id), to: setup.sessionText(batch.to_session_id) }) : ''" :resource="record" :not-found="{ icon: SearchX, title: t('education.promotion.not_found') }" :skeleton-rows="8" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education-promotions' }" :icon="ArrowLeft" class="mb-3">{{ t('education.promotion.back') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex flex-wrap items-center gap-2.5">
+                <span class="grid size-9 place-items-center rounded-xl bg-brand-soft text-brand-text" aria-hidden="true"><ListChecks class="size-[18px]" /></span>
+                <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ batch.number }}</span>
+                <AppBadge :tone="promotionTone(batch.status)" dot>{{ t(`education.promotion_statuses.${batch.status}`) }}</AppBadge>
+                <span v-if="people(batch.created_by)" class="text-[12px] text-faint">{{ t('education.promotions.made_by', { name: people(batch.created_by) }) }}</span>
+            </span>
+        </template>
+        <template #actions>
+            <template v-if="editable">
+                <AppButton size="sm" variant="danger-soft" :icon="X" :loading="stepping === 'cancel'" @click="step('cancel')">{{ t('education.promotion.cancel') }}</AppButton>
+                <AppButton v-if="changed" size="sm" :icon="Save" :loading="saving" @click="save">{{ t('education.promotion.save') }}</AppButton>
+                <AppButton size="sm" variant="primary" :icon="Send" :disabled="changed" :loading="stepping === 'submit'" @click="step('submit')">
+                    {{ setup.data.value?.rules?.promotion_approval ? t('education.promotion.submit') : t('education.promotion.submit_apply') }}
+                </AppButton>
+            </template>
+            <template v-if="batch.status === 'pending_approval' && setup.can('approve_promotion') && !mine">
+                <AppButton size="sm" variant="danger-soft" :icon="RotateCcw" @click="openReject">{{ t('education.promotion.reject') }}</AppButton>
+                <AppButton size="sm" variant="primary" :icon="Check" :loading="stepping === 'approve'" @click="step('approve')">{{ t('education.promotion.approve') }}</AppButton>
+            </template>
+            <AppButton v-if="batch.status === 'applied' && setup.can('promote')" size="sm" variant="danger-soft" :icon="Undo2" :loading="stepping === 'undo'" @click="step('undo')">{{ t('education.promotion.undo') }}</AppButton>
+        </template>
+        <template v-if="batch">
 
             <!-- Where the list stands. -->
             <div class="mb-5 space-y-2">
@@ -297,5 +287,5 @@ const toneOf = { promote: 'ok', graduate: 'brand', repeat: 'warn', leave: 'bad' 
                 </template>
             </AppDialog>
         </template>
-    </div>
+    </PageFrame>
 </template>

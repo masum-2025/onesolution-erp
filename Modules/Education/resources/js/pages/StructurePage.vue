@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, BookOpen, CalendarRange, Layers, PenLine, Plus, Sparkles } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -78,13 +78,13 @@ const statusTone = (status) => ({ open: 'ok', planned: 'brand', closed: 'neutral
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education' }" :icon="ArrowLeft" class="mb-3">{{ t('education.back') }}</AppButton>
-        <PageHeader :title="t('education.structure.title')" :description="t('education.structure.text')">
-            <template v-if="manage" #actions>
-                <AppButton :icon="Sparkles" @click="presetsOpen = true">{{ t('education.structure.preset') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.structure.title')" :description="t('education.structure.text')" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education' }" :icon="ArrowLeft" class="mb-3">{{ t('education.back') }}</AppButton>
+        </template>
+        <template v-if="manage" #actions>
+            <AppButton :icon="Sparkles" @click="presetsOpen = true">{{ t('education.structure.preset') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="6" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -217,5 +217,5 @@ const statusTone = (status) => ({ open: 'ok', planned: 'brand', closed: 'neutral
                 <AppButton variant="ghost" @click="presetsOpen = false">{{ t('education.close') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

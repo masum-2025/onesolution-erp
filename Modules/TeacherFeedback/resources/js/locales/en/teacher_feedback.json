@@ -104,5 +104,14 @@
     "stars_one": "{count} star",
     "stars_other": "{count} stars",
     "cancel": "Cancel",
-    "conflict": "Someone changed this round a moment ago. It is fresh now; try again."
+    "conflict": "Someone changed this round a moment ago. It is fresh now; try again.",
+    "export": {
+        "name": "Round",
+        "who": "Who rates",
+        "opens_on": "Opens on",
+        "closes_on": "Closes on",
+        "questions": "Questions",
+        "responses": "Answers",
+        "status": "Status"
+    }
 }

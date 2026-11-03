@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { CheckCircle2, Lock, Sparkles, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -62,8 +62,7 @@ async function send(round, row) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('teacher_feedback.portal.title')" :description="data ? t('teacher_feedback.portal.text', { name: data.student.name }) : ''" />
+    <PageFrame :title="t('teacher_feedback.portal.title')" :description="data ? t('teacher_feedback.portal.text', { name: data.student.name }) : ''" width="full">
         <p class="mb-4 flex items-start gap-2 rounded-xl bg-brand-soft px-4 py-3 text-[13px] text-brand-text">
             <Lock class="mt-0.5 size-4 shrink-0" aria-hidden="true" />{{ t('teacher_feedback.portal.anonymous') }}
         </p>
@@ -102,5 +101,5 @@ async function send(round, row) {
                 </ul>
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

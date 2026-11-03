@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { FileText, Plus, Trash2 } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -127,7 +128,7 @@ async function save() {
                 </AppField>
             </div>
             <AppField v-slot="{ id }" :label="t('education_exams.paper.sits_on')" :error="error('sits_on')" optional>
-                <input :id="id" v-model="form.sits_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.sits_on" />
             </AppField>
             <div class="grid grid-cols-2 gap-4">
                 <AppField v-slot="{ id }" :label="t('education_exams.paper.starts_at')" :error="error('starts_at')" optional>

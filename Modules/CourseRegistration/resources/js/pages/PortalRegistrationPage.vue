@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { BookOpen, CircleAlert, Info, ListChecks, MinusCircle, Plus, SearchX, Send, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -128,23 +128,18 @@ const seatText = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad' };
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
+    <PageFrame :title="data ? data.own ? t('course_registration.portal.title') : t('course_registration.portal.title_of', { name: data.student.name }) : ''" :description="data ? [data.student.code, textIn(data.session?.name)].filter(Boolean).join(' · ') : ''" width="md">
+        <template v-if="registration" #eyebrow>
+            <span class="mb-2 flex flex-wrap items-center gap-2">
+                <AppBadge :tone="registrationTone(registration.status)" dot>{{ t(`course_registration.statuses.${registration.status}`) }}</AppBadge>
+                <AppBadge v-if="registration.overload" tone="warn">{{ t('course_registration.registrations.overload') }}</AppBadge>
+            </span>
+        </template>
         <SkeletonRows v-if="view.loading.value && !data" :rows="8" />
         <section v-else-if="view.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('course_registration.portal.not_found')" /></section>
         <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
 
         <template v-else-if="data">
-            <PageHeader
-                :title="data.own ? t('course_registration.portal.title') : t('course_registration.portal.title_of', { name: data.student.name })"
-                :description="[data.student.code, textIn(data.session?.name)].filter(Boolean).join(' · ')"
-            >
-                <template v-if="registration" #eyebrow>
-                    <span class="mb-2 flex flex-wrap items-center gap-2">
-                        <AppBadge :tone="registrationTone(registration.status)" dot>{{ t(`course_registration.statuses.${registration.status}`) }}</AppBadge>
-                        <AppBadge v-if="registration.overload" tone="warn">{{ t('course_registration.registrations.overload') }}</AppBadge>
-                    </span>
-                </template>
-            </PageHeader>
 
             <!-- Where it stands. -->
             <div class="mb-5 space-y-2">
@@ -255,5 +250,5 @@ const seatText = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad' };
                 <AppButton variant="danger" :loading="busy === dropping?.id" :disabled="reason.trim().length < 3" @click="send(dropping, reason.trim())">{{ t('course_registration.registration.withdraw') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Archive, CircleCheck, Layers, Pencil, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -102,12 +102,10 @@ async function setStatus(row, status) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.structures.title')" :description="t('education_fees.structures.text')">
-            <template v-if="setup.can('configure')" #actions>
-                <AppButton variant="primary" :icon="Plus" :disabled="!sessionId || !heads.length" @click="open()">{{ t('education_fees.structures.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_fees.structures.title')" :description="t('education_fees.structures.text')" width="full">
+        <template v-if="setup.can('configure')" #actions>
+            <AppButton variant="primary" :icon="Plus" :disabled="!sessionId || !heads.length" @click="open()">{{ t('education_fees.structures.add') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="5" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -188,5 +186,5 @@ async function setStatus(row, status) {
                 <AppButton variant="primary" type="submit" form="fee-structure" :loading="saving" :disabled="!form.name.trim() || !linesPayload.length || invalid">{{ t('education_fees.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

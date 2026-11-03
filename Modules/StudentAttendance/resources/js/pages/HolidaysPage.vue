@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { CalendarOff, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -88,17 +88,15 @@ const levelNames = (ids) => ids.map((id) => textIn(setup.levels.value.find((leve
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('student_attendance.holidays.title')" :description="t('student_attendance.holidays.text')">
-            <template #actions>
-                <div class="flex items-center gap-1.5" role="group" :aria-label="t('student_attendance.holidays.year')">
-                    <AppButton size="icon" variant="ghost" :icon="ChevronLeft" :aria-label="t('student_attendance.holidays.previous_year')" @click="year--" />
-                    <span class="tabular min-w-14 text-center font-semibold text-fg">{{ formatNumber(year, { useGrouping: false }) }}</span>
-                    <AppButton size="icon" variant="ghost" :icon="ChevronRight" :aria-label="t('student_attendance.holidays.next_year')" @click="year++" />
-                </div>
-                <AppButton v-if="setup.can('manage')" variant="primary" :icon="Plus" @click="start">{{ t('student_attendance.holidays.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('student_attendance.holidays.title')" :description="t('student_attendance.holidays.text')" width="full">
+        <template #actions>
+            <div class="flex items-center gap-1.5" role="group" :aria-label="t('student_attendance.holidays.year')">
+                <AppButton size="icon" variant="ghost" :icon="ChevronLeft" :aria-label="t('student_attendance.holidays.previous_year')" @click="year--" />
+                <span class="tabular min-w-14 text-center font-semibold text-fg">{{ formatNumber(year, { useGrouping: false }) }}</span>
+                <AppButton size="icon" variant="ghost" :icon="ChevronRight" :aria-label="t('student_attendance.holidays.next_year')" @click="year++" />
+            </div>
+            <AppButton v-if="setup.can('manage')" variant="primary" :icon="Plus" @click="start">{{ t('student_attendance.holidays.add') }}</AppButton>
+        </template>
 
         <p v-if="weekend" class="mb-4 rounded-xl bg-subtle px-4 py-3 text-[13px] text-fg-2" role="note">{{ t('student_attendance.holidays.weekend', { days: weekend }) }}</p>
 
@@ -128,10 +126,10 @@ const levelNames = (ids) => ids.map((id) => textIn(setup.levels.value.find((leve
             <form class="space-y-4" @submit.prevent="save">
                 <div class="grid grid-cols-2 gap-3">
                     <AppField :label="t('student_attendance.holidays.starts_on')" :error="errors.starts_on?.[0]">
-                        <template #default="{ id }"><input :id="id" v-model="form.starts_on" type="date" class="field-input" required /></template>
+                        <template #default="{ id }"><DateInput :id="id" v-model="form.starts_on" required /></template>
                     </AppField>
                     <AppField :label="t('student_attendance.holidays.ends_on')" :hint="t('student_attendance.holidays.ends_on_hint')" :error="errors.ends_on?.[0]" optional>
-                        <template #default="{ id, describedby }"><input :id="id" v-model="form.ends_on" type="date" :min="form.starts_on" class="field-input" :aria-describedby="describedby" /></template>
+                        <template #default="{ id, describedby }"><DateInput :id="id" v-model="form.ends_on" :min="form.starts_on" :aria-describedby="describedby" /></template>
                     </AppField>
                 </div>
                 <TranslatedFields v-model="names" :label="t('student_attendance.holidays.name')" required :maxlength="80" :errors="errors" error-prefix="name" />
@@ -160,5 +158,5 @@ const levelNames = (ids) => ids.map((id) => textIn(setup.levels.value.find((leve
                 <AppButton variant="primary" :loading="saving" @click="save">{{ t('student_attendance.holidays.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

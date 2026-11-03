@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ChevronLeft, ChevronRight, ClipboardList, Search, UserPlus, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -12,6 +12,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { fetchPages } from '@/lib/pageExport';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
@@ -119,16 +120,29 @@ async function registerSection() {
         registering.value = false;
     }
 }
+
+// Export and print: every registration of the tab and search (not only this page).
+const exported = computed(() => (setup.sessionId.value ? {
+    module: 'course_registration',
+    page: 'course_registration.registrations',
+    columns: [
+        { key: 'code', label: t('course_registration.export.code'), value: (row) => row.student?.code ?? '' },
+        { key: 'name', label: t('course_registration.export.name'), value: (row) => row.student?.name ?? '' },
+        { key: 'credits', label: t('course_registration.export.credits'), type: 'number', value: (row) => row.credits_centi / 100 },
+        { key: 'overload', label: t('course_registration.export.overload'), value: (row) => (row.overload ? t('course_registration.export.yes') : '') },
+        { key: 'submitted_at', label: t('course_registration.export.submitted_on'), value: (row) => (row.submitted_at ? formatDate(row.submitted_at) : '') },
+        { key: 'status', label: t('course_registration.export.status'), value: (row) => t(`course_registration.statuses.${row.status}`) },
+    ],
+    fetchAll: (maxRows) => fetchPages((number) => api.registrations({ session_id: setup.sessionId.value, status: status.value === 'all' ? '' : status.value, q: search.value.trim(), page: number, per_page: 100 }), maxRows),
+} : null));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('course_registration.registrations.title')" :description="t('course_registration.registrations.text')">
-            <template v-if="setup.can('register')" #actions>
-                <AppButton :icon="Users" :disabled="!setup.sessionId.value" @click="openSections">{{ t('course_registration.registrations.register_section') }}</AppButton>
-                <AppButton variant="primary" :icon="UserPlus" :disabled="!setup.sessionId.value" @click="finding = true; term = ''">{{ t('course_registration.registrations.register') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('course_registration.registrations.title')" :description="t('course_registration.registrations.text')" width="full" :export="exported">
+        <template v-if="setup.can('register')" #actions>
+            <AppButton :icon="Users" :disabled="!setup.sessionId.value" @click="openSections">{{ t('course_registration.registrations.register_section') }}</AppButton>
+            <AppButton variant="primary" :icon="UserPlus" :disabled="!setup.sessionId.value" @click="finding = true; term = ''">{{ t('course_registration.registrations.register') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="6" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -166,7 +180,7 @@ async function registerSection() {
                         </li>
                     </ul>
                 </template>
-                <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+                <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                     <span class="tabular text-[12.5px] text-muted">{{ t('course_registration.registrations.page', { page: meta.page, pages: meta.last_page }) }}</span>
                     <div class="flex gap-2">
                         <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.page <= 1" @click="go(meta.page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -228,5 +242,5 @@ async function registerSection() {
                 <AppButton v-if="!result" variant="primary" :loading="registering" :disabled="!sectionId" @click="registerSection">{{ t('course_registration.section_register.register') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

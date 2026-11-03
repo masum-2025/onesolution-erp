@@ -2,13 +2,11 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, ArrowRightLeft, Camera, DoorOpen, FileBadge, Mail, PenLine, Phone, Plus, Printer, Trash2, UserX, UsersRound } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTabs from '@/components/AppTabs.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
@@ -171,44 +169,37 @@ async function uploadPhoto(event) {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education-students' }" :icon="ArrowLeft" class="mb-3">{{ t('education.student.back') }}</AppButton>
-
-        <SkeletonRows v-if="record.loading.value && !student" :rows="6" avatar />
-        <section v-else-if="record.error.value?.status === 404" class="card">
-            <EmptyState :icon="UserX" :title="t('education.student.not_found')" />
-        </section>
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="student">
-            <PageHeader :title="student.name" :description="student.name_local ?? ''">
-                <template #eyebrow>
-                    <span class="mb-3 flex flex-wrap items-center gap-3">
-                        <span class="relative">
-                            <StudentAvatar :name="student.name" :photo-url="student.photo_url" size="lg" />
-                            <button
-                                v-if="canEdit"
-                                type="button"
-                                class="absolute -bottom-1 -end-1 grid size-7 place-items-center rounded-full border border-line bg-surface text-fg-2 shadow-sm hover:text-fg disabled:opacity-50"
-                                :aria-label="t('education.student.change_photo')"
-                                :title="t('education.student.photo_hint', { kb: PHOTO_MAX_KB })"
-                                :disabled="uploading"
-                                @click="photoInput?.click()"
-                            >
-                                <Camera class="size-3.5" aria-hidden="true" />
-                            </button>
-                            <input ref="photoInput" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" tabindex="-1" @change="uploadPhoto" />
-                        </span>
-                        <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ student.code }}</span>
-                        <AppBadge :tone="statusTone(student.status)" dot>{{ t(`education.statuses.${student.status}`) }}</AppBadge>
-                        <span v-if="student.admission" class="text-[12px] text-faint">{{ t('education.student.from_admission', { number: student.admission.number }) }}</span>
-                    </span>
-                </template>
-                <template v-if="canEdit" #actions>
-                    <AppButton size="sm" :icon="PenLine" @click="editing = true">{{ t('education.edit') }}</AppButton>
-                    <AppButton v-if="student.status === 'active'" size="sm" variant="danger-soft" :icon="DoorOpen" @click="leaving = true">{{ t('education.student.leave') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="student ? student.name : ''" :description="student ? student.name_local ?? '' : ''" :resource="record" :not-found="{ icon: UserX, title: t('education.student.not_found') }" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education-students' }" :icon="ArrowLeft" class="mb-3">{{ t('education.student.back') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-3 flex flex-wrap items-center gap-3">
+                <span class="relative">
+                    <StudentAvatar :name="student.name" :photo-url="student.photo_url" size="lg" />
+                    <button
+                        v-if="canEdit"
+                        type="button"
+                        class="absolute -bottom-1 -end-1 grid size-7 place-items-center rounded-full border border-line bg-surface text-fg-2 shadow-sm hover:text-fg disabled:opacity-50"
+                        :aria-label="t('education.student.change_photo')"
+                        :title="t('education.student.photo_hint', { kb: PHOTO_MAX_KB })"
+                        :disabled="uploading"
+                        @click="photoInput?.click()"
+                    >
+                        <Camera class="size-3.5" aria-hidden="true" />
+                    </button>
+                    <input ref="photoInput" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" tabindex="-1" @change="uploadPhoto" />
+                </span>
+                <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ student.code }}</span>
+                <AppBadge :tone="statusTone(student.status)" dot>{{ t(`education.statuses.${student.status}`) }}</AppBadge>
+                <span v-if="student.admission" class="text-[12px] text-faint">{{ t('education.student.from_admission', { number: student.admission.number }) }}</span>
+            </span>
+        </template>
+        <template v-if="canEdit" #actions>
+            <AppButton size="sm" :icon="PenLine" @click="editing = true">{{ t('education.edit') }}</AppButton>
+            <AppButton v-if="student.status === 'active'" size="sm" variant="danger-soft" :icon="DoorOpen" @click="leaving = true">{{ t('education.student.leave') }}</AppButton>
+        </template>
+        <template v-if="student">
 
             <ModuleSummaryCards :tabs="moduleTabs" :student-id="student.id" @open="(key) => (tab = key)" />
 
@@ -342,5 +333,5 @@ async function uploadPhoto(event) {
             <IssueDialog :open="issuing" :students="[{ id: student.id, name: student.name }]" :education="education" @close="issuing = false" @issued="issued" />
             <GuardianDialog :open="guardianOpen" :student-id="student.id" :guardian="guardian" :education="education" @close="guardianOpen = false" @saved="reload" @conflict="reload" />
         </template>
-    </div>
+    </PageFrame>
 </template>

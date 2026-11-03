@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { LayoutGrid, PenLine, Plus, UserRound } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -49,22 +49,34 @@ function saved() {
     overview.reload();
 }
 const listNames = (section) => ['shift_id', 'medium_id', 'stream_id'].map((key) => section[key] && setup.listName(key.replace('_id', ''), section[key])).filter(Boolean);
+
+// Export and print: the sections of the session shown, class by class.
+const exported = computed(() => (data.value ? {
+    module: 'education',
+    page: 'education.sections',
+    columns: [
+        { key: 'level', label: t('education.word.level'), value: (section) => setup.levelText(section.level_id) },
+        { key: 'name', label: t('education.word.section') },
+        { key: 'teacher', label: t('education.sections.class_teacher'), value: (section) => (section.class_teacher_id ? setup.teacherName(section.class_teacher_id) : '') },
+        { key: 'lists', label: t('education.export.lists'), value: (section) => listNames(section).join(', ') },
+        { key: 'is_active', label: t('education.export.status'), value: (section) => (section.is_active === false ? t('education.sections.inactive') : t('education.export.active')) },
+    ],
+    rows: groups.value.flatMap((group) => group.sections),
+} : null));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education.sections.title')" :description="t('education.sections.text')">
-            <template #actions>
-                <label class="flex items-center gap-2">
-                    <span class="sr-only">{{ t('education.overview.session') }}</span>
-                    <select v-model="sessionId" class="field-input h-9 w-auto min-w-44" :disabled="!sessions.length">
-                        <option v-if="!sessions.length" value="">{{ t('education.overview.no_sessions') }}</option>
-                        <option v-for="session in sessions" :key="session.id" :value="session.id">{{ textIn(session.name) }}</option>
-                    </select>
-                </label>
-                <AppButton v-if="setup.can('manage')" variant="primary" :icon="Plus" :disabled="!sessions.length" @click="editing = { record: null, start: { session_id: sessionId } }">{{ t('education.sections.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.sections.title')" :description="t('education.sections.text')" width="full" :export="exported">
+        <template #actions>
+            <label class="flex items-center gap-2">
+                <span class="sr-only">{{ t('education.overview.session') }}</span>
+                <select v-model="sessionId" class="field-input h-9 w-auto min-w-44" :disabled="!sessions.length">
+                    <option v-if="!sessions.length" value="">{{ t('education.overview.no_sessions') }}</option>
+                    <option v-for="session in sessions" :key="session.id" :value="session.id">{{ textIn(session.name) }}</option>
+                </select>
+            </label>
+            <AppButton v-if="setup.can('manage')" variant="primary" :icon="Plus" :disabled="!sessions.length" @click="editing = { record: null, start: { session_id: sessionId } }">{{ t('education.sections.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="overview.loading.value && !data" :rows="6" />
         <ErrorState v-else-if="overview.error.value" :error="overview.error.value" @retry="overview.reload()" />
@@ -116,5 +128,5 @@ const listNames = (section) => ['shift_id', 'medium_id', 'stream_id'].map((key) 
         </div>
 
         <StructureDialog :open="editing !== null" kind="sections" :record="editing?.record ?? null" :start="editing?.start ?? {}" @close="editing = null" @saved="saved" @conflict="saved" />
-    </div>
+    </PageFrame>
 </template>

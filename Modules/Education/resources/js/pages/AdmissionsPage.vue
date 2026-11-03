@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeft, ChevronRight, FilePlus, FileText, Handshake, Search, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -11,6 +11,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { fetchPages } from '@/lib/pageExport';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { textIn } from '@/lib/texts';
@@ -84,19 +85,32 @@ function saved(admission) {
 
 const placeText = (admission) => (admission.level_id ? setup.levelText(admission.level_id) : t('education.admissions.no_place'));
 const guardianPhone = (admission) => admission.applicant?.guardians?.find((guardian) => guardian.is_primary)?.phone ?? admission.applicant?.guardians?.[0]?.phone ?? admission.applicant?.phone;
+
+// Export and print: every application of the tab and search (not only this page).
+const exported = computed(() => ({
+    module: 'education',
+    page: 'education.admissions',
+    columns: [
+        { key: 'number', label: t('education.export.number') },
+        { key: 'applicant', label: t('education.export.name'), value: (admission) => admission.applicant?.name ?? '' },
+        { key: 'place', label: t('education.export.place'), value: (admission) => placeText(admission) },
+        { key: 'phone', label: t('education.export.phone'), value: (admission) => phoneText(guardianPhone(admission)) },
+        { key: 'created_at', label: t('education.export.applied_on'), value: (admission) => formatDate(admission.created_at) },
+        { key: 'status', label: t('education.export.status'), value: (admission) => t(`education.admission_statuses.${admission.status}`) },
+    ],
+    fetchAll: (maxRows) => fetchPages((number) => education.admissions({ q: search.value.trim(), status: status.value === 'all' ? '' : status.value, program_id: programId.value, page: number, per_page: 100 }), maxRows),
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education.admissions.title')" :description="t('education.admissions.text')">
-            <template #actions>
-                <AppButton variant="primary" :icon="FilePlus" :disabled="!setup.ready.value" @click="adding = true">{{ t('education.admissions.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.admissions.title')" :description="t('education.admissions.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton variant="primary" :icon="FilePlus" :disabled="!setup.ready.value" @click="adding = true">{{ t('education.admissions.new') }}</AppButton>
+        </template>
 
-        <div class="mb-4 overflow-x-auto"><AppTabs v-model="status" :tabs="tabs" :label="t('education.admissions.title')" /></div>
+        <div class="mb-4 overflow-x-auto print:hidden"><AppTabs v-model="status" :tabs="tabs" :label="t('education.admissions.title')" /></div>
 
-        <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div class="mb-5 flex flex-col gap-3 print:hidden sm:flex-row sm:items-end">
             <AppField v-slot="{ id }" :label="t('education.admissions.search')" sr-only-label class="flex-1">
                 <div class="relative">
                     <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
@@ -146,7 +160,7 @@ const guardianPhone = (admission) => admission.applicant?.guardians?.find((guard
                     </li>
                 </ul>
             </template>
-            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                 <span class="tabular text-[12.5px] text-muted">{{ t('education.admissions.page', { page: meta.page, pages: meta.last_page }) }}</span>
                 <div class="flex gap-2">
                     <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.page <= 1" @click="go(meta.page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -156,5 +170,5 @@ const guardianPhone = (admission) => admission.applicant?.guardians?.find((guard
         </section>
 
         <ApplicationDialog :open="adding" :prefill="prefill" @close="closeAdding" @saved="saved" />
-    </div>
+    </PageFrame>
 </template>

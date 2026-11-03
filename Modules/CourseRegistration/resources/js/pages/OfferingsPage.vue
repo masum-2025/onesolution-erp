@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { BookOpen, Layers, PenLine, Plus, UserRound } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -47,16 +47,31 @@ function saved() {
     list.reload();
 }
 const kindTone = { compulsory: 'brand', elective: 'neutral', optional: 'outline' };
+
+// Export and print: the subjects offered in the session, class by class.
+const exported = computed(() => ({
+    module: 'course_registration',
+    page: 'course_registration.offerings',
+    columns: [
+        { key: 'code', label: t('course_registration.export.subject_code'), value: (offering) => offering.subject?.code ?? '' },
+        { key: 'subject', label: t('course_registration.export.subject'), value: (offering) => textIn(offering.subject?.name) },
+        { key: 'group_name', label: t('course_registration.export.group') },
+        { key: 'kind', label: t('course_registration.export.kind'), value: (offering) => t(`course_registration.kinds.${offering.kind}`) },
+        { key: 'credits', label: t('course_registration.export.credits'), type: 'number', value: (offering) => offering.credits_centi / 100 },
+        { key: 'teacher', label: t('course_registration.export.teacher'), value: (offering) => (offering.teacher_id ? setup.teacherName(offering.teacher_id) : '') },
+        { key: 'campus', label: t('course_registration.export.campus'), value: (offering) => setup.campusName(offering.unit_id) },
+        { key: 'status', label: t('course_registration.export.status'), value: (offering) => t(`course_registration.offering_statuses.${offering.status}`) },
+    ],
+    rows: groups.value.flatMap((group) => group.offerings),
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('course_registration.offerings.title')" :description="staff ? t('course_registration.offerings.text') : t('course_registration.offerings.mine')">
-            <template v-if="setup.can('manage')" #actions>
-                <AppButton :icon="Layers" :disabled="!setup.sessionId.value" @click="offeringCurriculum = true">{{ t('course_registration.offerings.from_curriculum') }}</AppButton>
-                <AppButton variant="primary" :icon="Plus" :disabled="!setup.sessionId.value" @click="editing = 'new'">{{ t('course_registration.offerings.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('course_registration.offerings.title')" :description="staff ? t('course_registration.offerings.text') : t('course_registration.offerings.mine')" width="full" :export="exported">
+        <template v-if="setup.can('manage')" #actions>
+            <AppButton :icon="Layers" :disabled="!setup.sessionId.value" @click="offeringCurriculum = true">{{ t('course_registration.offerings.from_curriculum') }}</AppButton>
+            <AppButton variant="primary" :icon="Plus" :disabled="!setup.sessionId.value" @click="editing = 'new'">{{ t('course_registration.offerings.add') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="6" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -104,5 +119,5 @@ const kindTone = { compulsory: 'brand', elective: 'neutral', optional: 'outline'
 
         <OfferingDialog :open="editing !== null" :offering="editing === 'new' ? null : editing" @close="editing = null" @saved="saved" @conflict="saved" />
         <CurriculumDialog :open="offeringCurriculum" @close="offeringCurriculum = false" @done="saved" />
-    </div>
+    </PageFrame>
 </template>

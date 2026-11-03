@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ClipboardList, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTabs from '@/components/AppTabs.vue';
@@ -47,15 +47,28 @@ function made(exam) {
     making.value = false;
     router.push({ name: 'exams-exam', params: { id: exam.id } });
 }
+
+// Export and print: the exams of the session and tab shown.
+const exported = computed(() => ({
+    module: 'education_exams',
+    page: 'exams.list',
+    columns: [
+        { key: 'name', label: t('education_exams.export.name'), value: (exam) => textIn(exam.name) },
+        { key: 'kind', label: t('education_exams.export.kind'), value: (exam) => t(`education_exams.kinds.${exam.kind}`) },
+        { key: 'campus', label: t('education_exams.export.campus'), value: (exam) => setup.campusName(exam.unit_id) },
+        { key: 'starts_on', label: t('education_exams.export.starts_on'), type: 'date' },
+        { key: 'ends_on', label: t('education_exams.export.ends_on'), type: 'date' },
+        { key: 'status', label: t('education_exams.export.status'), value: (exam) => t(`education_exams.exam_statuses.${exam.status}`) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_exams.list.title')" :description="t('education_exams.list.text')">
-            <template v-if="setup.can('manage')" #actions>
-                <AppButton variant="primary" :icon="Plus" :disabled="!setup.data.value?.sessions.length" @click="making = true">{{ t('education_exams.exam.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_exams.list.title')" :description="t('education_exams.list.text')" width="full" :export="exported">
+        <template v-if="setup.can('manage')" #actions>
+            <AppButton variant="primary" :icon="Plus" :disabled="!setup.data.value?.sessions.length" @click="making = true">{{ t('education_exams.exam.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="5" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -97,5 +110,5 @@ function made(exam) {
         </template>
 
         <ExamDialog :open="making" :session-id="sessionId" @close="making = false" @saved="made" />
-    </div>
+    </PageFrame>
 </template>

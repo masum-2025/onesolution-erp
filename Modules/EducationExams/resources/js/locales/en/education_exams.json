@@ -408,5 +408,13 @@
     "student_tab": {
         "title": "Results",
         "none": "No result published yet"
+    },
+    "export": {
+        "name": "Exam",
+        "kind": "Kind",
+        "campus": "Campus",
+        "starts_on": "Starts on",
+        "ends_on": "Ends on",
+        "status": "Status"
     }
 }

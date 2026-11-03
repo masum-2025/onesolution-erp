@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { ChevronRight, ClipboardCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -40,8 +40,7 @@ const byExam = computed(() => {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_exams.mine.title')" :description="t('education_exams.mine.text')" />
+    <PageFrame :title="t('education_exams.mine.title')" :description="t('education_exams.mine.text')" width="full">
 
         <SkeletonRows v-if="list.loading.value && !list.data.value" :rows="5" />
         <ErrorState v-else-if="list.error.value" :error="list.error.value" @retry="list.reload()" />
@@ -74,5 +73,5 @@ const byExam = computed(() => {
                 </ul>
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

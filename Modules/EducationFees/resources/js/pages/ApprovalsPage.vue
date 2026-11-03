@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { BadgePercent, Ban, Check, Inbox, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -71,8 +71,7 @@ async function decide(key, row, approve, note = null) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.approvals.title')" :description="t('education_fees.approvals.text')" />
+    <PageFrame :title="t('education_fees.approvals.title')" :description="t('education_fees.approvals.text')" width="full">
 
         <div class="grid grid-cols-1 gap-5 xl:grid-cols-3">
             <section v-for="group in groups" :key="group.key" class="card h-fit min-w-0">
@@ -103,5 +102,5 @@ async function decide(key, row, approve, note = null) {
 
         <ReasonDialog :open="refusing !== null" :title="t('education_fees.approvals.reject_title')" :label="t('education_fees.approvals.reject_reason')"
             :confirm-label="t('education_fees.approvals.reject')" :busy="busy === refusing?.row.id" @close="refusing = null" @submit="(note) => decide(refusing.key, refusing.row, false, note)" />
-    </div>
+    </PageFrame>
 </template>

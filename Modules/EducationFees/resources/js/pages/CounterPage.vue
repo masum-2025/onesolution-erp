@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowRight, Banknote, CircleCheck, HandCoins, Landmark, Printer, RotateCcw, Smartphone, Wallet } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -100,8 +100,7 @@ function next() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.counter.title')" :description="t('education_fees.counter.text')" />
+    <PageFrame :title="t('education_fees.counter.title')" :description="t('education_fees.counter.text')" width="full">
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="5" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -186,7 +185,7 @@ function next() {
                             </AppField>
                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <AppField v-slot="{ id }" :label="t('education_fees.counter.date')" :error="errors.received_on?.[0] ?? null">
-                                    <input :id="id" v-model="form.received_on" type="date" class="field-input" :max="setup.today.value" />
+                                    <DateInput :id="id" v-model="form.received_on" :max="setup.today.value" />
                                 </AppField>
                                 <AppField v-slot="{ id }" :label="t('education_fees.counter.note')">
                                     <input :id="id" v-model="form.note" class="field-input" maxlength="300" />
@@ -216,5 +215,5 @@ function next() {
                 </div>
             </template>
         </template>
-    </div>
+    </PageFrame>
 </template>

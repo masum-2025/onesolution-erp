@@ -2,12 +2,10 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { FileText, GraduationCap, Lock, SearchX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatNumber } from '@/lib/format';
 import { textIn } from '@/lib/texts';
@@ -29,12 +27,8 @@ const published = (iso) => (iso ? formatDate(iso, { dateStyle: 'medium' }) : '')
 </script>
 
 <template>
-    <div>
-        <SkeletonRows v-if="view.loading.value && !data" :rows="6" />
-        <section v-else-if="view.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('education_exams.portal.not_found')" /></section>
-        <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
-        <template v-else-if="data">
-            <PageHeader :title="t('education_exams.portal.title_of', { name: data.student.name })" :description="[data.student.code, data.institution].filter(Boolean).join(' · ')" />
+    <PageFrame :title="data ? t('education_exams.portal.title_of', { name: data.student.name }) : ''" :description="data ? [data.student.code, data.institution].filter(Boolean).join(' · ') : ''" :resource="view" :not-found="{ icon: SearchX, title: t('education_exams.portal.not_found') }" :skeleton-rows="6" width="full">
+        <template v-if="data">
 
             <section v-if="data.held" class="card flex items-start gap-3 px-5 py-4">
                 <Lock class="mt-0.5 size-5 shrink-0 text-warn" aria-hidden="true" />
@@ -76,5 +70,5 @@ const published = (iso) => (iso ? formatDate(iso, { dateStyle: 'medium' }) : '')
                 </div>
             </template>
         </template>
-    </div>
+    </PageFrame>
 </template>

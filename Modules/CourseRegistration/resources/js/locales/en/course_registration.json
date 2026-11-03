@@ -261,5 +261,20 @@
         "none": "Not registered for {session} yet",
         "empty_title": "No subject registration yet",
         "empty_text": "Subjects this student registers for, each session, show here."
+    },
+    "export": {
+        "code": "Student ID",
+        "name": "Name",
+        "credits": "Credits",
+        "overload": "More than the usual load",
+        "yes": "Yes",
+        "submitted_on": "Sent on",
+        "status": "Status",
+        "subject_code": "Subject code",
+        "subject": "Subject",
+        "group": "Group",
+        "kind": "Kind",
+        "teacher": "Teacher",
+        "campus": "Campus"
     }
 }

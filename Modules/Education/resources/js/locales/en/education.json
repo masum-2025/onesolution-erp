@@ -874,5 +874,35 @@
             "elective": "Elective",
             "optional": "Optional"
         }
+    },
+    "export": {
+        "code": "Student ID",
+        "name": "Name",
+        "name_local": "Name (Bangla)",
+        "program": "Programme",
+        "place": "Class and section",
+        "roll": "Roll",
+        "status": "Status",
+        "number": "Number",
+        "phone": "Phone",
+        "applied_on": "Applied on",
+        "level": "Class",
+        "section": "Section",
+        "lists": "Shift, medium, group",
+        "active": "Active",
+        "from_session": "From session",
+        "to_session": "To session",
+        "decisions": {
+            "promote": "Promoted",
+            "repeat": "Repeating",
+            "leave": "Leaving",
+            "graduate": "Graduating"
+        },
+        "made_by": "Made by",
+        "kind": "Kind",
+        "title": "Title",
+        "issued_on": "Issued on",
+        "valid_until": "Valid until",
+        "revoke_reason": "Why revoked"
     }
 }

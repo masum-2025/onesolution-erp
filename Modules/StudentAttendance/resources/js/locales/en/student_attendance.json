@@ -160,5 +160,13 @@
         "title": "Attendance",
         "calendar": "The month's attendance",
         "share": "Present share"
+    },
+    "export": {
+        "section": "Section",
+        "taken": "Taken",
+        "yes": "Yes",
+        "no": "Not yet",
+        "periods": "Periods taken",
+        "absent": "Absent"
     }
 }

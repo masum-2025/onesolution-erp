@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { CalendarClock, PenLine } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -115,13 +116,13 @@ async function save() {
     <AppDialog :open="editing" :title="t('course_registration.window.title')" :description="setup.sessionName(setup.sessionId.value)" :icon="CalendarClock" @close="editing = false">
         <form id="crs-window" class="grid gap-4 sm:grid-cols-2" novalidate @submit.prevent="save">
             <AppField v-slot="{ id }" :label="t('course_registration.window.opens_on')" :error="errors.opens_on?.[0] ?? null">
-                <input :id="id" v-model="form.opens_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.opens_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('course_registration.window.closes_on')" :error="errors.closes_on?.[0] ?? null">
-                <input :id="id" v-model="form.closes_on" type="date" class="field-input" :min="form.opens_on" />
+                <DateInput :id="id" v-model="form.closes_on" :min="form.opens_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('course_registration.window.add_drop_until')" :hint="t('course_registration.window.add_drop_hint')" :error="errors.add_drop_until?.[0] ?? null" class="sm:col-span-2">
-                <input :id="id" v-model="form.add_drop_until" type="date" class="field-input sm:w-56" :min="form.opens_on" :max="setup.session.value?.ends_on" />
+                <DateInput :id="id" v-model="form.add_drop_until" class="sm:w-56" :min="form.opens_on" :max="setup.session.value?.ends_on" />
             </AppField>
         </form>
         <template #footer>

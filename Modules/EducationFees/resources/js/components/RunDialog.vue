@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { FilePlus } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -94,11 +95,11 @@ async function save() {
                 <p v-if="errors.head_ids" class="mt-1 text-[12.5px] text-bad">{{ errors.head_ids[0] }}</p>
             </fieldset>
             <AppField v-slot="{ id }" :label="t('education_fees.runs.issue_date')" :error="errors.issue_date?.[0] ?? null">
-                <input :id="id" v-model="form.issue_date" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.issue_date" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_fees.runs.due_date')" :error="errors.due_date?.[0] ?? null"
                 :hint="form.kind === 'monthly' ? t('education_fees.runs.due_hint', { day: setup.rules.value.due_day }) : ''">
-                <input :id="id" v-model="form.due_date" type="date" class="field-input" :min="form.issue_date" />
+                <DateInput :id="id" v-model="form.due_date" :min="form.issue_date" />
             </AppField>
         </form>
         <template #footer>

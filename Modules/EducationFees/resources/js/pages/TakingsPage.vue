@@ -1,9 +1,8 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { Banknote, Globe, Landmark, Printer, ReceiptText, Smartphone } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { Banknote, Globe, Landmark, ReceiptText, Smartphone } from 'lucide-vue-next';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
-import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -36,23 +35,53 @@ watch([from, to], () => from.value && to.value && from.value <= to.value && taki
 const data = computed(() => takings.data.value?.data ?? null);
 const icons = { cash: Banknote, bank: Landmark, mobile: Smartphone, online: Globe };
 const people = computed(() => data.value?.people ?? {});
-const printPage = () => window.print();
+
+// Export and print (audited, by the school's export rules): the days' takings as one table,
+// each row named by its part (total, by method, by person, voided, each receipt).
+const exported = computed(() => {
+    const takings = data.value;
+    if (!takings) return null;
+    const part = (key, rows) => rows.map((row) => ({ part: t(key), ...row }));
+    const collector = (id) => (id === 'online' ? t('education_fees.takings.online') : people.value[id] ?? '');
+    return {
+        module: 'education_fees',
+        page: 'education_fees.takings',
+        columns: [
+            { key: 'part', label: t('education_fees.export.part') },
+            { key: 'name', label: t('education_fees.export.name') },
+            { key: 'number', label: t('education_fees.export.number') },
+            { key: 'method', label: t('education_fees.export.method') },
+            { key: 'collector', label: t('education_fees.export.collector') },
+            { key: 'amount', label: t('education_fees.export.total'), type: 'money', currency: setup.currency.value },
+            { key: 'voided', label: t('education_fees.receipt.voided') },
+        ],
+        rows: [
+            { part: t('education_fees.takings.total'), name: `${day(takings.from)} – ${day(takings.to)}`, amount: takings.total_minor },
+            ...part('education_fees.export.by_method', Object.entries(takings.by_method).map(([method, amount]) => ({ method: t(`education_fees.methods.${method}`), amount }))),
+            ...part('education_fees.takings.by_person', Object.entries(takings.by_collector).map(([person, amount]) => ({ collector: collector(person), amount }))),
+            { part: t('education_fees.takings.voided'), amount: takings.voided_minor },
+            ...part('education_fees.takings.receipts', takings.receipts.map((receipt) => ({
+                name: receipt.student?.name ?? '',
+                number: receipt.number,
+                method: t(`education_fees.methods.${receipt.method}`),
+                collector: people.value[receipt.collected_by] ?? t('education_fees.receipt.online'),
+                amount: receipt.amount_minor,
+                voided: receipt.status === 'voided' ? t('education_fees.receipt.voided') : '',
+            }))),
+        ],
+    };
+});
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.takings.title')" :description="t('education_fees.takings.text')">
-            <template #actions>
-                <AppButton class="print:hidden" :icon="Printer" :disabled="!data" @click="printPage">{{ t('education_fees.print') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_fees.takings.title')" :description="t('education_fees.takings.text')" width="full" :export="exported">
 
         <div class="mb-5 flex flex-wrap items-end gap-3 print:hidden">
             <AppField v-slot="{ id }" :label="t('education_fees.takings.from')">
-                <input :id="id" v-model="from" type="date" class="field-input" :max="to || undefined" />
+                <DateInput :id="id" v-model="from" :max="to || undefined" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_fees.takings.to')">
-                <input :id="id" v-model="to" type="date" class="field-input" :min="from || undefined" />
+                <DateInput :id="id" v-model="to" :min="from || undefined" />
             </AppField>
         </div>
 
@@ -106,5 +135,5 @@ const printPage = () => window.print();
                 </section>
             </div>
         </template>
-    </div>
+    </PageFrame>
 </template>

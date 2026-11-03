@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Clock, Pencil, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -91,12 +91,10 @@ async function remove(period) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('student_attendance.periods.title')" :description="t('student_attendance.periods.text')">
-            <template #actions>
-                <AppButton v-if="setup.can('manage')" variant="primary" :icon="Plus" :disabled="!campusId" @click="start()">{{ t('student_attendance.periods.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('student_attendance.periods.title')" :description="t('student_attendance.periods.text')" width="full">
+        <template #actions>
+            <AppButton v-if="setup.can('manage')" variant="primary" :icon="Plus" :disabled="!campusId" @click="start()">{{ t('student_attendance.periods.add') }}</AppButton>
+        </template>
 
         <p v-if="setup.data.value && !setup.rules.value.by_period" class="mb-4 rounded-xl bg-subtle px-4 py-3 text-[13px] text-fg-2" role="note">{{ t('student_attendance.periods.rule_off') }}</p>
 
@@ -153,5 +151,5 @@ async function remove(period) {
                 <AppButton variant="primary" :loading="saving" @click="save">{{ t('core.actions.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

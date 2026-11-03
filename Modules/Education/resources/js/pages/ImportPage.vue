@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ArrowLeft, CircleAlert, Download, FileSpreadsheet, FileUp, RotateCcw, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -127,9 +127,10 @@ const columnLabel = (key) => setup.fields('student').find((field) => field.key =
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education-students' }" :icon="ArrowLeft" class="mb-3">{{ t('education.import.back') }}</AppButton>
-        <PageHeader :title="t('education.import.title')" :description="t('education.import.text')" />
+    <PageFrame :title="t('education.import.title')" :description="t('education.import.text')" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education-students' }" :icon="ArrowLeft" class="mb-3">{{ t('education.import.back') }}</AppButton>
+        </template>
 
         <section v-if="setup.data.value && !setup.can('admit')" class="card"><EmptyState :icon="Users" :title="t('education.import.no_access')" /></section>
         <div v-else class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -233,5 +234,5 @@ const columnLabel = (key) => setup.fields('student').find((field) => field.key =
                 <AppButton block :icon="Download" @click="sample">{{ t('education.import.sample') }}</AppButton>
             </aside>
         </div>
-    </div>
+    </PageFrame>
 </template>

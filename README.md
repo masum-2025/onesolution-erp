@@ -4966,9 +4966,13 @@ only Bangla digit table and number reader) and `lib/dates.js`. The app frame (he
 Bangla joins correctly), XLSX, CSV and DOCX, and print; the server decides what is offered
 (`GET /api/page-exports`), checks and audits each export (`POST /api/page-exports`,
 `page_exported`, 30 a minute), by rules `ui.export_formats`, `ui.print_enabled`,
-`ui.export_modules_off`, `ui.export_max_rows`; a module declaring `{module}.export` (Payroll:
-`payroll.export`) limits export to holders. Step A moved Accounting journals, the Compliance
-register and the Projects list; the rest follow module by module. Details:
+`ui.export_modules_off`, `ui.export_max_rows`; a module declaring `{module}.export` limits export
+to holders (`payroll.export`, `hrm.export`: people's details; ids stay masked as on screen).
+Every module page uses `PageFrame` (step B, kept by `FrontendSourceTest`): about 85 list pages
+export what they show (every page of a paged list), record pages show their header once the
+record is there, and pages that lay out their own paper (labels, shipment sheets) say
+`own-paper`. Old page-level CSV and print buttons (POS takings, stock reports, fee dues and
+takings) are now the frame's menu, so they follow the rules and are audited. Details:
 [docs/frontend-ui.md](docs/frontend-ui.md).
 
 ### Future expansion (frontend)

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Plus, Sparkles, Trash2 } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -79,10 +80,10 @@ async function save() {
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('teacher_feedback.fields.opens_on')" :error="errors.opens_on?.[0] ?? null">
-                <input :id="id" v-model="form.opens_on" type="date" class="field-input" :disabled="isOpen" />
+                <DateInput :id="id" v-model="form.opens_on" :disabled="isOpen" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('teacher_feedback.fields.closes_on')" :error="errors.closes_on?.[0] ?? (form.closes_on && form.closes_on < form.opens_on ? t('teacher_feedback.fields.dates') : null)">
-                <input :id="id" v-model="form.closes_on" type="date" class="field-input" :min="form.opens_on" />
+                <DateInput :id="id" v-model="form.closes_on" :min="form.opens_on" />
             </AppField>
 
             <fieldset class="sm:col-span-2" :disabled="isOpen">

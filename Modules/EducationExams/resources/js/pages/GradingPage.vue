@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { GraduationCap, Pencil, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -77,12 +77,10 @@ async function save() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_exams.grading.title')" :description="t('education_exams.grading.text')">
-            <template v-if="manage" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="open()">{{ t('education_exams.grading.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_exams.grading.title')" :description="t('education_exams.grading.text')" width="full">
+        <template v-if="manage" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="open()">{{ t('education_exams.grading.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="5" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -157,5 +155,5 @@ async function save() {
                 <AppButton variant="primary" type="submit" form="scheme-form" :loading="saving" :disabled="!ready">{{ t('education_exams.save') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { ChevronLeft, ChevronRight, Download, Printer, TableProperties } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -53,13 +53,11 @@ const printIt = () => globalThis.print();
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('student_attendance.register.title')" :description="t('student_attendance.register.text')">
-            <template #actions>
-                <AppButton :icon="Printer" class="print:hidden" :disabled="!data?.dates.length" @click="printIt">{{ t('student_attendance.register.print') }}</AppButton>
-                <AppButton :icon="Download" class="print:hidden" :disabled="!data?.dates.length" @click="download">{{ t('student_attendance.register.csv') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('student_attendance.register.title')" :description="t('student_attendance.register.text')" width="full">
+        <template #actions>
+            <AppButton :icon="Printer" class="print:hidden" :disabled="!data?.dates.length" @click="printIt">{{ t('student_attendance.register.print') }}</AppButton>
+            <AppButton :icon="Download" class="print:hidden" :disabled="!data?.dates.length" @click="download">{{ t('student_attendance.register.csv') }}</AppButton>
+        </template>
 
         <div class="mb-4 flex flex-wrap items-end gap-3 print:hidden">
             <AppField :label="t('student_attendance.register.section')" class="w-full sm:w-72">
@@ -122,5 +120,5 @@ const printIt = () => globalThis.print();
             </table>
             <p class="border-t border-line px-3 py-2 text-[12px] text-muted">{{ t('student_attendance.register.legend') }}</p>
         </section>
-    </div>
+    </PageFrame>
 </template>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { BadgePercent, FileText, HandCoins, ReceiptText, SearchX, Undo2, CircleX } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import PageHeader from '@/components/PageHeader.vue';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -237,7 +238,7 @@ async function askRefund() {
 
         <AppDialog :open="ending !== null" :title="t('education_fees.student.end_title')" :description="t('education_fees.student.end_text')" @close="ending = null">
             <AppField v-slot="{ id }" :label="t('education_fees.student.end_on')">
-                <input :id="id" v-model="endOn" type="date" class="field-input sm:w-56" />
+                <DateInput :id="id" v-model="endOn" class="sm:w-56" />
             </AppField>
             <template #footer>
                 <AppButton variant="ghost" @click="ending = null">{{ t('education_fees.cancel') }}</AppButton>

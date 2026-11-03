@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Printer, SearchX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -52,20 +52,18 @@ function printPage() {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'crs-offerings' }" :icon="ArrowLeft" class="mb-3 print:hidden">{{ t('course_registration.roster.back') }}</AppButton>
-
+    <PageFrame :title="offering ? `${offering.subject?.code ?? ''} · ${textIn(offering.subject?.name)}` : ''" :description="offering ? `${t('course_registration.offerings.group', { name: offering.group_name })} · ${setup.sessionName(offering.session_id)}${offering.level_id ? ` · ${setup.levelText(offering.level_id)}` : ''}` : ''" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'crs-offerings' }" :icon="ArrowLeft" class="mb-3 print:hidden">{{ t('course_registration.roster.back') }}</AppButton>
+        </template>
+        <template #actions>
+            <AppButton :icon="Printer" class="print:hidden" @click="printPage">{{ t('course_registration.roster.print') }}</AppButton>
+        </template>
         <SkeletonRows v-if="record.loading.value && !data" :rows="8" avatar />
         <section v-else-if="record.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('course_registration.roster.not_found')" /></section>
         <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
 
         <template v-else-if="offering">
-            <PageHeader :title="`${offering.subject?.code ?? ''} · ${textIn(offering.subject?.name)}`"
-                :description="`${t('course_registration.offerings.group', { name: offering.group_name })} · ${setup.sessionName(offering.session_id)}${offering.level_id ? ` · ${setup.levelText(offering.level_id)}` : ''}`">
-                <template #actions>
-                    <AppButton :icon="Printer" class="print:hidden" @click="printPage">{{ t('course_registration.roster.print') }}</AppButton>
-                </template>
-            </PageHeader>
 
             <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div class="card p-4 sm:col-span-2"><SeatMeter :offering="offering" /></div>
@@ -119,5 +117,5 @@ function printPage() {
                 </ul>
             </section>
         </template>
-    </div>
+    </PageFrame>
 </template>

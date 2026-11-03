@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { ClipboardList } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -93,10 +94,10 @@ async function save() {
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_exams.exam.starts_on')" :error="error('starts_on')" optional>
-                <input :id="id" v-model="form.starts_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.starts_on" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_exams.exam.ends_on')" :error="error('ends_on') ?? (form.ends_on && form.starts_on && form.ends_on < form.starts_on ? t('education_exams.exam.ends_before') : null)" optional>
-                <input :id="id" v-model="form.ends_on" type="date" class="field-input" :min="form.starts_on || undefined" />
+                <DateInput :id="id" v-model="form.ends_on" :min="form.starts_on || undefined" />
             </AppField>
         </form>
         <template #footer>

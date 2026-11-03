@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, ListPlus, PenLine, Plus, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -128,13 +128,13 @@ const otherLocales = computed(() => textLocales().slice(1));
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education' }" :icon="ArrowLeft" class="mb-3">{{ t('education.back') }}</AppButton>
-        <PageHeader :title="t('education.fields_page.title')" :description="t('education.fields_page.text')">
-            <template #actions>
-                <AppButton v-if="manage" variant="primary" :icon="Plus" @click="edit()">{{ t('education.fields_page.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.fields_page.title')" :description="t('education.fields_page.text')" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education' }" :icon="ArrowLeft" class="mb-3">{{ t('education.back') }}</AppButton>
+        </template>
+        <template #actions>
+            <AppButton v-if="manage" variant="primary" :icon="Plus" @click="edit()">{{ t('education.fields_page.add') }}</AppButton>
+        </template>
 
         <div class="mb-5"><AppTabs v-model="entity" :tabs="tabs" :label="t('education.fields_page.title')" /></div>
 
@@ -212,5 +212,5 @@ const otherLocales = computed(() => textLocales().slice(1));
                 </AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

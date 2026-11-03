@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { BookOpen } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -99,7 +100,7 @@ async function save() {
                 </select>
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_lectures.fields.lesson_on')" :error="errors.lesson_on?.[0] ?? null">
-                <input :id="id" v-model="form.lesson_on" type="date" class="field-input" required />
+                <DateInput :id="id" v-model="form.lesson_on" required />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education_lectures.fields.title')" :error="errors.title?.[0] ?? null">
                 <input :id="id" v-model="form.title" class="field-input" maxlength="150" required :placeholder="t('education_lectures.fields.title_hint')" />

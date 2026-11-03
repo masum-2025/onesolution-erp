@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { FilePlus } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -209,7 +210,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                     </select>
                 </AppField>
                 <AppField v-if="sensitive" v-slot="{ id }" :label="t('education.fields.date_of_birth')" :error="fieldError('applicant.date_of_birth')" optional>
-                    <input :id="id" v-model="form.date_of_birth" type="date" class="field-input" :max="new Date().toISOString().slice(0, 10)" />
+                    <DateInput :id="id" v-model="form.date_of_birth" :max="new Date().toISOString().slice(0, 10)" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.application_form.previous_school')" :error="fieldError('applicant.previous_school')" optional>
                     <input :id="id" v-model="form.previous_school" class="field-input" maxlength="150" autocomplete="off" />

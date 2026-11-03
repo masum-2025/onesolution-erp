@@ -2,12 +2,11 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ChevronRight, CircleCheck, CreditCard, FileText, ReceiptText, SearchX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatMoney } from '@/lib/format';
@@ -58,13 +57,8 @@ async function pay(bill) {
 </script>
 
 <template>
-    <div class="mx-auto max-w-3xl">
-        <SkeletonRows v-if="view.loading.value && !data" :rows="8" />
-        <section v-else-if="view.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('education_fees.portal.not_found')" /></section>
-        <ErrorState v-else-if="view.error.value" :error="view.error.value" @retry="view.reload()" />
-
-        <template v-else-if="data">
-            <PageHeader :title="t('education_fees.portal.title_of', { name: data.student.name })" :description="[data.student.code, data.institution].filter(Boolean).join(' · ')" />
+    <PageFrame :title="data ? t('education_fees.portal.title_of', { name: data.student.name }) : ''" :description="data ? [data.student.code, data.institution].filter(Boolean).join(' · ') : ''" :resource="view" :not-found="{ icon: SearchX, title: t('education_fees.portal.not_found') }" :skeleton-rows="8" width="md">
+        <template v-if="data">
 
             <p v-if="backFromPayment" class="mb-4 flex items-start gap-2 rounded-xl bg-ok-soft px-4 py-3 text-[13px] text-fg">
                 <CircleCheck class="mt-0.5 size-4 shrink-0 text-ok" aria-hidden="true" />{{ t('education_fees.portal.paid_back') }}
@@ -160,5 +154,5 @@ async function pay(bill) {
                 <AppButton v-if="detail?.can_pay" variant="primary" :icon="CreditCard" :loading="paying === detail.id" @click="pay(detail)">{{ t('education_fees.portal.pay', { amount: money(detail.balance_minor) }) }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

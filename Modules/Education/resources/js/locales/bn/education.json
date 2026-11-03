@@ -874,5 +874,35 @@
             "elective": "নৈর্বাচনিক",
             "optional": "ঐচ্ছিক"
         }
+    },
+    "export": {
+        "code": "শিক্ষার্থী আইডি",
+        "name": "নাম",
+        "name_local": "নাম (বাংলা)",
+        "program": "প্রোগ্রাম",
+        "place": "শ্রেণি ও শাখা",
+        "roll": "রোল",
+        "status": "অবস্থা",
+        "number": "নম্বর",
+        "phone": "ফোন",
+        "applied_on": "আবেদনের তারিখ",
+        "level": "শ্রেণি",
+        "section": "শাখা",
+        "lists": "শিফট, মাধ্যম, বিভাগ",
+        "active": "চালু",
+        "from_session": "যে শিক্ষাবর্ষ থেকে",
+        "to_session": "যে শিক্ষাবর্ষে",
+        "decisions": {
+            "promote": "উত্তীর্ণ",
+            "repeat": "একই শ্রেণিতে",
+            "leave": "চলে যাচ্ছে",
+            "graduate": "সমাপ্ত"
+        },
+        "made_by": "যিনি তৈরি করেছেন",
+        "kind": "ধরন",
+        "title": "শিরোনাম",
+        "issued_on": "ইস্যুর তারিখ",
+        "valid_until": "মেয়াদ",
+        "revoke_reason": "বাতিলের কারণ"
     }
 }

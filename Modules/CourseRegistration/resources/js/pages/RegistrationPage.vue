@@ -2,14 +2,11 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Check, CircleAlert, MinusCircle, Plus, RotateCcw, Search, SearchX, Send } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { formatDate } from '@/lib/format';
@@ -157,30 +154,25 @@ const sourceText = (item) => t(`course_registration.registration.source.${item.s
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'crs-registrations' }" :icon="ArrowLeft" class="mb-3">{{ t('course_registration.registration.back') }}</AppButton>
-
-        <SkeletonRows v-if="record.loading.value && !registration" :rows="8" />
-        <section v-else-if="record.error.value?.status === 404" class="card"><EmptyState :icon="SearchX" :title="t('course_registration.registration.not_found')" /></section>
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="registration">
-            <PageHeader :title="registration.student?.name ?? '—'" :description="`${registration.student?.code ?? ''} · ${setup.sessionName(registration.session_id)}`">
-                <template #eyebrow>
-                    <span class="mb-2 flex flex-wrap items-center gap-2">
-                        <AppBadge :tone="registrationTone(registration.status)" dot>{{ t(`course_registration.statuses.${registration.status}`) }}</AppBadge>
-                        <AppBadge v-if="registration.overload" tone="warn">{{ t('course_registration.registrations.overload') }}</AppBadge>
-                        <span v-if="registration.approved_at" class="text-[12px] text-faint">{{ t('course_registration.registration.approved_on', { date: formatDate(registration.approved_at) }) }}</span>
-                    </span>
-                </template>
-                <template #actions>
-                    <AppButton v-if="editable && ['draft', 'returned'].includes(registration.status)" variant="primary" :icon="Send" :loading="stepping === 'submit'" @click="step('submit')">{{ t('course_registration.registration.submit') }}</AppButton>
-                    <template v-if="setup.can('approve') && registration.status === 'submitted' && !mine">
-                        <AppButton variant="danger-soft" :icon="RotateCcw" @click="returning = true; note = ''">{{ t('course_registration.registration.send_back') }}</AppButton>
-                        <AppButton variant="primary" :icon="Check" :loading="stepping === 'approve'" @click="step('approve')">{{ t('course_registration.registration.approve') }}</AppButton>
-                    </template>
-                </template>
-            </PageHeader>
+    <PageFrame :title="registration ? registration.student?.name ?? '—' : ''" :description="registration ? `${registration.student?.code ?? ''} · ${setup.sessionName(registration.session_id)}` : ''" :resource="record" :not-found="{ icon: SearchX, title: t('course_registration.registration.not_found') }" :skeleton-rows="8" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'crs-registrations' }" :icon="ArrowLeft" class="mb-3">{{ t('course_registration.registration.back') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-2 flex flex-wrap items-center gap-2">
+                <AppBadge :tone="registrationTone(registration.status)" dot>{{ t(`course_registration.statuses.${registration.status}`) }}</AppBadge>
+                <AppBadge v-if="registration.overload" tone="warn">{{ t('course_registration.registrations.overload') }}</AppBadge>
+                <span v-if="registration.approved_at" class="text-[12px] text-faint">{{ t('course_registration.registration.approved_on', { date: formatDate(registration.approved_at) }) }}</span>
+            </span>
+        </template>
+        <template #actions>
+            <AppButton v-if="editable && ['draft', 'returned'].includes(registration.status)" variant="primary" :icon="Send" :loading="stepping === 'submit'" @click="step('submit')">{{ t('course_registration.registration.submit') }}</AppButton>
+            <template v-if="setup.can('approve') && registration.status === 'submitted' && !mine">
+                <AppButton variant="danger-soft" :icon="RotateCcw" @click="returning = true; note = ''">{{ t('course_registration.registration.send_back') }}</AppButton>
+                <AppButton variant="primary" :icon="Check" :loading="stepping === 'approve'" @click="step('approve')">{{ t('course_registration.registration.approve') }}</AppButton>
+            </template>
+        </template>
+        <template v-if="registration">
 
             <!-- Where it stands. -->
             <div class="mb-5 space-y-2">
@@ -284,5 +276,5 @@ const sourceText = (item) => t(`course_registration.registration.source.${item.s
                 <AppButton variant="primary" :loading="stepping === 'send_back'" :disabled="note.trim().length < 3" @click="sendBack">{{ t('course_registration.registration.send_back') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, Layers, Megaphone, Printer, Send } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -83,23 +83,22 @@ async function publish() {
 </script>
 
 <template>
-    <div>
-        <RouterLink :to="{ name: 'exams-combinations' }" class="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
-            <ArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />{{ t('education_exams.combinations.title') }}
-        </RouterLink>
-
+    <PageFrame :title="combination ? textIn(combination.name) : ''" :description="combination ? `${setup.sessionName(combination.session_id)} · ${setup.levelName(combination.level_id)} · ${setup.schemeName(combination.grading_scheme_id)}` : ''" width="full">
+        <template #before>
+            <RouterLink :to="{ name: 'exams-combinations' }" class="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
+                <ArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />{{ t('education_exams.combinations.title') }}
+            </RouterLink>
+        </template>
+        <template #actions>
+            <AppBadge :tone="combination.status === 'published' ? 'ok' : 'neutral'" dot>{{ t(`education_exams.combinations.statuses.${combination.status}`) }}</AppBadge>
+            <AppButton v-if="results.data.value?.data.length" :icon="Printer" :to="{ name: 'exams-report-cards', params: { type: 'combination', id: combination.id } }">{{ t('education_exams.cards.button') }}</AppButton>
+            <AppButton v-if="combination.status === 'published' && setup.can('publish')" :icon="Send" :loading="sending" @click="sendToFamilies">{{ t('education_exams.send.button') }}</AppButton>
+            <AppButton v-if="combination.status !== 'published' && setup.can('publish')" variant="primary" :icon="Megaphone" :loading="publishing" :disabled="!results.data.value?.data.length" @click="publish">{{ t('education_exams.results.publish') }}</AppButton>
+        </template>
         <SkeletonRows v-if="record.loading.value && !record.data.value" :rows="6" />
         <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
         <div v-else-if="missing" class="card"><EmptyState :icon="Layers" :title="t('education_exams.combinations.not_found')" /></div>
         <template v-else-if="combination">
-            <PageHeader :title="textIn(combination.name)" :description="`${setup.sessionName(combination.session_id)} · ${setup.levelName(combination.level_id)} · ${setup.schemeName(combination.grading_scheme_id)}`">
-                <template #actions>
-                    <AppBadge :tone="combination.status === 'published' ? 'ok' : 'neutral'" dot>{{ t(`education_exams.combinations.statuses.${combination.status}`) }}</AppBadge>
-                    <AppButton v-if="results.data.value?.data.length" :icon="Printer" :to="{ name: 'exams-report-cards', params: { type: 'combination', id: combination.id } }">{{ t('education_exams.cards.button') }}</AppButton>
-                    <AppButton v-if="combination.status === 'published' && setup.can('publish')" :icon="Send" :loading="sending" @click="sendToFamilies">{{ t('education_exams.send.button') }}</AppButton>
-                    <AppButton v-if="combination.status !== 'published' && setup.can('publish')" variant="primary" :icon="Megaphone" :loading="publishing" :disabled="!results.data.value?.data.length" @click="publish">{{ t('education_exams.results.publish') }}</AppButton>
-                </template>
-            </PageHeader>
             <ul class="mb-4 flex flex-wrap gap-2">
                 <li v-for="item in combination.exams" :key="item.exam_id" class="rounded-full border border-line bg-surface px-3 py-1 text-[12.5px] text-fg">
                     <RouterLink :to="{ name: 'exams-exam', params: { id: item.exam_id } }" class="hover:underline">{{ examName(item.exam_id) }}</RouterLink>
@@ -113,5 +112,5 @@ async function publish() {
             </div>
             <ResultsTable v-else :rows="results.data.value.data" :meta="results.data.value.meta" :source="{ type: 'combination', id: combination.id }" />
         </template>
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Layers, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -83,12 +83,10 @@ async function save() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_exams.combinations.title')" :description="t('education_exams.combinations.text')">
-            <template v-if="setup.can('manage')" #actions>
-                <AppButton variant="primary" :icon="Plus" :disabled="!sessionId || !(exams.data.value?.data.length)" @click="open">{{ t('education_exams.combinations.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_exams.combinations.title')" :description="t('education_exams.combinations.text')" width="full">
+        <template v-if="setup.can('manage')" #actions>
+            <AppButton variant="primary" :icon="Plus" :disabled="!sessionId || !(exams.data.value?.data.length)" @click="open">{{ t('education_exams.combinations.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="4" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -153,5 +151,5 @@ async function save() {
                 <AppButton variant="primary" type="submit" form="combination-form" :loading="saving" :disabled="!ready">{{ t('education_exams.combinations.make') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { BookOpen, CheckCheck, Paperclip, PenLine, Plus, Send, Trash2, Undo2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -137,12 +137,10 @@ const goPage = (to) => router.replace({ query: { ...route.query, page: to > 1 ? 
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_lectures.page.title')" :description="t('education_lectures.page.text')">
-            <template v-if="setup.can('post')" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="openNew">{{ t('education_lectures.page.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_lectures.page.title')" :description="t('education_lectures.page.text')" width="full">
+        <template v-if="setup.can('post')" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="openNew">{{ t('education_lectures.page.new') }}</AppButton>
+        </template>
 
         <ErrorState v-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
         <template v-else>
@@ -220,5 +218,5 @@ const goPage = (to) => router.replace({ query: { ...route.query, page: to > 1 ? 
                 <AppButton variant="danger" :disabled="reason.trim().length < 3" :loading="busy !== null" @click="withdraw">{{ t('education_lectures.actions.withdraw') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

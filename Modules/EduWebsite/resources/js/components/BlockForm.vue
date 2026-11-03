@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { ArrowDown, ArrowUp, FileText, ImagePlus, Plus, Trash2, X } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -81,7 +82,7 @@ function move(list, index, step) {
             </AppField>
 
             <AppField v-else-if="field.kind === 'date'" v-slot="{ id }" :label="label(field)" :error="errorOf(field.key)" optional>
-                <input :id="id" v-model="form[field.key]" type="date" class="field-input sm:max-w-56" :disabled="disabled" />
+                <DateInput :id="id" v-model="form[field.key]" class="sm:max-w-56" :disabled="disabled" />
             </AppField>
 
             <AppField v-else-if="field.kind === 'number'" v-slot="{ id }" :label="label(field)" :error="errorOf(field.key)">

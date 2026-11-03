@@ -415,5 +415,22 @@
         "overdue": "{amount} overdue",
         "advance": "Nothing owed · {amount} in advance",
         "clear": "Nothing owed"
+    },
+    "export": {
+        "number": "Number",
+        "bill": "Bill",
+        "due_date": "Due on",
+        "total": "Amount",
+        "balance": "Left to pay",
+        "status": "Status",
+        "run": "Billing run",
+        "issue_date": "Issued on",
+        "yes": "Yes",
+        "active": "In use",
+        "part": "Part",
+        "name": "Name",
+        "method": "Paid by",
+        "collector": "Taken by",
+        "by_method": "By payment method"
     }
 }

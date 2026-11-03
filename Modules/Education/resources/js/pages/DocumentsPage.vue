@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Award, Ban, ChevronLeft, ChevronRight, IdCard, Mail, Palette, Printer, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -11,6 +11,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { fetchPages } from '@/lib/pageExport';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
@@ -86,18 +87,33 @@ async function revoke() {
 }
 
 const statusTone = { valid: 'ok', revoked: 'bad', expired: 'warn' };
+
+// Export and print: every issued document the filters find (not only this page).
+const exported = computed(() => ({
+    module: 'education',
+    page: 'education.documents',
+    columns: [
+        { key: 'number', label: t('education.export.number') },
+        { key: 'kind', label: t('education.export.kind'), value: (document) => t(`education.document_kinds.${document.kind}`) },
+        { key: 'title_text', label: t('education.export.title') },
+        { key: 'student_name', label: t('education.export.name') },
+        { key: 'issued_on', label: t('education.export.issued_on'), type: 'date' },
+        { key: 'valid_until', label: t('education.export.valid_until'), type: 'date' },
+        { key: 'status', label: t('education.export.status'), value: (document) => t(`education.document_statuses.${document.status}`) },
+        { key: 'revoke_reason', label: t('education.export.revoke_reason') },
+    ],
+    fetchAll: (maxRows) => fetchPages((number) => education.documents({ kind: kind.value, status: status.value, q: search.value.trim(), page: number, per_page: 100 }), maxRows),
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education.documents.title')" :description="t('education.documents.text')">
-            <template #actions>
-                <AppButton v-if="chosen.size" :icon="Printer" @click="print([...chosen])">{{ t('education.documents.print_selected', { count: chosen.size }) }}</AppButton>
-                <AppButton :icon="Palette" :to="{ name: 'education-designs' }">{{ t('education.documents.designs') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.documents.title')" :description="t('education.documents.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="chosen.size" :icon="Printer" @click="print([...chosen])">{{ t('education.documents.print_selected', { count: chosen.size }) }}</AppButton>
+            <AppButton :icon="Palette" :to="{ name: 'education-designs' }">{{ t('education.documents.designs') }}</AppButton>
+        </template>
 
-        <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_200px_200px]">
+        <div class="mb-5 grid grid-cols-1 gap-3 print:hidden sm:grid-cols-[minmax(0,1fr)_200px_200px]">
             <AppField v-slot="{ id }" :label="t('education.documents.search')" sr-only-label>
                 <div class="relative">
                     <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
@@ -148,7 +164,7 @@ const statusTone = { valid: 'ok', revoked: 'bad', expired: 'warn' };
                     </li>
                 </ul>
             </template>
-            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                 <span class="tabular text-[12.5px] text-muted">{{ t('education.documents.page', { page: meta.page, pages: meta.last_page }) }}</span>
                 <div class="flex gap-2">
                     <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.page <= 1" @click="go(meta.page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -166,5 +182,5 @@ const statusTone = { valid: 'ok', revoked: 'bad', expired: 'warn' };
                 <AppButton variant="danger" :loading="saving" :disabled="reason.trim().length < 3" @click="revoke">{{ t('education.documents.revoke') }}</AppButton>
             </template>
         </AppDialog>
-    </div>
+    </PageFrame>
 </template>

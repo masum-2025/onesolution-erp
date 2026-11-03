@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Check, UserPlus } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -288,7 +289,7 @@ const sectionText = (section) => {
                         <input :id="id" v-model="form.admission_no" dir="ltr" class="field-input" maxlength="40" autocomplete="off" />
                     </AppField>
                     <AppField v-if="!editing" v-slot="{ id }" :label="t('education.fields.admitted_on')" :error="fieldError('admitted_on')">
-                        <input :id="id" v-model="form.admitted_on" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="form.admitted_on" />
                     </AppField>
                 </div>
 
@@ -296,7 +297,7 @@ const sectionText = (section) => {
                 <fieldset v-if="sensitive" class="grid gap-4 rounded-xl border border-line p-4 sm:grid-cols-2">
                     <legend class="px-1 text-[12.5px] font-medium text-muted">{{ t('education.fields.private') }}</legend>
                     <AppField v-slot="{ id }" :label="t('education.fields.date_of_birth')" :error="fieldError('date_of_birth')" optional>
-                        <input :id="id" v-model="form.date_of_birth" type="date" class="field-input" :max="new Date().toISOString().slice(0, 10)" />
+                        <DateInput :id="id" v-model="form.date_of_birth" :max="new Date().toISOString().slice(0, 10)" />
                     </AppField>
                     <AppField v-slot="{ id }" :label="t('education.fields.birth_registration_no')" :error="fieldError('birth_registration_no')" optional>
                         <input :id="id" v-model="form.birth_registration_no" dir="ltr" inputmode="numeric" class="field-input tabular" maxlength="40" autocomplete="off" />

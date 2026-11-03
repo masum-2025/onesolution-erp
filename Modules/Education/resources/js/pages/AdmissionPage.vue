@@ -2,14 +2,11 @@
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, ArrowRight, FileX, Handshake, Mail, PenLine, Phone, UserCheck } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
@@ -93,36 +90,29 @@ const labelOf = (label) => (typeof label === 'string' ? t(`core.${label}`) : tex
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'education-admissions' }" :icon="ArrowLeft" class="mb-3">{{ t('education.admission.back') }}</AppButton>
-
-        <SkeletonRows v-if="record.loading.value && !admission" :rows="6" avatar />
-        <section v-else-if="record.error.value?.status === 404" class="card">
-            <EmptyState :icon="FileX" :title="t('education.admission.not_found')" />
-        </section>
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
-
-        <template v-else-if="admission">
-            <PageHeader :title="applicant.name || '—'" :description="applicant.name_local ?? ''">
-                <template #eyebrow>
-                    <span class="mb-3 flex flex-wrap items-center gap-3">
-                        <StudentAvatar :name="applicant.name ?? '?'" size="lg" />
-                        <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ admission.number }}</span>
-                        <AppBadge :tone="admissionTone(admission.status)" dot>{{ t(`education.admission_statuses.${admission.status}`) }}</AppBadge>
-                        <span class="inline-flex items-center gap-1 text-[12px] text-faint">
-                            <Handshake v-if="admission.source === 'crm'" class="size-3.5" aria-hidden="true" />
-                            {{ admission.source === 'crm' ? t('education.admissions.from_crm') : t('education.admissions.from_direct') }} · {{ formatDate(admission.created_at) }}
-                        </span>
-                    </span>
-                </template>
-                <template v-if="open" #actions>
-                    <AppButton size="sm" :icon="PenLine" @click="editing = true">{{ t('education.admission.edit') }}</AppButton>
-                    <AppButton v-for="step in nextSteps" :key="step" size="sm" :variant="['rejected', 'withdrawn'].includes(step) ? 'danger-soft' : 'secondary'" @click="openStep(step)">
-                        {{ t(`education.admission.steps.${step}`) }}
-                    </AppButton>
-                    <AppButton size="sm" variant="primary" :icon="UserCheck" :disabled="!placed" @click="admitting = true">{{ t('education.admission.admit') }}</AppButton>
-                </template>
-            </PageHeader>
+    <PageFrame :title="admission ? applicant.name || '—' : ''" :description="admission ? applicant.name_local ?? '' : ''" :resource="record" :not-found="{ icon: FileX, title: t('education.admission.not_found') }" :skeleton-rows="6" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'education-admissions' }" :icon="ArrowLeft" class="mb-3">{{ t('education.admission.back') }}</AppButton>
+        </template>
+        <template #eyebrow>
+            <span class="mb-3 flex flex-wrap items-center gap-3">
+                <StudentAvatar :name="applicant.name ?? '?'" size="lg" />
+                <span class="font-mono text-[12.5px] text-muted" dir="ltr">{{ admission.number }}</span>
+                <AppBadge :tone="admissionTone(admission.status)" dot>{{ t(`education.admission_statuses.${admission.status}`) }}</AppBadge>
+                <span class="inline-flex items-center gap-1 text-[12px] text-faint">
+                    <Handshake v-if="admission.source === 'crm'" class="size-3.5" aria-hidden="true" />
+                    {{ admission.source === 'crm' ? t('education.admissions.from_crm') : t('education.admissions.from_direct') }} · {{ formatDate(admission.created_at) }}
+                </span>
+            </span>
+        </template>
+        <template v-if="open" #actions>
+            <AppButton size="sm" :icon="PenLine" @click="editing = true">{{ t('education.admission.edit') }}</AppButton>
+            <AppButton v-for="step in nextSteps" :key="step" size="sm" :variant="['rejected', 'withdrawn'].includes(step) ? 'danger-soft' : 'secondary'" @click="openStep(step)">
+                {{ t(`education.admission.steps.${step}`) }}
+            </AppButton>
+            <AppButton size="sm" variant="primary" :icon="UserCheck" :disabled="!placed" @click="admitting = true">{{ t('education.admission.admit') }}</AppButton>
+        </template>
+        <template v-if="admission">
 
             <!-- What happened: admitted (open the student), closed, or a place still to choose. -->
             <div v-if="admission.student_id" class="mb-5 flex flex-col gap-3 rounded-2xl border border-ok/30 bg-ok-soft px-4 py-3.5 sm:flex-row sm:items-center">
@@ -188,5 +178,5 @@ const labelOf = (label) => (typeof label === 'string' ? t(`core.${label}`) : tex
                 </template>
             </AppDialog>
         </template>
-    </div>
+    </PageFrame>
 </template>

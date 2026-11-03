@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Check, Globe, ImagePlus, Save, TriangleAlert, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -138,8 +138,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('edu_website.settings.title')" :description="t('edu_website.settings.text')" />
+    <PageFrame :title="t('edu_website.settings.title')" :description="t('edu_website.settings.text')" width="full" class="space-y-6">
 
         <ErrorState v-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
         <SkeletonRows v-else-if="!resource.data.value" :rows="6" />
@@ -302,5 +301,5 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
         </form>
 
         <DomainCard v-if="site" :web="web" :site="site" :rule="meta.own_domain" :can-publish="canPublish" @changed="resource.reload()" />
-    </div>
+    </PageFrame>
 </template>

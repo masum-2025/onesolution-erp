@@ -364,5 +364,15 @@
         "apply": "Start an application",
         "download": "Download CSV",
         "kept": "{count} shown. Enquiries are removed after the keeping time of your settings."
+    },
+    "export": {
+        "student": "Student",
+        "guardian": "Guardian",
+        "phone": "Phone",
+        "level": "Class",
+        "message": "Message",
+        "sent_on": "Sent on",
+        "status": "Status",
+        "note": "Note"
     }
 }

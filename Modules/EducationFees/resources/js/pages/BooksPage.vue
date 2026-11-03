@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { BookCheck, RotateCw } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -43,12 +43,10 @@ async function retry() {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.books.title')" :description="t('education_fees.books.text')">
-            <template v-if="setup.can('configure') && counts.failed + counts.pending > 0" #actions>
-                <AppButton variant="primary" :icon="RotateCw" :loading="retrying" @click="retry">{{ t('education_fees.books.retry') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_fees.books.title')" :description="t('education_fees.books.text')" width="full">
+        <template v-if="setup.can('configure') && counts.failed + counts.pending > 0" #actions>
+            <AppButton variant="primary" :icon="RotateCw" :loading="retrying" @click="retry">{{ t('education_fees.books.retry') }}</AppButton>
+        </template>
 
         <dl class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div v-for="key in ['posted', 'pending', 'failed']" :key="key" class="card p-4">
@@ -72,5 +70,5 @@ async function retry() {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

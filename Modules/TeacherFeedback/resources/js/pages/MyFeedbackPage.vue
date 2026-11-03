@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Lock, Sparkles, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
@@ -20,8 +20,7 @@ const meta = computed(() => view.data.value?.meta ?? {});
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('teacher_feedback.mine.title')" :description="t('teacher_feedback.mine.text')" />
+    <PageFrame :title="t('teacher_feedback.mine.title')" :description="t('teacher_feedback.mine.text')" width="full">
         <p class="mb-4 flex items-start gap-2 rounded-xl bg-brand-soft px-4 py-3 text-[13px] text-brand-text">
             <Lock class="mt-0.5 size-4 shrink-0" aria-hidden="true" />{{ t('teacher_feedback.mine.privacy', { count: formatNumber(meta.min_responses ?? 5) }) }}
         </p>
@@ -37,5 +36,5 @@ const meta = computed(() => view.data.value?.meta ?? {});
                 <ResultRows :rows="round.rows" :questions="round.questions" :names="meta" :min-responses="meta.min_responses ?? 5" :show-teacher="false" />
             </section>
         </div>
-    </div>
+    </PageFrame>
 </template>

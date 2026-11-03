@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { ArrowLeft, Check, CircleAlert, CloudOff, LoaderCircle, Pencil, Search, Send, Undo2, UserX } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -272,24 +272,23 @@ const why = computed(() => {
 </script>
 
 <template>
-    <div>
-        <RouterLink :to="sheet ? { name: 'exams-exam', params: { id: sheet.exam_id }, query: { tab: 'sheets' } } : { name: 'exams-list' }" class="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
-            <ArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />{{ sheet ? textIn(sheet.exam?.name) : t('education_exams.list.title') }}
-        </RouterLink>
-
+    <PageFrame :title="sheet ? title : ''" :description="sheet ? t('education_exams.entry.marks_of', { full: marksShown(sheet.paper?.full_marks_centi), pass: sheet.paper?.pass_marks_centi ? marksShown(sheet.paper.pass_marks_centi) : '—' }) : ''" width="full">
+        <template #before>
+            <RouterLink :to="sheet ? { name: 'exams-exam', params: { id: sheet.exam_id }, query: { tab: 'sheets' } } : { name: 'exams-list' }" class="mb-3 inline-flex items-center gap-1.5 text-[13px] text-muted hover:text-fg">
+                <ArrowLeft class="size-4 rtl:rotate-180" aria-hidden="true" />{{ sheet ? textIn(sheet.exam?.name) : t('education_exams.list.title') }}
+            </RouterLink>
+        </template>
+        <template #actions>
+            <AppBadge :tone="sheetTone[sheet.status]" dot>{{ t(`education_exams.sheet_statuses.${sheet.status}`) }}</AppBadge>
+            <AppButton v-if="editable" variant="primary" :icon="Send" :loading="acting" :disabled="saving" @click="handIn">{{ t('education_exams.entry.hand_in') }}</AppButton>
+            <template v-if="canDecide">
+                <AppButton variant="primary" :icon="Check" :loading="acting" @click="approve">{{ t('education_exams.sheets.approve') }}</AppButton>
+                <AppButton variant="danger-soft" :icon="Undo2" :disabled="acting" @click="sendBack">{{ t('education_exams.sheets.send_back') }}</AppButton>
+            </template>
+        </template>
         <SkeletonRows v-if="loading && !sheet" :rows="8" />
         <ErrorState v-else-if="loadError" :error="loadError" @retry="load" />
         <template v-else-if="sheet">
-            <PageHeader :title="title" :description="t('education_exams.entry.marks_of', { full: marksShown(sheet.paper?.full_marks_centi), pass: sheet.paper?.pass_marks_centi ? marksShown(sheet.paper.pass_marks_centi) : '—' })">
-                <template #actions>
-                    <AppBadge :tone="sheetTone[sheet.status]" dot>{{ t(`education_exams.sheet_statuses.${sheet.status}`) }}</AppBadge>
-                    <AppButton v-if="editable" variant="primary" :icon="Send" :loading="acting" :disabled="saving" @click="handIn">{{ t('education_exams.entry.hand_in') }}</AppButton>
-                    <template v-if="canDecide">
-                        <AppButton variant="primary" :icon="Check" :loading="acting" @click="approve">{{ t('education_exams.sheets.approve') }}</AppButton>
-                        <AppButton variant="danger-soft" :icon="Undo2" :disabled="acting" @click="sendBack">{{ t('education_exams.sheets.send_back') }}</AppButton>
-                    </template>
-                </template>
-            </PageHeader>
 
             <p v-if="sheet.status === 'returned' && sheet.note" class="mb-4 rounded-lg bg-bad-soft px-4 py-3 text-[13px] text-fg" role="alert">
                 <strong class="font-semibold">{{ t('education_exams.entry.returned') }}</strong> {{ sheet.note }}
@@ -380,5 +379,5 @@ const why = computed(() => {
 
             <CorrectionDialog :open="correcting !== null" :sheet-id="sheet.id" :student="correcting?.student" :part="correcting?.part" :current="correcting?.current" @close="correcting = null" @done="corrected" />
         </template>
-    </div>
+    </PageFrame>
 </template>

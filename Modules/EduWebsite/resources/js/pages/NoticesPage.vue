@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { EyeOff, FileText, Globe, Megaphone, PenLine, Pin, Plus, Trash2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { DateInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -128,12 +128,10 @@ function pickFile(ids, rows) {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('edu_website.notices.title')" :description="t('edu_website.notices.text')">
-            <template v-if="site && canManage" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('edu_website.notices.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('edu_website.notices.title')" :description="t('edu_website.notices.text')" width="full" class="space-y-6">
+        <template v-if="site && canManage" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('edu_website.notices.add') }}</AppButton>
+        </template>
 
         <ErrorState v-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
         <SkeletonRows v-else-if="!resource.data.value" :rows="4" />
@@ -178,7 +176,7 @@ function pickFile(ids, rows) {
                 <TranslatedFields :required-locale="mainLocale" v-model="form.body" :label="t('edu_website.notices.body')" multiline :maxlength="5000" :errors="errors" error-prefix="body" />
                 <div class="grid gap-4 sm:grid-cols-2">
                     <AppField v-slot="{ id }" :label="t('edu_website.notices.date')" :hint="t('edu_website.notices.date_hint')" :error="errors.published_on?.[0] ?? null">
-                        <input :id="id" v-model="form.published_on" type="date" class="field-input" />
+                        <DateInput :id="id" v-model="form.published_on" />
                     </AppField>
                     <AppField :label="t('edu_website.notices.file')" :hint="t('edu_website.notices.file_hint')" :error="errors.media_id?.[0] ?? null" optional>
                         <div class="flex flex-wrap items-center gap-2">
@@ -202,5 +200,5 @@ function pickFile(ids, rows) {
         </AppDialog>
 
         <MediaPicker :open="picking" :web="web" kind="pdf" :selected="form.media_id ? [form.media_id] : []" :max-mb="meta.max_media_mb?.value ?? 5" :can-upload="canManage" @close="picking = false" @pick="pickFile" />
-    </div>
+    </PageFrame>
 </template>

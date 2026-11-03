@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { FilePlus, Files } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -29,15 +29,28 @@ watch(sessionId, () => runs.reload(), { immediate: true });
 const rows = computed(() => runs.data.value?.data ?? []);
 const tone = { draft: 'warn', final: 'ok', cancelled: 'outline' };
 const making = ref(false);
+
+// Export and print: the billing runs of the session shown.
+const exported = computed(() => ({
+    module: 'education_fees',
+    page: 'education_fees.runs',
+    columns: [
+        { key: 'title', label: t('education_fees.export.run'), value: (run) => runTitle(run) },
+        { key: 'issue_date', label: t('education_fees.export.issue_date'), type: 'date' },
+        { key: 'due_date', label: t('education_fees.export.due_date'), type: 'date' },
+        { key: 'bills_count', label: t('education_fees.dues.csv_columns.bills'), type: 'number' },
+        { key: 'total_minor', label: t('education_fees.export.total'), type: 'money', currency: setup.currency.value },
+        { key: 'status', label: t('education_fees.export.status'), value: (run) => t(`education_fees.run_statuses.${run.status}`) },
+    ],
+    rows: rows.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_fees.runs.title')" :description="t('education_fees.runs.text')">
-            <template v-if="setup.can('bill')" #actions>
-                <AppButton variant="primary" :icon="FilePlus" :disabled="!sessionId" @click="making = true">{{ t('education_fees.runs.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education_fees.runs.title')" :description="t('education_fees.runs.text')" width="full" :export="exported">
+        <template v-if="setup.can('bill')" #actions>
+            <AppButton variant="primary" :icon="FilePlus" :disabled="!sessionId" @click="making = true">{{ t('education_fees.runs.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="setup.loading.value && !setup.data.value" :rows="5" />
         <ErrorState v-else-if="setup.error.value" :error="setup.error.value" @retry="setup.reload()" />
@@ -68,5 +81,5 @@ const making = ref(false);
         </template>
 
         <RunDialog :open="making" :session-id="sessionId" @close="making = false" />
-    </div>
+    </PageFrame>
 </template>

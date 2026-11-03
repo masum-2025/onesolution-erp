@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { ArrowDown, ArrowUp, FilePlus, FileStack, Globe, House, ImagePlus, PenLine, Settings2, Trash2, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -149,12 +149,10 @@ async function save() {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('edu_website.pages.title')" :description="t('edu_website.pages.text')">
-            <template v-if="site && canManage" #actions>
-                <AppButton variant="primary" :icon="FilePlus" :disabled="full" @click="edit()">{{ t('edu_website.pages.add') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('edu_website.pages.title')" :description="t('edu_website.pages.text')" width="full" class="space-y-6">
+        <template v-if="site && canManage" #actions>
+            <AppButton variant="primary" :icon="FilePlus" :disabled="full" @click="edit()">{{ t('edu_website.pages.add') }}</AppButton>
+        </template>
 
         <ErrorState v-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
         <SkeletonRows v-else-if="!resource.data.value" :rows="4" />
@@ -231,5 +229,5 @@ async function save() {
         </AppDialog>
 
         <MediaPicker :open="picking" :web="web" kind="image" :selected="form.share ? [form.share] : []" :max-mb="meta.max_media_mb?.value ?? 5" :can-upload="canManage" @close="picking = false" @pick="pickShare" />
-    </div>
+    </PageFrame>
 </template>

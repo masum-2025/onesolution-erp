@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { ArrowRight, Check, FilePen, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTabs from '@/components/AppTabs.vue';
@@ -63,8 +63,7 @@ async function decide(row, approve) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_exams.corrections.title')" :description="t('education_exams.corrections.text')" />
+    <PageFrame :title="t('education_exams.corrections.title')" :description="t('education_exams.corrections.text')" width="full">
         <div class="mb-4 overflow-x-auto"><AppTabs v-model="tab" :tabs="tabs" :label="t('education_exams.corrections.title')" /></div>
         <p v-if="tab === 'pending' && !setup.can('publish')" class="mb-4 text-[12.5px] text-muted">{{ t('education_exams.corrections.cannot') }}</p>
 
@@ -108,5 +107,5 @@ async function decide(row, approve) {
                 </li>
             </ul>
         </section>
-    </div>
+    </PageFrame>
 </template>

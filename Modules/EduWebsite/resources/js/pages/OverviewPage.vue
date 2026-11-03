@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Copy, Eye, FileStack, Globe, Images, Megaphone, MoreHorizontal, Palette, PowerOff, Send, TriangleAlert } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppMenu from '@/components/AppMenu.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
@@ -100,8 +100,7 @@ const shortcuts = computed(() => [
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('edu_website.overview.title')" :description="t('edu_website.overview.text')" />
+    <PageFrame :title="t('edu_website.overview.title')" :description="t('edu_website.overview.text')" width="full" class="space-y-6">
 
         <ErrorState v-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
         <SkeletonRows v-else-if="!resource.data.value" :rows="4" />
@@ -204,5 +203,5 @@ const shortcuts = computed(() => [
                 </RouterLink>
             </nav>
         </template>
-    </div>
+    </PageFrame>
 </template>

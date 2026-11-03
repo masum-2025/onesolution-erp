@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ListChecks, Lock, Plus } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppTabs from '@/components/AppTabs.vue';
@@ -50,15 +50,29 @@ function made(batch) {
 
 const totals = (batch) => ({ promote: 0, repeat: 0, leave: 0, graduate: 0, ...batch.decisions });
 const maker = (batch) => batch.people?.[batch.created_by] ?? '';
+
+// Export and print: the promotion batches of the tab picked, and what each decided.
+const exported = computed(() => ({
+    module: 'education',
+    page: 'education.promotions',
+    columns: [
+        { key: 'number', label: t('education.export.number') },
+        { key: 'level', label: t('education.word.level'), value: (batch) => setup.levelText(batch.level_id) },
+        { key: 'from', label: t('education.export.from_session'), value: (batch) => setup.sessionText(batch.from_session_id) },
+        { key: 'to', label: t('education.export.to_session'), value: (batch) => setup.sessionText(batch.to_session_id) },
+        ...['promote', 'repeat', 'leave', 'graduate'].map((key) => ({ key, label: t(`education.export.decisions.${key}`), type: 'number', value: (batch) => totals(batch)[key] })),
+        { key: 'maker', label: t('education.export.made_by'), value: (batch) => maker(batch) },
+        { key: 'status', label: t('education.export.status'), value: (batch) => t(`education.promotion_statuses.${batch.status}`) },
+    ],
+    rows: batches.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education.promotions.title')" :description="t('education.promotions.text')">
-            <template v-if="setup.can('promote')" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="making = true">{{ t('education.promotions.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.promotions.title')" :description="t('education.promotions.text')" width="full" :export="exported">
+        <template v-if="setup.can('promote')" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="making = true">{{ t('education.promotions.new') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="!setup.data.value" :rows="4" />
         <section v-else-if="!allowed" class="card">
@@ -92,5 +106,5 @@ const maker = (batch) => batch.people?.[batch.created_by] ?? '';
         </template>
 
         <NewPromotionDialog :open="making" :education="education" @close="making = false" @made="made" />
-    </div>
+    </PageFrame>
 </template>

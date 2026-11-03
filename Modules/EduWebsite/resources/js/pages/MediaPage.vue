@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { FileText, Globe, ImagePlus, LoaderCircle, Trash2, Upload } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -82,13 +82,11 @@ function size(bytes) {
 </script>
 
 <template>
-    <div class="space-y-6">
-        <PageHeader :title="t('edu_website.media.title')" :description="t('edu_website.media.text')">
-            <template v-if="site && canManage" #actions>
-                <input ref="input" type="file" class="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf" multiple @change="upload" />
-                <AppButton variant="primary" :icon="Upload" :loading="uploading.length > 0" @click="input?.click()">{{ t('edu_website.media.upload') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('edu_website.media.title')" :description="t('edu_website.media.text')" width="full" class="space-y-6">
+        <template v-if="site && canManage" #actions>
+            <input ref="input" type="file" class="sr-only" accept="image/jpeg,image/png,image/webp,application/pdf" multiple @change="upload" />
+            <AppButton variant="primary" :icon="Upload" :loading="uploading.length > 0" @click="input?.click()">{{ t('edu_website.media.upload') }}</AppButton>
+        </template>
 
         <ErrorState v-if="resource.error.value" :error="resource.error.value" @retry="resource.reload()" />
         <SkeletonRows v-else-if="!resource.data.value" :rows="4" />
@@ -160,5 +158,5 @@ function size(bytes) {
                 </li>
             </ul>
         </template>
-    </div>
+    </PageFrame>
 </template>

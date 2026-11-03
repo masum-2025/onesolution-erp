@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { CalendarRange, Check, GraduationCap, Sparkles } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
 import { currentOrganization } from '@/lib/session';
@@ -136,10 +137,10 @@ const stepsDone = computed(() => ({ preset: hasPrograms.value, year: false }));
                     <input :id="id" v-model="year.name" class="field-input" maxlength="40" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.wizard.starts_on')" :error="fieldError('starts_on')">
-                    <input :id="id" v-model="year.starts_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="year.starts_on" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.wizard.ends_on')" :error="fieldError('ends_on')">
-                    <input :id="id" v-model="year.ends_on" type="date" class="field-input" :min="year.starts_on" />
+                    <DateInput :id="id" v-model="year.ends_on" :min="year.starts_on" />
                 </AppField>
             </div>
 
@@ -152,10 +153,10 @@ const stepsDone = computed(() => ({ preset: hasPrograms.value, year: false }));
                             <input :id="id" v-model="session.name" class="field-input" maxlength="60" />
                         </AppField>
                         <AppField v-slot="{ id }" :label="t('education.wizard.starts_on')">
-                            <input :id="id" v-model="sessions[index].starts_on" type="date" class="field-input" :min="year.starts_on" :max="year.ends_on" />
+                            <DateInput :id="id" v-model="sessions[index].starts_on" :min="year.starts_on" :max="year.ends_on" />
                         </AppField>
                         <AppField v-slot="{ id }" :label="t('education.wizard.ends_on')">
-                            <input :id="id" v-model="sessions[index].ends_on" type="date" class="field-input" :min="session.starts_on" :max="year.ends_on" />
+                            <DateInput :id="id" v-model="sessions[index].ends_on" :min="session.starts_on" :max="year.ends_on" />
                         </AppField>
                     </div>
                 </div>

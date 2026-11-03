@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import { DoorOpen } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -77,7 +78,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <textarea :id="id" v-model="form.reason" rows="3" class="field-input" maxlength="300" :aria-invalid="invalid || undefined" :aria-describedby="describedby" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education.leave.on')" :error="fieldError('on')" class="sm:w-56">
-                <input :id="id" v-model="form.on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.on" />
             </AppField>
         </form>
         <template #footer>

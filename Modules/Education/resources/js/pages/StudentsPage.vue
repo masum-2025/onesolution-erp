@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChevronLeft, ChevronRight, FileUp, GraduationCap, Search, UserPlus, X } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppField from '@/components/AppField.vue';
@@ -10,6 +10,7 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
+import { fetchPages } from '@/lib/pageExport';
 import { currentOrganization } from '@/lib/session';
 import { textIn } from '@/lib/texts';
 import { t } from '@/lib/i18n';
@@ -127,18 +128,34 @@ function rowPlace(student) {
     if (enrollment.roll_no) parts.push(t('education.student.roll', { roll: enrollment.roll_no }));
     return parts.filter(Boolean).join(' · ');
 }
+
+// Export and print: every student the filters find (not only this page), where each studies.
+const exported = computed(() => ({
+    module: 'education',
+    page: 'education.students',
+    columns: [
+        { key: 'code', label: t('education.export.code') },
+        { key: 'name', label: t('education.export.name') },
+        { key: 'name_local', label: t('education.export.name_local') },
+        { key: 'program', label: t('education.export.program'), value: (student) => textIn(setup.program(student.program_id)?.name) },
+        { key: 'place', label: t('education.export.place'), value: (student) => rowPlace(student) },
+        { key: 'roll_no', label: t('education.export.roll'), value: (student) => student.enrollment?.roll_no ?? '' },
+        { key: 'status', label: t('education.export.status'), value: (student) => t(`education.statuses.${student.status}`) },
+    ],
+    fetchAll: (maxRows) => fetchPages((number) => education.students({
+        q: search.value.trim(), status: status.value, program_id: programId.value, level_id: levelId.value, unplaced: unplaced.value ? 1 : '', page: number, per_page: 100,
+    }), maxRows),
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education.students.title')" :description="t('education.students.text')">
-            <template #actions>
-                <AppButton v-if="setup.can('admit')" :icon="FileUp" :to="{ name: 'education-import' }" :disabled="!setup.ready.value">{{ t('education.students_import') }}</AppButton>
-                <AppButton v-if="setup.can('admit')" variant="primary" :icon="UserPlus" :disabled="!setup.ready.value" @click="adding = true">{{ t('education.students.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('education.students.title')" :description="t('education.students.text')" width="full" :export="exported">
+        <template #actions>
+            <AppButton v-if="setup.can('admit')" :icon="FileUp" :to="{ name: 'education-import' }" :disabled="!setup.ready.value">{{ t('education.students_import') }}</AppButton>
+            <AppButton v-if="setup.can('admit')" variant="primary" :icon="UserPlus" :disabled="!setup.ready.value" @click="adding = true">{{ t('education.students.new') }}</AppButton>
+        </template>
 
-        <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:items-end">
+        <div class="mb-5 grid grid-cols-1 gap-3 print:hidden sm:grid-cols-2 lg:flex lg:items-end">
             <AppField v-slot="{ id }" :label="t('education.students.search')" sr-only-label class="sm:col-span-2 lg:flex-1">
                 <div class="relative">
                     <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden="true" />
@@ -208,7 +225,7 @@ function rowPlace(student) {
                 </ul>
             </template>
 
-            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3">
+            <footer v-if="meta && meta.last_page > 1" class="flex items-center justify-between border-t border-line px-5 py-3 print:hidden">
                 <span class="tabular text-[12.5px] text-muted">{{ t('education.students.page', { page: meta.page, pages: meta.last_page }) }}</span>
                 <div class="flex gap-2">
                     <AppButton size="sm" :icon="ChevronLeft" :disabled="meta.page <= 1" @click="go(meta.page - 1)">{{ t('core.actions.previous') }}</AppButton>
@@ -218,5 +235,5 @@ function rowPlace(student) {
         </section>
 
         <StudentDialog :open="adding" :start="{ program_id: programId || undefined, level_id: levelId || undefined }" @close="closeAdding" @saved="saved" />
-    </div>
+    </PageFrame>
 </template>

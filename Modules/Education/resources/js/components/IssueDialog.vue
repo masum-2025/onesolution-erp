@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { FileBadge } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -111,7 +112,7 @@ const fieldError = (name) => errors.value[name]?.[0] ?? null;
                 <input v-else :id="id" v-model="form.inputs[input.key]" class="field-input" maxlength="1000" />
             </AppField>
             <AppField v-slot="{ id }" :label="t('education.issue.issued_on')" :error="fieldError('issued_on')" class="sm:w-56">
-                <input :id="id" v-model="form.issued_on" type="date" class="field-input" />
+                <DateInput :id="id" v-model="form.issued_on" />
             </AppField>
         </form>
         <template #footer>

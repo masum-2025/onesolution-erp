@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { UserCheck } from 'lucide-vue-next';
+import { DateInput } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
@@ -135,7 +136,7 @@ const levelName = computed(() => setup.levelText(props.admission.level_id));
                     <input :id="id" v-model="form.birth_registration_no" dir="ltr" inputmode="numeric" class="field-input tabular" maxlength="40" autocomplete="off" />
                 </AppField>
                 <AppField v-slot="{ id }" :label="t('education.admit_dialog.admitted_on')" :error="fieldError('admitted_on')">
-                    <input :id="id" v-model="form.admitted_on" type="date" class="field-input" />
+                    <DateInput :id="id" v-model="form.admitted_on" />
                 </AppField>
             </div>
             <OwnFields v-model="extra" :fields="fields" :errors="errors" prefix="extra" />

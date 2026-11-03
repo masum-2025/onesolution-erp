@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { ArrowRight, Lock, MessageSquare, PenLine, Play, Plus, Sparkles, Users } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -60,15 +60,29 @@ async function step(round, action) {
         list.reload();
     }
 }
+
+// Export and print: the feedback rounds (no answers: those stay on the results page).
+const exported = computed(() => ({
+    module: 'teacher_feedback',
+    page: 'teacher_feedback.rounds',
+    columns: [
+        { key: 'name', label: t('teacher_feedback.export.name') },
+        { key: 'who_rates', label: t('teacher_feedback.export.who'), value: (round) => t(`teacher_feedback.who.${round.who_rates}`) },
+        { key: 'opens_on', label: t('teacher_feedback.export.opens_on'), type: 'date' },
+        { key: 'closes_on', label: t('teacher_feedback.export.closes_on'), type: 'date' },
+        { key: 'questions', label: t('teacher_feedback.export.questions'), type: 'number', value: (round) => round.question_texts?.length ?? 0 },
+        { key: 'responses', label: t('teacher_feedback.export.responses'), type: 'number' },
+        { key: 'status', label: t('teacher_feedback.export.status'), value: (round) => t(`teacher_feedback.statuses.${round.status}`) },
+    ],
+    rows: rounds.value,
+}));
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('teacher_feedback.rounds.title')" :description="t('teacher_feedback.rounds.text')">
-            <template v-if="setup.can('manage')" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('teacher_feedback.rounds.new') }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t('teacher_feedback.rounds.title')" :description="t('teacher_feedback.rounds.text')" width="full" :export="exported">
+        <template v-if="setup.can('manage')" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="edit()">{{ t('teacher_feedback.rounds.new') }}</AppButton>
+        </template>
 
         <p class="mb-4 flex items-start gap-2 rounded-xl bg-brand-soft px-4 py-3 text-[13px] text-brand-text">
             <Lock class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
@@ -111,5 +125,5 @@ async function step(round, action) {
         </ul>
 
         <RoundDialog :open="dialogOpen" :round="editing" @close="dialogOpen = false" @saved="saved" @conflict="dialogOpen = false; list.reload()" />
-    </div>
+    </PageFrame>
 </template>

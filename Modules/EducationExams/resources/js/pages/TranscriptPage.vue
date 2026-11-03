@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ScrollText, Search } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import EmptyState from '@/components/EmptyState.vue';
 import { currentOrganization } from '@/lib/session';
 import { t } from '@/lib/i18n';
@@ -50,8 +50,7 @@ function choose(student) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t('education_exams.transcript.title')" :description="t('education_exams.transcript.text')" />
+    <PageFrame :title="t('education_exams.transcript.title')" :description="t('education_exams.transcript.text')" width="full">
 
         <div class="relative mb-5 sm:w-96">
             <label>
@@ -78,5 +77,5 @@ function choose(student) {
             <EmptyState :icon="ScrollText" :title="t('education_exams.transcript.pick')" :text="t('education_exams.transcript.pick_text')" />
         </div>
         <StudentResults v-else :student-id="String(route.params.id)" named />
-    </div>
+    </PageFrame>
 </template>
