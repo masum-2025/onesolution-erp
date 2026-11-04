@@ -1,0 +1,30 @@
+<?php
+
+// চিঠিতে কর্মীর তথ্য (Letters module), preview-এর জন্য প্রতিটির উদাহরণসহ।
+return [
+    'group' => 'কর্মী',
+    'name' => 'নাম',
+    'name_local' => 'নাম (নিজ ভাষায়)',
+    'code' => 'কর্মী কোড',
+    'designation' => 'পদবি',
+    'department' => 'বিভাগ',
+    'employment_type' => 'চাকরির ধরন',
+    'joined_on' => 'যোগদানের তারিখ',
+    'probation_ends_on' => 'শিক্ষানবিশকাল শেষ',
+    'confirmed_on' => 'স্থায়ীকরণের তারিখ',
+    'exits_on' => 'শেষ কর্মদিবস',
+    'address' => 'ঠিকানা',
+    'service_length' => 'চাকরির মেয়াদ',
+    'sample_name' => 'Rahima Akter',
+    'sample_name_local' => 'রহিমা আক্তার',
+    'sample_code' => 'EMP-2026-0042',
+    'sample_designation' => 'সিনিয়র হিসাবরক্ষক',
+    'sample_department' => 'অর্থ বিভাগ',
+    'sample_employment_type' => 'স্থায়ী',
+    'sample_joined_on' => '১ মার্চ, ২০২৪',
+    'sample_probation_ends_on' => '৩১ আগস্ট, ২০২৪',
+    'sample_confirmed_on' => '১ সেপ্টেম্বর, ২০২৪',
+    'sample_exits_on' => '৩১ ডিসেম্বর, ২০২৬',
+    'sample_address' => 'বাড়ি ১২, সড়ক ৫, ধানমন্ডি, ঢাকা ১২০৫',
+    'sample_service_length' => '২ বছর ৮ মাস',
+];

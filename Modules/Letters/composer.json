@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/letters",
+    "description": "HR letters: templates designed per company and letters issued to employees from them.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Letters\\": "app/"
+        }
+    }
+}

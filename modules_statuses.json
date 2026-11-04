@@ -32,6 +32,7 @@
     "Expenses": true,
     "Recruitment": true,
     "Appraisals": true,
+    "Letters": true,
     "Leave": true,
     "EduWebsite": true,
     "BusinessNetwork": true,

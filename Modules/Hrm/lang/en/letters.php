@@ -1,0 +1,30 @@
+<?php
+
+// The employee's fields in letters (Letters module), with an example of each for the preview.
+return [
+    'group' => 'Employee',
+    'name' => 'Name',
+    'name_local' => 'Name (local script)',
+    'code' => 'Employee code',
+    'designation' => 'Designation',
+    'department' => 'Department',
+    'employment_type' => 'Kind of employment',
+    'joined_on' => 'Joining date',
+    'probation_ends_on' => 'Probation ends',
+    'confirmed_on' => 'Confirmation date',
+    'exits_on' => 'Last working day',
+    'address' => 'Address',
+    'service_length' => 'Length of service',
+    'sample_name' => 'Rahima Akter',
+    'sample_name_local' => 'রহিমা আক্তার',
+    'sample_code' => 'EMP-2026-0042',
+    'sample_designation' => 'Senior Accountant',
+    'sample_department' => 'Finance',
+    'sample_employment_type' => 'Permanent',
+    'sample_joined_on' => 'March 1, 2024',
+    'sample_probation_ends_on' => 'August 31, 2024',
+    'sample_confirmed_on' => 'September 1, 2024',
+    'sample_exits_on' => 'December 31, 2026',
+    'sample_address' => 'House 12, Road 5, Dhanmondi, Dhaka 1205',
+    'sample_service_length' => '2 years 8 months',
+];

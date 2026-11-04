@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Letters\Contracts\LetterFieldSource;
 use Modules\Payroll\Export\PayrollExporter;
+use Modules\Payroll\Letters\PayLetterFields;
 
 /**
  * Payroll: pay make-up, employees' salaries, monthly runs with approval,
@@ -21,6 +23,10 @@ class PayrollServiceProvider extends ServiceProvider
     {
         // The client's data export includes payroll (ExportsModuleData).
         $this->app->tag([PayrollExporter::class], 'module.exporters');
+        // Pay in letters, marked salary (Letters' LetterFieldSource), when Letters is installed.
+        if (interface_exists(LetterFieldSource::class)) {
+            $this->app->tag([PayLetterFields::class], 'letters.field_sources');
+        }
     }
 
     public function boot(): void

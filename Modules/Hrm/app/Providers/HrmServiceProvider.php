@@ -8,6 +8,8 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Hrm\Console\PruneImports;
 use Modules\Hrm\Console\SendDocumentExpiryAlerts;
 use Modules\Hrm\Export\HrmExporter;
+use Modules\Hrm\Letters\EmployeeLetterFields;
+use Modules\Letters\Contracts\LetterFieldSource;
 
 /**
  * Human resources: positions, employees, employment history and documents.
@@ -20,6 +22,10 @@ class HrmServiceProvider extends ServiceProvider
     {
         // The client's data export includes HRM (ExportsModuleData).
         $this->app->tag([HrmExporter::class], 'module.exporters');
+        // The employee's name, designation, dates in letters (Letters' LetterFieldSource), when Letters is installed.
+        if (interface_exists(LetterFieldSource::class)) {
+            $this->app->tag([EmployeeLetterFields::class], 'letters.field_sources');
+        }
     }
 
     public function boot(): void

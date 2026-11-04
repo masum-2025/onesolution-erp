@@ -35,6 +35,8 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET files/education/{organization}/{student}/photo',
     // Images of document designs and the photo on an issued document (Education): signed, thirty minutes.
     'GET files/education/{organization}/assets/{asset}', 'GET files/education/{organization}/documents/{document}/photo',
+    // Letter images: signed links only (Letters' Templates::assetLink).
+    'GET files/letters/{organization}/assets/{asset}',
     // The QR check of an issued document (Education): throttled per address, one answer for every code that does
     // not verify, no private details.
     'GET api/public/education/verify/{organization}/{code}',

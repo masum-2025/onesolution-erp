@@ -3741,6 +3741,58 @@ difference to review) and a shift open today. Logins `shop.owner@`, `store@`, `c
   number prefixes are data and rules. CRM customers and loyalty, gift cards, card terminals and
   bKash APIs are later steps behind the same payment methods.
 
+## Letters module (LET-1 backend)
+
+HR letters from designs a company makes or takes ready-made: appointment, joining, confirmation,
+increment, promotion, transfer, warning, experience, release, salary certificate, no objection,
+other. Requires HRM; Payroll adds pay fields when it is on. Tables (client database):
+`let_templates`, `let_letters`, `let_assets`, `let_sequences`.
+
+- **Designs** (`letters.design`): `POST/PATCH …/letters/templates` with the page (A4/Letter,
+  margins), letterhead (company name and logo, an uploaded letterhead image, or none; address per
+  language), up to 10 questions asked when issuing (`{input.key}`: line, longer text, date) and the
+  body per language as blocks, never HTML: heading, paragraph (`**bold**`, `*italic*`,
+  `__underline__`), list, table (rows, or a table field such as `pay.breakdown`), space,
+  signature (name, title, signature and stamp images), page break. Every `{placeholder}` must be
+  a known field (`LetterLayout`), English is required, other languages optional. Draft → active
+  → retired; the version counts up; `base_version` guards edits. Ten ready-made designs in
+  English and Bangla (`database/data/templates/*.php`), added once each with
+  `POST …/templates/presets/{key}`.
+- **Fields**: the letter's own (`letter.number`, `letter.date`, `company.name`,
+  `company.address`) and those other modules give through the `LetterFieldSource` contract (tag
+  `letters.field_sources`): HRM's employee (name, code, designation, department, kind of
+  employment, joining/probation/confirmation/leaving dates, address, length of service; never ids,
+  phone or e-mail) and Payroll's pay (basic, gross monthly and yearly, salary from, breakdown
+  table), all marked salary.
+- **Salary**: rule `letters.salary_fields_enabled` (sensitive) switches every salary field off
+  for a company; otherwise only people with `letters.salary` make salary designs, issue salary
+  letters or open them. Others see them listed, never their content. `GET …/letters/options`
+  gives the editor only the fields the reader may use.
+- **Issuing** (`letters.issue`, at a unit, for its people and below): `POST …/letters/issued`
+  with the design, 1–200 employees, the language, the answers and `op_id` (a retry gives the same
+  letters). If anyone lacks a value the design uses, nothing is issued and the message names them
+  and the fields. Each letter is numbered by rule `letters.number_format`
+  (`{CODE}/{YYYY}/{SEQ:4}`, counted per design code and year), keeps its content as issued, and
+  is audited (`letters.issued`, no content). `POST …/issued/{id}/revoke` with a reason; never
+  edited or deleted. `POST …/templates/{id}/preview` fills a design with an employee or the
+  examples, saving nothing.
+- **Employees** see the letters shared with them (`shared`, default on) at `GET …/letters/me`
+  and, in the client's portal, `GET /api/portal/letters` (subject `hrm.employee`), where rule
+  `letters.employees_see_own` allows; they are told by mail (`letters.issued`, the name only).
+- **Images** (letterhead, signature, stamp, logo): JPG/PNG/WebP up to 1 MB, stored privately,
+  shown through 30-minute signed links (`files/letters/{organization}/assets/{asset}`), switched
+  off, never deleted. Rate limits: 60 writes and 10 issues a minute per person.
+- Roles: administrator and HR officer get `letters.*`; the school principal designs and issues;
+  managers and staff-type roles do not see others' letters (`!letters.view`).
+- After deploy: migrate, `rules:sync`, `access:sync`.
+
+### Future expansion (Letters)
+
+- A new country, sector or partner adds its own designs (or ready-made files) and sets the
+  number format; a new language is another body in the same design. A new module adds fields by
+  implementing `LetterFieldSource`. No code change. Next: screens with a live A4 preview (LET-2),
+  letters from an increment round (LET-3).
+
 ## Factory ERP for garments (FAC-1: buyers, styles, BOM, orders)
 
 Module `factory_erp` (factory sector, every plan) now **requires Inventory, Accounting and CRM**

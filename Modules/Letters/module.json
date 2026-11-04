@@ -1,0 +1,11 @@
+{
+    "name": "Letters",
+    "alias": "letters",
+    "description": "HR letters: templates designed per company (appointment, experience, increment, warning and more) and letters issued to employees from them.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Letters\\Providers\\LettersServiceProvider"
+    ],
+    "files": []
+}
