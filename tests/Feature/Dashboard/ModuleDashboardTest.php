@@ -141,8 +141,8 @@ it('gathers the overview widgets of modules that are on', function () {
 
 it('shows a module settings page with the setup screens the person may open', function () {
     $this->asToken($this->w->token)->getJson('/api/modules/hrm/settings')->assertOk()
-        ->assertJsonPath('data.pages.*.key', ['departments', 'positions', 'fields'])
-        ->assertJsonPath('data.rule_count', 13)
+        ->assertJsonPath('data.pages.*.key', ['departments', 'positions', 'fields', 'logins'])
+        ->assertJsonPath('data.rule_count', 14)
         ->assertJsonPath('data.can_manage_modules', true);
 
     $viewer = staffWithRoles($this->w->c1, makeRole($this->w->c1, ['hrm.view'], 'HR viewer'));
