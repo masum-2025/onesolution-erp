@@ -65,6 +65,7 @@ class MakeErpModule extends Command
             file_put_contents($full, $contents);
         }
         $this->addStatus($definition->studly());
+        $this->addPrice($definition->key());
         file_put_contents(base_path('README.md'), $writer->readme(), FILE_APPEND);
         // The project's code style on what was written (imports in order, nothing unused).
         if (is_file(base_path('vendor/bin/pint'))) {
@@ -74,7 +75,7 @@ class MakeErpModule extends Command
         $this->newLine();
         $this->info('Done. Next:');
         $this->line('  composer dump-autoload');
-        $this->line('  php artisan rules:sync && php artisan access:sync');
+        $this->line('  php artisan rules:sync && php artisan access:sync && php artisan addons:sync-prices');
         $this->line('  php artisan migrate');
         $this->line("  php artisan test tests/Feature/{$definition->studly()}");
         $this->line('  php artisan security:endpoints --write && npm run build');
@@ -127,5 +128,24 @@ class MakeErpModule extends Command
         $statuses = json_decode((string) @file_get_contents($file), true) ?: [];
         $statuses[$studly] = true;
         file_put_contents($file, json_encode($statuses, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
+    }
+
+    /**
+     * Every module is for sale in the add-on store: a placeholder price (the
+     * small modules' tier) goes into the price data file, for the platform to
+     * change on its Add-ons page. Nothing is written unless the file's marker
+     * is there exactly once and the module has no price yet.
+     */
+    private function addPrice(string $key): void
+    {
+        $file = database_path('seeders/data/addon-prices.php');
+        $marker = "    // New modules (make:erp-module adds them here).\n";
+        $source = (string) @file_get_contents($file);
+        if (substr_count($source, $marker) !== 1 || str_contains($source, "    '{$key}' => [")) {
+            $this->warn("Add a price for \"{$key}\" to database/seeders/data/addon-prices.php (every module is sold in the add-on store).");
+
+            return;
+        }
+        file_put_contents($file, str_replace($marker, $marker."    '{$key}' => [50000, 30000, 500, 300],\n", $source));
     }
 }

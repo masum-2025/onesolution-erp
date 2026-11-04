@@ -45,14 +45,12 @@ class PartnerAddonController extends Controller
         $wholesale = $partner->billing_mode === BillingMode::Wholesale;
         $billingCurrency = (string) $this->rules->get('billing.partner_currency', $this->contexts->forPartner($partner));
 
+        // Every module for sale, each in every currency add-ons are priced in (a price may be set where none is yet).
+        $house = (bool) $partner->is_house;
+        $currencies = $this->prices->knownCurrencies($partner, $billingCurrency);
         $data = [];
         foreach ($this->registry->all() as $key => $module) {
             if (! $module->sellable || ($offered !== null && ! in_array($key, $offered, true))) {
-                continue;
-            }
-
-            $currencies = $this->prices->platformCurrencies($key);
-            if ($currencies === [] && ! $wholesale) {
                 continue;
             }
 
@@ -64,7 +62,9 @@ class PartnerAddonController extends Controller
                 'prices' => array_map(fn (string $currency) => [
                     'currency' => $currency,
                     'platform_minor' => $this->prices->platformListPrice($key, $currency),
-                    'own_minor' => $this->prices->partnerListPrice($partner, $key, $currency),
+                    'own_minor' => $house ? null : $this->prices->partnerListPrice($partner, $key, $currency),
+                    // The house sets the platform's prices: what clients pay and what wholesale partners pay us.
+                    ...($house ? ['wholesale_minor' => $this->prices->platformWholesalePrice($key, $currency)] : []),
                 ], $currencies),
                 'wholesale' => $wholesale ? [
                     'currency' => $billingCurrency,
@@ -73,7 +73,30 @@ class PartnerAddonController extends Controller
             ];
         }
 
-        return response()->json(['data' => $data, 'can_edit' => $this->hasRole(PartnerUserRole::Owner, PartnerUserRole::Billing)]);
+        $edits = $this->hasRole(PartnerUserRole::Owner, PartnerUserRole::Billing);
+
+        return response()->json(['data' => $data, 'currencies' => $currencies, 'can_edit' => $edits && ! $house, 'can_set_platform' => $edits && $house]);
+    }
+
+    /**
+     * The platform's price of a module (the house's owner or billing staff
+     * only): the list price clients pay, or the wholesale price partners pay
+     * us, in a currency, from today; empty = not sold in that currency.
+     */
+    public function platform(SetAddonPriceRequest $request, string $module): JsonResponse
+    {
+        $this->requireRole(PartnerUserRole::Owner, PartnerUserRole::Billing);
+        if (! $this->partner()->is_house) {
+            throw AddonException::notHouse();
+        }
+        if (! $this->registry->has($module) || ! $this->registry->get($module)->sellable) {
+            throw AddonException::unknown();
+        }
+
+        $this->prices->set(null, $request->validated('kind'), $module, $request->validated('currency'), $request->validated('amount_minor'),
+            CarbonImmutable::today(), $request->user(), $request->validated('reason'));
+
+        return response()->json(['message' => __('addons.messages.platform_price_saved')]);
     }
 
     public function update(SetAddonPriceRequest $request, string $module): JsonResponse

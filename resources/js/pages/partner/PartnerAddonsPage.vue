@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { PackagePlus } from 'lucide-vue-next';
+import { PackagePlus, Search } from 'lucide-vue-next';
 import { PageFrame, AppButton, AppField, MoneyInput, StatusBadge, EmptyState, confirmAction, newOpId, toast } from '@/ui';
 import { api } from '@/lib/http';
 import { useResource } from '@/lib/useResource';
@@ -9,26 +9,76 @@ import { t } from '@/lib/i18n';
 
 /**
  * Partner console: add-on prices for the partner's clients (its own, or the
- * platform's), what a wholesale partner pays us, and one client's add-ons,
- * started or cancelled for it (when clients do not buy themselves).
+ * platform's) for every module, what a wholesale partner pays us, and one
+ * client's add-ons, started or cancelled for it (when clients do not buy
+ * themselves). The platform itself (the house partner) sets the platform's
+ * list and wholesale price of every module here, in any currency.
  */
 const prices = useResource(() => api('/api/partner/addons'));
-const rows = computed(() => prices.data.value?.data ?? []);
 const canEdit = computed(() => !!prices.data.value?.can_edit);
+const canSetPlatform = computed(() => !!prices.data.value?.can_set_platform);
 const drafts = ref({});
 const saving = ref(null);
+const search = ref('');
+
+// A currency the platform starts pricing in: a column for every module, empty until a price is saved.
+const extraCurrencies = ref([]);
+const newCurrency = ref('');
+const currencies = computed(() => [...new Set([...(prices.data.value?.currencies ?? []), ...extraCurrencies.value])].sort());
+function addCurrency() {
+    const code = newCurrency.value.trim().toUpperCase();
+    if (/^[A-Z]{3}$/.test(code)) extraCurrencies.value.push(code);
+    newCurrency.value = '';
+}
+
+// Every module in every currency (a price not set yet is empty); the search only narrows what is shown.
+const allRows = computed(() => (prices.data.value?.data ?? [])
+    .map((row) => ({ ...row, prices: currencies.value.map((currency) => row.prices.find((price) => price.currency === currency) ?? { currency, platform_minor: null, own_minor: null, wholesale_minor: null }) })));
+const rows = computed(() => allRows.value.filter((row) => !search.value.trim() || `${row.name} ${row.key}`.toLowerCase().includes(search.value.trim().toLowerCase())));
 
 const money = (amount, currency) => formatMoney({ amount, currency });
-const draftKey = (module, currency) => `${module}:${currency}`;
+const draftKey = (module, currency, kind = 'own') => `${module}:${currency}:${kind}`;
 
-watch(rows, (list) => {
-    drafts.value = Object.fromEntries(list.flatMap((row) => row.prices.map((price) => [draftKey(row.key, price.currency), price.own_minor])));
-});
+watch(allRows, (list) => {
+    const next = {};
+    for (const row of list) {
+        for (const price of row.prices) {
+            next[draftKey(row.key, price.currency)] = price.own_minor;
+            next[draftKey(row.key, price.currency, 'list')] = price.platform_minor;
+            next[draftKey(row.key, price.currency, 'wholesale')] = price.wholesale_minor ?? null;
+        }
+    }
+    drafts.value = next;
+}, { immediate: true });
+
+/** The platform's price of a module (house only): what clients pay (list) or wholesale partners pay us; empty = not sold in that currency. */
+async function savePlatform(row, currency, kind, amount) {
+    const answer = await confirmAction({
+        title: t('addons.partner.platform_save_title', { name: row.name, kind: t(`addons.partner.kinds.${kind}`), currency }),
+        message: amount === null ? t('addons.partner.platform_stop_text', { currency }) : t('addons.partner.platform_save_text', { price: money(amount, currency) }),
+        reason: 'required',
+        danger: amount === null,
+        confirmLabel: t('addons.partner.save'),
+    });
+    if (!answer) return;
+    saving.value = draftKey(row.key, currency, kind);
+    try {
+        const response = await api(`/api/partner/addons/${row.key}/platform`, { method: 'PUT', body: { kind, currency, amount_minor: amount, reason: answer.reason } });
+        toast.success(response.message);
+        prices.reload();
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        saving.value = null;
+    }
+}
 
 async function savePrice(row, price, amount) {
     const answer = await confirmAction({
         title: t('addons.partner.save_title', { name: row.name, currency: price.currency }),
-        message: amount === null ? t('addons.partner.reset_text', { price: money(price.platform_minor, price.currency) }) : t('addons.partner.save_text', { price: money(amount, price.currency) }),
+        message: amount === null
+            ? (price.platform_minor === null ? t('addons.partner.reset_unpriced_text') : t('addons.partner.reset_text', { price: money(price.platform_minor, price.currency) }))
+            : t('addons.partner.save_text', { price: money(amount, price.currency) }),
         reason: 'required',
         confirmLabel: t('addons.partner.save'),
     });
@@ -87,10 +137,60 @@ async function clientAct(item, action) {
 </script>
 
 <template>
-    <PageFrame :title="t('addons.partner.title')" :description="t('addons.partner.text')" width="xl" :resource="prices"
-               :empty="{ when: !rows.length, icon: PackagePlus, title: t('addons.partner.empty_title'), text: t('addons.partner.empty_text') }">
+    <PageFrame :title="canSetPlatform ? t('addons.partner.platform_title') : t('addons.partner.title')" :description="canSetPlatform ? t('addons.partner.platform_text') : t('addons.partner.text')"
+               width="xl" :resource="prices"
+               :empty="{ when: !allRows.length, icon: PackagePlus, title: t('addons.partner.empty_title'), text: t('addons.partner.empty_text') }">
         <div class="space-y-6">
-            <div class="overflow-x-auto rounded-xl border border-line bg-surface">
+            <div class="flex flex-wrap items-end gap-3 print:hidden">
+                <div class="relative min-w-56 flex-1">
+                    <Search class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
+                    <input v-model="search" type="search" class="field-input ps-9" :placeholder="t('addons.partner.search')" :aria-label="t('addons.partner.search')" />
+                </div>
+                <form v-if="canSetPlatform" class="flex items-end gap-2" @submit.prevent="addCurrency">
+                    <AppField :label="t('addons.partner.new_currency')" class="w-32">
+                        <template #default="{ id }">
+                            <input :id="id" v-model="newCurrency" maxlength="3" class="field-input font-mono uppercase" dir="ltr" placeholder="EUR" />
+                        </template>
+                    </AppField>
+                    <AppButton type="submit" size="sm" :disabled="!/^[A-Za-z]{3}$/.test(newCurrency.trim())">{{ t('addons.partner.add_currency') }}</AppButton>
+                </form>
+            </div>
+
+            <!-- The platform: list and wholesale prices of every module, in every currency. -->
+            <div v-if="canSetPlatform" class="overflow-x-auto rounded-xl border border-line bg-surface">
+                <table class="w-full text-[14px]">
+                    <thead class="bg-surface-2 text-[12px] text-muted">
+                        <tr>
+                            <th class="px-4 py-2.5 text-start font-medium">{{ t('addons.partner.columns.module') }}</th>
+                            <th v-for="currency in currencies" :key="currency" class="px-4 py-2.5 text-start font-medium">{{ currency }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="row in rows" :key="row.key" class="border-t border-line align-top">
+                            <td class="px-4 py-3">
+                                <span class="font-medium">{{ row.name }}</span>
+                                <span class="block font-mono text-[11.5px] text-muted" dir="ltr">{{ row.key }}</span>
+                            </td>
+                            <td v-for="price in row.prices" :key="price.currency" class="px-4 py-3">
+                                <div v-for="kind in ['list', 'wholesale']" :key="kind" class="mb-2 flex flex-wrap items-end gap-1.5">
+                                    <AppField :label="t(`addons.partner.kinds.${kind}`)" class="w-32">
+                                        <template #default="{ id }">
+                                            <MoneyInput :id="id" v-model="drafts[draftKey(row.key, price.currency, kind)]" :currency="price.currency" :placeholder="t('addons.partner.not_sold')" />
+                                        </template>
+                                    </AppField>
+                                    <AppButton size="sm" :loading="saving === draftKey(row.key, price.currency, kind)"
+                                               :disabled="drafts[draftKey(row.key, price.currency, kind)] === null || drafts[draftKey(row.key, price.currency, kind)] === (kind === 'list' ? price.platform_minor : price.wholesale_minor)"
+                                               @click="savePlatform(row, price.currency, kind, drafts[draftKey(row.key, price.currency, kind)])">{{ t('addons.partner.save') }}</AppButton>
+                                    <AppButton v-if="(kind === 'list' ? price.platform_minor : price.wholesale_minor) !== null" size="sm" variant="ghost"
+                                               @click="savePlatform(row, price.currency, kind, null)">{{ t('addons.partner.stop') }}</AppButton>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div v-else class="overflow-x-auto rounded-xl border border-line bg-surface">
                 <table class="w-full text-[14px]">
                     <thead class="bg-surface-2 text-[12px] text-muted">
                         <tr>
@@ -107,13 +207,13 @@ async function clientAct(item, action) {
                                 <span class="block text-[12px] text-muted">{{ row.description }}</span>
                             </td>
                             <td class="px-4 py-3">
-                                <span v-for="price in row.prices" :key="price.currency" class="block">{{ money(price.platform_minor, price.currency) }}</span>
+                                <span v-for="price in row.prices" :key="price.currency" class="block">{{ price.platform_minor === null ? `${price.currency}: ${t('addons.partner.not_priced')}` : money(price.platform_minor, price.currency) }}</span>
                             </td>
                             <td class="px-4 py-3">
                                 <div v-for="price in row.prices" :key="price.currency" class="mb-2 flex flex-wrap items-end gap-2">
                                     <AppField :label="price.currency" class="w-36">
                                         <template #default="{ id }">
-                                            <MoneyInput :id="id" v-model="drafts[draftKey(row.key, price.currency)]" :currency="price.currency" :placeholder="t('addons.partner.uses_platform')" :disabled="!canEdit" />
+                                            <MoneyInput :id="id" v-model="drafts[draftKey(row.key, price.currency)]" :currency="price.currency" :placeholder="price.platform_minor === null ? t('addons.partner.not_sold') : t('addons.partner.uses_platform')" :disabled="!canEdit" />
                                         </template>
                                     </AppField>
                                     <template v-if="canEdit">

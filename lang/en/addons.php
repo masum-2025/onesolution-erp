@@ -7,6 +7,7 @@ return [
         'addon_not_allowed' => 'You cannot buy or cancel add-ons here. Ask the account owner or an administrator.',
         'addon_ask_provider' => 'Add-ons for this account are started by :provider. Contact them to add a module.',
         'addon_unknown' => 'There is no such add-on.',
+        'addon_not_house' => 'Only the platform sets its own add-on prices. Set your own price for your clients instead.',
         'addon_not_for_sale' => ':module cannot be added to this account.',
         'addon_in_plan' => ':module is already in your plan. Turn it on under Modules.',
         'addon_already_running' => ':module is already added to this account.',
@@ -27,6 +28,7 @@ return [
         'cancelled' => 'Cancelled. The module stays on until the end of the paid month; its data is kept.',
         'resumed' => 'Kept. The add-on carries on month by month.',
         'price_saved' => 'Price saved. It applies to new months from today.',
+        'platform_price_saved' => 'Platform price saved. It applies to new months from today.',
     ],
 
 ];

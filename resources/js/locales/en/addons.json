@@ -76,6 +76,22 @@
         "pick_client": "Choose a client",
         "client_nothing": "Nothing can be added for this client.",
         "buy_title": "Add {name} for {client}?",
-        "buy_text": "It turns on at once for {client}'s whole account and is billed month by month."
+        "buy_text": "It turns on at once for {client}'s whole account and is billed month by month.",
+        "platform_title": "Add-on prices (platform)",
+        "platform_text": "Every module the platform sells beyond a plan: what clients pay (list) and what wholesale partners pay us (wholesale), per currency and month. Empty: not sold in that currency. A new price applies to new months from today.",
+        "search": "Search modules",
+        "new_currency": "New currency",
+        "add_currency": "Add a currency",
+        "kinds": {
+            "list": "Clients pay",
+            "wholesale": "Wholesale"
+        },
+        "not_sold": "Not sold",
+        "not_priced": "not priced",
+        "stop": "Stop selling",
+        "platform_save_title": "{name}: {kind} in {currency}",
+        "platform_save_text": "The platform price becomes {price} a month, for new months from today.",
+        "platform_stop_text": "It will no longer be sold in {currency} at the platform price (partners with their own price still sell it).",
+        "reset_unpriced_text": "The platform does not price it in this currency, so your clients will not be able to add it."
     }
 }

@@ -434,6 +434,8 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
     Route::middleware('throttle:tenancy-sensitive')->group(function () {
         $addon = '[a-z0-9_]{2,50}';
         Route::put('addons/{module}', [PartnerAddonController::class, 'update'])->where('module', $addon);
+        // The house only: the platform's own list and wholesale prices.
+        Route::put('addons/{module}/platform', [PartnerAddonController::class, 'platform'])->where('module', $addon);
         Route::post('clients/{client}/addons/{module}/buy', [PartnerAddonController::class, 'buyFor'])->where('module', $addon)->middleware('two_factor.recent');
         Route::post('clients/{client}/addons/{module}/cancel', [PartnerAddonController::class, 'cancelFor'])->where('module', $addon);
     });

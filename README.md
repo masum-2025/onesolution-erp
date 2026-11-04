@@ -713,9 +713,15 @@ and cancellations and bills the next month; it is safe to repeat.
 
 Prices (`addon_prices`, monthly, minor units, never edited, replaced by a newer row):
 platform list and wholesale prices from `database/seeders/data/addon-prices.php`
-(**placeholders**); a partner sets its own list price per currency in its console. A module
-without a price is not for sale; a module can opt out with `'addon' => ['sellable' => false]`
-in its manifest.
+(**placeholders**, every module priced by size: large, standard, small, platform features); the
+platform (the house partner's owner or billing staff) changes any module's list or wholesale
+price per currency, adds a currency or stops selling in one on its Add-ons page
+(`PUT /api/partner/addons/{module}/platform`); a partner sets its own list price per currency
+for any module, priced by the platform or not. A second change the same day replaces that day's
+price (the audit keeps both). Every module is for sale: an architecture test
+(`tests/Feature/Addons/PlatformPricesTest.php`) fails for a module without a price in the data
+file unless its manifest says `'addon' => ['sellable' => false]`, and `make:erp-module` adds a
+placeholder line for each new module (then `addons:sync-prices`).
 
 ```bash
 php artisan addons:sync-prices
@@ -728,6 +734,7 @@ php artisan addons:cycle
 | GET | /api/organizations/{id}/addons | `billing.view`, `modules.manage` or `addons.buy` at the top |
 | POST | /api/organizations/{id}/addons/{module}/trial, /buy (step-up), /cancel, /resume | `addons.buy`; `op_id` on trial and buy |
 | GET / PUT | /api/partner/addons, /api/partner/addons/{module} | all / owner, billing |
+| PUT | /api/partner/addons/{module}/platform (kind list or wholesale) | the house's owner, billing |
 | GET / POST | /api/partner/clients/{id}/addons, /addons/{module}/buy, /cancel | all / owner, billing |
 
 Screens: Add-on store (`/addons`) for the account, Add-on prices (`/partner/addons`) for the

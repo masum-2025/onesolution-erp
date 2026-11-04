@@ -39,6 +39,29 @@ class AddonPriceBook
         return $this->find(AddonPrice::LIST, null, $module, $currency, CarbonImmutable::today())?->amount_minor;
     }
 
+    /** The platform's own wholesale price (what a wholesale partner pays us, unless agreed otherwise for it). */
+    public function platformWholesalePrice(string $module, string $currency): ?int
+    {
+        return $this->find(AddonPrice::WHOLESALE, null, $module, $currency, CarbonImmutable::today())?->amount_minor;
+    }
+
+    /**
+     * Every currency add-ons are priced in, by the platform or this partner
+     * (and the partner's billing currency): the columns a price table shows.
+     *
+     * @return list<string>
+     */
+    public function knownCurrencies(?Partner $partner, ?string $also = null): array
+    {
+        $codes = AddonPrice::query()
+            ->where(fn ($query) => $query->whereNull('partner_id')->when($partner !== null, fn ($inner) => $inner->orWhere('partner_id', $partner->getKey())))
+            ->distinct()->pluck('currency_code')->all();
+        $codes = array_values(array_unique(array_filter([...$codes, $also])));
+        sort($codes);
+
+        return $codes;
+    }
+
     /** The partner's own list price only (null: its clients see the platform's). */
     public function partnerListPrice(Partner $partner, string $module, string $currency): ?int
     {
@@ -76,6 +99,9 @@ class AddonPriceBook
                 AddonPrice::query()->where('partner_id', $partner?->getKey())->where('kind', $kind)
                     ->where('module_key', $module)->where('currency_code', $currency)->delete();
             } else {
+                // A second change the same day replaces that day's price (the audit log keeps both).
+                AddonPrice::query()->where('partner_id', $partner?->getKey())->where('kind', $kind)->where('module_key', $module)
+                    ->where('currency_code', $currency)->whereDate('effective_from', $from->toDateString())->delete();
                 $price = new AddonPrice([
                     'module_key' => $module,
                     'kind' => $kind,

@@ -27,6 +27,12 @@ class AddonException extends TenancyException
         return new self('addon_ask_provider', 403, ['provider' => $provider]);
     }
 
+    /** Only the platform (the house partner) sets the platform's prices. */
+    public static function notHouse(): self
+    {
+        return new self('addon_not_house', 403);
+    }
+
     public static function unknown(): self
     {
         return new self('addon_unknown', 404);
