@@ -39,6 +39,8 @@ function basis(line) {
     const params = Object.fromEntries(Object.entries(found.params).map(([key, value]) => {
         if (key === 'principal') return [key, money(value)];
         if (key === 'paid_out_on') return [key, day(value)];
+        // Arrears: months as "2027-01".
+        if (key === 'from' || key === 'to') return [key, value ? formatDate(`${value}-01T00:00:00Z`, { month: 'short', year: 'numeric', timeZone: 'UTC' }) : ''];
         return [key, typeof value === 'number' ? formatNumber(value) : value];
     }));
     return t(found.key, params);

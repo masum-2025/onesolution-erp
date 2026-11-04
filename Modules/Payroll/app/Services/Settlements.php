@@ -14,6 +14,7 @@ use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Hrm\Directory\EmployeeRecord;
 use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Models\Component;
+use Modules\Payroll\Models\IncrementArrear;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\LoanInstallment;
 use Modules\Payroll\Models\PfEntry;
@@ -28,7 +29,8 @@ use Modules\Payroll\Models\SettlementLine;
  * payroll.gratuity_min_years and payroll.gratuity_days_per_year, on the
  * basic at the last day), the provident fund (the employee's share in full,
  * the company's as far as rule payroll.pf_vesting allows; the rest kept
- * back), and every loan still owed. Lines added by hand (notice pay, leave
+ * back), every loan still owed, and increment arrears not yet paid with a
+ * run (in full, taxed on their taxable part). Lines added by hand (notice pay, leave
  * encashment …) stay; taxable ones carry tax at source as the extra yearly
  * tax on top of regular pay. Approved by someone who neither opened nor sent
  * it: posted, loans closed, the fund paid out. Paid like a salary.
@@ -170,8 +172,16 @@ class Settlements
                 }
                 $this->closeLoan($company, $loan, $settlement);
             }
+            // The arrears still owed must be what was worked out.
+            $owed = $this->owedArrears($company, $settlement->employee_id);
+            if ((int) $owed->sum('amount_minor') !== $sum('ARREARS')) {
+                throw PayrollException::settlementStale();
+            }
+            if ($owed->isNotEmpty()) {
+                $this->payArrears($company, $owed, $settlement);
+            }
 
-            $manualEarnings = (int) $lines->where('code', 'MANUAL')->where('kind', 'earning')->sum('amount_minor');
+            $manualEarnings = (int) $lines->where('code', 'MANUAL')->where('kind', 'earning')->sum('amount_minor') + $sum('ARREARS');
             $manualDeductions = (int) $lines->where('code', 'MANUAL')->where('kind', 'deduction')->sum('amount_minor');
             $journal = $this->postings->post($company, "payroll-settlement-{$settlement->getKey()}", CarbonImmutable::now()->startOfDay(),
                 __('payroll::payroll.narration.settlement', ['name' => $settlement->employee_name]), 'settlement', $settlement->getKey(), $settlement->currency_code, [
@@ -296,12 +306,17 @@ class Settlements
             $add('deduction', 'LOAN', ['en' => 'Loan still owed', 'bn' => 'বাকি ঋণ'], $loan->balance(), ['key' => 'loan', 'params' => ['principal' => $loan->principal_minor, 'paid_out_on' => $loan->paid_out_on->toDateString()]], $loan->getKey());
         }
 
+        // Increment arrears not paid with a run: in full (no provident fund, it closes here), taxed on their taxable part.
+        $owed = $this->owedArrears($company, $employee->id);
+        $add('earning', 'ARREARS', ['en' => 'Increment arrears', 'bn' => 'বেতন বৃদ্ধির বকেয়া'], (int) $owed->sum('amount_minor'),
+            ['key' => 'arrears', 'params' => ['from' => $owed->first()?->period, 'to' => $owed->last()?->period, 'taxable' => (int) $owed->sum('taxable_minor')]]);
+
         $manual = $this->payrolls->query(SettlementLine::class, $company)->where('settlement_id', $settlement->getKey())->where('manual', true)->orderBy('created_at')->get();
         $no = 0;
         foreach ($rows as $row) {
             $line = new SettlementLine;
             $line->fill(['organization_id' => $company->getKey(), 'settlement_id' => $settlement->getKey(), 'line_no' => ++$no, 'kind' => $row['kind'], 'code' => $row['code'],
-                'amount_minor' => $row['amount'], 'taxable' => false, 'basis' => $row['basis'], 'manual' => false, 'loan_id' => $row['loanId']]);
+                'amount_minor' => $row['amount'], 'taxable' => $row['code'] === 'ARREARS', 'basis' => $row['basis'], 'manual' => false, 'loan_id' => $row['loanId']]);
             $line->putTexts('name', $row['name']);
             $line->save();
         }
@@ -309,9 +324,9 @@ class Settlements
             $line->forceFill(['line_no' => ++$no])->save();
         }
 
-        // Tax at source on what is taxable (lines by hand), on top of a year of regular pay.
+        // Tax at source on what is taxable (lines by hand, the taxable part of arrears), on top of a year of regular pay.
         $lines = $this->linesOf($company, $settlement);
-        $taxable = (int) $lines->where('taxable', true)->sum('amount_minor');
+        $taxable = (int) $lines->where('taxable', true)->where('code', '!=', 'ARREARS')->sum('amount_minor') + (int) $owed->sum('taxable_minor');
         $tax = 0;
         if ($taxable > 0 && $salary !== null) {
             $components = $this->payrolls->query(Component::class, $company)->get()->keyBy('id');
@@ -327,6 +342,33 @@ class Settlements
         ])->save();
 
         return $settlement;
+    }
+
+    /**
+     * Increment arrears someone is still owed: planned and not taken by an
+     * approved run (a draft run's are taken over when the settlement is approved).
+     *
+     * @return Collection<int, IncrementArrear>
+     */
+    private function owedArrears(Organization $company, string $employeeId): Collection
+    {
+        $drafts = $this->payrolls->query(Run::class, $company)->where('status', Run::DRAFT)->pluck('id')->all();
+
+        return $this->payrolls->query(IncrementArrear::class, $company)->where('employee_id', $employeeId)->where('status', IncrementArrear::PLANNED)
+            ->where(fn ($query) => $query->whereNull('run_id')->orWhereIn('run_id', $drafts))->orderBy('period')->get();
+    }
+
+    /** Arrears paid with the settlement; draft runs that had taken them need calculating again. */
+    private function payArrears(Organization $company, Collection $owed, Settlement $settlement): void
+    {
+        $runIds = $owed->pluck('run_id')->filter()->unique()->all();
+        $this->payrolls->query(IncrementArrear::class, $company)->whereKey($owed->modelKeys())
+            ->update(['status' => IncrementArrear::PAID, 'run_id' => null, 'settlement_id' => $settlement->getKey()]);
+        foreach ($this->payrolls->query(Run::class, $company)->whereIn('id', $runIds)->where('status', Run::DRAFT)->get() as $run) {
+            $run->forceFill(['calculated_at' => null, 'version' => $run->version + 1])->save();
+        }
+        $this->audit->record('payroll.arrears_settled', $settlement, new: ['amount_minor' => (int) $owed->sum('amount_minor'), 'months' => $owed->pluck('period')->unique()->values()->all()],
+            organizationId: $company->getKey());
     }
 
     /** A loan settled in full: drafts that planned its instalments need calculating again. */

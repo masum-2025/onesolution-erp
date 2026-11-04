@@ -169,3 +169,47 @@ it('taxes arrears as a one-off payment and takes the provident fund on their bas
         ->and(collect($with['lines'])->where('code', 'PF_EMPLOYEE')->sum('amount'))->toBe(300000 + 60000)
         ->and(collect($with['lines'])->where('code', 'PF_EMPLOYER')->sum('amount'))->toBe(300000 + 60000);
 });
+
+it('pays the arrears of someone who left with their final settlement, once', function () {
+    $this->round = ($this->open)()->assertCreated()->json('data');
+    ($this->raiseAll)();
+    ($this->roundStep)('submit');
+    ($this->roundStep)('approve', $this->approver);
+    ($this->roundStep)('apply');
+
+    // Selim leaves on March 10; March's draft payroll takes everyone's arrears for now.
+    $fresh = $this->asToken($this->w->token)->getJson("/api/organizations/{$this->w->c1->id}/hrm/employees/{$this->selim['id']}")->json('data');
+    $this->asToken($this->w->token)->postJson("/api/organizations/{$this->w->c1->id}/hrm/employees/{$this->selim['id']}/steps/exit", ['base_version' => $fresh['version'], 'on' => '2027-03-10', 'reason' => 'Resigned'])->assertOk();
+    $march = $this->asToken($this->runner)->postJson(($this->api)('runs'), ['period' => '2027-03'])->assertCreated()->json('data');
+    $march = ($this->runStep)($march, 'calculate')->assertOk()->json('data');
+    expect(IncrementArrear::query()->where('run_id', $march['id'])->count())->toBe(4);
+    $this->travel(2)->minutes(); // past the per-minute limit on sensitive writes
+
+    // His settlement: the arrears in full (no provident fund on them), taxed on their taxable part.
+    $settle = fn (array $settlement, string $step, ?string $token = null, array $data = []) => $this->asToken($token ?? $this->runner)
+        ->postJson(($this->api)("settlements/{$settlement['id']}/{$step}"), ['base_version' => $settlement['version'], ...$data]);
+    $settlement = $this->asToken($this->runner)->postJson(($this->api)('settlements'), ['employee_id' => $this->selim['id']])->assertCreated()->json('data');
+    $arrears = collect($settlement['lines'])->firstWhere('code', 'ARREARS');
+    expect($arrears)->toMatchArray(['kind' => 'earning', 'amount_minor' => $this->expectedSelim])
+        ->and($arrears['basis'])->toEqual(['key' => 'arrears', 'params' => ['from' => '2027-01', 'to' => '2027-02', 'taxable' => $this->expectedSelim]]);
+
+    // Paid elsewhere meanwhile: the settlement must be worked out again.
+    $one = IncrementArrear::query()->where('employee_id', $this->selim['id'])->orderBy('period')->first();
+    $one->forceFill(['status' => IncrementArrear::PAID])->save();
+    $settlement = $settle($settlement, 'submit')->assertOk()->json('data');
+    $settle($settlement, 'approve', $this->approver)->assertConflict()->assertJsonPath('code', 'settlement_stale');
+    $one->forceFill(['status' => IncrementArrear::PLANNED])->save();
+    $settlement = $settle($settlement, 'reject', $this->approver, ['reason' => 'Work it out again'])->assertOk()->json('data');
+    $settlement = $settle($settlement, 'calculate')->assertOk()->json('data');
+    $settlement = $settle($settlement, 'submit')->assertOk()->json('data');
+    $settle($settlement, 'approve', $this->approver)->assertOk();
+
+    // Paid with the settlement; March must be worked out again and pays only Rahima's.
+    expect(IncrementArrear::query()->where('employee_id', $this->selim['id'])->where('status', IncrementArrear::PAID)->where('settlement_id', $settlement['id'])->count())->toBe(2)
+        ->and(AuditLog::query()->where('action', 'payroll.arrears_settled')->count())->toBe(1);
+    $march = $this->asToken($this->runner)->getJson(($this->api)("runs/{$march['id']}"))->json('data');
+    $march = ($this->runStep)($march, 'calculate')->assertOk()->json('data');
+    $selims = collect(($this->slip)($march, 'Selim Reza')['lines'])->where('code', 'ARREARS');
+    expect($selims)->toBeEmpty()
+        ->and(collect(($this->slip)($march, 'Rahima Akter')['lines'])->firstWhere('code', 'ARREARS')['amount_minor'])->toBe(900000);
+});

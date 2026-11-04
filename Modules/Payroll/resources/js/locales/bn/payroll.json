@@ -396,7 +396,8 @@
             "pf_employee": "নিজের জমা পুরোটা",
             "pf_employer": "{years} বছর পর কোম্পানির জমার {percent}%",
             "pf_forfeit": "{years} বছরে এখনো প্রাপ্য নয়; কোম্পানির কাছে থাকে",
-            "loan": "{paid_out_on} তারিখে দেওয়া {principal} ঋণের বাকি"
+            "loan": "{paid_out_on} তারিখে দেওয়া {principal} ঋণের বাকি",
+            "arrears": "{from} – {to} মাসের বেতন বৃদ্ধি, যা পুরনো মূল বেতনে দেওয়া হয়েছিল"
         },
         "confirm": {
             "submit_title": "{name}-এর চূড়ান্ত হিসাব অনুমোদনে পাঠাবেন?",

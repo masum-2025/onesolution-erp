@@ -45,6 +45,7 @@ return [
     'increment_cancelled' => 'Salary increment round cancelled',
     'bonus_bank_file_taken' => 'Bank file of a festival bonus taken',
     'loan_settled' => 'Loan closed by a final settlement',
+    'arrears_settled' => 'Increment arrears paid with a final settlement',
     'settlement_opened' => 'Final settlement opened',
     'settlement_calculated' => 'Final settlement calculated',
     'settlement_line_added' => 'Final settlement line added',

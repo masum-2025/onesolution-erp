@@ -396,7 +396,8 @@
             "pf_employee": "Their own contributions in full",
             "pf_employer": "{percent}% of the company's contributions after {years} years",
             "pf_forfeit": "Not yet theirs after {years} years; stays with the company",
-            "loan": "Rest of a loan of {principal} paid out on {paid_out_on}"
+            "loan": "Rest of a loan of {principal} paid out on {paid_out_on}",
+            "arrears": "Salary increment for {from} – {to}, paid at the old basic"
         },
         "confirm": {
             "submit_title": "Send the settlement of {name} for approval?",

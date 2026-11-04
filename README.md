@@ -3609,15 +3609,18 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
   `PF_EMPLOYER`, so the fund entry includes them) is taken on its basic part. Approving the run
   marks them paid; deleting it (or a slip without a salary) gives them back. The round page shows
   the arrears per line and paid / waiting; letters get `increment.arrears`; the data export has
-  rounds, lines and arrears. Not here yet: arrears of people who left before being paid (final
-  settlement), and over time recalculated on the new basic.
+  rounds, lines and arrears. Someone who leaves before being paid gets the arrears still owed with
+  their final settlement (PAY-5b): one `ARREARS` line in full (no provident fund, the fund closes
+  there), taxed on its taxable part; approval checks they are still owed (else `settlement_stale`),
+  marks them paid with `settlement_id` and makes a draft run that had taken them be worked out again.
+  Not here yet: over time recalculated on the new basic.
 - Appraisals fills Payroll's `PerformanceSource` contract (tag `payroll.performance_sources`):
   closed cycles, the bands, each finished review's score and band; nothing else leaves it, nothing
   where it is off (rates are then set by hand). Appraisal managers without `payroll.view` see no
   salaries. The bell tells approvers of rounds waiting for them.
 - Screens: `/payroll/increments`, `/payroll/increments/{id}` (table on wide screens, a list on
   phones, filter by band, where each rate comes from, export and print).
-- After deploy: migrate, `rules:sync`, `db:seed --class=RulesSeeder` (BD rounding); PAY-5: migrate (arrears table, two total columns), `rules:sync` (3 rules).
+- After deploy: migrate, `rules:sync`, `db:seed --class=RulesSeeder` (BD rounding); PAY-5: migrate (arrears table, two total columns), `rules:sync` (3 rules); PAY-5b: migrate (one column).
 
 ### Future expansion (Payroll)
 

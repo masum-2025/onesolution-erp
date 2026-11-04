@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * One employee's increment arrears for one month already paid: planned when
- * the round is applied, taken into the next run, paid when it is approved.
+ * the round is applied, taken into the next run, paid when it is approved
+ * (or, for someone who left, paid with their final settlement).
  */
 #[Fillable(['organization_id', 'round_id', 'line_id', 'employee_id', 'unit_id', 'period', 'slip_id', 'previous_minor', 'new_minor', 'amount_minor',
-    'taxable_minor', 'pf_base_minor', 'currency_code', 'status', 'run_id'])]
+    'taxable_minor', 'pf_base_minor', 'currency_code', 'status', 'run_id', 'settlement_id'])]
 class IncrementArrear extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;

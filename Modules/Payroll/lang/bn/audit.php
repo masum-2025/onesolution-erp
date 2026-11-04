@@ -45,6 +45,7 @@ return [
     'increment_cancelled' => 'বেতন বৃদ্ধির রাউন্ড বাতিল',
     'bonus_bank_file_taken' => 'উৎসব বোনাসের ব্যাংক ফাইল নেওয়া হয়েছে',
     'loan_settled' => 'চূড়ান্ত হিসাবে ঋণ বন্ধ',
+    'arrears_settled' => 'চূড়ান্ত হিসাবে বেতন বৃদ্ধির বকেয়া দেওয়া',
     'settlement_opened' => 'চূড়ান্ত হিসাব খোলা হয়েছে',
     'settlement_calculated' => 'চূড়ান্ত হিসাব করা হয়েছে',
     'settlement_line_added' => 'চূড়ান্ত হিসাবে লাইন যোগ',
