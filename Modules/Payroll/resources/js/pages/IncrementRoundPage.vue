@@ -52,6 +52,7 @@ const exported = computed(() => (round.value ? {
         { key: 'current_minor', label: t('payroll.increments.columns.now'), type: 'money', currency: round.value.currency },
         { key: 'rate_bp', label: t('payroll.increments.rate'), type: 'number', value: (line) => line.rate_bp / 100 },
         { key: 'new_minor', label: t('payroll.increments.columns.new'), type: 'money', currency: round.value.currency },
+        { key: 'arrears_minor', label: t('payroll.increments.columns.arrears'), type: 'money', currency: round.value.currency },
         { key: 'source', label: t('payroll.export.status'), value: sourceText },
         { key: 'reason', label: t('payroll.increments.reason') },
     ],
@@ -161,6 +162,10 @@ async function saveLine(back = false) {
             <section class="card mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4">
                 <p class="text-[14px] font-semibold">{{ t('payroll.increments.people', { count: formatNumber(raised.length) }) }}</p>
                 <p class="tabular text-[13.5px] text-fg-2">{{ t('payroll.increments.totals', { from: money(round.current_minor), to: money(round.new_minor), raise: money(round.new_minor - round.current_minor) }) }}</p>
+                <p v-if="round.arrears_minor > 0" class="tabular text-[13.5px] text-warn">
+                    {{ t('payroll.increments.arrears_total', { amount: money(round.arrears_minor) }) }}
+                    <template v-if="round.arrears?.months?.length"> · {{ t('payroll.increments.arrears_status', { paid: money(round.arrears.paid_minor), waiting: money(round.arrears.waiting_minor) }) }}</template>
+                </p>
                 <AppField v-if="bands.length" v-slot="{ id }" :label="t('payroll.increments.filter_band')" sr-only-label class="ms-auto w-full print:hidden sm:w-52">
                     <select :id="id" v-model="band" class="field-input">
                         <option value="">{{ t('payroll.increments.all_bands') }}</option>
@@ -187,6 +192,7 @@ async function saveLine(back = false) {
                             <th class="px-3 py-2.5 text-end font-medium">{{ t('payroll.increments.columns.rate') }}</th>
                             <th class="px-3 py-2.5 text-end font-medium">{{ t('payroll.increments.columns.new') }}</th>
                             <th class="px-3 py-2.5 text-end font-medium">{{ t('payroll.increments.columns.raise') }}</th>
+                            <th v-if="round.arrears_minor > 0" class="px-3 py-2.5 text-end font-medium">{{ t('payroll.increments.columns.arrears') }}</th>
                             <th class="px-5 py-2.5 print:hidden"><span class="sr-only">{{ t('payroll.increments.change') }}</span></th>
                         </tr>
                     </thead>
@@ -205,6 +211,7 @@ async function saveLine(back = false) {
                             </td>
                             <td class="tabular px-3 py-2.5 text-end font-semibold">{{ money(line.new_minor) }}</td>
                             <td class="tabular px-3 py-2.5 text-end text-ok">{{ line.new_minor > line.current_minor ? `+${money(line.new_minor - line.current_minor)}` : '' }}</td>
+                            <td v-if="round.arrears_minor > 0" class="tabular px-3 py-2.5 text-end text-warn">{{ line.arrears_minor ? money(line.arrears_minor) : '' }}</td>
                             <td class="px-5 py-2.5 text-end print:hidden">
                                 <AppButton v-if="round.can?.change" size="icon-sm" variant="ghost" :icon="PenLine" :aria-label="t('payroll.increments.change_title', { name: line.employee_name })" @click="edit(line)" />
                             </td>
@@ -220,6 +227,7 @@ async function saveLine(back = false) {
                         <span class="block text-[14px] font-medium">{{ line.employee_name }}</span>
                         <span class="block text-[12.5px] text-muted">{{ bandName(line.band) }} · {{ percentText(line.rate_bp) }}% · {{ sourceText(line) }}</span>
                         <span class="tabular block text-[12.5px]">{{ money(line.current_minor) }} → <b>{{ money(line.new_minor) }}</b></span>
+                        <span v-if="line.arrears_minor" class="tabular block text-[12.5px] text-warn">{{ t('payroll.increments.columns.arrears') }}: {{ money(line.arrears_minor) }}</span>
                         <span v-if="line.problem" class="block text-[12px] text-bad">{{ t(`payroll.increments.problems.${line.problem}`) }}</span>
                     </span>
                     <AppButton v-if="round.can?.change" size="icon-sm" variant="ghost" :icon="PenLine" :aria-label="t('payroll.increments.change_title', { name: line.employee_name })" @click="edit(line)" />

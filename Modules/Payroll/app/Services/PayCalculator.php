@@ -22,13 +22,14 @@ namespace Modules\Payroll\Services;
  *   the basic over the days in the month.
  * - Tax at source: the month's taxable earnings x 12 through the slabs
  *   (payroll.tax_slabs: cumulative "up to" bands, null = the rest), a
- *   twelfth of it each month.
+ *   twelfth of it each month. Increment arrears are taxed as a one-off
+ *   payment on top (the extra yearly tax they bring, as a bonus is).
  * - A net below zero is a problem the run cannot be sent with.
  */
 final class PayCalculator
 {
     /**
-     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, late_days?: int, early_days?: int, unpaid_leave_halves?: int, paid_days?: list<array{code: string, name: array<string, string>, halves: int, taxable: bool}>, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}}  $facts
+     * @param  array{basic: int, items: list<array{code: string, name: array<string, string>, kind: string, taxable: bool, prorated: bool, calc: string, amount: int|null, rate_bp: int|null}>, period_days: int, employed_days: int, absent_days: int, half_days: int, overtime_minutes: int, late_minutes: int, late_days?: int, early_days?: int, unpaid_leave_halves?: int, paid_days?: list<array{code: string, name: array<string, string>, halves: int, taxable: bool}>, adjustments: list<array{kind: string, label: string, amount: int, taxable: bool}>, earnings?: list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>, loans?: list<int>, pf?: array{0: int, 1: int}, arrears?: list<array{name: array<string, string>, amount: int, taxable: int, pf_base?: int}>}  $facts
      * @param  array{deduct_absence: bool, overtime_multiplier_bp: int, overtime_base: string, monthly_hours: int, late_policy: string, late_per_cut?: int, late_cut_halves?: int, early_policy?: string, early_per_cut?: int, early_cut_halves?: int, encash_base?: string, encash_divisor?: int, tax_slabs: list<array{0: int|null, 1: int}>}  $rules
      * @return array{lines: list<array{kind: string, code: string, name: array<string, string>, amount: int, taxable: bool}>, earnings: int, deductions: int, tax: int, net: int, problem: string|null}
      */
@@ -100,6 +101,18 @@ final class PayCalculator
         foreach ($facts['earnings'] ?? [] as $earning) {
             $lines[] = ['kind' => 'earning', 'code' => $earning['code'], 'name' => $earning['name'], 'amount' => (int) $earning['amount'], 'taxable' => (bool) $earning['taxable'], 'posting_key' => $earning['posting_key'] ?? null];
         }
+        // Increment arrears for months already paid: their own line, taxed below as a one-off
+        // payment (not as twelve months of it); provident fund on their basic part when given.
+        $arrearsTaxable = 0;
+        foreach ($facts['arrears'] ?? [] as $arrears) {
+            $lines[] = ['kind' => 'earning', 'code' => 'ARREARS', 'name' => $arrears['name'], 'amount' => (int) $arrears['amount'], 'taxable' => false];
+            $arrearsTaxable += (int) $arrears['taxable'];
+            if (isset($facts['pf']) && (int) ($arrears['pf_base'] ?? 0) > 0) {
+                [$employeeBp, $employerBp] = $facts['pf'];
+                $lines[] = ['kind' => 'deduction', 'code' => 'PF_EMPLOYEE', 'name' => ['en' => 'Provident fund (arrears)', 'bn' => 'ভবিষ্য তহবিল (বকেয়া)'], 'amount' => self::share((int) $arrears['pf_base'], $employeeBp), 'taxable' => false];
+                $lines[] = ['kind' => 'employer', 'code' => 'PF_EMPLOYER', 'name' => ['en' => 'Provident fund (company, arrears)', 'bn' => 'ভবিষ্য তহবিল (কোম্পানি, বকেয়া)'], 'amount' => self::share((int) $arrears['pf_base'], $employerBp), 'taxable' => false];
+            }
+        }
         // Amounts other modules recover (DeductionSource: an expense advance not spent).
         foreach ($facts['deductions'] ?? [] as $deduction) {
             $lines[] = ['kind' => 'deduction', 'code' => $deduction['code'], 'name' => $deduction['name'], 'amount' => (int) $deduction['amount'], 'taxable' => false, 'posting_key' => $deduction['posting_key'] ?? null];
@@ -116,7 +129,7 @@ final class PayCalculator
         $deductions = array_sum(array_map(fn (array $line) => $line['kind'] === 'deduction' ? $line['amount'] : 0, $lines));
         $taxable = array_sum(array_map(fn (array $line) => $line['taxable'] ? $line['amount'] : 0, $lines));
 
-        $tax = self::monthlyTax($taxable, $rules['tax_slabs']);
+        $tax = self::monthlyTax($taxable, $rules['tax_slabs']) + ($arrearsTaxable > 0 ? self::bonusTax($taxable, $arrearsTaxable, $rules['tax_slabs']) : 0);
         if ($tax > 0) {
             $lines[] = ['kind' => 'tax', 'code' => 'TAX', 'name' => ['en' => 'Income tax at source', 'bn' => 'উৎসে আয়কর'], 'amount' => $tax, 'taxable' => false];
         }

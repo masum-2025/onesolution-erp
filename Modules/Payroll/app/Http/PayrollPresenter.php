@@ -203,7 +203,7 @@ class PayrollPresenter
         return [
             'id' => $round->getKey(), 'title' => $round->title, 'titles' => $round->texts('title'), 'cycle_id' => $round->cycle_id,
             'effective_from' => $round->effective_from->toDateString(), 'status' => $round->status, 'currency' => $round->currency_code,
-            'employees' => $round->employees, 'current_minor' => $round->current_minor, 'new_minor' => $round->new_minor,
+            'employees' => $round->employees, 'current_minor' => $round->current_minor, 'new_minor' => $round->new_minor, 'arrears_minor' => $round->arrears_minor,
             'reject_reason' => $round->reject_reason, 'submitted_at' => $round->submitted_at?->toIso8601String(),
             'approved_at' => $round->approved_at?->toIso8601String(), 'applied_at' => $round->applied_at?->toIso8601String(), 'version' => $round->version,
             ...($approvals === null ? [] : ['approvals' => $approvals, 'approvals_needed' => $needed]),
@@ -217,7 +217,7 @@ class PayrollPresenter
     public function incrementLine(IncrementLine $line): array
     {
         return $line->only(['id', 'employee_id', 'employee_code', 'employee_name', 'unit_id', 'current_minor', 'score', 'band', 'rate_bp', 'rate_source',
-            'new_minor', 'reason', 'excluded', 'applied_salary_id', 'problem']);
+            'new_minor', 'arrears_minor', 'reason', 'excluded', 'applied_salary_id', 'problem']);
     }
 
     public function bonusLine(BonusLine $line, ?BonusRun $bonus = null): array

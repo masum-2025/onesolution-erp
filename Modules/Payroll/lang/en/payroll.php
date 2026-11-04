@@ -28,6 +28,7 @@ return [
         'bonus_not_found' => 'Bonus not found. Reload the list.',
         'increment_not_found' => 'Increment round not found. Reload the list.',
         'increment_month_locked' => 'The payroll of :period or a later month is sent or approved already. Choose a day after the last approved month.',
+        'increment_month_waiting' => 'The payroll of :period is waiting for approval. Approve or send it back first, then apply the round (its arrears need the final pay).',
         'increment_empty' => 'Nobody gets an increment in this round yet. Set rates, or fill it again from the appraisal.',
         'settlement_not_found' => 'Settlement not found. Reload the list.',
         'not_leaving' => 'This employee has no exit day yet. Record the exit in HR first.',
@@ -41,6 +42,7 @@ return [
         'increment_cycle' => 'Choose a finished appraisal cycle of this company, or none.',
         'increment_reason' => 'Say why this rate or amount is set by hand.',
         'increment_below' => 'The new basic cannot be lower than the basic now.',
+        'increment_too_old' => 'An increment can start at most :months months back here (company rule). Choose a later day.',
         'increment_max' => 'No increment above :max% of the basic here (company rule).',
         'code_taken' => 'Another item of this company already has this code.',
         'component' => 'Choose an active component of this company, each once.',
@@ -59,6 +61,7 @@ return [
     // Narration of the journals payroll posts.
     'increments' => [
         'salary_reason' => 'Increment: :title',
+        'arrears_line' => 'Increment arrears (:months)',
     ],
     'narration' => [
         'run' => 'Salaries :period',

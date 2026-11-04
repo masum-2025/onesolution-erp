@@ -44,6 +44,7 @@ class IncrementRound extends Model
             'employees' => 'integer',
             'current_minor' => 'integer',
             'new_minor' => 'integer',
+            'arrears_minor' => 'integer',
             'submitted_at' => 'immutable_datetime',
             'approved_at' => 'immutable_datetime',
             'applied_at' => 'immutable_datetime',

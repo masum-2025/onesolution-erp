@@ -20,11 +20,13 @@ return [
     'increment_rate' => 'Increment rate',
     'increment_effective_from' => 'Increment from',
     'increment_round' => 'Increment round',
+    'increment_arrears' => 'Arrears (months already paid)',
     'sample_increment_previous_basic' => 'BDT 30,030.00',
     'sample_increment_new_basic' => 'BDT 33,000.00',
     'sample_increment_raise' => 'BDT 2,970.00',
     'sample_increment_rate' => '10%',
     'sample_increment_effective_from' => 'January 1, 2027',
     'sample_increment_round' => 'Yearly increment 2027',
+    'sample_increment_arrears' => 'BDT 6,000.00',
     'round_not_applied' => 'Letters can be issued from this round once it is applied.',
 ];

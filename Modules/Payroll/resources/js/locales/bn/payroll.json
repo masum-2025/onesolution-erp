@@ -483,9 +483,12 @@
             "now": "এখনকার মূল বেতন",
             "rate": "হার",
             "new": "নতুন মূল বেতন",
-            "raise": "বৃদ্ধি"
+            "raise": "বৃদ্ধি",
+            "arrears": "বকেয়া"
         },
         "totals": "মাসিক মূল বেতন {from} → {to} (+{raise})",
+        "arrears_total": "আগেই বেতন দেওয়া মাসগুলোর বকেয়া: {amount}",
+        "arrears_status": "দেওয়া হয়েছে {paid}, পরের বেতনের অপেক্ষায় {waiting}",
         "filter_band": "মূল্যায়নের ফল",
         "all_bands": "সব ফল",
         "no_band": "ফল নেই",

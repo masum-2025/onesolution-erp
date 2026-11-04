@@ -128,6 +128,18 @@ return [
         'label' => 'Round new basics to',
         'description' => 'New basics from the bands are rounded to the nearest multiple of this amount (never below the basic now). Empty: not rounded.',
     ],
+    'increment_arrears' => [
+        'label' => 'Increments from a month already paid (arrears)',
+        'description' => 'A round may start in a month whose payroll is already approved; the difference for those months is paid as arrears with the next payroll. Off: such a round is refused.',
+    ],
+    'increment_arrears_max_months' => [
+        'label' => 'Arrears: how many months back',
+        'description' => 'A round may start at most this many months before the current month.',
+    ],
+    'arrears_pf' => [
+        'label' => 'Provident fund on arrears',
+        'description' => 'Take the provident fund (employee and company shares) on the arrears of the basic too, as if the raise had been paid on time. Follow your fund\'s own rules.',
+    ],
     'categories' => [
         'increment' => 'Salary increments',
         'fund' => 'Provident fund',

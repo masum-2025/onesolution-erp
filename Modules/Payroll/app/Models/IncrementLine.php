@@ -37,6 +37,7 @@ class IncrementLine extends Model
             'score' => 'integer',
             'rate_bp' => 'integer',
             'new_minor' => 'integer',
+            'arrears_minor' => 'integer',
             'excluded' => 'boolean',
         ];
     }

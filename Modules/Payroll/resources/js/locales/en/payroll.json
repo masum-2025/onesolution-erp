@@ -483,9 +483,12 @@
             "now": "Basic now",
             "rate": "Rate",
             "new": "New basic",
-            "raise": "Raise"
+            "raise": "Raise",
+            "arrears": "Arrears"
         },
         "totals": "Monthly basics {from} → {to} (+{raise})",
+        "arrears_total": "Arrears for months already paid: {amount}",
+        "arrears_status": "paid {paid}, waiting for the next payroll {waiting}",
         "filter_band": "Band",
         "all_bands": "All bands",
         "no_band": "No band",

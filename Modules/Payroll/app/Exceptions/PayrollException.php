@@ -166,6 +166,12 @@ class PayrollException extends TenancyException
         return new self('increment_month_locked', 409, ['period' => $period]);
     }
 
+    /** A month the round reaches is waiting for approval: its pay is not final, so arrears cannot be worked out yet. */
+    public static function incrementMonthWaiting(string $period): self
+    {
+        return new self('increment_month_waiting', 409, ['period' => $period]);
+    }
+
     public static function incrementEmpty(): self
     {
         return new self('increment_empty', 409);

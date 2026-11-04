@@ -3592,15 +3592,32 @@ through `Modules\Attendance\Services\AttendanceSummary`, the books only through
 - Applying sets each new basic as a salary from the day (`Salaries::assign`, audited one by one as
   `payroll.salary_set`); a line whose salary changed meanwhile, or whose structure was switched
   off, is held with its reason. The people with a login get `payroll.salary_revised` without any
-  amount. A month whose payroll (or a later one) is sent or approved cannot be a round's day: no
-  arrears in this step.
+  amount. With arrears off (below), a month whose payroll (or a later one) is sent or approved
+  cannot be a round's day.
+- **Arrears (PAY-5)**: rule `payroll.increment_arrears` (default on) lets a round start in a month
+  already paid, at most `payroll.increment_arrears_max_months` (12) back. `Services/Arrears`
+  works out each paid month (approved or paid runs) from that payslip's own facts (days employed,
+  absences, half days, leave without pay) at the old and the new basic, structure earnings only
+  (no over time, cuts or one-off lines); a first month started mid-way counts from the day. Each
+  line shows `arrears_minor` before approval (and the round its total); applying refuses while a
+  reached month waits for approval (`increment_month_waiting`), then plans one row per person and
+  month in `pay_increment_arrears` (amount, taxable part, basic part). The next run's calculation
+  takes the planned rows for months before it (`run_id`) and puts one line per round on the slip
+  ("Increment arrears (Jan 2027 – Feb 2027)", code `ARREARS`); it is taxed as a one-off payment
+  (`PayCalculator::bonusTax` on top of the month's tax, not twelve times), and with
+  `payroll.arrears_pf` (default on) the provident fund (both shares, codes `PF_EMPLOYEE` /
+  `PF_EMPLOYER`, so the fund entry includes them) is taken on its basic part. Approving the run
+  marks them paid; deleting it (or a slip without a salary) gives them back. The round page shows
+  the arrears per line and paid / waiting; letters get `increment.arrears`; the data export has
+  rounds, lines and arrears. Not here yet: arrears of people who left before being paid (final
+  settlement), and over time recalculated on the new basic.
 - Appraisals fills Payroll's `PerformanceSource` contract (tag `payroll.performance_sources`):
   closed cycles, the bands, each finished review's score and band; nothing else leaves it, nothing
   where it is off (rates are then set by hand). Appraisal managers without `payroll.view` see no
   salaries. The bell tells approvers of rounds waiting for them.
 - Screens: `/payroll/increments`, `/payroll/increments/{id}` (table on wide screens, a list on
   phones, filter by band, where each rate comes from, export and print).
-- After deploy: migrate, `rules:sync`, `db:seed --class=RulesSeeder` (BD rounding).
+- After deploy: migrate, `rules:sync`, `db:seed --class=RulesSeeder` (BD rounding); PAY-5: migrate (arrears table, two total columns), `rules:sync` (3 rules).
 
 ### Future expansion (Payroll)
 

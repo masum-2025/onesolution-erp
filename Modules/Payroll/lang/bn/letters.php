@@ -20,11 +20,13 @@ return [
     'increment_rate' => 'বৃদ্ধির হার',
     'increment_effective_from' => 'বৃদ্ধি যে তারিখ থেকে',
     'increment_round' => 'বেতন বৃদ্ধির round',
+    'increment_arrears' => 'বকেয়া (আগেই বেতন দেওয়া মাসগুলোর)',
     'sample_increment_previous_basic' => 'BDT ৩০,০৩০.০০',
     'sample_increment_new_basic' => 'BDT ৩৩,০০০.০০',
     'sample_increment_raise' => 'BDT ২,৯৭০.০০',
     'sample_increment_rate' => '১০%',
     'sample_increment_effective_from' => '১ জানুয়ারি, ২০২৭',
     'sample_increment_round' => 'বার্ষিক বেতন বৃদ্ধি ২০২৭',
+    'sample_increment_arrears' => 'BDT ৬,০০০.০০',
     'round_not_applied' => 'এই round কার্যকর (applied) হওয়ার পরেই এখান থেকে চিঠি দেওয়া যাবে।',
 ];

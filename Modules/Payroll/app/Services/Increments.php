@@ -14,9 +14,9 @@ use Modules\Hrm\Directory\EmployeeDirectory;
 use Modules\Payroll\Contracts\PerformanceSource;
 use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Models\IncrementApproval;
+use Modules\Payroll\Models\IncrementArrear;
 use Modules\Payroll\Models\IncrementLine;
 use Modules\Payroll\Models\IncrementRound;
-use Modules\Payroll\Models\Run;
 
 /**
  * Salary increments, usually after an appraisal cycle.
@@ -29,8 +29,10 @@ use Modules\Payroll\Models\Run;
  * payroll.increment_round_to, never below the basic now). Sent by payroll
  * staff, approved by payroll.salary_approval_levels other people, then
  * applied: each new basic becomes a salary from that day (Salaries::assign,
- * audited one by one), and the people are told without any amount. A month
- * whose payroll (or a later one) is sent or approved cannot be a round's.
+ * audited one by one), and the people are told without any amount. A round
+ * may start in a month already paid (Arrears: rule payroll.increment_arrears,
+ * so many months back): each line shows its arrears before approval, and
+ * applying plans them month by month for the next payroll run to pay.
  */
 class Increments
 {
@@ -42,6 +44,7 @@ class Increments
         private RuleContextFactory $contexts,
         private Notifier $notifier,
         private AuditLogger $audit,
+        private Arrears $arrears,
     ) {}
 
     /**
@@ -68,7 +71,7 @@ class Increments
     public function open(Organization $company, array $data, User $actor): IncrementRound
     {
         $from = CarbonImmutable::parse($data['effective_from'], 'UTC');
-        $this->openMonth($company, $from);
+        $this->arrears->checkDay($company, $from);
         $cycle = $data['cycle_id'] ?? null;
         if ($cycle !== null && ! collect($this->sources($company)['cycles'])->contains('id', $cycle)) {
             throw ValidationException::withMessages(['cycle_id' => __('payroll::payroll.validation.increment_cycle')]);
@@ -138,6 +141,7 @@ class Increments
                 $this->work($company, $line);
             }
             $line->save();
+            $this->previewArrears($company, $round, $line);
             $this->totals($company, $round);
             $round->forceFill(['version' => $round->version + 1])->save();
             $this->audit->record('payroll.increment_line_changed', $round, old: $old,
@@ -151,7 +155,7 @@ class Increments
     {
         return $this->payrolls->transaction($company, function () use ($company, $round, $baseVersion, $actor) {
             $round = $this->draft($company, $round, $baseVersion);
-            $this->openMonth($company, $round->effective_from);
+            $this->arrears->checkDay($company, $round->effective_from);
             if ($round->employees === 0) {
                 throw PayrollException::incrementEmpty();
             }
@@ -212,9 +216,13 @@ class Increments
             if ($round->status !== IncrementRound::APPROVED) {
                 throw PayrollException::notApproved();
             }
-            $this->openMonth($company, $round->effective_from);
+            $this->arrears->checkDay($company, $round->effective_from, applying: true);
             $title = $round->textIn('title');
             $applied = 0;
+            // Months already paid: their arrears are worked out again now (the pay is final) and planned.
+            $paidRuns = $this->arrears->paidRuns($company, $round);
+            $components = $this->arrears->components($company);
+            $planned = 0;
             foreach ($this->payrolls->query(IncrementLine::class, $company)->where('round_id', $round->getKey())->where('excluded', false)->orderBy('employee_name')->get() as $line) {
                 if ($line->new_minor <= $line->current_minor) {
                     continue;
@@ -226,6 +234,7 @@ class Increments
 
                     continue;
                 }
+                $months = $this->arrears->forLine($company, $round, $line, $paidRuns, $components);
                 try {
                     $salary = $this->salaries->assign($company, $employee, [
                         'structure_id' => (string) $line->structure_id, 'basic_minor' => $line->new_minor, 'effective_from' => $round->effective_from->toDateString(),
@@ -237,11 +246,18 @@ class Increments
 
                     continue;
                 }
-                $line->forceFill(['applied_salary_id' => $salary->getKey(), 'problem' => null])->save();
+                foreach ($months as $month) {
+                    (new IncrementArrear)->fill([
+                        ...$month, 'organization_id' => $company->getKey(), 'round_id' => $round->getKey(), 'line_id' => $line->getKey(),
+                        'employee_id' => $line->employee_id, 'unit_id' => $line->unit_id, 'currency_code' => $round->currency_code, 'status' => IncrementArrear::PLANNED,
+                    ])->save();
+                }
+                $line->forceFill(['applied_salary_id' => $salary->getKey(), 'problem' => null, 'arrears_minor' => array_sum(array_column($months, 'amount_minor'))])->save();
+                $planned += array_sum(array_column($months, 'amount_minor'));
                 $applied++;
             }
-            $round->forceFill(['status' => IncrementRound::APPLIED, 'applied_by' => $actor->getKey(), 'applied_at' => now(), 'version' => $round->version + 1])->save();
-            $this->audit->record('payroll.increment_applied', $round, new: [...$this->values($round), 'applied' => $applied], actor: $actor, organizationId: $company->getKey());
+            $round->forceFill(['status' => IncrementRound::APPLIED, 'applied_by' => $actor->getKey(), 'applied_at' => now(), 'arrears_minor' => $planned, 'version' => $round->version + 1])->save();
+            $this->audit->record('payroll.increment_applied', $round, new: [...$this->values($round), 'applied' => $applied, 'arrears_minor' => $planned], actor: $actor, organizationId: $company->getKey());
 
             return $round;
         });
@@ -308,7 +324,22 @@ class Increments
             }
             $line->save();
         }
+        $this->previewArrears($company, $round);
         $this->totals($company, $round);
+    }
+
+    /** Each line's arrears for months already paid, shown before approval (worked out again when applied). */
+    private function previewArrears(Organization $company, IncrementRound $round, ?IncrementLine $only = null): void
+    {
+        $runs = $this->arrears->paidRuns($company, $round);
+        $components = $runs->isEmpty() ? collect() : $this->arrears->components($company);
+        $lines = $only !== null ? [$only] : $this->payrolls->query(IncrementLine::class, $company)->where('round_id', $round->getKey())->get();
+        foreach ($lines as $line) {
+            $amount = array_sum(array_column($this->arrears->forLine($company, $round, $line, $runs, $components), 'amount_minor'));
+            if ($amount !== $line->arrears_minor) {
+                $line->forceFill(['arrears_minor' => $amount])->save();
+            }
+        }
     }
 
     /** A line on the rule: the band's rate (capped), the new basic rounded, never below the basic now. */
@@ -387,22 +418,13 @@ class Increments
     private function totals(Organization $company, IncrementRound $round): void
     {
         $raised = $this->payrolls->query(IncrementLine::class, $company)->where('round_id', $round->getKey())->where('excluded', false)
-            ->whereColumn('new_minor', '>', 'current_minor')->get(['current_minor', 'new_minor']);
+            ->whereColumn('new_minor', '>', 'current_minor')->get(['current_minor', 'new_minor', 'arrears_minor']);
         $round->forceFill([
             'employees' => $raised->count(),
             'current_minor' => (int) $raised->sum('current_minor'),
             'new_minor' => (int) $raised->sum('new_minor'),
+            'arrears_minor' => (int) $raised->sum('arrears_minor'),
         ])->save();
-    }
-
-    /** Applying would change a month whose payroll (or a later one) is sent or approved: refused. */
-    private function openMonth(Organization $company, CarbonImmutable $from): void
-    {
-        $period = $from->format('Y-m');
-        $closed = $this->payrolls->query(Run::class, $company)->where('period', '>=', $period)->where('status', '!=', Run::DRAFT)->exists();
-        if ($closed) {
-            throw PayrollException::incrementMonthLocked($period);
-        }
     }
 
     /** The people raised, told by mail that their pay changed from the day (no amount: they see it on their payslips). */

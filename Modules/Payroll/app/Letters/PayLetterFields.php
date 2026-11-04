@@ -31,7 +31,7 @@ class PayLetterFields implements LetterFieldSource
 {
     private const FIELDS = ['basic', 'gross', 'gross_yearly', 'effective_from'];
 
-    private const INCREMENT_FIELDS = ['previous_basic', 'new_basic', 'raise', 'rate', 'effective_from', 'round'];
+    private const INCREMENT_FIELDS = ['previous_basic', 'new_basic', 'raise', 'rate', 'effective_from', 'round', 'arrears'];
 
     public function __construct(private ModuleResolver $modules, private Payrolls $payrolls) {}
 
@@ -124,6 +124,8 @@ class PayLetterFields implements LetterFieldSource
                     'increment.raise' => MoneyText::format($line->new_minor - $line->current_minor, $round->currency_code, $locale),
                     'increment.rate' => self::percent($line->rate_bp, $locale),
                     'increment.effective_from' => $round->effective_from->locale($locale)->isoFormat('LL'),
+                    // Arrears for months already paid (planned or paid with a later run); none is shown as zero.
+                    'increment.arrears' => MoneyText::format($line->arrears_minor, $round->currency_code, $locale),
                 ];
             }
         }

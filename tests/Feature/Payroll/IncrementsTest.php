@@ -147,7 +147,8 @@ it('lets payroll staff set a rate or amount by hand, with a reason and within th
 });
 
 it('keeps months already sent or approved closed, and holds a line whose salary changed meanwhile', function () {
-    // November is approved: a round from November cannot open.
+    // Without arrears (rule payroll.increment_arrears off): November is sent, so a round from November cannot open.
+    trustedOrgRule($this->w->c1, 'payroll.increment_arrears', false);
     $run = $this->asToken($this->runner)->postJson(($this->api)('runs'), ['period' => '2026-11'])->assertCreated()->json('data');
     $run = $this->asToken($this->runner)->postJson(($this->api)("runs/{$run['id']}/calculate"), ['base_version' => $run['version']])->assertOk()->json('data');
     $run = $this->asToken($this->runner)->postJson(($this->api)("runs/{$run['id']}/submit"), ['base_version' => $run['version']])->assertOk()->json('data');

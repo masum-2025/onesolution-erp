@@ -4,6 +4,7 @@ namespace Modules\Payroll\Services;
 
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
+use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
@@ -22,6 +23,7 @@ use Modules\Payroll\Events\PayrollApproved;
 use Modules\Payroll\Exceptions\PayrollException;
 use Modules\Payroll\Models\Adjustment;
 use Modules\Payroll\Models\Component;
+use Modules\Payroll\Models\IncrementArrear;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\LoanInstallment;
 use Modules\Payroll\Models\PfEntry;
@@ -105,9 +107,13 @@ class Runs
             $earnings = $this->earnings($company, $ids, $run);
             $paidDays = $this->daysToPay($company, $ids, $run);
             $deductions = $this->deductions($company, $ids, $run);
+            $arrears = $this->takeArrears($company, $run, $ids);
             foreach ($employees as $employee) {
-                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components, $earnings[$employee->id] ?? [], $paidDays[$employee->id] ?? [], $deductions[$employee->id] ?? []);
+                $this->writeSlip($company, $run, $employee, $adjustments->get($employee->id, collect()), $components, $earnings[$employee->id] ?? [], $paidDays[$employee->id] ?? [], $deductions[$employee->id] ?? [], $arrears[$employee->id] ?? []);
             }
+            // Arrears of people whose slip could not be worked out (no salary) wait for a later run.
+            $held = $this->payrolls->query(Slip::class, $company)->where('run_id', $run->getKey())->where('problem', 'no_salary')->pluck('employee_id')->all();
+            $this->payrolls->query(IncrementArrear::class, $company)->where('run_id', $run->getKey())->whereIn('employee_id', $held)->update(['run_id' => null]);
 
             $this->totals($company, $run);
             $run->forceFill(['calculated_at' => now(), 'reject_reason' => null, 'version' => $run->version + 1])->save();
@@ -191,6 +197,9 @@ class Runs
 
             $this->recoverLoans($company, $run);
             $this->contributeToFund($company, $run);
+            // Increment arrears on the run's slips are paid.
+            $this->payrolls->query(IncrementArrear::class, $company)->where('run_id', $run->getKey())->where('status', IncrementArrear::PLANNED)
+                ->update(['status' => IncrementArrear::PAID]);
             $journal = $this->post($company, $run, "payroll-run-{$run->getKey()}", $run->period_to, $this->salaryLines($company, $run), 'run');
             $run->forceFill(['status' => Run::APPROVED, 'approved_at' => now(), 'journal_id' => $journal, 'version' => $run->version + 1])->save();
             $this->audit->record('payroll.run_approved', $run, new: [...$this->values($run), 'journal_id' => $journal], actor: $actor, organizationId: $company->getKey());
@@ -239,6 +248,8 @@ class Runs
             $slips->delete();
             $this->payrolls->query(Adjustment::class, $company)->where('run_id', $run->getKey())->delete();
             $this->plannedOf($company, $run)->delete();
+            // Arrears it was to pay go back to waiting for the next run.
+            $this->payrolls->query(IncrementArrear::class, $company)->where('run_id', $run->getKey())->update(['run_id' => null]);
             $this->audit->record('payroll.run_deleted', $run, old: $this->values($run), actor: $actor, organizationId: $company->getKey());
             $run->delete();
         });
@@ -249,8 +260,9 @@ class Runs
      * @param  Collection<string, Component>  $components
      * @param  list<array{code: string, name: array<string, string>, amount: int, taxable: bool}>  $earnings  From other modules (EarningSource).
      * @param  list<array{code: string, name: array<string, string>, amount: int, posting_key?: string|null}>  $deductions  From other modules (DeductionSource).
+     * @param  list<array{name: array<string, string>, amount: int, taxable: int, pf_base: int}>  $arrears  Increment arrears to pay with this run.
      */
-    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components, array $earnings = [], array $paidDays = [], array $deductions = []): void
+    private function writeSlip(Organization $company, Run $run, EmployeeRecord $employee, Collection $adjustments, Collection $components, array $earnings = [], array $paidDays = [], array $deductions = [], array $arrears = []): void
     {
         $from = $run->period_from->max($employee->joinedOn);
         $to = $employee->exitsOn === null ? $run->period_to : $run->period_to->min($employee->exitsOn);
@@ -287,6 +299,7 @@ class Runs
             'earnings' => $earnings,
             'deductions' => $deductions,
             'paid_days' => $paidDays,
+            'arrears' => $arrears,
             ...($this->pfShares($employee) === null ? [] : ['pf' => $this->pfShares($employee)]),
         ], $this->ruleSet($employee));
 
@@ -300,6 +313,43 @@ class Runs
             $row->putTexts('name', $line['name']);
             $row->save();
         }
+    }
+
+    /**
+     * Increment arrears this run pays: those waiting (or already taken by it)
+     * for months before it, for its people, one line per round naming the
+     * months. Provident fund on their basic part when payroll.arrears_pf says so.
+     *
+     * @param  list<string>  $employeeIds
+     * @return array<string, list<array{name: array<string, string>, amount: int, taxable: int, pf_base: int}>>
+     */
+    private function takeArrears(Organization $company, Run $run, array $employeeIds): array
+    {
+        $rows = fn () => $this->payrolls->query(IncrementArrear::class, $company)->where('status', IncrementArrear::PLANNED);
+        $rows()->where('run_id', $run->getKey())->update(['run_id' => null]);
+        $rows()->whereNull('run_id')->whereIn('employee_id', $employeeIds)->where('period', '<', $run->period)->update(['run_id' => $run->getKey()]);
+        $taken = $rows()->where('run_id', $run->getKey())->orderBy('period')->get();
+        if ($taken->isEmpty()) {
+            return [];
+        }
+        $withPf = (bool) $this->rules->get('payroll.arrears_pf', $this->contexts->forOrganization($company));
+        $month = fn (string $period, string $locale) => CarbonImmutable::createFromFormat('!Y-m', $period, 'UTC')->locale($locale)->isoFormat('MMM YYYY');
+
+        $all = [];
+        foreach ($taken->groupBy(fn (IncrementArrear $row) => "{$row->employee_id}|{$row->round_id}") as $group) {
+            $first = $group->first()->period;
+            $last = $group->last()->period;
+            $all[$group->first()->employee_id][] = [
+                'name' => collect(LanguageRegistry::codes())->mapWithKeys(fn (string $locale) => [$locale => __('payroll::payroll.increments.arrears_line', [
+                    'months' => $first === $last ? $month($first, $locale) : $month($first, $locale).' – '.$month($last, $locale),
+                ], $locale)])->all(),
+                'amount' => (int) $group->sum('amount_minor'),
+                'taxable' => (int) $group->sum('taxable_minor'),
+                'pf_base' => $withPf ? (int) $group->sum('pf_base_minor') : 0,
+            ];
+        }
+
+        return $all;
     }
 
     /**

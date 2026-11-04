@@ -10,6 +10,9 @@ use Modules\Payroll\Models\Adjustment;
 use Modules\Payroll\Models\BonusLine;
 use Modules\Payroll\Models\BonusRun;
 use Modules\Payroll\Models\Component;
+use Modules\Payroll\Models\IncrementArrear;
+use Modules\Payroll\Models\IncrementLine;
+use Modules\Payroll\Models\IncrementRound;
 use Modules\Payroll\Models\Loan;
 use Modules\Payroll\Models\LoanInstallment;
 use Modules\Payroll\Models\PaymentDetail;
@@ -101,6 +104,20 @@ class PayrollExporter implements ExportsModuleData
                 'bonus_run_id' => $row->bonus_run_id, 'employee_id' => $row->employee_id, 'employee_code' => $row->employee_code,
                 'employee_name' => $row->employee_name, 'basic_minor' => $row->basic_minor, 'service_months' => $row->service_months,
                 'not_paid_reason' => $row->not_paid_reason, 'gross_minor' => $row->gross_minor, 'tax_minor' => $row->tax_minor, 'net_minor' => $row->net_minor,
+            ]),
+            'increment_rounds' => $this->rows(IncrementRound::class, $organization, $organizationIds, fn (IncrementRound $row) => [
+                'id' => $row->getKey(), 'title' => json_encode($row->texts('title'), JSON_UNESCAPED_UNICODE), 'effective_from' => $row->effective_from->toDateString(),
+                'status' => $row->status, 'currency_code' => $row->currency_code, 'employees' => $row->employees, 'current_minor' => $row->current_minor,
+                'new_minor' => $row->new_minor, 'arrears_minor' => $row->arrears_minor, 'applied_at' => $row->applied_at?->toIso8601String(),
+            ]),
+            'increment_lines' => $this->rows(IncrementLine::class, $organization, $organizationIds, fn (IncrementLine $row) => [
+                'round_id' => $row->round_id, 'employee_id' => $row->employee_id, 'employee_code' => $row->employee_code, 'employee_name' => $row->employee_name,
+                'current_minor' => $row->current_minor, 'rate_bp' => $row->rate_bp, 'rate_source' => $row->rate_source, 'new_minor' => $row->new_minor,
+                'arrears_minor' => $row->arrears_minor, 'reason' => $row->reason, 'excluded' => $row->excluded, 'problem' => $row->problem,
+            ]),
+            'increment_arrears' => $this->rows(IncrementArrear::class, $organization, $organizationIds, fn (IncrementArrear $row) => [
+                'round_id' => $row->round_id, 'employee_id' => $row->employee_id, 'period' => $row->period, 'previous_minor' => $row->previous_minor,
+                'new_minor' => $row->new_minor, 'amount_minor' => $row->amount_minor, 'currency_code' => $row->currency_code, 'status' => $row->status, 'run_id' => $row->run_id,
             ]),
             'pf_entries' => $this->rows(PfEntry::class, $organization, $organizationIds, fn (PfEntry $row) => [
                 'employee_id' => $row->employee_id, 'kind' => $row->kind, 'period' => $row->period, 'employee_minor' => $row->employee_minor,

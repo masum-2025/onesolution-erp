@@ -306,6 +306,40 @@ return [
             'sort_order' => 82,
         ],
         [
+            'key' => 'payroll.increment_arrears',
+            'type' => 'boolean',
+            // A round may start in a month already paid: the difference for those months is paid as arrears with the next payroll.
+            'default' => true,
+            'label' => 'payroll::rules.increment_arrears.label',
+            'description' => 'payroll::rules.increment_arrears.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'increment',
+            'sort_order' => 83,
+        ],
+        [
+            'key' => 'payroll.increment_arrears_max_months',
+            'type' => 'integer',
+            // How many months back a round may start (from this month).
+            'schema' => ['minimum' => 1, 'maximum' => 36],
+            'default' => 12,
+            'label' => 'payroll::rules.increment_arrears_max_months.label',
+            'description' => 'payroll::rules.increment_arrears_max_months.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'increment',
+            'sort_order' => 84,
+        ],
+        [
+            'key' => 'payroll.arrears_pf',
+            'type' => 'boolean',
+            // Provident fund on arrears of the basic, both shares (as the fund's own rules say).
+            'default' => true,
+            'label' => 'payroll::rules.arrears_pf.label',
+            'description' => 'payroll::rules.arrears_pf.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company'],
+            'category' => 'increment',
+            'sort_order' => 85,
+        ],
+        [
             'key' => 'payroll.bonus_taxable',
             'type' => 'boolean',
             'default' => true,

@@ -11,6 +11,7 @@ use Modules\Payroll\Http\Controllers\Concerns\FindsPayroll;
 use Modules\Payroll\Http\PayrollPresenter;
 use Modules\Payroll\Http\Requests\IncrementRequest;
 use Modules\Payroll\Models\IncrementApproval;
+use Modules\Payroll\Models\IncrementArrear;
 use Modules\Payroll\Models\IncrementLine;
 use Modules\Payroll\Models\IncrementRound;
 use Modules\Payroll\Services\Increments;
@@ -75,6 +76,12 @@ class IncrementController extends Controller
             'lines' => $this->payrolls->query(IncrementLine::class, $company)->where('round_id', $found->getKey())->orderBy('employee_name')->get()
                 ->map(fn (IncrementLine $line) => $this->presenter->incrementLine($line))->values(),
             'bands' => $this->increments->sources($company)['bands'],
+            // Arrears planned when applied: how much is paid and how much still waits for a run.
+            'arrears' => [
+                'paid_minor' => (int) $this->payrolls->query(IncrementArrear::class, $company)->where('round_id', $found->getKey())->where('status', IncrementArrear::PAID)->sum('amount_minor'),
+                'waiting_minor' => (int) $this->payrolls->query(IncrementArrear::class, $company)->where('round_id', $found->getKey())->where('status', IncrementArrear::PLANNED)->sum('amount_minor'),
+                'months' => $this->payrolls->query(IncrementArrear::class, $company)->where('round_id', $found->getKey())->distinct()->orderBy('period')->pluck('period')->values(),
+            ],
         ]]);
     }
 
