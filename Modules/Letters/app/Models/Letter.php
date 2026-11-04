@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * reason, never deleted.
  */
 #[Fillable(['organization_id', 'unit_id', 'employee_id', 'employee_code', 'employee_name', 'template_id', 'template_version', 'kind', 'number',
-    'locale', 'title', 'content', 'uses_salary', 'shared', 'issued_by', 'issued_at', 'op_id'])]
+    'locale', 'title', 'content', 'uses_salary', 'shared', 'issued_by', 'issued_at', 'op_id', 'source_type', 'source_id'])]
 class Letter extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;

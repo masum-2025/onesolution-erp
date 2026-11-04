@@ -21,6 +21,7 @@ use Modules\Letters\Models\Letter;
 use Modules\Letters\Services\LetterFields;
 use Modules\Letters\Services\Letters;
 use Modules\Letters\Services\Place;
+use Modules\Letters\Services\Sources;
 
 /**
  * Letters of the people of a unit (and below it): listed with
@@ -41,6 +42,7 @@ class LetterController extends Controller
         private LetterFields $fields,
         private EmployeeDirectory $directory,
         private LettersPresenter $presenter,
+        private Sources $sources,
     ) {}
 
     public function index(Request $request, string $organization): JsonResponse
@@ -116,6 +118,27 @@ class LetterController extends Controller
             ->map(fn (EmployeeRecord $employee) => ['id' => $employee->id, 'code' => $employee->code, 'name' => $employee->name]);
 
         return response()->json(['data' => $people->values()]);
+    }
+
+    /**
+     * Who letters from another module's record are for (an applied increment
+     * round): its title, the letter kind it suits, and its people working in
+     * the unit or below, each with whether they already have a letter from it.
+     */
+    public function source(string $organization, string $type, string $id): JsonResponse
+    {
+        [$unit, $company] = $this->place($organization);
+        Gate::authorize('letters.issue', $unit);
+        $found = $this->sources->people($company, $type, $id, app()->getLocale());
+        $units = $this->place->subtreeIds($unit);
+        $issued = $this->place->query(Letter::class, $company)->where('source_type', $type)->where('source_id', $id)->whereNull('revoked_at')
+            ->pluck('employee_id')->map(fn ($employee) => (string) $employee)->flip();
+        $people = collect($this->directory->many($company, $found['employee_ids']))
+            ->filter(fn (EmployeeRecord $employee) => in_array($employee->unitId, $units, true))
+            ->sortBy('name')
+            ->map(fn (EmployeeRecord $employee) => ['id' => $employee->id, 'code' => $employee->code, 'name' => $employee->name, 'issued' => $issued->has($employee->id)]);
+
+        return response()->json(['data' => ['type' => $type, 'id' => $id, 'title' => $found['title'], 'kind' => $found['kind'], 'people' => $people->values()]]);
     }
 
     /** One's own letters (shared with them, not revoked), where the company lets employees see them. */

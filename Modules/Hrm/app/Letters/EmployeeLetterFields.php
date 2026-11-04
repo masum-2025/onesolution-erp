@@ -43,7 +43,7 @@ class EmployeeLetterFields implements LetterFieldSource
         ]];
     }
 
-    public function values(Organization $company, array $employeeIds, string $locale): array
+    public function values(Organization $company, array $employeeIds, string $locale, array $context = []): array
     {
         if ($employeeIds === [] || ! $this->modules->isEnabled('hrm', $company)) {
             return [];

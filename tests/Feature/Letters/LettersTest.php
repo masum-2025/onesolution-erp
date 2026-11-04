@@ -63,7 +63,7 @@ beforeEach(function () {
 it('adds a ready-made design, issues numbered letters to several people and keeps them as issued', function () {
     $options = $this->asToken($this->hr)->getJson(($this->api)('options'))->assertOk()->json('data');
     expect(collect($options['presets'])->pluck('key'))->toContain('confirmation', 'increment', 'experience')
-        ->and(collect($options['fields'])->pluck('group')->all())->toBe(['letter', 'employee', 'pay']);
+        ->and(collect($options['fields'])->pluck('group')->all())->toBe(['letter', 'employee', 'pay', 'increment']);
 
     $template = ($this->preset)('confirmation')->assertCreated()->json('data');
     expect($template)->toMatchArray(['status' => 'draft', 'code' => 'CNF', 'kind' => 'confirmation', 'uses_salary' => false])
@@ -142,7 +142,7 @@ it('refuses fields it does not know and names the people who lack a value', func
 
 it('keeps salary to people allowed to use it and to companies that allow it', function () {
     $options = $this->asToken($this->clerk)->getJson(($this->api)('options'))->assertOk()->json('data');
-    expect(collect($options['fields'])->pluck('group')->all())->not->toContain('pay')
+    expect(collect($options['fields'])->pluck('group')->all())->not->toContain('pay')->not->toContain('increment')
         ->and($options['salary'])->toBe(['enabled' => true, 'allowed' => false]);
     ($this->preset)('salary_certificate', $this->clerk)->assertForbidden()->assertJsonPath('code', 'salary_not_allowed');
 
@@ -163,7 +163,7 @@ it('keeps salary to people allowed to use it and to companies that allow it', fu
     // Switched off for the company: no salary letters at all.
     trustedOrgRule($this->w->c1, 'letters.salary_fields_enabled', false);
     ($this->issue)($template, [$this->rahima], ['inputs' => ['purpose' => 'a visa']])->assertForbidden()->assertJsonPath('code', 'salary_off');
-    expect(collect($this->asToken($this->hr)->getJson(($this->api)('options'))->json('data.fields'))->pluck('group')->all())->not->toContain('pay');
+    expect(collect($this->asToken($this->hr)->getJson(($this->api)('options'))->json('data.fields'))->pluck('group')->all())->not->toContain('pay')->not->toContain('increment');
 });
 
 it('revokes with a reason and keeps letters to the unit, the company and the module being on', function () {

@@ -24,10 +24,13 @@ interface LetterFieldSource
 
     /**
      * Each employee's values in the language: text, or rows for a table
-     * field. A field the employee has no value for is left out.
+     * field. A field the employee has no value for is left out. The context
+     * names the record the letters are issued from (LetterSource: type, id),
+     * if any, so a source can fill fields from it.
      *
      * @param  list<string>  $employeeIds
+     * @param  array{type?: string, id?: string}  $context
      * @return array<string, array<string, string|list<array{0: string, 1: string}>>>
      */
-    public function values(Organization $company, array $employeeIds, string $locale): array;
+    public function values(Organization $company, array $employeeIds, string $locale, array $context = []): array;
 }

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, Ban, Check, PenLine, RefreshCw, Send, TrendingUp, Undo2, X } from 'lucide-vue-next';
+import { ArrowLeft, Ban, Check, Mail, PenLine, RefreshCw, Send, TrendingUp, Undo2, X } from 'lucide-vue-next';
 import { MoneyInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -14,7 +14,7 @@ import { useResource } from '@/lib/useResource';
 import { confirmAction } from '@/lib/dialogs';
 import { textIn } from '@/lib/texts';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
-import { currentOrganization } from '@/lib/session';
+import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { payrollApi } from '../api';
@@ -144,6 +144,15 @@ async function saveLine(back = false) {
             <AppButton v-if="round.can?.reject" :icon="Undo2" @click="confirmStep('reject')">{{ t('payroll.increments.steps.reject') }}</AppButton>
             <AppButton v-if="round.can?.apply" variant="primary" :icon="TrendingUp" :loading="busy === 'apply'" @click="confirmStep('apply')">{{ t('payroll.increments.steps.apply') }}</AppButton>
             <AppButton v-if="round.can?.cancel" variant="ghost" :icon="Ban" @click="confirmStep('cancel')">{{ t('payroll.increments.steps.cancel') }}</AppButton>
+            <!-- Applied: increment letters to the people raised (the Letters module, when it is on and the person may issue). -->
+            <AppButton
+                v-if="round.status === 'applied' && can('letters.issue')"
+                variant="primary"
+                :icon="Mail"
+                :to="{ path: '/letters', query: { source: 'payroll.increment_round', id: round.id } }"
+            >
+                {{ t('payroll.increments.letters') }}
+            </AppButton>
         </template>
 
         <template v-if="round">

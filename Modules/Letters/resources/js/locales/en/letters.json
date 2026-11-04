@@ -82,6 +82,13 @@
         "send_other": "Issue {count} letters",
         "done_one": "{count} letter issued.",
         "done_other": "{count} letters issued.",
+        "from": "From {title}",
+        "from_people_one": "{count} person",
+        "from_people_other": "{count} people",
+        "already_one": "{count} already has a letter from it (not chosen)",
+        "already_other": "{count} already have a letter from it (not chosen)",
+        "has_one": "Has one",
+        "source_failed": "Could not open what these letters are issued from.",
         "no_active": "There is no active design yet. Open Letter designs, add one and make it active."
     },
     "letter": {

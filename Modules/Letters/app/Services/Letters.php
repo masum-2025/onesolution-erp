@@ -33,6 +33,9 @@ use Modules\Letters\Models\LetterTemplate;
  *   letters and by people with letters.salary.
  * - The same op_id (a retry, an offline send) gives the letters already
  *   issued instead of new ones.
+ * - Issued from another module's record (LetterSource, e.g. an increment
+ *   round): only its people, its values in the fields, and the record kept
+ *   on each letter.
  * - Employees whose letter is shared with them are told by mail (no
  *   content in the mail) and see it in the app or the portal.
  */
@@ -49,10 +52,11 @@ class Letters
         private RuleContextFactory $contexts,
         private Notifier $notifier,
         private AuditLogger $audit,
+        private Sources $sources,
     ) {}
 
     /**
-     * @param  array{template_id: string, employee_ids: list<string>, locale: string, inputs?: array<string, string|null>, shared?: bool, op_id: string}  $data
+     * @param  array{template_id: string, employee_ids: list<string>, locale: string, inputs?: array<string, string|null>, shared?: bool, op_id: string, source?: array{type: string, id: string}}  $data
      * @return list<Letter>
      */
     public function issue(Organization $unit, Organization $company, array $data, User $actor): array
@@ -74,6 +78,14 @@ class Letters
         $locale = $data['locale'];
         $blocks = $template->bodies[$locale] ?? throw ValidationException::withMessages(['locale' => __('letters::letters.validation.locale')]);
         $employees = $this->employees($unit, $company, $data['employee_ids']);
+        // From another module's record: only its people, and its context to the fields.
+        $source = isset($data['source']) ? ['type' => (string) $data['source']['type'], 'id' => (string) $data['source']['id']] : [];
+        if ($source !== []) {
+            $allowed = $this->sources->people($company, $source['type'], $source['id'], app()->getLocale())['employee_ids'];
+            if (array_diff(array_keys($employees), $allowed) !== []) {
+                throw ValidationException::withMessages(['employee_ids' => __('letters::letters.validation.not_in_source')]);
+            }
+        }
         $inputs = $this->inputs($template, (array) ($data['inputs'] ?? []), $locale);
 
         $used = [];
@@ -86,7 +98,7 @@ class Letters
         }
         $used = array_values(array_unique($used));
 
-        $given = $this->fields->values($company, array_keys($employees), $locale);
+        $given = $this->fields->values($company, array_keys($employees), $locale, $source);
         $today = CarbonImmutable::now('UTC');
         $address = $template->letterhead['address'][$locale] ?? $template->letterhead['address']['en'] ?? null;
         $common = [
@@ -112,7 +124,7 @@ class Letters
         }
 
         $shared = (bool) ($data['shared'] ?? true);
-        $letters = $this->place->transaction($company, function () use ($unit, $company, $template, $employees, $given, $common, $blocks, $locale, $shared, $data, $today, $address, $actor) {
+        $letters = $this->place->transaction($company, function () use ($unit, $company, $template, $employees, $given, $common, $blocks, $locale, $shared, $data, $today, $address, $source, $actor) {
             $letters = [];
             foreach ($employees as $id => $employee) {
                 $number = $this->nextNumber($company, $template->code, (int) $today->format('Y'));
@@ -130,9 +142,10 @@ class Letters
                     ],
                     'uses_salary' => $template->uses_salary, 'shared' => $shared,
                     'issued_by' => $actor->getKey(), 'issued_at' => $today, 'op_id' => $data['op_id'],
+                    'source_type' => $source['type'] ?? null, 'source_id' => $source['id'] ?? null,
                 ]);
                 $letter->save();
-                $this->audit->record('letters.issued', $letter, new: $letter->only(['number', 'kind', 'employee_code', 'locale', 'template_version', 'shared']),
+                $this->audit->record('letters.issued', $letter, new: $letter->only(['number', 'kind', 'employee_code', 'locale', 'template_version', 'shared', 'source_type', 'source_id']),
                     actor: $actor, organizationId: $company->getKey());
                 $letters[] = $letter;
             }
@@ -173,9 +186,10 @@ class Letters
      * What a design would look like for one employee (or with the examples when none), not saved.
      *
      * @param  array<string, string|null>  $inputs
+     * @param  array{type?: string, id?: string}  $source  The record letters would be issued from (its values fill the fields).
      * @return array<string, mixed>
      */
-    public function preview(Organization $unit, Organization $company, LetterTemplate $template, string $locale, ?string $employeeId, array $inputs): array
+    public function preview(Organization $unit, Organization $company, LetterTemplate $template, string $locale, ?string $employeeId, array $inputs, array $source = []): array
     {
         $blocks = $template->bodies[$locale] ?? throw ValidationException::withMessages(['locale' => __('letters::letters.validation.locale')]);
         $values = [];
@@ -186,7 +200,7 @@ class Letters
         }
         if ($employeeId !== null) {
             $employee = $this->employees($unit, $company, [$employeeId])[$employeeId];
-            $values = [...$values, ...($this->fields->values($company, [$employee->id], $locale)[$employee->id] ?? [])];
+            $values = [...$values, ...($this->fields->values($company, [$employee->id], $locale, $source)[$employee->id] ?? [])];
         }
         $address = $template->letterhead['address'][$locale] ?? $template->letterhead['address']['en'] ?? null;
         $values = [...$values, 'company.name' => $company->displayName($locale), 'company.address' => (string) $address,

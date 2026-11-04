@@ -3741,7 +3741,7 @@ difference to review) and a shift open today. Logins `shop.owner@`, `store@`, `c
   number prefixes are data and rules. CRM customers and loyalty, gift cards, card terminals and
   bKash APIs are later steps behind the same payment methods.
 
-## Letters module (LET-1 backend, LET-2 screens)
+## Letters module (LET-1 backend, LET-2 screens, LET-3 letters from increment rounds)
 
 HR letters from designs a company makes or takes ready-made: appointment, joining, confirmation,
 increment, promotion, transfer, warning, experience, release, salary certificate, no objection,
@@ -3798,13 +3798,23 @@ other. Requires HRM; Payroll adds pay fields when it is on. Tables (client datab
   (`LetterPaper`) for preview, print, "my letters" and the portal; marks are parsed into plain
   elements (`lib.js` `segments`), never HTML. Dashboard widget "Letters this month"; designs in
   draft show in the designers' bell. `GET …/letters/options?locale=` gives fields in a letter's language.
+- **From another module's record (LET-3)**: contract `LetterSource` (tag `letters.sources`):
+  `type()`, `people($company, $id, $locale)` → title, kind, employee ids, or `refused` with why.
+  Payroll's `IncrementLetters` (`payroll.increment_round`) gives an applied round's raised people.
+  `GET …/letters/sources/{type}/{id}` (`letters.issue`) lists them with whether each already has a
+  letter from it; `POST …/issued` and the preview take `source {type, id}`: only its people, its
+  context passed to every `LetterFieldSource::values(..., $context)`, kept on the letter
+  (`let_letters.source_type`, `source_id`) and in the audit. Payroll fills `increment.*`
+  (basic before and after, raise, rate, day, round) and takes `pay.*` from the round's day. The
+  round page links to `/letters?source=payroll.increment_round&id=…` (shown when applied and the
+  person may issue letters); the ready-made increment design uses these fields.
 
 ### Future expansion (Letters)
 
 - A new country, sector or partner adds its own designs (or ready-made files) and sets the
   number format; a new language is another body in the same design. A new module adds fields by
-  implementing `LetterFieldSource`. No code change. Next:
-  letters from an increment round (LET-3).
+  implementing `LetterFieldSource`, and a new record to issue from (a promotion, a
+  transfer) by implementing `LetterSource`. No code change.
 
 ## Factory ERP for garments (FAC-1: buyers, styles, BOM, orders)
 

@@ -1,8 +1,8 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { Mail, Plus, Search } from 'lucide-vue-next';
-import { AppBadge, AppButton, EmptyState, ErrorState, PageFrame, SkeletonRows } from '@/ui';
+import { AppBadge, AppButton, EmptyState, ErrorState, PageFrame, SkeletonRows, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
@@ -20,6 +20,7 @@ import IssueDialog from '../components/IssueDialog.vue';
 const org = currentOrganization();
 const letters = lettersApi(org.id);
 const router = useRouter();
+const route = useRoute();
 
 const filters = reactive({ q: '', kind: '', status: '', page: 1 });
 const list = useResource(() => letters.letters({ q: filters.q.trim() || undefined, kind: filters.kind || undefined, status: filters.status || undefined, page: filters.page }));
@@ -44,6 +45,7 @@ const canIssue = computed(() => Boolean(options.data.value?.data?.can?.issue));
 const templates = useResource(() => letters.templates(), { immediate: false });
 const active = computed(() => (templates.data.value?.data ?? []).filter((item) => item.status === 'active'));
 const issuing = ref(false);
+const source = ref(null);
 async function openIssue() {
     await templates.reload();
     issuing.value = true;
@@ -53,6 +55,23 @@ function issued(created) {
     list.reload();
     if (created.length === 1) router.push({ name: 'letters-letter', params: { id: created[0].id } });
 }
+function closeIssue() {
+    issuing.value = false;
+    source.value = null;
+    if (route.query.source) router.replace({ name: 'letters' });
+}
+
+// Reached from another module's record (an applied increment round): its people, its values.
+onMounted(async () => {
+    const { source: type, id } = route.query;
+    if (typeof type !== 'string' || typeof id !== 'string') return;
+    try {
+        source.value = (await letters.source(type, id)).data;
+        await openIssue();
+    } catch (error) {
+        toast.error(error.message || t('letters.issue.source_failed'));
+    }
+});
 
 const day = (iso) => formatDate(iso, { dateStyle: 'medium' });
 
@@ -174,6 +193,13 @@ const exported = computed(() => ({
         </section>
 
         <p v-if="canIssue && templates.data.value && !active.length" class="mt-3 text-[13px] text-muted">{{ t('letters.issue.no_active') }}</p>
-        <IssueDialog :open="issuing && active.length > 0" :templates="active" :max-people="options.data.value?.data?.max_people ?? 200" @close="issuing = false" @issued="issued" />
+        <IssueDialog
+            :open="issuing && active.length > 0"
+            :templates="active"
+            :source="source"
+            :max-people="options.data.value?.data?.max_people ?? 200"
+            @close="closeIssue"
+            @issued="(created) => { closeIssue(); issued(created); }"
+        />
     </PageFrame>
 </template>

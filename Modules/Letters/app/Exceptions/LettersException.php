@@ -56,6 +56,17 @@ class LettersException extends TenancyException
         return new self('missing_values', 422, ['people' => $people]);
     }
 
+    public static function sourceNotFound(): self
+    {
+        return new self('source_not_found', 404);
+    }
+
+    /** The record cannot give letters yet: why, in its module's words. */
+    public static function sourceRefused(string $why): self
+    {
+        return new self('source_refused', 409, ['why' => $why]);
+    }
+
     public static function alreadyRevoked(): self
     {
         return new self('already_revoked', 409);

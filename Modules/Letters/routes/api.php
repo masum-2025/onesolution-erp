@@ -19,6 +19,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:hrm', 'module:letters'])
         Route::get('templates/{template}', [TemplateController::class, 'show']);
         Route::get('assets', [TemplateController::class, 'assets']);
         Route::get('employees', [LetterController::class, 'employees']);
+        Route::get('sources/{type}/{id}', [LetterController::class, 'source']);
         Route::get('issued', [LetterController::class, 'index']);
         Route::get('issued/{letter}', [LetterController::class, 'show']);
         Route::get('me', [LetterController::class, 'mine']);

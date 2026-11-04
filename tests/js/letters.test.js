@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    blockSummary, defaultLocale, fillSample, insertField, keyFrom, lines, missingAnswers, newBlock, placeholdersOf, segments, unknownPlaceholders, wrapMark,
+    blockSummary, defaultLocale, fillSample, firstChosen, insertField, offeredDesigns, keyFrom, lines, missingAnswers, newBlock, placeholdersOf, segments, unknownPlaceholders, wrapMark,
 } from '../../Modules/Letters/resources/js/lib.js';
 import { moduleRoutes } from '../../resources/js/modules.js';
 import en from '../../Modules/Letters/resources/js/locales/en/letters.json';
@@ -78,5 +78,24 @@ describe('Letters screens', () => {
         expect(missingAnswers(inputs, { when: '2027-01-01' })).toEqual([]);
         expect(defaultLocale(['en', 'bn'], 'bn')).toBe('bn');
         expect(defaultLocale(['en'], 'bn')).toBe('en');
+    });
+});
+
+describe('Letters from a source (an increment round)', () => {
+    it('chooses the people without a letter from it and offers the designs of its kind', () => {
+        const people = [{ id: 'a', issued: true }, { id: 'b', issued: false }, { id: 'c', issued: false }];
+        expect(firstChosen(people, 200).map((person) => person.id)).toEqual(['b', 'c']);
+        expect(firstChosen(people, 1).map((person) => person.id)).toEqual(['b']);
+        const designs = [{ id: 1, kind: 'increment' }, { id: 2, kind: 'warning' }];
+        expect(offeredDesigns(designs, 'increment').map((item) => item.id)).toEqual([1]);
+        expect(offeredDesigns(designs, 'promotion').map((item) => item.id)).toEqual([1, 2]);
+        expect(offeredDesigns(designs, undefined).map((item) => item.id)).toEqual([1, 2]);
+    });
+
+    it('has the source texts in both languages', () => {
+        for (const key of ['issue.from', 'issue.from_people_one', 'issue.already_other', 'issue.has_one']) {
+            expect(keys(en)).toContain(key);
+            expect(keys(bn)).toContain(key);
+        }
     });
 });

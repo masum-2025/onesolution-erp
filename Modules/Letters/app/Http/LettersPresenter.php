@@ -74,6 +74,7 @@ class LettersPresenter
             'employee' => ['id' => $letter->employee_id, 'code' => $letter->employee_code, 'name' => $letter->employee_name],
             'uses_salary' => (bool) $letter->uses_salary,
             'shared' => (bool) $letter->shared,
+            'source' => $letter->source_type === null ? null : ['type' => $letter->source_type, 'id' => $letter->source_id],
             'issued_at' => $letter->issued_at->toIso8601String(),
             'issued_by' => $names[$letter->issued_by] ?? null,
             'revoked' => $letter->revoked_at !== null,

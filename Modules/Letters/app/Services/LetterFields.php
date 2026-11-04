@@ -85,13 +85,14 @@ class LetterFields
      * The values other modules give for these employees in a language.
      *
      * @param  list<string>  $employeeIds
+     * @param  array{type?: string, id?: string}  $context  The record letters are issued from (LetterSource).
      * @return array<string, array<string, string|list<array{0: string, 1: string}>>>
      */
-    public function values(Organization $company, array $employeeIds, string $locale): array
+    public function values(Organization $company, array $employeeIds, string $locale, array $context = []): array
     {
         $values = [];
         foreach ($this->sources() as $source) {
-            foreach ($source->values($company, $employeeIds, $locale) as $employeeId => $fields) {
+            foreach ($source->values($company, $employeeIds, $locale, $context) as $employeeId => $fields) {
                 $values[$employeeId] = [...($values[$employeeId] ?? []), ...$fields];
             }
         }

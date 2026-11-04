@@ -6,7 +6,7 @@ import { currentOrganization } from '@/lib/session';
 import { i18n, t } from '@/lib/i18n';
 import { textIn } from '@/lib/texts';
 import { lettersApi } from '../api';
-import { defaultLocale, missingAnswers } from '../lib';
+import { defaultLocale, firstChosen, missingAnswers, offeredDesigns } from '../lib';
 import LetterPaper from './LetterPaper.vue';
 
 /**
@@ -15,13 +15,20 @@ import LetterPaper from './LetterPaper.vue';
  * people see it; a preview with the first person before sending. One press
  * is one op_id, so pressing again after a dropped connection gives the same
  * letters. If someone lacks a detail the server names them and nothing is issued.
+ * From another module's record (a source such as an applied increment
+ * round): its people only, those without a letter from it chosen already,
+ * designs of the kind it suits first, and its values in the letter.
  */
 const props = defineProps({
     open: Boolean,
     templates: { type: Array, default: () => [] },
     templateId: { type: String, default: '' },
     maxPeople: { type: Number, default: 200 },
+    // { type, id, title, kind, people: [{ id, code, name, issued }] } or null.
+    source: { type: Object, default: null },
 });
+const offered = computed(() => offeredDesigns(props.templates, props.source?.kind));
+const alreadyIssued = computed(() => (props.source?.people ?? []).filter((person) => person.issued).length);
 const emit = defineEmits(['close', 'issued']);
 
 const org = currentOrganization();
@@ -43,8 +50,8 @@ let opId = newOpId();
 
 watch(() => props.open, (open) => {
     if (!open) return;
-    Object.assign(form, { template_id: props.templateId || props.templates[0]?.id || '', shared: true, inputs: {} });
-    people.value = [];
+    Object.assign(form, { template_id: props.templateId || offered.value[0]?.id || '', shared: true, inputs: {} });
+    people.value = firstChosen(props.source?.people ?? [], props.maxPeople);
     errors.value = {};
     problem.value = '';
     preview.value = null;
@@ -68,8 +75,15 @@ watch(() => form.template_id, async (id) => {
 
 let timer = null;
 async function lookUp(value) {
+    const q = value.trim().toLowerCase();
+    if (props.source) {
+        // Only the source's people, searched here.
+        found.value = props.source.people.filter((person) => !q || person.name.toLowerCase().includes(q) || person.code.toLowerCase().includes(q));
+        return;
+    }
     found.value = (await letters.employees(value.trim()).catch(() => ({ data: [] }))).data;
 }
+const sourceRef = computed(() => (props.source ? { type: props.source.type, id: props.source.id } : undefined));
 watch(search, (value) => {
     clearTimeout(timer);
     timer = setTimeout(() => lookUp(value), 250);
@@ -95,7 +109,7 @@ const labelOf = (input) => textIn(input.label);
 async function showPreview() {
     previewing.value = true;
     try {
-        preview.value = (await letters.preview(form.template_id, { employee_id: people.value[0]?.id ?? null, locale: form.locale, inputs: form.inputs })).data;
+        preview.value = (await letters.preview(form.template_id, { employee_id: people.value[0]?.id ?? null, locale: form.locale, inputs: form.inputs, source: sourceRef.value })).data;
     } catch (error) {
         toast.error(error.message);
     } finally {
@@ -110,7 +124,7 @@ async function send() {
     try {
         const { data } = await letters.issue({
             template_id: form.template_id, employee_ids: people.value.map((person) => person.id), locale: form.locale,
-            inputs: form.inputs, shared: form.shared, op_id: opId,
+            inputs: form.inputs, shared: form.shared, op_id: opId, source: sourceRef.value,
         });
         toast.success(t('letters.issue.done', { count: data.length }));
         emit('issued', data);
@@ -129,9 +143,14 @@ async function send() {
 <template>
     <AppDialog :open="open" :title="t('letters.issue.title')" :icon="Send" size="lg" @close="emit('close')">
         <form id="letters-issue" class="grid gap-4" novalidate @submit.prevent="send">
+            <p v-if="source" class="rounded-xl bg-brand-soft px-4 py-3 text-[13px] text-brand-text">
+                <span class="font-semibold">{{ t('letters.issue.from', { title: source.title }) }}</span>
+                · {{ t('letters.issue.from_people', { count: source.people.length }) }}
+                <template v-if="alreadyIssued"> · {{ t('letters.issue.already', { count: alreadyIssued }) }}</template>
+            </p>
             <AppField v-slot="{ id }" :label="t('letters.issue.design')" :error="errors.template_id?.[0]">
                 <select :id="id" v-model="form.template_id" class="field-input">
-                    <option v-for="item in templates" :key="item.id" :value="item.id">{{ textIn(item.name) }}{{ item.uses_salary ? ' · 💰' : '' }}</option>
+                    <option v-for="item in offered" :key="item.id" :value="item.id">{{ textIn(item.name) }}{{ item.uses_salary ? ' · 💰' : '' }}</option>
                 </select>
             </AppField>
 
@@ -156,6 +175,7 @@ async function send() {
                     @click="pick(person)"
                 >
                     <span class="flex-1">{{ person.name }}</span>
+                    <span v-if="person.issued" class="text-[11.5px] text-muted">{{ t('letters.issue.has_one') }}</span>
                     <span class="font-mono text-[12px] text-muted" dir="ltr">{{ person.code }}</span>
                 </button>
             </div>

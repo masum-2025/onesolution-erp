@@ -22,6 +22,7 @@ export function lettersApi(organizationId) {
         updateAsset: (id, body) => api(`${base}/assets/${id}`, { method: 'PATCH', body }),
 
         employees: (q) => api(`${base}/employees`, { query: { q: q || undefined } }),
+        source: (type, id) => api(`${base}/sources/${encodeURIComponent(type)}/${id}`),
         letters: (query = {}) => api(`${base}/issued`, { query }),
         letter: (id) => api(`${base}/issued/${id}`),
         issue: (body) => api(`${base}/issued`, { method: 'POST', body }),

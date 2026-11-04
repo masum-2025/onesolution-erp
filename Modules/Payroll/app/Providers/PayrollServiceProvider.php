@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Letters\Contracts\LetterFieldSource;
 use Modules\Payroll\Export\PayrollExporter;
+use Modules\Payroll\Letters\IncrementLetters;
 use Modules\Payroll\Letters\PayLetterFields;
 
 /**
@@ -26,6 +27,8 @@ class PayrollServiceProvider extends ServiceProvider
         // Pay in letters, marked salary (Letters' LetterFieldSource), when Letters is installed.
         if (interface_exists(LetterFieldSource::class)) {
             $this->app->tag([PayLetterFields::class], 'letters.field_sources');
+            // Increment letters from an applied round, to the people it raised.
+            $this->app->tag([IncrementLetters::class], 'letters.sources');
         }
     }
 

@@ -128,7 +128,8 @@ class TemplateController extends Controller
                 $employee = null;
             }
         }
-        $content = $this->letters->preview($unit, $company, $found, $request->validated('locale'), $employee, (array) ($request->validated('inputs') ?? []));
+        $content = $this->letters->preview($unit, $company, $found, $request->validated('locale'), $employee, (array) ($request->validated('inputs') ?? []),
+            (array) ($request->validated('source') ?? []));
 
         return response()->json(['data' => [
             'content' => $content,

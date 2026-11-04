@@ -432,6 +432,7 @@
     },
     "increments": {
         "title": "Salary increments",
+        "letters": "Issue increment letters",
         "text": "Raise basics from a day, usually after an appraisal: rates from the bands, or set by hand. Approved by other people, then applied.",
         "open": "New increment round",
         "name": "Name",

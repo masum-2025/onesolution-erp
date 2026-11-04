@@ -147,3 +147,14 @@ export function defaultLocale(locales, mine) {
 /** Badge tones: a design by its status, a letter by whether it was revoked. */
 export const templateTone = (status) => ({ active: 'ok', draft: 'neutral', retired: 'outline' })[status] ?? 'neutral';
 export const letterTone = (letter) => (letter.revoked ? 'bad' : 'ok');
+
+/** From a source: everyone without a letter from it yet is chosen (up to the limit). */
+export function firstChosen(people, max) {
+    return people.filter((person) => !person.issued).slice(0, max);
+}
+
+/** Designs offered for a source: those of the kind it suits, or all when there is none of that kind. */
+export function offeredDesigns(templates, kind) {
+    const suited = kind ? templates.filter((item) => item.kind === kind) : [];
+    return suited.length ? suited : templates;
+}
