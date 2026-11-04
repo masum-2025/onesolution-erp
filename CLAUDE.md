@@ -130,6 +130,10 @@ skip or simplify a requirement.
 - Events for cross-module side effects; queued listeners for slow work
 - Config and rules over conditionals: no `if ($sector === 'school')` in code
 - Name things by business meaning (`AdmitStudent`, not `ProcessData`)
+- Every page uses the shared frame from `@/ui`: `PageFrame` (header, loading/error/empty,
+  Export/Print), list pages pass `export`, money fields `MoneyInput`, date fields `DateInput`.
+  A page without the frame (own paper, public, full-screen tool) is added on purpose to
+  `PAGES_WITHOUT_FRAME` in `FrontendSourceTest`. See `docs/frontend-ui.md`.
 
 ## 7. Definition of done
 

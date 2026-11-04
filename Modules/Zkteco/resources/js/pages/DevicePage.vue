@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, CheckCheck, Sparkles, UserSearch, Users } from 'lucide-vue-next';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppSegmented from '@/components/AppSegmented.vue';
@@ -84,14 +85,10 @@ async function acceptAll() {
 </script>
 
 <template>
-    <div>
-        <div class="mb-5 flex items-start gap-2">
-            <AppButton size="icon" variant="ghost" :icon="ArrowLeft" :to="{ name: 'zkteco-devices' }" :aria-label="t('zkteco.match.back')" />
-            <div class="min-w-0 flex-1">
-                <h1 class="truncate text-[22px] font-semibold tracking-tight text-fg">{{ device?.name ?? t('zkteco.match.title') }}</h1>
-                <p class="text-[13px] text-muted">{{ t('zkteco.match.text') }}</p>
-            </div>
-        </div>
+    <PageFrame :title="device?.name ?? t('zkteco.match.title')" :description="t('zkteco.match.text')" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'zkteco-devices' }" :icon="ArrowLeft" class="mb-3">{{ t('zkteco.match.back') }}</AppButton>
+        </template>
 
         <SkeletonRows v-if="users.loading.value && !users.data.value" :rows="8" />
         <ErrorState v-else-if="users.error.value" :error="users.error.value" @retry="users.reload()" />
@@ -154,5 +151,5 @@ async function acceptAll() {
                 </li>
             </ul>
         </template>
-    </div>
+    </PageFrame>
 </template>

@@ -1,12 +1,13 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { Pencil, Plus, SearchX, Trash2 } from 'lucide-vue-next';
-import PageHeader from '@/components/PageHeader.vue';
+import { PageFrame } from '@/ui';
 import AppButton from '@/components/AppButton.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { api } from '@/lib/http';
+import { fetchPages } from '@/lib/pageExport';
 import { currentOrganization } from '@/lib/session';
 import { confirmAction } from '@/lib/dialogs';
 import { formatNumber } from '@/lib/format';
@@ -67,6 +68,23 @@ watch(() => query.q, () => {
 });
 watch(() => query.filters, () => { query.page = 1; load(); }, { deep: true });
 
+// Export and print: every record the search and filters find (all pages), the list's columns.
+const exported = computed(() => ({
+    module: ns.value,
+    page: `${ns.value}.${meta.value.name}`,
+    columns: columns.value.map((field) => ({
+        key: field.column,
+        label: t(`${ns.value}.fields.${meta.value.name}.${field.name}`),
+        ...(field.type === 'money' ? { type: 'money', currency: setup.value.currency }
+            : field.type === 'date' ? { type: 'date' }
+                : field.type === 'integer' ? { type: 'number' }
+                    : { value: (record) => displayValue(field, record[field.column], ctx.value) }),
+    })),
+    fetchAll: (maxRows) => fetchPages((number) => api(listBase.value, { query: {
+        page: number, per_page: 100, ...(query.q.trim() ? { q: query.q.trim() } : {}), ...Object.fromEntries(Object.entries(query.filters).filter(([, value]) => value !== '')),
+    } }), maxRows),
+}));
+
 const editing = ref(null);
 const dialogOpen = ref(false);
 function open(record) {
@@ -94,14 +112,12 @@ async function remove(record) {
 </script>
 
 <template>
-    <div>
-        <PageHeader :title="t(`${ns}.entities.${meta.name}.plural`)" :description="t(`${ns}.module.description`)">
-            <template v-if="setup.can?.manage" #actions>
-                <AppButton variant="primary" :icon="Plus" @click="open(null)">{{ t('generated.new', { name: t(`${ns}.entities.${meta.name}.label`) }) }}</AppButton>
-            </template>
-        </PageHeader>
+    <PageFrame :title="t(`${ns}.entities.${meta.name}.plural`)" :description="t(`${ns}.module.description`)" width="full" :export="exported">
+        <template v-if="setup.can?.manage" #actions>
+            <AppButton variant="primary" :icon="Plus" @click="open(null)">{{ t('generated.new', { name: t(`${ns}.entities.${meta.name}.label`) }) }}</AppButton>
+        </template>
 
-        <div class="mb-4 flex flex-wrap gap-2">
+        <div class="mb-4 flex flex-wrap gap-2 print:hidden">
             <input v-if="meta.search.length" v-model="query.q" type="search" class="field-input w-full sm:w-72" :placeholder="t('generated.search')" :aria-label="t('generated.search')" />
             <select v-for="field in filters" :key="field.name" v-model="query.filters[field.column]" class="field-input w-auto" :aria-label="t(`${ns}.fields.${meta.name}.${field.name}`)">
                 <option value="">{{ t(`${ns}.fields.${meta.name}.${field.name}`) }}: {{ t('generated.all') }}</option>
@@ -166,7 +182,7 @@ async function remove(record) {
                     </tr>
                 </tbody>
             </table>
-            <footer v-if="state.last > 1" class="flex items-center justify-between border-t border-line px-4 py-2 text-[13px] text-muted">
+            <footer v-if="state.last > 1" class="flex items-center justify-between border-t border-line px-4 py-2 text-[13px] text-muted print:hidden">
                 <span>{{ t('generated.page', { page: formatNumber(state.page), pages: formatNumber(state.last), total: formatNumber(state.total) }) }}</span>
                 <span class="flex gap-2">
                     <AppButton size="sm" :disabled="state.page <= 1" @click="query.page = state.page - 1; load()">{{ t('generated.previous') }}</AppButton>
@@ -176,5 +192,5 @@ async function remove(record) {
         </section>
 
         <GeneratedEntityDialog :open="dialogOpen" :schema="schema" :entity="meta" :record="editing" :base="listBase" :setup="setup" @close="dialogOpen = false" @saved="saved" />
-    </div>
+    </PageFrame>
 </template>

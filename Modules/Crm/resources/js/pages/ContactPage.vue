@@ -2,10 +2,9 @@
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowLeft, CalendarClock, CheckCircle2, Circle, FileText, Handshake, Mail, MessageSquare, Phone, PenLine, Receipt, ShieldOff, UserCheck } from 'lucide-vue-next';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
-import ErrorState from '@/components/ErrorState.vue';
-import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { api } from '@/lib/http';
 import { confirmAction } from '@/lib/dialogs';
@@ -80,12 +79,13 @@ async function anonymize() {
 </script>
 
 <template>
-    <div>
-        <AppButton variant="ghost" size="sm" :to="{ name: 'crm-contacts' }" :icon="ArrowLeft" class="mb-3">{{ t('crm.contacts.title') }}</AppButton>
-        <SkeletonRows v-if="record.loading.value && !contact" :rows="8" />
-        <ErrorState v-else-if="record.error.value" :error="record.error.value" @retry="record.reload()" />
+    <!-- The contact's own card is the header (name, ways to reach them, actions): the frame gives the rest. -->
+    <PageFrame :resource="record" :skeleton-rows="8" width="full">
+        <template #before>
+            <AppButton variant="ghost" size="sm" :to="{ name: 'crm-contacts' }" :icon="ArrowLeft" class="mb-3">{{ t('crm.contacts.title') }}</AppButton>
+        </template>
 
-        <template v-else-if="contact">
+        <template v-if="contact">
             <!-- Who -->
             <header class="card mb-5 flex flex-wrap items-center gap-4 p-5">
                 <span class="grid size-14 shrink-0 place-items-center rounded-2xl bg-brand-soft text-[22px] font-semibold text-brand-text" aria-hidden="true">{{ contact.name.slice(0, 1) }}</span>
@@ -214,5 +214,5 @@ async function anonymize() {
             <DealDialog v-if="dealing" :contact-id="contact.id" @close="dealing = false" @saved="changed" />
             <ActivityDialog v-if="activity" :contact-id="contact.id" :plan="activity.plan" @close="activity = null" @saved="changed" />
         </template>
-    </div>
+    </PageFrame>
 </template>

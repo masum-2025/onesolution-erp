@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowRightLeft, ChevronRight, MoreHorizontal, PenLine, Plus, SearchX } from 'lucide-vue-next';
+import { PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
 import AppMenu from '@/components/AppMenu.vue';
@@ -83,7 +84,8 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
 </script>
 
 <template>
-    <div>
+    <!-- The organization's own header (its kind, place in the tree, actions) stays: the frame gives width and paper. -->
+    <PageFrame width="full">
         <div v-if="organization.loading.value && !org" class="space-y-4" role="status" :aria-label="t('core.states.loading')">
             <div class="skeleton h-4 w-48" />
             <div class="flex items-center gap-4">
@@ -211,5 +213,5 @@ const STATUS_TONES = { active: 'ok', suspended: 'warn', archived: 'neutral' };
             />
             <MoveDialog :open="moving" :organization="org" :allow="moveAllowed" @close="moving = false" @moved="reloadAll" />
         </template>
-    </div>
+    </PageFrame>
 </template>

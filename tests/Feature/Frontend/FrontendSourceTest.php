@@ -72,6 +72,55 @@ it('draws every page in the shared page frame, never its own header', function (
     }
 });
 
+/*
+ * Pages that draw no PageFrame on purpose. A new one is added here knowingly, with its reason;
+ * every other page (and every future module's) is drawn in the frame.
+ */
+const PAGES_WITHOUT_FRAME = [
+    // Outside the signed-in app: sign-in, sign-up, invitations, public checks, the shell's own fallbacks.
+    'resources/js/pages/auth/ChooseContextPage.vue', 'resources/js/pages/auth/FirstPasswordPage.vue', 'resources/js/pages/auth/ForgotPage.vue',
+    'resources/js/pages/auth/InvitationPage.vue', 'resources/js/pages/auth/LegalPage.vue', 'resources/js/pages/auth/LoginPage.vue',
+    'resources/js/pages/auth/SignupPage.vue', 'resources/js/pages/auth/WelcomePage.vue', 'resources/js/pages/portal/JoinPage.vue',
+    'resources/js/pages/NotFoundPage.vue', 'resources/js/pages/ModuleAppPage.vue', 'Modules/Education/resources/js/pages/VerifyPage.vue',
+    // Their own paper (an invoice, a receipt, a slip, a report card, a quotation, an offer, issued documents).
+    'resources/js/pages/billing/InvoicePage.vue', 'Modules/Accounting/resources/js/pages/PortalInvoicePage.vue', 'Modules/Crm/resources/js/pages/QuotePage.vue',
+    'Modules/Education/resources/js/pages/PrintPage.vue', 'Modules/EducationExams/resources/js/pages/PortalReportCardPage.vue',
+    'Modules/EducationExams/resources/js/pages/ReportCardsPage.vue', 'Modules/EducationFees/resources/js/pages/BillPage.vue',
+    'Modules/EducationFees/resources/js/pages/PortalReceiptPage.vue', 'Modules/EducationFees/resources/js/pages/ReceiptPage.vue',
+    'Modules/Payroll/resources/js/pages/BonusSlipPage.vue', 'Modules/Payroll/resources/js/pages/SettlementSlipPage.vue',
+    'Modules/Payroll/resources/js/pages/SlipPage.vue', 'Modules/Pos/resources/js/pages/ReceiptPage.vue', 'Modules/Recruitment/resources/js/pages/OfferPage.vue',
+    // Full-screen tools: the shop's till, taking a class's attendance, the document designer.
+    'Modules/Pos/resources/js/pages/TillPage.vue', 'Modules/StudentAttendance/resources/js/pages/SheetPage.vue', 'Modules/Education/resources/js/pages/DesignerPage.vue',
+    // A shared panel (also inside the student's page) draws this page's header.
+    'Modules/EducationFees/resources/js/pages/StudentFeesPage.vue',
+];
+
+it('draws every page in PageFrame, except the reviewed own-paper, public and full-screen ones', function () {
+    $missing = [];
+    $seen = [];
+    $pages = (new Finder)->files()->in([resource_path('js/pages'), ...glob(base_path('Modules/*/resources/js/pages'), GLOB_ONLYDIR)])->name('*Page.vue');
+    foreach ($pages as $file) {
+        $path = str_replace([DIRECTORY_SEPARATOR, str_replace(DIRECTORY_SEPARATOR, '/', base_path()).'/'], ['/', ''], $file->getPathname());
+        if (in_array($path, PAGES_WITHOUT_FRAME, true)) {
+            $seen[] = $path;
+
+            continue;
+        }
+        if (! str_contains($file->getContents(), '<PageFrame')) {
+            $missing[] = $path;
+        }
+    }
+
+    expect($missing)->toBe([])
+        // A reviewed page that is gone (or now framed) leaves the list too.
+        ->and(array_values(array_diff(PAGES_WITHOUT_FRAME, $seen)))->toBe([]);
+});
+
+it('frames the screens of generated modules too', function () {
+    expect(file_get_contents(resource_path('js/components/generated/GeneratedListPage.vue')))
+        ->toContain('<PageFrame')->toContain(':export="exported"')->not->toMatch('/\bPageHeader\b/');
+});
+
 it('uses logical instead of physical left/right utilities', function () {
     foreach (frontendFiles() as $file) {
         expect($file->getContents())->not->toMatch('/\b(?:ml|mr|pl|pr|left|right)-(?:\d|\[|px|auto)|\btext-(?:left|right)\b|\bborder-[lr]\b|\brounded-[lr]-/', $file->getRelativePathname());
