@@ -5,6 +5,9 @@
 | Business numbers never live here; they are rules (Rules::get('letters.*')).
 */
 
+use Modules\Letters\Dashboard\DraftDesigns;
+use Modules\Letters\Dashboard\IssuedThisMonth;
+
 $rule = fn (string $key, string $type, mixed $default, array $levels, int $order, array $extra = []) => [
     'key' => "letters.{$key}",
     'type' => $type,
@@ -66,7 +69,10 @@ return [
     'events' => [],
     'is_core' => false,
     'requires_consent' => false,
-    'dashboard' => ['widgets' => []],
+    'dashboard' => ['widgets' => [
+        ['key' => 'issued', 'label' => 'letters::dashboard.issued', 'type' => 'stat', 'provider' => IssuedThisMonth::class, 'permission' => 'letters.view'],
+    ]],
+    'attention' => [DraftDesigns::class],
     'settings' => ['pages' => [
         ['key' => 'templates', 'label' => 'letters::module.menu_templates', 'route' => '/letters/templates', 'permission' => 'letters.design'],
     ]],

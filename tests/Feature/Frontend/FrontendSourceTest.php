@@ -89,8 +89,10 @@ const PAGES_WITHOUT_FRAME = [
     'Modules/EducationFees/resources/js/pages/PortalReceiptPage.vue', 'Modules/EducationFees/resources/js/pages/ReceiptPage.vue',
     'Modules/Payroll/resources/js/pages/BonusSlipPage.vue', 'Modules/Payroll/resources/js/pages/SettlementSlipPage.vue',
     'Modules/Payroll/resources/js/pages/SlipPage.vue', 'Modules/Pos/resources/js/pages/ReceiptPage.vue', 'Modules/Recruitment/resources/js/pages/OfferPage.vue',
+    'Modules/Letters/resources/js/pages/LetterPage.vue',
     // Full-screen tools: the shop's till, taking a class's attendance, the document designer.
     'Modules/Pos/resources/js/pages/TillPage.vue', 'Modules/StudentAttendance/resources/js/pages/SheetPage.vue', 'Modules/Education/resources/js/pages/DesignerPage.vue',
+    'Modules/Letters/resources/js/pages/EditorPage.vue',
     // A shared panel (also inside the student's page) draws this page's header.
     'Modules/EducationFees/resources/js/pages/StudentFeesPage.vue',
 ];

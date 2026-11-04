@@ -70,6 +70,9 @@ it('adds a ready-made design, issues numbered letters to several people and keep
         ->and($template['locales'])->toBe(['en', 'bn']);
     // A second time gives the same design.
     expect(($this->preset)('confirmation')->assertOk()->json('data.id'))->toBe($template['id']);
+    // A draft is in the designers' bell, not anyone else's.
+    $this->asToken($this->hr)->getJson('/api/attention')->assertOk()->assertJsonFragment(['key' => 'letters.drafts', 'count' => 1]);
+    expect(collect($this->asToken($this->viewer)->getJson('/api/attention')->json('data'))->pluck('key'))->not->toContain('letters.drafts');
 
     ($this->issue)($template, [$this->rahima], ['inputs' => ['effective_date' => '2026-12-01']])->assertConflict()->assertJsonPath('code', 'template_not_active');
     $template = ($this->activate)($template)->assertOk()->json('data');
@@ -86,6 +89,9 @@ it('adds a ready-made design, issues numbered letters to several people and keep
     $letter = $this->asToken($this->viewer)->getJson(($this->api)("issued/{$rahimas['id']}"))->assertOk()->json('data');
     expect(($this->text)($letter))->toContain('Rahima Akter')->toContain('Senior Accountant')->toContain('December 1, 2026')
         ->toContain($rahimas['number'])->not->toContain('{');
+    // The dashboard counts this month's letters for people who see letters.
+    expect($this->asToken($this->viewer)->getJson('/api/modules/letters/dashboard/issued')->assertOk()->json('data.value'))->toBe(2);
+    $this->asToken(orgToken($this->workerUser, $this->w->c1))->getJson('/api/modules/letters/dashboard/issued')->assertForbidden();
 
     // Changing the design never changes a letter already issued.
     $template = $this->asToken($this->hr)->getJson(($this->api)("templates/{$template['id']}"))->json('data');

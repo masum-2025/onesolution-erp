@@ -3741,7 +3741,7 @@ difference to review) and a shift open today. Logins `shop.owner@`, `store@`, `c
   number prefixes are data and rules. CRM customers and loyalty, gift cards, card terminals and
   bKash APIs are later steps behind the same payment methods.
 
-## Letters module (LET-1 backend)
+## Letters module (LET-1 backend, LET-2 screens)
 
 HR letters from designs a company makes or takes ready-made: appointment, joining, confirmation,
 increment, promotion, transfer, warning, experience, release, salary certificate, no objection,
@@ -3785,12 +3785,25 @@ other. Requires HRM; Payroll adds pay fields when it is on. Tables (client datab
 - Roles: administrator and HR officer get `letters.*`; the school principal designs and issues;
   managers and staff-type roles do not see others' letters (`!letters.view`).
 - After deploy: migrate, `rules:sync`, `access:sync`.
+- **Screens (LET-2)**: `/letters` (issued letters: search, kind and status filters, table on wide
+  screens and a list on phones, export and print; "Issue letters" dialog: design, people searched
+  and picked, language, the design's questions, shared or not, preview with the first person,
+  one `op_id` per press), `/letters/templates` (designs as cards, ready-made ones, a new design,
+  images), `/letters/templates/{id}` (full-screen editor: parts, page and questions on the start
+  side, the chosen part in the middle with **B** / *I* / __U__ and "insert a field", the letter as
+  it prints on the end side, filled with examples in the tab's language or with a real person from
+  the saved version; English and Bangla tabs, "copy English to translate"; on a phone the editor and
+  preview take turns), `/letters/issued/{id}` (the letter on its own paper, print or "Save as PDF",
+  revoke with a reason), `/letters/me` and `/portal/letters` (one's own). One drawing
+  (`LetterPaper`) for preview, print, "my letters" and the portal; marks are parsed into plain
+  elements (`lib.js` `segments`), never HTML. Dashboard widget "Letters this month"; designs in
+  draft show in the designers' bell. `GET …/letters/options?locale=` gives fields in a letter's language.
 
 ### Future expansion (Letters)
 
 - A new country, sector or partner adds its own designs (or ready-made files) and sets the
   number format; a new language is another body in the same design. A new module adds fields by
-  implementing `LetterFieldSource`. No code change. Next: screens with a live A4 preview (LET-2),
+  implementing `LetterFieldSource`. No code change. Next:
   letters from an increment round (LET-3).
 
 ## Factory ERP for garments (FAC-1: buyers, styles, BOM, orders)

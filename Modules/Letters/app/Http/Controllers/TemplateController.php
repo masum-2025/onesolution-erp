@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Modules\Letters\Http\Controllers\Concerns\FindsPlace;
@@ -43,11 +44,12 @@ class TemplateController extends Controller
         private LettersPresenter $presenter,
     ) {}
 
-    public function options(string $organization): JsonResponse
+    /** ?locale= gives the fields' labels and examples in a letter's language (the editor's preview); the screen's by default. */
+    public function options(Request $request, string $organization): JsonResponse
     {
         [$unit, $company] = $this->place($organization);
         abort_unless(Gate::any([...self::SEES, 'letters.view'], $unit), 403);
-        $locale = app()->getLocale();
+        $locale = $request->validate(['locale' => ['nullable', 'in:'.implode(',', LanguageRegistry::codes())]])['locale'] ?? app()->getLocale();
 
         return response()->json(['data' => [
             'kinds' => LetterLayout::KINDS,
