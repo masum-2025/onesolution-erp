@@ -6,6 +6,12 @@
 return [
 
     'actions' => [
+        'marketing_site_created' => 'Company website started',
+        'marketing_site_updated' => 'Company website settings changed',
+        'marketing_site_published' => 'Company website published',
+        'marketing_site_restored' => 'Company website: an earlier version brought back',
+        'marketing_site_offline' => 'Company website taken offline',
+        'marketing_page_deleted' => 'Company website page removed',
         'support_requested' => 'Support access requested',
         'support_auto_approved' => 'Support access approved by your rule',
         'support_approved' => 'Support access approved',

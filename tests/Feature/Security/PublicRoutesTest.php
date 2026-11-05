@@ -56,6 +56,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     // A school's public website (WEB-1): published pages only (a draft only with a signed
     // preview link), GET only, no session or cookie, its own strict CSP, 120 a minute per address.
     'GET s/{slug}/{path?}',
+    // A company website's drafts (MKT-1): only with a signed link from the console (an hour), GET only,
+    // no session, noindex, its own strict CSP, 120 a minute per address; its stylesheet, script and fonts.
+    'GET website-preview/{site}', 'GET website-preview/{site}/assets/{file}',
     // The sites server asks whether a host may get a certificate (WEB-3a): yes for a site's address
     // or proven own domain, no for any other name; answers nothing else, 600 a minute per address.
     'GET s/_tls',

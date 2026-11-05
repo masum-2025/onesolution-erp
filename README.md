@@ -5304,3 +5304,31 @@ The company's vehicles and their trips: who drove, how far, and what the fuel co
 - Screens from the shared generated list (`resources/js/components/generated`) and `resources/js/schema.js`.
 - After deploy: `composer dump-autoload`, migrate, `rules:sync`, `access:sync`.
 - A new sector, country or partner needs no code change: labels are texts, numbers are rules.
+
+## Company website (MKT-1)
+
+A partner's own marketing website, edited in the partner console; the house partner's is the platform's
+(One Solutions). Code `app/Platform/Marketing`, views `resources/views/marketing`, assets `resources/marketing`.
+
+- **Tables** (central): `mkt_sites` (template aurora | corporate | studio, settings: colours, header menu and
+  buttons, notice bar with dates, contact, social, footer, site SEO; the published snapshot), `mkt_pages`
+  (slug, title and SEO per language), `mkt_blocks` (type, data, order, shown between two days),
+  `mkt_versions` (last 20 publishes), `mkt_redirects` (left by a slug change).
+- **Blocks** (`BlockTypes`): hero_slider (effects fade / slide / zoom, seconds, autoplay, rotating words,
+  drawn visuals), stats (module, sector and language counts read live), ticker, offer (countdown, hides
+  itself after its end), cards, product (bento / orbit / simple; module names from the registry), features,
+  partner, pricing (prices from the plan catalogue; house only for now), gallery, news, faq, cta, text.
+  Texts per language, never HTML; colours and icons from fixed lists; links https, mailto, tel, site paths
+  or `app:/path` (the partner's app address).
+- **Public**: hosts in `MARKETING_HOSTS` (locally `onesolutions.localhost`) answer before the app; the main
+  language at `/`, others at `/bn/…`; canonical, hreflang, JSON-LD (Organization, SoftwareApplication with
+  offers, FAQPage), `sitemap.xml`, `robots.txt`; pages kept `MARKETING_CACHE_SECONDS`; 120 requests a minute
+  per address; CSP allows only the site's own `/assets/site.css` (its colours over the templates),
+  `/assets/site.js` (slider, reveal, counters, countdown; respects reduced motion) and fonts — no inline
+  styles or scripts. Drafts: `website-preview/{site}` with a signed link (an hour, noindex).
+- **Console API** (`/api/partner/website…`): everyone reads; owners and sales staff write pages and blocks;
+  owners change settings, publish, restore a version, take the site offline (all audited). Changes name the
+  version they were made on (409 otherwise).
+- **Later**: MKT-2 console editor screens with live preview; MKT-3 picture uploads, partner websites on
+  their own domains, contact form and leads, partner plans in pricing. A new sector, country or partner needs
+  no code: content, languages and colours are data.

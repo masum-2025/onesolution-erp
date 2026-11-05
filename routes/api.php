@@ -29,6 +29,7 @@ use App\Platform\Legal\Http\Controllers\PartnerLegalController;
 use App\Platform\Localization\Http\Controllers\OrganizationTranslationController;
 use App\Platform\Localization\Http\Controllers\PartnerLanguageController;
 use App\Platform\Localization\Http\Controllers\TextBundleController;
+use App\Platform\Marketing\Http\Controllers\WebsiteController;
 use App\Platform\Modules\Http\Controllers\MenuController;
 use App\Platform\Modules\Http\Controllers\ModuleConsentController;
 use App\Platform\Modules\Http\Controllers\ModuleController;
@@ -494,6 +495,26 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
         Route::delete('languages/{code}', [PartnerLanguageController::class, 'destroy'])->where('code', '[A-Za-z0-9-]{2,20}');
     });
     Route::post('translations/import', [PartnerLanguageController::class, 'import'])->middleware('throttle:i18n-import');
+
+    // The partner's company website (MKT-1): pages of sections, published as a snapshot.
+    Route::get('website', [WebsiteController::class, 'show']);
+    Route::get('website/versions', [WebsiteController::class, 'versions']);
+    Route::middleware('throttle:tenancy-sensitive')->where(['page' => '[0-9A-Za-z]{26}', 'block' => '[0-9A-Za-z]{26}', 'version' => '[0-9A-Za-z]{26}'])->group(function () {
+        Route::post('website', [WebsiteController::class, 'store']);
+        Route::patch('website', [WebsiteController::class, 'update']);
+        Route::post('website/publish', [WebsiteController::class, 'publish']);
+        Route::post('website/offline', [WebsiteController::class, 'offline']);
+        Route::post('website/versions/{version}/restore', [WebsiteController::class, 'restore']);
+        Route::post('website/preview-link', [WebsiteController::class, 'previewLink']);
+        Route::post('website/pages', [WebsiteController::class, 'storePage']);
+        Route::put('website/pages/order', [WebsiteController::class, 'orderPages']);
+        Route::patch('website/pages/{page}', [WebsiteController::class, 'updatePage']);
+        Route::delete('website/pages/{page}', [WebsiteController::class, 'destroyPage']);
+        Route::post('website/pages/{page}/blocks', [WebsiteController::class, 'storeBlock']);
+        Route::put('website/pages/{page}/blocks/order', [WebsiteController::class, 'orderBlocks']);
+        Route::patch('website/blocks/{block}', [WebsiteController::class, 'updateBlock']);
+        Route::delete('website/blocks/{block}', [WebsiteController::class, 'destroyBlock']);
+    });
 
     Route::get('rules', [PartnerRuleController::class, 'index']);
     Route::middleware('throttle:tenancy-sensitive')->group(function () {

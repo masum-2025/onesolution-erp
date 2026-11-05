@@ -4,6 +4,7 @@ use App\Http\Middleware\ApplyRequestLocale;
 use App\Http\Middleware\SecurityHeaders;
 use App\Platform\Identity\Http\Middleware\RequireRecentTwoFactor;
 use App\Platform\Identity\Http\Middleware\TrackUserSession;
+use App\Platform\Marketing\Http\Middleware\ServeMarketingByHost;
 use App\Platform\Modules\Http\Middleware\EnsureModuleEnabled;
 use App\Platform\Partners\Http\Middleware\ResolveHost;
 use App\Platform\Security\Http\Middleware\BaselineSecurityHeaders;
@@ -32,6 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: array_values(array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))))));
         // First of all: which account this address belongs to; unknown hosts are refused.
         $middleware->prepend(ResolveHost::class);
+        // The platform's own company website answers its hosts before anything of the app runs.
+        $middleware->prepend(ServeMarketingByHost::class);
         $middleware->append(ApplyRequestLocale::class);
         // Every response: nosniff, referrer policy, HSTS on HTTPS (Phase 8-2).
         $middleware->append(BaselineSecurityHeaders::class);

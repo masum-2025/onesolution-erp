@@ -10,6 +10,7 @@ use App\Platform\Identity\Http\Controllers\SignupController;
 use App\Platform\Identity\Http\Controllers\TwoFactorSessionController;
 use App\Platform\Identity\Http\Middleware\TrackUserSession;
 use App\Platform\Invitations\Http\InvitationController;
+use App\Platform\Marketing\Http\Controllers\PublicWebsiteController;
 use App\Platform\Monitoring\Http\HealthController;
 use App\Platform\Notifications\Http\Controllers\TemplatePreviewController;
 use App\Platform\Partners\Http\Controllers\TlsAskController;
@@ -76,6 +77,16 @@ Route::get('client-brand-assets/{organization}/logo', [ClientBrandAssetControlle
 Route::get('partner-preview/{preview}', [TemplatePreviewController::class, 'show'])
     ->middleware('auth:web')
     ->where('preview', '[A-Za-z0-9]{40}');
+
+// A company website's drafts (MKT-1): a signed link from the console (the page and language may change),
+// and the preview's stylesheet, script and fonts. No session: nothing here belongs to a signed-in person.
+Route::withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, PreventRequestForgery::class, AddQueuedCookiesToResponse::class, TrackUserSession::class])
+    ->where(['site' => '[0-9A-Za-z]{26}'])
+    ->group(function () {
+        Route::get('website-preview/{site}', [PublicWebsiteController::class, 'preview'])->name('marketing.preview');
+        Route::get('website-preview/{site}/assets/{file}', [PublicWebsiteController::class, 'previewAsset'])
+            ->where('file', 'site\.css|site\.js|fonts/[a-z0-9-]+\.woff2');
+    });
 
 // A data export file: only through a short-lived signed link from the export screen.
 Route::get('exports/{export}/download', [DataExportController::class, 'download'])

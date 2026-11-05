@@ -3,6 +3,12 @@
 return [
 
     'actions' => [
+        'marketing_site_created' => 'কোম্পানির ওয়েবসাইট শুরু হলো',
+        'marketing_site_updated' => 'কোম্পানির ওয়েবসাইটের সেটিং বদলানো হলো',
+        'marketing_site_published' => 'কোম্পানির ওয়েবসাইট প্রকাশিত হলো',
+        'marketing_site_restored' => 'কোম্পানির ওয়েবসাইট: আগের সংস্করণ ফেরানো হলো',
+        'marketing_site_offline' => 'কোম্পানির ওয়েবসাইট বন্ধ করা হলো',
+        'marketing_page_deleted' => 'কোম্পানির ওয়েবসাইটের পেজ মুছে ফেলা হলো',
         'support_requested' => 'সাপোর্ট অ্যাক্সেস চাওয়া হয়েছে',
         'support_auto_approved' => 'আপনার নিয়ম অনুযায়ী সাপোর্ট অ্যাক্সেস অনুমোদিত',
         'support_approved' => 'সাপোর্ট অ্যাক্সেস অনুমোদিত',

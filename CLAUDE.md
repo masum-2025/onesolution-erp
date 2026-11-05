@@ -145,3 +145,12 @@ skip or simplify a requirement.
 - [ ] README section for the module/feature updated
 - [ ] Short note on future expansion: what would change for a new sector,
       country or partner, and confirmation that no code change is needed for it
+
+## 8. Working economically (token budget)
+
+These never override sections 1–7 (plan first, security, isolation tests).
+- Read only the files and line ranges the task needs; search before reading; no whole-project scans.
+- Reuse existing services and patterns; no refactoring or rewrites outside the asked scope. Ask before widening scope.
+- Run targeted tests (`--filter`, the module's folder) while working; the full suite once before commit.
+- No repeated screenshots; one check per screen, only when asked or needed.
+- Short replies: what changed, test results, what is left.

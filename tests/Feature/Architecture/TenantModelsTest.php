@@ -32,6 +32,11 @@ use App\Platform\Legal\Models\DocumentAcceptance;
 use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Localization\Models\Language;
 use App\Platform\Localization\Models\TranslationOverride;
+use App\Platform\Marketing\Models\Block;
+use App\Platform\Marketing\Models\Page;
+use App\Platform\Marketing\Models\Redirect;
+use App\Platform\Marketing\Models\Site;
+use App\Platform\Marketing\Models\Version;
 use App\Platform\Modules\Models\ModuleConsent;
 use App\Platform\Modules\Models\ModulePurgeRequest;
 use App\Platform\Modules\Models\OrganizationModule;
@@ -118,6 +123,12 @@ const PLATFORM_MODELS = [
     // Partner layer: owned by a partner, not an organization. Written only by
     // the partner console services and read through the partner context.
     PartnerBrand::class,
+    // Company websites (MKT-1): a partner's own marketing site, partner-scoped (WebsiteController, PartnerConsole).
+    Site::class,
+    Page::class,
+    Block::class,
+    Version::class,
+    Redirect::class,
     PartnerDomain::class,
     PartnerModule::class,
     // A public site's address (central): the slug -> organization lookup a public request needs
