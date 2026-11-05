@@ -26,6 +26,7 @@ import {
     ScrollText,
     ShieldCheck,
     SlidersHorizontal,
+    MonitorSmartphone,
 } from 'lucide-vue-next';
 import ContextSwitcher from './ContextSwitcher.vue';
 import BrandMark from '@/components/BrandMark.vue';
@@ -89,6 +90,7 @@ const platformSections = computed(() => {
                     { to: '/partner/templates', label: t('core.nav.partner_templates'), icon: MessageSquareText },
                     { to: '/partner/languages', label: t('core.nav.partner_languages'), icon: Languages },
                     { to: '/partner/domains', label: t('core.nav.partner_domains'), icon: Globe },
+                    { to: '/partner/website', label: t('core.nav.partner_website'), icon: MonitorSmartphone },
                     { to: '/partner/modules', label: t('core.nav.partner_modules'), icon: Blocks },
                     { to: '/partner/rules', label: t('core.nav.partner_rules'), icon: SlidersHorizontal },
                 ],

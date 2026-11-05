@@ -178,6 +178,25 @@ const routes = [
                 component: () => import('./pages/partner/PartnerDomainsPage.vue'),
                 meta: { context: 'partner', ns: ['partner'] },
             },
+            // The partner's company website (MKT-2).
+            {
+                path: 'partner/website',
+                name: 'partner-website',
+                component: () => import('./pages/partner/website/WebsiteOverviewPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'website'] },
+            },
+            {
+                path: 'partner/website/pages',
+                name: 'partner-website-pages',
+                component: () => import('./pages/partner/website/WebsitePagesPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'website'] },
+            },
+            {
+                path: 'partner/website/settings',
+                name: 'partner-website-settings',
+                component: () => import('./pages/partner/website/WebsiteSettingsPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'website'] },
+            },
             {
                 path: 'partner/modules',
                 name: 'partner-modules',

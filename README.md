@@ -5329,6 +5329,11 @@ A partner's own marketing website, edited in the partner console; the house part
 - **Console API** (`/api/partner/website…`): everyone reads; owners and sales staff write pages and blocks;
   owners change settings, publish, restore a version, take the site offline (all audited). Changes name the
   version they were made on (409 otherwise).
-- **Later**: MKT-2 console editor screens with live preview; MKT-3 picture uploads, partner websites on
+- **Console screens** (MKT-2a, `resources/js/pages/partner/website/`, sidebar "Website"): Overview (start the
+  site, status, preview, publish / take offline, template, published versions to go back to), Pages (add,
+  title, address, menu, order with ↑↓, page SEO, delete) and Settings (colours with ready sets, languages,
+  header menu and buttons, notice bar with dates, contact, social, footer columns, site SEO). Saves carry
+  `base_version`; leaving with unsaved settings asks first. Texts in `locales/{en,bn}/website.json`.
+- **Later**: MKT-2b the page editor (sections) with a live preview; MKT-3 picture uploads, partner websites on
   their own domains, contact form and leads, partner plans in pricing. A new sector, country or partner needs
   no code: content, languages and colours are data.

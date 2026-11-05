@@ -165,7 +165,9 @@ it('keeps partners apart and keeps prices to the platform\'s site', function () 
 
     $tokenA = partnerToken(createPartnerStaff($this->w->partnerA, PartnerUserRole::Owner), $this->w->partnerA);
     $this->asToken($tokenA)->getJson('/api/partner/website')->assertOk()->assertJsonPath('data.site', null);
-    $this->asToken($tokenA)->postJson('/api/partner/website')->assertCreated()->assertJsonPath('data.site.template', 'corporate');
+    $this->asToken($tokenA)->postJson('/api/partner/website')->assertCreated()->assertJsonPath('data.site.template', 'corporate')
+        // A partner's site has no public address yet (own domains come later); never the platform's.
+        ->assertJsonPath('data.site.address', null);
 
     // Another partner's pages and sections are simply not there.
     $this->asToken($tokenA)->postJson("/api/partner/website/pages/{$homeA}/blocks", ['type' => 'text', 'data' => ['body' => ['en' => 'x']]])->assertNotFound();

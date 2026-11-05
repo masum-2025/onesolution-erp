@@ -207,6 +207,8 @@ class WebsiteController extends Controller
                 'status' => $site->status,
                 'published_at' => $site->published_at?->toIso8601String(),
                 'version' => $site->version,
+                // Where the public sees it: the house site's own address (partners' domains come with MKT-3).
+                'address' => $this->partner()->is_house ? config('marketing.url') : null,
                 'pages' => $pages->map(fn (Page $page) => [...$this->pageData($page), 'blocks' => ($blocks[$page->getKey()] ?? collect())->map(fn (Block $block) => $this->blockData($block))->values()])->values(),
             ],
             'choices' => $choices,
