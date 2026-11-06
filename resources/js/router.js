@@ -192,6 +192,12 @@ const routes = [
                 meta: { context: 'partner', ns: ['partner', 'website'] },
             },
             {
+                path: 'partner/website/pages/:id',
+                name: 'partner-website-page',
+                component: () => import('./pages/partner/website/WebsitePageEditorPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'website'] },
+            },
+            {
                 path: 'partner/website/settings',
                 name: 'partner-website-settings',
                 component: () => import('./pages/partner/website/WebsiteSettingsPage.vue'),

@@ -168,6 +168,12 @@ it('keeps partners apart and keeps prices to the platform\'s site', function () 
     $this->asToken($tokenA)->postJson('/api/partner/website')->assertCreated()->assertJsonPath('data.site.template', 'corporate')
         // A partner's site has no public address yet (own domains come later); never the platform's.
         ->assertJsonPath('data.site.address', null);
+    // The section forms come from the same rules; prices are not offered to a partner.
+    $choices = $this->asToken($tokenA)->getJson('/api/partner/website')->assertOk()->json('data.choices');
+    expect($choices['block_types'])->not->toContain('pricing')->toContain('hero_slider')
+        ->and(collect($choices['fields']['hero_slider'])->firstWhere('key', 'effect'))->toMatchArray(['kind' => 'choice', 'required' => true, 'options' => ['fade', 'slide', 'zoom']])
+        ->and(collect($choices['fields']['hero_slider'])->firstWhere('key', 'slides'))->toMatchArray(['kind' => 'list', 'min' => 1, 'max' => 6])
+        ->and(collect($choices['fields']['faq'])->firstWhere('key', 'items')['item']['fields'][0])->toMatchArray(['key' => 'question', 'kind' => 'text', 'required' => true]);
 
     // Another partner's pages and sections are simply not there.
     $this->asToken($tokenA)->postJson("/api/partner/website/pages/{$homeA}/blocks", ['type' => 'text', 'data' => ['body' => ['en' => 'x']]])->assertNotFound();

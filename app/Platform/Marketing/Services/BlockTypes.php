@@ -7,6 +7,7 @@ use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Packaging\PlanCatalog;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -188,6 +189,74 @@ final class BlockTypes
         }
 
         return $validator->validated();
+    }
+
+    /**
+     * What the console's form shows for each kind of section, read from the
+     * same rules that check it (one place for both): every field with its
+     * kind (text, list, map, choice, integer, boolean, date, datetime, link,
+     * string), whether it is required, its limits and its options.
+     *
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public function fields(string $main): array
+    {
+        return collect(self::TYPES)->mapWithKeys(fn (string $type) => [$type => $this->fieldsUnder($this->rules($type, $main), '')])->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $rules
+     * @return list<array<string, mixed>>
+     */
+    private function fieldsUnder(array $rules, string $prefix): array
+    {
+        $fields = [];
+        foreach (array_keys($rules) as $key) {
+            if (! str_starts_with($key, $prefix) || str_contains(substr($key, strlen($prefix)), '.')) {
+                continue;
+            }
+            $fields[] = ['key' => substr($key, strlen($prefix)), ...$this->field($rules, $key)];
+        }
+
+        return $fields;
+    }
+
+    /**
+     * @param  array<string, mixed>  $rules
+     * @return array<string, mixed>
+     */
+    private function field(array $rules, string $key): array
+    {
+        $rule = $rules[$key];
+        $strings = array_values(array_filter($rule, 'is_string'));
+        $limit = fn (array $list, string $name) => ($found = collect($list)->first(fn ($item) => str_starts_with($item, "{$name}:"))) === null ? null : (int) substr($found, strlen($name) + 1);
+        $field = ['required' => in_array('required', $strings, true)];
+
+        if (in_array('array:'.implode(',', LanguageRegistry::codes()), $strings, true)) {
+            $locale = collect(array_keys($rules))->first(fn ($child) => str_starts_with($child, "{$key}.") && ! str_contains(substr($child, strlen($key) + 1), '.'));
+            $max = $locale === null ? null : $limit(array_filter($rules[$locale], 'is_string'), 'max');
+
+            return [...$field, 'kind' => 'text', 'max' => $max, 'multiline' => $max !== null && $max > 160];
+        }
+        if (in_array('list', $strings, true) || in_array('array', $strings, true)) {
+            $item = isset($rules["{$key}.*"]) ? $this->field($rules, "{$key}.*") : ['kind' => 'object', 'fields' => $this->fieldsUnder($rules, "{$key}.*.")];
+
+            return [...$field, 'kind' => in_array('list', $strings, true) ? 'list' : 'map', 'min' => $limit($strings, 'min'), 'max' => $limit($strings, 'max'), 'item' => $item];
+        }
+        $in = collect($rule)->first(fn ($item) => $item instanceof In);
+        if ($in !== null) {
+            return [...$field, 'kind' => 'choice', 'options' => array_values((fn () => $this->values)->call($in))];
+        }
+        $kind = match (true) {
+            in_array('boolean', $strings, true) => 'boolean',
+            in_array('integer', $strings, true) => 'integer',
+            in_array('date_format:Y-m-d', $strings, true) => 'date',
+            in_array('date_format:Y-m-d\TH:i', $strings, true) => 'datetime',
+            $strings === self::link() => 'link',
+            default => 'string',
+        };
+
+        return [...$field, 'kind' => $kind, ...array_filter(['min' => $limit($strings, 'min'), 'max' => $limit($strings, 'max')], fn ($value) => $value !== null)];
     }
 
     /**

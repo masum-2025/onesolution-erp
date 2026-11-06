@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import { ArrowDown, ArrowUp, Eye, FileText, Home, Lock, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { RouterLink } from 'vue-router';
+import { ArrowDown, ArrowUp, Eye, FileText, Home, LayoutList, Lock, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import { AppBadge, AppButton, AppDialog, AppField, AppSwitch, PageFrame, TranslatedFields, confirmAction, toast } from '@/ui';
 import { api } from '@/lib/http';
 import { formatNumber } from '@/lib/format';
@@ -154,7 +155,7 @@ async function preview(page) {
                 <li v-for="(page, index) in pages" :key="page.id" class="flex flex-wrap items-center gap-3 px-4 py-3.5 sm:px-5">
                     <component :is="page.is_home ? Home : FileText" class="size-5 shrink-0 text-muted" aria-hidden="true" />
                     <span class="min-w-0 flex-1">
-                        <span class="block truncate text-[14px] font-medium text-fg">{{ pick(page.title) }}</span>
+                        <RouterLink :to="`/partner/website/pages/${page.id}`" class="block truncate text-[14px] font-medium text-fg hover:text-brand-text hover:underline">{{ pick(page.title) }}</RouterLink>
                         <span class="block truncate text-[12.5px] text-muted">
                             <span class="font-mono" dir="ltr">/{{ page.is_home ? '' : page.slug }}</span>
                             · {{ t('website.pages.sections', { count: formatNumber(page.blocks.length) }) }}
@@ -175,6 +176,7 @@ async function preview(page) {
                             <AppButton size="sm" variant="ghost" :icon="ArrowDown" :disabled="index === pages.length - 1 || busy === 'order'" :aria-label="t('website.move_down')" @click="move(index, 1)" />
                         </template>
                         <AppButton size="sm" variant="ghost" :icon="Eye" :aria-label="`${t('website.overview.preview')} ${pick(page.title)}`" @click="preview(page)" />
+                        <AppButton size="sm" :icon="LayoutList" @click="$router.push(`/partner/website/pages/${page.id}`)">{{ t('website.editor.sections') }}</AppButton>
                         <AppButton v-if="can.write" size="sm" :icon="Pencil" :aria-label="`${t('website.pages.edit')} ${pick(page.title)}`" @click="open(page)" />
                         <AppButton v-if="can.write && !page.is_home" size="sm" variant="danger-soft" :icon="Trash2" :aria-label="`${t('website.pages.delete')} ${pick(page.title)}`" @click="remove(page)" />
                     </span>

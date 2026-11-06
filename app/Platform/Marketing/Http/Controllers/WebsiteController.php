@@ -179,7 +179,8 @@ class WebsiteController extends Controller
         $owner = $this->hasRole(PartnerUserRole::Owner);
         $choices = [
             'templates' => Site::TEMPLATES,
-            'block_types' => BlockTypes::TYPES,
+            // Prices are the platform's own (Pages::checkType): other partners are not offered that section.
+            'block_types' => $this->partner()->is_house ? BlockTypes::TYPES : array_values(array_diff(BlockTypes::TYPES, ['pricing'])),
             'effects' => BlockTypes::EFFECTS,
             'product_styles' => BlockTypes::PRODUCT_STYLES,
             'slide_visuals' => BlockTypes::SLIDE_VISUALS,
@@ -196,6 +197,8 @@ class WebsiteController extends Controller
         }
         $pages = Page::query()->where('site_id', $site->getKey())->orderBy('sort_order')->get();
         $blocks = Block::query()->where('site_id', $site->getKey())->orderBy('sort_order')->get()->groupBy('page_id');
+        // The section forms, described by the rules that check them.
+        $choices['fields'] = app(BlockTypes::class)->fields($site->default_locale);
 
         return [
             'site' => [

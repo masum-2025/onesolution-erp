@@ -5334,6 +5334,11 @@ A partner's own marketing website, edited in the partner console; the house part
   title, address, menu, order with ↑↓, page SEO, delete) and Settings (colours with ready sets, languages,
   header menu and buttons, notice bar with dates, contact, social, footer columns, site SEO). Saves carry
   `base_version`; leaving with unsaved settings asks first. Texts in `locales/{en,bn}/website.json`.
-- **Later**: MKT-2b the page editor (sections) with a live preview; MKT-3 picture uploads, partner websites on
+- **Page editor** (MKT-2b, `/partner/website/pages/:id`): the page's sections (add any kind, fill in, ↑↓,
+  hide, show between two days, delete) beside a live preview of the drafts (signed link, desktop / phone,
+  each language, reloaded after every save). The forms are drawn from `BlockTypes::fields()`, which reads
+  the same validation rules (kind, required, limits, options), sent as `choices.fields`; a new kind of
+  section needs its rules and its texts, no new form. Partners other than the house are not offered pricing.
+- **Later**: MKT-3 picture uploads, partner websites on
   their own domains, contact form and leads, partner plans in pricing. A new sector, country or partner needs
   no code: content, languages and colours are data.
