@@ -85,7 +85,7 @@ Route::withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, Pr
     ->group(function () {
         Route::get('website-preview/{site}', [PublicWebsiteController::class, 'preview'])->name('marketing.preview');
         Route::get('website-preview/{site}/assets/{file}', [PublicWebsiteController::class, 'previewAsset'])
-            ->where('file', 'site\.css|site\.js|fonts/[a-z0-9-]+\.woff2');
+            ->where('file', 'site\.css|site\.js|fonts/[a-z0-9-]+\.woff2|media/[0-9A-Za-z]{26}/(large|small)\.webp');
     });
 
 // A data export file: only through a short-lived signed link from the export screen.

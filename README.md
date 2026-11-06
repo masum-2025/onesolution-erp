@@ -5339,6 +5339,24 @@ A partner's own marketing website, edited in the partner console; the house part
   each language, reloaded after every save). The forms are drawn from `BlockTypes::fields()`, which reads
   the same validation rules (kind, required, limits, options), sent as `choices.fields`; a new kind of
   section needs its rules and its texts, no new form. Partners other than the house are not offered pricing.
-- **Later**: MKT-3 picture uploads, partner websites on
-  their own domains, contact form and leads, partner plans in pricing. A new sector, country or partner needs
+- **Pictures** (MKT-3a, `mkt_media`, `MediaLibrary`, screen `/partner/website/media`): owners and sales
+  staff upload JPG/PNG/WebP (kind read from the bytes); each is redrawn as two WebP copies (1600 / 480 px,
+  hidden camera data dropped) on the private disk. Limits are core rules `marketing.max_media_mb` (5) and
+  `marketing.max_media_count` (300), set by the platform per partner. A section or setting names a picture
+  under an `image` key (`BlockTypes::media()`, form kind `media`): slides, gallery items, text sections and
+  the site's sharing picture (`settings.seo.image`). Saving checks the picture is the site's own. The site
+  serves `/assets/media/{id}/{large|small}.webp` only for pictures its published snapshot uses (a preview:
+  its drafts), with width, height, `srcset` and the picture's alt text. A picture used by the drafts, the
+  published snapshot or a kept version cannot be removed. Upload and removal are audited; uploads are
+  throttled (`marketing.uploads_per_minute`).
+- **Contact form and messages** (MKT-3b, `mkt_leads`, `Leads`, screen `/partner/website/leads`): a
+  `contact_form` section (name and phone always; email, company, message when asked) posts to
+  `POST /contact` on the site's host (a plain form post, no script, no session). Bots are kept out by a
+  hidden field, a signed time stamp (sent 3 s – 2 days after the page was drawn) and
+  `marketing.leads_per_hour` per address; the same phone within 10 minutes is one message. The answer is
+  the page again: a thank-you, or the visitor's answers with what to fix. `LeadReceived` is dispatched;
+  `TellPartnerOfLead` (queued) emails the partner's owners and sales staff (notification
+  `marketing.lead_received`, rewordable). Only owners and sales staff read messages (they hold phone
+  numbers); owners remove one (audited without the visitor's details). A CRM can listen to `LeadReceived`.
+- **Later**: MKT-3c partner websites on their own domains, partner plans in pricing. A new sector, country or partner needs
   no code: content, languages and colours are data.

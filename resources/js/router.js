@@ -198,6 +198,18 @@ const routes = [
                 meta: { context: 'partner', ns: ['partner', 'website'] },
             },
             {
+                path: 'partner/website/media',
+                name: 'partner-website-media',
+                component: () => import('./pages/partner/website/WebsiteMediaPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'website'] },
+            },
+            {
+                path: 'partner/website/leads',
+                name: 'partner-website-leads',
+                component: () => import('./pages/partner/website/WebsiteLeadsPage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'website'] },
+            },
+            {
                 path: 'partner/website/settings',
                 name: 'partner-website-settings',
                 component: () => import('./pages/partner/website/WebsiteSettingsPage.vue'),

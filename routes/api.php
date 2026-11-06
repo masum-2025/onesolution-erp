@@ -30,6 +30,8 @@ use App\Platform\Localization\Http\Controllers\OrganizationTranslationController
 use App\Platform\Localization\Http\Controllers\PartnerLanguageController;
 use App\Platform\Localization\Http\Controllers\TextBundleController;
 use App\Platform\Marketing\Http\Controllers\WebsiteController;
+use App\Platform\Marketing\Http\Controllers\WebsiteLeadController;
+use App\Platform\Marketing\Http\Controllers\WebsiteMediaController;
 use App\Platform\Modules\Http\Controllers\MenuController;
 use App\Platform\Modules\Http\Controllers\ModuleConsentController;
 use App\Platform\Modules\Http\Controllers\ModuleController;
@@ -499,6 +501,20 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
     // The partner's company website (MKT-1): pages of sections, published as a snapshot.
     Route::get('website', [WebsiteController::class, 'show']);
     Route::get('website/versions', [WebsiteController::class, 'versions']);
+    // Its pictures (MKT-3a).
+    Route::get('website/media', [WebsiteMediaController::class, 'index']);
+    Route::get('website/media/{media}/{size}', [WebsiteMediaController::class, 'file'])->where(['media' => '[0-9A-Za-z]{26}', 'size' => 'large|small']);
+    Route::post('website/media', [WebsiteMediaController::class, 'store'])->middleware('throttle:marketing-uploads');
+    // Messages from its contact form (MKT-3b).
+    Route::get('website/leads', [WebsiteLeadController::class, 'index']);
+    Route::middleware('throttle:tenancy-sensitive')->where(['lead' => '[0-9A-Za-z]{26}'])->group(function () {
+        Route::patch('website/leads/{lead}', [WebsiteLeadController::class, 'update']);
+        Route::delete('website/leads/{lead}', [WebsiteLeadController::class, 'destroy']);
+    });
+    Route::middleware('throttle:tenancy-sensitive')->where(['media' => '[0-9A-Za-z]{26}'])->group(function () {
+        Route::patch('website/media/{media}', [WebsiteMediaController::class, 'update']);
+        Route::delete('website/media/{media}', [WebsiteMediaController::class, 'destroy']);
+    });
     Route::middleware('throttle:tenancy-sensitive')->where(['page' => '[0-9A-Za-z]{26}', 'block' => '[0-9A-Za-z]{26}', 'version' => '[0-9A-Za-z]{26}'])->group(function () {
         Route::post('website', [WebsiteController::class, 'store']);
         Route::patch('website', [WebsiteController::class, 'update']);

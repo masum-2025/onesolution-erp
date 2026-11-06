@@ -10,6 +10,7 @@ use App\Platform\Countries\CountriesServiceProvider;
 use App\Platform\DataExport\DataExportServiceProvider;
 use App\Platform\Identity\IdentityServiceProvider;
 use App\Platform\Localization\LocalizationServiceProvider;
+use App\Platform\Marketing\MarketingServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
 use App\Platform\Monitoring\MonitoringServiceProvider;
 use App\Platform\Notifications\NotificationsServiceProvider;
@@ -43,6 +44,7 @@ return [
     AddonsServiceProvider::class,
     PaymentsServiceProvider::class,
     NotificationsServiceProvider::class,
+    MarketingServiceProvider::class,
     TransfersServiceProvider::class,
     PartnerApiServiceProvider::class,
     IdentityServiceProvider::class,

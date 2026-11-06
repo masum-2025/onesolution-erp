@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-vue-next';
 import { AppButton, AppField, AppSwitch, DateInput, TranslatedFields } from '@/ui';
 import { has, t } from '@/lib/i18n';
 import { SWATCHES, blankFor } from './blockForm';
+import MediaField from './MediaField.vue';
 
 defineOptions({ name: 'SchemaField' });
 
@@ -78,6 +79,16 @@ const mapKeys = computed(() => (Array.isArray(props.root?.plans) ? props.root.pl
         :maxlength="field.max ?? 300"
         :errors="errors"
         :error-prefix="path"
+        @update:model-value="emit('update:modelValue', $event)"
+    />
+
+    <!-- One of the website's pictures -->
+    <MediaField
+        v-else-if="field.kind === 'media'"
+        :model-value="modelValue || null"
+        :label="name"
+        :hint="path.includes('slides') ? t('website.media.slide_hint') : ''"
+        :error="error"
         @update:model-value="emit('update:modelValue', $event)"
     />
 

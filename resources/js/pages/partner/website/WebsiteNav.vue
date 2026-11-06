@@ -7,6 +7,8 @@ const route = useRoute();
 const LINKS = [
     { to: '/partner/website', key: 'overview' },
     { to: '/partner/website/pages', key: 'pages' },
+    { to: '/partner/website/media', key: 'media' },
+    { to: '/partner/website/leads', key: 'leads' },
     { to: '/partner/website/settings', key: 'settings' },
 ];
 </script>

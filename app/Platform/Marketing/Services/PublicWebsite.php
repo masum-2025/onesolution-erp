@@ -3,6 +3,7 @@
 namespace App\Platform\Marketing\Services;
 
 use App\Platform\Branding\BrandResolver;
+use App\Platform\Marketing\Models\Media;
 use App\Platform\Marketing\Models\Site;
 use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Packaging\PlanCatalog;
@@ -109,6 +110,22 @@ class PublicWebsite
 
         $slug = $page['slug'] ?? '';
 
+        // The site's own pictures this page shows: where they are, their size (no jumping while they
+        // load) and the words read out instead. A picture no longer kept is left out.
+        $rows = Media::query()->where('site_id', $site->getKey())
+            ->whereIn('id', MediaLibrary::idsIn(['blocks' => $blocks, 'seo' => $settings['seo'] ?? []]))
+            ->get(['id', 'width', 'height', 'alt'])->keyBy('id');
+        $picture = function (?string $id) use ($rows, $assets, $tx): ?array {
+            $row = $id === null ? null : $rows->get($id);
+
+            return $row === null ? null : [
+                'src' => "{$assets['base']}/media/{$row->id}/large.webp",
+                'small' => "{$assets['base']}/media/{$row->id}/small.webp",
+                'srcset' => "{$assets['base']}/media/{$row->id}/small.webp ".MediaLibrary::SIZES['small']."w, {$assets['base']}/media/{$row->id}/large.webp {$row->width}w",
+                'width' => $row->width, 'height' => $row->height, 'alt' => $tx($row->alt),
+            ];
+        };
+
         return [
             'site' => $site,
             'template' => $snapshot['template'],
@@ -139,8 +156,13 @@ class PublicWebsite
             'page' => $page,
             'blocks' => $blocks,
             'assets' => $assets,
+            // The contact form posts to the site itself (never in a preview); a post's answer fills in "form".
+            'form_action' => $preview ? null : $base.'/contact',
+            'form_stamp' => Leads::stamp($site),
+            'form' => null,
+            'picture' => $picture,
             'preview' => $preview,
-            'seo' => $page === null ? null : $this->seo($snapshot, $page, $locale, $origin, $tx, $blocks, (string) ($brand['name'] ?? $site->partner->name), $brand['logo_url'] ?? null),
+            'seo' => $page === null ? null : $this->seo($snapshot, $page, $locale, $origin, $tx, $blocks, (string) ($brand['name'] ?? $site->partner->name), $brand['logo_url'] ?? null, $picture($settings['seo']['image'] ?? null)['src'] ?? null),
             'verification' => $preview ? [] : array_filter([
                 'google-site-verification' => $settings['seo']['google_verification'] ?? null,
                 'msvalidate.01' => $settings['seo']['bing_verification'] ?? null,
@@ -301,14 +323,14 @@ class PublicWebsite
      *
      * @return array<string, mixed>
      */
-    private function seo(array $snapshot, array $page, string $locale, string $origin, \Closure $tx, array $blocks, string $name, ?string $logo): array
+    private function seo(array $snapshot, array $page, string $locale, string $origin, \Closure $tx, array $blocks, string $name, ?string $logo, ?string $shared): array
     {
         $main = $snapshot['default_locale'];
         $site = $snapshot['settings']['seo'] ?? [];
         $url = fn (string $code) => rtrim($origin, '/').($code === $main ? '' : '/'.$code).'/'.$page['slug'];
         $title = $tx($page['seo']['title'] ?? null) ?: ($page['is_home'] ? ($tx($site['title'] ?? null) ?: $name) : $tx($page['title']).' · '.$name);
         $description = $tx($page['seo']['description'] ?? null) ?: $tx($site['description'] ?? null);
-        $image = $page['seo']['image_url'] ?? $site['image_url'] ?? $logo;
+        $image = $page['seo']['image_url'] ?? $shared ?? $site['image_url'] ?? $logo;
         $absolute = fn (?string $path) => $path === null ? null : (str_starts_with($path, 'http') ? $path : rtrim($origin, '/').$path);
 
         $graph = [['@type' => 'Organization', 'name' => $name, 'url' => rtrim($origin, '/').'/', 'logo' => $absolute($logo)]];

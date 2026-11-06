@@ -96,10 +96,12 @@ class Pages
     public function addBlock(Site $site, Page $page, array $input): Block
     {
         $this->checkType($site, $input['type']);
+        $data = $this->types->clean($input['type'], (array) $input['data'], $site->default_locale);
+        MediaLibrary::checkOwned($site, $data);
 
         return Block::create([
             'site_id' => $site->getKey(), 'page_id' => $page->getKey(), 'type' => $input['type'],
-            'data' => $this->types->clean($input['type'], (array) $input['data'], $site->default_locale),
+            'data' => $data,
             'sort_order' => (int) Block::query()->where('page_id', $page->getKey())->max('sort_order') + 1,
             'is_visible' => $input['is_visible'] ?? true,
             'visible_from' => $input['visible_from'] ?? null,
@@ -117,6 +119,7 @@ class Pages
             }
             if (array_key_exists('data', $input)) {
                 $block->data = $this->types->clean($block->type, (array) $input['data'], $site->default_locale);
+                MediaLibrary::checkOwned($site, $block->data);
             }
             $block->fill(array_intersect_key($input, array_flip(['is_visible', 'visible_from', 'visible_until'])));
             if ($block->isDirty()) {

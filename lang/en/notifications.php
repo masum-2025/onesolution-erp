@@ -16,6 +16,11 @@ return [
             'sms' => '{{ product }}: support access to {{ organization }} {{ decision }}. {{ link }}',
             'action' => 'Open support access',
         ],
+        'marketing_lead_received' => [
+            'subject' => '{{ visitor }} wrote through your website',
+            'body' => "{{ visitor }} sent a message through the contact form of your website.\n\n{{ details }}\n\nTheir phone and email are in the console. Answering soon wins more clients.",
+            'action' => 'Open the messages',
+        ],
         'exports_ready' => [
             'subject' => 'Your data export from {{ organization }} is ready',
             'body' => "The export of all data of {{ organization }} is ready to download.\n\nThe file is kept until {{ expires }}; after that, prepare a new one.",
@@ -185,6 +190,7 @@ If this is not right, turn the account off at once and contact your gateway.",
     'catalog' => [
         'support_requested' => ['name' => 'Support access requested', 'description' => 'To the client people who can approve support access.'],
         'support_decided' => ['name' => 'Support access decided', 'description' => 'To your staff member who asked, when the client approves or rejects.'],
+        'marketing_lead_received' => ['name' => 'Website message', 'description' => 'To your owners and sales staff when someone writes through your website\'s contact form.'],
         'exports_ready' => ['name' => 'Data export ready', 'description' => 'To the client person who asked for the export.'],
         'billing_invoice_issued' => ['name' => 'New invoice (client)', 'description' => 'To the client people who can see billing.'],
         'billing_partner_invoice_issued' => ['name' => 'New invoice (you)', 'description' => 'To your owners and billing staff. Sent by us, in our brand.'],
@@ -245,6 +251,7 @@ If this is not right, turn the account off at once and contact your gateway.",
         'person' => 'Who made the change',
         'takes_effect' => 'When it takes effect',
         'company' => 'The new company',
+        'visitor' => 'Who wrote',
     ],
 
     // Example values for previews.
@@ -271,6 +278,7 @@ If this is not right, turn the account off at once and contact your gateway.",
         'ends' => '11 October 2026',
         'read_only_on' => '17 October 2026',
         'date' => '27 October 2026',
+        'visitor' => 'Karim Ahmed',
     ],
 
     'severity' => ['critical' => 'Critical', 'high' => 'High', 'normal' => 'Normal', 'low' => 'Low'],

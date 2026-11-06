@@ -906,6 +906,31 @@ return [
         'category' => 'billing',
         'sort_order' => 192,
     ],
+    // Company websites (MKT-3a): pictures a partner uploads for its own site.
+    [
+        'key' => 'marketing.max_media_mb',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1, 'maximum' => 20],
+        'default' => 5,
+        'label' => 'rules.core.marketing_max_media_mb.label',
+        'description' => 'rules.core.marketing_max_media_mb.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'website',
+        'sort_order' => 170,
+    ],
+    [
+        'key' => 'marketing.max_media_count',
+        'type' => 'integer',
+        'schema' => ['minimum' => 1, 'maximum' => 5000],
+        'default' => 300,
+        'label' => 'rules.core.marketing_max_media_count.label',
+        'description' => 'rules.core.marketing_max_media_count.description',
+        'overridable_levels' => ['platform', 'partner'],
+        'partner_editable' => false,
+        'category' => 'website',
+        'sort_order' => 171,
+    ],
     // Languages and wording (LANG-1). Base texts ship in files; the platform adds
     // languages and every level may reword texts in the database, inside these limits.
     [

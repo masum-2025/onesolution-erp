@@ -6,6 +6,7 @@ import { AppButton, AppField, AppSwitch, AppTabs, DateInput, PageFrame, Translat
 import { api } from '@/lib/http';
 import { languageName, t } from '@/lib/i18n';
 import LinkList from './LinkList.vue';
+import MediaField from './MediaField.vue';
 import WebsiteNav from './WebsiteNav.vue';
 import { changedMeanwhile, useWebsite } from './useWebsite';
 
@@ -39,7 +40,7 @@ function blank() {
         contact: { phone: '', email: '', address: {} },
         social: Object.fromEntries((choices.value.social ?? []).map((network) => [network, ''])),
         footer: { about: {}, columns: [], copyright: {} },
-        seo: { title: {}, description: {}, image_url: '', google_verification: '', bing_verification: '' },
+        seo: { title: {}, description: {}, image: null, image_url: '', google_verification: '', bing_verification: '' },
     };
 }
 
@@ -263,7 +264,8 @@ onBeforeRouteLeave(async () => {
                         <p class="text-[12.5px] text-muted">{{ t('website.seo.site_hint') }}</p>
                         <TranslatedFields v-model="form.seo.title" :label="t('website.seo.search_title')" :maxlength="70" :errors="errors" error-prefix="seo.title" />
                         <TranslatedFields v-model="form.seo.description" :label="t('website.seo.description')" multiline :maxlength="170" :errors="errors" error-prefix="seo.description" />
-                        <AppField :label="t('website.seo.image_url')" :hint="t('website.seo.image_hint')" :error="errors['seo.image_url']" optional>
+                        <MediaField v-model="form.seo.image" :label="t('website.seo.image')" :hint="t('website.seo.image_pick_hint')" :error="errors['seo.image']" />
+                        <AppField v-if="!form.seo.image" :label="t('website.seo.image_url')" :hint="t('website.seo.image_hint')" :error="errors['seo.image_url']" optional>
                             <template #default="{ id }"><input :id="id" v-model="form.seo.image_url" class="field-input font-mono" dir="ltr" maxlength="300" placeholder="https://" /></template>
                         </AppField>
                         <div class="grid gap-4 sm:grid-cols-2">

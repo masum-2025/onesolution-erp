@@ -197,6 +197,30 @@ footer .brand{color:#fff}
 .gal figure{position:relative;border-radius:18px;overflow:hidden}
 .gal .g1{grid-row:span 2}
 .gal figcaption{position:absolute;inset-inline:12px;bottom:12px;background:rgba(15,26,51,.72);color:#fff;font-size:13px;padding:6px 12px;border-radius:99px;width:max-content;backdrop-filter:blur(6px)}
+/* contact form */
+.lead-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start}
+.lead-solo{grid-template-columns:minmax(0,640px);justify-content:center}
+.lead-form{display:grid;gap:14px;background:#fff;border:1px solid rgba(15,26,51,.1);border-radius:20px;padding:26px;box-shadow:0 20px 40px -28px rgba(15,26,51,.35)}
+.lead-form .btn{justify-self:start;border:0;cursor:pointer;font:inherit}
+.lead-form .btn:disabled{opacity:.55;cursor:not-allowed}
+.lf{display:grid;gap:6px;font-size:14px;font-weight:600;color:var(--ink)}
+.lf small{font-weight:400;color:var(--ink-2)}
+.lf input,.lf textarea{font:inherit;font-weight:400;padding:11px 14px;border:1px solid rgba(15,26,51,.18);border-radius:12px;background:#fff;color:var(--ink);width:100%}
+.lf input:focus,.lf textarea:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+.lf [aria-invalid=true]{border-color:#e11d48}
+.lf em{font-style:normal;font-weight:400;font-size:13px;color:#be123c}
+.lead-note{font-size:14px;padding:10px 14px;border-radius:12px;background:rgba(15,26,51,.05)}
+.lead-note.bad{background:#fff1f2;color:#9f1239}
+.lead-done h3{font-size:22px}.lead-done p{color:var(--ink-2)}
+.lead-info{list-style:none;display:grid;gap:12px;padding:0;margin:0}
+.lead-info li{display:grid;gap:2px;padding:18px 20px;border-radius:16px;background:rgba(15,26,51,.04)}
+.lead-info b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.lead-info a{color:var(--blue);font-weight:600;overflow-wrap:anywhere}
+.trap{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:760px){.lead-grid{grid-template-columns:1fr}}
+.gal img{display:block;width:100%;height:100%;object-fit:cover}
+.slide-pic img{display:block;width:100%;height:auto;max-height:460px;object-fit:cover;border-radius:22px;box-shadow:0 30px 60px -30px rgba(15,26,51,.45)}
+.prose-pic{margin-top:22px}.prose-pic img{display:block;width:100%;height:auto;border-radius:16px}
 .shot{height:100%;padding:18px;display:grid;gap:10px;align-content:start}
 .shot i{display:block;height:14px;border-radius:6px;background:rgba(255,255,255,.55)}
 .shot i:nth-child(2){width:70%}.shot i:nth-child(3){width:45%}
