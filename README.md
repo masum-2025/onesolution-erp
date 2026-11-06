@@ -5349,6 +5349,14 @@ A partner's own marketing website, edited in the partner console; the house part
   its drafts), with width, height, `srcset` and the picture's alt text. A picture used by the drafts, the
   published snapshot or a kept version cannot be removed. Upload and removal are audited; uploads are
   throttled (`marketing.uploads_per_minute`).
-- **Later**: MKT-3b contact form and leads, MKT-3c partner websites on their own domains, partner plans in
-  pricing. A new sector, country or partner needs
+- **Contact form and messages** (MKT-3b, `mkt_leads`, `Leads`, screen `/partner/website/leads`): a
+  `contact_form` section (name and phone always; email, company, message when asked) posts to
+  `POST /contact` on the site's host (a plain form post, no script, no session). Bots are kept out by a
+  hidden field, a signed time stamp (sent 3 s – 2 days after the page was drawn) and
+  `marketing.leads_per_hour` per address; the same phone within 10 minutes is one message. The answer is
+  the page again: a thank-you, or the visitor's answers with what to fix. `LeadReceived` is dispatched;
+  `TellPartnerOfLead` (queued) emails the partner's owners and sales staff (notification
+  `marketing.lead_received`, rewordable). Only owners and sales staff read messages (they hold phone
+  numbers); owners remove one (audited without the visitor's details). A CRM can listen to `LeadReceived`.
+- **Later**: MKT-3c partner websites on their own domains, partner plans in pricing. A new sector, country or partner needs
   no code: content, languages and colours are data.

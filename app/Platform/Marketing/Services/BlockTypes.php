@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  */
 final class BlockTypes
 {
-    public const TYPES = ['hero_slider', 'stats', 'ticker', 'offer', 'cards', 'product', 'features', 'partner', 'pricing', 'gallery', 'news', 'faq', 'cta', 'text'];
+    public const TYPES = ['hero_slider', 'stats', 'ticker', 'offer', 'cards', 'product', 'features', 'partner', 'pricing', 'gallery', 'news', 'faq', 'cta', 'text', 'contact_form'];
 
     /** Slider effects, product section styles, and the small drawn pictures a slide or product card can show. */
     public const EFFECTS = ['fade', 'slide', 'zoom'];
@@ -169,6 +169,17 @@ final class BlockTypes
             'cta' => [...$this->text($main, 'title', 120, true), ...$this->text($main, 'text', 240), ...$button('primary'), ...$button('secondary')],
             // Plain text in paragraphs (blank lines).
             'text' => [...$head, ...$this->text($main, 'body', 8000, true), 'image' => self::media()],
+            // A form visitors write through (name and phone always; the rest when asked), beside the
+            // site's phone, email and address. Messages go to the console's Messages (Leads).
+            'contact_form' => [
+                ...$head,
+                'ask_email' => ['required', 'boolean'],
+                'ask_company' => ['required', 'boolean'],
+                'ask_message' => ['required', 'boolean'],
+                ...$this->text($main, 'button_label', 40),
+                ...$this->text($main, 'thanks', 200),
+                'show_contact' => ['required', 'boolean'],
+            ],
             default => [],
         };
     }

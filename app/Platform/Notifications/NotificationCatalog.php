@@ -45,6 +45,13 @@ final class NotificationCatalog
             'audience' => 'client',
             'path' => '/billing',
         ],
+        // Company websites (MKT-3b): someone wrote through the contact form.
+        'marketing.lead_received' => [
+            'channels' => ['mail'],
+            'placeholders' => ['product', 'visitor', 'details', 'link'],
+            'audience' => 'partner',
+            'path' => '/partner/website/leads',
+        ],
         'billing.partner_invoice_issued' => [
             'channels' => ['mail'],
             'placeholders' => ['product', 'partner', 'number', 'amount', 'due', 'link'],

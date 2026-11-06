@@ -33,6 +33,7 @@ use App\Platform\Legal\Models\LegalDocument;
 use App\Platform\Localization\Models\Language;
 use App\Platform\Localization\Models\TranslationOverride;
 use App\Platform\Marketing\Models\Block;
+use App\Platform\Marketing\Models\Lead;
 use App\Platform\Marketing\Models\Media;
 use App\Platform\Marketing\Models\Page;
 use App\Platform\Marketing\Models\Redirect;
@@ -131,6 +132,7 @@ const PLATFORM_MODELS = [
     Version::class,
     Redirect::class,
     Media::class,
+    Lead::class,
     PartnerDomain::class,
     PartnerModule::class,
     // A public site's address (central): the slug -> organization lookup a public request needs

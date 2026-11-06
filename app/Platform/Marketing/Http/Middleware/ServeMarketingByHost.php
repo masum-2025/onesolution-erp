@@ -23,13 +23,23 @@ class ServeMarketingByHost
         if ($hosts === [] || ! in_array(strtolower($request->getHost()), $hosts, true)) {
             return $next($request);
         }
-        if (! $request->isMethod('GET') && ! $request->isMethod('HEAD')) {
+        // Reading only, except the contact form's post (MKT-3b).
+        $contact = $request->isMethod('POST') && trim($request->path(), '/') === 'contact';
+        if (! $contact && ! $request->isMethod('GET') && ! $request->isMethod('HEAD')) {
             return response('', 405, ['Allow' => 'GET, HEAD']);
+        }
+        // A plain form post only (no files, no JSON).
+        if ($contact && ! str_starts_with(strtolower((string) $request->header('Content-Type')), 'application/x-www-form-urlencoded')) {
+            return response('', 415);
         }
         $house = Partner::query()->where('is_house', true)->value('id');
         $site = $house === null ? null : Site::query()->where('partner_id', $house)->first();
         if ($site === null) {
             return response()->view('marketing.unavailable', [], 404)->header('Cache-Control', 'no-store');
+        }
+
+        if ($contact) {
+            return app(PublicWebsiteController::class)->contact($request, $site);
         }
 
         return app(PublicWebsiteController::class)->serve($request, $site, $request->path() === '/' ? '' : $request->path());

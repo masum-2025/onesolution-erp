@@ -40,6 +40,33 @@ return [
         'social_x' => 'X',
         'social_instagram' => 'Instagram',
 
+        // The contact form (MKT-3b).
+        'form' => [
+            'name' => 'Your name',
+            'phone' => 'Phone',
+            'email' => 'Email',
+            'company' => 'Company or school',
+            'message' => 'How can we help?',
+            'optional' => 'optional',
+            'send' => 'Send',
+            'trap' => 'Leave this empty',
+            'sent_title' => 'Thank you, we got your message',
+            'sent_text' => 'We will call or write to you soon.',
+            'check' => 'Please check the marked fields and send again.',
+            'expired' => 'The form waited too long. Please send it again.',
+            'busy' => 'Too many messages were sent from here. Please try again in an hour, or call us.',
+            'preview' => 'In the preview the form does not send.',
+            'call' => 'Call',
+            'write' => 'Write',
+            'visit' => 'Visit',
+            'errors' => [
+                'name' => 'Write your name (at least 2 letters).',
+                'phone' => 'Write a phone number we can call, such as 01712 345678.',
+                'email' => 'Write a full email address, such as name@example.com, or leave it empty.',
+                'long' => 'This is too long. Please shorten it.',
+            ],
+        ],
+
         // Words inside the drawn pictures of the software (examples, not real records).
         'demo_menu_overview' => 'Overview',
         'demo_menu_people' => 'People',
@@ -109,6 +136,7 @@ return [
         'pricing_house_only' => 'A pricing section shows the platform\'s own plans, so only the platform\'s website can have one for now.',
         'main_locale_missing' => 'The main language must be one of the website\'s languages.',
         'unknown_block' => 'This kind of section does not exist.',
+        'lead_not_found' => 'That message is not one of this website\'s.',
         'media_not_found' => 'That picture is not part of this website. Pick one from its pictures.',
         'media_in_use' => 'This picture is used on the website (a section, the settings, or a kept version). Take it out there first.',
         'media_full' => 'This website already keeps :count pictures. Remove pictures it no longer uses, then upload again.',

@@ -71,6 +71,11 @@ class MarketingException extends TenancyException
         return new self('main_locale_missing', 422, [], ['field' => 'default_locale']);
     }
 
+    public static function leadNotFound(): self
+    {
+        return new self('lead_not_found', 404);
+    }
+
     public static function mediaNotFound(): self
     {
         return new self('media_not_found', 404);

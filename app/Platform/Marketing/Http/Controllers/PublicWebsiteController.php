@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Platform\Marketing\Models\Media;
 use App\Platform\Marketing\Models\Redirect;
 use App\Platform\Marketing\Models\Site;
+use App\Platform\Marketing\Services\Leads;
 use App\Platform\Marketing\Services\MediaLibrary;
 use App\Platform\Marketing\Services\PublicWebsite;
 use App\Platform\Marketing\Services\Websites;
@@ -30,7 +31,7 @@ class PublicWebsiteController extends Controller
 
     private const IMAGE_TYPES = ['png' => 'image/png', 'webp' => 'image/webp', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg'];
 
-    public function __construct(private PublicWebsite $public, private Websites $websites, private MediaLibrary $media) {}
+    public function __construct(private PublicWebsite $public, private Websites $websites, private MediaLibrary $media, private Leads $leads) {}
 
     /** The site on its own host. */
     public function serve(Request $request, Site $site, string $path): Response
@@ -82,6 +83,63 @@ class PublicWebsiteController extends Controller
         }
 
         return $this->guarded(response($cached, 200, ['Content-Type' => 'text/html; charset=UTF-8']), ['Cache-Control' => 'public, max-age=60']);
+    }
+
+    /**
+     * A visitor's message from the contact form (POST /contact on the site's host). Answered with
+     * the page again (never kept): a thank-you, or their answers with what to fix. A bot's post
+     * (the hidden field filled) is thanked and dropped; a stale or forged stamp asks to send again.
+     */
+    public function contact(Request $request, Site $site): Response
+    {
+        if ($limited = $this->limited($request)) {
+            return $limited;
+        }
+        if ($site->status !== Site::PUBLISHED || $site->published === null) {
+            return $this->unavailable();
+        }
+        $snapshot = $site->published;
+        $slug = trim((string) $request->input('page', ''), '/');
+        $page = $this->public->page($snapshot, $slug);
+        $blockId = (string) $request->input('block', '');
+        $block = $page === null ? null : collect($page['blocks'])->first(fn ($item) => $item['id'] === $blockId && $item['type'] === 'contact_form');
+        if ($block === null) {
+            return $this->unavailable();
+        }
+        $lang = (string) $request->input('lang', '');
+        $locale = in_array($lang, $snapshot['locales'], true) ? $lang : $snapshot['default_locale'];
+        $form = ['block' => $blockId, 'state' => 'sent', 'old' => [], 'errors' => []];
+        $status = 200;
+        // Only texts (anything else counts as empty), at most what any field takes.
+        $input = array_map(fn ($value) => is_string($value) ? mb_substr($value, 0, 2001) : '', $request->only(['name', 'phone', 'email', 'company', 'message']));
+
+        if (trim((string) $request->input(Leads::TRAP, '')) !== '') {
+            // A bot: thanked, nothing kept.
+        } elseif (! Leads::stampValid($site, (string) $request->input('stamp', ''))) {
+            $form = [...$form, 'state' => 'expired', 'old' => $input];
+            $status = 422;
+        } else {
+            [$errors, $values] = $this->leads->check($input, $block['data'], $locale);
+            $key = 'marketing-leads:'.$site->getKey().':'.$request->ip();
+            if ($errors !== []) {
+                $form = [...$form, 'state' => 'invalid', 'old' => $values, 'errors' => $errors];
+                $status = 422;
+            } elseif (RateLimiter::tooManyAttempts($key, (int) config('marketing.leads_per_hour'))) {
+                $form = [...$form, 'state' => 'busy', 'old' => $values];
+                $status = 429;
+            } else {
+                RateLimiter::hit($key, 3600);
+                $this->leads->receive($site, $values, $slug, $locale);
+            }
+        }
+
+        $origin = rtrim((string) config('marketing.url'), '/') ?: $request->getSchemeAndHttpHost();
+        $html = view('marketing.page', [
+            ...$this->public->view($site, $snapshot, $page, $locale, $origin, '', null, ['base' => '/assets', 'version' => (string) $site->cache_version]),
+            'form' => $form,
+        ])->render();
+
+        return $this->guarded(response($html, $status), ['Cache-Control' => 'no-store', 'X-Robots-Tag' => 'noindex']);
     }
 
     /** The drafts, behind a signed link from the console (an hour). */

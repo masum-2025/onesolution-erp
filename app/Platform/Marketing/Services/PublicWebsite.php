@@ -156,6 +156,10 @@ class PublicWebsite
             'page' => $page,
             'blocks' => $blocks,
             'assets' => $assets,
+            // The contact form posts to the site itself (never in a preview); a post's answer fills in "form".
+            'form_action' => $preview ? null : $base.'/contact',
+            'form_stamp' => Leads::stamp($site),
+            'form' => null,
             'picture' => $picture,
             'preview' => $preview,
             'seo' => $page === null ? null : $this->seo($snapshot, $page, $locale, $origin, $tx, $blocks, (string) ($brand['name'] ?? $site->partner->name), $brand['logo_url'] ?? null, $picture($settings['seo']['image'] ?? null)['src'] ?? null),
