@@ -6,10 +6,11 @@ use App\Platform\Branding\BrandResolver;
 use App\Platform\Marketing\Models\Media;
 use App\Platform\Marketing\Models\Site;
 use App\Platform\Modules\ModuleRegistry;
+use App\Platform\Packaging\Models\PartnerPlan;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Packaging\SectorCatalog;
-use App\Platform\Partners\Enums\DomainStatus;
 use App\Platform\Partners\Enums\DomainServes;
+use App\Platform\Partners\Enums\DomainStatus;
 use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Support\LocaleResolver;
 use App\Platform\Support\MoneyText;
@@ -262,10 +263,7 @@ class PublicWebsite
                 $block['module_count'] = count($this->modules->keys());
                 break;
             case 'pricing':
-                if (! $site->partner->is_house) {
-                    return null;
-                }
-                $block['plans'] = $this->plans($data, $locale);
+                $block['plans'] = $this->plans($site, $data, $locale);
                 if ($block['plans'] === []) {
                     return null;
                 }
@@ -276,12 +274,33 @@ class PublicWebsite
     }
 
     /**
-     * The plans a pricing block names, with their prices in its currency.
+     * The plans a pricing block names, with their prices in its currency: the
+     * platform's catalogue on its own site; a partner's own active plans on
+     * its site (an archived one, or one without that currency, just drops out).
      *
      * @return list<array<string, mixed>>
      */
-    private function plans(array $data, string $locale): array
+    private function plans(Site $site, array $data, string $locale): array
     {
+        $own = $site->partner->is_house ? null : PartnerPlan::query()->with('prices')->where('partner_id', $site->partner_id)
+            ->where('status', PartnerPlan::ACTIVE)->whereIn('id', $data['plans'])->get()->keyBy('id');
+        // One shape for both: name, description and prices [{currency, period, amount_minor}].
+        $find = function (string $key) use ($own, $locale): ?array {
+            if ($own !== null) {
+                $plan = $own->get($key);
+
+                return $plan === null ? null : [
+                    'name' => $plan->label($locale), 'description' => $plan->textIn('description', $locale) ?: null,
+                    'prices' => $plan->prices->map(fn ($row) => ['currency' => $row->currency_code, 'period' => $row->period, 'amount_minor' => $row->amount_minor])->all(),
+                ];
+            }
+            if (! $this->plans->has($key)) {
+                return null;
+            }
+            $plan = $this->plans->get($key);
+
+            return ['name' => $plan->label($locale), 'description' => $plan->description($locale), 'prices' => $plan->prices];
+        };
         // Whole amounts as "৳1,500" ("৳১,৫০০" in Bangla); anything with paisa or cents in the app's own way.
         $money = fn (int $minor, string $currency): string => $minor % 100 === 0
             ? (['BDT' => '৳', 'USD' => '$'][$currency] ?? $currency.' ').(new NumberFormatter($locale, NumberFormatter::DECIMAL))->format(intdiv($minor, 100))
@@ -289,11 +308,11 @@ class PublicWebsite
 
         $plans = [];
         foreach ($data['plans'] as $key) {
-            if (! $this->plans->has($key)) {
+            $plan = $find($key);
+            if ($plan === null) {
                 continue;
             }
-            $plan = $this->plans->get($key);
-            $price = fn (string $period) => collect($plan->prices)->first(fn ($row) => $row['currency'] === $data['currency'] && $row['period'] === $period);
+            $price = fn (string $period) => collect($plan['prices'])->first(fn ($row) => $row['currency'] === $data['currency'] && $row['period'] === $period);
             $monthly = $price('monthly');
             $yearly = $price('yearly');
             if ($monthly === null) {
@@ -302,8 +321,10 @@ class PublicWebsite
             $saved = $yearly !== null && $monthly['amount_minor'] > 0 ? intdiv(12 * $monthly['amount_minor'] - $yearly['amount_minor'], $monthly['amount_minor']) : 0;
             $plans[] = [
                 'key' => $key,
-                'name' => $plan->label($locale),
-                'description' => $plan->description($locale),
+                'name' => $plan['name'],
+                'description' => $plan['description'],
+                // The platform's plans sign up in the app; a partner's plan is talked over first (its contact form).
+                'url' => $own === null ? 'app:/signup?plan='.$key : '#write-to-us',
                 'free' => $monthly['amount_minor'] === 0,
                 'monthly' => $money((int) $monthly['amount_minor'], $data['currency']),
                 'monthly_minor' => (int) $monthly['amount_minor'],

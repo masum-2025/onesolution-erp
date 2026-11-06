@@ -4,7 +4,9 @@ namespace App\Platform\Marketing\Services;
 
 use App\Platform\Localization\LanguageRegistry;
 use App\Platform\Modules\ModuleRegistry;
+use App\Platform\Packaging\Models\PartnerPlan;
 use App\Platform\Packaging\PlanCatalog;
+use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\In;
@@ -41,7 +43,7 @@ final class BlockTypes
      *
      * @return array<string, mixed>
      */
-    public function rules(string $type, string $main): array
+    public function rules(string $type, string $main, ?Partner $partner = null): array
     {
         $head = [...$this->text($main, 'eyebrow', 60), ...$this->text($main, 'title', 160), ...$this->text($main, 'intro', 400)];
         $button = fn (string $name) => [...$this->text($main, "{$name}_label", 40), "{$name}_url" => $this->link()];
@@ -131,12 +133,12 @@ final class BlockTypes
                 'steps' => ['nullable', 'array', 'list', 'max:4'],
                 ...$this->text($main, 'steps.*', 80, true),
             ],
-            // Plans and prices from the plan catalogue (never typed here).
+            // Plans and prices never typed here: the platform's plan catalogue on its own site, a partner's own active plans on its site.
             'pricing' => [
                 ...$head,
                 'plans' => ['required', 'array', 'list', 'min:1', 'max:5'],
-                'plans.*' => ['required', 'string', Rule::in($this->plans->keys())],
-                'highlight' => ['nullable', 'string', Rule::in($this->plans->keys())],
+                'plans.*' => ['required', 'string', Rule::in($this->planKeys($partner))],
+                'highlight' => ['nullable', 'string', Rule::in($this->planKeys($partner))],
                 'currency' => ['required', Rule::in(['BDT', 'USD'])],
                 ...$this->text($main, 'note', 200),
                 'features' => ['nullable', 'array'],
@@ -190,12 +192,12 @@ final class BlockTypes
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    public function clean(string $type, array $data, string $main): array
+    public function clean(string $type, array $data, string $main, ?Partner $partner = null): array
     {
         if (! in_array($type, self::TYPES, true)) {
             throw ValidationException::withMessages(['type' => [__('marketing.errors.unknown_block')]]);
         }
-        $validator = Validator::make($data, $this->rules($type, $main));
+        $validator = Validator::make($data, $this->rules($type, $main, $partner));
         if ($validator->fails()) {
             throw ValidationException::withMessages(
                 collect($validator->errors()->toArray())->mapWithKeys(fn ($messages, $key) => ["data.{$key}" => $messages])->all()
@@ -213,9 +215,26 @@ final class BlockTypes
      *
      * @return array<string, list<array<string, mixed>>>
      */
-    public function fields(string $main): array
+    /**
+     * The plans a pricing section may name: the catalogue's keys on the
+     * platform's own site, the partner's own active plans (their ids) on a
+     * partner's site, never another partner's.
+     *
+     * @return list<string>
+     */
+    public function planKeys(?Partner $partner): array
     {
-        return collect(self::TYPES)->mapWithKeys(fn (string $type) => [$type => $this->fieldsUnder($this->rules($type, $main), '')])->all();
+        if ($partner === null || $partner->is_house) {
+            return $this->plans->keys();
+        }
+
+        return PartnerPlan::query()->where('partner_id', $partner->getKey())->where('status', PartnerPlan::ACTIVE)
+            ->orderBy('created_at')->pluck('id')->all();
+    }
+
+    public function fields(string $main, ?Partner $partner = null): array
+    {
+        return collect(self::TYPES)->mapWithKeys(fn (string $type) => [$type => $this->fieldsUnder($this->rules($type, $main, $partner), '')])->all();
     }
 
     /**

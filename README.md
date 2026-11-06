@@ -5366,5 +5366,10 @@ A partner's own marketing website, edited in the partner console; the house part
   console's "address" use the partner's first verified website domain (`Websites::address`). Platform and
   marketing hosts can never be added. A host shows only its own partner's site; a partner without a site
   shows "not available".
-- **Later**: partner plans in pricing. A new sector, country or partner needs
-  no code: content, languages and colours are data.
+- **Pricing on a partner's site**: the `pricing` section names plans, never prices. On the platform's site
+  these are plan catalogue keys (button: sign up for that plan). On a partner's site they are the
+  partner's own active partner plans (ids; the console shows their names, `choices.plan_names`), with the
+  plan's own name, description and prices (button: the contact form, `#write-to-us`). An archived plan
+  drops out of the page (within the page cache time) and can no longer be picked; another partner's plan
+  is refused (`BlockTypes::planKeys`).
+- A new sector, country or partner needs no code: content, languages, colours and plans are data.

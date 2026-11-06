@@ -17,6 +17,7 @@ use App\Platform\Marketing\Services\Pages;
 use App\Platform\Marketing\Services\SiteSettings;
 use App\Platform\Marketing\Services\Websites;
 use App\Platform\Modules\ModuleRegistry;
+use App\Platform\Packaging\Models\PartnerPlan;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Partners\Http\Controllers\Concerns\PartnerConsole;
 use App\Platform\Tenancy\Enums\PartnerUserRole;
@@ -179,8 +180,7 @@ class WebsiteController extends Controller
         $owner = $this->hasRole(PartnerUserRole::Owner);
         $choices = [
             'templates' => Site::TEMPLATES,
-            // Prices are the platform's own (Pages::checkType): other partners are not offered that section.
-            'block_types' => $this->partner()->is_house ? BlockTypes::TYPES : array_values(array_diff(BlockTypes::TYPES, ['pricing'])),
+            'block_types' => BlockTypes::TYPES,
             'effects' => BlockTypes::EFFECTS,
             'product_styles' => BlockTypes::PRODUCT_STYLES,
             'slide_visuals' => BlockTypes::SLIDE_VISUALS,
@@ -190,7 +190,9 @@ class WebsiteController extends Controller
             'social' => SiteSettings::SOCIAL,
             'locales' => LanguageRegistry::codes(),
             'modules' => collect(app(ModuleRegistry::class)->keys())->map(fn ($key) => ['key' => $key, 'name' => app(ModuleRegistry::class)->get($key)->label()])->values(),
-            'plans' => $this->partner()->is_house ? app(PlanCatalog::class)->keys() : [],
+            // Pricing names the catalogue's plans (house) or the partner's own active plans.
+            'plans' => $planKeys = app(BlockTypes::class)->planKeys($this->partner()),
+            'plan_names' => (object) $this->planNames($planKeys),
         ];
         if ($site === null) {
             return ['site' => null, 'choices' => $choices, 'can' => ['create' => $writer]];
@@ -198,7 +200,7 @@ class WebsiteController extends Controller
         $pages = Page::query()->where('site_id', $site->getKey())->orderBy('sort_order')->get();
         $blocks = Block::query()->where('site_id', $site->getKey())->orderBy('sort_order')->get()->groupBy('page_id');
         // The section forms, described by the rules that check them.
-        $choices['fields'] = app(BlockTypes::class)->fields($site->default_locale);
+        $choices['fields'] = app(BlockTypes::class)->fields($site->default_locale, $this->partner());
 
         return [
             'site' => [
@@ -217,6 +219,25 @@ class WebsiteController extends Controller
             'choices' => $choices,
             'can' => ['create' => false, 'write' => $writer, 'settings' => $owner, 'publish' => $owner],
         ];
+    }
+
+    /**
+     * What the console shows for each plan in the pricing form: the catalogue's label, or the
+     * partner plan's own name (its id is meaningless to people).
+     *
+     * @param  list<string>  $keys
+     * @return array<string, string>
+     */
+    private function planNames(array $keys): array
+    {
+        if ($this->partner()->is_house) {
+            $catalog = app(PlanCatalog::class);
+
+            return collect($keys)->mapWithKeys(fn ($key) => [$key => $catalog->get($key)->label()])->all();
+        }
+
+        return PartnerPlan::query()->where('partner_id', $this->partner()->getKey())->whereIn('id', $keys)->get()
+            ->mapWithKeys(fn (PartnerPlan $plan) => [$plan->getKey() => $plan->label()])->all();
     }
 
     /** @return array<string, mixed> */
