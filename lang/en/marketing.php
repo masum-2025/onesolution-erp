@@ -133,7 +133,6 @@ return [
         'home_stays' => 'The home page cannot be removed; change its sections instead.',
         'nothing_to_publish' => 'The website needs a home page before it can be published.',
         'version_not_found' => 'That earlier version is no longer kept.',
-        'pricing_house_only' => 'A pricing section shows the platform\'s own plans, so only the platform\'s website can have one for now.',
         'main_locale_missing' => 'The main language must be one of the website\'s languages.',
         'unknown_block' => 'This kind of section does not exist.',
         'lead_not_found' => 'That message is not one of this website\'s.',

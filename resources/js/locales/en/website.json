@@ -17,6 +17,8 @@
         "add_item": "Add to {name}",
         "remove_item": "Remove",
         "map_empty": "Choose the plans first.",
+        "no_plans": "You have no active plans yet. Make one, then pick it here; names and prices come from the plan.",
+        "make_plan": "Make a plan",
         "editor": {
             "text": "Add, fill in and order the sections of this page. The preview shows the drafts.",
             "missing": "This page is not there any more. Back to the",

@@ -95,8 +95,7 @@ class Pages
     /** @param  array<string, mixed>  $input  Validated (BlockRequest): type, data, visibility. */
     public function addBlock(Site $site, Page $page, array $input): Block
     {
-        $this->checkType($site, $input['type']);
-        $data = $this->types->clean($input['type'], (array) $input['data'], $site->default_locale);
+        $data = $this->types->clean($input['type'], (array) $input['data'], $site->default_locale, $site->partner);
         MediaLibrary::checkOwned($site, $data);
 
         return Block::create([
@@ -118,7 +117,7 @@ class Pages
                 throw MarketingException::changedMeanwhile();
             }
             if (array_key_exists('data', $input)) {
-                $block->data = $this->types->clean($block->type, (array) $input['data'], $site->default_locale);
+                $block->data = $this->types->clean($block->type, (array) $input['data'], $site->default_locale, $site->partner);
                 MediaLibrary::checkOwned($site, $block->data);
             }
             $block->fill(array_intersect_key($input, array_flip(['is_visible', 'visible_from', 'visible_until'])));
@@ -155,14 +154,6 @@ class Pages
             ->when($page !== null, fn ($query) => $query->whereKeyNot($page->getKey()))->exists();
         if ($taken) {
             throw MarketingException::slugTaken();
-        }
-    }
-
-    /** Prices come from the platform's plan catalogue: only the house's site shows a pricing block until partner plans can. */
-    private function checkType(Site $site, string $type): void
-    {
-        if ($type === 'pricing' && ! $site->partner->is_house) {
-            throw MarketingException::pricingHouseOnly();
         }
     }
 }

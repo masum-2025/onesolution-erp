@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { RouterLink } from 'vue-router';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-vue-next';
 import { AppButton, AppField, AppSwitch, DateInput, TranslatedFields } from '@/ui';
 import { has, t } from '@/lib/i18n';
@@ -34,7 +35,8 @@ const optional = computed(() => !props.field.required);
 function optionLabel(value) {
     if (props.field.key === 'modules' || props.path.endsWith('.modules')) return props.choices.modules?.find((module) => module.key === value)?.name ?? value;
     if (props.field.key === 'icon') return t(`website.icons.${value}`);
-    if (props.choices.plans?.includes(value)) return value.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
+    // A plan by its name (a partner's own plans are known only by id).
+    if (props.choices.plans?.includes(value)) return props.choices.plan_names?.[value] ?? value.replace(/_/g, ' ').replace(/^./, (letter) => letter.toUpperCase());
     return has(`website.options.${value}`) ? t(`website.options.${value}`) : value;
 }
 
@@ -155,6 +157,10 @@ const mapKeys = computed(() => (Array.isArray(props.root?.plans) ? props.root.pl
                 {{ optionLabel(option) }}
             </label>
         </div>
+        <p v-if="!field.item.options.length && field.key === 'plans'" class="text-[12.5px] text-muted">
+            {{ t('website.no_plans') }}
+            <RouterLink to="/partner/plans" class="font-medium text-brand-text hover:underline">{{ t('website.make_plan') }}</RouterLink>
+        </p>
         <p v-if="error" class="text-[12.5px] text-bad" role="alert">{{ error }}</p>
     </fieldset>
 

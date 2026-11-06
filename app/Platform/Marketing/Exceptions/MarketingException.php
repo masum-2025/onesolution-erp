@@ -61,11 +61,6 @@ class MarketingException extends TenancyException
         return new self('version_not_found', 404);
     }
 
-    public static function pricingHouseOnly(): self
-    {
-        return new self('pricing_house_only', 422, [], ['field' => 'type']);
-    }
-
     public static function mainLocaleMissing(): self
     {
         return new self('main_locale_missing', 422, [], ['field' => 'default_locale']);

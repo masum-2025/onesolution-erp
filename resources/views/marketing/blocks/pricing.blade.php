@@ -25,7 +25,7 @@
                     @if ($plan['features'] !== [])
                         <ul>@foreach ($plan['features'] as $feature)<li>{{ $tx($feature) }}</li>@endforeach</ul>
                     @endif
-                    <a @class(['btn', 'btn-p' => $plan['highlight'], 'btn-g' => ! $plan['highlight']]) href="{{ $link('app:/signup?plan='.$plan['key']) }}">{{ $plan['free'] ? $ui('start_free') : $ui('choose_plan', ['plan' => $plan['name']]) }}</a>
+                    <a @class(['btn', 'btn-p' => $plan['highlight'], 'btn-g' => ! $plan['highlight']]) href="{{ $link($plan['url']) }}">{{ $plan['free'] ? $ui('start_free') : $ui('choose_plan', ['plan' => $plan['name']]) }}</a>
                 </div>
             @endforeach
         </div>

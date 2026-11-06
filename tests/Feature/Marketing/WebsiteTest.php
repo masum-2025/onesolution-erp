@@ -168,9 +168,9 @@ it('keeps partners apart and keeps prices to the platform\'s site', function () 
     $this->asToken($tokenA)->postJson('/api/partner/website')->assertCreated()->assertJsonPath('data.site.template', 'corporate')
         // No verified website domain yet: no public address; never the platform's.
         ->assertJsonPath('data.site.address', null);
-    // The section forms come from the same rules; prices are not offered to a partner.
+    // The section forms come from the same rules; a partner's pricing offers only its own plans (none yet).
     $choices = $this->asToken($tokenA)->getJson('/api/partner/website')->assertOk()->json('data.choices');
-    expect($choices['block_types'])->not->toContain('pricing')->toContain('hero_slider')
+    expect($choices['block_types'])->toContain('pricing')->toContain('hero_slider')->and($choices['plans'])->toBe([])
         ->and(collect($choices['fields']['hero_slider'])->firstWhere('key', 'effect'))->toMatchArray(['kind' => 'choice', 'required' => true, 'options' => ['fade', 'slide', 'zoom']])
         ->and(collect($choices['fields']['hero_slider'])->firstWhere('key', 'slides'))->toMatchArray(['kind' => 'list', 'min' => 1, 'max' => 6])
         ->and(collect($choices['fields']['faq'])->firstWhere('key', 'items')['item']['fields'][0])->toMatchArray(['key' => 'question', 'kind' => 'text', 'required' => true]);
@@ -184,7 +184,7 @@ it('keeps partners apart and keeps prices to the platform\'s site', function () 
     $ownHome = Page::query()->where('site_id', Site::query()->where('partner_id', $this->w->partnerA->id)->value('id'))->where('is_home', true)->value('id');
     $this->asToken($tokenA)->postJson("/api/partner/website/pages/{$ownHome}/blocks", [
         'type' => 'pricing', 'data' => ['plans' => ['starter'], 'currency' => 'BDT'],
-    ])->assertUnprocessable()->assertJsonPath('code', 'pricing_house_only');
+    ])->assertUnprocessable()->assertJsonValidationErrors('data.plans.0');
 
     // The partner's own draft never shows on the platform's host.
     $this->asToken($tokenA)->postJson('/api/partner/website/publish')->assertOk();
