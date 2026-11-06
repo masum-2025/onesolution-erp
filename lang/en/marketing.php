@@ -109,6 +109,11 @@ return [
         'pricing_house_only' => 'A pricing section shows the platform\'s own plans, so only the platform\'s website can have one for now.',
         'main_locale_missing' => 'The main language must be one of the website\'s languages.',
         'unknown_block' => 'This kind of section does not exist.',
+        'media_not_found' => 'That picture is not part of this website. Pick one from its pictures.',
+        'media_in_use' => 'This picture is used on the website (a section, the settings, or a kept version). Take it out there first.',
+        'media_full' => 'This website already keeps :count pictures. Remove pictures it no longer uses, then upload again.',
+        'media_kind' => 'Only JPG, PNG or WebP pictures can be uploaded.',
+        'media_too_big' => 'This picture is bigger than :mb MB. Make it smaller and upload again.',
     ],
 
     'messages' => [
@@ -118,6 +123,7 @@ return [
         'restored' => 'The earlier version is live again, and your drafts now match it.',
         'offline' => 'The website is offline. Publish again to bring it back.',
         'deleted' => 'Removed.',
+        'media_added' => 'Picture added. Pick it in any section, then publish.',
     ],
 
 ];

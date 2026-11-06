@@ -92,6 +92,7 @@ class Websites
             }
             if (array_key_exists('settings', $changes)) {
                 $changes['settings'] = $this->settings->clean((array) $changes['settings'], $main);
+                MediaLibrary::checkOwned($site, $changes['settings']);
             }
             $site->fill(array_intersect_key($changes, array_flip(['template', 'locales', 'default_locale', 'settings'])));
             if (! $site->isDirty()) {

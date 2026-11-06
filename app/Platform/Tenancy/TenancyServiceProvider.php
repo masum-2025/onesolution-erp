@@ -72,6 +72,10 @@ class TenancyServiceProvider extends ServiceProvider
         RateLimiter::for('tenancy-sensitive', fn (Request $request) => Limit::perMinute((int) config('tenancy.throttle.sensitive'))
             ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
 
+        // A company website's pictures (MKT-3a): each upload is redrawn twice, so a few a minute.
+        RateLimiter::for('marketing-uploads', fn (Request $request) => Limit::perMinute((int) config('marketing.uploads_per_minute'))
+            ->by('marketing-uploads:'.($request->user()?->getAuthIdentifier() ?? $request->ip())));
+
         // Invitations send mail to addresses people type: an organization may send so many an
         // hour, a person so many a minute (the app is never a way to mail strangers in bulk).
         RateLimiter::for('member-invites', fn (Request $request) => [

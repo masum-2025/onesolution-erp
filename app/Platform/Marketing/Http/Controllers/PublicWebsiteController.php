@@ -3,8 +3,10 @@
 namespace App\Platform\Marketing\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Marketing\Models\Media;
 use App\Platform\Marketing\Models\Redirect;
 use App\Platform\Marketing\Models\Site;
+use App\Platform\Marketing\Services\MediaLibrary;
 use App\Platform\Marketing\Services\PublicWebsite;
 use App\Platform\Marketing\Services\Websites;
 use App\Platform\Partners\Models\PartnerBrand;
@@ -28,7 +30,7 @@ class PublicWebsiteController extends Controller
 
     private const IMAGE_TYPES = ['png' => 'image/png', 'webp' => 'image/webp', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg'];
 
-    public function __construct(private PublicWebsite $public, private Websites $websites) {}
+    public function __construct(private PublicWebsite $public, private Websites $websites, private MediaLibrary $media) {}
 
     /** The site on its own host. */
     public function serve(Request $request, Site $site, string $path): Response
@@ -134,6 +136,18 @@ class PublicWebsiteController extends Controller
             return response()->file(resource_path("marketing/fonts/{$match[1]}.woff2"), [
                 'Content-Type' => 'font/woff2', 'Cache-Control' => 'public, max-age=31536000, immutable', 'X-Content-Type-Options' => 'nosniff',
             ]);
+        }
+        // The site's own pictures: only those the snapshot shows (the published one on the site's
+        // host, the drafts in a preview). A picture never changes under its address.
+        if (preg_match('#^assets/media/([0-9A-Za-z]{26})/(large|small)\.webp$#', $path, $match)) {
+            $media = $snapshot === null || ! in_array($match[1], MediaLibrary::idsIn($snapshot), true)
+                ? null : Media::query()->where('site_id', $site->getKey())->find($match[1]);
+            $bytes = $media === null ? null : $this->media->bytes($media, $match[2]);
+            if ($bytes === null) {
+                return response('', 404);
+            }
+
+            return response($bytes, 200, ['Content-Type' => 'image/webp', 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => $version === null ? 'no-store' : 'public, max-age=31536000, immutable']);
         }
         // The partner's own uploaded logo and mark (its own only).
         if (preg_match('#^brand-assets/([0-9A-Za-z]{26})/([a-z_]+)$#', $path, $match)) {

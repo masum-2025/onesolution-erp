@@ -29,7 +29,13 @@
                             </ul>
                         @endif
                     </div>
-                    @include('marketing.parts.slide-visual', ['visual' => $slide['visual']])
+                    @php($pic = $picture($slide['image'] ?? null))
+                    @if ($pic)
+                        {{-- The first slide's picture is what a visitor sees first: fetched straight away. --}}
+                        <div class="vis slide-pic"><img src="{{ $pic['src'] }}" srcset="{{ $pic['srcset'] }}" sizes="(max-width: 760px) 100vw, 50vw" width="{{ $pic['width'] }}" height="{{ $pic['height'] }}" alt="{{ $pic['alt'] }}" @if ($loop->first) fetchpriority="high" @else loading="lazy" @endif decoding="async"></div>
+                    @else
+                        @include('marketing.parts.slide-visual', ['visual' => $slide['visual']])
+                    @endif
                 </div>
             </div>
         @endforeach

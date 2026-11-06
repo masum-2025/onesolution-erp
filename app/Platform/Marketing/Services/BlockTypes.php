@@ -65,6 +65,8 @@ final class BlockTypes
                 'slides.*.ticks' => ['nullable', 'array', 'list', 'max:4'],
                 ...$this->text($main, 'slides.*.ticks.*', 40, true),
                 'slides.*.visual' => ['required', Rule::in(self::SLIDE_VISUALS)],
+                // A picture of the site's own instead of the drawn one.
+                'slides.*.image' => self::media(),
             ],
             // A few numbers (counted up as they come into view) or a word.
             'stats' => [
@@ -141,11 +143,12 @@ final class BlockTypes
                 'features.*' => ['array', 'list', 'max:6'],
                 ...$this->text($main, 'features.*.*', 50, true),
             ],
-            // Pictures with a caption (until pictures can be uploaded: coloured tiles).
+            // Pictures with a caption (without a picture: a coloured tile).
             'gallery' => [
                 ...$head,
                 'items' => ['required', 'array', 'list', 'min:1', 'max:12'],
                 ...$this->text($main, 'items.*.caption', 80, true),
+                'items.*.image' => self::media(),
                 'items.*.color' => ['required', Rule::in(self::COLORS)],
             ],
             // News and notices written here: a date, a title, a line, a link.
@@ -165,7 +168,7 @@ final class BlockTypes
             // The closing call to act.
             'cta' => [...$this->text($main, 'title', 120, true), ...$this->text($main, 'text', 240), ...$button('primary'), ...$button('secondary')],
             // Plain text in paragraphs (blank lines).
-            'text' => [...$head, ...$this->text($main, 'body', 8000, true)],
+            'text' => [...$head, ...$this->text($main, 'body', 8000, true), 'image' => self::media()],
             default => [],
         };
     }
@@ -253,6 +256,7 @@ final class BlockTypes
             in_array('date_format:Y-m-d', $strings, true) => 'date',
             in_array('date_format:Y-m-d\TH:i', $strings, true) => 'datetime',
             $strings === self::link() => 'link',
+            $strings === self::media() => 'media',
             default => 'string',
         };
 
@@ -293,5 +297,16 @@ final class BlockTypes
     public static function link(): array
     {
         return ['nullable', 'string', 'max:300', 'regex:#^(https://[^\s<>"]+|mailto:[^\s<>"]+|tel:[0-9+() -]+|app:/[^\s<>"]*|/[^\s<>"]*|\#[A-Za-z0-9_-]+)$#i'];
+    }
+
+    /**
+     * One of the site's pictures (MediaLibrary): always under an "image" key, which is how
+     * the library finds where a picture is used; whose it is is checked on saving.
+     *
+     * @return list<string>
+     */
+    public static function media(): array
+    {
+        return ['nullable', 'string', 'ulid'];
     }
 }

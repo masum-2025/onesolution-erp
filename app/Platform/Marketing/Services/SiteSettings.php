@@ -64,8 +64,10 @@ final class SiteSettings
             'footer.columns.*.links.*.url' => ['required', ...array_slice($link, 1)],
             ...$this->text($main, 'footer.copyright', 120),
 
-            'seo' => ['nullable', 'array:title,description,image_url,google_verification,bing_verification'],
+            'seo' => ['nullable', 'array:title,description,image,image_url,google_verification,bing_verification'],
             ...$this->text($main, 'seo.title', 70), ...$this->text($main, 'seo.description', 170),
+            // The picture shown when the site is shared: one of its own (wins), or an address.
+            'seo.image' => BlockTypes::media(),
             'seo.image_url' => ['nullable', 'string', 'max:300', 'regex:#^(https://[^\s<>"]+|/[^\s<>"]*)$#i'],
             'seo.google_verification' => ['nullable', 'string', 'regex:/^[A-Za-z0-9_-]{10,100}$/'],
             'seo.bing_verification' => ['nullable', 'string', 'regex:/^[A-Za-z0-9]{10,64}$/'],

@@ -24,6 +24,9 @@ return [
     // Requests one visitor (address) may make a minute.
     'per_minute' => (int) env('MARKETING_PER_MINUTE', 120),
 
+    // Pictures one person may upload a minute (each is redrawn as two WebP copies).
+    'uploads_per_minute' => (int) env('MARKETING_UPLOADS_PER_MINUTE', 20),
+
     // Drafts kept for undo: the last published versions of a site.
     'versions_kept' => 20,
 ];

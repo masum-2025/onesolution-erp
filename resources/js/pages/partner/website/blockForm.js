@@ -22,6 +22,8 @@ export function blankFor(field) {
             return field.key === 'autoplay';
         case 'integer':
             return field.required ? (field.min ?? 0) : null;
+        case 'media':
+            return null;
         default:
             return '';
     }

@@ -30,6 +30,20 @@ export function useWebsite() {
     };
 }
 
+/** The website's pictures (MKT-3a): listed with the limits, uploaded one file at a time. */
+export const websiteMedia = {
+    list: () => api('/api/partner/website/media'),
+    upload: (file) => {
+        const form = new FormData();
+        form.append('file', file);
+        return api('/api/partner/website/media', { method: 'POST', body: form });
+    },
+    update: (id, body) => api(`/api/partner/website/media/${id}`, { method: 'PATCH', body }),
+    remove: (id) => api(`/api/partner/website/media/${id}`, { method: 'DELETE' }),
+    // A picture's small copy for the console (the API serves it to the signed-in partner only).
+    thumb: (id) => `/api/partner/website/media/${id}/small`,
+};
+
 /** Opens a signed preview of the drafts in a new tab (opened at the click, so no popup blocker). */
 export async function openPreview(path = null) {
     const tab = window.open('', '_blank');

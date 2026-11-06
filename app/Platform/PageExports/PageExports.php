@@ -49,6 +49,7 @@ class PageExports
         'partner.transfers' => [PartnerUserRole::Owner, PartnerUserRole::Sales],
         'partner.support' => [PartnerUserRole::Owner, PartnerUserRole::Support],
         'partner.api_keys' => [PartnerUserRole::Owner],
+        'partner.website_media' => [PartnerUserRole::Owner, PartnerUserRole::Sales],
     ];
 
     private const NONE = ['formats' => [], 'print' => false, 'max_rows' => 0];

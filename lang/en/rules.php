@@ -331,10 +331,19 @@ return [
             'label' => 'Translated share needed to publish a language (%)',
             'description' => 'A new language is offered to people only when at least this share of its texts is translated. Missing texts show in its fallback language.',
         ],
+        'marketing_max_media_mb' => [
+            'label' => 'Largest website picture (MB)',
+            'description' => 'The biggest picture a partner may upload for its company website. Pictures are made smaller (WebP) after upload.',
+        ],
+        'marketing_max_media_count' => [
+            'label' => 'Website pictures per partner',
+            'description' => 'How many pictures one company website may keep. Remove unused ones to make room.',
+        ],
     ],
 
     'categories' => [
         'language' => 'Language and wording',
+        'website' => 'Company website',
         'appearance' => 'Look and feel',
         'exports' => 'Export and print',
         'organization' => 'Organization',
