@@ -128,6 +128,10 @@ const stopWatching = watch(showVersions, (exists) => {
                 <p v-if="site.address" class="mt-3 ps-8 text-[13px]">
                     <a :href="site.address" target="_blank" rel="noopener" class="font-mono text-brand-text hover:underline" dir="ltr">{{ site.address }}</a>
                 </p>
+                <p v-else class="mt-3 ps-8 text-[13px] text-muted">
+                    {{ t('website.overview.no_address') }}
+                    <RouterLink to="/partner/domains" class="font-medium text-brand-text hover:underline">{{ t('website.overview.connect_domain') }}</RouterLink>
+                </p>
                 <p class="mt-3 ps-8 text-[12.5px] text-muted">{{ t('website.overview.drafts_note') }}</p>
             </section>
 

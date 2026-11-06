@@ -2,6 +2,7 @@
 
 namespace App\Platform\Partners\Models;
 
+use App\Platform\Partners\Enums\DomainServes;
 use App\Platform\Partners\Enums\DomainStatus;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
@@ -14,9 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * A custom host (erp.partner.com, or school.partner.com for one client).
  * Only an active (DNS-verified) domain resolves; written by DomainService.
+ * It opens either the app or the partner's company website ("serves").
  */
 #[Table('partner_domains')]
-#[Fillable(['partner_id', 'organization_id', 'host', 'status', 'verification_token', 'verified_at', 'last_checked_at', 'created_by'])]
+#[Fillable(['partner_id', 'organization_id', 'host', 'serves', 'status', 'verification_token', 'verified_at', 'last_checked_at', 'created_by'])]
 class PartnerDomain extends Model
 {
     use HasUlids;
@@ -29,6 +31,7 @@ class PartnerDomain extends Model
     protected function casts(): array
     {
         return [
+            'serves' => DomainServes::class,
             'status' => DomainStatus::class,
             'verified_at' => 'datetime',
             'last_checked_at' => 'datetime',
@@ -59,6 +62,11 @@ class PartnerDomain extends Model
     public function txtValue(): string
     {
         return 'onesolution-verify='.$this->verification_token;
+    }
+
+    public function servesWebsite(): bool
+    {
+        return $this->serves === DomainServes::Website;
     }
 
     public function isActive(): bool

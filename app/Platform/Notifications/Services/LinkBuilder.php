@@ -3,6 +3,7 @@
 namespace App\Platform\Notifications\Services;
 
 use App\Platform\Partners\Enums\DomainStatus;
+use App\Platform\Partners\Enums\DomainServes;
 use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Models\Partner;
@@ -23,6 +24,8 @@ class LinkBuilder
         $domains = PartnerDomain::query()
             ->where('partner_id', $partner->getKey())
             ->where('status', DomainStatus::Active)
+            // A website domain never opens the app.
+            ->where('serves', DomainServes::App)
             ->orderBy('created_at')
             ->get();
 
