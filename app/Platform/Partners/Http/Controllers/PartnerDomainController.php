@@ -3,6 +3,7 @@
 namespace App\Platform\Partners\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Partners\Enums\DomainServes;
 use App\Platform\Partners\Exceptions\PartnerException;
 use App\Platform\Partners\Http\Controllers\Concerns\PartnerConsole;
 use App\Platform\Partners\Http\Requests\PartnerReasonRequest;
@@ -37,7 +38,8 @@ class PartnerDomainController extends Controller
         $this->requireRole(PartnerUserRole::Owner);
 
         $client = $request->validated('organization_id') ? $this->client($request->validated('organization_id')) : null;
-        $domain = $this->domains->add($this->partner(), $request->validated('host'), $client, $request->user());
+        $serves = DomainServes::from($request->validated('serves', DomainServes::App->value));
+        $domain = $this->domains->add($this->partner(), $request->validated('host'), $client, $request->user(), $serves);
 
         return response()->json(['data' => $this->present($domain->load('organization')), 'message' => __('partners.messages.domain_added')], 201);
     }
@@ -75,6 +77,7 @@ class PartnerDomainController extends Controller
         return [
             'id' => $domain->getKey(),
             'host' => $domain->host,
+            'serves' => $domain->serves->value,
             'status' => $domain->status->value,
             'client' => $domain->organization === null ? null : ['id' => $domain->organization->getKey(), 'name' => $domain->organization->displayName()],
             // What to publish in DNS (the token is only shown to the partner that owns the domain).

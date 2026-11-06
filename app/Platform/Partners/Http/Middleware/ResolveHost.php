@@ -30,7 +30,8 @@ class ResolveHost
 
         $domain = $this->hosts->activeDomain($host);
 
-        if ($domain === null) {
+        // A website domain is answered by ServeMarketingByHost; it never opens the app.
+        if ($domain === null || $domain->servesWebsite()) {
             $message = __('partners.errors.unknown_host');
 
             return $request->expectsJson() || $request->is('api/*', 'session/*')

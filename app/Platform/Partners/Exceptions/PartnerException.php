@@ -36,6 +36,11 @@ class PartnerException extends TenancyException
         return new self('host_reserved', 422);
     }
 
+    public static function websiteForClient(): self
+    {
+        return new self('website_for_client', 422);
+    }
+
     public static function domainNotFound(): self
     {
         return new self('domain_not_found', 404);

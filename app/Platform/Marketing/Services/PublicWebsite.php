@@ -9,6 +9,7 @@ use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Packaging\PlanCatalog;
 use App\Platform\Packaging\SectorCatalog;
 use App\Platform\Partners\Enums\DomainStatus;
+use App\Platform\Partners\Enums\DomainServes;
 use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Support\LocaleResolver;
 use App\Platform\Support\MoneyText;
@@ -212,9 +213,9 @@ class PublicWebsite
     {
         if (! $site->partner->is_house) {
             $domain = PartnerDomain::query()->where('partner_id', $site->partner_id)->whereNull('organization_id')
-                ->where('status', DomainStatus::Active)->orderBy('created_at')->value('host');
+                ->where('status', DomainStatus::Active)->where('serves', DomainServes::App)->orderBy('created_at')->value('host');
             if ($domain !== null) {
-                return 'https://'.$domain;
+                return Websites::origin($domain);
             }
         }
 

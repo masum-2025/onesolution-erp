@@ -47,7 +47,7 @@ class PublicWebsiteController extends Controller
             return $this->unavailable();
         }
         $snapshot = $site->published;
-        $origin = rtrim((string) config('marketing.url'), '/') ?: $request->getSchemeAndHttpHost();
+        $origin = $this->websites->address($site) ?? $request->getSchemeAndHttpHost();
 
         if ($path === 'robots.txt') {
             return response("User-agent: *\nAllow: /\nSitemap: {$origin}/sitemap.xml\n", 200, ['Content-Type' => 'text/plain; charset=UTF-8', 'Cache-Control' => 'public, max-age=3600']);
@@ -68,8 +68,9 @@ class PublicWebsiteController extends Controller
             }
         }
 
-        // The day is part of the key: an offer or a notice bar ends at midnight.
-        $key = "marketing:page:{$site->getKey()}:{$site->cache_version}:{$locale}:".sha1($slug).':'.CarbonImmutable::now()->toDateString();
+        // The day is part of the key: an offer or a notice bar ends at midnight. The address too
+        // (a new website domain changes every canonical link).
+        $key = "marketing:page:{$site->getKey()}:{$site->cache_version}:{$locale}:".sha1($origin.'|'.$slug).':'.CarbonImmutable::now()->toDateString();
         $cached = $page === null ? null : Cache::get($key);
         if ($cached === null) {
             $html = view($page === null ? 'marketing.missing' : 'marketing.page', $this->public->view(
@@ -133,7 +134,7 @@ class PublicWebsiteController extends Controller
             }
         }
 
-        $origin = rtrim((string) config('marketing.url'), '/') ?: $request->getSchemeAndHttpHost();
+        $origin = $this->websites->address($site) ?? $request->getSchemeAndHttpHost();
         $html = view('marketing.page', [
             ...$this->public->view($site, $snapshot, $page, $locale, $origin, '', null, ['base' => '/assets', 'version' => (string) $site->cache_version]),
             'form' => $form,

@@ -5,6 +5,7 @@ namespace App\Platform\Partners\Services;
 use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Partners\Contracts\DnsTxtLookup;
+use App\Platform\Partners\Enums\DomainServes;
 use App\Platform\Partners\Enums\DomainStatus;
 use App\Platform\Partners\Exceptions\PartnerException;
 use App\Platform\Partners\Models\PartnerDomain;
@@ -26,11 +27,11 @@ class DomainService
         private AuditLogger $audit,
     ) {}
 
-    public function add(Partner $partner, string $host, ?Organization $client, User $actor): PartnerDomain
+    public function add(Partner $partner, string $host, ?Organization $client, User $actor, DomainServes $serves = DomainServes::App): PartnerDomain
     {
         $host = strtolower(trim($host));
 
-        if ($this->hosts->isPlatformHost($host)) {
+        if ($this->hosts->isPlatformHost($host) || $this->isMarketingHost($host)) {
             throw PartnerException::hostReserved();
         }
 
@@ -38,7 +39,12 @@ class DomainService
             throw PartnerException::clientNotFound();
         }
 
-        return DB::transaction(function () use ($partner, $host, $client, $actor) {
+        // A website domain is the partner's own (a client's domain opens the client's app).
+        if ($client !== null && $serves === DomainServes::Website) {
+            throw PartnerException::websiteForClient();
+        }
+
+        return DB::transaction(function () use ($partner, $host, $client, $actor, $serves) {
             if (PartnerDomain::query()->where('host', $host)->lockForUpdate()->exists()) {
                 throw PartnerException::hostTaken();
             }
@@ -47,6 +53,7 @@ class DomainService
                 'partner_id' => $partner->getKey(),
                 'organization_id' => $client?->getKey(),
                 'host' => $host,
+                'serves' => $serves,
                 'status' => DomainStatus::Pending,
                 'verification_token' => Str::random(40),
                 'created_by' => $actor->getKey(),
@@ -55,7 +62,7 @@ class DomainService
             $this->audit->record(
                 action: 'partner.domain_added',
                 target: $domain,
-                new: ['host' => $host, 'client' => $client?->getKey()],
+                new: ['host' => $host, 'client' => $client?->getKey(), 'serves' => $serves->value],
                 actor: $actor,
                 organizationId: $client?->getKey(),
                 partnerId: $partner->getKey(),
@@ -98,6 +105,14 @@ class DomainService
 
             return $domain;
         });
+    }
+
+    /** The platform's own company website hosts (config marketing.hosts) are never a partner's. */
+    private function isMarketingHost(string $host): bool
+    {
+        $hosts = array_filter(array_map(fn ($item) => strtolower(trim($item)), explode(',', (string) config('marketing.hosts'))));
+
+        return in_array($host, $hosts, true);
     }
 
     public function remove(PartnerDomain $domain, User $actor, string $reason): void

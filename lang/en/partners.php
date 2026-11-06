@@ -10,6 +10,7 @@ return [
         'powered_by_locked' => 'Your agreement does not allow hiding "Powered by". Contact the platform team to change it.',
         'host_taken' => 'This address is already connected to an account. Choose another address.',
         'host_reserved' => 'This is an address of the platform itself. Use an address of your own.',
+        'website_for_client' => 'A website address is your own, not a client’s. Leave the client empty, or choose "App".',
         'domain_not_found' => 'Domain not found. It may have been removed.',
         'verification_failed' => 'The DNS record was not found yet. Add a TXT record named ":name" with the value ":value", wait a few minutes, then check again.',
         'client_not_found' => 'Client not found. Choose a client account from your list.',

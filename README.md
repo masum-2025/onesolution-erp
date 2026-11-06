@@ -5358,5 +5358,13 @@ A partner's own marketing website, edited in the partner console; the house part
   `TellPartnerOfLead` (queued) emails the partner's owners and sales staff (notification
   `marketing.lead_received`, rewordable). Only owners and sales staff read messages (they hold phone
   numbers); owners remove one (audited without the visitor's details). A CRM can listen to `LeadReceived`.
-- **Later**: MKT-3c partner websites on their own domains, partner plans in pricing. A new sector, country or partner needs
+- **A partner's website on its own domain** (MKT-3c, `partner_domains.serves` = `app` | `website`): in
+  Domains, an owner adds an address and picks what it opens (default `app`; a client's address is always
+  `app`). Once the TXT record proves it, `ServeMarketingByHost` answers that host with the partner's
+  published site, before the app runs; `ResolveHost` refuses the app there, and message links
+  (`LinkBuilder`) and the site's `app:` links use only `app` domains. Canonical links, the sitemap and the
+  console's "address" use the partner's first verified website domain (`Websites::address`). Platform and
+  marketing hosts can never be added. A host shows only its own partner's site; a partner without a site
+  shows "not available".
+- **Later**: partner plans in pricing. A new sector, country or partner needs
   no code: content, languages and colours are data.

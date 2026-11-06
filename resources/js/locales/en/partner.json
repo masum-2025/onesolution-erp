@@ -125,6 +125,10 @@
         "client": "For one client only",
         "client_hint": "Leave empty for your own address (all clients).",
         "all_clients": "All clients",
+        "serves": "Opens",
+        "serves_hint": "Your app (sign-in and console), or your company website. A client's address always opens the app.",
+        "serves_app": "App",
+        "serves_website": "Website",
         "empty_title": "No domains yet",
         "empty_text": "Add an address such as erp.yourcompany.com so clients see only your brand.",
         "status": {

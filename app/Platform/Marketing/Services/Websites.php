@@ -9,6 +9,9 @@ use App\Platform\Marketing\Models\Block;
 use App\Platform\Marketing\Models\Page;
 use App\Platform\Marketing\Models\Site;
 use App\Platform\Marketing\Models\Version;
+use App\Platform\Partners\Enums\DomainServes;
+use App\Platform\Partners\Enums\DomainStatus;
+use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
@@ -35,6 +38,28 @@ class Websites
     public function require(Partner $partner): Site
     {
         return $this->of($partner) ?? throw MarketingException::noSite();
+    }
+
+    /**
+     * Where the public sees the site: the house site's configured address, a
+     * partner's first verified website domain; null while there is none.
+     */
+    public function address(Site $site): ?string
+    {
+        if ($site->partner->is_house) {
+            return rtrim((string) config('marketing.url'), '/') ?: null;
+        }
+        $host = PartnerDomain::query()->where('partner_id', $site->partner_id)->whereNull('organization_id')
+            ->where('serves', DomainServes::Website)->where('status', DomainStatus::Active)
+            ->orderBy('created_at')->value('host');
+
+        return $host === null ? null : self::origin($host);
+    }
+
+    /** "https://host" (local *.localhost hosts have no certificate). */
+    public static function origin(string $host): string
+    {
+        return (str_ends_with($host, '.localhost') ? 'http' : 'https').'://'.$host;
     }
 
     /** A new site from the starter (the house partner's tells about the platform; others' are a short general start). */
