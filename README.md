@@ -5372,4 +5372,10 @@ A partner's own marketing website, edited in the partner console; the house part
   plan's own name, description and prices (button: the contact form, `#write-to-us`). An archived plan
   drops out of the page (within the page cache time) and can no longer be picked; another partner's plan
   is refused (`BlockTypes::planKeys`).
+- **Customize (MKT-5)**: Website → Customize shows the whole site in a live preview with a Customize
+  panel (template, slider effect and time, product style, colours), saved to the drafts. The owner can
+  also make a **look link** (`POST/DELETE /api/partner/website/look-link`, audited, one at a time,
+  `marketing.look_days` days, only its hash kept in `mkt_sites.look_key`). Whoever opens the public site
+  with it sees the same panel there (a plain GET form, CSP-safe) and tries the looks; nothing is saved,
+  the page is `no-store`, `noindex` and sends no referrer. Visitors without the link never see it.
 - A new sector, country or partner needs no code: content, languages, colours and plans are data.

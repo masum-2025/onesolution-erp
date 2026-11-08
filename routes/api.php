@@ -522,6 +522,8 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
         Route::post('website/offline', [WebsiteController::class, 'offline']);
         Route::post('website/versions/{version}/restore', [WebsiteController::class, 'restore']);
         Route::post('website/preview-link', [WebsiteController::class, 'previewLink']);
+        Route::post('website/look-link', [WebsiteController::class, 'makeLookLink']);
+        Route::delete('website/look-link', [WebsiteController::class, 'endLookLink']);
         Route::post('website/pages', [WebsiteController::class, 'storePage']);
         Route::put('website/pages/order', [WebsiteController::class, 'orderPages']);
         Route::patch('website/pages/{page}', [WebsiteController::class, 'updatePage']);

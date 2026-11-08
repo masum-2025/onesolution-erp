@@ -20,6 +20,9 @@ class Site extends Model
 {
     use HasUlids;
 
+    /** The look link's hash never leaves the server. */
+    protected $hidden = ['look_key'];
+
     public const DRAFT = 'draft';
 
     public const PUBLISHED = 'published';
@@ -35,6 +38,7 @@ class Site extends Model
             'locales' => 'array',
             'published' => 'array',
             'published_at' => 'datetime',
+            'look_until' => 'datetime',
             'cache_version' => 'integer',
             'version' => 'integer',
         ];

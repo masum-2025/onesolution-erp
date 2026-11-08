@@ -1,10 +1,11 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
-import { Monitor, Palette, RefreshCw, Send, Smartphone, X } from 'lucide-vue-next';
+import { Copy, Link2, Monitor, Palette, RefreshCw, Send, Smartphone, X } from 'lucide-vue-next';
 import { AppButton, AppSegmented, PageFrame, confirmAction, toast } from '@/ui';
 import { api } from '@/lib/http';
 import { t } from '@/lib/i18n';
+import { formatDateTime } from '@/lib/format';
 import WebsiteNav from './WebsiteNav.vue';
 import { changedMeanwhile, useWebsite } from './useWebsite';
 
@@ -119,6 +120,45 @@ async function publish() {
     });
 }
 
+// A look link (owner): the public site with this panel for whoever holds it; the link is shown once.
+const lookUrl = ref(null);
+const live = computed(() => site.value?.status === 'published' && !!site.value?.address);
+async function makeLook() {
+    busy.value = 'look';
+    try {
+        const response = await api('/api/partner/website/look-link', { method: 'POST' });
+        lookUrl.value = response.data.url;
+        site.value.look_until = response.data.until;
+        toast.success(response.message);
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        busy.value = null;
+    }
+}
+async function copyLook() {
+    try {
+        await navigator.clipboard.writeText(lookUrl.value);
+        toast.success(t('website.customize.share_copied'));
+    } catch {
+        toast.error(lookUrl.value);
+    }
+}
+async function endLook() {
+    const ok = await confirmAction({ title: t('website.customize.share_end'), message: t('website.customize.share_end_confirm'), confirmLabel: t('website.customize.share_end'), danger: true });
+    if (!ok) return;
+    busy.value = 'look';
+    try {
+        toast.success((await api('/api/partner/website/look-link', { method: 'DELETE' })).message);
+        lookUrl.value = null;
+        site.value.look_until = null;
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        busy.value = null;
+    }
+}
+
 function onKey(event) {
     if (event.key === 'Escape') open.value = false;
 }
@@ -228,6 +268,25 @@ const optionClass = (on) => [option, on ? 'border-brand bg-brand text-brand-fg' 
                             <input v-model="ownColor" type="color" class="size-8 cursor-pointer rounded border border-line" :disabled="!can.settings || !!busy" @change="setColors({ primary: ownColor.toUpperCase() })" />
                         </label>
                     </div>
+
+                    <!-- Show it to someone: a look link (owner) -->
+                    <template v-if="can.settings">
+                        <h3 class="mt-4 mb-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">{{ t('website.customize.share_title') }}</h3>
+                        <p class="text-[12px] leading-relaxed text-muted">{{ t('website.customize.share_text') }}</p>
+                        <p v-if="!live" class="mt-2 text-[12px] text-muted">{{ t('website.customize.share_needs_live') }}</p>
+                        <template v-else>
+                            <div v-if="lookUrl" class="mt-2 flex items-center gap-1.5">
+                                <input :value="lookUrl" readonly class="field-input h-8 min-w-0 flex-1 text-[12px]" :aria-label="t('website.customize.share_title')" @focus="$event.target.select()" />
+                                <AppButton size="sm" variant="secondary" :icon="Copy" @click="copyLook">{{ t('website.customize.share_copy') }}</AppButton>
+                            </div>
+                            <p v-if="lookUrl" class="mt-1 text-[11.5px] text-warn">{{ t('website.customize.share_once') }}</p>
+                            <p v-if="site.look_until" class="mt-1 text-[11.5px] text-muted">{{ t('website.customize.share_until', { date: formatDateTime(site.look_until) }) }}</p>
+                            <div class="mt-2 flex flex-wrap gap-1.5">
+                                <AppButton size="sm" variant="secondary" :icon="Link2" :loading="busy === 'look'" :disabled="!!busy" @click="makeLook">{{ t(site.look_until ? 'website.customize.share_new' : 'website.customize.share_make') }}</AppButton>
+                                <AppButton v-if="site.look_until" size="sm" variant="ghost" :disabled="!!busy" @click="endLook">{{ t('website.customize.share_end') }}</AppButton>
+                            </div>
+                        </template>
+                    </template>
 
                     <p class="mt-4 text-[11.5px] leading-relaxed text-muted">
                         {{ can.settings ? t('website.customize.note') : t('website.customize.note_writer') }}

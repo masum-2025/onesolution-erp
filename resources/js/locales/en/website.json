@@ -414,7 +414,18 @@
             "add_it": "Add it",
             "no_site": "Start your website first, then customize it here.",
             "note": "Saved to the drafts at once. Logo, texts, menu and more are in",
-            "note_writer": "Only owners change the template and colours. More in"
+            "note_writer": "Only owners change the template and colours. More in",
+            "share_title": "Show it to someone",
+            "share_text": "A secret link to the public website with this Customize panel, for the person you send it to. They can try the looks; nothing is saved.",
+            "share_make": "Make a look link",
+            "share_new": "Make a new link",
+            "share_copy": "Copy",
+            "share_copied": "Link copied.",
+            "share_end": "End the link",
+            "share_until": "Works until {date}.",
+            "share_once": "Copy it now: it is shown only once.",
+            "share_end_confirm": "The person with the link will no longer see the panel.",
+            "share_needs_live": "Publish the website at its address first; then you can make a look link."
         }
     }
 }

@@ -40,6 +40,10 @@ class PublicWebsiteController extends Controller
             return $limited;
         }
         $path = trim($path, '/');
+        if ($path === 'assets/look.css') {
+            // A look link's colours (nothing secret: the ready-made pairs only).
+            return response($this->public->lookCss($request->query('palette')), 200, ['Content-Type' => 'text/css; charset=UTF-8', 'Cache-Control' => 'public, max-age=86400', 'X-Content-Type-Options' => 'nosniff']);
+        }
         if ($asset = $this->asset($site, $path, $site->published ?? null, (string) $site->cache_version)) {
             return $asset;
         }
@@ -66,6 +70,19 @@ class PublicWebsiteController extends Controller
 
                 return redirect()->to(str_starts_with($redirect->to_path, '/') ? $prefix.$redirect->to_path : $redirect->to_path, 301);
             }
+        }
+
+        // A look link: the Customize panel for whoever holds it; the choices are only shown (never
+        // saved, never kept, never indexed) and the link never leaves through a referrer.
+        $token = $request->query('look');
+        if ($page !== null && $token !== null && Websites::lookValid($site, $token)) {
+            $choices = $this->public->lookChoices($request->query());
+            [$snapshot, $page] = $this->public->withLook($snapshot, $page, $choices);
+            $html = view('marketing.page', $this->public->view(
+                $site, $snapshot, $page, $locale, $origin, '', null, ['base' => '/assets', 'version' => (string) $site->cache_version], ['token' => $token, 'choices' => $choices]
+            ))->render();
+
+            return $this->guarded(response($html, 200), ['Cache-Control' => 'no-store', 'X-Robots-Tag' => 'noindex, nofollow', 'Referrer-Policy' => 'no-referrer']);
         }
 
         // The day is part of the key: an offer or a notice bar ends at midnight. The address too

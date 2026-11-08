@@ -96,6 +96,22 @@ class WebsiteController extends Controller
         return response()->json(['data' => ['url' => $this->websites->previewUrl($this->site())]]);
     }
 
+    /** The look link (owner): the public site with the Customize panel for whoever holds it. */
+    public function makeLookLink(Request $request): JsonResponse
+    {
+        $this->requireRole(PartnerUserRole::Owner);
+
+        return response()->json(['data' => $this->websites->makeLookLink($this->site(), $request->user()), 'message' => __('marketing.messages.look_made')], 201);
+    }
+
+    public function endLookLink(Request $request): JsonResponse
+    {
+        $this->requireRole(PartnerUserRole::Owner);
+        $this->websites->endLookLink($this->site(), $request->user());
+
+        return response()->json(['data' => null, 'message' => __('marketing.messages.look_ended')]);
+    }
+
     public function storePage(PageRequest $request): JsonResponse
     {
         $this->requireRole(...self::WRITERS);
@@ -214,6 +230,8 @@ class WebsiteController extends Controller
                 'version' => $site->version,
                 // Where the public sees it: the house site's address, or the partner's verified website domain.
                 'address' => $this->websites->address($site),
+                // Until when a look link works (the link itself is shown once, when made).
+                'look_until' => $site->look_until?->isFuture() ? $site->look_until->toIso8601String() : null,
                 'pages' => $pages->map(fn (Page $page) => [...$this->pageData($page), 'blocks' => ($blocks[$page->getKey()] ?? collect())->map(fn (Block $block) => $this->blockData($block))->values()])->values(),
             ],
             'choices' => $choices,
