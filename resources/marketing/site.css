@@ -235,15 +235,17 @@ footer .brand{color:#fff}
 .hero .h1{font-size:clamp(38px,5.2vw,62px);font-weight:800;margin-top:20px}
 .hero .h1 em{font-style:normal;background:linear-gradient(90deg,var(--blue),#4f7be0 50%,var(--green));-webkit-background-clip:text;background-clip:text;color:transparent}
 .slides{display:grid}
-.slide{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1),visibility 0s .9s;transform:scale(1.04)}
-.slide.on{opacity:1;visibility:visible;transform:none;transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+/* The leaving slide fades out fast and the next one comes in just after, so two texts never show over each other. */
+.slide{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .3s ease,transform .9s cubic-bezier(.2,.7,.2,1),visibility 0s .3s;transform:scale(1.04)}
+.slide.on{opacity:1;visibility:visible;transform:none;transition:opacity .6s ease .25s,transform .9s cubic-bezier(.2,.7,.2,1)}
 [data-effect=slide] .slide{transform:translateX(8%)}
 [data-effect=slide] .slide.out{transform:translateX(-8%)}
 [data-effect=slide] .slide.on{transform:none}
 [data-effect=zoom] .slide{transform:scale(.9);filter:blur(6px)}
 [data-effect=zoom] .slide.out{transform:scale(1.12);filter:blur(6px)}
 [data-effect=zoom] .slide.on{transform:none;filter:none}
-[data-effect=zoom] .slide,[data-effect=zoom] .slide.on{transition:opacity .9s ease,transform 1.1s cubic-bezier(.2,.7,.2,1),filter .9s,visibility 0s .9s}
+[data-effect=zoom] .slide{transition:opacity .3s ease,transform 1.1s cubic-bezier(.2,.7,.2,1),filter .3s,visibility 0s .3s}
+[data-effect=zoom] .slide.on{transition:opacity .6s ease .25s,transform 1.1s cubic-bezier(.2,.7,.2,1),filter .9s}
 .slide.on .copy>*{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
 .slide.on .copy>*:nth-child(2){animation-delay:.08s}.slide.on .copy>*:nth-child(3){animation-delay:.16s}
 .slide.on .copy>*:nth-child(4){animation-delay:.24s}.slide.on .copy>*:nth-child(5){animation-delay:.32s}

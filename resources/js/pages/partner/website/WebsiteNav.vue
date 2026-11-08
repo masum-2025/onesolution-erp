@@ -6,6 +6,7 @@ import { t } from '@/lib/i18n';
 const route = useRoute();
 const LINKS = [
     { to: '/partner/website', key: 'overview' },
+    { to: '/partner/website/customize', key: 'customize' },
     { to: '/partner/website/pages', key: 'pages' },
     { to: '/partner/website/media', key: 'media' },
     { to: '/partner/website/leads', key: 'leads' },
