@@ -238,7 +238,9 @@ class Websites
      */
     public function makeLookLink(Site $site, User $actor): array
     {
-        $address = $this->address($site);
+        // The platform's own site without a set address: the first host it is served on.
+        $house = trim(explode(',', (string) config('marketing.hosts'))[0]);
+        $address = $this->address($site) ?? ($site->partner->is_house && $house !== '' ? self::origin($house) : null);
         if ($address === null || $site->status !== Site::PUBLISHED || $site->published === null) {
             throw MarketingException::lookNeedsLive();
         }

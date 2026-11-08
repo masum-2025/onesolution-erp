@@ -122,7 +122,8 @@ async function publish() {
 
 // A look link (owner): the public site with this panel for whoever holds it; the link is shown once.
 const lookUrl = ref(null);
-const live = computed(() => site.value?.status === 'published' && !!site.value?.address);
+// The server checks the address (the platform's own site may have none set but still be served).
+const live = computed(() => site.value?.status === 'published');
 async function makeLook() {
     busy.value = 'look';
     try {
