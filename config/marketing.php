@@ -32,4 +32,7 @@ return [
 
     // Drafts kept for undo: the last published versions of a site.
     'versions_kept' => 20,
+
+    // How many days a "look link" (the Customize panel on the public site, for one person) lasts.
+    'look_days' => (int) env('MARKETING_LOOK_DAYS', 7),
 ];

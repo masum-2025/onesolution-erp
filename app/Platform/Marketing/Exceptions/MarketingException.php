@@ -56,6 +56,11 @@ class MarketingException extends TenancyException
         return new self('nothing_to_publish', 422);
     }
 
+    public static function lookNeedsLive(): self
+    {
+        return new self('look_needs_live', 422);
+    }
+
     public static function versionNotFound(): self
     {
         return new self('version_not_found', 404);

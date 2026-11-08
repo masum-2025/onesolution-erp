@@ -8,7 +8,7 @@
     @if (($seo['description'] ?? '') !== '')
         <meta name="description" content="{{ $seo['description'] }}">
     @endif
-    @if ($preview || ($seo['noindex'] ?? false))
+    @if ($preview || $look || ($seo['noindex'] ?? false))
         <meta name="robots" content="noindex, nofollow">
     @endif
     @isset($seo)
@@ -39,6 +39,9 @@
     @endif
     <link rel="preload" href="{{ $assets['base'] }}/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ $assets['base'] }}/site.css?v={{ $assets['version'] }}">
+    @if (($look['palette'] ?? null) !== null)
+        <link rel="stylesheet" href="{{ $assets['base'] }}/look.css?palette={{ $look['palette'] }}">
+    @endif
     <script src="{{ $assets['base'] }}/site.js?v={{ $assets['version'] }}" defer></script>
 </head>
 <body>
@@ -138,5 +141,8 @@
         </span>
     </div>
 </footer>
+@if ($look)
+    @include('marketing.parts.look')
+@endif
 </body>
 </html>

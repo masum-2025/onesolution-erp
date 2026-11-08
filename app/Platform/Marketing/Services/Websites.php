@@ -15,6 +15,7 @@ use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Tenancy\Models\Partner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 /**
  * A partner's company website as a whole: made from a starter, its settings
@@ -226,6 +227,43 @@ class Websites
         $this->audit->record(action: 'marketing.site_offline', target: $site, actor: $actor, partnerId: $site->partner_id);
 
         return $site;
+    }
+
+    /**
+     * A "look link": the public website with the Customize panel, for whoever holds it, for a few
+     * days. One at a time (a new one ends the old); only its hash is kept. Needs the site live at
+     * its address. Audited.
+     *
+     * @return array{url: string, until: string}
+     */
+    public function makeLookLink(Site $site, User $actor): array
+    {
+        // The platform's own site without a set address: the first host it is served on.
+        $house = trim(explode(',', (string) config('marketing.hosts'))[0]);
+        $address = $this->address($site) ?? ($site->partner->is_house && $house !== '' ? self::origin($house) : null);
+        if ($address === null || $site->status !== Site::PUBLISHED || $site->published === null) {
+            throw MarketingException::lookNeedsLive();
+        }
+        $token = Str::random(40);
+        $until = now()->addDays(max(1, (int) config('marketing.look_days')));
+        $site->forceFill(['look_key' => hash('sha256', $token), 'look_until' => $until])->save();
+        $this->audit->record(action: 'marketing.look_link_made', target: $site, new: ['until' => $until->toIso8601String()], actor: $actor, partnerId: $site->partner_id);
+
+        return ['url' => rtrim($address, '/').'/?'.http_build_query(['look' => $token]), 'until' => $until->toIso8601String()];
+    }
+
+    public function endLookLink(Site $site, User $actor): void
+    {
+        $site->forceFill(['look_key' => null, 'look_until' => null])->save();
+        $this->audit->record(action: 'marketing.look_link_ended', target: $site, actor: $actor, partnerId: $site->partner_id);
+    }
+
+    /** Whether a visitor's "look" token is the site's current, unexpired one. */
+    public static function lookValid(Site $site, mixed $token): bool
+    {
+        return is_string($token) && strlen($token) === 40 && $site->look_key !== null
+            && $site->look_until !== null && now()->lt($site->look_until)
+            && hash_equals((string) $site->look_key, hash('sha256', $token));
     }
 
     /** A signed link on the app's host that shows the drafts for an hour (never indexed; "page" and "lang" may change). */

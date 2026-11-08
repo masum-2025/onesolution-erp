@@ -49,3 +49,5 @@
     tick(); setInterval(tick, 60000);
   });
 })();
+/* A look link's Customize panel: show each choice at once. */
+document.querySelectorAll('.look-form').forEach(function (f) { f.addEventListener('change', function () { f.submit(); }); });

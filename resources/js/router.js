@@ -198,6 +198,12 @@ const routes = [
                 meta: { context: 'partner', ns: ['partner', 'website'] },
             },
             {
+                path: 'partner/website/customize',
+                name: 'partner-website-customize',
+                component: () => import('./pages/partner/website/WebsiteCustomizePage.vue'),
+                meta: { context: 'partner', ns: ['partner', 'website'] },
+            },
+            {
                 path: 'partner/website/media',
                 name: 'partner-website-media',
                 component: () => import('./pages/partner/website/WebsiteMediaPage.vue'),

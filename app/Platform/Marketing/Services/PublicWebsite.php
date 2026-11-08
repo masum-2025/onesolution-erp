@@ -36,6 +36,62 @@ class PublicWebsite
         private SectorCatalog $sectors,
     ) {}
 
+    /** The ready-made colour pairs (main, second) a look link may try (the console offers the same). */
+    public const PALETTES = [
+        ['#2B4C9B', '#23A562'], ['#6D28D9', '#DB2777'], ['#047857', '#65A30D'], ['#BE123C', '#D97706'], ['#0369A1', '#0D9488'],
+    ];
+
+    /**
+     * A look link's choices from the address, each checked against what exists; anything else is ignored.
+     *
+     * @param  array<string, mixed>  $query
+     * @return array<string, string|int>
+     */
+    public function lookChoices(array $query): array
+    {
+        $pick = fn (string $key, array $allowed) => is_string($query[$key] ?? null) && in_array($query[$key], $allowed, true) ? $query[$key] : null;
+        $palette = $query['palette'] ?? null;
+
+        return array_filter([
+            'template' => $pick('template', Site::TEMPLATES),
+            'effect' => $pick('effect', BlockTypes::EFFECTS),
+            'product' => $pick('product', BlockTypes::PRODUCT_STYLES),
+            'palette' => is_string($palette) && ctype_digit($palette) && isset(self::PALETTES[(int) $palette]) ? (int) $palette : null,
+        ], fn ($value) => $value !== null);
+    }
+
+    /**
+     * The snapshot and page as they look with a look link's choices (the first slider and product
+     * section of the page). Only shown, never saved.
+     *
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    public function withLook(array $snapshot, array $page, array $choices): array
+    {
+        if (isset($choices['template'])) {
+            $snapshot['template'] = $choices['template'];
+        }
+        foreach (['effect' => ['hero_slider', 'effect'], 'product' => ['product', 'style']] as $key => [$type, $field]) {
+            foreach (isset($choices[$key]) ? $page['blocks'] : [] as $index => $block) {
+                if ($block['type'] === $type) {
+                    $page['blocks'][$index]['data'][$field] = $choices[$key];
+                    break;
+                }
+            }
+        }
+
+        return [$snapshot, $page];
+    }
+
+    /** A look link's colours over the site's stylesheet. */
+    public function lookCss(mixed $palette): string
+    {
+        $pair = is_string($palette) && ctype_digit($palette) ? (self::PALETTES[(int) $palette] ?? null) : null;
+
+        return $pair === null ? '' : ":root{--blue:{$pair[0]};--green:{$pair[1]}}
+";
+    }
+
     /**
      * The language a path asks for and the page path without it.
      *
@@ -67,9 +123,10 @@ class PublicWebsite
      * @param  string  $base  Where the site's paths start ("" on its own host, the preview's address otherwise).
      * @param  array<string, string>|null  $signature  A preview's signature: its links name the page in the query instead.
      * @param  array{base: string, version: string}  $assets  Where the stylesheet, script and fonts are, and their version.
+     * @param  array{token: string, choices: array<string, string|int>}|null  $look  A look link: its panel, and its links keep it.
      * @return array<string, mixed>
      */
-    public function view(Site $site, array $snapshot, ?array $page, string $locale, string $origin, string $base, ?array $signature, array $assets): array
+    public function view(Site $site, array $snapshot, ?array $page, string $locale, string $origin, string $base, ?array $signature, array $assets, ?array $look = null): array
     {
         $main = $snapshot['default_locale'];
         $settings = $snapshot['settings'] ?? [];
@@ -77,8 +134,9 @@ class PublicWebsite
         $tx = fn ($value): string => is_array($value) ? (string) (($value[$locale] ?? '') !== '' ? $value[$locale] : ($value[$main] ?? '')) : (string) ($value ?? '');
         $appBase = $this->appBase($site);
         // A page of the site in a language: "/bn/pricing" on the site, "?page=pricing&lang=bn&…" in a preview.
+        $lookQuery = $look === null ? '' : '?'.http_build_query(['look' => $look['token'], ...$look['choices']]);
         $address = fn (string $path, string $code) => $signature === null
-            ? $base.($code === $main ? '' : '/'.$code).'/'.$path
+            ? $base.($code === $main ? '' : '/'.$code).'/'.$path.$lookQuery
             : $base.'?'.http_build_query([...$signature, 'page' => $path, 'lang' => $code]);
         $link = function (?string $url) use ($address, $locale, $appBase): string {
             $url = (string) $url;
@@ -164,6 +222,17 @@ class PublicWebsite
             'form' => null,
             'picture' => $picture,
             'preview' => $preview,
+            'look' => $look === null ? null : [
+                'token' => $look['token'],
+                // The form comes back to this page (without the old choices: the form sends them all).
+                'action' => $base.($locale === $main ? '' : '/'.$locale).'/'.$slug,
+                'template' => $snapshot['template'],
+                'effect' => collect($page['blocks'] ?? [])->firstWhere('type', 'hero_slider')['data']['effect'] ?? null,
+                'product' => collect($page['blocks'] ?? [])->firstWhere('type', 'product')['data']['style'] ?? null,
+                'palette' => $look['choices']['palette'] ?? null,
+                'templates' => Site::TEMPLATES, 'effects' => BlockTypes::EFFECTS, 'products' => BlockTypes::PRODUCT_STYLES,
+                'palettes' => array_keys(self::PALETTES),
+            ],
             'seo' => $page === null ? null : $this->seo($snapshot, $page, $locale, $origin, $tx, $blocks, (string) ($brand['name'] ?? $site->partner->name), $brand['logo_url'] ?? null, $picture($settings['seo']['image'] ?? null)['src'] ?? null),
             'verification' => $preview ? [] : array_filter([
                 'google-site-verification' => $settings['seo']['google_verification'] ?? null,

@@ -190,7 +190,8 @@
             "pages": "Pages",
             "media": "Pictures",
             "leads": "Messages",
-            "settings": "Settings"
+            "settings": "Settings",
+            "customize": "Customize"
         },
         "leads": {
             "text": "People who wrote through your website's contact form. Call them soon; mark where each stands.",
@@ -200,7 +201,12 @@
             "empty_text": "Add a \"Contact form\" section to a page and publish; what visitors send appears here, and your owners and sales staff get an email.",
             "none_found": "No messages match",
             "status": "Status",
-            "statuses": { "new": "New", "contacted": "Contacted", "won": "Won", "closed": "Closed" },
+            "statuses": {
+                "new": "New",
+                "contacted": "Contacted",
+                "won": "Won",
+                "closed": "Closed"
+            },
             "when": "Sent",
             "name": "Name",
             "phone": "Phone",
@@ -392,6 +398,34 @@
             "youtube": "YouTube",
             "x": "X (Twitter)",
             "instagram": "Instagram"
+        },
+        "customize": {
+            "button": "Customize",
+            "text": "Change the look of your whole website in one place and see it at once: template, slider, product section and colours.",
+            "drafts": "Changes go to the drafts; visitors see them after Publish.",
+            "template": "Template",
+            "effect": "Slider effect",
+            "seconds": "Slide time: {n} s",
+            "product": "Product section",
+            "colors": "Colours",
+            "palette": "Colour set {n}",
+            "own": "Own",
+            "no_section": "Your home page has no {section} section yet.",
+            "add_it": "Add it",
+            "no_site": "Start your website first, then customize it here.",
+            "note": "Saved to the drafts at once. Logo, texts, menu and more are in",
+            "note_writer": "Only owners change the template and colours. More in",
+            "share_title": "Show it to someone",
+            "share_text": "A secret link to the public website with this Customize panel, for the person you send it to. They can try the looks; nothing is saved.",
+            "share_make": "Make a look link",
+            "share_new": "Make a new link",
+            "share_copy": "Copy",
+            "share_copied": "Link copied.",
+            "share_end": "End the link",
+            "share_until": "Works until {date}.",
+            "share_once": "Copy it now: it is shown only once.",
+            "share_end_confirm": "The person with the link will no longer see the panel.",
+            "share_needs_live": "Publish the website at its address first; then you can make a look link."
         }
     }
 }
