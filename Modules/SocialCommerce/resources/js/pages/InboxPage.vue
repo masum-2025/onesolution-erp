@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Bot, Check, Hand, Inbox, MessageCircle, MessagesSquare, RotateCcw, Send } from 'lucide-vue-next';
+import { Bot, Check, Hand, Inbox, MessageCircle, MessagesSquare, RotateCcw, Send, ShoppingCart } from 'lucide-vue-next';
 import { AppButton, EmptyState, ErrorState, newOpId, PageFrame, SkeletonRows, StatusBadge, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDateTime } from '@/lib/format';
@@ -104,6 +104,18 @@ const senderLabel = (message) => (message.sender === 'bot' ? t('social_commerce.
                         <AppButton v-if="thread.status !== 'done'" size="sm" :icon="Check" :disabled="busy" @click="mark('done')">{{ t('social_commerce.inbox.done') }}</AppButton>
                         <AppButton v-else size="sm" :icon="RotateCcw" :disabled="busy" @click="mark('reopen')">{{ t('social_commerce.inbox.reopen') }}</AppButton>
                     </header>
+                    <div v-if="thread.draft || thread.order || thread.kind === 'message'" class="flex flex-wrap items-center gap-3 border-b border-line bg-surface-2 px-5 py-2 text-[12.5px]">
+                        <span v-if="thread.draft" class="min-w-0 flex-1">
+                            <ShoppingCart class="inline size-3.5" aria-hidden="true" />
+                            {{ t('social_commerce.inbox.draft', { step: t(`social_commerce.inbox.step.${thread.draft.step}`) }) }}
+                            <template v-if="thread.draft.product"> · {{ thread.draft.product }}<template v-if="thread.draft.quantity"> × {{ thread.draft.quantity }}</template></template>
+                            <template v-if="thread.draft.name"> · {{ thread.draft.name }}</template>
+                        </span>
+                        <RouterLink v-if="thread.order" :to="{ name: 'online-order', params: { id: thread.order.id } }" class="font-medium text-brand-text underline">
+                            {{ t('social_commerce.inbox.order', { number: thread.order.number, status: t(`social_commerce.inbox.order_status.${thread.order.status}`) }) }}
+                        </RouterLink>
+                        <AppButton v-if="!thread.draft" size="sm" variant="ghost" :icon="ShoppingCart" :to="{ name: 'online-order-new', query: { customer_name: thread.customer ?? undefined } }">{{ t('social_commerce.inbox.make_order') }}</AppButton>
+                    </div>
                     <ol class="flex-1 space-y-3 overflow-auto px-5 py-4" :aria-label="t('social_commerce.inbox.messages')">
                         <li v-for="message in thread.messages" :key="message.id" class="flex" :class="message.direction === 'out' ? 'justify-end' : 'justify-start'">
                             <div class="max-w-[80%] rounded-2xl px-4 py-2 text-[13.5px]"

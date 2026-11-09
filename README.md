@@ -3902,6 +3902,30 @@ never reach logs, errors or the browser).
 - **Screens**: Inbox (waiting / open / finished, the bot's answers marked, answer, take, finish),
   Automatic replies (words and answers per language, try box), page switches on Pages.
 
+### SC-3: orders in Messenger
+
+- **Flow** (`OrderTaker`, Messenger only): "order korbo" (the `order` words) starts a draft on the
+  thread (`order_draft`, `draft_at`): product (known from the message, the post or the last talked
+  about, else a numbered list), how many (≤ `max_quantity`, ≤ what the page's warehouse can still
+  give: `Orders::available`), name, mobile (`PhoneNumber::normalize` by the company's country),
+  address, area (Online orders' zones, numbered); the summary uses `Orders::quote` (the real total);
+  a short "yes" (`confirm` words) places it through `Orders::place(…, null, 'facebook', $threadId)`
+  as a **draft** (cash on delivery; staff call and confirm), `op_id` from the thread and the draft's
+  start, so a second "yes" makes nothing. A short "cancel" or silence past `draft_hours` drops it.
+  Every line is a reply template (ask_*, summary, placed, cancelled, bad_phone, short_stock).
+  Numbers come back in the customer's language's digits.
+- **Where orders go**: each page's `order_branch_id` and `order_warehouse_id` (the company's own,
+  checked), set on Pages; empty, or `messenger_orders` off, or Online orders off: no orders taken.
+- **Order news**: on `online_orders.confirmed|shipped|delivered|cancelled` for channel facebook the
+  customer is told in their chat (`status_*` templates, `notify_order_status`); past 24 hours since
+  their last message with Meta's `POST_PURCHASE_UPDATE` tag.
+- **Online orders** changes: `Orders::place` takes no person for a channel's own order
+  (`created_by` may be empty); `Orders::quote()` and `Orders::brief()` are public; new event
+  `online_orders.shipped`; New order opens with `?customer_name` / `?customer_phone` (Inbox's
+  "Make an order").
+- **Rules**: `social_commerce.messenger_orders` (on), `.draft_hours` (24), `.max_quantity` (20),
+  `.notify_order_status` (on). Audit `social_commerce.order_taken`.
+
 ### Future expansion (Facebook selling)
 
 - A new sector, country or partner needs no code: the app is the partner's data, the footer line,

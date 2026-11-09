@@ -20,6 +20,7 @@ use Modules\Inventory\Services\Stock;
 use Modules\OnlineOrders\Events\OrderCancelled;
 use Modules\OnlineOrders\Events\OrderConfirmed;
 use Modules\OnlineOrders\Events\OrderDelivered;
+use Modules\OnlineOrders\Events\OrderShipped;
 use Modules\OnlineOrders\Exceptions\OnlineOrdersException;
 use Modules\OnlineOrders\Models\Order;
 use Modules\OnlineOrders\Models\OrderEvent;
@@ -69,7 +70,7 @@ class Orders
      *
      * @param  array{op_id: string, warehouse_id: string, customer_name: string, customer_phone: string, address: string, payment_method: string, delivery_zone?: string|null, delivery_minor?: int|null, note?: string|null, lines: list<array{item_id: string, quantity_milli: int, discount_minor?: int}>}  $data
      */
-    public function place(Organization $company, Organization $branch, array $data, User $actor, string $channel = 'manual', ?string $channelRef = null): Order
+    public function place(Organization $company, Organization $branch, array $data, ?User $actor, string $channel = 'manual', ?string $channelRef = null): Order
     {
         $existing = $this->book->query(Order::class, $company)->where('op_id', $data['op_id'])->first();
         if ($existing !== null) {
@@ -85,7 +86,7 @@ class Orders
                 'organization_id' => $company->getKey(), 'unit_id' => $branch->getKey(), 'warehouse_id' => $data['warehouse_id'],
                 'number' => $this->number($company, CarbonImmutable::now()), 'channel' => $channel, 'channel_ref' => $channelRef, 'status' => Order::DRAFT,
                 ...$customer, ...$this->totals($priced), 'currency_code' => $this->book->currency($company),
-                'payment_method' => $data['payment_method'], 'note' => $data['note'] ?? null, 'created_by' => $actor->getKey(), 'op_id' => $data['op_id'], 'version' => 1,
+                'payment_method' => $data['payment_method'], 'note' => $data['note'] ?? null, 'created_by' => $actor?->getKey(), 'op_id' => $data['op_id'], 'version' => 1,
             ])->save();
             $this->writeLines($company, $order, $priced);
             $this->history($company, $order, null, Order::DRAFT, null, $actor);
@@ -168,7 +169,7 @@ class Orders
             throw OnlineOrdersException::prepaidNotPaid($this->shown($order, $order->dueMinor()));
         }
 
-        return $this->change($company, $order, $baseVersion, function (Order $row) use ($company, $data, $actor) {
+        $shipped = $this->change($company, $order, $baseVersion, function (Order $row) use ($company, $data, $actor) {
             $lines = $this->book->query(OrderLine::class, $company)->where('order_id', $row->getKey())->orderBy('line_no')->get();
             $now = CarbonImmutable::now();
             $moved = $this->stock->take($company, $row->warehouse_id, $lines->map(fn (OrderLine $line) => ['item_id' => $line->item_id, 'quantity_milli' => $line->quantity_milli])->all(),
@@ -179,6 +180,40 @@ class Orders
             $this->move($company, $row, Order::SHIPPED, $actor, ['shipped_at' => $now, 'cost_minor' => $moved['cost_minor'],
                 'courier' => $data['courier'] ?? null, 'tracking' => $data['tracking'] ?? null]);
         });
+        OrderShipped::dispatch($company->getKey(), $shipped->getKey(), $shipped->channel, $shipped->channel_ref);
+
+        return $shipped;
+    }
+
+    /**
+     * What an order would cost, without keeping it (a channel shows the customer before they say yes):
+     * the same pricing as place(), in the company's currency.
+     *
+     * @param  array<string, mixed>  $data  as for place() (warehouse_id, lines, payment_method, delivery_zone or delivery_minor)
+     * @return array{subtotal_minor: int, discount_minor: int, tax_minor: int, delivery_minor: int, total_minor: int, prices_include_tax: bool, currency: string}
+     */
+    public function quote(Organization $company, Organization $branch, array $data): array
+    {
+        $this->warehouse($company, $data['warehouse_id']);
+        $totals = $this->totals($this->price($company, $branch, $data, null));
+        unset($totals['delivery_zone']);
+
+        return [...$totals, 'currency' => $this->book->currency($company)];
+    }
+
+    /**
+     * An order as a channel tells its customer about it (no personal data).
+     *
+     * @return array{id: string, number: string, status: string, total_minor: int, due_minor: int, currency: string, courier: ?string, tracking: ?string, channel: string, channel_ref: ?string}|null
+     */
+    public function brief(Organization $company, string $orderId): ?array
+    {
+        $order = $this->book->query(Order::class, $company)->whereKey($orderId)->first();
+
+        return $order === null ? null : [
+            'id' => $order->getKey(), 'number' => $order->number, 'status' => $order->status, 'total_minor' => $order->total_minor, 'due_minor' => $order->dueMinor(),
+            'currency' => $order->currency_code, 'courier' => $order->courier, 'tracking' => $order->tracking, 'channel' => $order->channel, 'channel_ref' => $order->channel_ref,
+        ];
     }
 
     /** It reached the customer: posted to the books and counted in their purchases. */
@@ -425,10 +460,10 @@ class Orders
             actor: $actor, organizationId: $company->getKey());
     }
 
-    private function history(Organization $company, Order $order, ?string $from, string $to, ?string $note, User $actor): void
+    private function history(Organization $company, Order $order, ?string $from, string $to, ?string $note, ?User $actor): void
     {
         (new OrderEvent)->fill(['organization_id' => $company->getKey(), 'order_id' => $order->getKey(), 'from_status' => $from, 'to_status' => $to,
-            'note' => $note, 'actor_id' => $actor->getKey(), 'created_at' => CarbonImmutable::now()])->save();
+            'note' => $note, 'actor_id' => $actor?->getKey(), 'created_at' => CarbonImmutable::now()])->save();
     }
 
     /** Goods back into the warehouse at exactly what they left at (once per order). */
@@ -463,7 +498,7 @@ class Orders
      * @param  array<string, mixed>  $data
      * @return array{items: array<string, array<string, mixed>>, lines: list<array<string, mixed>>, totals: array<string, mixed>, zone: string|null}
      */
-    private function price(Organization $company, Organization $branch, array $data, User $actor): array
+    private function price(Organization $company, Organization $branch, array $data, ?User $actor): array
     {
         $context = $this->contexts->forOrganization($branch);
         if ($data['payment_method'] === 'cod' && ! (bool) $this->rules->get('online_orders.cod_allowed', $context)) {
@@ -497,7 +532,7 @@ class Orders
         $totals = OrderMath::order($lines, $includeTax, $delivery);
 
         $percent = (string) $this->rules->get('online_orders.max_discount_percent', $context);
-        if (OrderMath::discountShare($totals['discount'], $totals['subtotal']) > OrderMath::percentToBp($percent) && ! Gate::forUser($actor)->allows('online_orders.supervise', $branch)) {
+        if (OrderMath::discountShare($totals['discount'], $totals['subtotal']) > OrderMath::percentToBp($percent) && ($actor === null || ! Gate::forUser($actor)->allows('online_orders.supervise', $branch))) {
             throw OnlineOrdersException::discountLimit($percent);
         }
 
@@ -538,7 +573,7 @@ class Orders
      * @param  array<string, mixed>  $data
      * @return array{customer_name: string, customer_phone: string, customer_id: string|null, address: string}
      */
-    private function customer(Organization $company, Organization $branch, array $data, User $actor): array
+    private function customer(Organization $company, Organization $branch, array $data, ?User $actor): array
     {
         $phone = PhoneNumber::normalize(trim((string) $data['customer_phone']), $this->book->country($company))
             ?? throw ValidationException::withMessages(['customer_phone' => __('online_orders::orders.validation.phone')]);

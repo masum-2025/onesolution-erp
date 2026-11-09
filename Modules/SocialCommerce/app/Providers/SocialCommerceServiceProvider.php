@@ -12,11 +12,16 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\OnlineOrders\Events\OrderCancelled;
+use Modules\OnlineOrders\Events\OrderConfirmed;
+use Modules\OnlineOrders\Events\OrderDelivered;
+use Modules\OnlineOrders\Events\OrderShipped;
 use Modules\SocialCommerce\Console\PruneConversations;
 use Modules\SocialCommerce\Console\PublishDuePosts;
 use Modules\SocialCommerce\Export\SocialCommerceExporter;
 use Modules\SocialCommerce\Listeners\QueueWebhook;
 use Modules\SocialCommerce\Listeners\StopPagesOfMetaApp;
+use Modules\SocialCommerce\Listeners\TellCustomerAboutOrder;
 
 /**
  * Facebook selling (SC-1): a company's pages connected through its
@@ -45,6 +50,10 @@ class SocialCommerceServiceProvider extends ServiceProvider
 
         Event::listen([MetaAppChanged::class, MetaPersonRemovedApp::class], StopPagesOfMetaApp::class);
         Event::listen(MetaWebhookReceived::class, QueueWebhook::class);
+        // Orders taken in Messenger: the customer hears how theirs moves on (Online orders' events).
+        if (class_exists(OrderConfirmed::class)) {
+            Event::listen([OrderConfirmed::class, OrderShipped::class, OrderDelivered::class, OrderCancelled::class], TellCustomerAboutOrder::class);
+        }
 
         if ($this->app->runningInConsole()) {
             $this->commands([PublishDuePosts::class, PruneConversations::class]);

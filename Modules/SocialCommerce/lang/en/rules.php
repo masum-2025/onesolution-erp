@@ -50,6 +50,22 @@ return [
         'label' => 'Keep conversations (days)',
         'description' => 'Conversations with no news for this long are forgotten, with the customers\' names.',
     ],
+    'messenger_orders' => [
+        'label' => 'Take orders in Messenger',
+        'description' => 'The bot asks the product, how many, name, mobile, address and area, then makes a draft order in Online orders. A page also needs its branch and warehouse set.',
+    ],
+    'draft_hours' => [
+        'label' => 'Drop an unfinished order after (hours)',
+        'description' => 'An order the customer stops answering is dropped after this long.',
+    ],
+    'max_quantity' => [
+        'label' => 'Most pieces per Messenger order',
+        'description' => 'Bigger orders are taken by a person.',
+    ],
+    'notify_order_status' => [
+        'label' => 'Tell the customer about their order',
+        'description' => 'In Messenger, when it is confirmed, sent, delivered or cancelled.',
+    ],
     'min_schedule_minutes' => [
         'label' => 'Earliest schedule (minutes)',
         'description' => 'A scheduled post goes out at least this many minutes after it is sent.',

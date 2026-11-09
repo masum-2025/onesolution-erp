@@ -242,10 +242,10 @@ class Pages
             if ($page->version !== $baseVersion) {
                 throw SocialCommerceException::versionConflict();
             }
-            $old = ['auto_reply' => $page->auto_reply, 'price_public' => $page->price_public];
+            $old = ['auto_reply' => $page->auto_reply, 'price_public' => $page->price_public, 'order_branch_id' => $page->order_branch_id, 'order_warehouse_id' => $page->order_warehouse_id];
             $page->fill([...array_intersect_key($switches, $old), 'version' => $page->version + 1])->save();
             $this->audit->record(action: 'social_commerce.page_switches_changed', target: $page, old: $old,
-                new: ['auto_reply' => $page->auto_reply, 'price_public' => $page->price_public], actor: $actor, organizationId: $company->getKey());
+                new: array_intersect_key($page->only(array_keys($old)), $old), actor: $actor, organizationId: $company->getKey());
 
             return $page;
         });

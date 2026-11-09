@@ -76,7 +76,7 @@ class Replies
             }
             foreach ((array) $template->keywords as $locale => $words) {
                 foreach ((array) $words as $word) {
-                    $word = trim($this->normal((string) $word), ' ?!.');
+                    $word = $this->bare((string) $word);
                     if ($word === '' || mb_strlen($word) <= $bestLength) {
                         continue;
                     }
@@ -138,6 +138,53 @@ class Replies
         }
 
         return trim(strtr($text, $common));
+    }
+
+    /**
+     * Whether a short message says yes ("confirm") or stop ("cancel") while an order is taken;
+     * the language of the word, or null. Only short messages count ("House no 4" is an address).
+     */
+    public function says(Organization $company, string $intent, string $text): ?string
+    {
+        $normal = $this->bare($text);
+        $tokens = array_values(array_filter(preg_split('/[^\p{L}\p{N}\p{M}]+/u', $normal) ?: []));
+        $template = $this->templates($company)[$intent] ?? null;
+        if ($template === null || ! $template->active || $tokens === [] || count($tokens) > 3) {
+            return null;
+        }
+        foreach ((array) $template->keywords as $locale => $words) {
+            foreach ((array) $words as $word) {
+                $word = $this->bare((string) $word);
+                if ($word !== '' && ($word === $normal || in_array($word, $tokens, true))) {
+                    return (string) $locale;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * A fixed answer (a question of taking an order, an order's news) in a language, filled; null when switched off or empty.
+     *
+     * @param  array<string, string>  $values  placeholder name => text
+     */
+    public function fill(Organization $company, string $intent, string $locale, array $values): ?string
+    {
+        $template = $this->templates($company)[$intent] ?? null;
+        if ($template === null || ! $template->active) {
+            return null;
+        }
+        $text = (string) ($template->answers[$locale] ?? $template->answers['en'] ?? '');
+        if (trim($text) === '') {
+            return null;
+        }
+        $pairs = [];
+        foreach ($values as $key => $value) {
+            $pairs['{'.$key.'}'] = $value;
+        }
+
+        return trim(strtr($text, $pairs));
     }
 
     /**
@@ -213,5 +260,11 @@ class Replies
     private function normal(string $text): string
     {
         return mb_strtolower(Str::squish($text));
+    }
+
+    /** Lower case, single spaces, no question marks, stops or Bangla dari at the ends (by character, never by byte). */
+    private function bare(string $text): string
+    {
+        return (string) preg_replace('/^[\s?!.।]+|[\s?!.।]+$/u', '', $this->normal($text));
     }
 }

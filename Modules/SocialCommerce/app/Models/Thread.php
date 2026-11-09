@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
 /** A conversation with one customer: their comments under one post, or their Messenger chat with the page. */
-#[Fillable(['organization_id', 'page_id', 'kind', 'thread_key', 'customer_ref', 'customer_name', 'fb_post_id', 'status', 'assigned_to', 'unknown_count', 'last_in_at', 'last_out_at', 'version'])]
+#[Fillable(['organization_id', 'page_id', 'kind', 'thread_key', 'customer_ref', 'customer_name', 'fb_post_id', 'status', 'assigned_to', 'unknown_count', 'order_draft', 'draft_at', 'last_order_id', 'last_in_at', 'last_out_at', 'version'])]
 class Thread extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;
@@ -33,6 +33,8 @@ class Thread extends Model
     {
         return [
             'unknown_count' => 'integer',
+            'order_draft' => 'array',
+            'draft_at' => 'immutable_datetime',
             'last_in_at' => 'immutable_datetime',
             'last_out_at' => 'immutable_datetime',
             'version' => 'integer',

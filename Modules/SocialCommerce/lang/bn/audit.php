@@ -24,4 +24,5 @@ return [
     'thread_done' => 'Facebook কথোপকথন শেষ',
     'thread_reopen' => 'Facebook কথোপকথন আবার খোলা হলো',
     'replies_changed' => 'স্বয়ংক্রিয় উত্তর বদলানো হলো',
+    'order_taken' => 'Messenger-এ অর্ডার নেওয়া হলো',
 ];

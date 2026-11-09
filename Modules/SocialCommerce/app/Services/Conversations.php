@@ -141,6 +141,31 @@ class Conversations
         });
     }
 
+    /**
+     * The customer's order news in their Messenger chat (Online orders' steps), in the language they
+     * wrote in. Past Meta's 24-hour window it goes with the POST_PURCHASE_UPDATE tag, which Meta allows
+     * for order updates. Returns the message kept, or null when there is nobody to tell.
+     *
+     * @param  callable(string): array<string, string>  $values  the placeholders, given the customer's language
+     */
+    public function tellCustomer(Organization $company, string $threadId, string $intent, callable $values): ?Message
+    {
+        $thread = $this->book->query(Thread::class, $company)->whereKey($threadId)->where('kind', Thread::MESSAGE)->first();
+        $page = $thread === null ? null : $this->book->query(SocialPage::class, $company)->find($thread->page_id);
+        if ($thread === null || $page === null || $page->status !== SocialPage::CONNECTED) {
+            return null;
+        }
+        $locale = (string) ($this->book->query(Message::class, $company)->where('thread_id', $thread->getKey())->where('direction', Message::IN)
+            ->whereNotNull('locale')->orderByDesc('created_at')->orderByDesc('id')->value('locale') ?? $this->localeOf((string) $this->book->query(Message::class, $company)->where('thread_id', $thread->getKey())->where('direction', Message::IN)->orderByDesc('created_at')->value('text')));
+        $text = $this->replies->fill($company, $intent, $locale, $values($locale));
+        if ($text === null) {
+            return null;
+        }
+        $tagged = $thread->last_in_at === null || $thread->last_in_at->lt(CarbonImmutable::now()->subHours(24));
+
+        return $this->send($company, $page, $thread, Message::PRIVATE, $text, $thread->customer_ref, Message::BOT, null, $intent, $locale, [], tag: $tagged ? 'POST_PURCHASE_UPDATE' : null);
+    }
+
     /** Threads waiting for a person at a company (the bell). */
     public function waiting(Organization $company): int
     {
@@ -186,6 +211,21 @@ class Conversations
         }
         $to = $commentId ?? $thread->customer_ref;
         $understood = $this->replies->understand($company, $in->text);
+
+        // Messenger: an order being taken (or one asked for) goes through its questions first.
+        if ($thread->kind === Thread::MESSAGE) {
+            $taken = app(OrderTaker::class)->handle($company, $page, $thread, $in->text, $items, $understood);
+            if ($taken !== null) {
+                $this->book->query(Message::class, $company)->whereKey($in->getKey())->update(['intent' => $understood['intent'] ?? null, 'locale' => $taken['locale'], 'item_ids' => $taken['items'] === [] ? null : json_encode($taken['items'])]);
+                if ($taken['text'] !== '') {
+                    $this->send($company, $page, $thread, Message::PRIVATE, $taken['text'], $to, Message::BOT, null, $taken['intent'], $taken['locale'], $taken['items']);
+                }
+                ($taken['wait'] ?? false) ? $this->wait($company, $thread)
+                    : $this->book->query(Thread::class, $company)->whereKey($thread->getKey())->where('status', '!=', Thread::WAITING)->update(['unknown_count' => 0, 'status' => Thread::OPEN, 'updated_at' => now()]);
+
+                return;
+            }
+        }
         $answer = $understood === null ? null : $this->replies->answer($company, $page, $understood['intent'], $understood['locale'], $items);
         $this->book->query(Message::class, $company)->whereKey($in->getKey())->update(['intent' => $understood['intent'] ?? null, 'locale' => $understood['locale'] ?? null, 'item_ids' => $items === [] ? null : json_encode(array_values($items))]);
 
@@ -194,7 +234,9 @@ class Conversations
             $unknown = $thread->unknown_count + 1;
             $this->book->query(Thread::class, $company)->whereKey($thread->getKey())->update(['unknown_count' => $unknown, 'updated_at' => now()]);
             if ($unknown >= (int) $this->rules->get('social_commerce.handoff_after_unknown', $context) && $thread->status !== Thread::WAITING) {
-                $locale = $understood['locale'] ?? $this->localeOf($in->text);
+                // The language the customer has been writing in ("2" alone says nothing), else the script of this message.
+                $locale = $understood['locale'] ?? $this->book->query(Message::class, $company)->where('thread_id', $thread->getKey())->where('direction', Message::IN)
+                    ->whereNotNull('locale')->orderByDesc('created_at')->orderByDesc('id')->value('locale') ?? $this->localeOf($in->text);
                 $handoff = $this->replies->answer($company, $page, 'handoff', $locale, []);
                 if ($handoff !== null) {
                     $this->send($company, $page, $thread, $thread->kind === Thread::COMMENT ? Message::PUBLIC : Message::PRIVATE, $handoff, $to, Message::BOT, null, 'handoff', $locale, []);
@@ -230,7 +272,7 @@ class Conversations
      *
      * @param  list<string>  $items
      */
-    private function send(Organization $company, SocialPage $page, Thread $thread, string $channel, string $text, string $to, string $sender, ?User $actor, ?string $intent, ?string $locale, array $items, ?string $opId = null, bool $privateReply = false): Message
+    private function send(Organization $company, SocialPage $page, Thread $thread, string $channel, string $text, string $to, string $sender, ?User $actor, ?string $intent, ?string $locale, array $items, ?string $opId = null, bool $privateReply = false, ?string $tag = null): Message
     {
         $status = 'sent';
         $error = null;
@@ -239,7 +281,7 @@ class Conversations
             $fbId = match (true) {
                 $privateReply => $this->sender->privateReply($page, $to, $text),
                 $thread->kind === Thread::COMMENT => $this->sender->underComment($page, $to, $text),
-                default => $this->sender->inMessenger($page, $to, $text),
+                default => $this->sender->inMessenger($page, $to, $text, $tag),
             };
         } catch (MetaException $e) {
             [$status, $error] = ['failed', $e->errorCode()];

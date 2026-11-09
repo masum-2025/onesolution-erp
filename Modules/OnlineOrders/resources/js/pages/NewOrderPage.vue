@@ -1,6 +1,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, PackagePlus, Plus, Search, Trash2 } from 'lucide-vue-next';
 import { AppButton, AppField, AppSegmented, cleanNumber, ErrorState, MoneyInput, newOpId, PageFrame, SkeletonRows, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
@@ -20,7 +20,12 @@ const options = useResource(() => orders.options());
 const settings = computed(() => options.data.value?.data ?? null);
 const currency = computed(() => settings.value?.currency ?? null);
 
-const form = reactive({ customer_name: '', customer_phone: '', address: '', warehouse_id: '', delivery_zone: '', delivery_minor: 0, payment_method: 'cod', note: '' });
+// A channel (the Facebook inbox) may open this with the customer's name and phone filled in.
+const prefill = useRoute().query;
+const form = reactive({
+    customer_name: String(prefill.customer_name ?? '').slice(0, 150), customer_phone: String(prefill.customer_phone ?? '').slice(0, 20),
+    address: '', warehouse_id: '', delivery_zone: '', delivery_minor: 0, payment_method: 'cod', note: '',
+});
 const lines = ref([]); // { item, quantity: text }
 const errors = ref({});
 const saving = ref(false);

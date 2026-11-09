@@ -24,4 +24,5 @@ return [
     'thread_done' => 'Facebook conversation finished',
     'thread_reopen' => 'Facebook conversation opened again',
     'replies_changed' => 'Automatic replies changed',
+    'order_taken' => 'Order taken in Messenger',
 ];
