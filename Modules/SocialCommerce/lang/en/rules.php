@@ -54,6 +54,10 @@ return [
         'label' => 'AI fills order details from one message',
         'description' => 'When a customer writes name, phone and address together in Messenger, those questions are filled at once.',
     ],
+    'send_pay_link' => [
+        'label' => 'Send a payment link after a Messenger order',
+        'description' => 'The customer gets a link to pay online what Online orders asks (for example the delivery charge). Needs Online payments and your merchant account.',
+    ],
     'keep_messages_days' => [
         'label' => 'Keep conversations (days)',
         'description' => 'Conversations with no news for this long are forgotten, with the customers\' names.',

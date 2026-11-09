@@ -29,6 +29,8 @@ class ReplyTemplate extends Model
         'notice', 'handoff',
         'ask_product', 'ask_quantity', 'ask_name', 'ask_phone', 'ask_address', 'ask_zone', 'bad_phone', 'short_stock', 'summary', 'placed', 'cancelled',
         'status_confirmed', 'status_shipped', 'status_delivered', 'status_cancelled',
+        // SC-5a: the payment link after the order, and thanks when it is paid.
+        'pay_link', 'status_paid',
     ];
 
     public const INTENTS = [...self::DETECTED, ...self::ORDER_WORDS, ...self::FIXED];

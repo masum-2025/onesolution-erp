@@ -16,6 +16,9 @@ class OrderPayment extends Model
 
     public const METHODS = ['cash', 'mobile', 'bank'];
 
+    /** Paid by the customer through a payment link (SC-5a); only the gateway's confirmation records it. */
+    public const ONLINE = 'online';
+
     public const UPDATED_AT = null;
 
     protected $table = 'online_order_payments';

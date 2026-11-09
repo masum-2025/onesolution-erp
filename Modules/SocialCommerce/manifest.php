@@ -80,6 +80,9 @@ return [
         $rule('draft_hours', 'integer', 24, $company, 170, 'orders', ['schema' => ['minimum' => 1, 'maximum' => 168]]),
         // Most pieces of a product one Messenger order may ask for (more: a person takes it).
         $rule('max_quantity', 'integer', 20, $company, 180, 'orders', ['schema' => ['minimum' => 1, 'maximum' => 1000]]),
+        // SC-5a: right after an order in Messenger, the customer gets a payment link for what Online orders
+        // asks online (online_orders.online_payment); needs Online payments and the company's merchant account.
+        $rule('send_pay_link', 'boolean', false, $company, 185, 'orders'),
         // The customer hears in Messenger when their order is confirmed, sent, delivered or cancelled.
         $rule('notify_order_status', 'boolean', true, $company, 190, 'orders'),
         // Conversations (customers' names and words) are forgotten after these days without news.

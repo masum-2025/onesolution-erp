@@ -260,7 +260,23 @@ class OrderTaker
         $this->book->query(Thread::class, $company)->whereKey($thread->getKey())->update(['last_order_id' => $order->getKey()]);
         $this->audit->record(action: 'social_commerce.order_taken', target: $thread, new: ['order' => $order->number, 'total_minor' => $order->total_minor], organizationId: $company->getKey());
 
-        return $this->say($company, 'placed', $draft['locale'], ['number' => $order->number, 'total' => MoneyText::shown($order->total_minor, $order->currency_code, $draft['locale'])], $draft);
+        $placed = $this->say($company, 'placed', $draft['locale'], ['number' => $order->number, 'total' => MoneyText::shown($order->total_minor, $order->currency_code, $draft['locale'])], $draft);
+
+        // SC-5a: what is asked online (the delivery charge, or all) goes with a payment link in the same answer.
+        $context = $this->contexts->forOrganization($company);
+        $link = $this->rules->get('social_commerce.send_pay_link', $context) === true ? app(Orders::class)->payLink($company, $order->getKey(), $draft['locale']) : null;
+        if ($link !== null) {
+            $pay = $this->replies->fill($company, 'pay_link', $draft['locale'], [
+                'amount' => MoneyText::shown($link['amount_minor'], $link['currency'], $draft['locale']),
+                'link' => $link['url'],
+                'hours' => $this->digits((int) $this->rules->get('online_orders.pay_link_hours', $context), $draft['locale']),
+            ]);
+            if ($pay !== null) {
+                $placed['text'] = trim($placed['text']."\n\n".$pay);
+            }
+        }
+
+        return $placed;
     }
 
     // ---------------------------------------------------------------- lines

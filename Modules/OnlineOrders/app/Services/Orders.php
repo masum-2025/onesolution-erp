@@ -6,12 +6,15 @@ use App\Models\User;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Identity\Support\PhoneNumber;
 use App\Platform\Modules\ModuleResolver;
+use App\Platform\Payments\PaymentCollectables;
+use App\Platform\Payments\Services\MerchantAccounts;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
 use App\Platform\Support\MoneyText;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 use Modules\Accounting\Ledger\LedgerLine;
 use Modules\Accounting\Services\TaxCodes;
@@ -20,6 +23,8 @@ use Modules\Inventory\Services\Stock;
 use Modules\OnlineOrders\Events\OrderCancelled;
 use Modules\OnlineOrders\Events\OrderConfirmed;
 use Modules\OnlineOrders\Events\OrderDelivered;
+use Modules\OnlineOrders\Events\OrderPaid;
+use Modules\OnlineOrders\Payments\OrderCollectable;
 use Modules\OnlineOrders\Events\OrderShipped;
 use Modules\OnlineOrders\Exceptions\OnlineOrdersException;
 use Modules\OnlineOrders\Models\Order;
@@ -278,6 +283,78 @@ class Orders
     }
 
     /**
+     * SC-5a: what the customer may pay online through a link now (rule
+     * online_orders.online_payment at the order's branch: the delivery charge
+     * or the whole order), less what is already paid; null when nothing is
+     * (rule none, paid, or the order is past packing or called off).
+     *
+     * @return array{order: Order, amount_minor: int, currency: string}|null
+     */
+    public function onlineDue(Organization $company, string $orderId): ?array
+    {
+        $order = $this->book->query(Order::class, $company)->whereKey($orderId)->first();
+        if ($order === null || ! in_array($order->status, [Order::DRAFT, Order::CONFIRMED, Order::PACKED], true)) {
+            return null;
+        }
+        $branch = Organization::query()->find($order->unit_id) ?? $company;
+        $target = match ((string) $this->rules->get('online_orders.online_payment', $this->contexts->forOrganization($branch))) {
+            'full' => $order->total_minor,
+            'delivery' => $order->delivery_minor,
+            default => 0,
+        };
+        $amount = min($target - $order->paid_minor, $order->dueMinor());
+
+        return $amount > 0 ? ['order' => $order, 'amount_minor' => $amount, 'currency' => $order->currency_code] : null;
+    }
+
+    /**
+     * A link the customer opens without a sign-in to pay what onlineDue says
+     * (signed, for online_orders.pay_link_hours); null when there is nothing
+     * to pay or the company takes no online payments.
+     *
+     * @return array{url: string, amount_minor: int, currency: string, expires_at: string}|null
+     */
+    public function payLink(Organization $company, string $orderId, ?string $locale = null): ?array
+    {
+        if (! app(PaymentCollectables::class)->usable(OrderCollectable::KIND, $company)) {
+            return null;
+        }
+        $due = $this->onlineDue($company, $orderId);
+        if ($due === null || app(MerchantAccounts::class)->collectingAccount($company, $due['currency']) === null) {
+            return null;
+        }
+        $expires = CarbonImmutable::now()->addHours((int) $this->rules->get('online_orders.pay_link_hours', $this->contexts->forOrganization($company)));
+
+        return [
+            // Signed without the host: the same link works on the partner's own domain.
+            'url' => url(URL::temporarySignedRoute('online_orders.pay', $expires, ['organization' => $company->getKey(), 'order' => $orderId, ...($locale === null ? [] : ['lang' => $locale])], absolute: false)),
+            'amount_minor' => $due['amount_minor'],
+            'currency' => $due['currency'],
+            'expires_at' => $expires->toIso8601String(),
+        ];
+    }
+
+    /**
+     * The gateway confirmed money the customer paid through a link: always
+     * kept (once per payment), even past what is owed now (the order changed
+     * or was called off meanwhile: staff give the rest back). Nobody typed it.
+     */
+    public function payOnline(Organization $company, string $orderId, int $amount, string $reference, string $opId): void
+    {
+        if ($this->book->query(OrderPayment::class, $company)->where('op_id', $opId)->exists()) {
+            return;
+        }
+        $row = $this->book->transaction($company, function () use ($company, $orderId, $amount, $reference, $opId) {
+            $row = $this->book->query(Order::class, $company)->whereKey($orderId)->lockForUpdate()->firstOrFail();
+            $this->money($company, $row, 'payment', OrderPayment::ONLINE, $amount, mb_substr($reference, 0, 80), $opId, null);
+            $row->forceFill(['paid_minor' => $row->paid_minor + $amount, 'version' => $row->version + 1])->save();
+
+            return $row;
+        });
+        OrderPaid::dispatch($company->getKey(), $row->getKey(), $row->channel, $row->channel_ref, $amount, $row->currency_code);
+    }
+
+    /**
      * Called off. Before shipping its stock is let go; shipped (it came
      * back undelivered) needs online_orders.supervise and the stock comes
      * back. Money kept is given back by the method named.
@@ -475,11 +552,11 @@ class Orders
     }
 
     /** A payment (in) or refund (out), recorded and posted against what the customer owes. */
-    private function money(Organization $company, Order $row, string $kind, string $method, int $amount, ?string $reference, string $opId, User $actor): void
+    private function money(Organization $company, Order $row, string $kind, string $method, int $amount, ?string $reference, string $opId, ?User $actor): void
     {
         $payment = new OrderPayment;
         $payment->fill(['organization_id' => $company->getKey(), 'order_id' => $row->getKey(), 'kind' => $kind, 'method' => $method, 'amount_minor' => $amount,
-            'reference' => $reference, 'recorded_by' => $actor->getKey(), 'op_id' => $opId, 'created_at' => CarbonImmutable::now()])->save();
+            'reference' => $reference, 'recorded_by' => $actor?->getKey(), 'op_id' => $opId, 'created_at' => CarbonImmutable::now()])->save();
         $in = $kind === 'payment';
         $journal = $this->postings->post($company, "online-order-{$kind}-{$payment->getKey()}", CarbonImmutable::now()->startOfDay(),
             __("online_orders::orders.narration.{$kind}", ['number' => $row->number]), $kind, $payment->getKey(), $row->currency_code, [

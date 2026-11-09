@@ -15,6 +15,7 @@ use Illuminate\Support\ServiceProvider;
 use Modules\OnlineOrders\Events\OrderCancelled;
 use Modules\OnlineOrders\Events\OrderConfirmed;
 use Modules\OnlineOrders\Events\OrderDelivered;
+use Modules\OnlineOrders\Events\OrderPaid;
 use Modules\OnlineOrders\Events\OrderShipped;
 use Modules\SocialCommerce\Console\PruneConversations;
 use Modules\SocialCommerce\Console\PublishDuePosts;
@@ -52,7 +53,7 @@ class SocialCommerceServiceProvider extends ServiceProvider
         Event::listen(MetaWebhookReceived::class, QueueWebhook::class);
         // Orders taken in Messenger: the customer hears how theirs moves on (Online orders' events).
         if (class_exists(OrderConfirmed::class)) {
-            Event::listen([OrderConfirmed::class, OrderShipped::class, OrderDelivered::class, OrderCancelled::class], TellCustomerAboutOrder::class);
+            Event::listen([OrderConfirmed::class, OrderShipped::class, OrderDelivered::class, OrderCancelled::class, OrderPaid::class], TellCustomerAboutOrder::class);
         }
 
         if ($this->app->runningInConsole()) {

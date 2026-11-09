@@ -111,6 +111,7 @@ return [
         'online_orders.tax_output' => '2130',
         'online_orders.cash' => '1110',
         'online_orders.mobile' => '1130',
+        'online_orders.online' => '1130',
         'online_orders.bank' => '1120',
         'crm.sales' => '4100',
         'projects.services' => '4100',

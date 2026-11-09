@@ -40,7 +40,8 @@
     "method": {
         "cash": "Cash",
         "mobile": "Mobile wallet",
-        "bank": "Bank"
+        "bank": "Bank",
+        "online": "Paid online (link)"
     },
     "channel": {
         "manual": "Typed in by staff",
@@ -77,6 +78,8 @@
         "not_found": "This order was not found",
         "print": "Print",
         "take_payment": "Take payment",
+        "pay_link": "Payment link",
+        "pay_link_copied": "Payment link copied ({amount}). Paste it into the customer's chat or SMS.",
         "step": {
             "confirm": "Confirm and hold stock",
             "pack": "Mark packed",

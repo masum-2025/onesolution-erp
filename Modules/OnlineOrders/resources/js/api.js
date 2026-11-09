@@ -17,6 +17,7 @@ export function onlineOrdersApi(organizationId) {
         revise: (id, body) => api(`${base}/orders/${id}`, { method: 'PATCH', body }),
         step: (id, step, body) => api(`${base}/orders/${id}/${step}`, { method: 'POST', body }),
         pay: (id, body) => api(`${base}/orders/${id}/payments`, { method: 'POST', body }),
+        payLink: (id) => api(`${base}/orders/${id}/pay-link`, { method: 'POST' }),
     };
 }
 

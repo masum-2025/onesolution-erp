@@ -85,6 +85,11 @@ class OnlineOrdersException extends TenancyException
         return new self('nothing_due', 409);
     }
 
+    public static function noPayLink(): self
+    {
+        return new self('no_pay_link', 409);
+    }
+
     public static function refundMethodMissing(string $amount): self
     {
         return new self('refund_method_missing', 422, ['amount' => $amount]);

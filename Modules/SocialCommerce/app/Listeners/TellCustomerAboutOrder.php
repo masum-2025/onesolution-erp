@@ -10,6 +10,7 @@ use App\Platform\Tenancy\Models\Organization;
 use Modules\OnlineOrders\Events\OrderCancelled;
 use Modules\OnlineOrders\Events\OrderConfirmed;
 use Modules\OnlineOrders\Events\OrderDelivered;
+use Modules\OnlineOrders\Events\OrderPaid;
 use Modules\OnlineOrders\Events\OrderShipped;
 use Modules\OnlineOrders\Services\Orders;
 use Modules\SocialCommerce\Services\Conversations;
@@ -23,7 +24,7 @@ class TellCustomerAboutOrder
 {
     public function __construct(private Conversations $conversations, private ModuleResolver $modules, private RuleResolver $rules, private RuleContextFactory $contexts) {}
 
-    public function handle(OrderConfirmed|OrderShipped|OrderDelivered|OrderCancelled $event): void
+    public function handle(OrderConfirmed|OrderShipped|OrderDelivered|OrderCancelled|OrderPaid $event): void
     {
         if ($event->channel !== 'facebook' || $event->channelRef === null) {
             return;
@@ -41,11 +42,13 @@ class TellCustomerAboutOrder
             $event instanceof OrderConfirmed => 'status_confirmed',
             $event instanceof OrderShipped => 'status_shipped',
             $event instanceof OrderDelivered => 'status_delivered',
+            $event instanceof OrderPaid => 'status_paid',
             default => 'status_cancelled',
         };
         $this->conversations->tellCustomer($company, $event->channelRef, $intent, fn (string $locale) => [
             'number' => $order['number'],
             'total' => MoneyText::shown($order['total_minor'], $order['currency'], $locale),
+            'amount' => $event instanceof OrderPaid ? MoneyText::shown($event->amountMinor, $event->currency, $locale) : '',
             'courier' => (string) ($order['courier'] ?? ''),
             'tracking' => (string) ($order['tracking'] ?? ''),
         ]);

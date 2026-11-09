@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, Ban, Banknote, PackageCheck, PackageX, Printer, Undo2 } from 'lucide-vue-next';
+import { ArrowLeft, Ban, Banknote, Link2, PackageCheck, PackageX, Printer, Undo2 } from 'lucide-vue-next';
 import { AppButton, AppDialog, AppField, MoneyInput, newOpId, PageFrame, StatusBadge, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDateTime, formatMoney, minorToDecimalString } from '@/lib/format';
@@ -69,6 +69,24 @@ async function pay() {
     }
 }
 
+// SC-5a: a payment link for the customer, copied to send in a chat or SMS (what is asked online, per the rules).
+async function copyPayLink() {
+    busy.value = true;
+    try {
+        const { data } = await orders.payLink(order.value.id);
+        try {
+            await navigator.clipboard.writeText(data.url);
+            toast.success(t('online_orders.order.pay_link_copied', { amount: formatMoney({ amount: data.amount_minor, currency: data.currency }) }));
+        } catch {
+            window.prompt(t('online_orders.order.pay_link'), data.url);
+        }
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        busy.value = false;
+    }
+}
+
 // Calling off or taking back: a reason, and how money kept goes back.
 const closing = reactive({ open: false, step: 'cancel', reason: '', refund: 'cash' });
 const refundAmount = computed(() => {
@@ -96,6 +114,7 @@ const printPage = () => window.print();
             <template v-if="order">
                 <AppButton :icon="Printer" class="print:hidden" @click="printPage">{{ t('online_orders.order.print') }}</AppButton>
                 <AppButton v-if="canPay" :icon="Banknote" :disabled="busy" @click="openPay">{{ t('online_orders.order.take_payment') }}</AppButton>
+                <AppButton v-if="canPay" :icon="Link2" :disabled="busy" class="print:hidden" @click="copyPayLink">{{ t('online_orders.order.pay_link') }}</AppButton>
                 <AppButton v-if="nextStep" variant="primary" :icon="PackageCheck" :loading="busy" @click="forward">{{ t(`online_orders.order.step.${nextStep}`) }}</AppButton>
             </template>
         </template>

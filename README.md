@@ -3949,6 +3949,31 @@ never reach logs, errors or the browser).
   its question as if typed (a bad phone stops there and is asked). `social_messages.understood_by`
   (keyword | ai); the reply tester shows it. No AI, no answer or the month used up: as before.
 
+### SC-5a: payment link after a Messenger order
+
+- **Platform** (`App\Platform\Payments`): new optional contract `Contracts\GuestCollectable`
+  (`dueForGuest`, `guestCustomer`) for records a customer pays without a sign-in, and
+  `CollectPayment::startForGuest($org, $kind, $id)` (payment `user_id` empty; an open payment for
+  the same record and amount is given back, so a second click opens the same gateway page).
+- **Online orders**: `OrderCollectable` (`online_orders.order`, guest only) in
+  `payment_collectables`. `Orders::onlineDue` — rule `online_orders.online_payment` at the order's
+  branch: `delivery` (default; the delivery charge, the rest cash on delivery), `full` or `none`,
+  less what is paid; only draft / confirmed / packed. `Orders::payLink($company, $id, $locale)` —
+  relative-signed `/pay/orders/{company}/{order}` (works on partner domains) for
+  `online_orders.pay_link_hours` (48), only with Online payments on and a merchant account.
+  `Orders::payOnline` keeps what the gateway confirmed, once per payment (op `payment-{id}`), even
+  past what is owed (order changed or called off: staff give the rest back); method `online`
+  (posting key `online_orders.online` -> 1130), `recorded_by` empty; event `online_orders.paid`.
+  Staff: `POST …/online-orders/orders/{order}/pay-link` (`online_orders.manage`, audited
+  `online_orders.pay_link_made`), button "Payment link" on the order (copies it).
+- **Pay page** (`PayController`, Blade, no session or cookie, no scripts, strict CSP, noindex,
+  `throttle:online-orders-pay` 20/min per address): a changed or expired link says so (410); the
+  amount is always the order's; "Pay" goes to the company's own gateway page; coming back shows
+  received / being checked / not gone through. Language: the link's (`lang`), else the company's.
+- **Facebook selling**: rule `social_commerce.send_pay_link` (off). On, the "order placed" answer
+  carries the link (`pay_link` template: `{amount}`, `{link}`, `{hours}`); when it is paid the
+  customer is thanked (`status_paid`: `{number}`, `{amount}`).
+
 ### Future expansion (Facebook selling)
 
 - A new sector, country or partner needs no code: the app is the partner's data, the footer line,
