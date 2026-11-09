@@ -32,6 +32,7 @@ return [
         'image_dimensions' => 'The photo must be at least 200 × 200 pixels.',
         'too_far' => 'A post can be scheduled up to 90 days ahead.',
         'reason' => 'Say why, so the writer knows what to change.',
+        'report_range' => 'A report can cover at most :days days. Choose a shorter period.',
     ],
     'status' => [
         'draft' => 'a draft',

@@ -8,4 +8,5 @@ return [
     'connect' => 'Facebook পেজ connect ও disconnect করা, পেজের switch বদলানো',
     'inbox' => 'Facebook comment ও message পড়া ও উত্তর দেওয়া',
     'replies' => 'স্বয়ংক্রিয় উত্তর বদলানো',
+    'reports' => 'Facebook বিক্রির রিপোর্ট দেখা (conversation, order, টাকার হিসাব)',
 ];

@@ -12,4 +12,5 @@ export default [
     { path: 'social/connect', name: 'social-connect', component: () => import('./pages/ConnectPage.vue'), meta },
     { path: 'social/inbox', name: 'social-inbox', component: () => import('./pages/InboxPage.vue'), meta },
     { path: 'social/replies', name: 'social-replies', component: () => import('./pages/RepliesPage.vue'), meta },
+    { path: 'social/reports', name: 'social-reports', component: () => import('./pages/ReportsPage.vue'), meta },
 ];

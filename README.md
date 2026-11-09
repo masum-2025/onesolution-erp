@@ -4005,6 +4005,23 @@ never reach logs, errors or the browser).
 - **Future**: Pathao, RedX, eCourier are each a new `CourierDriver` and an entry in
   `CourierDrivers` and the rule's list; nothing else changes. A new country or partner needs no code.
 
+### SC-5c: Facebook sales report
+
+- **Who**: `social_commerce.reports` at the company (it shows amounts). Menu Facebook → Reports
+  (`/social/reports`): period (7/30 days, this month, chosen days, at most 366), one page or all,
+  Export and Print.
+- **API**: `GET organizations/{org}/social/reports/sales?from&to&page_id` (default: the last 30 days;
+  days in the company's timezone; `throttle:social-reports`, 30 a minute). Read only, no new tables.
+- **What**: conversations (new, comment/Messenger, active = the customer wrote in the period, and
+  how many of those ordered: `conversion_bp`), messages received and answered by the bot or staff,
+  understood by keyword, by AI or not at all; Facebook orders (count, value, average, delivered,
+  cancelled or returned, paid online); by day, by page (through the order's conversation) and the
+  ten best-selling products (cancelled and returned left out).
+- **Boundaries**: orders come from `OnlineOrders\Services\Orders::channelFacts()` (no names, phones or
+  addresses), never its tables; with Online orders off only the conversation parts show. Counted in
+  PHP (no raw SQL). Amounts are the company's currency; an order in another currency is counted
+  (`other_currency`) but not added up.
+
 ### Future expansion (Facebook selling)
 
 - A new sector, country or partner needs no code: the app is the partner's data, the footer line,

@@ -10,6 +10,8 @@ export function socialApi(organizationId) {
 
     return {
         pages: () => api(`${base}/pages`),
+        // SC-5c: sales between two days (?from, ?to, ?page_id).
+        salesReport: (query) => api(`${base}/reports/sales`, { query }),
         connect: () => api(`${base}/connect`, { method: 'POST' }),
         candidates: (state) => api(`${base}/connect/candidates`, { query: { state } }),
         savePages: (body) => api(`${base}/connect/pages`, { method: 'POST', body }),

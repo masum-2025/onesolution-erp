@@ -262,6 +262,39 @@ class Orders
         ];
     }
 
+    /**
+     * SC-5c: the facts other modules may report on, for the orders a channel placed between two moments
+     * (UTC, end excluded): no names, phones or addresses. Read only.
+     *
+     * @return list<array{id: string, channel_ref: ?string, status: string, total_minor: int, paid_online_minor: int, currency: string, placed_at: CarbonImmutable, lines: list<array{item_id: string, name: string, quantity_milli: int, total_minor: int}>}>
+     */
+    public function channelFacts(Organization $company, string $channel, CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $orders = $this->book->query(Order::class, $company)->where('channel', $channel)
+            ->where('created_at', '>=', $from)->where('created_at', '<', $to)
+            ->get(['id', 'channel_ref', 'status', 'total_minor', 'currency_code', 'created_at']);
+        if ($orders->isEmpty()) {
+            return [];
+        }
+        $online = [];
+        $lines = [];
+        foreach (array_chunk($orders->modelKeys(), 500) as $ids) {
+            foreach ($this->book->query(OrderPayment::class, $company)->whereIn('order_id', $ids)->where('method', OrderPayment::ONLINE)->get(['order_id', 'kind', 'amount_minor']) as $payment) {
+                $online[$payment->order_id] = ($online[$payment->order_id] ?? 0) + ($payment->kind === 'payment' ? 1 : -1) * (int) $payment->amount_minor;
+            }
+            foreach ($this->book->query(OrderLine::class, $company)->whereIn('order_id', $ids)->orderBy('line_no')->get(['order_id', 'item_id', 'name', 'quantity_milli', 'total_minor']) as $line) {
+                $lines[$line->order_id][] = ['item_id' => (string) $line->item_id, 'name' => (string) $line->name, 'quantity_milli' => (int) $line->quantity_milli, 'total_minor' => (int) $line->total_minor];
+            }
+        }
+
+        return $orders->map(fn (Order $order) => [
+            'id' => (string) $order->getKey(), 'channel_ref' => $order->channel_ref, 'status' => (string) $order->status,
+            'total_minor' => (int) $order->total_minor, 'paid_online_minor' => max(0, $online[$order->getKey()] ?? 0),
+            'currency' => (string) $order->currency_code, 'placed_at' => CarbonImmutable::parse($order->created_at),
+            'lines' => $lines[$order->getKey()] ?? [],
+        ])->values()->all();
+    }
+
     /** It reached the customer: posted to the books and counted in their purchases. */
     public function deliver(Organization $company, Order $order, int $baseVersion, ?User $actor): Order
     {

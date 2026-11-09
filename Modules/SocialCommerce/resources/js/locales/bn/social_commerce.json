@@ -263,5 +263,61 @@
         "just_now": "এইমাত্র",
         "preview_empty": "আপনার লেখা এখানে দেখাবে।",
         "prices_kept": "পোস্টের সাথে রাখা দাম: {list}"
+    },
+    "reports": {
+        "title": "Facebook বিক্রির রিপোর্ট",
+        "text": "আপনার Facebook পেজ থেকে কী এসেছে: কয়টা conversation, কে উত্তর দিয়েছে, আর Messenger-এ কয়টা order হয়েছে।",
+        "period": "সময়",
+        "presets": {
+            "week": "গত ৭ দিন",
+            "month30": "গত ৩০ দিন",
+            "this_month": "এই মাস",
+            "custom": "দিন বেছে নিন"
+        },
+        "from": "শুরু",
+        "to": "শেষ",
+        "page": "পেজ",
+        "all_pages": "সব পেজ",
+        "zone": "দিন গোনা হয়েছে {zone} সময় অনুযায়ী।",
+        "orders_off": "Online orders বন্ধ আছে, তাই শুধু conversation দেখানো হচ্ছে। Messenger-এর order এখানে দেখতে এটি চালু করুন।",
+        "other_currency": "অন্য মুদ্রার {count}টি order গোনা হয়েছে, কিন্তু টাকার যোগফলে ধরা হয়নি।",
+        "empty": "এই সময়ে কিছু নেই",
+        "empty_text": "এই দিনগুলোতে Facebook থেকে কোনো conversation বা order আসেনি। আরও লম্বা সময় বা অন্য পেজ বেছে নিন।",
+        "new_count": "{count}টি নতুন",
+        "conversion": "{percent}% conversation থেকে order",
+        "average": "গড় {amount}",
+        "tiles": {
+            "conversations": "Conversation",
+            "orders": "Order",
+            "amount": "Order-এর মূল্য",
+            "delivered": "পৌঁছেছে",
+            "cancelled": "বাতিল বা ফেরত",
+            "paid_online": "অনলাইনে পরিশোধ"
+        },
+        "by_day": "দিন অনুযায়ী",
+        "day_counts": "{orders}টি order, {conversations}টি নতুন chat",
+        "by_answer": "কে উত্তর দিয়েছে",
+        "received": "গ্রাহকের {count}টি মেসেজ",
+        "answers": {
+            "bot": "Bot উত্তর দিয়েছে",
+            "person": "Staff উত্তর দিয়েছেন",
+            "by_keyword": "Keyword দিয়ে বোঝা",
+            "by_ai": "AI দিয়ে বোঝা",
+            "not_understood": "বোঝা যায়নি"
+        },
+        "by_page": "পেজ অনুযায়ী",
+        "by_item": "সবচেয়ে বেশি বিক্রি হওয়া পণ্য",
+        "no_items": "এই সময়ে কোনো পণ্য বিক্রি হয়নি।",
+        "totals": "মোট",
+        "columns": {
+            "part": "অংশ",
+            "name": "নাম",
+            "page": "পেজ",
+            "conversations": "Conversation",
+            "orders": "Order",
+            "quantity": "পরিমাণ",
+            "amount": "মূল্য",
+            "delivered": "পৌঁছেছে"
+        }
     }
 }

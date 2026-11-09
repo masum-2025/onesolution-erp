@@ -10,4 +10,5 @@ return [
     'menu_pages' => 'Pages',
     'menu_inbox' => 'Inbox',
     'menu_replies' => 'Automatic replies',
+    'menu_reports' => 'Reports',
 ];

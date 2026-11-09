@@ -6,6 +6,7 @@ use Modules\SocialCommerce\Http\Controllers\InboxController;
 use Modules\SocialCommerce\Http\Controllers\PageController;
 use Modules\SocialCommerce\Http\Controllers\PostController;
 use Modules\SocialCommerce\Http\Controllers\ReplyController;
+use Modules\SocialCommerce\Http\Controllers\ReportController;
 
 /*
 | Facebook selling API (loaded by SocialCommerceServiceProvider under /api,
@@ -30,6 +31,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:social_com
             Route::post('pages/{page}/disconnect', [PageController::class, 'disconnect'])->name('social.pages.disconnect');
             Route::patch('pages/{page}', [PageController::class, 'switches'])->name('social.pages.switches');
         });
+
+        // Sales reports (SC-5c).
+        Route::get('reports/sales', [ReportController::class, 'sales'])->middleware('throttle:social-reports');
 
         // Inbox and automatic replies (SC-2).
         Route::get('inbox', [InboxController::class, 'index']);
