@@ -6,6 +6,12 @@
 return [
 
     'actions' => [
+        'meta_app_change_requested' => 'Meta app change asked for',
+        'meta_app_changed' => 'Meta app changed (approved)',
+        'meta_app_changed_after_wait' => 'Meta app changed (after the waiting time)',
+        'meta_app_change_rejected' => 'Meta app change dropped',
+        'meta_person_removed_app' => 'A person removed the Meta app',
+        'meta_data_deletion' => 'Meta data deletion request',
         'marketing_site_created' => 'Company website started',
         'marketing_site_updated' => 'Company website settings changed',
         'marketing_site_published' => 'Company website published',

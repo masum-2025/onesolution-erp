@@ -11,6 +11,7 @@ use App\Platform\DataExport\DataExportServiceProvider;
 use App\Platform\Identity\IdentityServiceProvider;
 use App\Platform\Localization\LocalizationServiceProvider;
 use App\Platform\Marketing\MarketingServiceProvider;
+use App\Platform\Meta\MetaServiceProvider;
 use App\Platform\Modules\ModulesServiceProvider;
 use App\Platform\Monitoring\MonitoringServiceProvider;
 use App\Platform\Notifications\NotificationsServiceProvider;
@@ -43,6 +44,7 @@ return [
     BillingServiceProvider::class,
     AddonsServiceProvider::class,
     PaymentsServiceProvider::class,
+    MetaServiceProvider::class,
     NotificationsServiceProvider::class,
     MarketingServiceProvider::class,
     TransfersServiceProvider::class,

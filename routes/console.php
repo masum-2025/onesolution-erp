@@ -30,6 +30,9 @@ Schedule::command('payments:reconcile')->everyFiveMinutes()->withoutOverlapping(
 // A client's payment gateway account change takes effect once its single-approver wait is over (Phase 6).
 Schedule::command('payments:apply-merchant-changes')->everyTenMinutes()->withoutOverlapping()->onOneServer();
 
+// A partner's Meta app change takes effect once its single-approver wait is over (SC-1).
+Schedule::command('meta:apply-app-changes')->everyTenMinutes()->withoutOverlapping()->onOneServer();
+
 // Accounts whose "delete my account" grace period ended are erased (Phase 5C-3).
 Schedule::command('privacy:erase-due')->dailyAt('03:30')->withoutOverlapping()->onOneServer();
 

@@ -3815,6 +3815,68 @@ $actor, channel, channelRef)`, `confirm`, `ship`, `deliver`, `pay`, `cancel`, `t
   `online_orders.confirmed|delivered|cancelled`. Courier APIs, payment links and partial returns
   are later steps on the same tables.
 
+## Facebook selling module (SC-1: pages and product posts)
+
+Needs Inventory (`requires: inventory`); products, prices and stock come only through
+`Inventory\Services\Stock` (`items`, `onHandAll`). Facebook is reached only through the platform's
+`App\Platform\Meta` (the Graph client signs every call with `appsecret_proof`; tokens and secrets
+never reach logs, errors or the browser).
+
+- **Meta app per partner** (platform table `meta_apps`, partner console *Meta app (Facebook)*,
+  owners only): app id + secret (encrypted), checked with Meta (`GET /{app}`) before saving; a change
+  waits for a second partner owner (password, `two_factor.recent`) or, with one owner,
+  `meta.single_approver_wait_hours` (24, `meta:apply-app-changes` every 10 min). A client connects
+  through its partner's own app, else the house partner's where `social_commerce.house_app_allowed`
+  (platform/partner) lets it. A replaced app id asks every page of it to sign in again.
+- **Meta callbacks** (`/api/meta/{app}/deauthorize`, `/data-deletion`, `GET /api/meta/deletion/{code}`):
+  public, only with Meta's `signed_request` (HMAC with the app secret). Deauthorize → that
+  person's pages need a new sign-in; data deletion → tokens forgotten, pages disconnected, a
+  confirmation code (`meta_deletion_requests`, the person only as a hash). Raised as
+  `MetaPersonRemovedApp`; the module listens.
+- **Connecting** (`social_commerce.connect`): `POST connect` gives Meta's dialog address with a
+  one-time state (48 chars, bound to the person and the company, 10 minutes, cache, encrypted);
+  Meta returns to `GET /api/social/facebook/callback` (no sign-in; the state is the proof), which
+  swaps the code for a long-lived token and the page tokens and keeps them under the state; the
+  screen lists `connect/candidates?state` (no tokens) and `POST connect/pages` keeps the chosen ones.
+  A page belongs to one company (checked in every client database). Scopes: `pages_show_list`,
+  `pages_read_engagement`, `pages_manage_posts`.
+- **Tables** (tenant): `social_pages` (token encrypted, `meta_person_id`, `can_post` = Facebook task
+  CREATE_CONTENT, connected | needs_reconnect | disconnected), `social_posts` (text, language,
+  `publish_at` UTC, draft → pending → scheduled → publishing → published, or rejected / failed;
+  `op_id`, `version`), `social_post_media` (private files, order, Facebook photo id),
+  `social_post_products` (item + price when written; SC-2 replies start here: `Posts::productsOf`).
+- **Posting**: products add their line (name, price, stock per `show_price` / `show_stock`); up to
+  `max_images_per_post` photos (JPG/PNG/WebP, `max_image_mb`, content re-checked) shown through
+  30-minute signed links. Sent on: where `posts_need_approval` and the writer cannot approve it waits
+  (approvers are mailed), else it is scheduled. Due posts go to the queue (`PublishPost`; the
+  scheduler's `social:publish-due` every minute is the backstop). The publisher claims a post
+  (scheduled → publishing at its version), uploads photos unpublished, then one feed post with the
+  text and `post_footer` in the post's language. Busy / unreachable: tried again (5, 10 minutes,
+  3 attempts); token or permission gone: the page needs a new sign-in (mailed) and the post fails
+  (the writer is mailed); stuck over 15 minutes: failed, never sent twice.
+- **API** (`/api/organizations/{unit}/social/…`, `module:inventory` + `module:social_commerce`, the
+  company of the unit): `pages`, `connect`, `connect/candidates`, `connect/pages`,
+  `pages/{id}/disconnect`, `options`, `items?search&locale`, `posts?status`, `POST posts`,
+  `PATCH|DELETE posts/{id}`, `POST posts/{id}/submit|approve|reject|withdraw`, `POST posts/{id}/media`,
+  `DELETE posts/{id}/media/{media}`, `PUT posts/{id}/media-order` (all writes `base_version`).
+- Permissions `social_commerce.view|compose|approve|connect`; audit `social_commerce.*` and
+  `meta.*`; notifications `social_commerce.post_waiting|post_failed|page_needs_reconnect`; events
+  `social_commerce.page_connected|post_published|post_failed`; data export adds pages (no tokens),
+  posts and products.
+- **Screens** (`Modules/SocialCommerce/resources/js`): Pages (connect in one click, connect again,
+  disconnect), Choose pages (after Meta's sign-in), Posts (status filter, export), Post (page,
+  language, text, products, photos, time; send / approve / turn down / take back; a Facebook-like
+  preview). Partner console: `resources/js/pages/partner/PartnerMetaAppPage.vue`.
+- After deploy: migrate, `rules:sync`, `access:sync`; set the house partner's Meta app in its
+  console; run the scheduler and a queue worker.
+
+### Future expansion (Facebook selling)
+
+- A new sector, country or partner needs no code: the app is the partner's data, the footer line,
+  approval, photo limits, price and stock lines and the earliest schedule are rules, the language
+  is the post's. SC-2 (webhook, inbox, replies) adds scopes and a webhook on the same app; SC-3
+  places orders through `OnlineOrders\Services\Orders`; Instagram uses the same `Meta\Graph`.
+
 ## Letters module (LET-1 backend, LET-2 screens, LET-3 letters from increment rounds)
 
 HR letters from designs a company makes or takes ready-made: appointment, joining, confirmation,

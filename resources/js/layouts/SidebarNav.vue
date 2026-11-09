@@ -9,6 +9,7 @@ import {
     ChevronDown,
     ChevronsLeft,
     Code,
+    Facebook,
     Download,
     FileText,
     Globe,
@@ -85,6 +86,7 @@ const platformSections = computed(() => {
                 label: t('core.nav.partner_settings'),
                 items: [
                     ...(context?.role === 'owner' ? [{ to: '/partner/api-keys', label: t('core.nav.partner_api'), icon: Code }] : []),
+                    ...(context?.role === 'owner' ? [{ to: '/partner/meta-app', label: t('core.nav.partner_meta'), icon: Facebook }] : []),
                     { to: '/partner/brand', label: t('core.nav.partner_brand'), icon: Palette },
                     { to: '/partner/messaging', label: t('core.nav.partner_messaging'), icon: Mail },
                     { to: '/partner/templates', label: t('core.nav.partner_templates'), icon: MessageSquareText },
