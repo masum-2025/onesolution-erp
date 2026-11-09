@@ -3768,6 +3768,53 @@ difference to review) and a shift open today. Logins `shop.owner@`, `store@`, `c
   number prefixes are data and rules. CRM customers and loyalty, gift cards, card terminals and
   bKash APIs are later steps behind the same payment methods.
 
+## Online orders module (OO-1: orders from every channel)
+
+Needs Inventory (`requires: inventory`); posts to Accounting and counts purchases in CRM where they
+are on. Uses only `Inventory\Services\Stock` (items, units, warehouses, `onHand`, `take()`),
+`Accounting\Services\TaxCodes` + `Ledger::post` and `Crm\Services\Customers` (`remember`,
+`recordSale`). The public `Modules\OnlineOrders\Services\Orders` is how other modules (Facebook
+selling next, the website shop later) place and move orders: `place($company, $branch, $data,
+$actor, channel, channelRef)`, `confirm`, `ship`, `deliver`, `pay`, `cancel`, `takeBack`, `available`.
+
+- **Tables** (tenant, `organization_id` = the company): `online_orders` (branch, warehouse, channel
+  manual|facebook|website + channel ref, status, customer name / phone in E.164 / CRM contact,
+  address, zone, cod|prepaid, totals frozen when the draft is made or changed, `op_id` unique,
+  `version`), `online_order_lines`, `online_order_payments` (payment|refund, append-only, `op_id`),
+  `online_order_events` (history, append-only), `online_order_sequences`.
+- **Flow**: draft → confirmed (stock **held**: other orders see on hand less what confirmed and
+  packed orders hold) → packed → shipped (stock leaves at cost; prepaid orders only once paid) →
+  delivered (posted Dr online_orders.receivable / Cr online_orders.sales, .tax_output,
+  .delivery_income; Dr inventory.cogs / Cr inventory.stock; CRM purchase). Payments Dr
+  online_orders.cash|mobile|bank / Cr receivable, never above what is owed.
+- **Cancel** before shipping lets the hold go; once shipped (came back) only
+  `online_orders.supervise`, stock back at what it left at. **Take back** a delivered order
+  (`supervise`, within `online_orders.return_days`): stock back, sale and CRM purchase reversed,
+  the delivery charge stays owed, money kept beyond it given back. Partial returns come later.
+- **API** (`/api/organizations/{unit}/online-orders/…`, `module:inventory` + `module:online_orders`,
+  writes throttled 60/min): `options`, `items?warehouse_id&search`, `orders` (status, channel, number
+  or mobile), `POST orders` (the unit in the address is the order's branch, never the body),
+  `PATCH orders/{id}` (drafts, `base_version`), `POST orders/{id}/confirm|pack|ship|deliver|cancel|return`
+  (`base_version`), `POST orders/{id}/payments` (`op_id`).
+- **Rules**: `online_orders.number_prefix` (OO), `.prices_include_tax`, `.cod_allowed`,
+  `.delivery_zones` (`[{code, name: {en, bn}, charge_minor}]`; empty: the charge is typed),
+  `.max_discount_percent` (10; above needs supervise), `.return_days` (7).
+- Permissions `online_orders.view|manage|supervise`; audit `online_orders.*`; data export adds the
+  tables; general chart maps the posting keys (1140 / 4100 / 4200 / 2130 / 1110 / 1130 / 1120).
+  Add-on price in `database/seeders/data/addon-prices.php`.
+- **Screens** (`Modules/OnlineOrders/resources/js`): Orders (status filter, number or mobile search,
+  export), New order (customer, items with what can still go out, zone or typed charge, payment),
+  Order (totals, history, next step, take payment, cancel / take back with refund, print).
+- After deploy: migrate, `rules:sync`, `access:sync`, `accounting:map-postings`.
+
+### Future expansion (online orders)
+
+- A new sector, country or partner needs no code: zones and charges, COD, VAT, discount limit,
+  return days and the number prefix are rules; the channel is data. Facebook selling (SC-3) places
+  orders through `Orders::place(..., 'facebook', $threadId)` and listens to
+  `online_orders.confirmed|delivered|cancelled`. Courier APIs, payment links and partial returns
+  are later steps on the same tables.
+
 ## Letters module (LET-1 backend, LET-2 screens, LET-3 letters from increment rounds)
 
 HR letters from designs a company makes or takes ready-made: appointment, joining, confirmation,

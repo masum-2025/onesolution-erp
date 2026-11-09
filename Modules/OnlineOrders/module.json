@@ -1,0 +1,11 @@
+{
+    "name": "OnlineOrders",
+    "alias": "online_orders",
+    "description": "Online orders from every channel (typed in, later Facebook and the website): customer, delivery, stock held and shipped, cash on delivery, returns.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\OnlineOrders\\Providers\\OnlineOrdersServiceProvider"
+    ],
+    "files": []
+}

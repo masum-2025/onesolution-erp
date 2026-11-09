@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/online-orders",
+    "description": "Online orders: customer, delivery, stock held and shipped, cash on delivery, returns.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\OnlineOrders\\": "app/"
+        }
+    }
+}

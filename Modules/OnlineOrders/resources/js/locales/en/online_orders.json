@@ -1,0 +1,116 @@
+{
+    "fields": {
+        "number": "Order number",
+        "date": "Date",
+        "customer": "Customer's name",
+        "phone": "Mobile number",
+        "status": "Where it stands",
+        "payment": "Payment",
+        "total": "Total",
+        "due": "Still owed",
+        "paid": "Paid",
+        "address": "Delivery address",
+        "warehouse": "Ships from",
+        "zone": "Delivery area",
+        "delivery": "Delivery charge",
+        "note": "Note",
+        "goods": "Goods",
+        "quantity": "Quantity",
+        "item": "Item",
+        "amount": "Amount",
+        "courier": "Courier",
+        "tracking": "Tracking number",
+        "method": "Paid by",
+        "reference": "Reference (transaction ID)",
+        "reason": "Reason"
+    },
+    "status": {
+        "draft": "Draft",
+        "confirmed": "Confirmed",
+        "packed": "Packed",
+        "shipped": "Sent out",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled",
+        "returned": "Taken back"
+    },
+    "payment": {
+        "cod": "Cash on delivery",
+        "prepaid": "Paid before sending"
+    },
+    "method": {
+        "cash": "Cash",
+        "mobile": "Mobile wallet",
+        "bank": "Bank"
+    },
+    "channel": {
+        "manual": "Typed in by staff",
+        "facebook": "From Facebook",
+        "website": "From the website"
+    },
+    "list": {
+        "title": "Online orders",
+        "text": "Orders from the phone, Facebook and the website, from draft to delivered.",
+        "new": "New order",
+        "all": "All",
+        "search": "Order number or mobile number",
+        "empty": "No orders here yet",
+        "empty_text": "Orders appear here as they are taken. Start with \"New order\".",
+        "due": "{amount} owed"
+    },
+    "new": {
+        "title": "New order",
+        "text": "Who it is for, where it goes, how it is paid and what is in it.",
+        "customer": "Customer",
+        "items": "Items",
+        "find_item": "Find an item by name or SKU, then press Enter",
+        "available": "{quantity} can go out",
+        "add": "Add",
+        "no_items": "No items yet. Find one above and add it.",
+        "remove": "Remove {item}",
+        "no_zones": "No delivery areas are set in the rules; type the charge.",
+        "estimate": "A guide: VAT and the final total are worked out when the order is saved.",
+        "save": "Save as draft",
+        "saved": "Order {number} saved as a draft. Confirm it to hold the stock."
+    },
+    "order": {
+        "back": "Online orders",
+        "not_found": "This order was not found",
+        "print": "Print",
+        "take_payment": "Take payment",
+        "step": {
+            "confirm": "Confirm and hold stock",
+            "pack": "Mark packed",
+            "ship": "Send out",
+            "deliver": "Mark delivered",
+            "cancel": "Cancel order",
+            "return": "Take back"
+        },
+        "done": {
+            "confirm": "Confirmed: the stock is held for this order.",
+            "pack": "Marked packed.",
+            "ship": "Sent out: the stock has left the warehouse.",
+            "deliver": "Delivered and added to the books.",
+            "pay": "Payment recorded.",
+            "cancel": "Order cancelled.",
+            "return": "Order taken back: the goods are in stock again."
+        },
+        "courier": "Courier {courier}, tracking {tracking}",
+        "discount": "{amount} off",
+        "history": "History",
+        "money": {
+            "payment": "{amount} paid by {method}",
+            "refund": "{amount} given back by {method}"
+        },
+        "vat_inside": "VAT inside",
+        "vat_added": "VAT added",
+        "supervisor_note": "A supervisor cancels orders already sent out and takes delivered orders back.",
+        "cancel_note": "Cancelling lets the held stock go. Money paid is given back.",
+        "ship_text": "Who carries it (both optional).",
+        "pay_text": "{amount} is owed. Record what was received.",
+        "cancel_text": "The order stops here. Stock sent out comes back to the warehouse.",
+        "return_text": "The goods come back to the warehouse and their sale is reversed; the delivery charge stays owed.",
+        "refund": "Give back {amount} by",
+        "cancel": "Close",
+        "keep": "Keep the order"
+    }
+}
