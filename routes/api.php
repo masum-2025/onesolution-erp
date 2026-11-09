@@ -47,6 +47,8 @@ use App\Platform\Packaging\Http\Controllers\PartnerPlanController;
 use App\Platform\Packaging\Http\Controllers\SectorPackageController;
 use App\Platform\Packaging\Http\Controllers\UsageController;
 use App\Platform\PageExports\Http\PageExportController;
+use App\Platform\Meta\Http\MetaCallbackController;
+use App\Platform\Meta\Http\PartnerMetaAppController;
 use App\Platform\PageExports\Http\PartnerPageExportController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiKeyController;
 use App\Platform\PartnerApi\Http\Controllers\PartnerApiV1Controller;
@@ -485,6 +487,14 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
         Route::post('messaging/test-sms', [PartnerMessagingController::class, 'testSms']);
     });
 
+    // The partner's own Meta app (SC-1): changes are checked with Meta and wait for a second owner.
+    Route::get('meta-app', [PartnerMetaAppController::class, 'show']);
+    Route::middleware('throttle:meta-app')->group(function () {
+        Route::put('meta-app', [PartnerMetaAppController::class, 'update'])->middleware('two_factor.recent')->name('meta.app.update');
+        Route::post('meta-app/approve', [PartnerMetaAppController::class, 'approve'])->middleware('two_factor.recent')->name('meta.app.approve');
+        Route::post('meta-app/reject', [PartnerMetaAppController::class, 'reject'])->name('meta.app.reject');
+    });
+
     // Languages and wording (LANG-1): the partner's own wording; the platform's languages for the house partner.
     Route::get('languages', [PartnerLanguageController::class, 'index']);
     Route::get('translations', [PartnerLanguageController::class, 'texts']);
@@ -541,6 +551,15 @@ Route::middleware(['auth:sanctum', 'partner'])->prefix('partner')->group(functio
         Route::post('rule-approvals/{value}/approve', [PartnerRuleController::class, 'approve'])->middleware('two_factor.recent');
         Route::post('rule-approvals/{value}/reject', [PartnerRuleController::class, 'reject']);
     });
+});
+
+/*
+| Meta's callbacks for one app (SC-1): public, the signed_request is the proof.
+*/
+Route::prefix('meta')->middleware('throttle:meta-callback')->group(function () {
+    Route::post('{app}/deauthorize', [MetaCallbackController::class, 'deauthorize'])->where('app', '[0-9A-Za-z]{26}');
+    Route::post('{app}/data-deletion', [MetaCallbackController::class, 'dataDeletion'])->where('app', '[0-9A-Za-z]{26}');
+    Route::get('deletion/{code}', [MetaCallbackController::class, 'deletionStatus'])->where('code', '[0-9a-z]{26}');
 });
 
 /*

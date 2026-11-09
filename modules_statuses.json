@@ -38,5 +38,6 @@
     "BusinessNetwork": true,
     "Compliance": true,
     "Projects": true,
-    "OnlineOrders": true
+    "OnlineOrders": true,
+    "SocialCommerce": true
 }

@@ -1,0 +1,11 @@
+{
+    "name": "SocialCommerce",
+    "alias": "social_commerce",
+    "description": "Selling on Facebook: connect a company's pages, post products from the ERP with approval and scheduling (later: comments, Messenger orders).",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\SocialCommerce\\Providers\\SocialCommerceServiceProvider"
+    ],
+    "files": []
+}

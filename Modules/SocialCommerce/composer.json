@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/social-commerce",
+    "description": "Selling on Facebook: pages, product posts with approval and scheduling.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\SocialCommerce\\": "app/"
+        }
+    }
+}

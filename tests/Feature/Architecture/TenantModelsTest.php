@@ -59,6 +59,8 @@ use App\Platform\Packaging\Models\PlanPrice;
 use App\Platform\Packaging\Models\SectorPackage;
 use App\Platform\Packaging\Models\Subscription;
 use App\Platform\PartnerApi\Models\PartnerApiKey;
+use App\Platform\Meta\Models\MetaApp;
+use App\Platform\Meta\Models\MetaDeletionRequest;
 use App\Platform\Partners\Models\PartnerBrand;
 use App\Platform\Partners\Models\PartnerDomain;
 use App\Platform\Partners\Models\PartnerModule;
@@ -125,6 +127,9 @@ const PLATFORM_MODELS = [
     // Partner layer: owned by a partner, not an organization. Written only by
     // the partner console services and read through the partner context.
     PartnerBrand::class,
+    // A partner's own Meta app and Meta's deletion requests for it (SC-1): partner-scoped (PartnerMetaAppController, PartnerConsole).
+    MetaApp::class,
+    MetaDeletionRequest::class,
     // Company websites (MKT-1): a partner's own marketing site, partner-scoped (WebsiteController, PartnerConsole).
     Site::class,
     Page::class,

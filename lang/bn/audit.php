@@ -3,6 +3,12 @@
 return [
 
     'actions' => [
+        'meta_app_change_requested' => 'Meta app বদলানোর অনুরোধ',
+        'meta_app_changed' => 'Meta app বদলানো হলো (অনুমোদিত)',
+        'meta_app_changed_after_wait' => 'Meta app বদলানো হলো (অপেক্ষার সময় শেষে)',
+        'meta_app_change_rejected' => 'Meta app বদলানোর অনুরোধ বাদ দেওয়া হলো',
+        'meta_person_removed_app' => 'একজন Meta app সরিয়ে নিয়েছেন',
+        'meta_data_deletion' => 'Meta-র তথ্য মোছার অনুরোধ',
         'marketing_site_created' => 'কোম্পানির ওয়েবসাইট শুরু হলো',
         'marketing_site_updated' => 'কোম্পানির ওয়েবসাইটের সেটিং বদলানো হলো',
         'marketing_site_published' => 'কোম্পানির ওয়েবসাইট প্রকাশিত হলো',

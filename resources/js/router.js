@@ -124,6 +124,12 @@ const routes = [
                 meta: { context: 'partner', ns: ['partner', 'billing'] },
             },
             {
+                path: 'partner/meta-app',
+                name: 'partner-meta-app',
+                component: () => import('./pages/partner/PartnerMetaAppPage.vue'),
+                meta: { context: 'partner', ns: ['partner'] },
+            },
+            {
                 path: 'partner/api-keys',
                 name: 'partner-api-keys',
                 component: () => import('./pages/partner/PartnerApiKeysPage.vue'),

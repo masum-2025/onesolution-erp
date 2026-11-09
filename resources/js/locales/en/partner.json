@@ -205,6 +205,47 @@
         "how_text": "Send the key as a bearer token. Up to {rate} requests per minute per key.",
         "idempotency": "Send an Idempotency-Key header with each create: if you retry, nothing is created twice."
     },
+    "meta": {
+        "title": "Meta app (Facebook)",
+        "text": "Your clients connect their Facebook pages through your own Meta app, so Facebook shows your app's name. Without one they use the platform's app, where allowed.",
+        "add": "Add your Meta app",
+        "change": "Change the Meta app",
+        "none": "No Meta app of your own yet",
+        "none_text": "Create an app at developers.facebook.com (type Business), then add its id and secret here.",
+        "status": {
+            "pending": "Waiting for approval",
+            "active": "In use",
+            "disabled": "Off"
+        },
+        "app_id": "App id",
+        "app_secret": "App secret",
+        "app_id_hint": "developers.facebook.com → your app → App settings → Basic.",
+        "app_secret_hint": "Same page, App secret → Show. It is stored encrypted and never shown again.",
+        "password": "Your password",
+        "approved_at": "Approved",
+        "pending_title": "A change waits for approval",
+        "pending_text": "{name} ({id}), asked for {when}.",
+        "activates": "With no second owner, it is used from {when}.",
+        "needs_other": "Another partner owner has to approve it.",
+        "no_other": "There is no second owner, so it is used after {hours} hours.",
+        "approve": "Approve",
+        "approve_text": "Your clients' pages will connect through this app. Enter your password to approve.",
+        "reject": "Drop the change",
+        "form_text": "We check the id and secret with Meta before saving. Another partner owner then approves the change.",
+        "save": "Check and save",
+        "cancel": "Cancel",
+        "setup_title": "Enter these in your Meta app",
+        "setup_text": "Facebook Login → Settings → Valid OAuth redirect URIs (add one for each of your domains), and App settings → Advanced for the two callbacks.",
+        "callbacks": {
+            "redirect_uri": "OAuth redirect URI",
+            "deauthorize": "Deauthorize callback URL",
+            "data_deletion": "Data deletion request URL"
+        },
+        "permissions": "Ask Meta (App review) for: pages_show_list, pages_read_engagement, pages_manage_posts.",
+        "copy": "Copy",
+        "copied": "Copied.",
+        "copy_failed": "Could not copy. Select the text and copy it."
+    },
     "export": {
         "name": "Name",
         "type": "Kind",

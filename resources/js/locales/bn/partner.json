@@ -205,6 +205,47 @@
         "how_text": "কী-টি bearer token হিসেবে পাঠান। প্রতি কী-তে প্রতি মিনিটে সর্বোচ্চ {rate}টি অনুরোধ।",
         "idempotency": "প্রতিটি তৈরির অনুরোধে Idempotency-Key header পাঠান: আবার চেষ্টা করলে কিছু দুবার তৈরি হবে না।"
     },
+    "meta": {
+        "title": "Meta app (Facebook)",
+        "text": "আপনার ক্লায়েন্টরা আপনার নিজের Meta app দিয়ে তাদের Facebook পেজ connect করেন, তাই Facebook আপনার app-এর নাম দেখায়। না থাকলে, অনুমতি থাকলে, তারা প্ল্যাটফর্মের app ব্যবহার করেন।",
+        "add": "আপনার Meta app যোগ করুন",
+        "change": "Meta app বদলান",
+        "none": "এখনো নিজের কোনো Meta app নেই",
+        "none_text": "developers.facebook.com-এ একটি app (Business ধরনের) তৈরি করুন, তারপর তার id আর secret এখানে দিন।",
+        "status": {
+            "pending": "অনুমোদনের অপেক্ষায়",
+            "active": "চালু",
+            "disabled": "বন্ধ"
+        },
+        "app_id": "App id",
+        "app_secret": "App secret",
+        "app_id_hint": "developers.facebook.com → আপনার app → App settings → Basic।",
+        "app_secret_hint": "একই পাতায় App secret → Show। এটি encrypted অবস্থায় রাখা হয় এবং আর কখনো দেখানো হয় না।",
+        "password": "আপনার পাসওয়ার্ড",
+        "approved_at": "অনুমোদিত",
+        "pending_title": "একটি পরিবর্তন অনুমোদনের অপেক্ষায়",
+        "pending_text": "{name} ({id}), চাওয়া হয়েছে {when}।",
+        "activates": "দ্বিতীয় owner না থাকায় {when} থেকে চালু হবে।",
+        "needs_other": "অন্য একজন partner owner-কে অনুমোদন দিতে হবে।",
+        "no_other": "দ্বিতীয় কোনো owner নেই, তাই {hours} ঘণ্টা পরে চালু হবে।",
+        "approve": "অনুমোদন দিন",
+        "approve_text": "আপনার ক্লায়েন্টদের পেজ এই app দিয়ে connect হবে। অনুমোদন দিতে পাসওয়ার্ড দিন।",
+        "reject": "পরিবর্তন বাদ দিন",
+        "form_text": "সংরক্ষণের আগে id আর secret Meta-র সাথে মিলিয়ে দেখা হয়। তারপর অন্য একজন partner owner অনুমোদন দেবেন।",
+        "save": "যাচাই করে সংরক্ষণ",
+        "cancel": "বাতিল",
+        "setup_title": "এগুলো আপনার Meta app-এ বসান",
+        "setup_text": "Facebook Login → Settings → Valid OAuth redirect URIs (আপনার প্রতিটি domain-এর জন্য একটি), আর দুটি callback-এর জন্য App settings → Advanced।",
+        "callbacks": {
+            "redirect_uri": "OAuth redirect URI",
+            "deauthorize": "Deauthorize callback URL",
+            "data_deletion": "Data deletion request URL"
+        },
+        "permissions": "Meta-র কাছে (App review) চাইবেন: pages_show_list, pages_read_engagement, pages_manage_posts।",
+        "copy": "কপি",
+        "copied": "কপি হয়েছে।",
+        "copy_failed": "কপি করা যায়নি। লেখাটি বেছে নিয়ে কপি করুন।"
+    },
     "export": {
         "name": "নাম",
         "type": "ধরন",
