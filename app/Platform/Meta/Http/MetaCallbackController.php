@@ -5,12 +5,14 @@ namespace App\Platform\Meta\Http;
 use App\Http\Controllers\Controller;
 use App\Platform\Audit\AuditLogger;
 use App\Platform\Meta\Events\MetaPersonRemovedApp;
+use App\Platform\Meta\Events\MetaWebhookReceived;
 use App\Platform\Meta\MetaApps;
 use App\Platform\Meta\Models\MetaApp;
 use App\Platform\Meta\Models\MetaDeletionRequest;
 use App\Platform\Meta\SignedRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 /**
@@ -51,6 +53,37 @@ class MetaCallbackController extends Controller
             'url' => url('/api/meta/deletion/'.$deletion->code),
             'confirmation_code' => $deletion->code,
         ]);
+    }
+
+    /** Meta checks the webhook address: it must repeat the app's verify token; we answer its challenge. */
+    public function verifyWebhook(Request $request, string $app): Response
+    {
+        $found = $this->apps->find($app);
+        // PHP reads "hub.mode" in a query string as "hub_mode".
+        $ok = $found !== null && $found->isActive() && $request->query('hub_mode') === 'subscribe'
+            && is_string($found->webhook_verify_token) && hash_equals($found->webhook_verify_token, (string) $request->query('hub_verify_token', ''));
+        abort_unless($ok, 403);
+
+        return response((string) $request->query('hub_challenge', ''), 200, ['Content-Type' => 'text/plain']);
+    }
+
+    /**
+     * An event from Meta (comments, messages): only with the app's signature
+     * (X-Hub-Signature-256 over the raw body). Handled on the queue by the
+     * modules that hold the pages, so Meta gets its answer at once.
+     */
+    public function webhook(Request $request, string $app): JsonResponse
+    {
+        $found = $this->apps->find($app);
+        abort_if($found === null || ! $found->isActive(), 404);
+        $expected = 'sha256='.hash_hmac('sha256', $request->getContent(), (string) $found->app_secret);
+        abort_unless(hash_equals($expected, (string) $request->header('X-Hub-Signature-256', '')), 403);
+        $payload = json_decode($request->getContent(), true);
+        if (is_array($payload) && ($payload['object'] ?? null) === 'page') {
+            MetaWebhookReceived::dispatch($found->getKey(), $payload);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     /** What a person who asked for deletion can look up with their code. */

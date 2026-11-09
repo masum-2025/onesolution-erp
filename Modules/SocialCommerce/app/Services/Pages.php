@@ -35,8 +35,17 @@ use Modules\SocialCommerce\Models\SocialPage;
  */
 class Pages
 {
-    /** What SC-1 asks Facebook for: list the pages, read them, post on them. */
-    public const SCOPES = ['pages_show_list', 'pages_read_engagement', 'pages_manage_posts'];
+    /**
+     * What is asked of Facebook: list, read and post on the pages (SC-1); hear their comments and
+     * messages, read and answer comments, answer in Messenger (SC-2).
+     */
+    public const SCOPES = [
+        'pages_show_list', 'pages_read_engagement', 'pages_manage_posts',
+        'pages_manage_metadata', 'pages_read_user_content', 'pages_manage_engagement', 'pages_messaging',
+    ];
+
+    /** Webhook fields a page is subscribed to: comments (feed) and Messenger (messages). */
+    public const FIELDS = 'feed,messages';
 
     public function __construct(
         private SocialBook $book,
@@ -83,6 +92,8 @@ class Pages
             $token = $this->graph->personToken($app, $code, (string) $held['redirect']);
             $person = (string) ($this->graph->get($app, 'me', $token, ['fields' => 'id'])['id'] ?? '');
             $found = $this->graph->get($app, 'me/accounts', $token, ['fields' => 'id,name,access_token,tasks,picture{url}', 'limit' => 100]);
+            $granted = collect((array) ($this->graph->get($app, 'me/permissions', $token)['data'] ?? []))
+                ->filter(fn ($row) => is_array($row) && ($row['status'] ?? '') === 'granted')->pluck('permission')->map(fn ($scope) => (string) $scope)->values()->all();
         } catch (MetaException $e) {
             Cache::forget($this->key($state));
 
@@ -102,7 +113,7 @@ class Pages
                 'can_post' => in_array('CREATE_CONTENT', (array) ($page['tasks'] ?? []), true),
             ];
         }
-        $this->remember($state, [...$held, 'person' => $person, 'pages' => $pages]);
+        $this->remember($state, [...$held, 'person' => $person, 'pages' => $pages, 'scopes' => $granted]);
 
         return '/social/connect?state='.$state;
     }
@@ -149,12 +160,15 @@ class Pages
             }
         }
 
-        $saved = $this->book->transaction($company, function () use ($company, $actor, $held, $chosen) {
+        $pricePublic = $this->rules->get('social_commerce.price_public', $this->contexts->forOrganization($company)) !== false;
+        $saved = $this->book->transaction($company, function () use ($company, $actor, $held, $chosen, $pricePublic) {
             $saved = [];
             foreach ($chosen as $page) {
                 $row = $this->book->query(SocialPage::class, $company)->where('page_id', $page['page_id'])->lockForUpdate()->first();
                 $before = $row?->status;
-                $row ??= $this->book->query(SocialPage::class, $company)->make(['organization_id' => $company->getKey(), 'page_id' => $page['page_id'], 'version' => 0]);
+                $row ??= $this->book->query(SocialPage::class, $company)->make([
+                    'organization_id' => $company->getKey(), 'page_id' => $page['page_id'], 'version' => 0, 'auto_reply' => true, 'price_public' => $pricePublic,
+                ]);
                 $row->fill([
                     'meta_app_id' => $held['app'],
                     'name' => $page['name'],
@@ -162,6 +176,8 @@ class Pages
                     'token' => $page['token'],
                     'meta_person_id' => $held['person'] !== '' ? $held['person'] : null,
                     'can_post' => $page['can_post'],
+                    'scopes' => array_values(array_intersect(self::SCOPES, (array) ($held['scopes'] ?? []))),
+                    'subscribed_at' => null,
                     'status' => SocialPage::CONNECTED,
                     'status_reason' => null,
                     'connected_by' => $actor->getKey(),
@@ -181,11 +197,58 @@ class Pages
             return $saved;
         });
         Cache::forget($this->key($state));
+        $app = $this->apps->find((string) $held['app']);
         foreach ($saved as $row) {
+            if ($app !== null) {
+                $this->subscribe($company, $app, $row);
+            }
             PageConnected::dispatch($company->getKey(), $row->getKey());
         }
 
-        return $saved;
+        return array_map(fn (SocialPage $row) => $row->fresh() ?? $row, $saved);
+    }
+
+    /**
+     * Subscribes the page to the app's webhook (comments and messages). When Facebook refuses
+     * (a permission missing), the page still posts; the screen asks to connect again for replies.
+     */
+    public function subscribe(Organization $company, MetaApp $app, SocialPage $page): bool
+    {
+        try {
+            $this->graph->post($app, "{$page->page_id}/subscribed_apps", (string) $page->token, ['subscribed_fields' => self::FIELDS]);
+        } catch (MetaException) {
+            return false;
+        }
+        $this->book->query(SocialPage::class, $company)->whereKey($page->getKey())->update(['subscribed_at' => now()]);
+
+        return true;
+    }
+
+    /** Permissions SC-2 needs that the page's sign-in did not give (empty: comments and messages work). */
+    public function missingScopes(SocialPage $page): array
+    {
+        return array_values(array_diff(self::SCOPES, (array) $page->scopes));
+    }
+
+    /**
+     * The page's switches: automatic replies, and the price in public comment replies.
+     *
+     * @param  array{auto_reply?: bool, price_public?: bool}  $switches
+     */
+    public function setSwitches(Organization $company, SocialPage $page, int $baseVersion, array $switches, User $actor): SocialPage
+    {
+        return $this->book->transaction($company, function () use ($company, $page, $baseVersion, $switches, $actor) {
+            $page = $this->book->query(SocialPage::class, $company)->whereKey($page->getKey())->lockForUpdate()->firstOrFail();
+            if ($page->version !== $baseVersion) {
+                throw SocialCommerceException::versionConflict();
+            }
+            $old = ['auto_reply' => $page->auto_reply, 'price_public' => $page->price_public];
+            $page->fill([...array_intersect_key($switches, $old), 'version' => $page->version + 1])->save();
+            $this->audit->record(action: 'social_commerce.page_switches_changed', target: $page, old: $old,
+                new: ['auto_reply' => $page->auto_reply, 'price_public' => $page->price_public], actor: $actor, organizationId: $company->getKey());
+
+            return $page;
+        });
     }
 
     /** Stops using a page: the token is forgotten; posts waiting for it go back to drafts. */

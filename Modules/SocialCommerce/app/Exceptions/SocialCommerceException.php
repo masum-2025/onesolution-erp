@@ -80,6 +80,11 @@ class SocialCommerceException extends TenancyException
         return new self('unknown_item', 422);
     }
 
+    public static function cannotSend(string $reason): self
+    {
+        return new self('cannot_send', 422, ['reason' => $reason]);
+    }
+
     public static function versionConflict(): self
     {
         return new self('version_conflict', 409);

@@ -2,8 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\SocialCommerce\Http\Controllers\FacebookCallbackController;
+use Modules\SocialCommerce\Http\Controllers\InboxController;
 use Modules\SocialCommerce\Http\Controllers\PageController;
 use Modules\SocialCommerce\Http\Controllers\PostController;
+use Modules\SocialCommerce\Http\Controllers\ReplyController;
 
 /*
 | Facebook selling API (loaded by SocialCommerceServiceProvider under /api,
@@ -26,6 +28,18 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:social_com
             Route::post('connect', [PageController::class, 'start']);
             Route::post('connect/pages', [PageController::class, 'save'])->name('social.connect.pages');
             Route::post('pages/{page}/disconnect', [PageController::class, 'disconnect'])->name('social.pages.disconnect');
+            Route::patch('pages/{page}', [PageController::class, 'switches'])->name('social.pages.switches');
+        });
+
+        // Inbox and automatic replies (SC-2).
+        Route::get('inbox', [InboxController::class, 'index']);
+        Route::get('inbox/{thread}', [InboxController::class, 'show']);
+        Route::get('replies', [ReplyController::class, 'index']);
+        Route::middleware('throttle:social-writes')->group(function () {
+            Route::post('inbox/{thread}/reply', [InboxController::class, 'reply'])->name('social.inbox.reply');
+            Route::post('inbox/{thread}/{step}', [InboxController::class, 'mark'])->whereIn('step', ['claim', 'done', 'reopen'])->name('social.inbox.mark');
+            Route::post('replies/try', [ReplyController::class, 'try'])->name('social.replies.try');
+            Route::put('replies/{intent}', [ReplyController::class, 'update'])->name('social.replies.update');
         });
 
         Route::middleware('throttle:social-writes')->group(function () {

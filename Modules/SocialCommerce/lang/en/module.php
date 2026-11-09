@@ -8,4 +8,6 @@ return [
     'menu_posts' => 'Posts',
     'menu_new' => 'New post',
     'menu_pages' => 'Pages',
+    'menu_inbox' => 'Inbox',
+    'menu_replies' => 'Automatic replies',
 ];

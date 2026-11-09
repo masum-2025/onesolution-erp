@@ -18,4 +18,10 @@ return [
     'post_deleted' => 'Facebook post deleted',
     'post_published' => 'Facebook post published',
     'post_failed' => 'Facebook post failed',
+    'page_switches_changed' => 'Facebook page switches changed',
+    'reply_sent' => 'Answer sent from the Facebook inbox',
+    'thread_claim' => 'Facebook conversation taken',
+    'thread_done' => 'Facebook conversation finished',
+    'thread_reopen' => 'Facebook conversation opened again',
+    'replies_changed' => 'Automatic replies changed',
 ];

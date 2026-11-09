@@ -3870,6 +3870,38 @@ never reach logs, errors or the browser).
 - After deploy: migrate, `rules:sync`, `access:sync`; set the house partner's Meta app in its
   console; run the scheduler and a queue worker.
 
+### SC-2: inbox and automatic replies
+
+- **Webhook** (platform): `GET /api/meta/{app}/webhook` answers Meta's check with the app's
+  `webhook_verify_token`; `POST` takes events only with `X-Hub-Signature-256` (HMAC of the raw body
+  with the app secret) and raises `MetaWebhookReceived`; the module queues `HandleWebhook`, which
+  finds the page (connected through that app, any client database) and passes comments (feed /
+  comment / add) and Messenger messages (no echoes) to `Conversations`. Each Meta id is handled once
+  (`social_webhook_events`, kept 7 days). Partner console shows the webhook URL and verify token.
+- **Connecting** now asks also `pages_manage_metadata`, `pages_read_user_content`,
+  `pages_manage_engagement`, `pages_messaging`, keeps the granted scopes and subscribes the page
+  (`subscribed_apps`, fields feed,messages). A page missing them shows "connect again".
+- **Tables** (tenant): `social_threads` (comment thread per customer and post, or Messenger chat;
+  open | waiting | done; who has it), `social_messages` (append-only; customer | bot | person;
+  public | private; intent; items; sent | failed; `op_id`), `social_reply_templates` (per company,
+  from `Modules/SocialCommerce/database/data/reply-templates.php`), page switches `auto_reply`,
+  `price_public`.
+- **Bot** (`Replies`): words per language (Banglish under bn: dam, koto, pp …); the longest match
+  wins; answers price | stock | delivery | order with `{product} {price} {stock} {delivery} {page}`
+  filled at that moment (Inventory price and stock, Online orders' zones when on). Product: the
+  post's products (comments), else named in the message, the referral post, or the last one talked
+  about. Price under a comment: public, or with the page switch off to the inbox (private reply)
+  plus the `notice` line. Not answered again within `reply_cooldown_minutes`; never the page's own
+  comments. Not understood `handoff_after_unknown` times: the `handoff` answer once, the thread
+  waits (bell `social_commerce.waiting`).
+- **Rules**: `social_commerce.auto_reply`, `.price_public` (new pages), `.reply_cooldown_minutes`
+  (10), `.handoff_after_unknown` (1), `.keep_messages_days` (365; `social:prune` daily).
+- **API**: `PATCH pages/{id}` (switches, `connect`), `inbox?status&page_id`, `inbox/{id}`,
+  `POST inbox/{id}/reply` (`op_id`), `POST inbox/{id}/claim|done|reopen`, `replies`,
+  `PUT replies/{intent}`, `POST replies/try`. Permissions `social_commerce.inbox`, `.replies`.
+- **Screens**: Inbox (waiting / open / finished, the bot's answers marked, answer, take, finish),
+  Automatic replies (words and answers per language, try box), page switches on Pages.
+
 ### Future expansion (Facebook selling)
 
 - A new sector, country or partner needs no code: the app is the partner's data, the footer line,

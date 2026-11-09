@@ -19,7 +19,11 @@ return [
         'too_soon' => 'A scheduled post must be at least :minutes minutes from now. Pick a later time or leave the time empty to post at once.',
         'unknown_item' => 'A product on this post is no longer in stock records. Remove it and add it again.',
         'version_conflict' => 'Someone changed this post in the meantime. Reload it and try again.',
+        'thread_not_found' => 'That conversation was not found. It may have been forgotten after the days kept.',
+        'reply_not_found' => 'That automatic reply does not exist.',
+        'cannot_send' => 'The answer did not go out. :reason',
     ],
+    'attention' => 'Facebook conversations waiting for an answer',
     'validation' => [
         'image_type' => 'Use a JPG, PNG or WebP picture.',
         'image_size' => 'The photo is too large. Make it smaller and add it again.',
@@ -76,5 +80,8 @@ return [
         'approve_failed' => 'Approved, but Facebook did not take the post. See why below.',
         'reject_rejected' => 'Turned down. The writer can change it and send it again.',
         'withdraw_draft' => 'Back to draft. Change it and send it again when ready.',
+        'switches' => 'Saved.',
+        'reply_sent' => 'Sent.',
+        'replies_saved' => 'Saved. New questions are answered this way.',
     ],
 ];

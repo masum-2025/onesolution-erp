@@ -561,6 +561,11 @@ Route::prefix('meta')->middleware('throttle:meta-callback')->group(function () {
     Route::post('{app}/data-deletion', [MetaCallbackController::class, 'dataDeletion'])->where('app', '[0-9A-Za-z]{26}');
     Route::get('deletion/{code}', [MetaCallbackController::class, 'deletionStatus'])->where('code', '[0-9a-z]{26}');
 });
+// Meta's webhook (SC-2): many events a minute from Meta; the signature is the proof.
+Route::prefix('meta')->middleware('throttle:meta-webhook')->group(function () {
+    Route::get('{app}/webhook', [MetaCallbackController::class, 'verifyWebhook'])->where('app', '[0-9A-Za-z]{26}');
+    Route::post('{app}/webhook', [MetaCallbackController::class, 'webhook'])->where('app', '[0-9A-Za-z]{26}');
+});
 
 /*
 | Partner API v1 (Phase 5B-5): a partner's own systems, with an API key

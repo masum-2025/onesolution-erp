@@ -14,6 +14,7 @@ use App\Platform\Tenancy\Models\Partner;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Partners' own Meta apps (SC-1). Which app a client's page connects
@@ -74,6 +75,7 @@ class MetaApps
                 $new->partner_id = $partner->getKey();
                 $new->status = MetaApp::PENDING;
                 $new->version = 0;
+                $new->webhook_verify_token = Str::random(40);
             });
             $app->pending_app_id = $appId;
             $app->pending_app_secret = $secret;

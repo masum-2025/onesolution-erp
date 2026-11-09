@@ -4,6 +4,7 @@ namespace Modules\SocialCommerce\Providers;
 
 use App\Platform\Meta\Events\MetaAppChanged;
 use App\Platform\Meta\Events\MetaPersonRemovedApp;
+use App\Platform\Meta\Events\MetaWebhookReceived;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Request;
@@ -11,8 +12,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\SocialCommerce\Console\PruneConversations;
 use Modules\SocialCommerce\Console\PublishDuePosts;
 use Modules\SocialCommerce\Export\SocialCommerceExporter;
+use Modules\SocialCommerce\Listeners\QueueWebhook;
 use Modules\SocialCommerce\Listeners\StopPagesOfMetaApp;
 
 /**
@@ -41,12 +44,14 @@ class SocialCommerceServiceProvider extends ServiceProvider
         RateLimiter::for('social-connect', fn (Request $request) => Limit::perMinute(10)->by($by('social-connect')($request)));
 
         Event::listen([MetaAppChanged::class, MetaPersonRemovedApp::class], StopPagesOfMetaApp::class);
+        Event::listen(MetaWebhookReceived::class, QueueWebhook::class);
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PublishDuePosts::class]);
+            $this->commands([PublishDuePosts::class, PruneConversations::class]);
         }
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $schedule->command('social:publish-due')->everyMinute()->withoutOverlapping()->onOneServer();
+            $schedule->command('social:prune')->dailyAt('03:10')->withoutOverlapping()->onOneServer();
         });
 
         if (! $this->app->routesAreCached()) {

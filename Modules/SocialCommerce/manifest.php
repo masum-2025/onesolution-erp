@@ -1,5 +1,7 @@
 <?php
 
+use Modules\SocialCommerce\Dashboard\InboxAttention;
+
 /*
 | Module manifest: read by App\Platform\Modules\ModuleRegistry.
 | Business numbers never live here; they are rules (Rules::get('social_commerce.*')).
@@ -35,8 +37,12 @@ return [
         'social_commerce.compose',
         // Approve or turn down posts; what one approves goes out at its time.
         'social_commerce.approve',
-        // Connect and disconnect the company's Facebook pages.
+        // Connect and disconnect the company's Facebook pages, and set their switches (replies, price in public).
         'social_commerce.connect',
+        // Read the comments and Messenger chats, answer them, take and finish conversations.
+        'social_commerce.inbox',
+        // Change what the bot understands and answers.
+        'social_commerce.replies',
     ],
     'rules' => [
         // Whether a partner's clients may connect through the house Meta app when the partner has none of its own
@@ -55,6 +61,16 @@ return [
         $rule('show_stock', 'boolean', false, $company, 70, 'posting'),
         // How soon a scheduled post may go out at the earliest (minutes from now).
         $rule('min_schedule_minutes', 'integer', 10, $company, 80, 'posting', ['schema' => ['minimum' => 0, 'maximum' => 1440]]),
+        // The bot answers comments and messages (each page also has its own switch).
+        $rule('auto_reply', 'boolean', true, $company, 110, 'replies'),
+        // A newly connected page's price switch: on, a price goes in the public comment reply; off, to the inbox.
+        $rule('price_public', 'boolean', true, $company, 120, 'replies'),
+        // The same question in a conversation is not answered again within these minutes.
+        $rule('reply_cooldown_minutes', 'integer', 10, $company, 130, 'replies', ['schema' => ['minimum' => 0, 'maximum' => 1440]]),
+        // After this many questions the bot did not understand, a person is asked to answer.
+        $rule('handoff_after_unknown', 'integer', 1, $company, 140, 'replies', ['schema' => ['minimum' => 1, 'maximum' => 10]]),
+        // Conversations (customers' names and words) are forgotten after these days without news.
+        $rule('keep_messages_days', 'integer', 365, ['platform', 'partner', 'plan', 'group', 'company'], 150, 'replies', ['country_specific' => true, 'schema' => ['minimum' => 30, 'maximum' => 3650]]),
     ],
     'menu' => [
         [
@@ -65,9 +81,11 @@ return [
             'order' => 57,
             'section' => 'business',
             'children' => [
+                ['key' => 'inbox', 'label' => 'social_commerce::module.menu_inbox', 'route' => '/social/inbox', 'permission' => 'social_commerce.inbox'],
                 ['key' => 'posts', 'label' => 'social_commerce::module.menu_posts', 'route' => '/social/posts', 'permission' => 'social_commerce.view'],
                 ['key' => 'new', 'label' => 'social_commerce::module.menu_new', 'route' => '/social/posts/new', 'permission' => 'social_commerce.compose'],
                 ['key' => 'pages', 'label' => 'social_commerce::module.menu_pages', 'route' => '/social/pages', 'permission' => 'social_commerce.view'],
+                ['key' => 'replies', 'label' => 'social_commerce::module.menu_replies', 'route' => '/social/replies', 'permission' => 'social_commerce.replies'],
             ],
         ],
     ],
@@ -93,10 +111,12 @@ return [
             'path' => '/social/pages',
         ],
     ],
+    'attention' => [InboxAttention::class],
     'is_core' => false,
     'requires_consent' => false,
     'dashboard' => ['widgets' => []],
     'settings' => ['pages' => [
         ['key' => 'pages', 'label' => 'social_commerce::module.menu_pages', 'route' => '/social/pages', 'permission' => 'social_commerce.connect'],
+        ['key' => 'replies', 'label' => 'social_commerce::module.menu_replies', 'route' => '/social/replies', 'permission' => 'social_commerce.replies'],
     ]],
 ];

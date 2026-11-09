@@ -79,6 +79,9 @@ class PartnerMetaAppController extends Controller
                 'redirect_uri' => url((string) config('meta.redirect_path')),
                 'deauthorize' => url("/api/meta/{$app->getKey()}/deauthorize"),
                 'data_deletion' => url("/api/meta/{$app->getKey()}/data-deletion"),
+                // Webhooks → Page: callback URL and verify token; fields feed and messages.
+                'webhook' => url("/api/meta/{$app->getKey()}/webhook"),
+                'verify_token' => $app->webhook_verify_token,
             ],
             'second_owner' => $this->apps->approvers($this->partner(), $user)->isNotEmpty(),
             'wait_hours' => (int) config('meta.single_approver_wait_hours'),
