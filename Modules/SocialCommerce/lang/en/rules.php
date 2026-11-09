@@ -46,6 +46,14 @@ return [
         'label' => 'Ask a person after this many questions not understood',
         'description' => 'The customer is told a person will answer, and the conversation waits in the inbox.',
     ],
+    'ai_understanding' => [
+        'label' => 'AI reads what the keywords miss',
+        'description' => 'When no keyword matches, the AI assistant reads the message to tell what the customer asks. Needs the AI assistant module; each reading counts against its monthly limit.',
+    ],
+    'ai_fill_order' => [
+        'label' => 'AI fills order details from one message',
+        'description' => 'When a customer writes name, phone and address together in Messenger, those questions are filled at once.',
+    ],
     'keep_messages_days' => [
         'label' => 'Keep conversations (days)',
         'description' => 'Conversations with no news for this long are forgotten, with the customers\' names.',

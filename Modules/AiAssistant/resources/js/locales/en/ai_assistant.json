@@ -1,0 +1,28 @@
+{
+    "usage": {
+        "title": "AI assistant",
+        "text": "How many messages the AI read for your company this month, and on each day. Only counts are kept, never the messages.",
+        "used": "Used this month",
+        "left": "Left this month",
+        "model": "Model",
+        "limit_text": "The limit is the rule \"AI readings per month\". Past it, your modules go on without AI until the next month.",
+        "limit_reached": "This month's AI readings are used up. Replies go on with keywords only until the next month.",
+        "no_key": "The AI is not set up on this server yet (no key), so nothing is read. Ask the platform's administrator.",
+        "day": "Day",
+        "module": "Module",
+        "calls": "Readings",
+        "failures": "Not answered",
+        "tokens": "Tokens",
+        "input_tokens": "Tokens in",
+        "output_tokens": "Tokens out",
+        "empty": "Nothing read yet",
+        "empty_text": "Turn on \"AI reads what the keywords miss\" in Facebook selling's rules, and readings show here."
+    },
+    "modules": {
+        "social_commerce": "Facebook selling"
+    },
+    "models": {
+        "haiku": "Haiku (quick)",
+        "sonnet": "Sonnet (careful)"
+    }
+}

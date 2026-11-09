@@ -3926,6 +3926,29 @@ never reach logs, errors or the browser).
 - **Rules**: `social_commerce.messenger_orders` (on), `.draft_hours` (24), `.max_quantity` (20),
   `.notify_order_status` (on). Audit `social_commerce.order_taken`.
 
+### SC-4: AI reads what the keywords miss
+
+- **Platform door** (`App\Platform\Ai`): `Contracts\ReadsText` bound to `ClaudeReader` (official
+  PHP SDK `anthropic-ai/sdk`, structured JSON output with a schema; `config/ai.php`: the platform's
+  `ANTHROPIC_API_KEY`, models `haiku` / `sonnet`, `AI_TIMEOUT` 8 s, one retry). Any trouble (no or
+  bad key, slow, rate limited, refused, cut off, wrong shape) is `AiUnavailable` with a short
+  reason; the text sent is never logged. Tests bind a fake; no test calls the API.
+- **AI assistant module** (`requires_consent`): its public service `Understanding::read($company,
+  $module, …)` reads only when the module is on for the company (consent given), within
+  `ai_assistant.monthly_calls` (2000 a calendar month, all modules; failed readings count) with the
+  model of `ai_assistant.model` (haiku; platform/partner/plan). Every reading is counted in the
+  tenant table `ai_usage` (company, module, day: calls, failures, tokens; never the text).
+  `GET /api/organizations/{unit}/ai/usage` (`module:ai_assistant`, `ai_assistant.manage`, the
+  unit's company) feeds the *AI assistant* screen (this month against the limit, last 31 days).
+- **Facebook selling** (`AiReader`): keywords first (free). Only when they find nothing — or, in
+  Messenger, an order message of 4+ words — and `social_commerce.ai_understanding` (off) is on, the
+  message is sent inside `<customer_message>` tags (data, not instructions) and read into
+  `{intent: price|stock|delivery|order|none, locale, quantity, name, phone, address}`. The AI never
+  writes to the customer: the answer is still the company's own template with its own facts.
+  With `.ai_fill_order` (on) the details fill the order's next questions at once, each checked by
+  its question as if typed (a bad phone stops there and is asked). `social_messages.understood_by`
+  (keyword | ai); the reply tester shows it. No AI, no answer or the month used up: as before.
+
 ### Future expansion (Facebook selling)
 
 - A new sector, country or partner needs no code: the app is the partner's data, the footer line,

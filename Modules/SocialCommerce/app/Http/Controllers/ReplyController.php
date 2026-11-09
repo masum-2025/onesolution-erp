@@ -12,6 +12,7 @@ use Modules\SocialCommerce\Http\Requests\SocialRequest;
 use Modules\SocialCommerce\Models\Post;
 use Modules\SocialCommerce\Models\ReplyTemplate;
 use Modules\SocialCommerce\Models\SocialPage;
+use Modules\SocialCommerce\Services\AiReader;
 use Modules\SocialCommerce\Services\Posts;
 use Modules\SocialCommerce\Services\Replies;
 use Modules\SocialCommerce\Services\SocialBook;
@@ -53,6 +54,17 @@ class ReplyController extends Controller
         $company = $this->company($organization);
         $text = (string) $request->validated('text');
         $understood = $this->replies->understand($company, $text);
+        $by = $understood === null ? null : 'keyword';
+        // SC-4: what the keywords miss, the AI assistant reads (when on; the reading counts in the month).
+        $ai = app(AiReader::class);
+        $fields = [];
+        if ($ai->wanted($company, $text, $understood, null, true)) {
+            $reading = $ai->read($company, $text);
+            $fields = $reading['fields'] ?? [];
+            if ($understood === null && ($reading['intent'] ?? null) !== null) {
+                [$understood, $by] = [['intent' => $reading['intent'], 'locale' => $reading['locale']], 'ai'];
+            }
+        }
         $postId = $request->validated('post_id');
         $items = $postId !== null ? array_column($this->posts->productsOf($company, $postId), 'item_id') : $this->replies->itemsNamedIn($company, $text);
         $page = $this->book->query(SocialPage::class, $company)->where('status', SocialPage::CONNECTED)->first()
@@ -62,6 +74,8 @@ class ReplyController extends Controller
         return response()->json(['data' => [
             'intent' => $understood['intent'] ?? null,
             'locale' => $understood['locale'] ?? null,
+            'understood_by' => $by,
+            'fields' => (object) $fields,
             'answer' => $answer,
             'handoff' => $answer === null ? $this->replies->answer($company, $page, 'handoff', $understood['locale'] ?? (preg_match('/\p{Bengali}/u', $text) ? 'bn' : 'en'), []) : null,
         ]]);
