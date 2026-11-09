@@ -21,6 +21,7 @@ use Modules\OnlineOrders\Models\Order;
 use Modules\OnlineOrders\Models\OrderEvent;
 use Modules\OnlineOrders\Models\OrderLine;
 use Modules\OnlineOrders\Models\OrderPayment;
+use Modules\OnlineOrders\Services\Couriers;
 use Modules\OnlineOrders\Services\OrderBook;
 use Modules\OnlineOrders\Services\Orders;
 
@@ -73,6 +74,9 @@ class OrderController extends Controller
             'max_discount_percent' => (string) $rules->get('online_orders.max_discount_percent', $context),
             'currency' => $this->book->currency($company),
             'can_order' => $unit->type !== OrganizationType::Group && Gate::allows('online_orders.manage', $unit),
+            // SC-5b: the company's courier accounts that can take a parcel now (names only).
+            'couriers' => app(Couriers::class)->accounts($company)->filter(fn ($courier) => $courier->is_active)
+                ->map(fn ($courier) => ['id' => $courier->getKey(), 'name' => $courier->name, 'driver' => $courier->driver])->values()->all(),
         ]]);
     }
 
@@ -147,6 +151,23 @@ class OrderController extends Controller
         };
 
         return response()->json(['data' => $this->full($company, $done)]);
+    }
+
+    /** SC-5b: book with one of the company's courier accounts and send the order out. */
+    public function book(OrderRequest $request, string $organization, string $order): JsonResponse
+    {
+        [$found, $company] = $this->managed($organization, $order);
+        $booked = app(Couriers::class)->book($company, $found, (int) $request->validated('base_version'), (string) $request->validated('courier_id'), $request->user());
+
+        return response()->json(['data' => $this->full($company, $booked)]);
+    }
+
+    /** SC-5b: ask the courier where the parcel stands now. */
+    public function courierStatus(OrderRequest $request, string $organization, string $order): JsonResponse
+    {
+        [$found, $company] = $this->managed($organization, $order);
+
+        return response()->json(['data' => $this->full($company, app(Couriers::class)->refresh($company, $found, $request->user()))]);
     }
 
     public function pay(OrderRequest $request, string $organization, string $order): JsonResponse

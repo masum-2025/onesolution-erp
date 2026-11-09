@@ -87,6 +87,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     // An online order's payment link (SC-5a): signed (company + order, ends after online_orders.pay_link_hours),
     // no session, no scripts and a strict CSP, the amount always the order's own; 20 a minute per address.
     'GET pay/orders/{organization}/{order}', 'POST pay/orders/{organization}/{order}',
+    // A courier's parcel notices (SC-5b): the account's own Bearer token (only its SHA-256 kept, compared in constant
+    // time), one 401 for every unknown company, account or token, 404 when Online orders is off; 120 a minute per address.
+    'POST api/couriers/{organization}/{courier}/webhook',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

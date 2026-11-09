@@ -1,13 +1,13 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, Ban, Banknote, Link2, PackageCheck, PackageX, Printer, Undo2 } from 'lucide-vue-next';
+import { ArrowLeft, Ban, Banknote, Link2, PackageCheck, PackageX, Printer, RefreshCw, Undo2 } from 'lucide-vue-next';
 import { AppButton, AppDialog, AppField, MoneyInput, newOpId, PageFrame, StatusBadge, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDateTime, formatMoney, minorToDecimalString } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { t } from '@/lib/i18n';
-import { NEXT_STEP, onlineOrdersApi, STATUS_TONES } from '../api';
+import { COURIER_TONES, NEXT_STEP, onlineOrdersApi, STATUS_TONES } from '../api';
 
 /**
  * One order: its customer, items and totals, where it stands and its
@@ -43,20 +43,29 @@ async function run(call, done) {
     }
 }
 
-// Sending out: who carries it (optional).
-const shipping = reactive({ open: false, courier: '', tracking: '' });
+// Sending out: booked with one of the company's courier accounts (SC-5b), or handed over by hand (courier typed, optional).
+const shipping = reactive({ open: false, courier: '', tracking: '', courierId: '', couriers: [] });
 function forward() {
     if (nextStep.value === 'ship') {
         shipping.open = true;
+        orders.options().then(({ data }) => {
+            shipping.couriers = data.couriers ?? [];
+            shipping.courierId = shipping.couriers[0]?.id ?? '';
+        }).catch(() => { shipping.couriers = []; });
         return;
     }
     run(() => orders.step(order.value.id, nextStep.value, { base_version: order.value.version }), t(`online_orders.order.done.${nextStep.value}`));
 }
 async function ship() {
-    if (await run(() => orders.step(order.value.id, 'ship', { base_version: order.value.version, courier: shipping.courier || null, tracking: shipping.tracking || null }), t('online_orders.order.done.ship'))) {
+    const booked = Boolean(shipping.courierId);
+    const call = booked
+        ? () => orders.book(order.value.id, { base_version: order.value.version, courier_id: shipping.courierId })
+        : () => orders.step(order.value.id, 'ship', { base_version: order.value.version, courier: shipping.courier || null, tracking: shipping.tracking || null });
+    if (await run(call, t(booked ? 'online_orders.order.done.book' : 'online_orders.order.done.ship'))) {
         shipping.open = false;
     }
 }
+const askCourier = () => run(() => orders.courierStatus(order.value.id), t('online_orders.order.courier_asked'));
 
 // Money in: the whole amount owed by default.
 const paying = reactive({ open: false, method: 'cash', amount: 0, reference: '', opId: '' });
@@ -129,6 +138,11 @@ const printPage = () => window.print();
                         <p class="text-[14px] font-medium">{{ order.customer_name }} · <span dir="ltr">{{ order.customer_phone }}</span></p>
                         <p class="mt-1 whitespace-pre-line text-[13.5px] text-muted">{{ order.address }}</p>
                         <p v-if="order.courier || order.tracking" class="mt-2 text-[13px]">{{ t('online_orders.order.courier', { courier: order.courier ?? '—', tracking: order.tracking ?? '—' }) }}</p>
+                        <div v-if="order.courier_status" class="mt-2 flex flex-wrap items-center gap-2 text-[12.5px] text-muted">
+                            <StatusBadge :status="order.courier_status" :tones="COURIER_TONES">{{ t(`online_orders.courier_status.${order.courier_status}`) }}</StatusBadge>
+                            <span v-if="order.courier_checked_at">{{ t('online_orders.order.courier_checked', { at: formatDateTime(order.courier_checked_at) }) }}</span>
+                            <AppButton v-if="order.courier_ref && order.status === 'shipped'" size="sm" variant="ghost" :icon="RefreshCw" :disabled="busy" class="print:hidden" @click="askCourier">{{ t('online_orders.order.courier_ask') }}</AppButton>
+                        </div>
                         <p v-if="order.note" class="mt-2 text-[13px]">{{ order.note }}</p>
                         <p v-if="order.cancel_reason" class="mt-2 text-[13px] text-bad">{{ order.cancel_reason }}</p>
                     </section>
@@ -181,8 +195,17 @@ const printPage = () => window.print();
 
             <AppDialog :open="shipping.open" :title="t('online_orders.order.step.ship')" :description="t('online_orders.order.ship_text')" @close="shipping.open = false">
                 <form class="grid gap-4" @submit.prevent="ship">
-                    <AppField :label="t('online_orders.fields.courier')" optional v-slot="{ id }"><input :id="id" v-model="shipping.courier" class="field-input" maxlength="80" /></AppField>
-                    <AppField :label="t('online_orders.fields.tracking')" optional v-slot="{ id }"><input :id="id" v-model="shipping.tracking" class="field-input" dir="ltr" maxlength="80" /></AppField>
+                    <AppField v-if="shipping.couriers.length" :label="t('online_orders.order.send_with')" v-slot="{ id }">
+                        <select :id="id" v-model="shipping.courierId" class="field-input">
+                            <option v-for="courier in shipping.couriers" :key="courier.id" :value="courier.id">{{ courier.name }}</option>
+                            <option value="">{{ t('online_orders.order.by_hand') }}</option>
+                        </select>
+                    </AppField>
+                    <p v-if="shipping.courierId" class="text-[13px] text-muted">{{ t('online_orders.order.book_text', { amount: money(order.due_minor) }) }}</p>
+                    <template v-else>
+                        <AppField :label="t('online_orders.fields.courier')" optional v-slot="{ id }"><input :id="id" v-model="shipping.courier" class="field-input" maxlength="80" /></AppField>
+                        <AppField :label="t('online_orders.fields.tracking')" optional v-slot="{ id }"><input :id="id" v-model="shipping.tracking" class="field-input" dir="ltr" maxlength="80" /></AppField>
+                    </template>
                     <div class="flex justify-end gap-2"><AppButton @click="shipping.open = false">{{ t('online_orders.order.cancel') }}</AppButton><AppButton type="submit" variant="primary" :loading="busy">{{ t('online_orders.order.step.ship') }}</AppButton></div>
                 </form>
             </AppDialog>

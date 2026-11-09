@@ -7,4 +7,5 @@ return [
     'menu' => 'Online orders',
     'menu_orders' => 'Orders',
     'menu_new' => 'New order',
+    'menu_couriers' => 'Couriers',
 ];

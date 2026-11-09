@@ -36,6 +36,9 @@ class OnlineOrdersServiceProvider extends ServiceProvider
         // The payment link's page (SC-5a): opened by customers, a few a minute per address.
         RateLimiter::for('online-orders-pay', fn (Request $request) => Limit::perMinute(20)->by('online-orders-pay:'.$request->ip()));
 
+        // A courier's notices (SC-5b): a busy day sends many, per sending address.
+        RateLimiter::for('online-orders-courier-notices', fn (Request $request) => Limit::perMinute(120)->by('online-orders-courier:'.$request->ip()));
+
         RateLimiter::for('online-orders-writes', fn (Request $request) => Limit::perMinute(self::WRITES_PER_MINUTE)
             ->by('online-orders-writes:'.($request->user()?->getKey() ?? $request->ip())));
 

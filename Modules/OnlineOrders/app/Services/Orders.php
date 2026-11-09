@@ -10,22 +10,25 @@ use App\Platform\Payments\PaymentCollectables;
 use App\Platform\Payments\Services\MerchantAccounts;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
+use App\Platform\Support\LocaleResolver;
 use App\Platform\Support\MoneyText;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Accounting\Ledger\LedgerLine;
 use Modules\Accounting\Services\TaxCodes;
 use Modules\Crm\Services\Customers;
 use Modules\Inventory\Services\Stock;
+use Modules\OnlineOrders\Couriers\CourierStatus;
 use Modules\OnlineOrders\Events\OrderCancelled;
 use Modules\OnlineOrders\Events\OrderConfirmed;
 use Modules\OnlineOrders\Events\OrderDelivered;
 use Modules\OnlineOrders\Events\OrderPaid;
-use Modules\OnlineOrders\Payments\OrderCollectable;
 use Modules\OnlineOrders\Events\OrderShipped;
+use Modules\OnlineOrders\Payments\OrderCollectable;
 use Modules\OnlineOrders\Exceptions\OnlineOrdersException;
 use Modules\OnlineOrders\Models\Order;
 use Modules\OnlineOrders\Models\OrderEvent;
@@ -165,16 +168,17 @@ class Orders
      * Handed to the courier: stock leaves the warehouse at its cost. An order
      * paid before sending (prepaid) goes only once paid in full.
      *
-     * @param  array{courier?: string|null, tracking?: string|null}  $data
+     * Booked with a courier (SC-5b, Couriers::book), the courier's account, its id for the parcel and its status come too.
+     *
+     * @param  array{courier?: string|null, tracking?: string|null, courier_id?: string, courier_ref?: string, courier_status?: string}  $data
      */
     public function ship(Organization $company, Order $order, int $baseVersion, array $data, User $actor): Order
     {
-        $this->expect($order, 'ship', [Order::CONFIRMED, Order::PACKED]);
-        if ($order->payment_method === 'prepaid' && $order->dueMinor() > 0) {
-            throw OnlineOrdersException::prepaidNotPaid($this->shown($order, $order->dueMinor()));
-        }
+        $this->shippable($order);
+        $booked = isset($data['courier_id']) ? ['courier_id' => $data['courier_id'], 'courier_ref' => $data['courier_ref'] ?? null,
+            'courier_status' => $data['courier_status'] ?? null, 'courier_checked_at' => CarbonImmutable::now()] : [];
 
-        $shipped = $this->change($company, $order, $baseVersion, function (Order $row) use ($company, $data, $actor) {
+        $shipped = $this->change($company, $order, $baseVersion, function (Order $row) use ($company, $data, $actor, $booked) {
             $lines = $this->book->query(OrderLine::class, $company)->where('order_id', $row->getKey())->orderBy('line_no')->get();
             $now = CarbonImmutable::now();
             $moved = $this->stock->take($company, $row->warehouse_id, $lines->map(fn (OrderLine $line) => ['item_id' => $line->item_id, 'quantity_milli' => $line->quantity_milli])->all(),
@@ -183,11 +187,48 @@ class Orders
                 $line->forceFill(['cost_minor' => $moved['lines'][$index] ?? 0])->save();
             }
             $this->move($company, $row, Order::SHIPPED, $actor, ['shipped_at' => $now, 'cost_minor' => $moved['cost_minor'],
-                'courier' => $data['courier'] ?? null, 'tracking' => $data['tracking'] ?? null]);
+                'courier' => $data['courier'] ?? null, 'tracking' => $data['tracking'] ?? null, ...$booked]);
         });
         OrderShipped::dispatch($company->getKey(), $shipped->getKey(), $shipped->channel, $shipped->channel_ref);
 
         return $shipped;
+    }
+
+    /** May the order go out now (it is confirmed or packed; a prepaid order is paid in full)? Throws why not. */
+    public function shippable(Order $order): void
+    {
+        $this->expect($order, 'ship', [Order::CONFIRMED, Order::PACKED]);
+        if ($order->payment_method === 'prepaid' && $order->dueMinor() > 0) {
+            throw OnlineOrdersException::prepaidNotPaid($this->shown($order, $order->dueMinor()));
+        }
+    }
+
+    /**
+     * What the courier last said about a parcel (SC-5b): kept on the order with a line in its history when it
+     * changed; delivered moves a shipped order on when online_orders.courier_marks_delivered allows (nobody did it,
+     * so no person is named). Cancelled or partly delivered only show; staff take the goods back themselves.
+     */
+    public function courierSays(Organization $company, string $orderId, string $status, ?string $note, ?User $actor): Order
+    {
+        $changed = false;
+        $row = $this->book->transaction($company, function () use ($company, $orderId, $status, $note, $actor, &$changed) {
+            $row = $this->book->query(Order::class, $company)->whereKey($orderId)->lockForUpdate()->firstOrFail();
+            $changed = $row->courier_status !== $status;
+            $row->forceFill(['courier_status' => $status, 'courier_checked_at' => CarbonImmutable::now(), ...($changed ? ['version' => $row->version + 1] : [])])->save();
+            if ($changed) {
+                $words = __("online_orders::orders.courier_statuses.{$status}", [], $this->companyLocale($company));
+                $this->history($company, $row, $row->status, $row->status, Str::limit($note === null ? $words : "{$words}: {$note}", 300), $actor);
+            }
+
+            return $row;
+        });
+
+        $marks = (bool) $this->rules->get('online_orders.courier_marks_delivered', $this->contexts->forOrganization(Organization::query()->findOrFail($row->unit_id)));
+        if ($changed && $status === CourierStatus::DELIVERED && $row->status === Order::SHIPPED && $marks) {
+            return $this->deliver($company, $row, $row->version, null);
+        }
+
+        return $row;
     }
 
     /**
@@ -222,7 +263,7 @@ class Orders
     }
 
     /** It reached the customer: posted to the books and counted in their purchases. */
-    public function deliver(Organization $company, Order $order, int $baseVersion, User $actor): Order
+    public function deliver(Organization $company, Order $order, int $baseVersion, ?User $actor): Order
     {
         $this->expect($order, 'deliver', [Order::SHIPPED]);
         $delivered = $this->change($company, $order, $baseVersion, function (Order $row) use ($company, $actor) {
@@ -495,6 +536,12 @@ class Orders
         }
     }
 
+    /** The company's own language (texts written down without a person, such as what the courier said). */
+    private function companyLocale(Organization $company): string
+    {
+        return app(LocaleResolver::class)->resolve(null, null, $company);
+    }
+
     private function crmOn(Organization $company): bool
     {
         return class_exists(Customers::class) && app(Customers::class)->available($company);
@@ -528,7 +575,7 @@ class Orders
     }
 
     /** @param  array<string, mixed>  $extra */
-    private function move(Organization $company, Order $row, string $to, User $actor, array $extra = [], ?string $note = null): void
+    private function move(Organization $company, Order $row, string $to, ?User $actor, array $extra = [], ?string $note = null): void
     {
         $from = $row->status;
         $row->forceFill(['status' => $to, ...$extra]);

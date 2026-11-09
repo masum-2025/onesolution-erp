@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // SC-5b: couriers (each company's own API keys are kept in Online orders, encrypted).
+    'steadfast' => [
+        'url' => env('STEADFAST_URL', 'https://portal.packzy.com/api/v1'),
+        'timeout' => (int) env('COURIER_TIMEOUT', 15),
+    ],
+
 ];

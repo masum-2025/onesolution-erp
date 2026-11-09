@@ -18,6 +18,12 @@ export function onlineOrdersApi(organizationId) {
         step: (id, step, body) => api(`${base}/orders/${id}/${step}`, { method: 'POST', body }),
         pay: (id, body) => api(`${base}/orders/${id}/payments`, { method: 'POST', body }),
         payLink: (id) => api(`${base}/orders/${id}/pay-link`, { method: 'POST' }),
+        // SC-5b: book with a courier account, ask the courier, and the company's accounts.
+        book: (id, body) => api(`${base}/orders/${id}/book`, { method: 'POST', body }),
+        courierStatus: (id) => api(`${base}/orders/${id}/courier-status`, { method: 'POST' }),
+        couriers: () => api(`${base}/couriers`),
+        addCourier: (body) => api(`${base}/couriers`, { method: 'POST', body }),
+        changeCourier: (id, body) => api(`${base}/couriers/${id}`, { method: 'PATCH', body }),
     };
 }
 
@@ -30,6 +36,17 @@ export const STATUS_TONES = {
     delivered: 'ok',
     cancelled: 'bad',
     returned: 'bad',
+};
+
+/** Badge tone per courier status (SC-5b). */
+export const COURIER_TONES = {
+    booked: 'brand',
+    in_transit: 'warn',
+    on_hold: 'warn',
+    delivered: 'ok',
+    partly_delivered: 'warn',
+    cancelled: 'bad',
+    unknown: 'neutral',
 };
 
 /** The next step forward from each status (the main button on an order). */

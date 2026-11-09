@@ -100,6 +100,30 @@ class OnlineOrdersException extends TenancyException
         return new self('return_too_late', 409, ['days' => (string) $days]);
     }
 
+    /** SC-5b: the courier is not one this company may use (online_orders.couriers, its country). */
+    public static function courierNotAllowed(): self
+    {
+        return new self('courier_not_allowed', 422);
+    }
+
+    /** SC-5b: the courier account is switched off. */
+    public static function courierOff(): self
+    {
+        return new self('courier_off', 409);
+    }
+
+    /** SC-5b: the order was not booked with a courier, so there is nobody to ask. */
+    public static function notBooked(): self
+    {
+        return new self('not_booked', 409);
+    }
+
+    /** SC-5b: the courier refused or could not be reached (reason: unreachable, bad_credentials, refused, bad_answer). */
+    public static function courierFailed(string $reason, ?string $detail): self
+    {
+        return new self("courier_{$reason}", $reason === 'unreachable' ? 503 : 422, ['detail' => $detail ?? '']);
+    }
+
     public static function versionConflict(array $current): self
     {
         return new self('version_conflict', 409, extra: ['current' => $current]);
