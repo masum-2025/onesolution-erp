@@ -37,5 +37,6 @@
     "EduWebsite": true,
     "BusinessNetwork": true,
     "Compliance": true,
-    "Projects": true
+    "Projects": true,
+    "OnlineOrders": true
 }
