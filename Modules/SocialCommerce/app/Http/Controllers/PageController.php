@@ -4,11 +4,15 @@ namespace Modules\SocialCommerce\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Platform\Meta\Exceptions\MetaException;
+use App\Platform\Modules\ModuleResolver;
+use App\Platform\Tenancy\Enums\OrganizationType;
 use App\Platform\Tenancy\Http\Controllers\Api\Concerns\FindsVisibleOrganizations;
 use App\Platform\Tenancy\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Modules\Inventory\Services\Stock;
+use Modules\OnlineOrders\Services\Orders;
 use Modules\SocialCommerce\Exceptions\SocialCommerceException;
 use Modules\SocialCommerce\Http\Requests\SocialRequest;
 use Modules\SocialCommerce\Http\SocialPresenter;
@@ -43,6 +47,12 @@ class PageController extends Controller
             // Whether Facebook is set up for this company's partner (else connecting cannot start), and through which app.
             'app' => $app === null ? null : ['name' => $app->app_name],
             'can_connect' => Gate::allows('social_commerce.connect', $company),
+            // Where Messenger orders may go (Online orders on): the company and its branches, its warehouses.
+            'order_places' => ! class_exists(Orders::class) || ! app(ModuleResolver::class)->isEnabled('online_orders', $company) ? null : [
+                'branches' => Organization::query()->subtreeOf($company)->where('type', '!=', OrganizationType::Group->value)->orderBy('depth')->get()
+                    ->map(fn (Organization $unit) => ['id' => $unit->getKey(), 'name' => $unit->displayName()])->values()->all(),
+                'warehouses' => app(Stock::class)->warehouses($company),
+            ],
         ]]);
     }
 
@@ -90,7 +100,16 @@ class PageController extends Controller
         $company = $this->company($organization);
         Gate::authorize('social_commerce.connect', $company);
         $found = $this->book->query(SocialPage::class, $company)->whereKey($page)->first() ?? throw SocialCommerceException::notFound('page');
-        $done = $this->pages->setSwitches($company, $found, (int) $request->validated('base_version'), $request->safe()->only(['auto_reply', 'price_public']), $request->user());
+        $switches = $request->safe()->only(['auto_reply', 'price_public', 'order_branch_id', 'order_warehouse_id']);
+        // Where Messenger orders go: one of the company's own branches (or the company) and warehouses.
+        if (($switches['order_branch_id'] ?? null) !== null
+            && ! Organization::query()->subtreeOf($company)->whereKey($switches['order_branch_id'])->where('type', '!=', OrganizationType::Group->value)->exists()) {
+            throw SocialCommerceException::notFound('branch');
+        }
+        if (($switches['order_warehouse_id'] ?? null) !== null && app(Stock::class)->warehouse($company, $switches['order_warehouse_id']) === null) {
+            throw SocialCommerceException::notFound('warehouse');
+        }
+        $done = $this->pages->setSwitches($company, $found, (int) $request->validated('base_version'), $switches, $request->user());
 
         return response()->json(['data' => $this->presenter->page($done), 'message' => __('social_commerce::social.messages.switches')]);
     }

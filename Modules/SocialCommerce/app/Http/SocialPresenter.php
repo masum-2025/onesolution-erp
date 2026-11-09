@@ -11,6 +11,7 @@ use Modules\SocialCommerce\Models\Post;
 use Modules\SocialCommerce\Models\PostMedia;
 use Modules\SocialCommerce\Models\PostProduct;
 use Modules\SocialCommerce\Models\SocialPage;
+use Modules\SocialCommerce\Services\OrderTaker;
 use Modules\SocialCommerce\Services\Pages;
 use Modules\SocialCommerce\Services\Publisher;
 use Modules\SocialCommerce\Services\SocialBook;
@@ -41,6 +42,9 @@ class SocialPresenter
             'price_public' => $page->price_public,
             // Comments and messages reach us only when subscribed with every permission asked for.
             'hears' => $page->subscribed_at !== null && app(Pages::class)->missingScopes($page) === [],
+            'order_branch_id' => $page->order_branch_id,
+            'order_warehouse_id' => $page->order_warehouse_id,
+            'takes_orders' => app(OrderTaker::class)->takesOrders(Organization::query()->findOrFail($page->organization_id), $page),
             'status' => $page->status,
             'status_reason' => $page->status_reason,
             'connected_at' => $page->connected_at?->toIso8601String(),

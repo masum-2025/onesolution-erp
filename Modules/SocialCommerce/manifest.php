@@ -69,6 +69,14 @@ return [
         $rule('reply_cooldown_minutes', 'integer', 10, $company, 130, 'replies', ['schema' => ['minimum' => 0, 'maximum' => 1440]]),
         // After this many questions the bot did not understand, a person is asked to answer.
         $rule('handoff_after_unknown', 'integer', 1, $company, 140, 'replies', ['schema' => ['minimum' => 1, 'maximum' => 10]]),
+        // Customers may order in Messenger (a page also needs its branch and warehouse set).
+        $rule('messenger_orders', 'boolean', true, $company, 160, 'orders'),
+        // An order being taken is dropped after these hours of silence.
+        $rule('draft_hours', 'integer', 24, $company, 170, 'orders', ['schema' => ['minimum' => 1, 'maximum' => 168]]),
+        // Most pieces of a product one Messenger order may ask for (more: a person takes it).
+        $rule('max_quantity', 'integer', 20, $company, 180, 'orders', ['schema' => ['minimum' => 1, 'maximum' => 1000]]),
+        // The customer hears in Messenger when their order is confirmed, sent, delivered or cancelled.
+        $rule('notify_order_status', 'boolean', true, $company, 190, 'orders'),
         // Conversations (customers' names and words) are forgotten after these days without news.
         $rule('keep_messages_days', 'integer', 365, ['platform', 'partner', 'plan', 'group', 'company'], 150, 'replies', ['country_specific' => true, 'schema' => ['minimum' => 30, 'maximum' => 3650]]),
     ],

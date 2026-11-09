@@ -28,9 +28,15 @@ class Sender
         return $this->messages($page, ['recipient' => json_encode(['comment_id' => $commentId]), 'message' => json_encode(['text' => $text])]);
     }
 
-    public function inMessenger(SocialPage $page, string $customerRef, string $text): string
+    /** An answer in Messenger; with a tag (POST_PURCHASE_UPDATE), news sent past Meta's 24-hour window. */
+    public function inMessenger(SocialPage $page, string $customerRef, string $text, ?string $tag = null): string
     {
-        return $this->messages($page, ['recipient' => json_encode(['id' => $customerRef]), 'messaging_type' => 'RESPONSE', 'message' => json_encode(['text' => $text])]);
+        return $this->messages($page, [
+            'recipient' => json_encode(['id' => $customerRef]),
+            'messaging_type' => $tag === null ? 'RESPONSE' : 'MESSAGE_TAG',
+            ...($tag === null ? [] : ['tag' => $tag]),
+            'message' => json_encode(['text' => $text], JSON_UNESCAPED_UNICODE),
+        ]);
     }
 
     /**

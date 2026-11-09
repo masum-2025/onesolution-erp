@@ -82,7 +82,7 @@ return [
     ],
     'quick_actions' => [],
     // Other modules (Facebook selling, CRM) listen to these; payloads carry ids and amounts only.
-    'events' => ['online_orders.confirmed', 'online_orders.delivered', 'online_orders.cancelled'],
+    'events' => ['online_orders.confirmed', 'online_orders.shipped', 'online_orders.delivered', 'online_orders.cancelled'],
     // Accounting maps each to an account; cost uses Inventory's keys.
     'ledger_accounts' => [
         'online_orders.receivable' => ['label' => 'online_orders::orders.posting_keys.receivable', 'type' => 'asset'],

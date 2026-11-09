@@ -26,7 +26,10 @@ class SocialRequest extends StrictFormRequest
         $locales = LanguageRegistry::codes();
 
         return match (true) {
-            $this->routeIs('social.pages.switches') => [...$version, 'auto_reply' => ['sometimes', 'boolean'], 'price_public' => ['sometimes', 'boolean']],
+            $this->routeIs('social.pages.switches') => [
+                ...$version, 'auto_reply' => ['sometimes', 'boolean'], 'price_public' => ['sometimes', 'boolean'],
+                'order_branch_id' => ['sometimes', 'nullable', 'string', 'size:26'], 'order_warehouse_id' => ['sometimes', 'nullable', 'string', 'size:26'],
+            ],
             $this->routeIs('social.inbox.reply') => ['text' => ['required', 'string', 'min:1', 'max:2000'], 'op_id' => ['nullable', 'string', 'max:64']],
             $this->routeIs('social.inbox.mark') => $version,
             $this->routeIs('social.replies.try') => ['text' => ['required', 'string', 'max:1000'], 'post_id' => ['nullable', 'string', 'size:26']],

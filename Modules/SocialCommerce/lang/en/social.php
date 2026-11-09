@@ -22,6 +22,8 @@ return [
         'thread_not_found' => 'That conversation was not found. It may have been forgotten after the days kept.',
         'reply_not_found' => 'That automatic reply does not exist.',
         'cannot_send' => 'The answer did not go out. :reason',
+        'branch_not_found' => 'Pick one of your own branches for the page\'s orders.',
+        'warehouse_not_found' => 'Pick one of your own warehouses for the page\'s orders.',
     ],
     'attention' => 'Facebook conversations waiting for an answer',
     'validation' => [

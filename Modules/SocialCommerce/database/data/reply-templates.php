@@ -50,6 +50,52 @@ return [
             'en' => 'To order, send us your name, mobile number and full address in a message.',
         ],
     ],
+    // Taking an order in Messenger (SC-3): yes, and stop.
+    'confirm' => [
+        'keywords' => [
+            'bn' => ['হ্যাঁ', 'হ্যা', 'জি', 'জ্বি', 'ঠিক আছে', 'নিশ্চিত', 'ha', 'haa', 'hya', 'ji', 'jii', 'thik ache', 'confirm koro'],
+            'en' => ['yes', 'yeah', 'ok', 'okay', 'confirm', 'sure'],
+        ],
+        'answers' => ['bn' => '', 'en' => ''],
+    ],
+    'cancel' => [
+        'keywords' => [
+            'bn' => ['বাতিল', 'না', 'লাগবে না', 'থাক', 'batil', 'lagbe na', 'thak', 'na'],
+            'en' => ['cancel', 'stop', 'no', 'never mind'],
+        ],
+        'answers' => ['bn' => '', 'en' => ''],
+    ],
+    'ask_product' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => [
+        'bn' => "কোন পণ্যটি নেবেন? নম্বর লিখুন:\n{products}",
+        'en' => "Which product would you like? Write its number:\n{products}",
+    ]],
+    'ask_quantity' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => [
+        'bn' => '{product} কয়টি নেবেন? (১ থেকে {max})',
+        'en' => 'How many {product}? (1 to {max})',
+    ]],
+    'ask_name' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার নাম লিখুন।', 'en' => 'Your name, please.']],
+    'ask_phone' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার মোবাইল নম্বর লিখুন।', 'en' => 'Your mobile number, please.']],
+    'ask_address' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'পুরো ডেলিভারি ঠিকানা লিখুন (বাসা, রাস্তা, এলাকা)।', 'en' => 'Your full delivery address, please (house, road, area).']],
+    'ask_zone' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => [
+        'bn' => "ডেলিভারি কোথায়? নম্বর লিখুন:\n{zones}",
+        'en' => "Where should we deliver? Write its number:\n{zones}",
+    ]],
+    'bad_phone' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'নম্বরটি ঠিক মনে হচ্ছে না। আবার লিখুন, যেমন 01712345678।', 'en' => 'That number does not look right. Write it again, e.g. 01712345678.']],
+    'short_stock' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'দুঃখিত, {product} এখন {available}টি আছে। কয়টি নেবেন?', 'en' => 'Sorry, we have {available} {product} now. How many would you like?']],
+    'summary' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => [
+        'bn' => "আপনার অর্ডার:\n{product} × {quantity}\nডেলিভারি: {zone} ({delivery})\nমোট: {total} (ক্যাশ অন ডেলিভারি)\n{name}, {phone}\n{address}\n\nঠিক থাকলে \"হ্যাঁ\" লিখুন, বাতিল করতে \"বাতিল\"।",
+        'en' => "Your order:\n{product} × {quantity}\nDelivery: {zone} ({delivery})\nTotal: {total} (cash on delivery)\n{name}, {phone}\n{address}\n\nWrite \"yes\" to confirm, or \"cancel\".",
+    ]],
+    'placed' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => [
+        'bn' => 'ধন্যবাদ! আপনার অর্ডার নম্বর {number}। আমরা শিগগির ফোন করে নিশ্চিত করব।',
+        'en' => 'Thank you! Your order number is {number}. We will call you soon to confirm.',
+    ]],
+    'cancelled' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'ঠিক আছে, অর্ডারটি বাতিল করা হলো।', 'en' => 'All right, the order is cancelled.']],
+    // The customer's order news (Online orders' steps).
+    'status_confirmed' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার অর্ডার {number} নিশ্চিত হয়েছে। মোট {total}।', 'en' => 'Your order {number} is confirmed. Total {total}.']],
+    'status_shipped' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার অর্ডার {number} পাঠানো হয়েছে। {courier} {tracking}', 'en' => 'Your order {number} is on its way. {courier} {tracking}']],
+    'status_delivered' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার অর্ডার {number} পৌঁছে গেছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!', 'en' => 'Your order {number} has been delivered. Thank you for shopping with us!']],
+    'status_cancelled' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার অর্ডার {number} বাতিল হয়েছে। প্রশ্ন থাকলে এখানে লিখুন।', 'en' => 'Your order {number} was cancelled. Write to us here if you have a question.']],
     // Public line under a comment when the price went to the customer's inbox.
     'notice' => [
         'keywords' => ['bn' => [], 'en' => []],

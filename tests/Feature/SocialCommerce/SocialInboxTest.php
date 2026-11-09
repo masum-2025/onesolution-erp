@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Modules\SocialCommerce\Models\Message;
 use Modules\SocialCommerce\Models\Post;
 use Modules\SocialCommerce\Models\PostProduct;
+use Modules\SocialCommerce\Models\ReplyTemplate;
 use Modules\SocialCommerce\Models\SocialPage;
 use Modules\SocialCommerce\Models\Thread;
 use Modules\SocialCommerce\Services\Conversations;
@@ -192,7 +193,8 @@ it('stays quiet when the page\'s automatic replies are off: the conversation wai
 it('lets a company change what the bot understands and try it', function () {
     $this->asToken($this->agent)->getJson(($this->api)('replies'))->assertForbidden();
     $templates = $this->asToken($this->admin)->getJson(($this->api)('replies'))->assertOk()->json('data.templates');
-    expect(collect($templates)->pluck('intent')->all())->toBe(['price', 'stock', 'delivery', 'order', 'notice', 'handoff']);
+    expect(collect($templates)->pluck('intent')->all())->toBe(ReplyTemplate::INTENTS)
+        ->and(array_slice(ReplyTemplate::INTENTS, 0, 4))->toBe(['price', 'stock', 'delivery', 'order']);
 
     $tried = $this->asToken($this->admin)->postJson(($this->api)('replies/try'), ['text' => 'pp', 'post_id' => $this->post->id])->assertOk();
     expect($tried->json('data'))->toMatchArray(['intent' => 'price', 'locale' => 'bn'])->and($tried->json('data.answer'))->toContain('সাবান');

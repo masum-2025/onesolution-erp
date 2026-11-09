@@ -103,6 +103,23 @@ async function disconnect(page) {
                             <AppSwitch :model-value="page.price_public" :label="t('social_commerce.pages.price_public')" show-label :disabled="!data.can_connect || busy" @update:model-value="(value) => setSwitch(page, 'price_public', value)" />
                         </span>
                         <span v-if="page.status === 'connected'" class="mt-1 block text-[12px] text-muted">{{ page.price_public ? t('social_commerce.pages.price_public_on') : t('social_commerce.pages.price_public_off') }}</span>
+                        <span v-if="page.status === 'connected' && data.order_places" class="mt-3 grid gap-2 sm:grid-cols-2">
+                            <label class="grid gap-1 text-[12.5px] text-muted">
+                                {{ t('social_commerce.pages.order_branch') }}
+                                <select class="field-input" :value="page.order_branch_id ?? ''" :disabled="!data.can_connect || busy" @change="setSwitch(page, 'order_branch_id', $event.target.value || null)">
+                                    <option value="">{{ t('social_commerce.pages.no_orders') }}</option>
+                                    <option v-for="unit in data.order_places.branches" :key="unit.id" :value="unit.id">{{ unit.name }}</option>
+                                </select>
+                            </label>
+                            <label class="grid gap-1 text-[12.5px] text-muted">
+                                {{ t('social_commerce.pages.order_warehouse') }}
+                                <select class="field-input" :value="page.order_warehouse_id ?? ''" :disabled="!data.can_connect || busy" @change="setSwitch(page, 'order_warehouse_id', $event.target.value || null)">
+                                    <option value="">{{ t('social_commerce.pages.no_orders') }}</option>
+                                    <option v-for="warehouse in data.order_places.warehouses" :key="warehouse.id" :value="warehouse.id">{{ warehouse.name }}</option>
+                                </select>
+                            </label>
+                            <span class="text-[12px] sm:col-span-2" :class="page.takes_orders ? 'text-ok' : 'text-warn'">{{ page.takes_orders ? t('social_commerce.pages.takes_orders') : t('social_commerce.pages.no_orders_text') }}</span>
+                        </span>
                     </span>
                     <StatusBadge :status="page.status" :tones="PAGE_TONES">{{ t(`social_commerce.pages.status.${page.status}`) }}</StatusBadge>
                     <span v-if="data.can_connect" class="flex gap-2">

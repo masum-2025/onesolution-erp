@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Modules\Inventory\Services\Stock;
+use Modules\OnlineOrders\Services\Orders;
 use Modules\SocialCommerce\Exceptions\SocialCommerceException;
 use Modules\SocialCommerce\Http\Requests\SocialRequest;
 use Modules\SocialCommerce\Models\Message;
@@ -122,6 +123,16 @@ class InboxController extends Controller
         return [
             ...$this->head($thread),
             'page' => $page === null ? null : ['id' => $page->getKey(), 'name' => $page->name, 'picture_url' => $page->picture_url, 'usable' => $page->status === SocialPage::CONNECTED],
+            // The order being taken in the chat (where it is), and the last one placed from it.
+            'draft' => $thread->order_draft === null ? null : [
+                'step' => $thread->order_draft['step'] ?? null,
+                'product' => isset($thread->order_draft['item_id']) ? ($this->stock->items($company, [(string) $thread->order_draft['item_id']])[0]['name'] ?? null) : null,
+                'quantity' => $thread->order_draft['quantity'] ?? null,
+                'name' => $thread->order_draft['name'] ?? null,
+                'phone' => $thread->order_draft['phone'] ?? null,
+                'started_at' => $thread->draft_at?->toIso8601String(),
+            ],
+            'order' => $thread->last_order_id === null || ! class_exists(Orders::class) ? null : app(Orders::class)->brief($company, $thread->last_order_id),
             'messages' => $messages->map(fn (Message $message) => [
                 'id' => $message->getKey(),
                 'direction' => $message->direction,
