@@ -25,6 +25,8 @@ class OrdersPresenter
             'total_minor' => $order->total_minor, 'paid_minor' => $order->paid_minor, 'refunded_minor' => $order->refunded_minor, 'due_minor' => $order->dueMinor(),
             'currency' => $order->currency_code, 'prices_include_tax' => $order->prices_include_tax,
             'courier' => $order->courier, 'tracking' => $order->tracking, 'cancel_reason' => $order->cancel_reason,
+            'courier_id' => $order->courier_id, 'courier_ref' => $order->courier_ref, 'courier_status' => $order->courier_status,
+            'courier_checked_at' => $order->courier_checked_at?->toIso8601String(),
             'created_at' => $order->created_at?->toIso8601String(), 'confirmed_at' => $order->confirmed_at?->toIso8601String(), 'shipped_at' => $order->shipped_at?->toIso8601String(),
             'delivered_at' => $order->delivered_at?->toIso8601String(), 'closed_at' => $order->closed_at?->toIso8601String(), 'version' => $order->version,
             ...($lines === null ? [] : ['lines' => $lines->map(fn (OrderLine $line) => [

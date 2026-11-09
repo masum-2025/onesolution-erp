@@ -3974,6 +3974,37 @@ never reach logs, errors or the browser).
   carries the link (`pay_link` template: `{amount}`, `{link}`, `{hours}`); when it is paid the
   customer is thanked (`status_paid`: `{number}`, `{amount}`).
 
+### SC-5b: courier booking (Steadfast first)
+
+- **Who**: the company's admin adds courier accounts (`online_orders.couriers`, at the company only:
+  Online orders → Couriers); order desk staff (`online_orders.manage`) book from the order's
+  "Send out" dialog (pick an account, or "hand it over myself" as before).
+- **Accounts** (`online_order_couriers`, client database): a `CourierDrivers` key, a name, the
+  driver's credential fields (Steadfast: `api_key`, `secret_key`) **encrypted**, never returned by
+  the API; the webhook token is shown once (only its SHA-256 kept; "New token" replaces it). Every
+  add or change is audited (which parts changed, never the keys). Optimistic `base_version`.
+- **Booking** (`POST orders/{order}/book`, `courier_id`, `base_version`): the order must be
+  shippable (confirmed or packed, prepaid paid in full). The courier is asked first; refused,
+  unreachable or bad keys → a clear error and the order stays as it was. Then the order ships as
+  usual (stock out, `online_orders.shipped`, the Messenger "sent" message with the tracking code)
+  with `courier_id`, `courier_ref` (consignment), `courier_status`. Invoice = the order number, so
+  the courier refuses the same order twice; cash to collect = what is left to pay.
+- **Where the parcel is**: the courier's webhook `POST /api/couriers/{company}/{courier}/webhook`
+  (the account's Bearer token; 401 for any unknown company/account/token, 404 when Online orders is
+  off, 120/min per address) or "Ask the courier" (`POST orders/{order}/courier-status`). Statuses
+  are ours (`CourierStatus`: booked, in_transit, on_hold, delivered, partly_delivered, cancelled,
+  unknown); a change is written into the order's history in the company's language. "Delivered"
+  completes a shipped order when `online_orders.courier_marks_delivered` (on, branch) allows;
+  cancelled or partly delivered only show, staff take the goods back themselves.
+- **Rules**: `online_orders.couriers` (multi_enum, default `steadfast`, country-specific; each
+  driver also lists its countries: Steadfast BD), `online_orders.courier_marks_delivered`.
+- **Config**: `STEADFAST_URL` (default `https://portal.packzy.com/api/v1`), `COURIER_TIMEOUT`.
+- **Not yet**: cash the courier collected is still recorded as a payment by hand (the courier's
+  payout reconciliation comes later); a booking whose shipping then fails (rare: a stock or version
+  change in between) stays at the courier and is cancelled in its panel.
+- **Future**: Pathao, RedX, eCourier are each a new `CourierDriver` and an entry in
+  `CourierDrivers` and the rule's list; nothing else changes. A new country or partner needs no code.
+
 ### Future expansion (Facebook selling)
 
 - A new sector, country or partner needs no code: the app is the partner's data, the footer line,

@@ -53,6 +53,7 @@ class Order extends Model
             'prices_include_tax' => 'boolean',
             'confirmed_at' => 'immutable_datetime',
             'shipped_at' => 'immutable_datetime',
+            'courier_checked_at' => 'immutable_datetime',
             'delivered_at' => 'immutable_datetime',
             'closed_at' => 'immutable_datetime',
             'version' => 'integer',

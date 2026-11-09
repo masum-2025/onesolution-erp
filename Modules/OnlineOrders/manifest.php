@@ -38,6 +38,8 @@ return [
         'online_orders.manage',
         // Cancel an order already shipped (it came back), take a delivered order back, give a discount above the limit.
         'online_orders.supervise',
+        // SC-5b: add and change the company's courier accounts (their API keys).
+        'online_orders.couriers',
     ],
     'rules' => [
         // Order numbers: the prefix, the year and a running number (OO-2026-000001).
@@ -72,6 +74,10 @@ return [
         $rule('online_payment', 'enum', 'delivery', $branch, 70, 'payment', ['schema' => ['enum' => ['none', 'delivery', 'full']], 'country_specific' => true]),
         // How long a payment link works (hours).
         $rule('pay_link_hours', 'integer', 48, $company, 80, 'payment', ['schema' => ['minimum' => 1, 'maximum' => 720]]),
+        // SC-5b: couriers a company may book parcels with (each also only in the countries it delivers in).
+        $rule('couriers', 'multi_enum', ['steadfast'], $company, 90, 'delivery', ['schema' => ['items' => ['enum' => ['steadfast']]], 'country_specific' => true]),
+        // When the courier says a parcel was delivered, mark the order delivered (off: staff do it).
+        $rule('courier_marks_delivered', 'boolean', true, $branch, 100, 'delivery'),
     ],
     'menu' => [
         [
@@ -84,6 +90,7 @@ return [
             'children' => [
                 ['key' => 'orders', 'label' => 'online_orders::module.menu_orders', 'route' => '/online-orders', 'permission' => 'online_orders.view'],
                 ['key' => 'new', 'label' => 'online_orders::module.menu_new', 'route' => '/online-orders/new', 'permission' => 'online_orders.manage'],
+                ['key' => 'couriers', 'label' => 'online_orders::module.menu_couriers', 'route' => '/online-orders/couriers', 'permission' => 'online_orders.couriers'],
             ],
         ],
     ],

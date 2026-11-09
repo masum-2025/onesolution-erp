@@ -7,4 +7,5 @@ return [
     'menu' => 'অনলাইন অর্ডার',
     'menu_orders' => 'অর্ডার',
     'menu_new' => 'নতুন অর্ডার',
+    'menu_couriers' => 'কুরিয়ার',
 ];

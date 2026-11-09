@@ -39,4 +39,13 @@ return [
         'label' => 'Payment link works for (hours)',
         'description' => 'After this, the link no longer opens; a new one can be sent.',
     ],
+    'couriers' => [
+        'label' => 'Couriers that can be booked',
+        'description' => 'Delivery companies the company may book parcels with from an order (each only in the countries it delivers in).',
+        'options' => ['steadfast' => 'Steadfast Courier'],
+    ],
+    'courier_marks_delivered' => [
+        'label' => 'Courier\'s "delivered" completes the order',
+        'description' => 'When the courier says a parcel was delivered, the order is marked delivered by itself. Off: staff mark it.',
+    ],
 ];

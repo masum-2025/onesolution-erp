@@ -95,7 +95,8 @@
             "deliver": "Delivered and added to the books.",
             "pay": "Payment recorded.",
             "cancel": "Order cancelled.",
-            "return": "Order taken back: the goods are in stock again."
+            "return": "Order taken back: the goods are in stock again.",
+            "book": "Booked with the courier and sent out"
         },
         "courier": "Courier {courier}, tracking {tracking}",
         "discount": "{amount} off",
@@ -114,6 +115,55 @@
         "return_text": "The goods come back to the warehouse and their sale is reversed; the delivery charge stays owed.",
         "refund": "Give back {amount} by",
         "cancel": "Close",
-        "keep": "Keep the order"
+        "keep": "Keep the order",
+        "send_with": "Send with",
+        "by_hand": "Hand it over myself (type the courier below)",
+        "book_text": "The courier is asked to collect {amount} on delivery. The tracking code comes back by itself.",
+        "courier_ask": "Ask the courier",
+        "courier_checked": "checked {at}",
+        "courier_asked": "The courier's latest word is on the order."
+    },
+    "courier_status": {
+        "booked": "Booked",
+        "in_transit": "With the courier",
+        "on_hold": "On hold",
+        "delivered": "Delivered (courier)",
+        "partly_delivered": "Partly delivered",
+        "cancelled": "Cancelled by courier",
+        "unknown": "Not known"
+    },
+    "couriers": {
+        "title": "Couriers",
+        "description": "Your accounts at delivery companies. Book parcels from an order; the courier tells us where each one is.",
+        "add": "Add courier",
+        "empty": "No courier accounts yet",
+        "empty_text": "Add your Steadfast account with its API key and secret key (from the Steadfast panel → API).",
+        "none_allowed": "No courier can be added here (rule \"Couriers that can be booked\", or none delivers in your country).",
+        "name": "Name",
+        "driver": "Courier",
+        "active": "On",
+        "off": "Off",
+        "switch_on": "Switch on",
+        "switch_off": "Switch off",
+        "edit": "Change keys",
+        "save": "Save",
+        "cancel": "Cancel",
+        "keys_help": "Keys are kept encrypted and never shown again. To change them, type them all again.",
+        "webhook": "Webhook address",
+        "webhook_help": "In the courier's panel, set this address as the webhook and the token below as its Bearer token.",
+        "token": "Webhook token",
+        "token_once": "Copy the token now: it is shown only this once.",
+        "new_token": "New token",
+        "new_token_confirm": "Make a new webhook token? The old one stops working at once, so update it in the courier's panel too.",
+        "copied": "Copied",
+        "added": "Courier added",
+        "saved": "Saved",
+        "drivers": {
+            "steadfast": "Steadfast Courier"
+        },
+        "fields": {
+            "api_key": "API key",
+            "secret_key": "Secret key"
+        }
     }
 }

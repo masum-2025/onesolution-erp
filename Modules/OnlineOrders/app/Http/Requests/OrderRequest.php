@@ -36,6 +36,12 @@ class OrderRequest extends StrictFormRequest
         if (str_ends_with($path, '/ship')) {
             return [...$version, 'courier' => ['nullable', 'string', 'max:80'], 'tracking' => ['nullable', 'string', 'max:80']];
         }
+        if (str_ends_with($path, '/book')) {
+            return [...$version, 'courier_id' => ['required', 'string', 'ulid']];
+        }
+        if (str_ends_with($path, '/courier-status')) {
+            return [];
+        }
         if (preg_match('#/(cancel|return)$#', $path)) {
             return [...$version, 'reason' => ['required', 'string', 'min:3', 'max:300'], 'refund_method' => ['nullable', $methods]];
         }
