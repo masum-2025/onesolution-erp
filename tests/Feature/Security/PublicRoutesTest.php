@@ -76,6 +76,14 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET careers/{slug}/offer/{token}', 'POST careers/{slug}/offer/{token}',
     // For search engines: a careers page's open jobs (what the page itself shows, same limits) and robots.txt (fixed text).
     'GET careers/{slug}/sitemap.xml', 'GET robots.txt',
+    // Meta's callbacks (SC-1): only with Meta's signed_request (HMAC with the app secret), throttled.
+    'POST api/meta/{app}/deauthorize', 'POST api/meta/{app}/data-deletion', 'GET api/meta/deletion/{code}',
+    // Meta's webhook (SC-2): the verify token (GET) and X-Hub-Signature-256 (POST) are the proof, throttled.
+    'GET api/meta/{app}/webhook', 'POST api/meta/{app}/webhook',
+    // Coming back from Facebook's sign-in (SC-1): the one-time state (bound to person and company, 10 minutes) is the proof, throttled.
+    'GET api/social/facebook/callback',
+    // A post's photo (SC-1): only through a short-lived signed link.
+    'GET files/social/{organization}/media/{media}',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

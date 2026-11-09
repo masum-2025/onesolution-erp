@@ -211,12 +211,28 @@ class Conversations
         }
         $to = $commentId ?? $thread->customer_ref;
         $understood = $this->replies->understand($company, $in->text);
+        $by = $understood === null ? null : 'keyword';
+
+        // SC-4: what the keywords miss (or an order's details in one message) the AI assistant reads.
+        $fields = [];
+        $messenger = $thread->kind === Thread::MESSAGE;
+        $step = $messenger ? ($thread->order_draft['step'] ?? null) : null;
+        $ai = app(AiReader::class);
+        if ($ai->wanted($company, $in->text, $understood, $step, $messenger)) {
+            $reading = $ai->read($company, $in->text);
+            if ($reading !== null) {
+                $fields = $messenger ? $reading['fields'] : [];
+                if ($understood === null && $reading['intent'] !== null) {
+                    [$understood, $by] = [['intent' => $reading['intent'], 'locale' => $reading['locale']], 'ai'];
+                }
+            }
+        }
 
         // Messenger: an order being taken (or one asked for) goes through its questions first.
-        if ($thread->kind === Thread::MESSAGE) {
-            $taken = app(OrderTaker::class)->handle($company, $page, $thread, $in->text, $items, $understood);
+        if ($messenger) {
+            $taken = app(OrderTaker::class)->handle($company, $page, $thread, $in->text, $items, $understood, $fields);
             if ($taken !== null) {
-                $this->book->query(Message::class, $company)->whereKey($in->getKey())->update(['intent' => $understood['intent'] ?? null, 'locale' => $taken['locale'], 'item_ids' => $taken['items'] === [] ? null : json_encode($taken['items'])]);
+                $this->book->query(Message::class, $company)->whereKey($in->getKey())->update(['intent' => $understood['intent'] ?? null, 'locale' => $taken['locale'], 'understood_by' => $fields !== [] ? 'ai' : $by, 'item_ids' => $taken['items'] === [] ? null : json_encode($taken['items'])]);
                 if ($taken['text'] !== '') {
                     $this->send($company, $page, $thread, Message::PRIVATE, $taken['text'], $to, Message::BOT, null, $taken['intent'], $taken['locale'], $taken['items']);
                 }
@@ -227,7 +243,7 @@ class Conversations
             }
         }
         $answer = $understood === null ? null : $this->replies->answer($company, $page, $understood['intent'], $understood['locale'], $items);
-        $this->book->query(Message::class, $company)->whereKey($in->getKey())->update(['intent' => $understood['intent'] ?? null, 'locale' => $understood['locale'] ?? null, 'item_ids' => $items === [] ? null : json_encode(array_values($items))]);
+        $this->book->query(Message::class, $company)->whereKey($in->getKey())->update(['intent' => $understood['intent'] ?? null, 'locale' => $understood['locale'] ?? null, 'understood_by' => $by, 'item_ids' => $items === [] ? null : json_encode(array_values($items))]);
 
         if ($answer === null) {
             $thread->refresh();

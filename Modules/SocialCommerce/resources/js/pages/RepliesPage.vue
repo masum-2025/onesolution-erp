@@ -84,6 +84,7 @@ async function tryIt() {
                 <div v-if="trying.result" class="rounded-xl bg-surface-2 p-4 text-[13.5px]" aria-live="polite">
                     <p class="text-[12.5px] text-muted">
                         {{ trying.result.intent ? t('social_commerce.replies.understood', { intent: t(`social_commerce.replies.intent.${trying.result.intent}`), lang: t(`core.languages.${trying.result.locale}`) }) : t('social_commerce.replies.not_understood') }}
+                        <span v-if="trying.result.understood_by" class="ms-2 rounded-full border border-line px-2 py-0.5 text-[11.5px]">{{ t(`social_commerce.replies.by.${trying.result.understood_by}`) }}</span>
                     </p>
                     <p class="mt-1 flex gap-2 whitespace-pre-line"><Bot class="mt-0.5 size-4 shrink-0" aria-hidden="true" />{{ trying.result.answer ?? trying.result.handoff ?? '—' }}</p>
                     <p v-if="trying.result.intent && !trying.result.answer" class="mt-1 text-[12px] text-warn">{{ t('social_commerce.replies.no_answer') }}</p>

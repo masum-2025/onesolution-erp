@@ -155,6 +155,10 @@
         "understood": "Understood: {intent} (answer in {lang})",
         "not_understood": "Not understood: a person will answer, and the customer gets this:",
         "no_answer": "Understood, but nothing to answer with (no product or no delivery areas): a person will answer.",
+        "by": {
+            "keyword": "by keywords",
+            "ai": "by AI"
+        },
         "intent": {
             "price": "Price",
             "stock": "In stock?",

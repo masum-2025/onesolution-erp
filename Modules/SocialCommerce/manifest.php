@@ -69,6 +69,11 @@ return [
         $rule('reply_cooldown_minutes', 'integer', 10, $company, 130, 'replies', ['schema' => ['minimum' => 0, 'maximum' => 1440]]),
         // After this many questions the bot did not understand, a person is asked to answer.
         $rule('handoff_after_unknown', 'integer', 1, $company, 140, 'replies', ['schema' => ['minimum' => 1, 'maximum' => 10]]),
+        // SC-4: when the keywords do not tell what a customer asks, the AI assistant reads the message
+        // (needs the AI assistant module, with its consent; every call counts against ai_assistant.monthly_calls).
+        $rule('ai_understanding', 'boolean', false, $company, 145, 'replies'),
+        // With AI on: one message with name, phone and address fills those questions of a Messenger order at once.
+        $rule('ai_fill_order', 'boolean', true, $company, 146, 'replies'),
         // Customers may order in Messenger (a page also needs its branch and warehouse set).
         $rule('messenger_orders', 'boolean', true, $company, 160, 'orders'),
         // An order being taken is dropped after these hours of silence.

@@ -45,9 +45,12 @@ function tenantRoutes(string $middleware, array $parameters, string $prefix = 'a
  */
 function sweepUri(RouteDefinition $route, array $parameters, string $target): string
 {
+    // A parameter limited to a few words ({step} = confirm|ship|...) gets its first word, else the route is not even found.
+    $word = fn (string $name) => preg_match('/^\(?([a-z_-]+)(\||\)?$)/', (string) ($route->wheres[$name] ?? ''), $found) === 1 ? $found[1] : null;
+
     return '/'.preg_replace_callback('/\{(\w+)\??\}/', fn (array $match) => in_array($match[1], $parameters, true)
         ? $target
-        : Str::lower((string) Str::ulid()), $route->uri());
+        : ($word($match[1]) ?? Str::lower((string) Str::ulid())), $route->uri());
 }
 
 /**

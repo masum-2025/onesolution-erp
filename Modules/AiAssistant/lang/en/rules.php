@@ -11,7 +11,21 @@ return [
         ],
     ],
 
+    'monthly_calls' => [
+        'label' => 'AI readings per month',
+        'description' => 'Most messages the AI may read for the company in a month, all modules together. Past it, work goes on without AI until the next month.',
+    ],
+    'model' => [
+        'label' => 'AI model',
+        'description' => 'Haiku is quick and cheap; Sonnet reads harder messages and costs more.',
+        'options' => [
+            'haiku' => 'Haiku (quick)',
+            'sonnet' => 'Sonnet (careful)',
+        ],
+    ],
+
     'categories' => [
         'privacy' => 'Privacy',
+        'usage' => 'Usage',
     ],
 ];

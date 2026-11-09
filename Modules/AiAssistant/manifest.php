@@ -28,6 +28,31 @@ return [
             'category' => 'privacy',
             'sort_order' => 10,
         ],
+        [
+            // SC-4: most AI readings a company may make in a calendar month (all modules together);
+            // past it, modules go on without AI until the next month.
+            'key' => 'ai_assistant.monthly_calls',
+            'type' => 'integer',
+            'schema' => ['minimum' => 0, 'maximum' => 1000000],
+            'default' => 2000,
+            'label' => 'ai_assistant::rules.monthly_calls.label',
+            'description' => 'ai_assistant::rules.monthly_calls.description',
+            'overridable_levels' => ['platform', 'partner', 'plan', 'group', 'company'],
+            'category' => 'usage',
+            'sort_order' => 20,
+        ],
+        [
+            // Which model reads (config ai.models): haiku is quick and cheap, sonnet reads harder text.
+            'key' => 'ai_assistant.model',
+            'type' => 'enum',
+            'schema' => ['enum' => ['haiku', 'sonnet']],
+            'default' => 'haiku',
+            'label' => 'ai_assistant::rules.model.label',
+            'description' => 'ai_assistant::rules.model.description',
+            'overridable_levels' => ['platform', 'partner', 'plan'],
+            'category' => 'usage',
+            'sort_order' => 30,
+        ],
     ],
     'menu' => [
         [

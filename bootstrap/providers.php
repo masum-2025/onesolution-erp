@@ -1,6 +1,7 @@
 <?php
 
 use App\Platform\Access\AccessServiceProvider;
+use App\Platform\Ai\AiServiceProvider;
 use App\Platform\Addons\AddonsServiceProvider;
 use App\Platform\Analytics\AnalyticsServiceProvider;
 use App\Platform\Audit\AuditServiceProvider;
@@ -45,6 +46,7 @@ return [
     AddonsServiceProvider::class,
     PaymentsServiceProvider::class,
     MetaServiceProvider::class,
+    AiServiceProvider::class,
     NotificationsServiceProvider::class,
     MarketingServiceProvider::class,
     TransfersServiceProvider::class,

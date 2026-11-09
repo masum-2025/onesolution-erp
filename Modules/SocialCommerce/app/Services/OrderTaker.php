@@ -55,9 +55,33 @@ class OrderTaker
     /**
      * @param  list<string>  $items  products known for the message (named, the post, the last talked about)
      * @param  array{intent: string, locale: string}|null  $understood
+     * @param  array<string, string>  $fields  quantity, name, phone, address the AI assistant read (SC-4)
      * @return array{text: string, intent: string, locale: string, items: list<string>, wait?: bool}|null
      */
-    public function handle(Organization $company, SocialPage $page, Thread $thread, string $text, array $items, ?array $understood): ?array
+    public function handle(Organization $company, SocialPage $page, Thread $thread, string $text, array $items, ?array $understood, array $fields = []): ?array
+    {
+        $result = $this->step($company, $page, $thread, $text, $items, $understood, $fields);
+
+        // SC-4: details the AI assistant read from the same message answer the next questions too,
+        // each checked by its question as if typed (a bad one stops there and is asked for).
+        while ($result !== null && $fields !== []) {
+            $step = $thread->order_draft['step'] ?? null;
+            if (! in_array($step, AiReader::FIELDS, true) || ! isset($fields[$step])) {
+                break;
+            }
+            $value = $fields[$step];
+            unset($fields[$step]);
+            $result = $this->answer($company, $page, $thread, $thread->order_draft, $value);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param  list<string>  $items
+     * @param  array<string, string>  $fields  read by the AI assistant (taken out as used)
+     */
+    private function step(Organization $company, SocialPage $page, Thread $thread, string $text, array $items, ?array $understood, array &$fields): ?array
     {
         $draft = $thread->order_draft;
         $hours = (int) $this->rules->get('social_commerce.draft_hours', $this->contexts->forOrganization($company));
@@ -80,7 +104,17 @@ class OrderTaker
 
             return $this->say($company, 'cancelled', $locale, [], $draft);
         }
+        // The AI's reading of this question's answer is cleaner than the whole message ("ami Karim, 017..." -> "Karim").
+        if (isset($fields[$draft['step']])) {
+            $text = $fields[$draft['step']];
+            unset($fields[$draft['step']]);
+        }
 
+        return $this->answer($company, $page, $thread, $draft, $text);
+    }
+
+    private function answer(Organization $company, SocialPage $page, Thread $thread, array $draft, string $text): array
+    {
         return match ($draft['step']) {
             'product' => $this->product($company, $page, $thread, $draft, $text),
             'quantity' => $this->quantity($company, $page, $thread, $draft, $text),
