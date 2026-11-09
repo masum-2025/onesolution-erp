@@ -11,6 +11,7 @@ use Modules\SocialCommerce\Models\Post;
 use Modules\SocialCommerce\Models\PostMedia;
 use Modules\SocialCommerce\Models\PostProduct;
 use Modules\SocialCommerce\Models\SocialPage;
+use Modules\SocialCommerce\Services\Pages;
 use Modules\SocialCommerce\Services\Publisher;
 use Modules\SocialCommerce\Services\SocialBook;
 
@@ -36,6 +37,10 @@ class SocialPresenter
             'name' => $page->name,
             'picture_url' => $page->picture_url,
             'can_post' => $page->can_post,
+            'auto_reply' => $page->auto_reply,
+            'price_public' => $page->price_public,
+            // Comments and messages reach us only when subscribed with every permission asked for.
+            'hears' => $page->subscribed_at !== null && app(Pages::class)->missingScopes($page) === [],
             'status' => $page->status,
             'status_reason' => $page->status_reason,
             'connected_at' => $page->connected_at?->toIso8601String(),

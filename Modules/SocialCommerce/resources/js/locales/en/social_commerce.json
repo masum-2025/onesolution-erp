@@ -38,6 +38,12 @@
             "disconnected": "Disconnected"
         },
         "through_app": "Pages connect through the Meta app \"{app}\".",
+        "not_hearing": "Comments and messages do not reach us yet. Connect again and allow every permission asked for.",
+        "auto_reply": "Automatic replies",
+        "price_public": "Show the price in public",
+        "price_public_on": "A price goes under the customer's comment.",
+        "price_public_off": "A price goes to the customer's inbox; under the comment only a short note.",
+        "saved": "Saved.",
         "disconnect_title": "Disconnect {page}?",
         "disconnect_text": "Posts can no longer go to this page. Posts waiting for it go back to drafts; nothing is deleted.",
         "outcome": {
@@ -75,6 +81,76 @@
         "photos_only": "(photos only)",
         "photo_count": "{count} photo(s)",
         "product_count": "{count} product(s)"
+    },
+    "inbox": {
+        "title": "Facebook inbox",
+        "text": "Comments and Messenger chats of your pages. The bot answers what it understands; the rest waits for you here.",
+        "all": "All",
+        "status": {
+            "waiting": "Waiting for you",
+            "open": "Open",
+            "done": "Finished"
+        },
+        "kind": {
+            "comment": "Comments under a post",
+            "message": "Messenger"
+        },
+        "channel": {
+            "public": "under the comment",
+            "private": "in the inbox"
+        },
+        "empty": "Nothing here",
+        "empty_text": "When customers comment or write to your page, they appear here.",
+        "pick": "Pick a conversation",
+        "pick_text": "Choose one on the left to read it and answer.",
+        "customer": "Facebook customer",
+        "bot": "Bot",
+        "team": "Our team",
+        "with": "with {name}",
+        "claim": "Take it",
+        "done": "Finish",
+        "reopen": "Open again",
+        "messages": "Messages",
+        "failed": "Did not go out.",
+        "reply": "Your answer",
+        "reply_comment": "Answer under the customer's last comment",
+        "reply_message": "Answer in Messenger",
+        "send": "Send"
+    },
+    "replies": {
+        "title": "Automatic replies",
+        "text": "What the bot understands and how it answers. Prices, stock and delivery charges come from the ERP at the moment it answers.",
+        "try_title": "Try it",
+        "try_text": "What a customer writes",
+        "try_placeholder": "e.g. dam koto? / price? / pp",
+        "try_post": "Under the post",
+        "no_post": "No post (Messenger)",
+        "try": "Try",
+        "understood": "Understood: {intent} (answer in {lang})",
+        "not_understood": "Not understood: a person will answer, and the customer gets this:",
+        "no_answer": "Understood, but nothing to answer with (no product or no delivery areas): a person will answer.",
+        "intent": {
+            "price": "Price",
+            "stock": "In stock?",
+            "delivery": "Delivery charge",
+            "order": "How to order",
+            "notice": "Note under the comment (price sent to the inbox)",
+            "handoff": "When the bot does not understand"
+        },
+        "about": {
+            "price": "Answers with the selling price and stock of the post's products.",
+            "stock": "Says whether the products are in stock.",
+            "delivery": "Lists the delivery areas and charges (from Online orders).",
+            "order": "Tells the customer how to order.",
+            "notice": "Goes under the comment when a page sends prices to the inbox.",
+            "handoff": "Sent once, then the conversation waits for a person."
+        },
+        "active": "On",
+        "words": "Words in {lang}",
+        "words_hint": "Separate with commas. Banglish (dam, koto, pp) goes with Bangla.",
+        "answer": "Answer in {lang}",
+        "placeholders": "You can use {product}, {price}, {stock}, {delivery}, {page}.",
+        "save": "Save"
     },
     "post": {
         "new_title": "New Facebook post",

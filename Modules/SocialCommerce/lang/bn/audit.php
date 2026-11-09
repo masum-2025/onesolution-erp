@@ -18,4 +18,10 @@ return [
     'post_deleted' => 'Facebook পোস্ট মুছে ফেলা হলো',
     'post_published' => 'Facebook পোস্ট প্রকাশিত',
     'post_failed' => 'Facebook পোস্ট যায়নি',
+    'page_switches_changed' => 'Facebook পেজের switch বদলানো হলো',
+    'reply_sent' => 'Facebook ইনবক্স থেকে উত্তর পাঠানো হলো',
+    'thread_claim' => 'Facebook কথোপকথনের দায়িত্ব নেওয়া হলো',
+    'thread_done' => 'Facebook কথোপকথন শেষ',
+    'thread_reopen' => 'Facebook কথোপকথন আবার খোলা হলো',
+    'replies_changed' => 'স্বয়ংক্রিয় উত্তর বদলানো হলো',
 ];

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
 /** A company's connected Facebook page. The token is encrypted and never serialized. */
-#[Fillable(['organization_id', 'meta_app_id', 'page_id', 'name', 'picture_url', 'token', 'meta_person_id', 'can_post', 'status', 'status_reason', 'connected_by', 'connected_at', 'version'])]
+#[Fillable(['organization_id', 'meta_app_id', 'page_id', 'name', 'picture_url', 'token', 'meta_person_id', 'can_post', 'scopes', 'subscribed_at', 'auto_reply', 'price_public', 'status', 'status_reason', 'connected_by', 'connected_at', 'version'])]
 class SocialPage extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;
@@ -29,6 +29,10 @@ class SocialPage extends Model
         return [
             'token' => 'encrypted',
             'can_post' => 'boolean',
+            'scopes' => 'array',
+            'subscribed_at' => 'immutable_datetime',
+            'auto_reply' => 'boolean',
+            'price_public' => 'boolean',
             'connected_at' => 'immutable_datetime',
             'version' => 'integer',
         ];

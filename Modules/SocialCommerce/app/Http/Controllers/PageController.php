@@ -84,6 +84,17 @@ class PageController extends Controller
         return response()->json(['data' => $this->presenter->page($done), 'message' => __('social_commerce::social.messages.disconnected')]);
     }
 
+    /** The page's switches: automatic replies, and the price in public comment replies. */
+    public function switches(SocialRequest $request, string $organization, string $page): JsonResponse
+    {
+        $company = $this->company($organization);
+        Gate::authorize('social_commerce.connect', $company);
+        $found = $this->book->query(SocialPage::class, $company)->whereKey($page)->first() ?? throw SocialCommerceException::notFound('page');
+        $done = $this->pages->setSwitches($company, $found, (int) $request->validated('base_version'), $request->safe()->only(['auto_reply', 'price_public']), $request->user());
+
+        return response()->json(['data' => $this->presenter->page($done), 'message' => __('social_commerce::social.messages.switches')]);
+    }
+
     private function company(string $organization): Organization
     {
         return $this->book->companyOf($this->findVisible($organization));

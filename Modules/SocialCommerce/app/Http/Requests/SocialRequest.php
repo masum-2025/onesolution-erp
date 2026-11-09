@@ -23,7 +23,22 @@ class SocialRequest extends StrictFormRequest
             'item_ids.*' => ['string', 'size:26'],
         ];
 
+        $locales = LanguageRegistry::codes();
+
         return match (true) {
+            $this->routeIs('social.pages.switches') => [...$version, 'auto_reply' => ['sometimes', 'boolean'], 'price_public' => ['sometimes', 'boolean']],
+            $this->routeIs('social.inbox.reply') => ['text' => ['required', 'string', 'min:1', 'max:2000'], 'op_id' => ['nullable', 'string', 'max:64']],
+            $this->routeIs('social.inbox.mark') => $version,
+            $this->routeIs('social.replies.try') => ['text' => ['required', 'string', 'max:1000'], 'post_id' => ['nullable', 'string', 'size:26']],
+            $this->routeIs('social.replies.update') => [
+                ...$version,
+                'active' => ['required', 'boolean'],
+                'keywords' => ['present', 'array:'.implode(',', $locales)],
+                'keywords.*' => ['array', 'max:60'],
+                'keywords.*.*' => ['string', 'max:60'],
+                'answers' => ['required', 'array:'.implode(',', $locales)],
+                'answers.*' => ['nullable', 'string', 'max:1000'],
+            ],
             $this->routeIs('social.connect.pages') => ['state' => ['required', 'string', 'size:48'], 'page_ids' => ['required', 'array', 'min:1', 'max:50'], 'page_ids.*' => ['string', 'regex:/^\d{1,40}$/']],
             $this->routeIs('social.pages.disconnect', 'social.posts.submit', 'social.posts.approve', 'social.posts.withdraw', 'social.posts.destroy', 'social.media.destroy') => $version,
             $this->routeIs('social.posts.reject') => [...$version, 'reason' => ['required', 'string', 'min:3', 'max:300']],

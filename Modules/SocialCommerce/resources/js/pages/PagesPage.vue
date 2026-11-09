@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { Facebook, Link2Off, RefreshCw, Unplug } from 'lucide-vue-next';
-import { AppButton, confirmAction, EmptyState, ErrorState, PageFrame, SkeletonRows, StatusBadge, toast } from '@/ui';
+import { AppButton, AppSwitch, confirmAction, EmptyState, ErrorState, PageFrame, SkeletonRows, StatusBadge, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDateTime } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
@@ -39,6 +39,19 @@ async function connect() {
     } catch (error) {
         toast.error(error.message);
         busy.value = false;
+    }
+}
+
+async function setSwitch(page, key, value) {
+    busy.value = true;
+    try {
+        await social.switches(page.id, { base_version: page.version, [key]: value });
+        toast.success(t('social_commerce.pages.saved'));
+    } catch (error) {
+        toast.error(error.message);
+    } finally {
+        busy.value = false;
+        list.reload();
     }
 }
 
@@ -84,6 +97,12 @@ async function disconnect(page) {
                         </span>
                         <span v-if="page.status === 'connected' && !page.can_post" class="mt-1 block text-[12.5px] text-warn">{{ t('social_commerce.pages.cannot_post') }}</span>
                         <span v-if="page.status === 'needs_reconnect'" class="mt-1 block text-[12.5px] text-warn">{{ t('social_commerce.pages.needs_reconnect') }}</span>
+                        <span v-else-if="page.status === 'connected' && !page.hears" class="mt-1 block text-[12.5px] text-warn">{{ t('social_commerce.pages.not_hearing') }}</span>
+                        <span v-if="page.status === 'connected'" class="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+                            <AppSwitch :model-value="page.auto_reply" :label="t('social_commerce.pages.auto_reply')" show-label :disabled="!data.can_connect || busy" @update:model-value="(value) => setSwitch(page, 'auto_reply', value)" />
+                            <AppSwitch :model-value="page.price_public" :label="t('social_commerce.pages.price_public')" show-label :disabled="!data.can_connect || busy" @update:model-value="(value) => setSwitch(page, 'price_public', value)" />
+                        </span>
+                        <span v-if="page.status === 'connected'" class="mt-1 block text-[12px] text-muted">{{ page.price_public ? t('social_commerce.pages.price_public_on') : t('social_commerce.pages.price_public_off') }}</span>
                     </span>
                     <StatusBadge :status="page.status" :tones="PAGE_TONES">{{ t(`social_commerce.pages.status.${page.status}`) }}</StatusBadge>
                     <span v-if="data.can_connect" class="flex gap-2">

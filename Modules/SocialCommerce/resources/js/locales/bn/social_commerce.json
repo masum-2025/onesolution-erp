@@ -38,6 +38,12 @@
             "disconnected": "Disconnected"
         },
         "through_app": "পেজগুলো \"{app}\" Meta app দিয়ে connect হয়।",
+        "not_hearing": "Comment ও message এখনো আমাদের কাছে আসছে না। আবার connect করে চাওয়া সব অনুমতি দিন।",
+        "auto_reply": "স্বয়ংক্রিয় উত্তর",
+        "price_public": "দাম প্রকাশ্যে দেখান",
+        "price_public_on": "দাম কাস্টমারের comment-এর নিচে যাবে।",
+        "price_public_off": "দাম কাস্টমারের ইনবক্সে যাবে; comment-এর নিচে শুধু ছোট একটি লাইন।",
+        "saved": "সংরক্ষিত হয়েছে।",
         "disconnect_title": "{page} disconnect করবেন?",
         "disconnect_text": "এই পেজে আর পোস্ট যাবে না। এর অপেক্ষায় থাকা পোস্টগুলো খসড়ায় ফিরবে; কিছুই মুছবে না।",
         "outcome": {
@@ -75,6 +81,76 @@
         "photos_only": "(শুধু ছবি)",
         "photo_count": "{count}টি ছবি",
         "product_count": "{count}টি পণ্য"
+    },
+    "inbox": {
+        "title": "Facebook ইনবক্স",
+        "text": "আপনার পেজের comment আর Messenger কথোপকথন। Bot যা বোঝে তার উত্তর দেয়; বাকিগুলো এখানে আপনার অপেক্ষায় থাকে।",
+        "all": "সব",
+        "status": {
+            "waiting": "আপনার অপেক্ষায়",
+            "open": "খোলা",
+            "done": "শেষ"
+        },
+        "kind": {
+            "comment": "পোস্টের নিচে comment",
+            "message": "Messenger"
+        },
+        "channel": {
+            "public": "comment-এর নিচে",
+            "private": "ইনবক্সে"
+        },
+        "empty": "এখানে কিছু নেই",
+        "empty_text": "কাস্টমার আপনার পেজে comment বা message দিলে এখানে দেখাবে।",
+        "pick": "একটি কথোপকথন বাছুন",
+        "pick_text": "পড়তে ও উত্তর দিতে বাঁ পাশ থেকে একটি বাছুন।",
+        "customer": "Facebook কাস্টমার",
+        "bot": "Bot",
+        "team": "আমাদের টিম",
+        "with": "{name}-এর দায়িত্বে",
+        "claim": "দায়িত্ব নিন",
+        "done": "শেষ করুন",
+        "reopen": "আবার খুলুন",
+        "messages": "মেসেজ",
+        "failed": "যায়নি।",
+        "reply": "আপনার উত্তর",
+        "reply_comment": "কাস্টমারের শেষ comment-এর নিচে উত্তর দিন",
+        "reply_message": "Messenger-এ উত্তর দিন",
+        "send": "পাঠান"
+    },
+    "replies": {
+        "title": "স্বয়ংক্রিয় উত্তর",
+        "text": "Bot কী বোঝে আর কীভাবে উত্তর দেয়। দাম, স্টক আর ডেলিভারি চার্জ উত্তর দেওয়ার মুহূর্তে ERP থেকে আসে।",
+        "try_title": "পরীক্ষা করুন",
+        "try_text": "কাস্টমার যা লেখেন",
+        "try_placeholder": "যেমন dam koto? / দাম কত? / pp",
+        "try_post": "যে পোস্টের নিচে",
+        "no_post": "কোনো পোস্ট নয় (Messenger)",
+        "try": "পরীক্ষা",
+        "understood": "বুঝেছে: {intent} ({lang}-এ উত্তর)",
+        "not_understood": "বোঝেনি: একজন মানুষ উত্তর দেবেন, আর কাস্টমার এটি পাবেন:",
+        "no_answer": "বুঝেছে, কিন্তু উত্তর দেওয়ার মতো তথ্য নেই (পণ্য বা ডেলিভারি এলাকা নেই): একজন মানুষ উত্তর দেবেন।",
+        "intent": {
+            "price": "দাম",
+            "stock": "স্টকে আছে?",
+            "delivery": "ডেলিভারি চার্জ",
+            "order": "কীভাবে অর্ডার করবেন",
+            "notice": "Comment-এর নিচের লাইন (দাম ইনবক্সে পাঠালে)",
+            "handoff": "Bot না বুঝলে"
+        },
+        "about": {
+            "price": "পোস্টের পণ্যের বিক্রয়মূল্য আর স্টক জানায়।",
+            "stock": "পণ্য স্টকে আছে কিনা জানায়।",
+            "delivery": "ডেলিভারি এলাকা আর চার্জ জানায় (অনলাইন অর্ডার থেকে)।",
+            "order": "কাস্টমারকে অর্ডারের নিয়ম জানায়।",
+            "notice": "পেজ দাম ইনবক্সে পাঠালে comment-এর নিচে যায়।",
+            "handoff": "একবার পাঠানো হয়, তারপর কথোপকথন মানুষের অপেক্ষায় থাকে।"
+        },
+        "active": "চালু",
+        "words": "{lang}-এ শব্দ",
+        "words_hint": "কমা দিয়ে আলাদা করুন। Banglish (dam, koto, pp) বাংলার সাথে।",
+        "answer": "{lang}-এ উত্তর",
+        "placeholders": "{product}, {price}, {stock}, {delivery}, {page} ব্যবহার করতে পারেন।",
+        "save": "সংরক্ষণ"
     },
     "post": {
         "new_title": "নতুন Facebook পোস্ট",

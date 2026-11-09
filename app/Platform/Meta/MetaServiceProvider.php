@@ -20,6 +20,8 @@ class MetaServiceProvider extends ServiceProvider
         RateLimiter::for('meta-app', fn (Request $request) => Limit::perMinute(6)->by('meta-app:'.($request->user()?->getKey() ?? $request->ip())));
         // Meta's callbacks come from Meta's addresses; this only stops floods.
         RateLimiter::for('meta-callback', fn (Request $request) => Limit::perMinute(120)->by('meta-callback:'.$request->ip()));
+        // Webhook events: a busy page sends many; per app, so one flood does not stop the others.
+        RateLimiter::for('meta-webhook', fn (Request $request) => Limit::perMinute(1200)->by('meta-webhook:'.$request->route('app')));
 
         if ($this->app->runningInConsole()) {
             $this->commands([ApplyMetaAppChanges::class]);

@@ -239,9 +239,11 @@
         "callbacks": {
             "redirect_uri": "OAuth redirect URI",
             "deauthorize": "Deauthorize callback URL",
-            "data_deletion": "Data deletion request URL"
+            "data_deletion": "Data deletion request URL",
+            "webhook": "Webhooks → Page: callback URL (fields: feed, messages)",
+            "verify_token": "Webhooks → Page: verify token"
         },
-        "permissions": "Ask Meta (App review) for: pages_show_list, pages_read_engagement, pages_manage_posts.",
+        "permissions": "Ask Meta (App review) for: pages_show_list, pages_read_engagement, pages_manage_posts, pages_manage_metadata, pages_read_user_content, pages_manage_engagement, pages_messaging.",
         "copy": "Copy",
         "copied": "Copied.",
         "copy_failed": "Could not copy. Select the text and copy it."

@@ -30,8 +30,19 @@ export function socialApi(organizationId) {
         },
         removeMedia: (id, mediaId, body) => api(`${base}/posts/${id}/media/${mediaId}`, { method: 'DELETE', body }),
         orderMedia: (id, body) => api(`${base}/posts/${id}/media-order`, { method: 'PUT', body }),
+        switches: (id, body) => api(`${base}/pages/${id}`, { method: 'PATCH', body }),
+        threads: (query = {}) => api(`${base}/inbox`, { query }),
+        thread: (id) => api(`${base}/inbox/${id}`),
+        reply: (id, body) => api(`${base}/inbox/${id}/reply`, { method: 'POST', body }),
+        mark: (id, step, body) => api(`${base}/inbox/${id}/${step}`, { method: 'POST', body }),
+        replies: () => api(`${base}/replies`),
+        saveReply: (intent, body) => api(`${base}/replies/${intent}`, { method: 'PUT', body }),
+        tryReply: (body) => api(`${base}/replies/try`, { method: 'POST', body }),
     };
 }
+
+/** Badge tone per conversation status. */
+export const THREAD_TONES = { open: 'brand', waiting: 'warn', done: 'neutral' };
 
 /** Badge tone per post status (colour plus a dot and the word, never colour alone). */
 export const POST_TONES = {
