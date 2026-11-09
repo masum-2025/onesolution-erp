@@ -10,4 +10,5 @@ return [
     'menu_pages' => 'পেজ',
     'menu_inbox' => 'ইনবক্স',
     'menu_replies' => 'স্বয়ংক্রিয় উত্তর',
+    'menu_reports' => 'রিপোর্ট',
 ];

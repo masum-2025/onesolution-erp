@@ -8,4 +8,5 @@ return [
     'connect' => 'Connect and disconnect Facebook pages, set their switches',
     'inbox' => 'Read and answer Facebook comments and messages',
     'replies' => 'Change the automatic replies',
+    'reports' => 'See Facebook sales reports (conversations, orders, amounts)',
 ];

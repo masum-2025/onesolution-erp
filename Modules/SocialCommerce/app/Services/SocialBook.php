@@ -78,4 +78,10 @@ class SocialBook
     {
         return (string) ($this->settings->values($company)['currency_code'] ?? '');
     }
+
+    /** The company's timezone (days in reports are its own). */
+    public function timezone(Organization $company): string
+    {
+        return (string) (($this->settings->values($company)['timezone'] ?? null) ?: 'UTC');
+    }
 }

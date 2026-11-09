@@ -45,6 +45,7 @@ class SocialCommerceServiceProvider extends ServiceProvider
 
         $by = fn (string $name) => fn (Request $request) => $name.':'.($request->user()?->getKey() ?? $request->ip());
         RateLimiter::for('social-writes', fn (Request $request) => Limit::perMinute(60)->by($by('social-writes')($request)));
+        RateLimiter::for('social-reports', fn (Request $request) => Limit::perMinute(30)->by($by('social-reports')($request)));
         RateLimiter::for('social-uploads', fn (Request $request) => Limit::perMinute(30)->by($by('social-uploads')($request)));
         // Each start asks Meta; the callback comes from browsers coming back.
         RateLimiter::for('social-connect', fn (Request $request) => Limit::perMinute(10)->by($by('social-connect')($request)));

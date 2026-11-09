@@ -263,5 +263,61 @@
         "just_now": "Just now",
         "preview_empty": "Your text appears here.",
         "prices_kept": "Prices kept with the post: {list}"
+    },
+    "reports": {
+        "title": "Facebook sales report",
+        "text": "What your Facebook pages brought in: conversations, who answered, and the orders placed in Messenger.",
+        "period": "Period",
+        "presets": {
+            "week": "Last 7 days",
+            "month30": "Last 30 days",
+            "this_month": "This month",
+            "custom": "Choose days"
+        },
+        "from": "From",
+        "to": "To",
+        "page": "Page",
+        "all_pages": "All pages",
+        "zone": "Days are counted in {zone} time.",
+        "orders_off": "Online orders is off, so only conversations are shown. Turn it on to see Messenger orders here.",
+        "other_currency": "{count} order(s) in another currency are counted but not added to the amounts.",
+        "empty": "Nothing in this period",
+        "empty_text": "No conversation or order came from Facebook in these days. Choose a longer period or another page.",
+        "new_count": "{count} new",
+        "conversion": "{percent}% of conversations ordered",
+        "average": "Average {amount}",
+        "tiles": {
+            "conversations": "Conversations",
+            "orders": "Orders",
+            "amount": "Order value",
+            "delivered": "Delivered",
+            "cancelled": "Cancelled or returned",
+            "paid_online": "Paid online"
+        },
+        "by_day": "By day",
+        "day_counts": "{orders} orders, {conversations} new chats",
+        "by_answer": "Who answered",
+        "received": "{count} customer messages",
+        "answers": {
+            "bot": "Answered by the bot",
+            "person": "Answered by staff",
+            "by_keyword": "Understood by keywords",
+            "by_ai": "Understood by AI",
+            "not_understood": "Not understood"
+        },
+        "by_page": "By page",
+        "by_item": "Best-selling products",
+        "no_items": "No product sold in this period.",
+        "totals": "Totals",
+        "columns": {
+            "part": "Part",
+            "name": "Name",
+            "page": "Page",
+            "conversations": "Conversations",
+            "orders": "Orders",
+            "quantity": "Quantity",
+            "amount": "Amount",
+            "delivered": "Delivered"
+        }
     }
 }

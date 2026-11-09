@@ -43,6 +43,8 @@ return [
         'social_commerce.inbox',
         // Change what the bot understands and answers.
         'social_commerce.replies',
+        // SC-5c: see the sales reports (conversations, Facebook orders and their amounts).
+        'social_commerce.reports',
     ],
     'rules' => [
         // Whether a partner's clients may connect through the house Meta app when the partner has none of its own
@@ -102,6 +104,7 @@ return [
                 ['key' => 'new', 'label' => 'social_commerce::module.menu_new', 'route' => '/social/posts/new', 'permission' => 'social_commerce.compose'],
                 ['key' => 'pages', 'label' => 'social_commerce::module.menu_pages', 'route' => '/social/pages', 'permission' => 'social_commerce.view'],
                 ['key' => 'replies', 'label' => 'social_commerce::module.menu_replies', 'route' => '/social/replies', 'permission' => 'social_commerce.replies'],
+                ['key' => 'reports', 'label' => 'social_commerce::module.menu_reports', 'route' => '/social/reports', 'permission' => 'social_commerce.reports'],
             ],
         ],
     ],
