@@ -3,6 +3,7 @@
 namespace Modules\OnlineOrders\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Platform\Audit\AuditLogger;
 use App\Platform\Identity\Support\PhoneNumber;
 use App\Platform\Rules\RuleContextFactory;
 use App\Platform\Rules\RuleResolver;
@@ -117,6 +118,16 @@ class OrderController extends Controller
         [$found, $company] = $this->managed($organization, $order);
 
         return response()->json(['data' => $this->full($company, $this->orders->revise($company, $found, (int) $request->validated('base_version'), $request->safe()->except('base_version'), $request->user()))]);
+    }
+
+    /** SC-5a: a payment link for the customer (staff copy it into a chat or SMS). */
+    public function payLink(string $organization, string $order): JsonResponse
+    {
+        [$found, $company] = $this->managed($organization, $order);
+        $link = $this->orders->payLink($company, $found->getKey()) ?? throw OnlineOrdersException::noPayLink();
+        app(AuditLogger::class)->record('online_orders.pay_link_made', $found, new: ['number' => $found->number, 'amount_minor' => $link['amount_minor']], actor: request()->user(), organizationId: $company->getKey());
+
+        return response()->json(['data' => $link]);
     }
 
     /** A step: confirm, pack, ship, deliver, cancel or return. */

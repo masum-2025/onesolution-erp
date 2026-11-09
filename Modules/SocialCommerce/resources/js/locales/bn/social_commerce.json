@@ -182,7 +182,9 @@
             "status_confirmed": "খবর: অর্ডার নিশ্চিত",
             "status_shipped": "খবর: অর্ডার পাঠানো হয়েছে",
             "status_delivered": "খবর: অর্ডার পৌঁছেছে",
-            "status_cancelled": "খবর: অর্ডার বাতিল"
+            "status_cancelled": "খবর: অর্ডার বাতিল",
+            "pay_link": "খবর: অর্ডারের পর পেমেন্ট লিংক",
+            "status_paid": "খবর: পেমেন্ট পাওয়া গেছে"
         },
         "about": {
             "confirm": "সারাংশের পর যে ছোট উত্তরগুলো \"হ্যাঁ\" বোঝায়।",
@@ -202,6 +204,8 @@
             "status_shipped": "{number}, {courier}, {tracking}।",
             "status_delivered": "{number}।",
             "status_cancelled": "{number}।",
+            "pay_link": "{amount}, {link}, {hours}।",
+            "status_paid": "{number}, {amount}।",
             "price": "পোস্টের পণ্যের বিক্রয়মূল্য আর স্টক জানায়।",
             "stock": "পণ্য স্টকে আছে কিনা জানায়।",
             "delivery": "ডেলিভারি এলাকা আর চার্জ জানায় (অনলাইন অর্ডার থেকে)।",

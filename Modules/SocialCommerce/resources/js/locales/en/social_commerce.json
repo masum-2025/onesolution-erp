@@ -182,7 +182,9 @@
             "status_confirmed": "News: order confirmed",
             "status_shipped": "News: order sent",
             "status_delivered": "News: order delivered",
-            "status_cancelled": "News: order cancelled"
+            "status_cancelled": "News: order cancelled",
+            "pay_link": "News: payment link after the order",
+            "status_paid": "News: payment received"
         },
         "about": {
             "confirm": "Short answers that mean yes at the summary.",
@@ -202,6 +204,8 @@
             "status_shipped": "{number}, {courier}, {tracking}.",
             "status_delivered": "{number}.",
             "status_cancelled": "{number}.",
+            "pay_link": "{amount}, {link}, {hours}.",
+            "status_paid": "{number}, {amount}.",
             "price": "Answers with the selling price and stock of the post's products.",
             "stock": "Says whether the products are in stock.",
             "delivery": "Lists the delivery areas and charges (from Online orders).",

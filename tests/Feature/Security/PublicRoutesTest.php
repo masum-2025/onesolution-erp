@@ -84,6 +84,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     'GET api/social/facebook/callback',
     // A post's photo (SC-1): only through a short-lived signed link.
     'GET files/social/{organization}/media/{media}',
+    // An online order's payment link (SC-5a): signed (company + order, ends after online_orders.pay_link_hours),
+    // no session, no scripts and a strict CSP, the amount always the order's own; 20 a minute per address.
+    'GET pay/orders/{organization}/{order}', 'POST pay/orders/{organization}/{order}',
     // Health check, CSRF cookie, and the single page app shell.
     'GET up', 'GET sanctum/csrf-cookie', 'GET {path?}',
 ];

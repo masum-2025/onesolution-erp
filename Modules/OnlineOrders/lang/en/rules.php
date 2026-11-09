@@ -26,4 +26,17 @@ return [
         'label' => 'Days to send an order back',
         'description' => 'After delivery. Later, the order can no longer be taken back.',
     ],
+    'online_payment' => [
+        'label' => 'Paid online before sending',
+        'description' => 'What a customer pays through a payment link (needs Online payments and your merchant account).',
+        'options' => [
+            'none' => 'Nothing (no payment link)',
+            'delivery' => 'The delivery charge (the rest on delivery)',
+            'full' => 'The whole order',
+        ],
+    ],
+    'pay_link_hours' => [
+        'label' => 'Payment link works for (hours)',
+        'description' => 'After this, the link no longer opens; a new one can be sent.',
+    ],
 ];

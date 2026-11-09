@@ -31,12 +31,17 @@ class OnlineOrdersServiceProvider extends ServiceProvider
     {
         $root = dirname(__DIR__, 2);
         $this->loadTranslationsFrom($root.'/lang', 'online_orders');
+        $this->loadViewsFrom($root.'/resources/views', 'online_orders');
+
+        // The payment link's page (SC-5a): opened by customers, a few a minute per address.
+        RateLimiter::for('online-orders-pay', fn (Request $request) => Limit::perMinute(20)->by('online-orders-pay:'.$request->ip()));
 
         RateLimiter::for('online-orders-writes', fn (Request $request) => Limit::perMinute(self::WRITES_PER_MINUTE)
             ->by('online-orders-writes:'.($request->user()?->getKey() ?? $request->ip())));
 
         if (! $this->app->routesAreCached()) {
             Route::middleware('api')->prefix('api')->group($root.'/routes/api.php');
+            Route::middleware('web')->group($root.'/routes/web.php');
         }
     }
 }

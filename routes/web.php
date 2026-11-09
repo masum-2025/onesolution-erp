@@ -124,6 +124,6 @@ Route::get('robots.txt', RobotsTxtController::class)
 
 // Every other page path boots the app; its router decides what to show.
 Route::get('/{path?}', AppShellController::class)
-    // files/: modules' signed download links; s/: schools' public websites (both registered after this route).
-    ->where('path', '^(?!api/|session/|sanctum/|up$|build/|storage/|files/|s/).*$')
+    // files/: modules' signed download links; s/: schools' public websites; pay/: payment links (SC-5a) (all registered after this route).
+    ->where('path', '^(?!api/|session/|sanctum/|up$|build/|storage/|files/|s/|pay/).*$')
     ->name('app');

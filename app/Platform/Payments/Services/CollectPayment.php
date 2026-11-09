@@ -4,6 +4,7 @@ namespace App\Platform\Payments\Services;
 
 use App\Models\User;
 use App\Platform\Payments\CallbackUrls;
+use App\Platform\Payments\Contracts\GuestCollectable;
 use App\Platform\Payments\Contracts\PaymentGateway;
 use App\Platform\Payments\Exceptions\PaymentException;
 use App\Platform\Payments\GatewayRegistry;
@@ -15,6 +16,7 @@ use App\Platform\Rules\RuleResolver;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Str;
 
 /**
  * A customer pays a client for one record (Phase 6), into the client's own
@@ -102,6 +104,73 @@ class CollectPayment
             throw $exception;
         }
 
+        $payment->forceFill(['gateway_ref' => $session->reference, 'checkout_url' => $session->redirectUrl])->save();
+
+        return $payment;
+    }
+
+    /**
+     * A customer without a sign-in pays through a signed link the module sent
+     * (SC-5a, GuestCollectable). A payment still open for the record is given
+     * back (one at a time); otherwise a new one. The amount is the module's.
+     */
+    public function startForGuest(Organization $organization, string $kind, string $id): Payment
+    {
+        if (! $this->collectables->usable($kind, $organization)) {
+            throw PaymentException::kindNotAvailable();
+        }
+        $provider = $this->collectables->provider($kind);
+        if (! $provider instanceof GuestCollectable) {
+            throw PaymentException::kindNotAvailable();
+        }
+        $due = $provider->dueForGuest($organization, $id);
+        if ($due === null || $due->amountMinor <= 0) {
+            throw PaymentException::nothingDue();
+        }
+
+        $open = Payment::query()->where('organization_id', $organization->getKey())->where('purpose', Payment::COLLECTION)
+            ->where('subject_type', $kind)->where('subject_id', $id)->whereNull('user_id')->where('status', Payment::PENDING)
+            ->where('amount_minor', $due->amountMinor)->where('currency_code', $due->currency)
+            ->whereNotNull('checkout_url')->where('expires_at', '>', CarbonImmutable::now())->latest('created_at')->first();
+        if ($open !== null) {
+            return $open;
+        }
+
+        $company = $this->accounts->companyOf($organization) ?? throw PaymentException::noMerchantAccount();
+        $account = $this->accounts->collectingAccount($company, $due->currency) ?? throw PaymentException::noMerchantAccount();
+        $gateway = $this->gateways->forAccount($account);
+        if ($gateway === null || ! $gateway->isAvailable() || ! $gateway->supportsCurrency($due->currency)) {
+            throw PaymentException::noMerchantAccount();
+        }
+        $minutes = (int) $this->rules->get('online_payments.payment_expiry_minutes', $this->contexts->forOrganization($organization));
+
+        $payment = new Payment;
+        $payment->forceFill([
+            'organization_id' => $organization->getKey(),
+            'partner_id' => $organization->partner_id,
+            'merchant_account_id' => $account->getKey(),
+            'user_id' => null,
+            'purpose' => Payment::COLLECTION,
+            'subject_type' => $kind,
+            'subject_id' => $id,
+            'gateway' => $account->gateway,
+            'op_id' => 'guest-'.Str::lower((string) Str::ulid()),
+            'currency_code' => $due->currency,
+            'subtotal_minor' => $due->amountMinor,
+            'tax_rate_bp' => 0,
+            'tax_minor' => 0,
+            'amount_minor' => $due->amountMinor,
+            'status' => Payment::PENDING,
+            'expires_at' => CarbonImmutable::now()->addMinutes($minutes),
+        ])->save();
+
+        try {
+            $session = $gateway->start($payment, $provider->guestCustomer($organization, $id), $this->urls($gateway));
+        } catch (PaymentException $exception) {
+            $payment->forceFill(['status' => Payment::FAILED, 'failure_code' => 'gateway_error'])->save();
+
+            throw $exception;
+        }
         $payment->forceFill(['gateway_ref' => $session->reference, 'checkout_url' => $session->redirectUrl])->save();
 
         return $payment;

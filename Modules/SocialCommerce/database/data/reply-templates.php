@@ -96,6 +96,12 @@ return [
     'status_shipped' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার অর্ডার {number} পাঠানো হয়েছে। {courier} {tracking}', 'en' => 'Your order {number} is on its way. {courier} {tracking}']],
     'status_delivered' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার অর্ডার {number} পৌঁছে গেছে। আমাদের সাথে থাকার জন্য ধন্যবাদ!', 'en' => 'Your order {number} has been delivered. Thank you for shopping with us!']],
     'status_cancelled' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'আপনার অর্ডার {number} বাতিল হয়েছে। প্রশ্ন থাকলে এখানে লিখুন।', 'en' => 'Your order {number} was cancelled. Write to us here if you have a question.']],
+    // SC-5a: the payment link right after the order, and thanks once it is paid.
+    'pay_link' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => [
+        'bn' => "অর্ডার পাঠানোর আগে {amount} অনলাইনে দিন ({hours} ঘণ্টার মধ্যে):\n{link}",
+        'en' => "Please pay {amount} online before we send your order (within {hours} hours):\n{link}",
+    ]],
+    'status_paid' => ['keywords' => ['bn' => [], 'en' => []], 'answers' => ['bn' => 'ধন্যবাদ! অর্ডার {number}-এর {amount} পাওয়া গেছে।', 'en' => 'Thank you! We received {amount} for order {number}.']],
     // Public line under a comment when the price went to the customer's inbox.
     'notice' => [
         'keywords' => ['bn' => [], 'en' => []],

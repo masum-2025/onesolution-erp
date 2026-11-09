@@ -5,6 +5,8 @@
 | Business numbers never live here; they are rules (Rules::get('online_orders.*')).
 */
 
+use Modules\OnlineOrders\Payments\OrderCollectable;
+
 $rule = fn (string $key, string $type, mixed $default, array $levels, int $order, string $category, array $extra = []) => [
     'key' => "online_orders.{$key}",
     'type' => $type,
@@ -65,6 +67,11 @@ return [
         $rule('max_discount_percent', 'decimal', '10', $branch, 50, 'selling', ['schema' => ['pattern' => '^\d{1,3}(\.\d{1,2})?$']]),
         // Days after delivery a customer may send an order back.
         $rule('return_days', 'integer', 7, $branch, 60, 'selling', ['country_specific' => true, 'schema' => ['minimum' => 0, 'maximum' => 365]]),
+        // SC-5a: what a customer pays online through a link before the order is sent (needs Online payments
+        // and the company's merchant account): nothing, the delivery charge (the rest cash on delivery), or all of it.
+        $rule('online_payment', 'enum', 'delivery', $branch, 70, 'payment', ['schema' => ['enum' => ['none', 'delivery', 'full']], 'country_specific' => true]),
+        // How long a payment link works (hours).
+        $rule('pay_link_hours', 'integer', 48, $company, 80, 'payment', ['schema' => ['minimum' => 1, 'maximum' => 720]]),
     ],
     'menu' => [
         [
@@ -82,7 +89,9 @@ return [
     ],
     'quick_actions' => [],
     // Other modules (Facebook selling, CRM) listen to these; payloads carry ids and amounts only.
-    'events' => ['online_orders.confirmed', 'online_orders.shipped', 'online_orders.delivered', 'online_orders.cancelled'],
+    'events' => ['online_orders.confirmed', 'online_orders.shipped', 'online_orders.delivered', 'online_orders.cancelled', 'online_orders.paid'],
+    // SC-5a: the customer pays through a signed link (Online payments, the company's merchant account).
+    'payment_collectables' => [OrderCollectable::class],
     // Accounting maps each to an account; cost uses Inventory's keys.
     'ledger_accounts' => [
         'online_orders.receivable' => ['label' => 'online_orders::orders.posting_keys.receivable', 'type' => 'asset'],
@@ -92,6 +101,7 @@ return [
         'online_orders.cash' => ['label' => 'online_orders::orders.posting_keys.cash', 'type' => 'asset'],
         'online_orders.mobile' => ['label' => 'online_orders::orders.posting_keys.mobile', 'type' => 'asset'],
         'online_orders.bank' => ['label' => 'online_orders::orders.posting_keys.bank', 'type' => 'asset'],
+        'online_orders.online' => ['label' => 'online_orders::orders.posting_keys.online', 'type' => 'asset'],
     ],
     'is_core' => false,
     'requires_consent' => false,

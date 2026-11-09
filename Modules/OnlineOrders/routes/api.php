@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:online_ord
             Route::post('orders', [OrderController::class, 'store']);
             Route::patch('orders/{order}', [OrderController::class, 'update']);
             Route::post('orders/{order}/payments', [OrderController::class, 'pay']);
+            Route::post('orders/{order}/pay-link', [OrderController::class, 'payLink']);
             Route::post('orders/{order}/{step}', [OrderController::class, 'step'])->whereIn('step', ['confirm', 'pack', 'ship', 'deliver', 'cancel', 'return']);
         });
     });
