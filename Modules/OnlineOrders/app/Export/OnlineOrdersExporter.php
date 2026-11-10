@@ -6,10 +6,10 @@ use App\Platform\DataExport\Contracts\ExportsModuleData;
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Scopes\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
+use Modules\OnlineOrders\Models\CourierPayout;
 use Modules\OnlineOrders\Models\Order;
 use Modules\OnlineOrders\Models\OrderEvent;
 use Modules\OnlineOrders\Models\OrderLine;
-use Modules\OnlineOrders\Models\CourierPayout;
 use Modules\OnlineOrders\Models\OrderPayment;
 
 /** Online orders in the client's data export: orders with their lines, payments and history. */
@@ -30,6 +30,7 @@ class OnlineOrdersExporter implements ExportsModuleData
                 'tax_minor' => $row->tax_minor, 'delivery_minor' => $row->delivery_minor, 'total_minor' => $row->total_minor, 'paid_minor' => $row->paid_minor,
                 'refunded_minor' => $row->refunded_minor, 'cost_minor' => $row->cost_minor, 'currency_code' => $row->currency_code, 'created_at' => $row->created_at?->toIso8601String(),
                 'delivered_at' => $row->delivered_at?->toIso8601String(), 'closed_at' => $row->closed_at?->toIso8601String(),
+                'courier_returning_at' => $row->courier_returning_at?->toIso8601String(), 'received_back_at' => $row->received_back_at?->toIso8601String(),
             ]),
             'order_lines' => $this->rows(OrderLine::class, $organization, $organizationIds, fn (OrderLine $row) => [
                 'order_id' => $row->order_id, 'line_no' => $row->line_no, 'item_id' => $row->item_id, 'sku' => $row->sku, 'name' => json_encode($row->texts('name'), JSON_UNESCAPED_UNICODE),

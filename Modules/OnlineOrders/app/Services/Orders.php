@@ -14,6 +14,7 @@ use App\Platform\Support\LocaleResolver;
 use App\Platform\Support\MoneyText;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -28,13 +29,13 @@ use Modules\OnlineOrders\Events\OrderConfirmed;
 use Modules\OnlineOrders\Events\OrderDelivered;
 use Modules\OnlineOrders\Events\OrderPaid;
 use Modules\OnlineOrders\Events\OrderShipped;
-use Modules\OnlineOrders\Payments\OrderCollectable;
 use Modules\OnlineOrders\Exceptions\OnlineOrdersException;
 use Modules\OnlineOrders\Models\Order;
 use Modules\OnlineOrders\Models\OrderEvent;
 use Modules\OnlineOrders\Models\OrderLine;
 use Modules\OnlineOrders\Models\OrderPayment;
 use Modules\OnlineOrders\Models\Sequence;
+use Modules\OnlineOrders\Payments\OrderCollectable;
 
 /**
  * Online orders, the public service other modules (Facebook selling, the
@@ -214,7 +215,16 @@ class Orders
         $row = $this->book->transaction($company, function () use ($company, $orderId, $status, $note, $actor, &$changed) {
             $row = $this->book->query(Order::class, $company)->whereKey($orderId)->lockForUpdate()->firstOrFail();
             $changed = $row->courier_status !== $status;
-            $row->forceFill(['courier_status' => $status, 'courier_checked_at' => CarbonImmutable::now(), ...($changed ? ['version' => $row->version + 1] : [])])->save();
+            $now = CarbonImmutable::now();
+            // SC-7: "cancelled" on a parcel out for delivery: it is coming back; a later "delivered" clears that.
+            $returning = $row->courier_returning_at;
+            if ($changed && $status === CourierStatus::CANCELLED && $row->status === Order::SHIPPED && $returning === null
+                && (bool) $this->rules->get('online_orders.courier_cancel_means_return', $this->contexts->forOrganization(Organization::query()->findOrFail($row->unit_id)))) {
+                $returning = $now;
+            } elseif ($changed && $status === CourierStatus::DELIVERED) {
+                $returning = null;
+            }
+            $row->forceFill(['courier_status' => $status, 'courier_checked_at' => $now, 'courier_returning_at' => $returning, ...($changed ? ['version' => $row->version + 1] : [])])->save();
             if ($changed) {
                 $words = __("online_orders::orders.courier_statuses.{$status}", [], $this->companyLocale($company));
                 $this->history($company, $row, $row->status, $row->status, Str::limit($note === null ? $words : "{$words}: {$note}", 300), $actor);
@@ -482,6 +492,71 @@ class Orders
         OrderCancelled::dispatch($company->getKey(), $cancelled->getKey(), $cancelled->channel, $cancelled->channel_ref, Order::CANCELLED);
 
         return $cancelled;
+    }
+
+    /**
+     * SC-7: the parcel the courier could not deliver is back in the warehouse
+     * (online_orders.receive_returns): the goods go back into stock at what
+     * they left at and the order is cancelled. Money the customer paid ahead
+     * is given back, less the delivery charge when rule
+     * online_orders.keep_delivery_on_return (the parcel did travel); what is
+     * kept is the delivery income.
+     *
+     * @param  array{note?: string|null, refund_method?: string|null}  $data
+     */
+    public function receiveBack(Organization $company, Order $order, int $baseVersion, array $data, User $actor): Order
+    {
+        if ($order->status !== Order::SHIPPED || $order->courier_returning_at === null) {
+            throw OnlineOrdersException::notComingBack();
+        }
+        $keep = (bool) $this->rules->get('online_orders.keep_delivery_on_return', $this->contexts->forOrganization(Organization::query()->findOrFail($order->unit_id)))
+            ? min(max(0, $order->heldMinor()), $order->delivery_minor) : 0;
+        $refund = $order->heldMinor() - $keep;
+        if ($refund > 0 && empty($data['refund_method'])) {
+            throw OnlineOrdersException::refundMethodMissing($this->shown($order, $refund));
+        }
+        $note = trim((string) ($data['note'] ?? ''));
+        $reason = Str::limit(__('online_orders::orders.courier_returned').($note === '' ? '' : ": {$note}"), 300);
+        $cancelled = $this->change($company, $order, $baseVersion, function (Order $row) use ($company, $data, $actor, $keep, $refund, $reason) {
+            if ($row->status !== Order::SHIPPED || $row->courier_returning_at === null) {
+                throw OnlineOrdersException::notComingBack();
+            }
+            $now = CarbonImmutable::now();
+            $this->stockBack($company, $row, $actor, 'order_cancelled');
+            if ($keep > 0) {
+                $this->postings->post($company, "online-order-courier-return-{$row->getKey()}", $now->startOfDay(), __('online_orders::orders.narration.courier_return', ['number' => $row->number]),
+                    'order_courier_return', $row->getKey(), $row->currency_code, [
+                        LedgerLine::debit('online_orders.receivable', $keep, $row->unit_id),
+                        LedgerLine::credit('online_orders.delivery_income', $keep, $row->unit_id),
+                    ]);
+            }
+            if ($refund > 0) {
+                $this->money($company, $row, 'refund', $data['refund_method'], $refund, null, "online-order-refund-{$row->getKey()}", $actor);
+                $row->refunded_minor += $refund;
+            }
+            $this->move($company, $row, Order::CANCELLED, $actor, ['cancel_reason' => $reason, 'closed_at' => $now, 'received_back_at' => $now], $reason);
+        });
+        OrderCancelled::dispatch($company->getKey(), $cancelled->getKey(), $cancelled->channel, $cancelled->channel_ref, Order::CANCELLED);
+
+        return $cancelled;
+    }
+
+    /**
+     * Parcels the courier is bringing back (shipped, courier said "cancelled"), oldest first, of these units.
+     *
+     * @param  list<string>  $unitIds
+     * @return Collection<int, Order>
+     */
+    public function comingBack(Organization $company, array $unitIds, int $limit = 300): Collection
+    {
+        return $this->book->query(Order::class, $company)->where('status', Order::SHIPPED)->whereNotNull('courier_returning_at')
+            ->whereIn('unit_id', $unitIds)->orderBy('courier_returning_at')->orderBy('id')->limit($limit)->get();
+    }
+
+    /** Days a parcel may be on its way back before it is late (rule online_orders.return_overdue_days at its branch). */
+    public function overdueDays(string $unitId): int
+    {
+        return (int) $this->rules->get('online_orders.return_overdue_days', $this->contexts->forOrganization(Organization::query()->findOrFail($unitId)));
     }
 
     /**

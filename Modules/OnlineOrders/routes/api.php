@@ -5,6 +5,7 @@ use Modules\OnlineOrders\Http\Controllers\CourierController;
 use Modules\OnlineOrders\Http\Controllers\CourierPayoutController;
 use Modules\OnlineOrders\Http\Controllers\CourierWebhookController;
 use Modules\OnlineOrders\Http\Controllers\OrderController;
+use Modules\OnlineOrders\Http\Controllers\ReturnController;
 
 /*
 | Online orders API (loaded by OnlineOrdersServiceProvider under /api, group
@@ -25,6 +26,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:online_ord
         // SC-6: what couriers owe and their payouts (online_orders.courier_payouts).
         Route::get('courier-payouts', [CourierPayoutController::class, 'index']);
         Route::get('courier-payouts/{courier}', [CourierPayoutController::class, 'show']);
+        // SC-7: parcels the courier is bringing back (online_orders.receive_returns).
+        Route::get('returns', [ReturnController::class, 'index']);
 
         Route::middleware('throttle:online-orders-writes')->group(function () {
             Route::post('orders', [OrderController::class, 'store']);
@@ -33,6 +36,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:online_ord
             Route::post('orders/{order}/pay-link', [OrderController::class, 'payLink']);
             Route::post('orders/{order}/book', [OrderController::class, 'book']);
             Route::post('orders/{order}/courier-status', [OrderController::class, 'courierStatus']);
+            Route::post('orders/{order}/receive-back', [ReturnController::class, 'receive']);
             Route::post('orders/{order}/{step}', [OrderController::class, 'step'])->whereIn('step', ['confirm', 'pack', 'ship', 'deliver', 'cancel', 'return']);
             Route::post('couriers', [CourierController::class, 'store']);
             Route::patch('couriers/{courier}', [CourierController::class, 'update']);

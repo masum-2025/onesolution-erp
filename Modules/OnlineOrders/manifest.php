@@ -5,6 +5,7 @@
 | Business numbers never live here; they are rules (Rules::get('online_orders.*')).
 */
 
+use Modules\OnlineOrders\Dashboard\ReturnsAttention;
 use Modules\OnlineOrders\Payments\OrderCollectable;
 
 $rule = fn (string $key, string $type, mixed $default, array $levels, int $order, string $category, array $extra = []) => [
@@ -42,6 +43,8 @@ return [
         'online_orders.couriers',
         // SC-6: see what each courier owes (cash collected at the door) and record its payouts.
         'online_orders.courier_payouts',
+        // SC-7: see the parcels a courier is bringing back and take them back into the warehouse.
+        'online_orders.receive_returns',
     ],
     'rules' => [
         // Order numbers: the prefix, the year and a running number (OO-2026-000001).
@@ -82,6 +85,12 @@ return [
         $rule('courier_marks_delivered', 'boolean', true, $branch, 100, 'delivery'),
         // SC-6: the courier's "delivered" records what the customer still owed as paid to the courier (settled by a payout).
         $rule('courier_collects_cod', 'boolean', true, $branch, 110, 'delivery'),
+        // SC-7: the courier's "cancelled" on a parcel out for delivery means it is coming back (off: staff cancel it by hand).
+        $rule('courier_cancel_means_return', 'boolean', true, $branch, 120, 'delivery'),
+        // Days a parcel may be on its way back before it shows as late.
+        $rule('return_overdue_days', 'integer', 7, $branch, 130, 'delivery', ['schema' => ['minimum' => 1, 'maximum' => 60]]),
+        // A parcel that came back keeps the delivery charge the customer paid ahead (the rest is given back).
+        $rule('keep_delivery_on_return', 'boolean', true, $branch, 140, 'delivery', ['country_specific' => true]),
     ],
     'menu' => [
         [
@@ -96,10 +105,13 @@ return [
                 ['key' => 'new', 'label' => 'online_orders::module.menu_new', 'route' => '/online-orders/new', 'permission' => 'online_orders.manage'],
                 ['key' => 'couriers', 'label' => 'online_orders::module.menu_couriers', 'route' => '/online-orders/couriers', 'permission' => 'online_orders.couriers'],
                 ['key' => 'courier_payouts', 'label' => 'online_orders::module.menu_courier_payouts', 'route' => '/online-orders/courier-payouts', 'permission' => 'online_orders.courier_payouts'],
+                ['key' => 'returns', 'label' => 'online_orders::module.menu_returns', 'route' => '/online-orders/returns', 'permission' => 'online_orders.receive_returns'],
             ],
         ],
     ],
     'quick_actions' => [],
+    // SC-7: parcels coming back, in the bell.
+    'attention' => [ReturnsAttention::class],
     // Other modules (Facebook selling, CRM) listen to these; payloads carry ids and amounts only.
     'events' => ['online_orders.confirmed', 'online_orders.shipped', 'online_orders.delivered', 'online_orders.cancelled', 'online_orders.paid'],
     // SC-5a: the customer pays through a signed link (Online payments, the company's merchant account).

@@ -9,4 +9,5 @@ return [
     'menu_new' => 'New order',
     'menu_couriers' => 'Couriers',
     'menu_courier_payouts' => 'Courier payouts',
+    'menu_returns' => 'Returning parcels',
 ];

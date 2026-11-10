@@ -28,6 +28,9 @@ export function onlineOrdersApi(organizationId) {
         courierPayouts: () => api(`${base}/courier-payouts`),
         courierPayout: (id) => api(`${base}/courier-payouts/${id}`),
         recordPayout: (id, body) => api(`${base}/courier-payouts/${id}`, { method: 'POST', body }),
+        // SC-7: parcels coming back from the courier.
+        returns: () => api(`${base}/returns`),
+        receiveBack: (id, body) => api(`${base}/orders/${id}/receive-back`, { method: 'POST', body }),
     };
 }
 

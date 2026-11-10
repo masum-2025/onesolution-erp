@@ -4005,6 +4005,31 @@ never reach logs, errors or the browser).
 - **Future**: Pathao, RedX, eCourier are each a new `CourierDriver` and an entry in
   `CourierDrivers` and the rule's list; nothing else changes. A new country or partner needs no code.
 
+### SC-7: returning parcels (the courier could not deliver)
+
+- **Who**: store or packing staff at a company or branch with the new permission
+  `online_orders.receive_returns`. Online orders module, any sector, any plan.
+- **Flow**: when the courier says "cancelled" for a parcel already out for delivery (status
+  shipped), the order gets `courier_returning_at` (rule `online_orders.courier_cancel_means_return`,
+  branch level, default on). It shows on **Online orders → Returning parcels**
+  (`/online-orders/returns`) and in the bell (`online_orders.returning`; warns once a parcel is
+  later than `online_orders.return_overdue_days`, default 7). A later "delivered" clears the mark.
+- **Received back** (`POST …/online-orders/orders/{order}/receive-back` with `base_version`, optional
+  `note`, `refund_method`): goods go back into stock at what they left at, the order is cancelled
+  with `received_back_at`, audit `online_orders.order_cancelled`, event `online_orders.cancelled`.
+  Money paid ahead is given back, less the delivery charge when rule
+  `online_orders.keep_delivery_on_return` (default on): the kept part is posted
+  receivable → delivery income. Only a shipped order that is coming back can be received (409).
+- **Courier payouts** cards show each account's return rate over the last 30 days. The courier's
+  return charge is part of the "courier charge" written on its payout (SC-6).
+- **API**: `GET …/online-orders/returns` (oldest first, with goods, days on the way, late flag).
+- **Tests**: `tests/Feature/OnlineOrders/ParcelReturnTest.php`.
+- **Not yet**: damaged goods are not split out (take them back, then write them off with an
+  inventory adjustment). A Messenger customer gets the usual "order cancelled" message (SC-3
+  listener) when the parcel is received back; there is no separate "your parcel came back" text.
+- **Future**: another courier only maps its own "cancelled" status in its driver; a new country or
+  partner changes rules, not code.
+
 ### SC-6: courier payouts (cash on delivery settled)
 
 - **Collected**: when a courier says "delivered" (webhook or refresh) for a booked order, what the

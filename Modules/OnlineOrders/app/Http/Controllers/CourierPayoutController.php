@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Platform\Tenancy\Http\Controllers\Api\Concerns\FindsVisibleOrganizations;
 use App\Platform\Tenancy\Models\Organization;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Modules\OnlineOrders\Http\Requests\CourierPayoutRequest;
 use Modules\OnlineOrders\Models\Courier;
 use Modules\OnlineOrders\Models\CourierPayout;
+use Modules\OnlineOrders\Models\Order;
 use Modules\OnlineOrders\Services\CourierPayouts;
 use Modules\OnlineOrders\Services\Couriers;
 use Modules\OnlineOrders\Services\OrderBook;
@@ -39,6 +41,7 @@ class CourierPayoutController extends Controller
                 'id' => $courier->getKey(), 'name' => $courier->name, 'driver' => $courier->driver, 'is_active' => $courier->is_active,
                 'owed' => $owed->groupBy('currency')->map(fn ($rows, $currency) => ['currency' => $currency, 'amount_minor' => (int) $rows->sum('amount_minor'), 'count' => $rows->count()])->values()->all(),
                 'last_payout' => $last === null ? null : $this->shown($last),
+                'returns' => $this->returns($company, $courier),
             ];
         })->values()->all()]);
     }
@@ -76,6 +79,19 @@ class CourierPayoutController extends Controller
         Gate::authorize('online_orders.courier_payouts', $company);
 
         return $company;
+    }
+
+    /**
+     * SC-7: of the parcels sent with this account in the last 30 days, how many came (or are coming) back.
+     *
+     * @return array{days: int, sent: int, returned: int}
+     */
+    private function returns(Organization $company, Courier $courier): array
+    {
+        $sent = $this->book->query(Order::class, $company)->where('courier_id', $courier->getKey())->where('shipped_at', '>=', CarbonImmutable::now()->subDays(30))
+            ->get(['id', 'courier_returning_at', 'received_back_at']);
+
+        return ['days' => 30, 'sent' => $sent->count(), 'returned' => $sent->filter(fn (Order $order) => $order->courier_returning_at !== null || $order->received_back_at !== null)->count()];
     }
 
     /** @return array<string, mixed> */
