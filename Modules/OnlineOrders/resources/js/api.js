@@ -24,6 +24,10 @@ export function onlineOrdersApi(organizationId) {
         couriers: () => api(`${base}/couriers`),
         addCourier: (body) => api(`${base}/couriers`, { method: 'POST', body }),
         changeCourier: (id, body) => api(`${base}/couriers/${id}`, { method: 'PATCH', body }),
+        // SC-6: what couriers owe and the payouts they send.
+        courierPayouts: () => api(`${base}/courier-payouts`),
+        courierPayout: (id) => api(`${base}/courier-payouts/${id}`),
+        recordPayout: (id, body) => api(`${base}/courier-payouts/${id}`, { method: 'POST', body }),
     };
 }
 

@@ -8,4 +8,5 @@ return [
     'menu_orders' => 'Orders',
     'menu_new' => 'New order',
     'menu_couriers' => 'Couriers',
+    'menu_courier_payouts' => 'Courier payouts',
 ];

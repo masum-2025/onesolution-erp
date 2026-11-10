@@ -4005,6 +4005,25 @@ never reach logs, errors or the browser).
 - **Future**: Pathao, RedX, eCourier are each a new `CourierDriver` and an entry in
   `CourierDrivers` and the rule's list; nothing else changes. A new country or partner needs no code.
 
+### SC-6: courier payouts (cash on delivery settled)
+
+- **Collected**: when a courier says "delivered" (webhook or refresh) for a booked order, what the
+  customer still owed is recorded as a payment by `courier` (op id `courier-cod-{order}`, once) into
+  the posting key `online_orders.courier_clearing`. Rule `online_orders.courier_collects_cod`
+  (branch, default on); off: staff record payments by hand.
+- **Payouts** (`online_orders.courier_payouts` at the company; menu Online orders → Courier payouts,
+  `/online-orders/courier-payouts`): `GET …/online-orders/courier-payouts` (each account with what
+  it owes per currency), `GET …/courier-payouts/{courier}` (owed payments, oldest first, and past
+  payouts), `POST …/courier-payouts/{courier}` `{op_id, payment_ids[], method bank|mobile|cash,
+  received_minor, fee_minor?, paid_on, reference?, reason?}`. The payments must be this account's,
+  unsettled, one currency; collected − received − charge ≠ 0 needs a reason. Books: money account
+  debit, `online_orders.courier_fees` debit, `online_orders.courier_difference` (short: debit; over:
+  credit), clearing credit. Written once (`online_order_courier_payouts`, payments get
+  `courier_payout_id`), audited (`online_orders.courier_payout_recorded`), in the data export.
+- **General chart**: clearing 1140, charges 5600, differences 5900 (companies may map them elsewhere).
+- **Later**: read Steadfast's payout list from its API to tick the orders by itself (needs real keys);
+  a courier's returned parcel after its "delivered" is still corrected by hand.
+
 ### SC-5c: Facebook sales report
 
 - **Who**: `social_commerce.reports` at the company (it shows amounts). Menu Facebook → Reports

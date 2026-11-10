@@ -16,7 +16,7 @@ use Modules\Accounting\Services\Ledger;
 class OrderPostings
 {
     /** Where each payment method goes in the books. */
-    public const METHOD_KEYS = ['cash' => 'online_orders.cash', 'mobile' => 'online_orders.mobile', 'bank' => 'online_orders.bank', 'online' => 'online_orders.online'];
+    public const METHOD_KEYS = ['cash' => 'online_orders.cash', 'mobile' => 'online_orders.mobile', 'bank' => 'online_orders.bank', 'online' => 'online_orders.online', 'courier' => 'online_orders.courier_clearing'];
 
     public function __construct(private ModuleResolver $modules) {}
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\OnlineOrders\Http\Controllers\CourierController;
+use Modules\OnlineOrders\Http\Controllers\CourierPayoutController;
 use Modules\OnlineOrders\Http\Controllers\CourierWebhookController;
 use Modules\OnlineOrders\Http\Controllers\OrderController;
 
@@ -21,6 +22,9 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:online_ord
         Route::get('orders/{order}', [OrderController::class, 'show']);
         // SC-5b: the company's courier accounts (online_orders.couriers).
         Route::get('couriers', [CourierController::class, 'index']);
+        // SC-6: what couriers owe and their payouts (online_orders.courier_payouts).
+        Route::get('courier-payouts', [CourierPayoutController::class, 'index']);
+        Route::get('courier-payouts/{courier}', [CourierPayoutController::class, 'show']);
 
         Route::middleware('throttle:online-orders-writes')->group(function () {
             Route::post('orders', [OrderController::class, 'store']);
@@ -32,6 +36,7 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:online_ord
             Route::post('orders/{order}/{step}', [OrderController::class, 'step'])->whereIn('step', ['confirm', 'pack', 'ship', 'deliver', 'cancel', 'return']);
             Route::post('couriers', [CourierController::class, 'store']);
             Route::patch('couriers/{courier}', [CourierController::class, 'update']);
+            Route::post('courier-payouts/{courier}', [CourierPayoutController::class, 'store']);
         });
     });
 

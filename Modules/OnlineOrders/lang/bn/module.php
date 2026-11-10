@@ -8,4 +8,5 @@ return [
     'menu_orders' => 'অর্ডার',
     'menu_new' => 'নতুন অর্ডার',
     'menu_couriers' => 'কুরিয়ার',
+    'menu_courier_payouts' => 'কুরিয়ারের টাকা',
 ];
