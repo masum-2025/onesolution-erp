@@ -30,4 +30,17 @@ class Charges implements PatientCharges
 
         return ['bill_id' => $line->bill_id, 'line_id' => $line->getKey()];
     }
+
+    public function services(Organization $company): array
+    {
+        return $this->store->query(Service::class, $company)->where('is_active', true)->orderBy('code')->get()
+            ->mapWithKeys(fn (Service $service) => [$service->code => ['name' => $service->textIn('name'), 'price_minor' => $service->price_minor]])->all();
+    }
+
+    public function dueOn(Organization $company, string $billId): ?int
+    {
+        $bill = $this->store->query(Bill::class, $company)->whereKey($billId)->first();
+
+        return $bill === null || $bill->status === Bill::VOID ? null : $bill->dueMinor();
+    }
 }

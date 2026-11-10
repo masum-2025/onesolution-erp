@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/diagnostics",
+    "description": "Laboratory and imaging: tests with normal ranges, orders billed to the patient, barcoded samples, results with flags, verification and signed reports.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Diagnostics\\": "app/"
+        }
+    }
+}

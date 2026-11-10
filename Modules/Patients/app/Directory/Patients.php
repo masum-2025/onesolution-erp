@@ -78,6 +78,6 @@ class Patients implements PatientDirectory
 
     private function record(Organization $company, Patient $patient): PatientRecord
     {
-        return new PatientRecord($patient->getKey(), $patient->mrn, $patient->name, $patient->sex, $patient->ageOn($this->store->today($company)), $patient->mobile, $patient->unit_id);
+        return new PatientRecord($patient->getKey(), $patient->mrn, $patient->name, $patient->sex, $patient->ageOn($this->store->today($company)), $patient->mobile, $patient->unit_id, $patient->date_of_birth?->toDateString());
     }
 }

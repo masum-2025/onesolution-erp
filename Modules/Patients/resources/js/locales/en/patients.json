@@ -73,7 +73,8 @@
         "age_estimated": "about {count} yrs",
         "history": "History",
         "history_empty": "Nothing here yet. Visits, reports and bills show up as they happen.",
-        "bills": "Bills"
+        "bills": "Bills",
+        "lab": "Lab orders"
     },
     "merge": {
         "title": "Merge duplicate patients",
@@ -110,7 +111,8 @@
         "text": "Your record at {org}.",
         "empty": "No patient record linked yet",
         "empty_text": "Ask the reception to link your patient record to this account.",
-        "bills": "My bills"
+        "bills": "My bills",
+        "lab": "My lab reports"
     },
     "guide": {
         "find": {

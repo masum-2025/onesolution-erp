@@ -16,6 +16,8 @@ final readonly class PatientRecord
         public ?int $age,
         public ?string $mobile,
         public string $unitId,
+        /** "YYYY-MM-DD" (estimated when only the age was known), or null. */
+        public ?string $dateOfBirth = null,
     ) {}
 
     /** "P000123 · Rahim Uddin" */

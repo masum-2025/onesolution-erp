@@ -73,7 +73,8 @@
         "age_estimated": "আনুমানিক {count} বছর",
         "history": "ইতিহাস",
         "history_empty": "এখনো কিছু নেই। ভিজিট, রিপোর্ট আর বিল হলে এখানে দেখাবে।",
-        "bills": "বিল"
+        "bills": "বিল",
+        "lab": "ল্যাব order"
     },
     "merge": {
         "title": "একই রোগী একত্র করা",
@@ -110,7 +111,8 @@
         "text": "{org}-এ আপনার record।",
         "empty": "এখনো কোনো রোগী record যুক্ত হয়নি",
         "empty_text": "Reception-কে বলুন আপনার রোগী record এই account-এ যুক্ত করে দিতে।",
-        "bills": "আমার বিল"
+        "bills": "আমার বিল",
+        "lab": "আমার ল্যাব রিপোর্ট"
     },
     "guide": {
         "find": {
