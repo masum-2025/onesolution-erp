@@ -5779,3 +5779,39 @@ was merged into.
   `rules:sync`, `access:sync`, `addons:sync-prices`.
 - A new country or partner needs no code: ID rules, numbering, duplicate check and privacy are rules; mobile
   formats come from the country data files; texts are translations. A new sector turns the module on in its package.
+
+## Patient billing (module `patient_billing`, H-1b)
+
+Bills for patients (needs `patients`): services and prices, bills, payments and advances, discounts with
+approval, refunds as separate records, corporate and panel clients, and each cashier's cash day. Other
+departments add charges through `Modules\PatientBilling\Contracts\PatientCharges::add()` (one line per source
+record, on the patient's open bill at the unit).
+
+- Tables `patient_billing_services` (price, VAT code), `_panels` (discount %, credit limit), `_bills` (open → final
+  or void; totals kept on the bill), `_bill_lines` (price of the day; voided, never deleted), `_payments`
+  (payment / advance / refund; append-only, `op_id`), `_discount_requests` (maker-checker), `_cash_days`,
+  `_sequences` (B…, MR…, RF… numbers).
+- API `/api/organizations/{organization}/patient-billing/…`: services and panels (generated lists), `bills`
+  (`status=open|due|final|void`, `patient`, `q` = number), `bills/{id}` (+ `/lines`, `/panel`, `/discount`,
+  `/finalize`, `/void`, `/refund`, `/receipt`), `payments`, `patients?q=`, `approvals`,
+  `discount-requests/{id}/decide`, `cash-days` (+ `/open`, `/{id}/close`, `/{id}/review`). Portal:
+  `GET /api/portal/patient-billing/bills` (final bills of the linked patients).
+- Permissions `patient_billing.view`, `.collect` (bills, payments, own cash day), `.approve` (discounts, refunds),
+  `.manage` (prices, panels), `.close_day` (review other cashiers' days).
+- Rules `discount_approval_above_percent` (10, sensitive), `allow_due` (true), `prices_include_tax` (true, country
+  specific), `require_cash_day` (true), `cash_variance_allowed` (0, minor units), `number_prefixes`.
+- Books (only with Accounting on and set up), posting keys `patient_billing.cash|card|mobile|receivable|
+  panel_receivable|advance|income|tax_output|refunds|cash_variance` (defaults in the general chart):
+  finalize → receivable (patient share) + panel receivable / income + VAT; payment → method / receivable (or
+  panel receivable once a panel bill is final); advance → method / advance; refund → refunds / method; cash
+  difference at closing.
+- Events `patient_billing.bill_finalized`, `.payment_received`, `.refund_made`, `.day_closed` (ids and amounts).
+  A final bill adds a line to the patient's history (no amount).
+- Screens: bills (new bill, advance), bill (services, panel, discount, payment, finalize, void, refund), printable
+  bill and money receipt, discount approvals and refunds, close cash, portal bills; guides bn/en.
+- Not yet: a public signed receipt link for patients (the portal shows bills), online payment links, panel
+  settlement (collecting from the panel in Accounting), giving back an unused advance without a bill.
+- After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`;
+  companies whose books already exist need `accounting:map-postings` for the new keys.
+- A new country or partner needs no code: VAT, dues, discount limit, cash rules and numbers are rules; prices
+  and panels are data; texts are translations.

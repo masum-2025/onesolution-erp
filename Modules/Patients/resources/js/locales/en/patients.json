@@ -72,7 +72,8 @@
         "views_text": "Every time someone opened this patient's record, history or card.",
         "age_estimated": "about {count} yrs",
         "history": "History",
-        "history_empty": "Nothing here yet. Visits, reports and bills show up as they happen."
+        "history_empty": "Nothing here yet. Visits, reports and bills show up as they happen.",
+        "bills": "Bills"
     },
     "merge": {
         "title": "Merge duplicate patients",
@@ -108,7 +109,8 @@
         "title": "My health record",
         "text": "Your record at {org}.",
         "empty": "No patient record linked yet",
-        "empty_text": "Ask the reception to link your patient record to this account."
+        "empty_text": "Ask the reception to link your patient record to this account.",
+        "bills": "My bills"
     },
     "guide": {
         "find": {

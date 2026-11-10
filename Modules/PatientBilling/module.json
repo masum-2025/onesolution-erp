@@ -1,0 +1,11 @@
+{
+    "name": "PatientBilling",
+    "alias": "patient_billing",
+    "description": "Bills for patients: services and prices, payments and advances, discounts with approval, refunds, corporate and panel clients, and closing the cash each day.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\PatientBilling\\Providers\\PatientBillingServiceProvider"
+    ],
+    "files": []
+}
