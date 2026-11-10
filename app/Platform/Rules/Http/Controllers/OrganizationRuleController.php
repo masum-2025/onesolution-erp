@@ -54,9 +54,29 @@ class OrganizationRuleController extends Controller
     {
         [$organization, $target] = $this->load($organization, 'view');
         $moduleFilter = $request->query('module');
+        $summary = $request->validate(['summary' => ['sometimes', 'boolean']])['summary'] ?? false;
+        $ownRows = $this->ownRows($target)->groupBy('rule_key');
+
+        // PERF-1: the home page shows only how many rules are set here (own value or limit in force now),
+        // a few bytes instead of every rule with its resolution.
+        if ((bool) $summary) {
+            $now = now();
+            $total = 0;
+            $own = 0;
+            foreach ($this->catalog->all() as $key => $rule) {
+                if (is_string($moduleFilter) && $moduleFilter !== '' && $rule->moduleKey !== $moduleFilter) {
+                    continue;
+                }
+                $total++;
+                if ($ownRows->get($key, new Collection)->contains(fn (RuleValue $row) => $row->isEffectiveAt($now))) {
+                    $own++;
+                }
+            }
+
+            return response()->json(['data' => ['own_count' => $own, 'total' => $total]]);
+        }
 
         $resolved = $this->resolver->all($target->context);
-        $ownRows = $this->ownRows($target)->groupBy('rule_key');
         $modules = $this->modules->resolveAll($organization);
 
         $grouped = [];
