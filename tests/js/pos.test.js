@@ -2,7 +2,7 @@ import fs from 'fs';
 import { describe, expect, it } from 'vitest';
 import { addToCart, amountToMinor, discountShare, formatQuantity, holdCart, MAX_HELD, percentToBp, priceCart, quantityToMilli, quickCash, readHeld, reportRange, resumeCart, saleBody, settle, shiftTone, splitTax } from '../../Modules/Pos/resources/js/lib.js';
 import { milliForCsv } from '../../resources/js/lib/csv.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Pos/resources/js/locales/en/pos.json';
 import bn from '../../Modules/Pos/resources/js/locales/bn/pos.json';
 

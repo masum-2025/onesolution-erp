@@ -7,6 +7,7 @@ use App\Platform\Access\AccessResolver;
 use App\Platform\Access\Services\RoleService;
 use App\Platform\Modules\ModuleRegistry;
 use App\Platform\Modules\ModuleResolver;
+use App\Platform\Modules\PageAccess;
 use App\Platform\Tenancy\Context\CurrentContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Lang;
@@ -28,8 +29,7 @@ class MenuController extends Controller
         $resolved = $resolver->resolveAll($context->organization());
         $held = $access->held();
         $sector = $roles->sectorOf($context->organization());
-        $allows = fn (array $entry) => (! isset($entry['permission']) || in_array($entry['permission'], $held, true))
-            && (! isset($entry['sectors']) || ($sector !== null && in_array($sector, $entry['sectors'], true)));
+        $allows = fn (array $entry) => PageAccess::allows($entry, $held, $sector);
         $label = fn (array $entry) => __($sector !== null && isset($entry['sector_labels'][$sector]) ? $entry['sector_labels'][$sector] : $entry['label']);
         // Read-only and export-only organizations create nothing.
         $canCreate = $context->mode() === CurrentContext::MODE_NORMAL;

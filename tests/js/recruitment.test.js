@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { amountToMinor, applicationTone, byStage, dayOf, minorToText, nameIn, nextSlot, offerTone, openingTone, recommendationTone } from '../../Modules/Recruitment/resources/js/lib';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Recruitment/resources/js/locales/en/recruitment.json';
 import bn from '../../Modules/Recruitment/resources/js/locales/bn/recruitment.json';
 

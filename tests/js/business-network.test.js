@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { indentOf, statusTone } from '../../Modules/BusinessNetwork/resources/js/api';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/BusinessNetwork/resources/js/locales/en/business_network.json';
 import bn from '../../Modules/BusinessNetwork/resources/js/locales/bn/business_network.json';
 

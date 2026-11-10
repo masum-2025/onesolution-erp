@@ -9,6 +9,7 @@ use App\Platform\Appearance\AppearanceResolver;
 use App\Platform\Branding\BrandResolver;
 use App\Platform\Legal\Services\LegalService;
 use App\Platform\Localization\LocalizationState;
+use App\Platform\Modules\PageAccess;
 use App\Platform\Partners\HostContext;
 use App\Platform\Tenancy\Actions\ListAvailableContexts;
 use App\Platform\Tenancy\Context\ContextResolver;
@@ -72,6 +73,8 @@ class MeController extends Controller
             'contexts' => $contexts->handle($user),
             'permissions' => $this->usablePermissions($context, $access),
             'can' => $this->abilities($context, $access),
+            // FE-1: modules whose screens the browser loads here, and their menu pages this person may not open.
+            ...app(PageAccess::class)->forContext($context),
             // A partner's own address always shows that partner's brand; on the platform
             // address the brand follows the account being worked in.
             'brand' => $brands->for(

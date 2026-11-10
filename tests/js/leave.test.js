@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { covers, daysToHalves, halvesToDays, monthDays, shiftMonth, statusTone } from '../../Modules/Leave/resources/js/lib';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Leave/resources/js/locales/en/leave.json';
 import bn from '../../Modules/Leave/resources/js/locales/bn/leave.json';
 

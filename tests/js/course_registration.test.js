@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { byLevel, creditState, credits, itemTone, offeringAction, outcomeTone, portalBlock, registrationTone, seats, windowState } from '../../Modules/CourseRegistration/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/CourseRegistration/resources/js/locales/en/course_registration.json';
 import bn from '../../Modules/CourseRegistration/resources/js/locales/bn/course_registration.json';
 

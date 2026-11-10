@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { advanceTone, amountToMinor, dayOf, kmToTenths, mileageAmount, minorToText, monthsFrom, nameIn, needsReceipt, statusTone, tenthsToKm } from '../../Modules/Expenses/resources/js/lib';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Expenses/resources/js/locales/en/expenses.json';
 import bn from '../../Modules/Expenses/resources/js/locales/bn/expenses.json';
 

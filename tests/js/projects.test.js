@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { amountToMinor, columns, groupMine, initials, orderAfterDrop, progress, projectTone, quantityToMilli } from '../../Modules/Projects/resources/js/lib';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Projects/resources/js/locales/en/projects.json';
 import bn from '../../Modules/Projects/resources/js/locales/bn/projects.json';
 

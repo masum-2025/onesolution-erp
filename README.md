@@ -4005,6 +4005,24 @@ never reach logs, errors or the browser).
 - **Future**: Pathao, RedX, eCourier are each a new `CourierDriver` and an entry in
   `CourierDrivers` and the rule's list; nothing else changes. A new country or partner needs no code.
 
+### FE-1: module screens loaded by module and role
+
+- **Why**: every module's route list was in the first load (each company's browser carried all
+  29, on or off), and the first load passed its 80 KB budget. Now it is **65 KB**.
+- **How**: `/api/me` gives `modules` (on here) and `denied_pages` (menu pages whose permission or
+  sector this person's roles do not give: `App\Platform\Modules\PageAccess`, the menu's own test).
+  `resources/js/modules.js` fetches only those modules' `routes.js` and registers their routes under
+  the shell route `app-shell`, leaving out the denied pages; on sign-in, sign-out or another
+  organization the set is rebuilt and the address resolved again, so a direct link works. Pages
+  outside the menu (an order's own page, "my leave") follow their module. Only the UI is shaped:
+  every API call still checks permission, organization and module.
+- **Public pages** (signed out, no shell) go in a module's `resources/js/public-routes.js`, always
+  loaded (Education's QR check).
+- **New module**: nothing to change; its folder name gives its key (`OnlineOrders` → `online_orders`).
+- **Tests**: `tests/Feature/Modules/PageAccessTest.php`, `tests/js/lazyModuleRoutes.test.js`; module
+  route tests read every list through `tests/js/support/moduleRoutes.js`. `phpunit.xml` now pins
+  `APP_URL` so tests never follow the developer's own address.
+
 ### PERF-1: a lighter home page and pages fetched ahead
 
 - **Counts only**: `GET /api/organizations/{id}/rules?summary=1` answers `{own_count, total}` (rules

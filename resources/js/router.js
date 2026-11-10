@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { appVersion, isMissingFile, reloadForMissingFile } from './lib/appVersion';
 import { loadNamespaces } from './lib/i18n';
 import { loadMe, session } from './lib/session';
-import { moduleOutsideRoutes, moduleRoutes } from './modules';
+import { moduleOutsideRoutes, syncModuleRoutes } from './modules';
 
 /*
  * Every screen is its own lazy chunk; its translations load with it (meta.ns).
@@ -30,6 +30,8 @@ const routes = [
     { path: '/portal/join/:key?', name: 'portal-join', component: () => import('./pages/portal/JoinPage.vue'), meta: { public: true, ns: ['auth', 'identity', 'portal'] } },
     {
         path: '/',
+        // Module screens are added under this name once /api/me says which are on (FE-1, modules.js).
+        name: 'app-shell',
         component: AppShell,
         children: [
             { path: '', name: 'home', component: () => import('./pages/OverviewPage.vue'), meta: { context: 'organization', ns: ['home', 'orgs', 'dashboard'] } },
@@ -85,8 +87,6 @@ const routes = [
             // A group's or company's own wording (LANG-1, multi_language).
             { path: 'languages', name: 'languages', component: () => import('./pages/languages/LanguagesPage.vue'), meta: { context: 'organization', ns: ['languages'] } },
             { path: 'approvals', name: 'approvals', component: () => import('./pages/rules/ApprovalsPage.vue'), meta: { context: 'organization', ns: ['rules'] } },
-            // Screens of business modules (Modules/*/resources/js/routes.js).
-            ...moduleRoutes,
             {
                 path: 'apps/:module/:item',
                 name: 'module-app',
@@ -275,6 +275,10 @@ router.beforeEach(async (to) => {
     if (!session.ready) await loadMe().catch(() => null);
 
     const me = session.me;
+
+    // FE-1: the screens of the modules on here, without pages this person may not open; when they
+    // change (sign-in, another organization), the address is resolved again against them.
+    if (await syncModuleRoutes(router, me).catch(() => false)) return to.fullPath;
     const namespaces = loadNamespaces(['core', ...(to.meta.ns ?? [])]);
 
     // Open to anyone, signed in or not (an invitation link may be opened on a shared computer).

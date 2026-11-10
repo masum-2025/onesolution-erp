@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { amountToMinor, fieldsToApi, fieldText, phoneText, priceQuote, quantityToMilli, quoteTone, readCsv, splitTax } from '../../Modules/Crm/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Crm/resources/js/locales/en/crm.json';
 import bn from '../../Modules/Crm/resources/js/locales/bn/crm.json';
 

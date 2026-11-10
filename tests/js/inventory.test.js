@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { amountToMinor, barcodeModules, cleanNumber, CODE128_TABLE, code128Modules, ean13Modules, ean13Valid, formatQuantity, levelTone, lineToApi, milliToText, quantityToMilli, statusTone, toCsv } from '../../Modules/Inventory/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Inventory/resources/js/locales/en/inventory.json';
 import bn from '../../Modules/Inventory/resources/js/locales/bn/inventory.json';
 

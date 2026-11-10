@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { billKind, billState, normalizeAmountText, parseAmount, parsePercent, percentText, plan, requestTone } from '../../Modules/EducationFees/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/EducationFees/resources/js/locales/en/education_fees.json';
 import bn from '../../Modules/EducationFees/resources/js/locales/bn/education_fees.json';
 
