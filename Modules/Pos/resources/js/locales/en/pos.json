@@ -1,4 +1,23 @@
 {
+    "guide": {
+        "sell": {
+            "title": "How to sell",
+            "steps": {
+                "1": "Open the shift: count the cash in the drawer and enter it.",
+                "2": "Type the product's name or SKU, or scan its barcode.",
+                "3": "Set the quantity; add a discount if needed.",
+                "4": "Tap Pay, take cash, card or mobile wallet, then print the receipt."
+            },
+            "tips": {
+                "1": "A discount above the limit needs a supervisor.",
+                "2": "No internet? Keep selling; sales are sent when you are back online."
+            },
+            "mistakes": {
+                "1": "Close the shift at day end, or the next day's cash will not match."
+            },
+            "settings": "The discount limit, returns and receipt numbers are in this module's settings."
+        }
+    },
     "common": {
         "cancel": "Cancel",
         "save": "Save",

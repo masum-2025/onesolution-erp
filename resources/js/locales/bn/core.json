@@ -275,6 +275,17 @@
         "as_of": "{date} পর্যন্ত",
         "printed_on": "{date} তারিখে প্রিন্ট করা"
     },
+    "guide": {
+        "button": "কীভাবে করবেন?",
+        "tips": "টিপস",
+        "mistakes": "সাধারণ ভুল",
+        "settings": "এই পাতার setting",
+        "open_settings": "Setting খুলুন",
+        "video": "ভিডিও দেখুন",
+        "quiet": "আর মনে করিয়ে দেবেন না",
+        "quiet_done": "ঠিক আছে। দরকার হলে নির্দেশনা এখানেই পাবেন।",
+        "got_it": "বুঝেছি"
+    },
     "footer": {
         "terms": "শর্তাবলি",
         "privacy": "গোপনীয়তা"

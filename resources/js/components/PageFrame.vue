@@ -5,6 +5,8 @@ import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import ExportMenu from '@/components/ExportMenu.vue';
+import GuideButton from '@/components/GuideButton.vue';
+import { hasGuide } from '@/lib/guide';
 import { currentOrganization } from '@/lib/session';
 import { formatDate } from '@/lib/format';
 import { t } from '@/lib/i18n';
@@ -42,6 +44,11 @@ const props = defineProps({
     skeletonRows: { type: Number, default: 5 },
     // The page lays out its own paper (labels, a shipment sheet): no header, name or date on it.
     ownPaper: Boolean,
+    // "How to?" guide: a translation key such as 'pharmacy.guide.sell' (see lib/guide.js),
+    // where this page's settings live (a route) and a partner's video (https).
+    guide: { type: String, default: '' },
+    guideSettings: { type: [Object, String], default: null },
+    guideVideo: { type: String, default: '' },
 });
 
 const widths = { md: 'max-w-3xl', lg: 'max-w-5xl', xl: 'max-w-7xl', full: '' };
@@ -52,6 +59,7 @@ const missing = computed(() => !!props.notFound && failed.value?.status === 404)
 const exportOptions = computed(() => (props.export ? { title: props.title, ...props.export } : null));
 const organization = computed(() => currentOrganization()?.name ?? '');
 const today = formatDate(new Date().toISOString());
+const guideShown = computed(() => hasGuide(props.guide));
 </script>
 
 <template>
@@ -65,10 +73,11 @@ const today = formatDate(new Date().toISOString());
         <PageHeader v-if="title" :title="title" :description="description" :class="ownPaper ? 'print:hidden' : ''">
             <template v-if="$slots.eyebrow" #eyebrow><slot name="eyebrow" /></template>
             <!-- Buttons are for the screen: never on paper. -->
-            <template v-if="$slots.actions || exportOptions" #actions>
+            <template v-if="$slots.actions || exportOptions || guideShown" #actions>
                 <span class="contents print:hidden">
                     <slot name="actions" />
                     <ExportMenu v-if="exportOptions" :options="exportOptions" />
+                    <GuideButton v-if="guideShown" :guide="guide" :settings="guideSettings" :video="guideVideo" />
                 </span>
             </template>
         </PageHeader>
