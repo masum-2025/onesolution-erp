@@ -1,0 +1,292 @@
+{
+    "module": {
+        "title": "ডায়াগনস্টিক",
+        "description": "ল্যাব ও ইমেজিং: স্বাভাবিক সীমাসহ test, রোগীর বিলে যাওয়া order, barcode-সহ নমুনা, চিহ্নসহ ফল, যাচাই আর সই করা রিপোর্ট।"
+    },
+    "entities": {
+        "test": {
+            "label": "Test",
+            "plural": "Test-এর তালিকা"
+        },
+        "referrer": {
+            "label": "Referral ডাক্তার",
+            "plural": "Referral ডাক্তার"
+        }
+    },
+    "fields": {
+        "test": {
+            "code": "কোড",
+            "name": "Test-এর নাম",
+            "department": "বিভাগ",
+            "sample_type": "নমুনা",
+            "service_code": "বিলের সেবার কোড (দাম)",
+            "turnaround_hours": "রিপোর্ট দিতে লাগে (ঘণ্টা, খালি = সাধারণ)",
+            "is_active": "চালু"
+        },
+        "referrer": {
+            "name": "ডাক্তারের নাম",
+            "registration_no": "নিবন্ধন নম্বর (BMDC)",
+            "mobile": "মোবাইল",
+            "commission_percent": "কমিশন % (খালি = সাধারণ)",
+            "is_active": "চালু"
+        }
+    },
+    "options": {
+        "test": {
+            "department": {
+                "haematology": "হেমাটোলজি",
+                "biochemistry": "বায়োকেমিস্ট্রি",
+                "microbiology": "মাইক্রোবায়োলজি",
+                "immunology": "ইমিউনোলজি ও সেরোলজি",
+                "clinical_pathology": "ক্লিনিক্যাল প্যাথলজি (প্রস্রাব, মল)",
+                "imaging": "ইমেজিং (এক্স-রে, আল্ট্রাসাউন্ড)",
+                "cardiology": "কার্ডিওলজি (ইসিজি, ইকো)",
+                "other": "অন্যান্য"
+            },
+            "sample_type": {
+                "blood": "রক্ত",
+                "serum": "সিরাম",
+                "urine": "প্রস্রাব",
+                "stool": "মল",
+                "swab": "সোয়াব",
+                "other": "অন্য নমুনা",
+                "none": "নমুনা লাগে না (ইমেজিং, ইসিজি)"
+            }
+        }
+    },
+    "common": {
+        "loading": "আনা হচ্ছে…",
+        "cancel": "বাতিল",
+        "confirm": "নিশ্চিত",
+        "previous": "আগের",
+        "next": "পরের",
+        "page": "পাতা {page} / {last}",
+        "years": "{count} বছর"
+    },
+    "sex": {
+        "male": "পুরুষ",
+        "female": "নারী",
+        "other": "অন্যান্য"
+    },
+    "stage": {
+        "ordered": "নমুনা নেওয়া বাকি",
+        "collected": "ফল লেখা বাকি",
+        "resulted": "যাচাই বাকি",
+        "verified": "তৈরি",
+        "delivered": "দেওয়া হয়েছে"
+    },
+    "stage_tab": {
+        "ordered": "নমুনা",
+        "collected": "ফল লেখা",
+        "resulted": "যাচাই",
+        "verified": "রিপোর্ট দেওয়া",
+        "delivered": "দেওয়া হয়েছে"
+    },
+    "sample": {
+        "blood": "রক্ত",
+        "serum": "সিরাম",
+        "urine": "প্রস্রাব",
+        "stool": "মল",
+        "swab": "সোয়াব",
+        "other": "অন্য",
+        "none": "নমুনা নেই"
+    },
+    "flag": {
+        "low": "কম",
+        "high": "বেশি",
+        "critical_low": "বিপজ্জনক কম",
+        "critical_high": "বিপজ্জনক বেশি",
+        "abnormal": "স্বাভাবিক নয়"
+    },
+    "flag_short": {
+        "low": "L",
+        "high": "H",
+        "critical_low": "LL",
+        "critical_high": "HH",
+        "abnormal": "*"
+    },
+    "orders": {
+        "title": "Test order",
+        "text": "টিউব scan করুন বা কোন ধাপের কাজ তা বাছুন।",
+        "all": "সব",
+        "stage_label": "ধাপ",
+        "scan": "টিউব scan বা order নম্বর লিখুন",
+        "empty": "এখন এখানে কিছু নেই",
+        "new": "নতুন test order",
+        "new_text": "রোগী খুঁজুন, test বাছুন। এগুলো রোগীর বিলে যাবে।",
+        "patient": "রোগী",
+        "find_patient": "রোগী নম্বর, মোবাইল বা নাম",
+        "no_patient": "রোগী পাওয়া যায়নি। আগে রোগী নিবন্ধন করুন (রোগী)।",
+        "change": "বদলান",
+        "tests": "Test",
+        "tests_hint": "ডাক্তার যে test লিখেছেন সবগুলোতে টিক দিন।",
+        "filter_tests": "নাম বা কোড দিয়ে test খুঁজুন",
+        "referrer": "Referral ডাক্তার",
+        "no_referrer": "নেই",
+        "notes": "মন্তব্য (ঐচ্ছিক)",
+        "total": "মোট {amount}",
+        "place": "Order ও বিল",
+        "placed": "Order {number} তৈরি হয়েছে",
+        "number": "Order নং",
+        "status": "ধাপ",
+        "due": "দেওয়ার কথা",
+        "due_at": "দেওয়ার কথা {time}",
+        "late": "দেরি"
+    },
+    "order": {
+        "title": "Order",
+        "not_found": "এই order এখানে নেই",
+        "back": "Test order",
+        "collect": "নমুনা নিন",
+        "collected": "নমুনা নেওয়া হয়েছে: label print করুন",
+        "labels": "Label",
+        "report": "রিপোর্ট",
+        "deliver": "দেওয়া হয়েছে চিহ্ন দিন",
+        "delivered": "রিপোর্ট দেওয়া হয়েছে",
+        "bill": "বিল",
+        "bill_due": "বিলে এখনো {amount} বাকি।",
+        "late": "রিপোর্ট দেওয়ার কথা ছিল {time}।",
+        "referred_by": "Referral: {name}",
+        "samples": "নমুনা",
+        "sample_rejected": "বাতিল: {reason}",
+        "reject": "নমুনা বাতিল",
+        "reject_text": "Test-গুলো নতুন barcode-সহ নতুন নমুনার অপেক্ষায় থাকবে।",
+        "rejected": "নমুনা বাতিল হয়েছে",
+        "amendment": "সংশোধন {number}",
+        "sent_back_note": "ফেরত এসেছে: {note}",
+        "waiting_sample": "নমুনার অপেক্ষায়।",
+        "normal": "স্বাভাবিক: {range}",
+        "no_parameters": "এই test-এর ঘর এখনো ঠিক করা হয়নি (Test-এর ঘর ও স্বাভাবিক সীমা)।",
+        "entered_by": "লিখেছেন {name}",
+        "verified_by": "যাচাই করেছেন {name}",
+        "save": "ফল রাখুন",
+        "amend": "সংশোধন রাখুন",
+        "saved": "ফল রাখা হয়েছে",
+        "someone_else": "এই ফল আপনি লিখেছেন; অন্য কেউ যাচাই করবেন।",
+        "send_back": "ফেরত পাঠান",
+        "send_back_text": "ফল record-এ থাকবে; বেঞ্চে আবার লেখা হবে।",
+        "sent_back": "ফেরত পাঠানো হয়েছে",
+        "verify": "যাচাই ও সই",
+        "verified": "যাচাই হয়েছে",
+        "reason": "কারণ",
+        "delivered_at": "দেওয়া হয়েছে {time}"
+    },
+    "labels": {
+        "title": "Label {number}",
+        "back": "Order-এ ফিরুন",
+        "print": "Label print",
+        "none": "এখনো label দেওয়ার মতো নমুনা নেই।"
+    },
+    "report": {
+        "title": "রিপোর্ট {number}",
+        "print": "Print বা PDF রাখুন",
+        "heading": "ল্যাবরেটরি রিপোর্ট",
+        "patient": "রোগী",
+        "number": "রিপোর্ট নং",
+        "mrn": "রোগী নম্বর",
+        "date": "তারিখ",
+        "age_sex": "বয়স / লিঙ্গ",
+        "referred_by": "Referral",
+        "amended": "সংশোধিত",
+        "test": "পরীক্ষা",
+        "result": "ফল",
+        "unit": "একক",
+        "normal": "স্বাভাবিক সীমা",
+        "signed": "যাচাই করেছেন {name}, {time}",
+        "nothing": "এখনো যাচাই করা কোনো ফল নেই।",
+        "footer": "L = কম, H = বেশি, LL / HH = বিপজ্জনক। ফল ডাক্তার দেখে বুঝিয়ে দেবেন।"
+    },
+    "parameters": {
+        "title": "Test-এর ঘর ও স্বাভাবিক সীমা",
+        "text": "প্রতিটা test কী কী জানায়, আর লিঙ্গ ও বয়স অনুযায়ী কী স্বাভাবিক।",
+        "test": "Test",
+        "pick_test": "Test বাছুন…",
+        "none_picked": "ঘর ঠিক করতে একটি test বাছুন",
+        "no_tests": "আগে Test-এর তালিকায় test যোগ করুন।",
+        "save": "রাখুন",
+        "saved": "রাখা হয়েছে",
+        "name_en": "নাম (ইংরেজি)",
+        "name_bn": "নাম (বাংলা)",
+        "unit": "একক",
+        "type": "উত্তর",
+        "types": {
+            "number": "সংখ্যা",
+            "text": "লেখা",
+            "choice": "তালিকা থেকে"
+        },
+        "decimals": "দশমিক",
+        "choices": "যে উত্তরগুলো থেকে বাছবেন",
+        "choices_hint": "কমা দিয়ে আলাদা করুন, যেমন Positive, Negative।",
+        "remove": "এই ঘর বাদ দিন",
+        "ranges": "স্বাভাবিক সীমা",
+        "sex": "লিঙ্গ",
+        "sexes": {
+            "any": "যেকোনো",
+            "male": "পুরুষ",
+            "female": "নারী"
+        },
+        "age_from": "বয়স থেকে",
+        "age_to": "পর্যন্ত",
+        "any_age": "যেকোনো",
+        "age_unit": "হিসাবে",
+        "years": "বছর",
+        "days": "দিন",
+        "low": "নিচের সীমা",
+        "high": "ওপরের সীমা",
+        "critical_low": "বিপজ্জনক নিচে",
+        "critical_high": "বিপজ্জনক ওপরে",
+        "normal_text": "স্বাভাবিক উত্তর",
+        "remove_range": "এই সীমা বাদ দিন",
+        "add_range": "সীমা যোগ করুন",
+        "add": "ঘর যোগ করুন"
+    },
+    "portal": {
+        "title": "আমার ল্যাব রিপোর্ট",
+        "text": "{org}-এ আপনার রিপোর্ট।",
+        "empty": "এখনো কোনো রিপোর্ট নেই",
+        "empty_text": "ল্যাব যাচাই করলে রিপোর্ট এখানে দেখাবে।"
+    },
+    "guide": {
+        "orders": {
+            "title": "Test order দেবেন যেভাবে",
+            "steps": {
+                "1": "\"নতুন test order\" চেপে রোগী খুঁজুন।",
+                "2": "Test বেছে নিন (নাম বা কোড দিয়ে খুঁজুন)।",
+                "3": "Referral ডাক্তার থাকলে দিন।",
+                "4": "\"Order ও বিল\" — test রোগীর বিলে যাবে; টাকা সেখানে নিন।"
+            },
+            "tips": {
+                "1": "ওপরের ঘরে টিউবের barcode scan করলে তার order খোলে।"
+            },
+            "settings": "রিপোর্টের সময় আর নম্বরের অক্ষর ডায়াগনস্টিক-এর সেটিংসে আছে।"
+        },
+        "bench": {
+            "title": "নমুনা নেবেন, ফল লিখবেন ও যাচাই করবেন যেভাবে",
+            "steps": {
+                "1": "\"নমুনা নিন\", তারপর label print করে টিউবে লাগান।",
+                "2": "টিউব scan করে প্রতিটা ঘরে ফল লিখুন; রাখলে সীমার বাইরের ফলে চিহ্ন বসে।",
+                "3": "অন্য একজন খুলে \"যাচাই ও সই\" (বা \"ফেরত পাঠান\") চাপবেন।",
+                "4": "সব test যাচাই হলে রিপোর্ট print করে দেওয়া হয়েছে চিহ্ন দিন।"
+            },
+            "tips": {
+                "1": "সইয়ের পর বদলালে নতুন সংশোধন হয়, পুরোনো ফলও থাকে।"
+            },
+            "mistakes": {
+                "1": "Label লাগানোর আগে রোগীর নাম মিলিয়ে নিন।",
+                "2": "নমুনা জমাট বা কম হলে \"নমুনা বাতিল\" করে নতুন নিন।"
+            }
+        },
+        "parameters": {
+            "title": "Test-এর ঘর ঠিক করবেন যেভাবে",
+            "steps": {
+                "1": "Test বাছুন।",
+                "2": "প্রতিটা ঘর তার এককসহ যোগ করুন।",
+                "3": "লিঙ্গ ও বয়স অনুযায়ী স্বাভাবিক সীমা দিন (নবজাতক দিন হিসাবে)।",
+                "4": "রাখুন।"
+            },
+            "tips": {
+                "1": "দেওয়া সীমাগুলো শুরু মাত্র: আপনার pathologist মিলিয়ে নেবেন।"
+            }
+        }
+    }
+}

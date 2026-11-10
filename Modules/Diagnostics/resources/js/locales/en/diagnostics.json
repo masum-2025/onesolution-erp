@@ -1,0 +1,292 @@
+{
+    "module": {
+        "title": "Diagnostics",
+        "description": "Laboratory and imaging: tests with normal ranges, orders billed to the patient, barcoded samples, results with flags, verification and signed reports."
+    },
+    "entities": {
+        "test": {
+            "label": "Test",
+            "plural": "Tests"
+        },
+        "referrer": {
+            "label": "Referring doctor",
+            "plural": "Referring doctors"
+        }
+    },
+    "fields": {
+        "test": {
+            "code": "Code",
+            "name": "Test name",
+            "department": "Department",
+            "sample_type": "Sample",
+            "service_code": "Billing service code (price)",
+            "turnaround_hours": "Report ready in (hours, empty = usual)",
+            "is_active": "In use"
+        },
+        "referrer": {
+            "name": "Doctor's name",
+            "registration_no": "Registration no. (BMDC)",
+            "mobile": "Mobile",
+            "commission_percent": "Commission % (empty = usual)",
+            "is_active": "In use"
+        }
+    },
+    "options": {
+        "test": {
+            "department": {
+                "haematology": "Haematology",
+                "biochemistry": "Biochemistry",
+                "microbiology": "Microbiology",
+                "immunology": "Immunology and serology",
+                "clinical_pathology": "Clinical pathology (urine, stool)",
+                "imaging": "Imaging (X-ray, ultrasound)",
+                "cardiology": "Cardiology (ECG, echo)",
+                "other": "Other"
+            },
+            "sample_type": {
+                "blood": "Blood",
+                "serum": "Serum",
+                "urine": "Urine",
+                "stool": "Stool",
+                "swab": "Swab",
+                "other": "Other sample",
+                "none": "No sample (imaging, ECG)"
+            }
+        }
+    },
+    "common": {
+        "loading": "Loading…",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {page} of {last}",
+        "years": "{count} yrs"
+    },
+    "sex": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+    },
+    "stage": {
+        "ordered": "Sample to take",
+        "collected": "Results to enter",
+        "resulted": "To verify",
+        "verified": "Ready",
+        "delivered": "Given"
+    },
+    "stage_tab": {
+        "ordered": "Collect",
+        "collected": "Enter results",
+        "resulted": "Verify",
+        "verified": "Give reports",
+        "delivered": "Given"
+    },
+    "sample": {
+        "blood": "Blood",
+        "serum": "Serum",
+        "urine": "Urine",
+        "stool": "Stool",
+        "swab": "Swab",
+        "other": "Other",
+        "none": "No sample"
+    },
+    "flag": {
+        "low": "Low",
+        "high": "High",
+        "critical_low": "Critically low",
+        "critical_high": "Critically high",
+        "abnormal": "Not normal"
+    },
+    "flag_short": {
+        "low": "L",
+        "high": "H",
+        "critical_low": "LL",
+        "critical_high": "HH",
+        "abnormal": "*"
+    },
+    "orders": {
+        "title": "Test orders",
+        "text": "Scan a tube or pick a stage to work on.",
+        "all": "All",
+        "stage_label": "Stage",
+        "scan": "Scan tube or type order number",
+        "empty": "Nothing here right now",
+        "new": "New test order",
+        "new_text": "Find the patient, tick the tests. They go on the patient's bill.",
+        "patient": "Patient",
+        "find_patient": "Patient number, mobile or name",
+        "no_patient": "No patient found. Register the patient first (Patients).",
+        "change": "Change",
+        "tests": "Tests",
+        "tests_hint": "Tick every test the doctor asked for.",
+        "filter_tests": "Find a test by name or code",
+        "referrer": "Referring doctor",
+        "no_referrer": "None",
+        "notes": "Note (optional)",
+        "total": "Total {amount}",
+        "place": "Order and bill",
+        "placed": "Order {number} made",
+        "number": "Order no.",
+        "status": "Stage",
+        "due": "Due",
+        "due_at": "due {time}",
+        "late": "Late"
+    },
+    "order": {
+        "title": "Order",
+        "not_found": "This order is not here",
+        "back": "Test orders",
+        "collect": "Take samples",
+        "collected": "Samples taken: print the labels",
+        "labels": "Labels",
+        "report": "Report",
+        "deliver": "Mark as given",
+        "delivered": "Report given",
+        "bill": "Bill",
+        "bill_due": "{amount} is still due on the bill.",
+        "late": "The report was due {time}.",
+        "referred_by": "Referred by {name}",
+        "samples": "Samples",
+        "sample_rejected": "Rejected: {reason}",
+        "reject": "Reject sample",
+        "reject_text": "The tests wait for a new sample with a new barcode.",
+        "rejected": "Sample rejected",
+        "amendment": "Amendment {number}",
+        "sent_back_note": "Sent back: {note}",
+        "waiting_sample": "Waiting for the sample.",
+        "normal": "Normal: {range}",
+        "no_parameters": "This test has no values set up yet (Test values and normal ranges).",
+        "entered_by": "Entered by {name}",
+        "verified_by": "verified by {name}",
+        "save": "Save results",
+        "amend": "Save a correction",
+        "saved": "Results saved",
+        "someone_else": "You entered these; someone else verifies.",
+        "send_back": "Send back",
+        "send_back_text": "The results stay on record; the bench enters them again.",
+        "sent_back": "Sent back",
+        "verify": "Verify and sign",
+        "verified": "Verified",
+        "reason": "Reason",
+        "delivered_at": "Given {time}"
+    },
+    "labels": {
+        "title": "Labels {number}",
+        "back": "Back to the order",
+        "print": "Print labels",
+        "none": "No samples to label yet."
+    },
+    "report": {
+        "title": "Report {number}",
+        "print": "Print or save as PDF",
+        "heading": "Laboratory report",
+        "patient": "Patient",
+        "number": "Report no.",
+        "mrn": "Patient no.",
+        "date": "Date",
+        "age_sex": "Age / sex",
+        "referred_by": "Referred by",
+        "amended": "corrected",
+        "test": "Test",
+        "result": "Result",
+        "unit": "Unit",
+        "normal": "Normal range",
+        "signed": "Verified by {name}, {time}",
+        "nothing": "No verified results yet.",
+        "footer": "L = low, H = high, LL / HH = critical. Results should be read by a doctor."
+    },
+    "parameters": {
+        "title": "Test values and normal ranges",
+        "text": "What each test reports, and what is normal by sex and age.",
+        "test": "Test",
+        "pick_test": "Pick a test…",
+        "none_picked": "Pick a test to set up its values",
+        "no_tests": "Add tests in the Test list first.",
+        "save": "Save",
+        "saved": "Saved",
+        "name_en": "Name (English)",
+        "name_bn": "Name (Bangla)",
+        "unit": "Unit",
+        "type": "Answer",
+        "types": {
+            "number": "Number",
+            "text": "Text",
+            "choice": "Pick from list"
+        },
+        "decimals": "Decimals",
+        "choices": "Answers to pick from",
+        "choices_hint": "Separate with commas, e.g. Positive, Negative.",
+        "remove": "Remove this value",
+        "ranges": "Normal ranges",
+        "sex": "Sex",
+        "sexes": {
+            "any": "Any",
+            "male": "Male",
+            "female": "Female"
+        },
+        "age_from": "Age from",
+        "age_to": "to",
+        "any_age": "any",
+        "age_unit": "In",
+        "years": "years",
+        "days": "days",
+        "low": "Low",
+        "high": "High",
+        "critical_low": "Critical low",
+        "critical_high": "Critical high",
+        "normal_text": "Normal answer",
+        "remove_range": "Remove this range",
+        "add_range": "Add a range",
+        "add": "Add a value"
+    },
+    "portal": {
+        "title": "My lab reports",
+        "text": "Your reports at {org}.",
+        "empty": "No reports yet",
+        "empty_text": "Reports show here once the lab has verified them."
+    },
+    "guide": {
+        "orders": {
+            "title": "How to order tests",
+            "steps": {
+                "1": "Tap \"New test order\" and find the patient.",
+                "2": "Tick the tests (search by name or code).",
+                "3": "Add the referring doctor if any.",
+                "4": "\"Order and bill\" puts the tests on the patient's bill; take the money there."
+            },
+            "tips": {
+                "1": "Scan a tube's barcode in the box above to open its order."
+            },
+            "settings": "Report times and number prefixes are in the Diagnostics settings."
+        },
+        "bench": {
+            "title": "How to take samples, enter and verify results",
+            "steps": {
+                "1": "\"Take samples\", then print the labels and stick them on the tubes.",
+                "2": "Scan the tube and type each value; out-of-range values are flagged when saved.",
+                "3": "Someone else opens it and taps \"Verify and sign\" (or \"Send back\").",
+                "4": "When every test is verified, print the report and mark it given."
+            },
+            "tips": {
+                "1": "A change after signing is a new correction; the old values stay on record."
+            },
+            "mistakes": {
+                "1": "Check the patient's name before sticking a label.",
+                "2": "A clotted or too-small sample: \"Reject sample\" and take a new one."
+            }
+        },
+        "parameters": {
+            "title": "How to set up a test's values",
+            "steps": {
+                "1": "Pick the test.",
+                "2": "Add each value with its unit.",
+                "3": "Add normal ranges by sex and age (newborns in days).",
+                "4": "Save."
+            },
+            "tips": {
+                "1": "The sample ranges given are a start: your pathologist checks them."
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, Eye, GitMerge, History, IdCard, Pencil, ReceiptText, TriangleAlert, UserX } from 'lucide-vue-next';
+import { ArrowLeft, Eye, FlaskConical, GitMerge, History, IdCard, Pencil, ReceiptText, TriangleAlert, UserX } from 'lucide-vue-next';
 import { AppButton, AppField, EmptyState, PageFrame } from '@/ui';
 import AppDialog from '@/components/AppDialog.vue';
 import { useResource } from '@/lib/useResource';
@@ -125,6 +125,7 @@ async function showViews() {
         <template v-if="patient" #actions>
             <AppButton :icon="IdCard" @click="router.push({ name: 'patients-card', params: { id: patient.id } })">{{ t('patients.patient.card') }}</AppButton>
             <AppButton v-if="router.hasRoute('patient-billing-bills')" :icon="ReceiptText" @click="router.push({ name: 'patient-billing-bills', query: { patient: patient.id } })">{{ t('patients.patient.bills') }}</AppButton>
+            <AppButton v-if="router.hasRoute('diagnostics-orders')" :icon="FlaskConical" @click="router.push({ name: 'diagnostics-orders', query: { patient: patient.id } })">{{ t('patients.patient.lab') }}</AppButton>
             <AppButton v-if="can.manage" :icon="Pencil" @click="editing = true">{{ t('patients.patient.edit') }}</AppButton>
             <AppButton v-if="can.manage" variant="ghost" :icon="GitMerge" @click="merging = true">{{ t('patients.merge.ask') }}</AppButton>
             <AppButton v-if="can.audit" variant="ghost" :icon="Eye" @click="showViews">{{ t('patients.patient.views') }}</AppButton>

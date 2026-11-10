@@ -42,5 +42,6 @@
     "SocialCommerce": true,
     "Pharmacy": true,
     "Patients": true,
-    "PatientBilling": true
+    "PatientBilling": true,
+    "Diagnostics": true
 }

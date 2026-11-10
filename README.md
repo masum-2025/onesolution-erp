@@ -5815,3 +5815,35 @@ record, on the patient's open bill at the unit).
   companies whose books already exist need `accounting:map-postings` for the new keys.
 - A new country or partner needs no code: VAT, dues, discount limit, cash rules and numbers are rules; prices
   and panels are data; texts are translations.
+
+## Diagnostics (module `diagnostics`, H-2a)
+
+Laboratory and imaging (needs `patients` and `patient_billing`): tests with their values and normal ranges,
+orders billed on the patient's bill, barcoded samples, results flagged by sex and age, verification by a second
+person, amendments that keep the old values, and printed reports. Other modules order tests through
+`Modules\Diagnostics\Contracts\TestOrders` (`place` by test codes, once per source record; `catalogue`).
+
+- Tables `diagnostics_tests` (code, department, sample type, billing `service_code`, turnaround), `_parameters`
+  (number / text / choice, unit, decimals; turned off, never deleted), `_ranges` (sex, age band in days, low/high,
+  critical, normal text; decimals, never floats), `_referrers`, `_orders`, `_order_tests` (ordered → collected →
+  resulted → verified), `_samples` (barcode, rejected with a reason), `_results` (append-only per amendment),
+  `_verifications` (append-only), `_deliveries`, `_sequences` (D… orders, S… samples).
+- API `/api/organizations/{organization}/diagnostics/…`: tests and referrers (generated lists),
+  `tests/{id}/parameters` (GET/PUT), `orders` (`stage`, `q` = order number or barcode, `patient`), `orders/{id}`
+  (+ `/collect`, `/deliver`, `/report`), `samples/{barcode}`, `samples/{id}/reject`, `order-tests/{id}/results`
+  (PUT with `base_version`), `/verify`, `/send-back`, `patients?q=`. Portal: `GET /api/portal/diagnostics/reports`
+  (verified values of the linked patients only).
+- Permissions `diagnostics.view`, `.order`, `.collect`, `.result`, `.verify`, `.deliver`, `.manage`.
+- Rules `report_turnaround_hours` (24), `require_verification` (true, sensitive; off = entering is enough),
+  `number_prefixes` (`{"order":"D","sample":"S"}`).
+- Events `diagnostics.ordered`, `.sample_collected`, `.result_verified`, `.report_ready` (ids only). A verified
+  order adds "Lab report …" to the patient's history.
+- Contracts used: Patients `PatientDirectory` (now also gives the birth date), Patient billing `PatientCharges`
+  (`add`, plus `services` and `dueOn`).
+- Screens: worklist by stage with a scan box, new order (tests ticked, total shown), order bench (take samples,
+  labels, enter results with normal ranges and flags, verify / send back, give), tube labels (50 × 25 mm), printed
+  report (save as PDF from print), test values and ranges editor, portal reports; guides bn/en.
+- Next (H-2b): referring doctors' commission and payouts, a time-limited report link, SMS.
+- After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`.
+- A new country or partner needs no code: ranges, tests and prices are data; verification, turnaround and numbers
+  are rules; texts are translations.
