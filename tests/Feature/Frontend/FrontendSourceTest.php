@@ -129,6 +129,17 @@ it('uses logical instead of physical left/right utilities', function () {
     }
 });
 
+it('keeps each text file at its own top level, never wrapped in its namespace', function () {
+    // A file is loaded as its namespace: t('website.title') reads website.json's "title". A file
+    // wrapped as {"website": {...}} showed raw keys on every screen using it (fixed 2026-11-10).
+    foreach ([...glob(resource_path('js/locales/*/*.json')), ...glob(base_path('Modules/*/resources/js/locales/*/*.json'))] as $file) {
+        $data = json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+        $namespace = basename($file, '.json');
+
+        expect(count($data) === 1 && array_key_first($data) === $namespace)->toBeFalse("{$file} is wrapped in \"{$namespace}\"");
+    }
+});
+
 it('has the same translation keys in Bangla and English', function () {
     $keys = function (array $data, string $prefix = '') use (&$keys): array {
         $out = [];
