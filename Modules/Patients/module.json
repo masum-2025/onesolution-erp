@@ -1,0 +1,11 @@
+{
+    "name": "Patients",
+    "alias": "patients",
+    "description": "One record per patient for the whole company: patient number, contact, guardian, allergies, history and the patient portal.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Patients\\Providers\\PatientsServiceProvider"
+    ],
+    "files": []
+}

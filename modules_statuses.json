@@ -40,5 +40,6 @@
     "Projects": true,
     "OnlineOrders": true,
     "SocialCommerce": true,
-    "Pharmacy": true
+    "Pharmacy": true,
+    "Patients": true
 }

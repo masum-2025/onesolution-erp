@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/patients",
+    "description": "One record per patient for the whole company: patient number, contact, guardian, allergies, history and the patient portal.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Patients\\": "app/"
+        }
+    }
+}

@@ -5750,3 +5750,32 @@ Medicine shop on top of Inventory and POS (requires both). Plan: `docs/plans/hea
 - After deploy: migrate, `rules:sync`, `access:sync`, `addons:sync-prices`.
 - A new country or partner needs no code: MRP, expiry and prescription behaviour are rules (country or
   partner can set or lock them), texts are translations. A new sector turns the module on in its package.
+
+## Patients (module `patients`, H-1)
+
+One record per patient for the whole company (registered at a branch), its history, the "who looked" log and
+the patient portal. Other modules reach patients only through `Modules\Patients\Contracts\PatientDirectory`
+(`find`, `exists`, `label`, `search`, `addToTimeline`, `linkCarer`); a merged patient answers as the record it
+was merged into.
+
+- Tables `patients_patients` (ID number and allergies encrypted; ID number also as a keyed hash),
+  `patients_sequences`, `patients_views` (append-only), `patients_timeline`, `patients_care_links`, `patients_merges`.
+- API `/api/organizations/{organization}/patients/…`: `GET patients?q=` (patient number, mobile in any form, name;
+  throttled), `POST patients` (`op_id`; `confirm_new` after a look-alike warning, 409 `possible_duplicate`),
+  `GET|PATCH patients/{id}` (`base_version`), `GET patients/{id}/timeline`, `GET patients/{id}/card` (QR = patient
+  number only), `GET patients/{id}/views`, `POST patients/{id}/merge`, `GET merges`, `POST merges/{id}/decide`.
+  Opening a record, history or card writes `patients_views`. Patients are never deleted (merged instead).
+- Portal: subject `patients.patient` (relations self, guardian), `GET /api/portal/patients` (own record and history;
+  never ID number, allergies, address or mobile).
+- Permissions `patients.view`, `.register`, `.manage` (change, merge), `.treat` (clinicians), `.audit` (who looked).
+- Rules `patients.mrn_prefix` (P), `require_id_number` (false, country specific), `duplicate_check`
+  (off/mobile/mobile_name), `share_between_branches` (true), `doctor_sees` (all/own, sensitive: with own, a
+  clinician without register/manage sees only patients linked by a care link), `portal_enabled` (true).
+- Events `patients.registered`, `patients.merged` (ids only). Audit keeps the patient number and changed field
+  names, never values.
+- Screens: find / new patient (look-alike check), patient page (allergies in red, history, change, merge, who
+  looked), printable card, merge approvals, portal page; "How to?" guides bn/en.
+- After deploy: `composer dump-autoload --no-scripts` (with `COMPOSER_DISABLE_NETWORK=1` if it hangs), migrate,
+  `rules:sync`, `access:sync`, `addons:sync-prices`.
+- A new country or partner needs no code: ID rules, numbering, duplicate check and privacy are rules; mobile
+  formats come from the country data files; texts are translations. A new sector turns the module on in its package.
