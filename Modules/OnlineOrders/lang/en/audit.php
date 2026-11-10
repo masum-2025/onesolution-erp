@@ -12,4 +12,5 @@ return [
     'order_returned' => 'Online order taken back',
     'payment_recorded' => 'Payment for an online order',
     'refund_made' => 'Money given back for an online order',
+    'courier_payout_recorded' => 'Courier payout recorded',
 ];

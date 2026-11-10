@@ -41,7 +41,8 @@
         "cash": "Cash",
         "mobile": "Mobile wallet",
         "bank": "Bank",
-        "online": "Paid online (link)"
+        "online": "Paid online (link)",
+        "courier": "Collected by the courier"
     },
     "channel": {
         "manual": "Typed in by staff",
@@ -165,5 +166,37 @@
             "api_key": "API key",
             "secret_key": "Secret key"
         }
+    },
+    "payouts": {
+        "title": "Courier payouts",
+        "text": "Cash your couriers collected at the door, and the payouts they send back. Tick the orders a payout covers and write what arrived.",
+        "no_couriers": "No courier account yet",
+        "no_couriers_text": "Add a courier account under Couriers. What it collects on delivery shows here.",
+        "loading": "Loading what this courier owes…",
+        "nothing_owed": "Owes nothing",
+        "nothing_owed_text": "This courier owes nothing now. When it delivers a cash-on-delivery parcel, the order shows here.",
+        "owed_count": "{count} order(s) owed",
+        "last": "last payout {day}",
+        "owed_title": "What {courier} owes",
+        "pick_all": "Tick all",
+        "pick_none": "Untick all",
+        "record": "Record a payout",
+        "orders": "Orders",
+        "collected": "Collected",
+        "received": "Arrived",
+        "fee": "Courier charge",
+        "method": "Arrived in",
+        "paid_on": "Arrived on",
+        "reference": "Reference (optional)",
+        "difference": "Difference",
+        "reason": "Reason for the difference",
+        "short": "{amount} less than collected. Write why (for example a parcel charge or a missing payment).",
+        "over": "{amount} more than collected. Write why.",
+        "mixed": "The ticked orders are in different currencies. Record one payout per currency.",
+        "save": "Save payout",
+        "final": "A saved payout cannot be changed. It goes into the books at once.",
+        "recorded": "Payout saved",
+        "history": "Earlier payouts",
+        "no_history": "No payout from this courier yet."
     }
 }

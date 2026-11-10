@@ -124,6 +124,24 @@ class OnlineOrdersException extends TenancyException
         return new self("courier_{$reason}", $reason === 'unreachable' ? 503 : 422, ['detail' => $detail ?? '']);
     }
 
+    /** SC-6: some of the payments chosen are not this courier's, or are already settled. */
+    public static function paymentsNotOwed(): self
+    {
+        return new self('payments_not_owed', 409);
+    }
+
+    /** SC-6: the payments chosen are in more than one currency (one payout each). */
+    public static function mixedCurrencies(): self
+    {
+        return new self('mixed_currencies', 422);
+    }
+
+    /** SC-6: what arrived and the charge do not add up to what was collected, and no reason was given. */
+    public static function differenceNeedsReason(string $difference): self
+    {
+        return new self('difference_needs_reason', 422, ['difference' => $difference]);
+    }
+
     public static function versionConflict(array $current): self
     {
         return new self('version_conflict', 409, extra: ['current' => $current]);

@@ -40,6 +40,8 @@ return [
         'online_orders.supervise',
         // SC-5b: add and change the company's courier accounts (their API keys).
         'online_orders.couriers',
+        // SC-6: see what each courier owes (cash collected at the door) and record its payouts.
+        'online_orders.courier_payouts',
     ],
     'rules' => [
         // Order numbers: the prefix, the year and a running number (OO-2026-000001).
@@ -78,6 +80,8 @@ return [
         $rule('couriers', 'multi_enum', ['steadfast'], $company, 90, 'delivery', ['schema' => ['items' => ['enum' => ['steadfast']]], 'country_specific' => true]),
         // When the courier says a parcel was delivered, mark the order delivered (off: staff do it).
         $rule('courier_marks_delivered', 'boolean', true, $branch, 100, 'delivery'),
+        // SC-6: the courier's "delivered" records what the customer still owed as paid to the courier (settled by a payout).
+        $rule('courier_collects_cod', 'boolean', true, $branch, 110, 'delivery'),
     ],
     'menu' => [
         [
@@ -91,6 +95,7 @@ return [
                 ['key' => 'orders', 'label' => 'online_orders::module.menu_orders', 'route' => '/online-orders', 'permission' => 'online_orders.view'],
                 ['key' => 'new', 'label' => 'online_orders::module.menu_new', 'route' => '/online-orders/new', 'permission' => 'online_orders.manage'],
                 ['key' => 'couriers', 'label' => 'online_orders::module.menu_couriers', 'route' => '/online-orders/couriers', 'permission' => 'online_orders.couriers'],
+                ['key' => 'courier_payouts', 'label' => 'online_orders::module.menu_courier_payouts', 'route' => '/online-orders/courier-payouts', 'permission' => 'online_orders.courier_payouts'],
             ],
         ],
     ],
@@ -109,6 +114,9 @@ return [
         'online_orders.mobile' => ['label' => 'online_orders::orders.posting_keys.mobile', 'type' => 'asset'],
         'online_orders.bank' => ['label' => 'online_orders::orders.posting_keys.bank', 'type' => 'asset'],
         'online_orders.online' => ['label' => 'online_orders::orders.posting_keys.online', 'type' => 'asset'],
+        'online_orders.courier_clearing' => ['label' => 'online_orders::orders.posting_keys.courier_clearing', 'type' => 'asset'],
+        'online_orders.courier_fees' => ['label' => 'online_orders::orders.posting_keys.courier_fees', 'type' => 'expense'],
+        'online_orders.courier_difference' => ['label' => 'online_orders::orders.posting_keys.courier_difference', 'type' => 'expense'],
     ],
     'is_core' => false,
     'requires_consent' => false,

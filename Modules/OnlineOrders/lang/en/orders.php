@@ -27,6 +27,9 @@ return [
         'courier_refused' => 'The courier refused the booking: :detail Fix it on the order and try again.',
         'courier_bad_answer' => 'The courier sent an answer we could not read. Check the parcel in the courier\'s panel before trying again.',
         'courier_keys' => 'Type every key this courier needs: :fields.',
+        'payments_not_owed' => 'Some of the chosen payments are not owed by this courier or were already settled. Reload the list and choose again.',
+        'mixed_currencies' => 'The chosen payments are in different currencies. Record one payout per currency.',
+        'difference_needs_reason' => 'What arrived and the charge differ from what was collected by :difference. Write the reason before saving.',
         'refund_method_missing' => ':amount was paid for this order. Choose how it is given back.',
         'return_too_late' => 'Orders can be sent back within :days days of delivery; this one is past that.',
         'version_conflict' => 'Someone changed this order a moment ago. Refresh to see it, then try again.',
@@ -52,6 +55,7 @@ return [
         'returned' => 'Online order :number taken back',
         'payment' => 'Payment for online order :number',
         'refund' => 'Money back for online order :number',
+        'courier_payout' => 'Payout from :courier for :count cash-on-delivery order(s)',
     ],
     'posting_keys' => [
         'receivable' => 'Owed by online customers',
@@ -62,6 +66,9 @@ return [
         'mobile' => 'Mobile wallet (online orders)',
         'bank' => 'Bank (online orders)',
         'online' => 'Paid online through a link (online orders)',
+        'courier_clearing' => 'Cash on delivery held by couriers',
+        'courier_fees' => 'Courier charges',
+        'courier_difference' => 'Courier payout differences',
     ],
     // SC-5a: the page the customer opens from the payment link.
     'pay' => [

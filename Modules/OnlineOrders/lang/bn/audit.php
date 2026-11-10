@@ -12,4 +12,5 @@ return [
     'order_returned' => 'অনলাইন অর্ডার ফেরত নেওয়া হয়েছে',
     'payment_recorded' => 'অনলাইন অর্ডারের টাকা নেওয়া হয়েছে',
     'refund_made' => 'অনলাইন অর্ডারের টাকা ফেরত দেওয়া হয়েছে',
+    'courier_payout_recorded' => 'কুরিয়ারের payout লেখা হয়েছে',
 ];

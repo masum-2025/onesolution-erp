@@ -48,4 +48,8 @@ return [
         'label' => 'Courier\'s "delivered" completes the order',
         'description' => 'When the courier says a parcel was delivered, the order is marked delivered by itself. Off: staff mark it.',
     ],
+    'courier_collects_cod' => [
+        'label' => 'Courier\'s "delivered" records the cash it collected',
+        'description' => 'When the courier says a parcel was delivered, what the customer still owed is recorded as paid to the courier, to be settled by its payout. Off: staff record payments by hand.',
+    ],
 ];

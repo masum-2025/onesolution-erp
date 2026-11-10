@@ -223,12 +223,36 @@ class Orders
             return $row;
         });
 
-        $marks = (bool) $this->rules->get('online_orders.courier_marks_delivered', $this->contexts->forOrganization(Organization::query()->findOrFail($row->unit_id)));
-        if ($changed && $status === CourierStatus::DELIVERED && $row->status === Order::SHIPPED && $marks) {
-            return $this->deliver($company, $row, $row->version, null);
+        $branch = $this->contexts->forOrganization(Organization::query()->findOrFail($row->unit_id));
+        if ($changed && $status === CourierStatus::DELIVERED && $row->status === Order::SHIPPED && (bool) $this->rules->get('online_orders.courier_marks_delivered', $branch)) {
+            $row = $this->deliver($company, $row, $row->version, null);
+        }
+        if ($changed && $status === CourierStatus::DELIVERED && $row->courier_id !== null && (bool) $this->rules->get('online_orders.courier_collects_cod', $branch)) {
+            $row = $this->courierCollected($company, $row);
         }
 
         return $row;
+    }
+
+    /**
+     * SC-6: the courier says it delivered, so it holds what the customer still owed (cash on delivery):
+     * a payment by "courier" into the courier clearing account, settled later by a payout. Once per order.
+     */
+    private function courierCollected(Organization $company, Order $order): Order
+    {
+        return $this->book->transaction($company, function () use ($company, $order) {
+            $row = $this->book->query(Order::class, $company)->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+            $opId = "courier-cod-{$row->getKey()}";
+            $due = $row->dueMinor();
+            if ($due <= 0 || ! in_array($row->status, [Order::SHIPPED, Order::DELIVERED], true)
+                || $this->book->query(OrderPayment::class, $company)->where('op_id', $opId)->exists()) {
+                return $row;
+            }
+            $this->money($company, $row, 'payment', OrderPayment::COURIER, $due, $row->courier_ref, $opId, null);
+            $row->forceFill(['paid_minor' => $row->paid_minor + $due, 'version' => $row->version + 1])->save();
+
+            return $row;
+        });
     }
 
     /**

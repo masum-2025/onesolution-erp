@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Modules\OnlineOrders\Models\Order;
 use Modules\OnlineOrders\Models\OrderEvent;
 use Modules\OnlineOrders\Models\OrderLine;
+use Modules\OnlineOrders\Models\CourierPayout;
 use Modules\OnlineOrders\Models\OrderPayment;
 
 /** Online orders in the client's data export: orders with their lines, payments and history. */
@@ -36,7 +37,15 @@ class OnlineOrdersExporter implements ExportsModuleData
                 'tax_minor' => $row->tax_minor, 'total_minor' => $row->total_minor, 'cost_minor' => $row->cost_minor,
             ]),
             'order_payments' => $this->rows(OrderPayment::class, $organization, $organizationIds, fn (OrderPayment $row) => [
-                'order_id' => $row->order_id, 'kind' => $row->kind, 'method' => $row->method, 'amount_minor' => $row->amount_minor, 'reference' => $row->reference, 'created_at' => $row->created_at->toIso8601String(),
+                'order_id' => $row->order_id, 'kind' => $row->kind, 'method' => $row->method, 'amount_minor' => $row->amount_minor, 'reference' => $row->reference,
+                'courier_payout_id' => $row->courier_payout_id, 'created_at' => $row->created_at->toIso8601String(),
+            ]),
+            // SC-6: payouts couriers sent for the cash they collected.
+            'courier_payouts' => $this->rows(CourierPayout::class, $organization, $organizationIds, fn (CourierPayout $row) => [
+                'id' => $row->getKey(), 'courier_id' => $row->courier_id, 'method' => $row->method, 'currency_code' => $row->currency_code,
+                'collected_minor' => $row->collected_minor, 'received_minor' => $row->received_minor, 'fee_minor' => $row->fee_minor,
+                'difference_minor' => $row->difference_minor, 'payments_count' => $row->payments_count, 'paid_on' => $row->paid_on->toDateString(),
+                'reference' => $row->reference, 'reason' => $row->reason, 'created_at' => $row->created_at?->toIso8601String(),
             ]),
             'order_history' => $this->rows(OrderEvent::class, $organization, $organizationIds, fn (OrderEvent $row) => [
                 'order_id' => $row->order_id, 'from_status' => $row->from_status, 'to_status' => $row->to_status, 'note' => $row->note, 'at' => $row->created_at->toIso8601String(),

@@ -19,6 +19,9 @@ class OrderPayment extends Model
     /** Paid by the customer through a payment link (SC-5a); only the gateway's confirmation records it. */
     public const ONLINE = 'online';
 
+    /** SC-6: collected by the courier at the door; owed by it until a payout settles it (courier_payout_id). */
+    public const COURIER = 'courier';
+
     public const UPDATED_AT = null;
 
     protected $table = 'online_order_payments';
