@@ -54,6 +54,12 @@ class Catalog
     /**
      * @param  array<string, mixed>  $data
      */
+    /** A unit, category, warehouse or item of the company by id (another module changing what it made, e.g. Pharmacy's medicines). */
+    public function find(Organization $company, string $kind, string $id): ?Model
+    {
+        return $this->inventories->query(self::KINDS[$kind][0], $company)->whereKey($id)->first();
+    }
+
     public function update(Organization $company, string $kind, Model $model, int $baseVersion, array $data, User $actor): Model
     {
         [$class, $fields] = self::KINDS[$kind];

@@ -5720,3 +5720,33 @@ A partner's own marketing website, edited in the partner console; the house part
   with it sees the same panel there (a plain GET form, CSP-safe) and tries the looks; nothing is saved,
   the page is `no-store`, `noindex` and sends no referrer. Visitors without the link never see it.
 - A new sector, country or partner needs no code: content, languages, colours and plans are data.
+
+## Pharmacy (module `pharmacy`, PH-1)
+
+Medicine shop on top of Inventory and POS (requires both). Plan: `docs/plans/health-sectors-detail.md`.
+
+- **Medicines** (`pharmacy_medicines`): an Inventory item (brand name, SKU, barcode, selling price of one
+  piece, VAT code, batches kept, unit PCS) plus generic, strength, form, DGDA no., MRP of one piece,
+  pieces per strip and strips per box. Generics (controlled or not) and manufacturers are simple lists
+  (`pharmacy_generics`, `pharmacy_manufacturers`, made by make:erp-module).
+- **Selling**: `POST …/pharmacy/sales` by piece, strip or box; each line is split over the good batches
+  expiring first and sold as a **POS sale** (shift, payments, receipt number, books are POS's).
+  `pharmacy_sale_links` keeps the prescription (patient, prescriber, BMDC no.).
+- **POS guard** (`Modules\Pos\Contracts\SaleGuard`, tag `pos.sale_guards`): while Pharmacy is on at the
+  counter's branch, every POS sale of a medicine, at the POS till too, is refused above MRP, from an
+  expired batch, or (controlled) without a prescription. Offline sales are kept and marked `guard` for review.
+- **Buying** (`pharmacy_purchases`): an Inventory receipt with batch and expiry on every line, posted at once.
+- **Supplier returns** (`pharmacy_supplier_returns` + lines): submitted, approved by someone else
+  (`pharmacy.approve`, maker-checker), then an Inventory issue of the named batches.
+- **Controlled-drug register** (`pharmacy_controlled_entries`, append-only): every in and out with batch,
+  balance after and for whom; reading it is audited.
+- Rules: `pharmacy.near_expiry_days`, `return_before_expiry_days`, `block_expired_sale`, `block_above_mrp`,
+  `controlled_requires_prescription` (sensitive), `sell_loose_pieces`, `number_prefixes`.
+- Permissions: `pharmacy.view`, `sell` (with `pos.sell`), `manage` (buying also needs `inventory.manage`),
+  `controlled`, `approve`. Events `pharmacy.sale_made`, `pharmacy.controlled_dispensed` (ids only).
+- Screens: sell, medicines, purchases, stock and expiry, returns, controlled register, reports; each with
+  a "How to?" guide (bn, en). Generics and manufacturers in the module's settings.
+- Off: routes 403, menu hidden, the POS guard does nothing (POS sells as before); no data is deleted.
+- After deploy: migrate, `rules:sync`, `access:sync`, `addons:sync-prices`.
+- A new country or partner needs no code: MRP, expiry and prescription behaviour are rules (country or
+  partner can set or lock them), texts are translations. A new sector turns the module on in its package.

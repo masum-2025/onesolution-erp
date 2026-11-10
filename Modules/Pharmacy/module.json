@@ -1,0 +1,11 @@
+{
+    "name": "Pharmacy",
+    "alias": "pharmacy",
+    "description": "Medicine shop: medicines by brand and generic, selling by piece, strip or box within MRP, expiry and the controlled-drug register.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Pharmacy\\Providers\\PharmacyServiceProvider"
+    ],
+    "files": []
+}

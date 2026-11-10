@@ -35,7 +35,8 @@
     "review": {
         "negative_stock": "খাতার চেয়ে বেশি বিক্রি",
         "late_session": "শিফট বন্ধের পর এসেছে",
-        "discount": "সীমার বেশি ছাড়"
+        "discount": "সীমার বেশি ছাড়",
+        "guard": "অন্য module-এর নিয়ম ভেঙেছে (যেমন ফার্মেসি)"
     },
     "shift_status": {
         "open": "খোলা",

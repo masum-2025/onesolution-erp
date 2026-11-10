@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/pharmacy",
+    "description": "Medicine shop: medicines by brand and generic, selling by piece, strip or box within MRP, expiry and the controlled-drug register.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Pharmacy\\": "app/"
+        }
+    }
+}
