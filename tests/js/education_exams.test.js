@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { bandFor, bandsComplete, cellText, centiText, gradePaper, nextStatuses, parseCenti, parsePercent, percentBp, pointText, readCell, readWeights, resultSummary, sheetCounts, sheetProgress } from '../../Modules/EducationExams/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/EducationExams/resources/js/locales/en/education_exams.json';
 import bn from '../../Modules/EducationExams/resources/js/locales/bn/education_exams.json';
 

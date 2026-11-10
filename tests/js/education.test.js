@@ -32,7 +32,8 @@ import {
     stepOfError,
     suggestSessions,
 } from '../../Modules/Education/resources/js/lib.js';
-import { moduleOutsideRoutes, moduleRoutes } from '../../resources/js/modules.js';
+import { moduleOutsideRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import { readCsv } from '../../resources/js/lib/csv.js';
 import { readCsv as crmReadCsv } from '../../Modules/Crm/resources/js/lib.js';
 import en from '../../Modules/Education/resources/js/locales/en/education.json';

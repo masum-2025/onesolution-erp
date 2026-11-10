@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     blockSummary, defaultLocale, fillSample, firstChosen, insertField, offeredDesigns, keyFrom, lines, missingAnswers, newBlock, placeholdersOf, segments, unknownPlaceholders, wrapMark,
 } from '../../Modules/Letters/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Letters/resources/js/locales/en/letters.json';
 import bn from '../../Modules/Letters/resources/js/locales/bn/letters.json';
 

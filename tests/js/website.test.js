@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { i18n } from '../../resources/js/lib/i18n';
 import { BLOCKS, BLOCK_TYPES, blankItem, blockBody, blockForm, blockSummary, carriesWhiteText, COLOUR_SETS, contrast, sizeParts, slugFrom } from '../../Modules/EduWebsite/resources/js/lib';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/EduWebsite/resources/js/locales/en/edu_website.json';
 import bn from '../../Modules/EduWebsite/resources/js/locales/bn/edu_website.json';
 

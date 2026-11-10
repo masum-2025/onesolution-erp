@@ -17,7 +17,7 @@ import {
     STATUSES,
     timeToMinutes,
 } from '../../Modules/Attendance/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Attendance/resources/js/locales/en/attendance.json';
 import bn from '../../Modules/Attendance/resources/js/locales/bn/attendance.json';
 

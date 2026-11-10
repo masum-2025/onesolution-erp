@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { amountToMinor, bankCsv, bpToPercent, cleanNumber, firstRecoveryMonth, incrementTone, installmentOf, installmentTone, loanTone, minorToText, nextPeriod, percentToBp, raiseBy, runTone, settlementBasis, settlementSections, sortBonusLines, sortSlips } from '../../Modules/Payroll/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Payroll/resources/js/locales/en/payroll.json';
 import bn from '../../Modules/Payroll/resources/js/locales/bn/payroll.json';
 

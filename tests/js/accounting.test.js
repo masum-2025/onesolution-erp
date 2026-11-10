@@ -31,7 +31,7 @@ import {
     statusTone,
     todayIn,
 } from '../../Modules/Accounting/resources/js/lib.js';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 
 describe('Accounting screens', () => {
     it('registers its screens with the app shell, each a lazy page', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { bandName, cycleTone, nameIn, ratingName, scoreText, stageTone, stagesOf, weightsTotal } from '../../Modules/Appraisals/resources/js/lib';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Appraisals/resources/js/locales/en/appraisals.json';
 import bn from '../../Modules/Appraisals/resources/js/locales/bn/appraisals.json';
 

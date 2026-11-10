@@ -21,6 +21,4 @@ export default [
     { path: 'education/documents/print', name: 'education-print', component: () => import('./pages/PrintPage.vue'), meta },
     { path: 'education/structure', name: 'education-structure', component: () => import('./pages/StructurePage.vue'), meta },
     { path: 'education/fields', name: 'education-fields', component: () => import('./pages/FieldsPage.vue'), meta },
-    // Checking a document's QR code: public, without the app shell (anyone, signed in or not).
-    { path: '/verify/:organization/:code', name: 'education-verify', component: () => import('./pages/VerifyPage.vue'), meta: { public: true, outside: true, ns: ['education'], module: 'education' } },
 ];

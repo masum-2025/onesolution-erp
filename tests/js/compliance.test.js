@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { adviceTone, amountToMinor, counts, expiryFrom, grid, localToday, mailtoLink, renewalMark, stateTone } from '../../Modules/Compliance/resources/js/lib';
-import { moduleRoutes } from '../../resources/js/modules.js';
+import { moduleRoutes } from './support/moduleRoutes.js';
 import en from '../../Modules/Compliance/resources/js/locales/en/compliance.json';
 import bn from '../../Modules/Compliance/resources/js/locales/bn/compliance.json';
 
