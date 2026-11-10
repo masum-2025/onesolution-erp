@@ -4005,6 +4005,21 @@ never reach logs, errors or the browser).
 - **Future**: Pathao, RedX, eCourier are each a new `CourierDriver` and an entry in
   `CourierDrivers` and the rule's list; nothing else changes. A new country or partner needs no code.
 
+### PERF-1: a lighter home page and pages fetched ahead
+
+- **Counts only**: `GET /api/organizations/{id}/rules?summary=1` answers `{own_count, total}` (rules
+  with an own value or limit in force at this unit; `module=` still filters), and
+  `GET /api/organizations/{id}/modules?summary=1` answers `{enabled, total}`. Same access checks as
+  the full lists. The home page uses them: about 550 KB and ~100 ms less per visit.
+- **Pages fetched ahead** (`resources/js/lib/prefetch.js`): pointing at, focusing or touching a
+  sidebar link fetches that page's code; the first four menu pages come when the browser is idle,
+  never on a slow (2g/3g) or data-saving connection. Only code is fetched, never data.
+- **Tests**: Vitest runs with `pool: 'vmThreads'` (one jsdom per worker, ~12 s instead of minutes);
+  `tests/js/setup.js` gives that context Node's WebCrypto. `tests/Feature/Performance/HomeSummaryTest.php`,
+  `tests/js/prefetch.test.js`.
+- **Server setup** for speed (web server instead of `artisan serve`, OPcache, Redis):
+  [docs/ops/server-setup.md](docs/ops/server-setup.md).
+
 ### SC-7: returning parcels (the courier could not deliver)
 
 - **Who**: store or packing staff at a company or branch with the new permission

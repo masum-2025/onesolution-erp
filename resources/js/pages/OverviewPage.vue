@@ -21,8 +21,8 @@ const connected = session.me?.context?.mode === 'connection';
 const unlessConnected = (load) => (connected ? Promise.resolve(null) : load());
 
 const units = useResource(() => unlessConnected(() => visibleOrganizations()));
-const modules = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/modules`).then((response) => response.data)));
-const rules = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/rules`).then((response) => response.data)));
+const modules = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/modules?summary=1`).then((response) => response.data)));
+const rules = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/rules?summary=1`).then((response) => response.data)));
 const settings = useResource(() => unlessConnected(() => api(`/api/organizations/${org.id}/settings`).then((response) => response.data)));
 // Headline widgets of every module that is on here (UI-1b), each loading on its own.
 const overview = useResource(() => api('/api/dashboard').then((response) => response.data));
@@ -47,7 +47,6 @@ const greeting = computed(() => {
     return t(`home.greeting.${part}`, { name: first });
 });
 
-const ruleList = computed(() => (rules.data.value ?? []).flatMap((group) => group.categories.flatMap((category) => category.rules)));
 
 const stats = computed(() => [
     {
@@ -64,7 +63,7 @@ const stats = computed(() => [
         icon: Blocks,
         label: t('home.stats.modules'),
         value: modules.data.value
-            ? t('home.stats.of', { value: formatNumber(modules.data.value.filter((item) => item.enabled).length), total: formatNumber(modules.data.value.length) })
+            ? t('home.stats.of', { value: formatNumber(modules.data.value.enabled), total: formatNumber(modules.data.value.total) })
             : null,
         hint: t('home.stats.modules_hint'),
         to: '/modules',
@@ -74,8 +73,8 @@ const stats = computed(() => [
         key: 'rules',
         icon: SlidersHorizontal,
         label: t('home.stats.rules_here'),
-        value: rules.data.value ? formatNumber(ruleList.value.filter((rule) => rule.own.value || rule.own.constraint).length) : null,
-        hint: t('home.stats.rules_hint', { total: formatNumber(ruleList.value.length) }),
+        value: rules.data.value ? formatNumber(rules.data.value.own_count) : null,
+        hint: t('home.stats.rules_hint', { total: formatNumber(rules.data.value?.total ?? 0) }),
         to: '/rules',
         loading: rules.loading.value && !rules.data.value,
     },

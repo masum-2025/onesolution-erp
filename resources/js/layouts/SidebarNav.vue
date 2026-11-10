@@ -36,6 +36,7 @@ import { can, session } from '@/lib/session';
 import { formatNumber } from '@/lib/format';
 import { moduleIcon } from '@/lib/icons';
 import { menuLink } from '@/lib/menu';
+import { prefetchPath, prefetchWhenIdle } from '@/lib/prefetch';
 import { i18n, t } from '@/lib/i18n';
 
 /**
@@ -200,6 +201,20 @@ function toggleOpen(item) {
     open[itemKey(item)] = !open[itemKey(item)];
 }
 
+// PERF-1: a page's code comes when someone points at its link, and the first menu pages when the browser is idle.
+function pointAt(event) {
+    const link = event.target?.closest?.('a[href]');
+    if (link) prefetchPath(router, link.getAttribute('href'));
+}
+watch(
+    () => props.menu,
+    (menu) => {
+        const paths = menu.flatMap((item) => (item.children?.length ? item.children.map((child) => linkTo({ ...child, module: item.module })) : [linkTo(item)]));
+        prefetchWhenIdle(router, paths);
+    },
+    { immediate: true },
+);
+
 // Under the brand name: the console's name for partner staff, else the brand's tagline.
 const subtitle = computed(() => (isPartner.value ? t('core.context.partner_console') : taglineFor(i18n.locale)));
 
@@ -258,7 +273,14 @@ const linkClass = (active) => [
             <ContextSwitcher :compact="collapsed" />
         </div>
 
-        <nav class="min-h-0 flex-1 overflow-x-visible overflow-y-auto pb-4" :class="collapsed ? 'px-2' : 'px-3'" :aria-label="t('core.nav.label')">
+        <nav
+            class="min-h-0 flex-1 overflow-x-visible overflow-y-auto pb-4"
+            :class="collapsed ? 'px-2' : 'px-3'"
+            :aria-label="t('core.nav.label')"
+            @pointerover="pointAt"
+            @focusin="pointAt"
+            @touchstart.passive="pointAt"
+        >
             <!-- Platform screens -->
             <section v-for="section in platformSections" :key="section.key" class="pt-4" :aria-label="section.label">
                 <p v-if="!collapsed" class="px-3 pb-2 text-[11px] font-semibold tracking-[0.1em] text-side-muted uppercase" aria-hidden="true">{{ section.label }}</p>

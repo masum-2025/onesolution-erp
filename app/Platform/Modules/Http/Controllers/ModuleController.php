@@ -13,6 +13,7 @@ use App\Platform\Tenancy\Http\Controllers\Api\Concerns\FindsVisibleOrganizations
 use App\Platform\Tenancy\Models\Organization;
 use App\Platform\Tenancy\Services\HierarchyService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -29,10 +30,21 @@ class ModuleController extends Controller
     /**
      * Every module with its effective state for this organization and where it comes from.
      */
-    public function index(string $organization, HierarchyService $hierarchy): AnonymousResourceCollection
+    public function index(Request $request, string $organization, HierarchyService $hierarchy): AnonymousResourceCollection|JsonResponse
     {
         $organization = $this->findVisible($organization);
         Gate::authorize('view', $organization);
+        $summary = $request->validate(['summary' => ['sometimes', 'boolean']])['summary'] ?? false;
+
+        // PERF-1: the home page shows only how many are on (a few bytes, not every module's details).
+        if ((bool) $summary) {
+            $resolved = $this->resolver->resolveAll($organization);
+
+            return response()->json(['data' => [
+                'enabled' => count(array_filter($this->registry->keys(), fn (string $key) => $resolved[$key]->enabled)),
+                'total' => count($this->registry->keys()),
+            ]]);
+        }
 
         $names = $hierarchy->ancestors($organization)
             ->concat([$organization])

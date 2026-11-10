@@ -52,5 +52,8 @@ export default defineConfig({
     test: {
         environment: 'jsdom',
         include: ['tests/js/**/*.test.js'],
+        // PERF-1: one jsdom per worker instead of one per file (each file still runs in its own context).
+        pool: 'vmThreads',
+        setupFiles: ['tests/js/setup.js'],
     },
 });
