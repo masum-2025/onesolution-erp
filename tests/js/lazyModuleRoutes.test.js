@@ -77,6 +77,30 @@ describe('syncModuleRoutes', () => {
         expect(await syncModuleRoutes(makeRouter(), null, { modules: lists })).toBe(false);
     });
 
+    it('loads the partner console only in a partner context (FE-2)', async () => {
+        const partner = vi.fn(async () => [{ path: 'partner/plans', name: 'partner-plans', component: Page, meta: { context: 'partner' } }]);
+        const router = makeRouter();
+
+        await syncModuleRoutes(router, me(), { modules: lists, partner });
+        expect(partner).not.toHaveBeenCalled();
+        expect(at(router, '/partner/plans')).toBe('not-found');
+
+        expect(await syncModuleRoutes(router, { context: { type: 'partner', id: 'p-1' } }, { modules: lists, partner })).toBe(true);
+        expect(at(router, '/partner/plans')).toBe('partner-plans');
+        expect(router.hasRoute('online-orders')).toBe(false);
+
+        // Back in a company: the console's screens go.
+        await syncModuleRoutes(router, me(), { modules: lists, partner });
+        expect(router.hasRoute('partner-plans')).toBe(false);
+    });
+
+    it('keeps every partner console screen in its own file, none in the first load', async () => {
+        const { default: routes } = await import('@/partnerRoutes.js');
+        expect(routes.length).toBe(25);
+        expect(routes.every((route) => route.meta.context === 'partner' && route.path.startsWith('partner/'))).toBe(true);
+        expect(routes.every((route) => typeof route.component === 'function')).toBe(true);
+    });
+
     it('skips a module whose list cannot be fetched (offline) and tries again later', async () => {
         const router = makeRouter();
         lists.hrm.mockRejectedValueOnce(new Error('offline'));

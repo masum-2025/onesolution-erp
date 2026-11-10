@@ -4016,6 +4016,9 @@ never reach logs, errors or the browser).
   organization the set is rebuilt and the address resolved again, so a direct link works. Pages
   outside the menu (an order's own page, "my leave") follow their module. Only the UI is shaped:
   every API call still checks permission, organization and module.
+- **Partner console (FE-2)**: its 25 screens are in `resources/js/partnerRoutes.js`, fetched only in a
+  partner context; company staff never load them (first load **63.5 KB**). A partner address opened in
+  a company shows "page not found" instead of sending them home.
 - **Public pages** (signed out, no shell) go in a module's `resources/js/public-routes.js`, always
   loaded (Education's QR check).
 - **New module**: nothing to change; its folder name gives its key (`OnlineOrders` → `online_orders`).

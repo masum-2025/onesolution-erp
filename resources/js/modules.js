@@ -31,8 +31,12 @@ const byKey = Object.fromEntries(Object.entries(loaders).map(([path, load]) => [
 
 const state = { signature: null, removers: [] };
 
+// FE-2: the partner console's screens, only for someone working in a partner's console.
+const partnerConsole = () => import('./partnerRoutes.js').then((module) => module.default);
+
 /** What the routes depend on: the context, its modules and the pages left out. */
 function signatureOf(me) {
+    if (me?.context?.type === 'partner') return `partner:${me.context.id}`;
     if (me?.context?.type !== 'organization') return '';
     return [me.context.id, ...(me.modules ?? []), '|', ...(me.denied_pages ?? [])].join(',');
 }
@@ -42,18 +46,20 @@ function signatureOf(me) {
  * route named `parent`), without the pages this person may not open. Returns
  * whether anything changed (the navigation then resolves its address again).
  */
-export async function syncModuleRoutes(router, me, { parent = 'app-shell', modules = byKey } = {}) {
+export async function syncModuleRoutes(router, me, { parent = 'app-shell', modules = byKey, partner = partnerConsole } = {}) {
     const signature = signatureOf(me);
     if (signature === state.signature) return false;
 
-    const keys = signature === '' ? [] : (me.modules ?? []).filter((key) => modules[key]);
+    const inPartner = signature.startsWith('partner:');
+    const loaders = inPartner ? { partner } : modules;
+    const keys = inPartner ? ['partner'] : signature === '' ? [] : (me.modules ?? []).filter((key) => modules[key]);
     // Nothing registered and nothing to register (signed out, partner console): no change to resolve again.
     if (!keys.length && !state.removers.length) {
         state.signature = signature;
         return false;
     }
     const denied = new Set(me?.denied_pages ?? []);
-    const lists = await Promise.all(keys.map((key) => modules[key]().catch(() => [])));
+    const lists = await Promise.all(keys.map((key) => loaders[key]().catch(() => [])));
 
     state.removers.forEach((remove) => remove());
     state.removers = lists
