@@ -72,7 +72,8 @@
         "views_text": "যতবার কেউ এই রোগীর record, ইতিহাস বা কার্ড খুলেছেন।",
         "age_estimated": "আনুমানিক {count} বছর",
         "history": "ইতিহাস",
-        "history_empty": "এখনো কিছু নেই। ভিজিট, রিপোর্ট আর বিল হলে এখানে দেখাবে।"
+        "history_empty": "এখনো কিছু নেই। ভিজিট, রিপোর্ট আর বিল হলে এখানে দেখাবে।",
+        "bills": "বিল"
     },
     "merge": {
         "title": "একই রোগী একত্র করা",
@@ -108,7 +109,8 @@
         "title": "আমার স্বাস্থ্য record",
         "text": "{org}-এ আপনার record।",
         "empty": "এখনো কোনো রোগী record যুক্ত হয়নি",
-        "empty_text": "Reception-কে বলুন আপনার রোগী record এই account-এ যুক্ত করে দিতে।"
+        "empty_text": "Reception-কে বলুন আপনার রোগী record এই account-এ যুক্ত করে দিতে।",
+        "bills": "আমার বিল"
     },
     "guide": {
         "find": {

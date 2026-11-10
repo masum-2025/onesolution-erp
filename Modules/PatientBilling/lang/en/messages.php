@@ -1,0 +1,53 @@
+<?php
+
+// Errors and other server texts.
+return [
+    'errors' => [
+        'not_company_unit' => 'Open a company or one of its branches: a group keeps no bills of its own.',
+        'version_conflict' => 'Someone changed this a moment ago. It has been loaded again; make your change once more.',
+        'no_currency' => 'Set the company currency first (company settings).',
+        'bad_link' => 'Choose one from this company (and this branch or one below it).',
+        'in_use' => 'Bills already use this. Mark it "not in use" instead of removing it.',
+        'service_not_found' => 'This service is not here. Open the page again.',
+        'panel_not_found' => 'This corporate or panel client is not here. Open the page again.',
+        'patient_not_found' => 'This patient is not here. Search for the patient again.',
+        'bill_not_found' => 'This bill is not here. Open the page again.',
+        'line_not_found' => 'This line is not on the bill any more. Open the bill again.',
+        'discount_not_found' => 'This request is not here. Open the page again.',
+        'cash_day_not_found' => 'This cash day is not here. Open the page again.',
+        'service_inactive' => 'This service is not in use. Choose another or turn it on in "Services and prices".',
+        'panel_inactive' => 'This corporate or panel client is not in use. Choose another.',
+        'bad_quantity' => 'Enter how many (1 or more).',
+        'bill_not_open' => 'This bill is already final or void, so it cannot be changed. Give a refund instead.',
+        'bill_empty' => 'Add at least one service before finalizing.',
+        'bill_paid' => 'Money was taken on this bill, so it cannot be voided. Refund the money first.',
+        'discount_waiting' => 'A discount on this bill is waiting for approval. Wait for the decision first.',
+        'discount_too_big' => 'The discount is bigger than the bill. Enter a smaller amount.',
+        'discount_below_paid' => 'With this discount the bill would be less than what was already paid. Refund the difference first.',
+        'must_pay_in_full' => 'This branch does not allow dues: take the full amount before finalizing.',
+        'panel_over_limit' => 'This would go over the panel\'s credit limit. Take payment from the patient or ask to raise the limit.',
+        'overpay' => 'This is more than is due on the bill. Take the rest as an advance.',
+        'advance_short' => 'The patient\'s advance is not enough. Take the rest another way.',
+        'bad_method' => 'An advance is taken in cash, card or mobile money.',
+        'refund_too_big' => 'You cannot give back more than was paid on this bill.',
+        'no_cash_day' => 'Open your cash day first (Close cash → Open the day), then take cash.',
+        'day_already_open' => 'Your cash day is already open.',
+        'day_not_open' => 'This cash day is already closed.',
+        'not_your_day' => 'Only the cashier closes their own day.',
+        'own_request' => 'You made this, so someone else must decide it.',
+        'not_pending' => 'This has already been decided.',
+    ],
+    'validation' => [
+        'taken' => 'Another service already has this code. Use a different one.',
+    ],
+    'narration' => [
+        'bill' => 'Patient bill :number',
+        'payment' => 'Patient payment :number',
+        'advance' => 'Patient advance :number',
+        'refund' => 'Patient refund :number',
+        'cash_day' => 'Cash count difference',
+    ],
+    'timeline' => [
+        'bill' => 'Bill :number',
+    ],
+];

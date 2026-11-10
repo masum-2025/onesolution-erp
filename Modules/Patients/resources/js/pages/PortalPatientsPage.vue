@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from 'vue';
-import { HeartPulse, History } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
+import { HeartPulse, History, ReceiptText } from 'lucide-vue-next';
+import { AppButton } from '@/ui';
 import { EmptyState, PageFrame } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDateTime } from '@/lib/format';
@@ -11,6 +13,9 @@ import { portalPatients } from '../api';
  * The portal: a patient (or a parent) sees their own record and history,
  * nothing else.
  */
+const router = useRouter();
+// The bills page exists only while Patient billing is on for this organization.
+const hasBills = router.hasRoute('patient-billing-portal');
 const view = useResource(() => portalPatients());
 const data = computed(() => view.data.value?.data ?? null);
 const patients = computed(() => data.value?.patients ?? []);
@@ -19,6 +24,9 @@ const patients = computed(() => data.value?.patients ?? []);
 <template>
     <PageFrame :title="t('patients.portal.title')" :description="data ? t('patients.portal.text', { org: data.organization }) : ''" :resource="view" width="md"
                :empty="{ when: !!data && !patients.length, icon: HeartPulse, title: t('patients.portal.empty'), text: t('patients.portal.empty_text') }">
+        <template v-if="hasBills && patients.length" #actions>
+            <AppButton :icon="ReceiptText" @click="router.push({ name: 'patient-billing-portal' })">{{ t('patients.portal.bills') }}</AppButton>
+        </template>
         <section v-for="patient in patients" :key="patient.id" class="card mb-4">
             <header class="border-b border-line px-5 py-3">
                 <h2 class="text-[15px] font-semibold">{{ patient.name }}</h2>

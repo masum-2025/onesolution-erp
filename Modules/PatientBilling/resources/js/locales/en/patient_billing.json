@@ -1,0 +1,286 @@
+{
+    "module": {
+        "title": "Patient billing",
+        "description": "Bills for patients: services and prices, payments and advances, discounts with approval, refunds, corporate and panel clients, and closing the cash each day."
+    },
+    "entities": {
+        "service": {
+            "label": "Service",
+            "plural": "Services and prices"
+        },
+        "panel": {
+            "label": "Corporate or panel client",
+            "plural": "Corporate and panel clients"
+        }
+    },
+    "fields": {
+        "service": {
+            "code": "Code",
+            "name": "Service name",
+            "category": "Type",
+            "price": "Price",
+            "tax_code_id": "VAT (when the company keeps books)",
+            "is_active": "In use"
+        },
+        "panel": {
+            "name": "Company name",
+            "kind": "Kind",
+            "credit_limit": "Credit limit (empty = no limit)",
+            "discount_percent": "Discount (%)",
+            "is_active": "In use"
+        }
+    },
+    "options": {
+        "service": {
+            "category": {
+                "consultation": "Consultation",
+                "test": "Test",
+                "bed": "Bed or cabin",
+                "procedure": "Procedure",
+                "other": "Other"
+            }
+        },
+        "panel": {
+            "kind": {
+                "corporate": "Corporate",
+                "panel": "Insurance or panel"
+            }
+        }
+    },
+    "common": {
+        "loading": "Loading…",
+        "cancel": "Cancel",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {page} of {last}",
+        "years": "{count} yrs"
+    },
+    "status": {
+        "open": "Open",
+        "final": "Final",
+        "void": "Void"
+    },
+    "method": {
+        "cash": "Cash",
+        "card": "Card",
+        "mobile": "bKash / Nagad",
+        "advance": "From advance"
+    },
+    "sources": {
+        "diagnostics": "From diagnostics",
+        "outpatient": "From outpatient",
+        "inpatient": "From the ward",
+        "pharmacy": "From pharmacy"
+    },
+    "pick": {
+        "search": "Patient number, mobile or name",
+        "none": "No patient found. Register the patient first (Patients).",
+        "change": "Change",
+        "advance": "advance {amount}"
+    },
+    "bills": {
+        "title": "Bills and payments",
+        "text": "Open a bill, add services, take money and print the receipt.",
+        "new": "New bill",
+        "new_text": "Find the patient. Choose a corporate or panel client only if they pay.",
+        "open": "Open the bill",
+        "advance": "Take advance",
+        "advance_text": "Money before any bill (e.g. before admission). It pays later bills.",
+        "advance_taken": "Advance taken: {number}",
+        "all": "All",
+        "filter": {
+            "open": "Open",
+            "due": "Due",
+            "final": "Final",
+            "void": "Void"
+        },
+        "filter_label": "Show",
+        "find_number": "Bill number",
+        "empty": "No bills here",
+        "empty_text": "Tap \"New bill\" to start one.",
+        "number": "Bill no.",
+        "patient": "Patient",
+        "status": "Status",
+        "total": "Total",
+        "due": "Due",
+        "date": "Date",
+        "due_short": "due {amount}"
+    },
+    "bill": {
+        "title": "Bill",
+        "not_found": "This bill is not here",
+        "back": "Bills",
+        "print": "Print",
+        "service": "Service",
+        "quantity": "Qty",
+        "price": "Price",
+        "discount": "Discount",
+        "amount": "Amount",
+        "remove_line": "Take this line off",
+        "no_lines": "No services yet. Pick one below.",
+        "pick_service": "Pick a service…",
+        "add": "Add",
+        "line_removed": "Line taken off",
+        "panel": "Corporate or panel",
+        "panel_hint": "Their discount applies; what is due at the end goes to them.",
+        "no_panel": "None (patient pays)",
+        "subtotal": "Subtotal",
+        "panel_discount": "Panel discount",
+        "vat": "VAT",
+        "vat_inside": "VAT (included)",
+        "total": "Total",
+        "paid": "Paid",
+        "refunded": "Refunded",
+        "due": "Due",
+        "due_panel": "Due from panel",
+        "advance_left": "Advance left: {amount}",
+        "give_discount": "Give discount",
+        "discount_text": "Discounts above {percent}% of the bill wait for someone else to approve.",
+        "discount_amount": "Discount amount",
+        "discount_reason": "Reason",
+        "discount_reason_hint": "E.g. \"Staff family\" or \"Poor patient\".",
+        "discount_given": "Discount given",
+        "discount_waiting": "Sent for approval",
+        "discount_pending": "A discount of {amount} asked by {name} is waiting for approval.",
+        "finalize": "Finalize",
+        "finalize_text": "Total {total}, still due {due}. A final bill cannot be changed; mistakes are refunded.",
+        "finalized": "Bill finalized",
+        "void": "Void bill",
+        "void_text": "Only an open bill nobody paid can be voided. It stays in the list as void.",
+        "void_reason_label": "Reason",
+        "voided": "Bill voided",
+        "void_reason": "Voided: {reason}",
+        "money": "Money in and out",
+        "no_money": "No money taken yet."
+    },
+    "pay": {
+        "take": "Take payment",
+        "text": "Due now: {due}.",
+        "amount": "Amount",
+        "amount_hint": "Full or part. More than is due? Take the rest as an advance.",
+        "method": "How paid",
+        "reference": "Transaction ID (optional)",
+        "reference_hint": "From the card slip or bKash / Nagad message.",
+        "taken": "Money receipt {number}"
+    },
+    "refund": {
+        "title": "Refund",
+        "text": "Up to {max} can be given back. It is a separate record; the bill stays.",
+        "how": "Give back as",
+        "reason": "Reason",
+        "reason_hint": "E.g. \"Test not done\".",
+        "give": "Give refund",
+        "given": "Refund {number} given"
+    },
+    "receipt": {
+        "back": "Back to the bill",
+        "bill": "Bill and money receipt",
+        "provisional": "Bill (not final yet)",
+        "number": "Bill no.",
+        "date": "Date",
+        "patient": "Patient",
+        "mrn": "Patient no."
+    },
+    "approvals": {
+        "title": "Discounts and refunds",
+        "text": "Big discounts wait here for someone other than the person who asked.",
+        "filter": "Show",
+        "status": {
+            "pending": "Waiting",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        },
+        "discounts": "Discount requests",
+        "none": "No requests here",
+        "refunds": "Latest refunds",
+        "no_refunds": "No refunds yet",
+        "decide": "Decide",
+        "decide_text": "{amount} off bill {number}. Reason: {reason}",
+        "waiting": "Waiting for someone else",
+        "note": "Note",
+        "note_hint": "Needed to reject.",
+        "approve": "Approve",
+        "reject": "Reject",
+        "approved": "Approved",
+        "rejected": "Rejected"
+    },
+    "cash": {
+        "title": "Close cash",
+        "text": "Open your day, take cash, then count and close at the end.",
+        "float": "Cash in the drawer at the start",
+        "float_hint": "Change money you start with (can be 0).",
+        "open": "Open the day",
+        "opened": "Day opened",
+        "open_since": "Open since {time}. Cash that should be in the drawer:",
+        "expected_hint": "Start {float} + cash taken − cash given back.",
+        "close": "Count and close",
+        "close_text": "Expected {expected}. A difference of more than {allowed} goes to a supervisor.",
+        "counted": "Counted",
+        "counted_hint": "Count the notes and coins in the drawer.",
+        "expected": "Expected",
+        "difference": "Difference",
+        "closed": "Day closed",
+        "sent_for_review": "The difference is over the limit; a supervisor will look at it.",
+        "review": "Review",
+        "review_text": "{name}'s day is {difference} out.",
+        "review_note": "What was found",
+        "accept": "Accept and close",
+        "accepted": "Day closed",
+        "empty": "No cash days yet",
+        "status": {
+            "open": "Open",
+            "review": "To review",
+            "closed": "Closed"
+        }
+    },
+    "portal": {
+        "title": "My bills",
+        "text": "Your bills at {org}.",
+        "empty": "No bills yet",
+        "empty_text": "Final bills show up here.",
+        "paid": "Paid",
+        "refund": "Refunded"
+    },
+    "guide": {
+        "bills": {
+            "title": "How to bill a patient and take money",
+            "steps": {
+                "1": "Tap \"New bill\" and find the patient.",
+                "2": "Add services; charges from other departments come in by themselves.",
+                "3": "Giving a discount? Write the reason.",
+                "4": "Take the money: full, part or from the advance.",
+                "5": "Finalize and print the receipt."
+            },
+            "tips": {
+                "1": "Money before a bill (admission) is an advance; it pays later bills."
+            },
+            "mistakes": {
+                "1": "Bills cannot be deleted. Before finalizing take a wrong line off; after, give a refund."
+            },
+            "settings": "Discount limit, dues and number prefixes are in the Patient billing settings."
+        },
+        "approvals": {
+            "title": "How to approve discounts",
+            "steps": {
+                "1": "Open a waiting request.",
+                "2": "Read the reason, then approve or reject."
+            },
+            "tips": {
+                "1": "You cannot approve your own request.",
+                "2": "Refunds are given from the bill by people allowed to approve."
+            }
+        },
+        "cash": {
+            "title": "How to close the cash",
+            "steps": {
+                "1": "In the morning, open the day with the change in the drawer.",
+                "2": "At the end, count the cash and enter it.",
+                "3": "Within the limit it closes; beyond it, a supervisor reviews."
+            },
+            "mistakes": {
+                "1": "Cash cannot be taken until your day is open."
+            },
+            "settings": "The allowed difference is in the Patient billing settings."
+        }
+    }
+}
