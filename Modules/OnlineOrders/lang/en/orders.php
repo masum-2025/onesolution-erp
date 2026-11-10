@@ -2,6 +2,8 @@
 
 // Online orders: errors (what to do next), checks, book entries.
 return [
+    'courier_returned' => 'The courier brought the parcel back',
+    'attention_returning' => 'Parcels coming back from the courier',
     'errors' => [
         'not_company_unit' => 'Online orders belong to a company or a branch. Open one of them and try again.',
         'no_currency' => 'The company has no currency yet. Set it in the company\'s settings first.',
@@ -28,6 +30,7 @@ return [
         'courier_bad_answer' => 'The courier sent an answer we could not read. Check the parcel in the courier\'s panel before trying again.',
         'courier_keys' => 'Type every key this courier needs: :fields.',
         'payments_not_owed' => 'Some of the chosen payments are not owed by this courier or were already settled. Reload the list and choose again.',
+        'not_coming_back' => 'This order is not a parcel the courier is bringing back. Reload the order to see where it stands.',
         'mixed_currencies' => 'The chosen payments are in different currencies. Record one payout per currency.',
         'difference_needs_reason' => 'What arrived and the charge differ from what was collected by :difference. Write the reason before saving.',
         'refund_method_missing' => ':amount was paid for this order. Choose how it is given back.',
@@ -56,6 +59,7 @@ return [
         'payment' => 'Payment for online order :number',
         'refund' => 'Money back for online order :number',
         'courier_payout' => 'Payout from :courier for :count cash-on-delivery order(s)',
+        'courier_return' => 'Delivery charge kept on returned parcel :number',
     ],
     'posting_keys' => [
         'receivable' => 'Owed by online customers',

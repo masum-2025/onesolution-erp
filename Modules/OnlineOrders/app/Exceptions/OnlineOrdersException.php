@@ -125,6 +125,12 @@ class OnlineOrdersException extends TenancyException
     }
 
     /** SC-6: some of the payments chosen are not this courier's, or are already settled. */
+    /** SC-7: only a shipped order the courier is bringing back can be received back. */
+    public static function notComingBack(): self
+    {
+        return new self('not_coming_back', 409);
+    }
+
     public static function paymentsNotOwed(): self
     {
         return new self('payments_not_owed', 409);

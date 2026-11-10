@@ -197,6 +197,30 @@
         "final": "A saved payout cannot be changed. It goes into the books at once.",
         "recorded": "Payout saved",
         "history": "Earlier payouts",
-        "no_history": "No payout from this courier yet."
+        "no_history": "No payout from this courier yet.",
+        "return_rate": "{percent}% came back in the last {days} days"
+    },
+    "returns": {
+        "title": "Returning parcels",
+        "text": "Parcels the courier could not deliver and is bringing back. When one arrives, check it and take it back: its goods go back into stock and the order is cancelled.",
+        "all": "On the way",
+        "late": "Late",
+        "none": "No parcel coming back",
+        "none_text": "When a courier cancels a parcel out for delivery, it shows here until you take it back.",
+        "none_late": "No parcel is late.",
+        "order": "Order",
+        "customer": "Customer",
+        "courier": "Courier",
+        "since": "Cancelled on",
+        "days": "Days on the way",
+        "items": "Goods",
+        "on_way": "On the way · {days} day(s)",
+        "late_badge": "Late · {days} day(s)",
+        "cancelled_on": "The courier cancelled it on {day}",
+        "paid_ahead": "{amount} paid ahead. Give it back by",
+        "receive": "Parcel received back",
+        "confirm_title": "Take {number} back into the warehouse?",
+        "confirm_text": "Check that every item below is in the parcel. Its goods go back into stock and the order is cancelled. This cannot be undone. You may write a note (for example a damaged item).",
+        "received": "{number} taken back. Goods are in stock again."
     }
 }

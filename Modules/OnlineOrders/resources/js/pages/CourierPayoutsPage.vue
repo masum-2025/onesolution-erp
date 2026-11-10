@@ -121,6 +121,9 @@ const exported = computed(() => (account.value ? {
                     {{ t('online_orders.payouts.owed_count', { count: formatNumber(row.owed.reduce((sum, due) => sum + due.count, 0)) }) }}
                     <template v-if="row.last_payout"> · {{ t('online_orders.payouts.last', { day: formatDate(`${row.last_payout.paid_on}T00:00:00Z`, { day: 'numeric', month: 'short', timeZone: 'UTC' }) }) }}</template>
                 </p>
+                <p v-if="row.returns?.sent" class="mt-0.5 text-[12px] text-muted">
+                    {{ t('online_orders.payouts.return_rate', { percent: formatNumber(Math.round((row.returns.returned * 100) / row.returns.sent)), days: formatNumber(row.returns.days) }) }}
+                </p>
             </button>
         </div>
 

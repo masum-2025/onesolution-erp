@@ -9,5 +9,6 @@ export default [
     { path: 'online-orders/new', name: 'online-order-new', component: () => import('./pages/NewOrderPage.vue'), meta },
     { path: 'online-orders/couriers', name: 'online-order-couriers', component: () => import('./pages/CouriersPage.vue'), meta },
     { path: 'online-orders/courier-payouts', name: 'online-order-courier-payouts', component: () => import('./pages/CourierPayoutsPage.vue'), meta },
+    { path: 'online-orders/returns', name: 'online-order-returns', component: () => import('./pages/ReturnsPage.vue'), meta },
     { path: 'online-orders/:id', name: 'online-order', component: () => import('./pages/OrderPage.vue'), meta },
 ];

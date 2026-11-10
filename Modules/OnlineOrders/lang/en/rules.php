@@ -52,4 +52,16 @@ return [
         'label' => 'Courier\'s "delivered" records the cash it collected',
         'description' => 'When the courier says a parcel was delivered, what the customer still owed is recorded as paid to the courier, to be settled by its payout. Off: staff record payments by hand.',
     ],
+    'courier_cancel_means_return' => [
+        'label' => 'Courier\'s "cancelled" means the parcel is coming back',
+        'description' => 'When the courier cancels a parcel already out for delivery, the order shows under Returning parcels until staff take it back. Off: staff cancel such orders by hand.',
+    ],
+    'return_overdue_days' => [
+        'label' => 'Days before a returning parcel is late',
+        'description' => 'A parcel still not back this many days after the courier cancelled it shows as late, and the bell warns.',
+    ],
+    'keep_delivery_on_return' => [
+        'label' => 'Keep the delivery charge when a parcel comes back',
+        'description' => 'When a parcel comes back, money the customer paid ahead is given back less the delivery charge (the parcel did travel). Off: everything paid is given back.',
+    ],
 ];

@@ -54,6 +54,8 @@ class Order extends Model
             'confirmed_at' => 'immutable_datetime',
             'shipped_at' => 'immutable_datetime',
             'courier_checked_at' => 'immutable_datetime',
+            'courier_returning_at' => 'immutable_datetime',
+            'received_back_at' => 'immutable_datetime',
             'delivered_at' => 'immutable_datetime',
             'closed_at' => 'immutable_datetime',
             'version' => 'integer',
