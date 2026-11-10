@@ -10,6 +10,8 @@ const props = defineProps({
     side: { type: String, default: 'end' }, // start | end
     width: { type: String, default: 'sm:max-w-[560px]' },
     labelledby: { type: String, default: null },
+    // On phones: a sheet rising from the bottom instead of a full-height panel.
+    sheet: Boolean,
 });
 
 const emit = defineEmits(['close']);
@@ -18,10 +20,18 @@ const panel = ref(null);
 const titleId = useId();
 const { onKeydown } = useModal(toRef(props, 'open'), panel, () => emit('close'));
 
-const position = computed(() => (props.side === 'start' ? 'start-0 border-e' : 'end-0 border-s'));
-const hidden = computed(() =>
-    props.side === 'start' ? '-translate-x-full rtl:translate-x-full' : 'translate-x-full rtl:-translate-x-full',
-);
+const position = computed(() => {
+    const side = props.side === 'start' ? 'start-0 border-e' : 'end-0 border-s';
+    if (!props.sheet) return `inset-y-0 ${side}`;
+    const wide = props.side === 'start' ? 'sm:start-0 sm:end-auto sm:border-e' : 'sm:end-0 sm:start-auto sm:border-s';
+    return `inset-x-0 bottom-0 max-h-[85dvh] rounded-t-2xl border-t sm:inset-x-auto sm:inset-y-0 sm:max-h-none sm:rounded-none sm:border-t-0 ${wide}`;
+});
+const hidden = computed(() => {
+    const across = props.side === 'start' ? '-translate-x-full rtl:translate-x-full' : 'translate-x-full rtl:-translate-x-full';
+    if (!props.sheet) return across;
+    const wide = props.side === 'start' ? 'sm:-translate-x-full sm:rtl:translate-x-full' : 'sm:translate-x-full sm:rtl:-translate-x-full';
+    return `translate-y-full sm:translate-y-0 ${wide}`;
+});
 </script>
 
 <template>
@@ -42,7 +52,7 @@ const hidden = computed(() =>
                 aria-modal="true"
                 :aria-labelledby="labelledby ?? titleId"
                 tabindex="-1"
-                class="fixed inset-y-0 z-50 flex w-full flex-col border-line bg-raised shadow-dialog outline-none"
+                class="fixed z-50 flex w-full flex-col border-line bg-raised shadow-dialog outline-none"
                 :class="[position, width]"
                 @keydown="onKeydown"
             >

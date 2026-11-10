@@ -8,6 +8,7 @@ import AppDialog from '@/components/AppDialog.vue';
 import AppField from '@/components/AppField.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ErrorState from '@/components/ErrorState.vue';
+import GuideButton from '@/components/GuideButton.vue';
 import SkeletonRows from '@/components/SkeletonRows.vue';
 import { useResource } from '@/lib/useResource';
 import { enqueueOffline, offline, offlineRecords } from '@/lib/offline';
@@ -330,6 +331,7 @@ function nextSale() {
                 <AppBadge v-if="offline.pending" tone="brand">{{ t('pos.till.pending', { count: formatNumber(offline.pending) }) }}</AppBadge>
                 <span class="flex-1" />
                 <span class="hidden text-[12px] opacity-75 xl:inline">{{ t('pos.till.keys') }}</span>
+                <GuideButton guide="pos.guide.sell" :settings="{ name: 'module-settings', params: { module: 'pos' } }" on-dark />
                 <AppButton v-if="shift" variant="ghost" size="sm" :icon="ReceiptText" class="!text-side-fg hover:!bg-white/10" :to="{ name: 'pos-shift', params: { id: shift.id } }">{{ t('pos.till.close_shift') }}</AppButton>
                 <AppButton variant="ghost" size="sm" :icon="fullScreen ? Minimize : Maximize" class="!text-side-fg hover:!bg-white/10" @click="toggleFullScreen">{{ t(fullScreen ? 'pos.till.exit_full_screen' : 'pos.till.full_screen') }}</AppButton>
             </div>

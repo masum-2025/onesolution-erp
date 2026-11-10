@@ -165,3 +165,35 @@ it('has the same translation keys in Bangla and English', function () {
         expect($bn)->toBe($en, basename($english).' keys differ between en and bn');
     }
 });
+
+it('gives every "How to" guide a title and a first step in Bangla and English', function () {
+    // <PageFrame guide="pharmacy.guide.sell"> or <GuideButton guide="…">: the button hides without these keys,
+    // so a missing text would silently drop the guide (see lib/guide.js).
+    $texts = function (string $locale, string $namespace): array {
+        $files = [resource_path("js/locales/{$locale}/{$namespace}.json"), ...glob(base_path("Modules/*/resources/js/locales/{$locale}/{$namespace}.json"))];
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                return json_decode(file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
+            }
+        }
+
+        return [];
+    };
+
+    $guides = [];
+    foreach (frontendFiles()->name('*.vue') as $file) {
+        preg_match_all('/\bguide="([a-z_]+)\.guide\.([a-z_]+)"/', $file->getContents(), $found, PREG_SET_ORDER);
+        foreach ($found as [, $namespace, $page]) {
+            $guides["{$namespace}.guide.{$page}"] = [$namespace, $page];
+        }
+    }
+
+    expect($guides)->not->toBeEmpty();
+    foreach ($guides as $key => [$namespace, $page]) {
+        foreach (['bn', 'en'] as $locale) {
+            $guide = $texts($locale, $namespace)['guide'][$page] ?? [];
+            expect(is_string($guide['title'] ?? null) && is_string($guide['steps']['1'] ?? null))
+                ->toBeTrue("{$key} has no title or first step in {$locale}");
+        }
+    }
+});

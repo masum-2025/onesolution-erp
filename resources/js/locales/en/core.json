@@ -275,6 +275,17 @@
         "as_of": "As of {date}",
         "printed_on": "Printed on {date}"
     },
+    "guide": {
+        "button": "How to?",
+        "tips": "Tips",
+        "mistakes": "Common mistakes",
+        "settings": "Settings for this page",
+        "open_settings": "Open the settings",
+        "video": "Watch the video",
+        "quiet": "Don't remind me again",
+        "quiet_done": "Done. The guide stays here when you need it.",
+        "got_it": "Got it"
+    },
     "footer": {
         "terms": "Terms",
         "privacy": "Privacy"

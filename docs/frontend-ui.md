@@ -51,6 +51,24 @@ A record's page (its title comes with its data):
 - `not-found`: shown for a 404 instead of the error. Pages that load in their own way (several
   calls, a form) leave out `resource` and keep their states; the title waits for the record.
 
+## "How to?" guide
+
+`<PageFrame guide="pharmacy.guide.sell" :guide-settings="{ name: 'module-settings', params: { module: 'pharmacy' } }">`
+puts a **ⓘ কীভাবে করবেন? / How to?** button at the inline-end of the header. It opens a side
+drawer (a bottom sheet on phones) with numbered steps, tips, common mistakes and where the
+page's settings live. A full-screen tool without the frame places `<GuideButton guide="…" />`
+in its own bar (the POS till does).
+
+- Texts are plain translation strings in the module's bn and en files, so partners and companies
+  reword them in the language editor without code:
+  `guide.<page>.title`, `guide.<page>.steps.1…9`, optional `tips.1…`, `mistakes.1…`, `settings`.
+- No title or no first step: no button (never raw keys). Text is shown as text, never HTML.
+- `guide-video`: a partner's https link only.
+- The button pulses until that page's guide was opened once; "Don't remind me again" stops it on
+  every page. Remembered in this browser only (`lib/storage`).
+- The drawer loads on the first click (nothing added to the first load).
+- `FrontendSourceTest` checks that every `guide="…"` has a title and a first step in bn and en.
+
 ## Export and print
 
 | Format | How | Notes |
