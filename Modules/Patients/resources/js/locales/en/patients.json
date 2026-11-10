@@ -1,0 +1,156 @@
+{
+    "sex": { "male": "Male", "female": "Female", "other": "Other" },
+    "id_type": { "nid": "National ID", "birth_reg": "Birth registration", "passport": "Passport", "none": "None" },
+    "purpose": { "record": "opened the record", "history": "opened the history", "card": "opened the card" },
+    "sources": {
+        "patients": "Registration",
+        "patient_billing": "Billing",
+        "diagnostics": "Diagnostics",
+        "outpatient": "Outpatient",
+        "inpatient": "Inpatient",
+        "pharmacy": "Pharmacy"
+    },
+    "common": {
+        "loading": "Loading…",
+        "years": "{count} yrs",
+        "previous": "Previous",
+        "next": "Next",
+        "page": "Page {page} of {last}",
+        "cancel": "Cancel"
+    },
+    "list": { "mrn": "Patient no.", "name": "Name", "age": "Age", "sex": "Sex", "mobile": "Mobile" },
+    "form": {
+        "name": "Name",
+        "sex": "Sex",
+        "age_or_date": "Age or date of birth",
+        "by_age": "Age",
+        "by_date": "Date of birth",
+        "age": "Age (years)",
+        "age_hint": "Not sure of the birth date? The age is enough.",
+        "date_of_birth": "Date of birth",
+        "mobile": "Mobile",
+        "mobile_hint": "Like 01712345678. Used to find the patient next time.",
+        "id_type": "ID type",
+        "id_number": "ID number",
+        "id_number_kept": "Saved: {number}. Type a new number only to change it.",
+        "more": "More details (guardian, blood group, ID, allergies, address)",
+        "name_local": "Name in Bangla",
+        "guardian_name": "Guardian",
+        "guardian_relation": "Relation",
+        "guardian_relation_hint": "Father, mother, husband…",
+        "blood_group": "Blood group",
+        "allergies": "Allergies",
+        "allergies_hint": "Medicines or foods the patient reacts to. Shown in red to every doctor.",
+        "address": "Address"
+    },
+    "find": {
+        "title": "Find a patient",
+        "text": "Type the patient number, mobile or name.",
+        "new": "New patient",
+        "new_text": "Name, sex, age and mobile are enough; add the rest later.",
+        "search": "Patient number, mobile or name",
+        "only_own": "You see only the patients you care for.",
+        "none": "No patient found for \"{term}\"",
+        "empty": "No patients yet",
+        "none_text": "Register the patient with \"New patient\".",
+        "lookalike": "These patients look the same. If one of them is this patient, open it instead of making a second record.",
+        "same_id": "same ID number",
+        "this_one": "This is the patient",
+        "back_to_form": "Back to the form",
+        "register_anyway": "Register anyway",
+        "save": "Register",
+        "registered": "Registered: patient number {mrn}"
+    },
+    "patient": {
+        "not_found": "This patient is not here",
+        "back": "Find a patient",
+        "card": "Card",
+        "edit": "Change details",
+        "save": "Save",
+        "saved": "Saved",
+        "views": "Who opened this",
+        "views_text": "Every time someone opened this patient's record, history or card.",
+        "age_estimated": "about {count} yrs",
+        "history": "History",
+        "history_empty": "Nothing here yet. Visits, reports and bills show up as they happen."
+    },
+    "merge": {
+        "title": "Merge duplicate patients",
+        "text": "Two records for one person: someone asks, someone else decides.",
+        "ask": "Merge into another",
+        "ask_text": "Find the record that should stay. This record's history moves there once someone else approves.",
+        "find": "Find",
+        "summary": "{from} will be merged into {into}.",
+        "reason": "Reason",
+        "reason_hint": "E.g. \"Same person, registered twice\".",
+        "send": "Ask for approval",
+        "asked": "Sent for approval",
+        "filter": "Show",
+        "empty": "No requests here",
+        "decide": "Decide",
+        "decide_text": "{from} will be merged into {into}. This cannot be undone.",
+        "waiting": "Waiting for someone else",
+        "note": "Note",
+        "note_hint": "Needed to reject.",
+        "approve": "Approve and merge",
+        "reject": "Reject",
+        "approved": "Merged",
+        "rejected": "Rejected",
+        "status": { "pending": "Waiting", "approved": "Merged", "rejected": "Rejected" }
+    },
+    "card": {
+        "title": "Card: {name}",
+        "back": "Back to the patient",
+        "print": "Print",
+        "qr_alt": "QR code with the patient number"
+    },
+    "portal": {
+        "title": "My health record",
+        "text": "Your record at {org}.",
+        "empty": "No patient record linked yet",
+        "empty_text": "Ask the reception to link your patient record to this account."
+    },
+    "guide": {
+        "find": {
+            "title": "How to find or register a patient",
+            "steps": {
+                "1": "Type the mobile or the patient number.",
+                "2": "Found? Tap the name. If not, tap \"New patient\".",
+                "3": "Name, age or date of birth, sex and mobile are enough; add the rest later.",
+                "4": "Print the card (QR) for the patient to bring next time."
+            },
+            "tips": {
+                "1": "Mobile numbers work in any form, Bangla digits too."
+            },
+            "mistakes": {
+                "1": "A warning shows when the mobile already exists: check before adding a second record."
+            },
+            "settings": "Patient number prefix, the ID number rule and the duplicate check are in the Patients settings."
+        },
+        "history": {
+            "title": "How to read a patient's history",
+            "steps": {
+                "1": "Open the patient.",
+                "2": "See every visit, report, prescription and bill by date."
+            },
+            "tips": {
+                "1": "Opening this page is recorded, for the patient's privacy.",
+                "2": "Allergies show in red at the top."
+            },
+            "mistakes": {
+                "1": "Two records for one person? Use \"Merge into another\" instead of making changes on both."
+            }
+        },
+        "merges": {
+            "title": "How to merge duplicate patients",
+            "steps": {
+                "1": "Open a waiting request.",
+                "2": "Check both records are the same person.",
+                "3": "Approve, or reject with a note."
+            },
+            "tips": {
+                "1": "You cannot approve your own request."
+            }
+        }
+    }
+}

@@ -66,6 +66,7 @@ $prices = [
     'api_integration' => [80000, 50000, 800, 500],
     'external_integrations' => [80000, 50000, 800, 500],
     // New modules (make:erp-module adds them here).
+    'patients' => [50000, 30000, 500, 300],
     'pharmacy' => [50000, 30000, 500, 300],
 ];
 
