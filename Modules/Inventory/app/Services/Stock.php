@@ -6,6 +6,8 @@ use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Modules\Inventory\Exceptions\InventoryException;
 use Modules\Inventory\Models\Balance;
+use Modules\Inventory\Models\Batch;
+use Modules\Inventory\Models\BatchStock;
 use Modules\Inventory\Models\Category;
 use Modules\Inventory\Models\Item;
 use Modules\Inventory\Models\Move;
@@ -106,6 +108,40 @@ class Stock
     {
         return $this->inventories->query(Balance::class, $company)->where('warehouse_id', $warehouseId)->whereIn('item_id', $itemIds)
             ->pluck('quantity_milli', 'item_id')->map(fn ($quantity) => (int) $quantity)->all();
+    }
+
+    /**
+     * The batches a warehouse holds (quantity above zero) of items, expiring
+     * first, those without an expiry last (Pharmacy: FEFO that skips expired
+     * batches, near-expiry lists). $warehouseId null: every warehouse in use.
+     *
+     * @param  list<string>|null  $itemIds  null: every item.
+     * @return list<array{item_id: string, warehouse_id: string, batch_id: string, number: string, expires_on: string|null, quantity_milli: int}>
+     */
+    public function batchesOnHand(Organization $company, ?string $warehouseId, ?array $itemIds = null, ?string $expiringBy = null): array
+    {
+        if ($itemIds === []) {
+            return [];
+        }
+        $warehouses = $warehouseId !== null ? [$warehouseId] : $this->inventories->query(Warehouse::class, $company)->where('is_active', true)->pluck('id')->all();
+        $batches = $this->inventories->query(Batch::class, $company)
+            ->when($itemIds !== null, fn ($query) => $query->whereIn('item_id', $itemIds))
+            ->when($expiringBy !== null, fn ($query) => $query->whereNotNull('expires_on')->where('expires_on', '<=', $expiringBy))
+            ->get(['id', 'item_id', 'number', 'expires_on', 'created_at'])->keyBy('id');
+        if ($batches->isEmpty()) {
+            return [];
+        }
+
+        return $this->inventories->query(BatchStock::class, $company)->whereIn('warehouse_id', $warehouses)->whereIn('batch_id', $batches->keys()->all())
+            ->where('quantity_milli', '>', 0)->get(['batch_id', 'warehouse_id', 'quantity_milli'])
+            ->map(function (BatchStock $row) use ($batches) {
+                $batch = $batches[$row->batch_id];
+
+                return ['item_id' => (string) $batch->item_id, 'warehouse_id' => (string) $row->warehouse_id, 'batch_id' => (string) $batch->getKey(), 'number' => (string) $batch->number,
+                    'expires_on' => $batch->expires_on?->toDateString(), 'quantity_milli' => (int) $row->quantity_milli, 'created' => $batch->created_at?->getTimestamp() ?? 0];
+            })
+            ->sortBy(fn (array $row) => [$row['expires_on'] === null ? 1 : 0, $row['expires_on'] ?? '', $row['created']])
+            ->map(fn (array $row) => array_diff_key($row, ['created' => true]))->values()->all();
     }
 
     /**

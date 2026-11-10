@@ -1,0 +1,362 @@
+{
+    "module": {
+        "title": "Pharmacy",
+        "description": "Medicine shop: medicines by brand and generic, selling by piece, strip or box within MRP, expiry and the controlled-drug register."
+    },
+    "entities": {
+        "generic": {
+            "label": "Generic",
+            "plural": "Generics"
+        },
+        "manufacturer": {
+            "label": "Manufacturer",
+            "plural": "Manufacturers"
+        }
+    },
+    "fields": {
+        "generic": {
+            "name": "Generic name",
+            "drug_class": "Drug class",
+            "is_controlled": "Controlled medicine",
+            "controlled_schedule": "Schedule (if controlled)",
+            "in_use": "In use"
+        },
+        "manufacturer": {
+            "name": "Company name",
+            "country": "Country code (e.g. BD)",
+            "in_use": "In use"
+        }
+    },
+    "common": {
+        "cancel": "Cancel",
+        "save": "Save"
+    },
+    "forms": {
+        "tablet": "Tablet",
+        "capsule": "Capsule",
+        "syrup": "Syrup",
+        "suspension": "Suspension",
+        "injection": "Injection",
+        "drops": "Drops",
+        "cream": "Cream",
+        "ointment": "Ointment",
+        "inhaler": "Inhaler",
+        "powder": "Powder",
+        "suppository": "Suppository",
+        "other": "Other"
+    },
+    "packs": {
+        "piece": "Piece",
+        "strip": "Strip",
+        "box": "Box"
+    },
+    "methods": {
+        "cash": "Cash",
+        "card": "Card",
+        "mobile": "bKash / Nagad"
+    },
+    "sell": {
+        "title": "Sell medicines",
+        "text": "Find by brand or generic name, or scan. The batch that expires first (and is still good) is sold.",
+        "no_counter": "No counter yet",
+        "no_counter_text": "Set up a counter in POS (which branch, which warehouse, which payments). Then come back here.",
+        "counter": "Counter",
+        "offline": "Offline",
+        "open_title": "Open the shift",
+        "open_text": "Count the cash in the drawer before the first sale.",
+        "float": "Cash in the drawer",
+        "open": "Open the shift",
+        "shift_opened": "Shift opened.",
+        "saved_offline": "Saved on this device. It is sent when the internet is back.",
+        "sold": "Sold: {number}",
+        "give_change": "Give back",
+        "print": "Print the receipt",
+        "next": "Next customer",
+        "search": "Brand or generic name, or scan the barcode",
+        "no_medicines": "No medicines yet",
+        "no_medicines_text": "Add medicines in the medicine list, then buy them in Purchases.",
+        "in_stock": "{count} pieces in stock",
+        "controlled": "Controlled",
+        "expires": "Expires {date}",
+        "substitutes": "Substitutes",
+        "not_found": "Nothing found. Try the generic name.",
+        "hint": "Start typing a name. Press Enter after scanning.",
+        "cart": "This sale",
+        "cart_empty": "Nothing added yet.",
+        "remove": "Remove",
+        "pack": "Pack",
+        "less": "One less",
+        "quantity": "Quantity",
+        "more": "One more",
+        "pieces": "{count} pieces",
+        "short": "Only {count} pieces are in stock.",
+        "prescription": "Prescription (controlled medicine)",
+        "patient_name": "Patient's name",
+        "bmdc": "Doctor's BMDC no.",
+        "doctor": "Doctor's name",
+        "customer": "Customer (optional)",
+        "customer_name": "Name",
+        "customer_phone": "Mobile",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "vat": "VAT",
+        "total": "Total",
+        "method": "Payment",
+        "received": "Cash received",
+        "change": "Change:",
+        "complete": "Take {amount}",
+        "prescription_hint": "Enter the patient's name and the doctor's BMDC no. to sell a controlled medicine.",
+        "substitutes_of": "Instead of {name}",
+        "no_substitutes": "No other brand of the same generic and strength is in the list.",
+        "add": "Add",
+        "controlled_offline": "Controlled medicines are not sold offline. Wait for the internet.",
+        "offline_off": "Selling offline is switched off for this counter."
+    },
+    "medicines": {
+        "title": "Medicines",
+        "text": "Every medicine with its generic, strength, form, MRP and packs.",
+        "add": "New medicine",
+        "edit": "Change medicine",
+        "search": "Brand, generic, SKU or barcode",
+        "generic": "Generic",
+        "all_generics": "All generics",
+        "none_found": "No medicine matches. Try another name.",
+        "empty": "No medicines yet. Tap \"New medicine\".",
+        "off": "Not in use",
+        "saved": "Medicine saved.",
+        "sku": "SKU (code)",
+        "brand": "Brand name",
+        "strength": "Strength",
+        "form": "Form",
+        "price": "Selling price (one piece)",
+        "price_hint": "Empty: sells at the MRP.",
+        "mrp": "MRP (one piece)",
+        "mrp_hint": "The price printed on the pack, for one piece.",
+        "above_mrp": "The selling price cannot be above the MRP.",
+        "need_generic": "Add the generic name first.",
+        "add_generic": "Add a generic",
+        "barcode": "Barcode",
+        "manufacturer": "Manufacturer",
+        "dgda": "DGDA no.",
+        "per_strip": "Pieces in a strip",
+        "per_box": "Strips in a box",
+        "rx": "Needs a prescription",
+        "in_use": "In use"
+    },
+    "purchases": {
+        "title": "Purchases",
+        "text": "Medicines bought, with batch and expiry. Stock is there to sell at once.",
+        "new": "New purchase",
+        "supplier": "Supplier",
+        "date": "Date",
+        "warehouse": "Warehouse",
+        "medicine": "Medicine",
+        "cost": "Cost of one pack",
+        "batch": "Batch",
+        "expiry": "Expiry",
+        "add_line": "Add a medicine",
+        "total": "Total",
+        "save": "Save the purchase",
+        "saved": "Purchase saved. Stock is up.",
+        "empty": "No purchases yet",
+        "empty_text": "Record what you bought, with batch and expiry.",
+        "line_count": "{count} medicines",
+        "number": "Number",
+        "lines": "Medicines"
+    },
+    "stock": {
+        "title": "Stock and expiry",
+        "text": "Every batch on the shelf with its expiry. Red: sell first or return.",
+        "filter": "Show",
+        "show": {
+            "all": "All",
+            "near": "Expiring soon",
+            "return": "To return",
+            "expired": "Expired"
+        },
+        "states": {
+            "ok": "Good",
+            "near": "Expiring soon",
+            "return": "Return before expiry",
+            "expired": "Expired"
+        },
+        "state": "Expiry",
+        "empty": "Nothing here",
+        "empty_all": "No medicine in stock yet. Buy some in Purchases.",
+        "empty_near": "No medicine expires soon.",
+        "empty_return": "Nothing to return now.",
+        "empty_expired": "No expired medicine on the shelf.",
+        "pieces": "Pieces",
+        "days_left": "{count} days left",
+        "days_ago": "expired {count} days ago",
+        "return": "Return"
+    },
+    "returns": {
+        "title": "Returns to supplier",
+        "text": "Expired or expiring batches going back. Someone else approves; then stock goes down.",
+        "new": "New return",
+        "all": "All",
+        "filter": "Status",
+        "status": {
+            "submitted": "Waiting for approval",
+            "approved": "Approved",
+            "rejected": "Rejected"
+        },
+        "empty": "No returns",
+        "empty_text": "Start one from Stock and expiry, or with \"New return\".",
+        "decide": "Approve or reject",
+        "decide_text": "Approved, the batches leave the stock.",
+        "waiting": "Waiting for someone else",
+        "reason": "Why",
+        "reason_hint": "e.g. Expired, damaged",
+        "batch": "Medicine and batch",
+        "send": "Send for approval",
+        "sent": "Sent for approval.",
+        "approved": "Approved. Stock is down.",
+        "rejected": "Rejected.",
+        "note": "Note",
+        "note_hint": "Needed to reject.",
+        "reject": "Reject",
+        "approve": "Approve"
+    },
+    "controlled": {
+        "title": "Controlled-drug register",
+        "text": "Every controlled medicine in and out, with batch, balance and for whom. Nothing here can be changed.",
+        "medicine": "Medicine",
+        "all": "All controlled medicines",
+        "from": "From",
+        "to": "To",
+        "show": "Show",
+        "empty": "Nothing in the register",
+        "empty_text": "Buying or selling a controlled medicine writes it here.",
+        "when": "When",
+        "in": "In",
+        "out": "Out",
+        "balance": "Balance",
+        "whom": "For / from",
+        "note": "Note",
+        "sources": {
+            "purchase": "Bought",
+            "sale": "Sold",
+            "supplier_return": "Returned"
+        }
+    },
+    "reports": {
+        "title": "Pharmacy reports",
+        "text": "Sales per day, and stock by expiry worth at MRP.",
+        "kind": "Report",
+        "sales": "Sales",
+        "expiry": "Expiry",
+        "empty": "Nothing to show",
+        "empty_sales": "No pharmacy sales in these dates.",
+        "empty_expiry": "No medicine is expiring or expired.",
+        "day": "Day",
+        "count": "Sales",
+        "controlled": "With controlled medicines",
+        "total": "Total",
+        "batches": "Batches",
+        "worth": "Worth at MRP",
+        "sales_count": "{count} sales",
+        "controlled_count": "{count} with controlled",
+        "batch_count": "{count} batches"
+    },
+    "guide": {
+        "sell": {
+            "title": "How to sell",
+            "steps": {
+                "1": "Type the medicine: search by brand or generic name, or scan the barcode.",
+                "2": "Tap Piece, Strip or Box; change the quantity with + and −.",
+                "3": "The batch expiring first (and still good) is sold for you. Red means it expires soon.",
+                "4": "Out of stock? Tap \"Substitutes\" to see other brands of the same generic.",
+                "5": "Take the payment (cash, card, bKash/Nagad) and print the receipt."
+            },
+            "tips": {
+                "1": "You cannot charge above the MRP, and expired batches are never sold.",
+                "2": "No internet? Keep selling; sales are sent when you are back online."
+            },
+            "mistakes": {
+                "1": "A controlled medicine needs the patient's name and the doctor's BMDC number."
+            },
+            "settings": "Near-expiry days, loose pieces and the prescription rule are in the Pharmacy settings."
+        },
+        "medicines": {
+            "title": "How to add a medicine",
+            "steps": {
+                "1": "Tap \"New medicine\".",
+                "2": "Enter the brand name, generic, strength (e.g. 500 mg) and form.",
+                "3": "Enter the MRP of one piece, the pieces in a strip and the strips in a box.",
+                "4": "Add the barcode and DGDA number if you have them, then Save."
+            },
+            "tips": {
+                "1": "Leave the selling price empty to sell at the MRP; it can never be higher."
+            },
+            "mistakes": {
+                "1": "Add the generic first (Settings → Generics); mark controlled ones there."
+            }
+        },
+        "purchases": {
+            "title": "How to record a purchase",
+            "steps": {
+                "1": "Enter the supplier and the date.",
+                "2": "For each medicine: the pack, how many, the cost of one pack, the batch number and the expiry.",
+                "3": "Tap \"Save the purchase\": stock goes up at once."
+            },
+            "mistakes": {
+                "1": "A batch without an expiry date is not accepted; copy it from the pack."
+            }
+        },
+        "stock": {
+            "title": "How to watch expiry",
+            "steps": {
+                "1": "Pick at the top: all, expiring soon, to return, or expired.",
+                "2": "Sell red rows first, or return them to the supplier.",
+                "3": "Tap \"Return\" on a row to start a supplier return with it."
+            },
+            "settings": "How many days count as \"soon\" is in the Pharmacy settings."
+        },
+        "returns": {
+            "title": "How to return to a supplier",
+            "steps": {
+                "1": "Tap \"New return\" (or \"Return\" in Stock and expiry).",
+                "2": "Choose the supplier, the medicine and batch, and how many pieces; write why.",
+                "3": "Send for approval: someone else approves it, then the stock goes down."
+            },
+            "tips": {
+                "1": "Customers' returns are made from the POS sale (Sales → the receipt)."
+            }
+        },
+        "controlled": {
+            "title": "How to keep the register",
+            "steps": {
+                "1": "Choose the medicine and the dates.",
+                "2": "See every in and out with the batch, the balance, the patient and the doctor's BMDC number.",
+                "3": "Print it for an inspection."
+            },
+            "tips": {
+                "1": "Nothing here can be deleted or changed; each reading is recorded."
+            }
+        },
+        "reports": {
+            "title": "How to read the reports",
+            "steps": {
+                "1": "Choose Sales or Expiry.",
+                "2": "For sales, choose the dates.",
+                "3": "Export or print."
+            }
+        },
+        "generic": {
+            "title": "How to keep generics",
+            "steps": {
+                "1": "Add each generic name once (e.g. Paracetamol).",
+                "2": "Tick \"Controlled medicine\" for controlled ones: their sales then need a prescription and go into the register."
+            }
+        },
+        "manufacturer": {
+            "title": "How to keep manufacturers",
+            "steps": {
+                "1": "Add the companies that make your medicines.",
+                "2": "Choose the company when you add a medicine."
+            }
+        }
+    }
+}

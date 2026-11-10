@@ -17,6 +17,7 @@ use Modules\Accounting\Services\TaxCodes;
 use Modules\Crm\Services\Customers;
 use Modules\Inventory\Exceptions\InventoryException;
 use Modules\Inventory\Services\Stock;
+use Modules\Pos\Contracts\SaleGuard;
 use Modules\Pos\Events\SaleMade;
 use Modules\Pos\Exceptions\PosException;
 use Modules\Pos\Models\Payment;
@@ -60,7 +61,7 @@ class Sales
     ) {}
 
     /**
-     * @param  array{op_id: string, session_id?: string|null, customer_name?: string|null, lines: list<array{item_id: string, quantity_milli: int, discount_minor?: int}>, payments: list<array{method: string, amount_minor: int, reference?: string|null}>}  $data
+     * @param  array{op_id: string, session_id?: string|null, customer_name?: string|null, lines: list<array{item_id: string, quantity_milli: int, discount_minor?: int, batch_number?: string|null}>, payments: list<array{method: string, amount_minor: int, reference?: string|null}>, guard?: array<string, mixed>}  $data  guard: what a module's SaleGuard needs (never from the till's request).
      */
     public function sell(Organization $company, Register $register, array $data, User $actor, ?CarbonImmutable $madeAt = null): Sale
     {
@@ -79,6 +80,15 @@ class Sales
 
         // Items as Inventory has them now; quantities with no more decimals than the unit allows.
         $items = collect($this->stock->items($company, array_values(array_unique(array_column($data['lines'], 'item_id')))))->keyBy('id');
+        // Other modules' say over the lines (e.g. Pharmacy: MRP, expiry, prescriptions); they may split a line by batch.
+        foreach (app()->tagged(SaleGuard::TAG) as $guard) {
+            $checked = $guard->prepare($company, $register, $items->all(), array_values($data['lines']), (array) ($data['guard'] ?? []), $offline);
+            $data['lines'] = array_values($checked['lines']);
+            if ($checked['reviews'] !== []) {
+                $reviews[] = 'guard';
+            }
+        }
+        unset($data['guard']);
         $units = $this->stock->units($company);
         $rates = $this->taxRates($company, $items->pluck('tax_code_id')->filter()->unique()->values()->all());
         $priced = [];
@@ -139,7 +149,8 @@ class Sales
             }
 
             // Stock leaves; an offline sale already made goes below zero rather than being lost.
-            $take = array_map(fn (SaleLine $line) => ['item_id' => $line->item_id, 'quantity_milli' => $line->quantity_milli], $lines);
+            // A batch named by a guard (Pharmacy: never an expired one); otherwise Inventory's FEFO.
+            $take = array_map(fn (SaleLine $line, int $index) => ['item_id' => $line->item_id, 'quantity_milli' => $line->quantity_milli, 'batch_number' => $data['lines'][$index]['batch_number'] ?? null], $lines, array_keys($lines));
             $source = ['module' => 'pos', 'type' => 'sale', 'id' => $sale->getKey(), 'actor_id' => $actor->getKey()];
             try {
                 $moved = $this->stock->take($company, $register->warehouse_id, $take, $source, $soldAt);

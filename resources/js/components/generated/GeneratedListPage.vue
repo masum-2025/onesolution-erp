@@ -112,7 +112,7 @@ async function remove(record) {
 </script>
 
 <template>
-    <PageFrame :title="t(`${ns}.entities.${meta.name}.plural`)" :description="t(`${ns}.module.description`)" width="full" :export="exported">
+    <PageFrame :title="t(`${ns}.entities.${meta.name}.plural`)" :description="t(`${ns}.module.description`)" width="full" :export="exported" :guide="`${ns}.guide.${meta.name}`">
         <template v-if="setup.can?.manage" #actions>
             <AppButton variant="primary" :icon="Plus" @click="open(null)">{{ t('generated.new', { name: t(`${ns}.entities.${meta.name}.label`) }) }}</AppButton>
         </template>

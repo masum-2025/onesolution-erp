@@ -39,5 +39,6 @@
     "Compliance": true,
     "Projects": true,
     "OnlineOrders": true,
-    "SocialCommerce": true
+    "SocialCommerce": true,
+    "Pharmacy": true
 }

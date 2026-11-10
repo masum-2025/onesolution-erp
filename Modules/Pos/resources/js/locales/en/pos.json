@@ -35,7 +35,8 @@
     "review": {
         "negative_stock": "Sold more than the books showed",
         "late_session": "Arrived after the shift closed",
-        "discount": "Discount over the limit"
+        "discount": "Discount over the limit",
+        "guard": "Broke a rule of another module (e.g. pharmacy)"
     },
     "shift_status": {
         "open": "Open",
