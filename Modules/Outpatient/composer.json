@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/outpatient",
+    "description": "Doctors' chambers: weekly schedules, serials with the fee on the patient's bill, free follow-ups, the waiting-room screen and the doctor's own patient list.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Outpatient\\": "app/"
+        }
+    }
+}

@@ -58,4 +58,17 @@ class Charges implements PatientCharges
             'lines' => $lines->mapWithKeys(fn (BillLine $line) => [(string) $line->source_id => $line->total_minor - $line->tax_minor])->all(),
         ];
     }
+
+    public function withdraw(Organization $company, string $sourceModule, string $sourceType, string $sourceId, User $actor): bool
+    {
+        $line = $this->store->query(BillLine::class, $company)->where('source_module', $sourceModule)->where('source_type', $sourceType)
+            ->where('source_id', $sourceId)->whereNull('voided_at')->first();
+        $bill = $line === null ? null : $this->store->query(Bill::class, $company)->whereKey($line->bill_id)->first();
+        if ($bill === null || $bill->status !== Bill::OPEN) {
+            return false;
+        }
+        $this->bills->voidLine($company, $bill, $line->getKey(), $actor);
+
+        return true;
+    }
 }

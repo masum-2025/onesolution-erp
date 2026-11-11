@@ -43,5 +43,6 @@
     "Pharmacy": true,
     "Patients": true,
     "PatientBilling": true,
-    "Diagnostics": true
+    "Diagnostics": true,
+    "Outpatient": true
 }

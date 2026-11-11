@@ -5859,3 +5859,38 @@ person, amendments that keep the old values, and printed reports. Other modules 
 - After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`.
 - A new country or partner needs no code: ranges, tests and prices are data; verification, turnaround and numbers
   are rules; texts are translations.
+
+## Outpatient (module `outpatient`, H-3a)
+
+Doctors' chambers: weekly schedules, serials with the fee on the patient's bill, free follow-ups, the waiting-room
+screen and the doctor's own patient list. Needs Patients and Patient billing (403 when either is off).
+
+- **Doctors and chambers** (generated lists, `database/module-definitions/outpatient.php`): a doctor's fee and
+  follow-up fee are Patient billing service codes (checked when saved); a chamber belongs to a branch.
+- **Weekly schedule** (`GET|PUT …/outpatient/doctors/{doctor}/schedule`, `outpatient.manage` to save): sessions
+  (weekday, chamber, from–to, serials or empty = rule `outpatient.daily_serial_limit`) saved as a whole with the
+  doctor's version; no overlaps on a day; a session left out is switched off, its serials stay. The doctor's
+  sign-in is a staff member of the company (one doctor per person).
+- **Serials** (`outpatient.book`): `GET …/sessions?date=` (sessions held, free places), `GET …/quote?session=&patient=`,
+  `POST …/serials` (`op_id`; under a lock on the session, numbers in order, a cancelled number never reused; one
+  serial per patient a session; today up to 90 days ahead). The fee goes on the patient's open bill at the
+  chamber's branch through `PatientCharges::add`. A follow-up within `outpatient.follow_up_free_days` of the last
+  paid, finished visit to the same doctor is free; later the follow-up fee (or the fee).
+- **Moving on** (`POST …/serials/{id}/status`, `base_version`): booked → arrived → in → done; absent; cancelled
+  with a reason. Cancelling takes the fee off the bill while it is open (`PatientCharges::withdraw`, new); a final
+  bill's refund is made in billing. The desk moves any serial; a doctor (`outpatient.consult`) calls in and
+  finishes only their own.
+- **Own patients**: with `patients.doctor_sees = own`, a doctor who only consults lists and opens only their own
+  serials (others are 404). Booking links the doctor to the patient (Patients' care link). `GET …/my-patients`.
+- **Waiting-room screen** `GET …/queue/{chamber}` (`outpatient.view`, a signed-in device): serial numbers now and
+  waiting per doctor, never a name.
+- **SMS**: rule `outpatient.serial_sms` (branch) texts the serial, doctor, date and time when SMS is on for the
+  partner and the patient has a mobile (queued listener on `outpatient.serial_booked`).
+- Permissions `outpatient.view`, `.book` (desk), `.consult` (doctors), `.manage`. Every step is audited without
+  the patient's details.
+- Screens: today's serials, give a serial, slip (80 mm), my patients, weekly schedules, waiting-room screen
+  (full screen), guides in bn/en.
+- After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`.
+- A new country, sector or partner needs no code: fees are billing prices, limits and free days are rules, the
+  registration label and texts are translations. Next (H-3b): consultations, prescriptions, templates, tests to
+  the lab.

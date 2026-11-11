@@ -94,6 +94,8 @@ const PAGES_WITHOUT_FRAME = [
     // Full-screen tools: the shop's till, taking a class's attendance, the document designer.
     'Modules/Pos/resources/js/pages/TillPage.vue', 'Modules/StudentAttendance/resources/js/pages/SheetPage.vue', 'Modules/Education/resources/js/pages/DesignerPage.vue',
     'Modules/Letters/resources/js/pages/EditorPage.vue',
+    // The waiting-room screen of a chamber (Outpatient): serial numbers only, on a TV.
+    'Modules/Outpatient/resources/js/pages/QueuePage.vue',
     // A shared panel (also inside the student's page) draws this page's header.
     'Modules/EducationFees/resources/js/pages/StudentFeesPage.vue',
 ];
