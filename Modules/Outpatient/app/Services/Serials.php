@@ -230,6 +230,17 @@ class Serials
             ->distinct()->pluck('doctor_id')->map(fn ($id) => (string) $id)->all();
     }
 
+    /** A serial at the unit and below that the person may see (a doctor limited to their own sees only theirs); else 404. */
+    public function visible(Organization $company, Organization $unit, User $user, string $id): Serial
+    {
+        $serial = $this->store->query(Serial::class, $company)->whereKey($id)->whereIn('unit_id', $this->store->subtreeIds($unit))->first();
+        if ($serial !== null && $this->onlyOwn($unit, $user) && ! $this->doctorsOf($company, $user)->contains((string) $serial->doctor_id)) {
+            $serial = null;
+        }
+
+        return $serial ?? throw OutpatientException::notFound('serial');
+    }
+
     /** @return Collection<int, string> The doctors signed in as this person. */
     public function doctorsOf(Organization $company, User $user): Collection
     {

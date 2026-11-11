@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { CalendarDays, MonitorPlay, Plus, Printer, RefreshCw, Stethoscope } from 'lucide-vue-next';
+import { CalendarDays, FilePenLine, MonitorPlay, Plus, Printer, RefreshCw, Stethoscope } from 'lucide-vue-next';
 import { AppBadge, AppButton, AppField, DateInput, PageFrame, confirmAction, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDate } from '@/lib/format';
@@ -126,6 +126,8 @@ async function step(row, to) {
                             <div class="flex flex-wrap justify-end gap-1.5">
                                 <AppButton v-for="to in steps(row)" :key="to" size="sm" :variant="to === 'cancelled' || to === 'absent' ? 'ghost' : 'secondary'"
                                            :loading="busy === `${row.id}:${to}`" :disabled="!!busy" @click="step(row, to)">{{ t(`outpatient.step.${to}`) }}</AppButton>
+                                <AppButton v-if="can.consult && ['in', 'done'].includes(row.status)" size="sm" variant="ghost" :icon="FilePenLine" :aria-label="t('outpatient.mine.write')"
+                                           @click="router.push({ name: 'outpatient-consult', params: { id: row.id } })" />
                                 <AppButton size="sm" variant="ghost" :icon="Printer" :aria-label="t('outpatient.serials.slip')" @click="router.push({ name: 'outpatient-slip', params: { id: row.id } })" />
                             </div>
                         </td>

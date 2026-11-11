@@ -112,7 +112,8 @@
         "empty": "No patient record linked yet",
         "empty_text": "Ask the reception to link your patient record to this account.",
         "bills": "My bills",
-        "lab": "My lab reports"
+        "lab": "My lab reports",
+        "prescriptions": "My prescriptions"
     },
     "guide": {
         "find": {

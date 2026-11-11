@@ -5892,5 +5892,28 @@ screen and the doctor's own patient list. Needs Patients and Patient billing (40
   (full screen), guides in bn/en.
 - After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`.
 - A new country, sector or partner needs no code: fees are billing prices, limits and free days are rules, the
-  registration label and texts are translations. Next (H-3b): consultations, prescriptions, templates, tests to
-  the lab.
+  registration label and texts are translations.
+
+### Consultations and prescriptions (H-3b)
+
+- **Who**: written and read only with `outpatient.consult` (the desk never sees a diagnosis): the serial's doctor
+  when the doctor has a sign-in, anyone who consults for a doctor without one. With `patients.doctor_sees = own`
+  another doctor does not find the serial (404).
+- **Writing** (`GET|PUT …/serials/{serial}/consultation`): complaints, findings (BP, pulse, temperature, weight,
+  SpO₂, other), diagnosis, medicines (dose, days, when to take it, note), advised tests, advice, follow-up date. A
+  draft is saved with its version (409 when two write at once).
+- **Finishing** (`POST …/consultation/finish`): needs a diagnosis, advice, a medicine or a test; the serial becomes
+  done; the patient's history gets "Seen by Dr …" (no diagnosis); events `outpatient.consultation_done`,
+  `outpatient.prescription_written`, `outpatient.tests_advised` (ids only). A finished one is never changed:
+  `POST …/consultation/amend` (reason) starts the next revision from it; the first stays and is marked replaced
+  when the new one is finished.
+- **Medicines**: with Pharmacy on, picked from its list (`GET …/outpatient/medicines?q=` through Pharmacy's new
+  `MedicineCatalogue` contract; the id is checked when saved); otherwise written by name. **Tests**: with
+  Diagnostics on, picked from the lab's list; `POST …/consultation/send-tests` sends those to the lab once through
+  `TestOrders::place` (billed there).
+- **Prescription** (`GET …/serials/{serial}/prescription`, A5 page): headings and "when to take it" in the rule
+  `outpatient.prescription_language` (bn, en or both) at the chamber's unit.
+- **Templates** (`…/outpatient/templates`): a doctor's own, or for every doctor (managers).
+- **Portal** (`GET /api/portal/outpatient/prescriptions`): a patient's own finished prescriptions in force.
+- Audited with counts only. After deploy: migrate. A new country or partner needs no code: timings and headings are
+  translations, the language is a rule.

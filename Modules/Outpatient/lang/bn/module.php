@@ -11,5 +11,6 @@ return [
     'menu_book' => 'সিরিয়াল দিন',
     'menu_mine' => 'আমার রোগী',
     'menu_schedules' => 'সাপ্তাহিক সময়সূচি',
+    'menu_templates' => 'প্রেসক্রিপশনের ছাঁচ',
     'new_serial' => 'সিরিয়াল দিন',
 ];

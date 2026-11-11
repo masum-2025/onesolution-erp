@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { FlaskConical, HeartPulse, History, ReceiptText } from 'lucide-vue-next';
+import { FileText, FlaskConical, HeartPulse, History, ReceiptText } from 'lucide-vue-next';
 import { AppButton } from '@/ui';
 import { EmptyState, PageFrame } from '@/ui';
 import { useResource } from '@/lib/useResource';
@@ -17,6 +17,7 @@ const router = useRouter();
 // The bills page exists only while Patient billing is on for this organization.
 const hasBills = router.hasRoute('patient-billing-portal');
 const hasLab = router.hasRoute('diagnostics-portal');
+const hasPrescriptions = router.hasRoute('outpatient-portal');
 const view = useResource(() => portalPatients());
 const data = computed(() => view.data.value?.data ?? null);
 const patients = computed(() => data.value?.patients ?? []);
@@ -25,7 +26,8 @@ const patients = computed(() => data.value?.patients ?? []);
 <template>
     <PageFrame :title="t('patients.portal.title')" :description="data ? t('patients.portal.text', { org: data.organization }) : ''" :resource="view" width="md"
                :empty="{ when: !!data && !patients.length, icon: HeartPulse, title: t('patients.portal.empty'), text: t('patients.portal.empty_text') }">
-        <template v-if="(hasBills || hasLab) && patients.length" #actions>
+        <template v-if="(hasBills || hasLab || hasPrescriptions) && patients.length" #actions>
+            <AppButton v-if="hasPrescriptions" :icon="FileText" @click="router.push({ name: 'outpatient-portal' })">{{ t('patients.portal.prescriptions') }}</AppButton>
             <AppButton v-if="hasLab" :icon="FlaskConical" @click="router.push({ name: 'diagnostics-portal' })">{{ t('patients.portal.lab') }}</AppButton>
             <AppButton v-if="hasBills" :icon="ReceiptText" @click="router.push({ name: 'patient-billing-portal' })">{{ t('patients.portal.bills') }}</AppButton>
         </template>

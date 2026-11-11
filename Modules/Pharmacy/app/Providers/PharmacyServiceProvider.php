@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Pharmacy\Contracts\MedicineCatalogue;
+use Modules\Pharmacy\Services\Catalogue;
 use Modules\Pharmacy\Services\PharmacySaleGuard;
 use Modules\Pos\Contracts\SaleGuard;
 
@@ -25,6 +27,8 @@ class PharmacyServiceProvider extends ServiceProvider
     {
         // POS asks the pharmacy about every sale of a medicine (MRP, expiry, prescriptions).
         $this->app->tag([PharmacySaleGuard::class], SaleGuard::TAG);
+        // Other modules pick medicines through the catalogue (prescriptions).
+        $this->app->bind(MedicineCatalogue::class, Catalogue::class);
     }
 
     public function boot(): void

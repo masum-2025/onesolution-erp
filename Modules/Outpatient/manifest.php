@@ -77,13 +77,15 @@ return [
                 ['key' => 'doctors', 'label' => 'outpatient::module.menu_doctors', 'route' => '/outpatient/doctors', 'permission' => 'outpatient.view'],
                 ['key' => 'chambers', 'label' => 'outpatient::module.menu_chambers', 'route' => '/outpatient/chambers', 'permission' => 'outpatient.view'],
                 ['key' => 'schedules', 'label' => 'outpatient::module.menu_schedules', 'route' => '/outpatient/schedules', 'permission' => 'outpatient.view'],
+                ['key' => 'templates', 'label' => 'outpatient::module.menu_templates', 'route' => '/outpatient/templates', 'permission' => 'outpatient.consult'],
             ],
         ],
     ],
     'quick_actions' => [
         ['key' => 'book', 'label' => 'outpatient::module.new_serial', 'route' => '/outpatient/book', 'permission' => 'outpatient.book', 'icon' => 'stethoscope'],
     ],
-    'events' => ['outpatient.serial_booked'],
+    // Payloads carry ids only (never what the doctor wrote).
+    'events' => ['outpatient.serial_booked', 'outpatient.consultation_done', 'outpatient.prescription_written', 'outpatient.tests_advised'],
     // To patients (wording in outpatient::notifications).
     'notifications' => [
         'outpatient.serial_booked' => ['channels' => ['sms'], 'placeholders' => ['product', 'organization', 'doctor', 'date', 'time', 'number', 'chamber'], 'audience' => 'person', 'path' => '/'],

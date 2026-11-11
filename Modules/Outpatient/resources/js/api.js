@@ -22,8 +22,21 @@ export function opdApi(organizationId) {
         patients: (q) => api(`${base}/patients`, { query: { q } }),
         queue: (chamberId) => api(`${base}/queue/${chamberId}`),
         mine: (query = {}) => api(`${base}/my-patients`, { query }),
+        consultation: (serialId) => api(`${base}/serials/${serialId}/consultation`),
+        saveConsultation: (serialId, body) => api(`${base}/serials/${serialId}/consultation`, { method: 'PUT', body }),
+        finish: (serialId, body) => api(`${base}/serials/${serialId}/consultation/finish`, { method: 'POST', body }),
+        amend: (serialId, body) => api(`${base}/serials/${serialId}/consultation/amend`, { method: 'POST', body }),
+        sendTests: (serialId) => api(`${base}/serials/${serialId}/consultation/send-tests`, { method: 'POST' }),
+        prescription: (serialId) => api(`${base}/serials/${serialId}/prescription`),
+        medicines: (q) => api(`${base}/medicines`, { query: { q } }),
+        templates: () => api(`${base}/templates`),
+        saveTemplate: (id, body) => (id ? api(`${base}/templates/${id}`, { method: 'PATCH', body }) : api(`${base}/templates`, { method: 'POST', body })),
+        removeTemplate: (id, version) => api(`${base}/templates/${id}`, { method: 'DELETE', query: { base_version: version } }),
     };
 }
+
+/** The portal: a patient's own prescriptions. */
+export const portalPrescriptions = () => api('/api/portal/outpatient/prescriptions');
 
 /** Badge tone for each serial status. */
 export const statusTones = { booked: 'neutral', arrived: 'info', in: 'warn', done: 'ok', absent: 'bad', cancelled: 'neutral' };
