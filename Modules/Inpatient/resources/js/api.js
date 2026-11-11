@@ -23,8 +23,20 @@ export function ipdApi(organizationId) {
         admit: (body) => api(`${base}/admissions`, { method: 'POST', body }),
         move: (id, body) => api(`${base}/admissions/${id}/move`, { method: 'POST', body }),
         cancel: (id, body) => api(`${base}/admissions/${id}/cancel`, { method: 'POST', body }),
+        care: (id) => api(`${base}/admissions/${id}/care`),
+        addRound: (id, body) => api(`${base}/admissions/${id}/rounds`, { method: 'POST', body }),
+        addNursingNote: (id, body) => api(`${base}/admissions/${id}/nursing-notes`, { method: 'POST', body }),
+        orderTests: (id, body) => api(`${base}/admissions/${id}/tests`, { method: 'POST', body }),
+        discharge: (id) => api(`${base}/admissions/${id}/discharge`),
+        saveDischarge: (id, body) => api(`${base}/admissions/${id}/discharge`, { method: 'PUT', body }),
+        finishDischarge: (id, body) => api(`${base}/admissions/${id}/discharge/finish`, { method: 'POST', body }),
+        amendDischarge: (id, body) => api(`${base}/admissions/${id}/discharge/amend`, { method: 'POST', body }),
+        dischargePaper: (id) => api(`${base}/admissions/${id}/discharge/paper`),
     };
 }
+
+/** A patient's own discharge papers in the client's portal. */
+export const portalDischarges = () => api('/api/portal/inpatient/discharges');
 
 /**
  * How each bed state looks on the board: colour plus a word and an icon name, so the state never

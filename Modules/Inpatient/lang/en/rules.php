@@ -18,6 +18,10 @@ return [
         'label' => 'Admission number prefix',
         'description' => 'Letters before the admission number, such as IP000123.',
     ],
+    'discharge_language' => [
+        'label' => 'Discharge paper language',
+        'description' => 'The language the headings of the printed discharge paper are in.',
+    ],
     'categories' => [
         'charges' => 'Charges',
         'discharge' => 'Discharge',

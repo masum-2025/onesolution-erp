@@ -157,8 +157,9 @@ it('cancels a mistaken admission while the bill is open: bed days off the bill, 
     $this->asToken($this->desk)->postJson(($this->api)("admissions/{$admission['id']}/cancel", $this->w->b1), ['base_version' => 1])->assertUnprocessable()->assertJsonValidationErrors('reason');
     $this->asToken($this->desk)->postJson(($this->api)("admissions/{$admission['id']}/cancel", $this->w->b1), ['reason' => 'Wrong patient', 'base_version' => 1])->assertOk()->assertJsonPath('data.status', 'cancelled');
     expect(($this->stay)($admission)['bill_due_minor'])->toBe(0);
+    // The bed day taken off the bill is kept (marked) but not shown, and the job adds none.
     ($this->charge)('2026-11-04 08:00');
-    expect(($this->stay)($admission)['bed_days'])->toHaveCount(1);
+    expect(($this->stay)($admission)['bed_days'])->toHaveCount(0);
     expect(collect($this->asToken($this->desk)->getJson(($this->api)('admissions', $this->w->b1))->json('data')))->toHaveCount(0)
         ->and(collect($this->asToken($this->desk)->getJson(($this->api)('admissions?status=cancelled', $this->w->b1))->json('data')))->toHaveCount(1);
 });

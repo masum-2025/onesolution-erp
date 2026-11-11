@@ -59,7 +59,7 @@ class AdmissionController extends Controller
         $found = $this->admissions->visible($company, $unit, $request->user(), $admission);
         $beds = $this->beds($company);
         $moves = $this->store->query(BedMove::class, $company)->where('admission_id', $found->getKey())->orderBy('moved_at')->get();
-        $days = $this->store->query(BedCharge::class, $company)->where('admission_id', $found->getKey())->orderBy('day_no')->get();
+        $days = $this->store->query(BedCharge::class, $company)->where('admission_id', $found->getKey())->whereNull('withdrawn_at')->orderBy('day_no')->get();
 
         return response()->json(['data' => [
             ...$this->rows($company, collect([$found]))[0],
@@ -68,7 +68,7 @@ class AdmissionController extends Controller
             'moves' => $moves->map(fn (BedMove $move) => ['from' => $beds[(string) $move->from_bed_id] ?? null, 'to' => $beds[(string) $move->to_bed_id] ?? null, 'moved_at' => $move->moved_at->toIso8601String(), 'reason' => $move->reason])->values(),
             'bed_days' => $days->map(fn (BedCharge $day) => ['day_no' => $day->day_no, 'day_on' => $day->day_on->toDateString(), 'bed' => $beds[(string) $day->bed_id] ?? null, 'service_code' => $day->service_code])->values(),
             'currency' => rescue(fn () => $this->store->currency($company), null, false),
-            'can' => ['admit' => Gate::allows('inpatient.admit', $unit)],
+            'can' => ['admit' => Gate::allows('inpatient.admit', $unit), 'round' => Gate::allows('inpatient.round', $unit), 'nurse' => Gate::allows('inpatient.nurse', $unit), 'discharge' => Gate::allows('inpatient.discharge', $unit)],
         ]]);
     }
 
@@ -136,7 +136,7 @@ class AdmissionController extends Controller
     {
         $beds = $this->beds($company);
         $doctors = User::query()->whereKey($list->pluck('doctor_user_id')->unique()->all())->pluck('name', 'id');
-        $days = $this->store->query(BedCharge::class, $company)->whereIn('admission_id', $list->pluck('id')->all())->get(['admission_id'])->countBy(fn ($c) => (string) $c->admission_id);
+        $days = $this->store->query(BedCharge::class, $company)->whereIn('admission_id', $list->pluck('id')->all())->whereNull('withdrawn_at')->get(['admission_id'])->countBy(fn ($c) => (string) $c->admission_id);
 
         return $list->map(function (Admission $admission) use ($company, $beds, $doctors, $days) {
             $patient = $this->patients->find($company, $admission->patient_id);

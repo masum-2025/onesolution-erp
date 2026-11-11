@@ -12,4 +12,9 @@ return [
     'admitted' => 'রোগী ভর্তি',
     'bed_moved' => 'রোগীর বেড বদল',
     'admission_cancelled' => 'ভর্তি বাতিল',
+    'round_added' => 'ডাক্তারের round নোট',
+    'nursing_note_added' => 'নার্সের নোট',
+    'tests_ordered' => 'ল্যাবে test পাঠানো',
+    'discharged' => 'রোগীর ছাড়পত্র',
+    'discharge_amended' => 'ছাড়পত্র সংশোধন',
 ];

@@ -63,6 +63,17 @@ return [
             'category' => 'general',
             'sort_order' => 40,
         ],
+        [
+            'key' => 'inpatient.discharge_language',
+            'type' => 'enum',
+            'schema' => ['enum' => ['bn', 'en', 'both']],
+            'default' => 'bn',
+            'label' => 'inpatient::rules.discharge_language.label',
+            'description' => 'inpatient::rules.discharge_language.description',
+            'overridable_levels' => ['platform', 'partner', 'group', 'company', 'branch'],
+            'category' => 'discharge',
+            'sort_order' => 50,
+        ],
     ],
     'menu' => [
         [
@@ -76,6 +87,7 @@ return [
                 ['key' => 'admit', 'label' => 'inpatient::module.menu_admit', 'route' => '/inpatient/admit', 'permission' => 'inpatient.admit'],
                 ['key' => 'board', 'label' => 'inpatient::module.menu_board', 'route' => '/inpatient/board', 'permission' => 'inpatient.view'],
                 ['key' => 'admissions', 'label' => 'inpatient::module.menu_admissions', 'route' => '/inpatient/admissions', 'permission' => 'inpatient.view'],
+                ['key' => 'discharges', 'label' => 'inpatient::module.menu_discharges', 'route' => '/inpatient/admissions?status=discharged', 'permission' => 'inpatient.view'],
                 ['key' => 'wards', 'label' => 'inpatient::module.menu_wards', 'route' => '/inpatient/wards', 'permission' => 'inpatient.view'],
                 ['key' => 'beds', 'label' => 'inpatient::module.menu_beds', 'route' => '/inpatient/beds', 'permission' => 'inpatient.manage'],
             ],
@@ -85,7 +97,7 @@ return [
         ['key' => 'admit', 'label' => 'inpatient::module.new_admission', 'route' => '/inpatient/admit', 'permission' => 'inpatient.admit', 'icon' => 'bed'],
     ],
     // Payloads carry ids only.
-    'events' => ['inpatient.admitted', 'inpatient.bed_moved'],
+    'events' => ['inpatient.admitted', 'inpatient.bed_moved', 'inpatient.tests_ordered', 'inpatient.discharged'],
     'is_core' => false,
     'requires_consent' => false,
     'dashboard' => ['widgets' => []],

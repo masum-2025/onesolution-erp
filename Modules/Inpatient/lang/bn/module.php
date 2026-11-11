@@ -9,6 +9,7 @@ return [
     'menu_admit' => 'ভর্তি',
     'menu_board' => 'বেডের অবস্থা',
     'menu_admissions' => 'ভর্তি রোগী',
+    'menu_discharges' => 'ছাড়পত্র',
     'menu_beds' => 'বেড',
     'new_admission' => 'রোগী ভর্তি',
 ];

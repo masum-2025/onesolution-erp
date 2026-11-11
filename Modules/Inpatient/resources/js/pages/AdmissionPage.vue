@@ -1,18 +1,22 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, ArrowRightLeft, BedDouble, ReceiptText, XCircle } from 'lucide-vue-next';
-import { AppBadge, AppButton, AppDialog, AppField, PageFrame, confirmAction, toast } from '@/ui';
+import { AppBadge, AppButton, AppDialog, AppField, AppTabs, PageFrame, confirmAction, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { t } from '@/lib/i18n';
 import { ipdApi } from '../api';
+import CarePanel from '../components/CarePanel.vue';
+import DischargePanel from '../components/DischargePanel.vue';
 
 /**
  * One stay: the patient, bed and doctor, what is due on the bill, the bed
  * moves and the bed days charged. The desk moves the patient to a free bed or
  * cancels a mistaken admission (with a reason, while the bill is open).
+ * Those who give care also see tabs for round notes, nursing notes, tests and
+ * the discharge; the server decides who may read and write each.
  */
 const ipd = ipdApi(currentOrganization().id);
 const route = useRoute();
@@ -21,6 +25,23 @@ const view = useResource(() => ipd.admission(route.params.id));
 const stay = computed(() => view.data.value?.data ?? null);
 const money = (amount) => formatMoney({ amount, currency: stay.value?.currency });
 const statusTone = { admitted: 'info', discharged: 'ok', cancelled: 'neutral' };
+
+const caring = computed(() => !!(stay.value?.can.round || stay.value?.can.nurse || stay.value?.can.discharge));
+const tabs = computed(() => ['overview', ...(caring.value ? ['rounds', 'nursing', 'tests', 'discharge'] : [])].map((key) => ({ key, label: t(`inpatient.tabs.${key}`) })));
+const tab = ref(['rounds', 'nursing', 'tests', 'discharge'].includes(route.query.tab) ? route.query.tab : 'overview');
+// The tab shown: one this person has, else the overview.
+const shown = computed(() => (tabs.value.some((item) => item.key === tab.value) ? tab.value : 'overview'));
+watch(tab, (value) => router.replace({ query: value === 'overview' ? {} : { tab: value } }));
+const care = ref(null);
+async function loadCare() {
+    care.value = (await ipd.care(route.params.id).catch((error) => {
+        toast.error(error.message);
+        return { data: null };
+    })).data;
+}
+watch([tab, caring], ([value, can]) => {
+    if (can && ['rounds', 'nursing', 'tests'].includes(value) && !care.value) loadCare();
+}, { immediate: true });
 
 const moving = ref(false);
 const board = ref([]);
@@ -60,7 +81,7 @@ async function cancel() {
 </script>
 
 <template>
-    <PageFrame :title="stay ? `${stay.number} · ${stay.patient?.name ?? ''}` : ''" width="lg" :resource="view" :not-found="{ icon: BedDouble, title: t('inpatient.admission.not_found') }">
+    <PageFrame :title="stay ? `${stay.number} · ${stay.patient?.name ?? ''}` : ''" width="lg" :resource="view" :guide="shown === 'discharge' ? 'inpatient.guide.discharge' : 'inpatient.guide.admissions'" :not-found="{ icon: BedDouble, title: t('inpatient.admission.not_found') }">
         <template #before>
             <AppButton variant="ghost" size="sm" :icon="ArrowLeft" @click="router.push({ name: 'inpatient-admissions' })">{{ t('inpatient.admission.back') }}</AppButton>
         </template>
@@ -72,7 +93,10 @@ async function cancel() {
             <AppButton variant="primary" :icon="ArrowRightLeft" @click="startMove">{{ t('inpatient.admission.move') }}</AppButton>
         </template>
 
-        <template v-if="stay">
+        <AppTabs v-if="stay && tabs.length > 1" :model-value="shown" @update:model-value="tab = $event" :tabs="tabs" :label="t('inpatient.tabs.label')" class="mb-4" />
+        <CarePanel v-if="stay && care && ['rounds', 'nursing', 'tests'].includes(shown)" :kind="shown" :care="care" :admitted="stay.status === 'admitted'" :api="ipd" :admission-id="stay.id" @changed="loadCare" />
+        <DischargePanel v-else-if="stay && shown === 'discharge'" :api="ipd" :admission-id="stay.id" @changed="view.reload()" />
+        <template v-else-if="stay && shown === 'overview'">
             <dl class="mb-4 grid gap-3 sm:grid-cols-4">
                 <div class="card px-4 py-3"><dt class="text-[12px] text-muted">{{ t('inpatient.admissions.bed') }}</dt><dd class="text-[15px] font-semibold">{{ stay.bed?.ward }} · <span dir="ltr">{{ stay.bed?.code }}</span></dd></div>
                 <div class="card px-4 py-3"><dt class="text-[12px] text-muted">{{ t('inpatient.admissions.doctor') }}</dt><dd class="text-[15px] font-semibold">{{ stay.doctor?.name }}</dd></div>

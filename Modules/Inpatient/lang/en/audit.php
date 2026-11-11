@@ -12,4 +12,9 @@ return [
     'admitted' => 'Patient admitted',
     'bed_moved' => 'Patient moved to another bed',
     'admission_cancelled' => 'Admission cancelled',
+    'round_added' => 'Round note written',
+    'nursing_note_added' => 'Nursing note written',
+    'tests_ordered' => 'Tests sent to the lab',
+    'discharged' => 'Patient discharged',
+    'discharge_amended' => 'Discharge summary amended',
 ];
