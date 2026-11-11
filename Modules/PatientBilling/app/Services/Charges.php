@@ -15,7 +15,7 @@ use Modules\PatientBilling\Models\Service;
  */
 class Charges implements PatientCharges
 {
-    public function __construct(private PatientBillingStore $store, private Bills $bills) {}
+    public function __construct(private PatientBillingStore $store, private Bills $bills, private Payments $payments) {}
 
     public function add(Organization $company, Organization $unit, string $patientId, string $sourceModule, string $sourceType, string $sourceId, string $serviceCode, int $quantityMilli, User $actor): array
     {
@@ -57,6 +57,11 @@ class Charges implements PatientCharges
             'currency' => $bill->currency,
             'lines' => $lines->mapWithKeys(fn (BillLine $line) => [(string) $line->source_id => $line->total_minor - $line->tax_minor])->all(),
         ];
+    }
+
+    public function creditOf(Organization $company, string $patientId): int
+    {
+        return max(0, $this->payments->advanceBalance($company, $patientId));
     }
 
     public function withdraw(Organization $company, string $sourceModule, string $sourceType, string $sourceId, User $actor): bool

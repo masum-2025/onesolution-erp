@@ -1,0 +1,11 @@
+{
+    "name": "Inpatient",
+    "alias": "inpatient",
+    "description": "Admitted patients: wards and beds, admission with an advance, the bed board, bed moves, daily bed charges on the bill, rounds, nursing notes and discharge.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Inpatient\\Providers\\InpatientServiceProvider"
+    ],
+    "files": []
+}

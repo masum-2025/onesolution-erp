@@ -44,4 +44,7 @@ interface PatientCharges
      * any refund is then made in billing.
      */
     public function withdraw(Organization $company, string $sourceModule, string $sourceType, string $sourceId, User $actor): bool;
+
+    /** What the patient has on advance and not yet used (minor units of the company's currency). */
+    public function creditOf(Organization $company, string $patientId): int;
 }

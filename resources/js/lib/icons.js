@@ -1,5 +1,6 @@
 import {
     Banknote,
+    BedDouble,
     BookOpen,
     Boxes,
     Briefcase,
@@ -44,6 +45,7 @@ import {
  */
 const ICONS = {
     banknote: Banknote,
+    bed: BedDouble,
     cart: ShoppingCart,
     book: BookOpen,
     briefcase: Briefcase,
