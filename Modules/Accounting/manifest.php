@@ -116,7 +116,7 @@ return [
             'key' => 'accounting.chart_template',
             'type' => 'enum',
             // Files in database/data/charts; a sector package suggests its own.
-            'schema' => ['enum' => ['general', 'school', 'factory', 'retail']],
+            'schema' => ['enum' => ['general', 'school', 'factory', 'retail', 'pharmacy', 'diagnostic', 'hospital']],
             'default' => 'general',
             'label' => 'accounting::rules.chart_template.label',
             'description' => 'accounting::rules.chart_template.description',

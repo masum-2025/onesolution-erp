@@ -19,6 +19,9 @@ return [
         'school' => 'স্কুল',
         'factory' => 'কারখানা',
         'retail' => 'দোকান ও খুচরা বিক্রি',
+        'pharmacy' => 'ফার্মেসি',
+        'diagnostic' => 'ডায়াগনস্টিক সেন্টার',
+        'hospital' => 'হাসপাতাল বা ক্লিনিক',
     ],
     'document_types' => [
         'invoice' => 'ইনভয়েস',

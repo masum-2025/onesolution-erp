@@ -101,6 +101,38 @@ return [
             'name' => 'QC inspector',
             'description' => 'Checks pieces at the end of lines and does final inspections.',
         ],
+        'doctor' => [
+            'name' => 'Doctor',
+            'description' => 'Sees patients, writes prescriptions and round notes, orders tests.',
+        ],
+        'nurse' => [
+            'name' => 'Nurse',
+            'description' => 'Writes vitals, nursing notes and medicines given on the ward.',
+        ],
+        'receptionist' => [
+            'name' => 'Receptionist',
+            'description' => 'Registers patients, books serials, admits and takes payment at the desk.',
+        ],
+        'billing_officer' => [
+            'name' => 'Billing officer',
+            'description' => 'Takes payments on patients\' bills and closes the cash day.',
+        ],
+        'lab_technician' => [
+            'name' => 'Lab technician',
+            'description' => 'Collects samples and enters test results.',
+        ],
+        'pathologist' => [
+            'name' => 'Pathologist',
+            'description' => 'Checks and signs lab reports, then hands them over.',
+        ],
+        'ward_incharge' => [
+            'name' => 'Ward in-charge',
+            'description' => 'Runs the ward: beds, admissions, nursing and discharge.',
+        ],
+        'pharmacist' => [
+            'name' => 'Pharmacist',
+            'description' => 'Sells and dispenses medicines, keeps stock and the controlled-drug register.',
+        ],
         'cashier' => [
             'name' => 'Cashier',
             'description' => 'Opens and closes a till shift and sells at the counter.',
