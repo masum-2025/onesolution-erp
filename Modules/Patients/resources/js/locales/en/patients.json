@@ -113,7 +113,8 @@
         "empty_text": "Ask the reception to link your patient record to this account.",
         "bills": "My bills",
         "lab": "My lab reports",
-        "prescriptions": "My prescriptions"
+        "prescriptions": "My prescriptions",
+        "discharges": "My discharge papers"
     },
     "guide": {
         "find": {

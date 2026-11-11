@@ -14,6 +14,9 @@ export default [
     { path: 'inpatient/admit', name: 'inpatient-admit', component: () => import('./pages/AdmitPage.vue'), meta },
     { path: 'inpatient/admissions', name: 'inpatient-admissions', component: () => import('./pages/AdmissionsPage.vue'), meta },
     { path: 'inpatient/admissions/:id', name: 'inpatient-admission', component: () => import('./pages/AdmissionPage.vue'), meta },
+    { path: 'inpatient/admissions/:id/discharge', name: 'inpatient-discharge-paper', component: () => import('./pages/DischargePaperPage.vue'), meta },
+    // A patient's own discharge papers in the client's portal (B2B2C): portal members may open this.
+    { path: 'portal/discharges', name: 'inpatient-portal', component: () => import('./pages/PortalDischargesPage.vue'), meta: { ...meta, portal: true } },
     { path: 'inpatient/beds', name: 'inpatient-beds', component: () => import('./pages/BedsPage.vue'), meta },
     ...schema.entities.map((entity) => ({
         path: `${schema.slug}/${entity.path}`,

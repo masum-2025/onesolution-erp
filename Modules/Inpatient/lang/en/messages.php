@@ -20,10 +20,22 @@ return [
         'bill_final' => 'The bill is already final, so the admission cannot be cancelled. Discharge the patient instead.',
         'bed_occupied' => 'A patient is in this bed. Move them first.',
         'cannot_set_bed' => 'This bed cannot be set that way now. Reload the board.',
+        'care_only' => 'Only doctors, nurses and those who discharge read care notes. Ask an admin for access.',
+        'lab_off' => 'The lab (Diagnostics) is off here, so tests cannot be sent. Write them in the round note instead.',
+        'already_signed' => 'The discharge is already signed. Use "Amend" to put it right.',
+        'summary_needed' => 'Write the discharge summary (at least the diagnosis) and save it first.',
+        'dues_left' => 'Money is still due on the bill. Collect it (or adjust the advance) in Patient billing, then discharge.',
+        'not_discharged' => 'The patient is not discharged yet, so there is nothing to amend.',
+        'discharge_not_found' => 'There is no signed discharge for this admission yet.',
     ],
     'validation' => [
         'taken' => 'Another bed of this ward already has this code.',
         'service_code' => 'Patient billing has no service with this code ("Services and prices"). Add it there first.',
         'not_staff' => 'Pick a staff member of this company as the doctor.',
+        'empty_note' => 'Write a note, a vital sign or a medicine given.',
+        'test' => 'The lab has no test in use with this code. Pick one from the list.',
+    ],
+    'timeline' => [
+        'discharged' => 'Discharged (:number, :ward)',
     ],
 ];

@@ -165,11 +165,12 @@
             "title": "Working with admitted patients",
             "steps": {
                 "1": "Open the patient.",
-                "2": "\"Move bed\" to transfer.",
-                "3": "Open the bill to take money."
+                "2": "Doctors add round notes; nurses add vitals and medicines given.",
+                "3": "\"Tests\" to send tests to the lab if needed.",
+                "4": "\"Move bed\" to transfer."
             },
             "tips": {
-                "1": "Rounds, nursing notes and discharge come in the next update."
+                "1": "Notes are never changed or removed: write a new one to correct."
             }
         },
         "wards": {
@@ -181,6 +182,128 @@
             "tips": {
                 "1": "The daily charge is a service in \"Services and prices\" (Patient billing)."
             }
+        },
+        "discharge": {
+            "title": "How to discharge a patient",
+            "steps": {
+                "1": "Write the diagnosis, treatment and advice; save.",
+                "2": "Check the due if discharged now; collect it in the bill.",
+                "3": "\"Discharge\", then print."
+            },
+            "tips": {
+                "1": "Discharge is blocked while money is due (a setting).",
+                "2": "A mistake after signing: \"Amend\" with a reason; the first paper is kept."
+            },
+            "settings": "Whether dues block discharge and the paper's language are in the Inpatient settings."
         }
+    },
+    "tabs": {
+        "label": "Admission sections",
+        "overview": "Overview",
+        "rounds": "Rounds",
+        "nursing": "Nursing",
+        "tests": "Tests",
+        "discharge": "Discharge"
+    },
+    "care": {
+        "empty_rounds": "No round notes yet.",
+        "empty_nursing": "No nursing notes yet.",
+        "empty_tests": "No tests sent yet.",
+        "add_rounds": "Write a round note",
+        "add_nursing": "Write a nursing note",
+        "add_tests": "Send tests to the lab",
+        "save_rounds": "Save note",
+        "save_nursing": "Save note",
+        "save_tests": "Send to the lab",
+        "saved_rounds": "Round note saved.",
+        "saved_nursing": "Nursing note saved.",
+        "saved_tests": "Tests sent to the lab; billed there.",
+        "round_note": "What you found and what to do",
+        "nursing_note": "Note",
+        "medicines_given": "Medicines given",
+        "medicine": "Medicine",
+        "dose": "Dose",
+        "route": "How given",
+        "remove": "Remove",
+        "add_medicine": "Add a medicine",
+        "pick_tests": "Pick the tests",
+        "lab_off": "The lab is not on here. Write the tests in a round note.",
+        "loading": "Loading…"
+    },
+    "vitals": {
+        "bp_systolic": "BP (upper)",
+        "bp_diastolic": "BP (lower)",
+        "pulse": "Pulse /min",
+        "temperature": "Temp °F",
+        "spo2": "SpO₂ %",
+        "resp_rate": "Breaths /min",
+        "sugar": "Sugar mmol/L"
+    },
+    "route": {
+        "oral": "By mouth",
+        "iv": "IV",
+        "im": "IM",
+        "sc": "Under the skin",
+        "inhaled": "Inhaled",
+        "topical": "On the skin",
+        "other": "Other"
+    },
+    "outcome": {
+        "cured": "Cured",
+        "improved": "Improved",
+        "referred": "Referred",
+        "lama": "Left against advice",
+        "death": "Died"
+    },
+    "discharge": {
+        "bed_days": "Bed days at discharge",
+        "final_due": "Due if discharged now",
+        "advance": "On advance: {amount} (adjust it in the bill)",
+        "blocked": "Collect the due first",
+        "clear": "Ready to discharge",
+        "summary": "Discharge summary",
+        "signed": "Signed {at}",
+        "draft": "Draft",
+        "diagnosis": "Diagnosis",
+        "treatment": "Treatment given",
+        "advice": "Advice",
+        "follow_up_on": "Follow-up on",
+        "outcome": "Outcome",
+        "save": "Save draft",
+        "discharge": "Discharge",
+        "saved": "Summary saved.",
+        "confirm_title": "Discharge {number}?",
+        "confirm_text": "The summary is signed, the bed days are settled and the bed goes for cleaning. After this, changes are made only by amendment.",
+        "done": "Patient discharged.",
+        "none": "No discharge summary yet.",
+        "amend": "Amend",
+        "amend_text": "The signed paper is kept; this becomes the next version.",
+        "amend_reason": "Why it is amended",
+        "amended": "Discharge amended.",
+        "print": "Print",
+        "revisions": "Versions",
+        "revision": "Version {n}",
+        "superseded": "replaced"
+    },
+    "paper": {
+        "title": "Discharge {number}",
+        "not_found": "No signed discharge yet",
+        "back": "Back to the admission",
+        "heading": "Discharge certificate",
+        "patient": "Patient",
+        "number": "Admission no.",
+        "mrn": "Patient no.",
+        "age": "Age",
+        "bed": "Bed",
+        "doctor": "Doctor",
+        "admitted": "Admitted",
+        "discharged": "Discharged",
+        "reason": "Reason for admission",
+        "signature": "Signature"
+    },
+    "portal": {
+        "title": "My discharge papers",
+        "empty": "No discharge papers yet",
+        "empty_text": "They appear here after you leave the hospital."
     }
 }

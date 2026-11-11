@@ -23,6 +23,6 @@ class BedCharge extends Model
 
     protected function casts(): array
     {
-        return ['day_no' => 'integer', 'day_on' => 'date:Y-m-d'];
+        return ['day_no' => 'integer', 'day_on' => 'date:Y-m-d', 'withdrawn_at' => 'datetime'];
     }
 }

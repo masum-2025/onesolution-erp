@@ -152,10 +152,11 @@ class Admissions
             if ($admission->status !== Admission::ADMITTED) {
                 throw InpatientException::because('not_admitted', 409);
             }
-            foreach ($this->store->query(BedCharge::class, $company)->where('admission_id', $admission->getKey())->get() as $charge) {
+            foreach ($this->store->query(BedCharge::class, $company)->where('admission_id', $admission->getKey())->whereNull('withdrawn_at')->get() as $charge) {
                 if (! $this->charges->withdraw($company, 'inpatient', 'bed_day', (string) $charge->getKey(), $actor)) {
                     throw InpatientException::because('bill_final', 409);
                 }
+                $charge->forceFill(['withdrawn_at' => CarbonImmutable::now()])->save();
             }
             $bed = $this->store->query(Bed::class, $company)->whereKey($admission->bed_id)->lockForUpdate()->first();
             $bed?->forceFill(['status' => Bed::CLEANING, 'admission_id' => null, 'version' => $bed->version + 1])->save();

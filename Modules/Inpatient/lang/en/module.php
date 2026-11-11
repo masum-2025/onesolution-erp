@@ -9,6 +9,7 @@ return [
     'menu_admit' => 'Admit a patient',
     'menu_board' => 'Bed board',
     'menu_admissions' => 'Admitted patients',
+    'menu_discharges' => 'Discharges',
     'menu_beds' => 'Beds',
     'new_admission' => 'Admit a patient',
 ];

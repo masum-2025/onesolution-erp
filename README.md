@@ -5918,11 +5918,11 @@ screen and the doctor's own patient list. Needs Patients and Patient billing (40
 - Audited with counts only. After deploy: migrate. A new country or partner needs no code: timings and headings are
   translations, the language is a rule.
 
-## Inpatient (module `inpatient`, H-4a)
+## Inpatient (module `inpatient`, H-4a and H-4b)
 
 Admitted patients: wards and beds, admission with an advance, the bed board, bed moves and daily bed charges on
-the patient's bill. Needs Patients and Patient billing (403 when either is off). Rounds, nursing notes and
-discharge come in H-4b.
+the patient's bill, rounds, nursing notes, tests and discharge. Needs Patients and Patient billing (403 when
+either is off); tests need Diagnostics on.
 
 - **Wards** (generated list, `database/module-definitions/inpatient.php`) and **beds** (`…/inpatient/beds`,
   `inpatient.manage`): a bed's code is unique in its ward; its daily charge is a Patient billing service code
@@ -5945,5 +5945,22 @@ discharge come in H-4b.
   `.manage`. Events `inpatient.admitted`, `inpatient.bed_moved` (ids only). Audited without patient details.
 - After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`;
   the scheduler runs `inpatient:bed-charges` hourly.
-- A new country or partner needs no code: bed prices are billing services, the day rule and advance are rules,
-  texts are translations.
+- **Care notes** (H-4b), all append-only with `op_id`, written only while the patient is in: round notes
+  `POST …/admissions/{id}/rounds` (`inpatient.round`), nursing notes `POST …/nursing-notes` (`inpatient.nurse`;
+  vitals BP, pulse, temperature °F, SpO₂, breaths, sugar, checked in range; medicines given), tests
+  `POST …/tests` (`inpatient.round`): one lab order through `Diagnostics\Contracts\TestOrders`, billed by the lab,
+  403 `lab_off` with Diagnostics off. `GET …/care` only for those who give care (round, nurse or discharge), never
+  the desk alone. Audited with counts only.
+- **Discharge** (H-4b, `inpatient.discharge`): the summary (diagnosis, treatment, advice, follow-up, outcome) is a
+  draft with its version (`PUT …/discharge`). `GET …/discharge` shows the bed days and the due if the patient leaves
+  now (at midnight the discharge day does not count). `POST …/discharge/finish` (`base_version`): with rule
+  `inpatient.discharge_requires_clearance` (sensitive, default on) refused while money is due (422 `dues_left`,
+  `due_minor`); then missing bed days are charged, extra ones withdrawn while the bill is open (marked
+  `withdrawn_at`, never removed), the summary is signed, the bed goes for cleaning and the patient's history gets a
+  line without the diagnosis. A signed summary is never changed: `POST …/discharge/amend` (reason) makes the next
+  signed revision and keeps the earlier one. `GET …/discharge/paper`: A4 paper, headings in rule
+  `inpatient.discharge_language` (bn, en or both). Portal: `GET /api/portal/inpatient/discharges` shows a portal
+  member only the signed papers of their linked patients. Events `inpatient.tests_ordered`, `inpatient.discharged`.
+- Left for later: nurses' medicines charged from the pharmacy (now only written), a PDF file.
+- A new country or partner needs no code: bed prices are billing services, the day rule, advance, clearance and
+  paper language are rules, texts are translations.
