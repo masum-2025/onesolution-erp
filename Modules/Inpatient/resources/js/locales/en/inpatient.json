@@ -1,0 +1,186 @@
+{
+    "module": {
+        "title": "Inpatient",
+        "description": "Admitted patients: wards and beds, admission with an advance, the bed board, bed moves, daily bed charges on the bill, rounds, nursing notes and discharge."
+    },
+    "entities": {
+        "ward": {
+            "label": "Ward or cabin",
+            "plural": "Wards and cabins"
+        }
+    },
+    "fields": {
+        "ward": {
+            "name": "Name",
+            "kind": "Kind",
+            "is_active": "In use"
+        }
+    },
+    "options": {
+        "ward": {
+            "kind": {
+                "general": "General ward",
+                "cabin": "Cabin",
+                "icu": "ICU",
+                "hdu": "HDU",
+                "nicu": "NICU",
+                "other": "Other"
+            }
+        }
+    },
+    "common": {
+        "refresh": "Refresh",
+        "cancel": "Cancel"
+    },
+    "bed_status": {
+        "free": "Free",
+        "occupied": "Occupied",
+        "cleaning": "Being cleaned",
+        "blocked": "Blocked"
+    },
+    "status": {
+        "admitted": "Admitted",
+        "discharged": "Discharged",
+        "cancelled": "Cancelled"
+    },
+    "kind": {
+        "general": "General ward",
+        "cabin": "Cabin",
+        "icu": "ICU",
+        "hdu": "HDU",
+        "nicu": "NICU",
+        "other": "Other"
+    },
+    "board": {
+        "title": "Bed board",
+        "text": "Every bed by ward. Tap an occupied bed to open the patient, a free one to admit, a cleaned one to mark it ready.",
+        "legend": "Bed states",
+        "no_beds": "No beds in this ward yet.",
+        "bed_label": "Bed {code}: {status}",
+        "cleaned": "Bed {code} is ready.",
+        "empty": "No wards yet",
+        "empty_text": "Add wards and cabins, then their beds."
+    },
+    "admit": {
+        "title": "Admit a patient",
+        "text": "Find the patient, pick the doctor and a free bed, take the advance, then admit.",
+        "step_patient": "1. Patient",
+        "step_bed": "2. Bed and doctor",
+        "find": "Patient number, mobile or name",
+        "change": "Change",
+        "no_patient": "No patient found. Check the spelling or register them.",
+        "register": "Register a new patient",
+        "advance": "On advance: {amount}",
+        "advance_needed": "Needed before admission: {amount}",
+        "take_advance": "Take the advance in Patient billing",
+        "bed": "Bed",
+        "pick_bed": "Pick a free bed",
+        "no_free_bed": "No free bed now",
+        "doctor": "Attending doctor",
+        "pick_doctor": "Pick the doctor",
+        "reason": "Reason for admission",
+        "guardian": "Guardian",
+        "guardian_mobile": "Guardian's mobile",
+        "admit": "Admit",
+        "done": "Admitted as {number} in bed {bed}."
+    },
+    "admissions": {
+        "title": "Admitted patients",
+        "text": "Patients in the hospital now, with bed, doctor and days so far.",
+        "status": "Status",
+        "number": "Admission no.",
+        "patient": "Patient",
+        "bed": "Bed",
+        "doctor": "Doctor",
+        "admitted_at": "Admitted",
+        "days": "Bed days",
+        "day_count": "{count} day(s)",
+        "empty": "No patients here"
+    },
+    "admission": {
+        "back": "Admitted patients",
+        "not_found": "This admission is not here",
+        "due": "Due on the bill",
+        "open_bill": "Open the bill",
+        "moves": "Beds",
+        "bed_days": "Bed days charged",
+        "day": "Day {n}",
+        "move": "Move bed",
+        "move_text": "The days so far stay at the old bed; the old bed goes for cleaning.",
+        "move_reason": "Why (optional)",
+        "moved": "Patient moved.",
+        "cancel": "Cancel admission",
+        "cancel_title": "Cancel admission {number}?",
+        "cancel_text": "Only for a mistake: its bed days come off the open bill and the bed goes for cleaning.",
+        "cancelled": "Admission cancelled.",
+        "cancel_reason": "Cancelled because"
+    },
+    "beds": {
+        "title": "Beds",
+        "text": "Each ward's beds and their daily charge (a service in Patient billing).",
+        "new": "Add a bed",
+        "edit": "Change bed",
+        "ward": "Ward",
+        "code": "Bed no.",
+        "service_code": "Daily charge code",
+        "service_hint": "A service code from \"Services and prices\" in Patient billing.",
+        "status": "State",
+        "actions": "Actions",
+        "in_use": "In use",
+        "off": "Not in use",
+        "save": "Save",
+        "saved": "Bed saved.",
+        "remove": "Remove",
+        "remove_title": "Remove bed {code}?",
+        "remove_text": "Only a bed that never had a patient can be removed; others are switched off.",
+        "empty": "No beds yet",
+        "empty_text": "Tap \"Add a bed\".",
+        "no_wards": "Add a ward or cabin first (Wards and cabins)."
+    },
+    "guide": {
+        "admit": {
+            "title": "How to admit a patient",
+            "steps": {
+                "1": "Find the patient.",
+                "2": "Pick doctor, ward and a free bed.",
+                "3": "Take the advance.",
+                "4": "\"Admit\"."
+            },
+            "tips": {
+                "1": "The first bed day goes on the bill at once; the next ones by themselves each day."
+            },
+            "settings": "When a bed day starts and the advance needed are in the Inpatient settings."
+        },
+        "board": {
+            "title": "Reading the bed board",
+            "steps": {
+                "1": "Green = free, red = occupied, amber = cleaning, grey = blocked; each also says it in words.",
+                "2": "Tap a bed to open the patient."
+            },
+            "tips": {
+                "1": "A bed being cleaned: tap it when it is ready."
+            }
+        },
+        "admissions": {
+            "title": "Working with admitted patients",
+            "steps": {
+                "1": "Open the patient.",
+                "2": "\"Move bed\" to transfer.",
+                "3": "Open the bill to take money."
+            },
+            "tips": {
+                "1": "Rounds, nursing notes and discharge come in the next update."
+            }
+        },
+        "wards": {
+            "title": "How to set up wards and beds",
+            "steps": {
+                "1": "Add wards or cabins.",
+                "2": "Add beds with their daily charge."
+            },
+            "tips": {
+                "1": "The daily charge is a service in \"Services and prices\" (Patient billing)."
+            }
+        }
+    }
+}

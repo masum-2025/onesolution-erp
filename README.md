@@ -5917,3 +5917,33 @@ screen and the doctor's own patient list. Needs Patients and Patient billing (40
 - **Portal** (`GET /api/portal/outpatient/prescriptions`): a patient's own finished prescriptions in force.
 - Audited with counts only. After deploy: migrate. A new country or partner needs no code: timings and headings are
   translations, the language is a rule.
+
+## Inpatient (module `inpatient`, H-4a)
+
+Admitted patients: wards and beds, admission with an advance, the bed board, bed moves and daily bed charges on
+the patient's bill. Needs Patients and Patient billing (403 when either is off). Rounds, nursing notes and
+discharge come in H-4b.
+
+- **Wards** (generated list, `database/module-definitions/inpatient.php`) and **beds** (`…/inpatient/beds`,
+  `inpatient.manage`): a bed's code is unique in its ward; its daily charge is a Patient billing service code
+  (checked). A bed that ever had a patient is switched off, never removed; a ward with beds stays.
+- **Bed board** `GET …/beds/board` (`inpatient.view`): every bed by ward, free / occupied / cleaning / blocked in
+  colour, word and icon. The desk marks a cleaned bed free or a bed blocked (`POST …/beds/{bed}/status`).
+- **Admitting** `POST …/admissions` (`inpatient.admit`, `op_id`): the bed is taken under a lock (409 `bed_taken`
+  for the second desk); one stay a patient at a time; the attending doctor is a staff member, linked to the
+  patient (care link); the advance in rule `inpatient.min_advance` (money, empty = none) must be on the patient's
+  advance (`PatientCharges::creditOf`, new). Numbers by rule `inpatient.number_prefix` (IP000001).
+- **Bed days**: rule `inpatient.bed_day_starts` (sensitive): `midnight` (the admission day counts, the discharge
+  day does not) or `admission_time` (each started 24 hours). Each day goes on the bill once (`PatientCharges::add`,
+  one row a day of a stay), at the bed the patient was in when the day began: at admission, before a move, and by
+  `inpatient:bed-charges` every hour (companies with Inpatient on only).
+- **Moving** `POST …/admissions/{id}/move` (`base_version`): the days so far are charged first; the old bed goes
+  for cleaning; moves are append-only. **Cancelling** `POST …/admissions/{id}/cancel` (reason): only while the bill
+  is open; the bed days come off the bill.
+- With `patients.doctor_sees = own` a doctor (`inpatient.round` only) sees only their own admissions; other
+  occupied beds show without names. Permissions `inpatient.view`, `.admit`, `.nurse`, `.round`, `.discharge`,
+  `.manage`. Events `inpatient.admitted`, `inpatient.bed_moved` (ids only). Audited without patient details.
+- After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`;
+  the scheduler runs `inpatient:bed-charges` hourly.
+- A new country or partner needs no code: bed prices are billing services, the day rule and advance are rules,
+  texts are translations.

@@ -1,0 +1,9 @@
+{
+    "name": "onesolutions/inpatient",
+    "description": "Admitted patients: wards and beds, admission with an advance, the bed board, bed moves, daily bed charges on the bill, rounds, nursing notes and discharge.",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Inpatient\\": "app/"
+        }
+    }
+}

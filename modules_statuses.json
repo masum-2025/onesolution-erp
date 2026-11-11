@@ -44,5 +44,6 @@
     "Patients": true,
     "PatientBilling": true,
     "Diagnostics": true,
-    "Outpatient": true
+    "Outpatient": true,
+    "Inpatient": true
 }
