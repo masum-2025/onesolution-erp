@@ -29,6 +29,9 @@ return [
             'school' => 'School',
             'factory' => 'Factory',
             'retail' => 'Shop and retail',
+            'pharmacy' => 'Pharmacy',
+            'diagnostic' => 'Diagnostic centre',
+            'hospital' => 'Hospital or clinic',
         ],
     ],
     'require_cost_centre' => [

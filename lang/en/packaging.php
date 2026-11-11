@@ -72,6 +72,18 @@ return [
             'name' => 'Retail shop',
             'description' => 'Stock, customers and accounts for shops and stores.',
         ],
+        'pharmacy' => [
+            'name' => 'Pharmacy',
+            'description' => 'Medicine sales with batches and expiry, stock, the controlled-drug register and accounts.',
+        ],
+        'diagnostic' => [
+            'name' => 'Diagnostic centre',
+            'description' => 'Patients, bills, lab tests and reports, referral commission and accounts.',
+        ],
+        'hospital' => [
+            'name' => 'Hospital or clinic',
+            'description' => 'Outdoor serials and prescriptions, admissions and beds, lab, pharmacy, bills, staff and accounts.',
+        ],
         'college' => [
             'name' => 'College',
             'description' => 'Higher secondary and degree classes: students, admissions, staff and accounts.',

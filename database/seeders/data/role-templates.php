@@ -106,6 +106,53 @@ return [
         'permissions' => ['crm.view', 'crm.edit', 'crm.manage', 'crm.export', 'inventory.view'],
     ],
 
+    // ── Health (pharmacy, diagnostic centre, hospital) ───────────────────
+    // Used by more than one health sector, so not tied to one.
+    [
+        'key' => 'doctor',
+        'sector' => null,
+        // Sees and treats patients, writes prescriptions and round notes, orders tests.
+        'permissions' => ['patients.view', 'patients.treat', 'outpatient.view', 'outpatient.consult', 'inpatient.view', 'inpatient.round', 'diagnostics.view', 'diagnostics.order', 'pharmacy.view'],
+    ],
+    [
+        'key' => 'nurse',
+        'sector' => null,
+        'permissions' => ['patients.view', 'inpatient.view', 'inpatient.nurse', 'outpatient.view'],
+    ],
+    [
+        'key' => 'receptionist',
+        'sector' => null,
+        // The front desk: registers patients, books serials, admits, orders tests and takes the money for them.
+        'permissions' => ['patients.view', 'patients.register', 'outpatient.view', 'outpatient.book', 'inpatient.view', 'inpatient.admit', 'diagnostics.view', 'diagnostics.order', 'patient_billing.view', 'patient_billing.collect'],
+    ],
+    [
+        'key' => 'billing_officer',
+        'sector' => null,
+        'permissions' => ['patient_billing.view', 'patient_billing.collect', 'patient_billing.close_day', 'patients.view', 'outpatient.view', 'inpatient.view', 'diagnostics.view'],
+    ],
+    [
+        'key' => 'lab_technician',
+        'sector' => null,
+        'permissions' => ['diagnostics.view', 'diagnostics.collect', 'diagnostics.result', 'patients.view'],
+    ],
+    [
+        'key' => 'pathologist',
+        'sector' => null,
+        // Checks and signs reports, then hands them over.
+        'permissions' => ['diagnostics.view', 'diagnostics.result', 'diagnostics.verify', 'diagnostics.deliver', 'patients.view', 'patients.treat'],
+    ],
+    [
+        'key' => 'ward_incharge',
+        'sector' => null,
+        'permissions' => ['inpatient.view', 'inpatient.admit', 'inpatient.nurse', 'inpatient.discharge', 'patients.view', 'patient_billing.view'],
+    ],
+    [
+        'key' => 'pharmacist',
+        'sector' => null,
+        // Sells and dispenses, keeps the medicine list and stock and the controlled-drug register; approvals stay with a manager.
+        'permissions' => ['pharmacy.view', 'pharmacy.sell', 'pharmacy.manage', 'pharmacy.controlled', 'pos.view', 'pos.sell', 'inventory.view', 'inventory.manage', 'patients.view'],
+    ],
+
     // ── School ───────────────────────────────────────────────────────────
     [
         'key' => 'principal',

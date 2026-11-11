@@ -62,7 +62,7 @@
         "name": "Name",
         "name_required": "Enter the English name.",
         "sector": "Sector",
-        "sector_hint": "A new company starts with the modules, roles and settings of its sector. Everything can be changed later.",
+        "sector_hint": "Choose your business type; the needed modules, roles and settings turn on by themselves, and you can turn any on or off later.",
         "regional": "Regional settings",
         "inherit_hint": "Leave empty to use the value from the level above.",
         "inherit": "Same as the level above",

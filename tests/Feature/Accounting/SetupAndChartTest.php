@@ -21,7 +21,7 @@ beforeEach(function () {
 it('sets up the books once: the chart, posting accounts and the first fiscal year in twelve periods', function () {
     $status = $this->asToken($this->w->token)->getJson(($this->url)('/setup'))->assertOk()->json('data');
     expect($status)->toMatchArray(['set_up' => false, 'currency' => 'BDT', 'suggested_template' => 'general', 'can_set_up' => true])
-        ->and(array_column($status['templates'], 'key'))->toBe(['factory', 'general', 'retail', 'school']);
+        ->and(array_column($status['templates'], 'key'))->toBe(['diagnostic', 'factory', 'general', 'hospital', 'pharmacy', 'retail', 'school']);
 
     $result = setUpBooks($this, $this->w->token, $this->w->c1)->assertCreated()->json('data');
     expect($result['template'])->toBe('general')->and($result['accounts'])->toBeGreaterThan(30);

@@ -5964,3 +5964,31 @@ either is off); tests need Diagnostics on.
 - Left for later: nurses' medicines charged from the pharmacy (now only written), a PDF file.
 - A new country or partner needs no code: bed prices are billing services, the day rule, advance, clearance and
   paper language are rules, texts are translations.
+
+## Health sectors: pharmacy, diagnostic centre, hospital (H-5)
+
+Three sector packages (`database/seeders/data/sector-packages.php`), applied when a company of that sector is
+made, as ordinary company data that stays editable. Data only: no code knows these sectors.
+
+| Sector | Modules turned on (when the plan includes them) | Chart | Roles |
+|---|---|---|---|
+| `pharmacy` | inventory, pos, pharmacy, crm, accounting | `pharmacy` | administrator, manager, accountant, pharmacist, cashier, store_keeper |
+| `diagnostic` | patients, patient_billing, diagnostics, accounting, hrm, attendance | `diagnostic` | + receptionist, billing_officer, lab_technician, pathologist, hr_officer |
+| `hospital` | all of these plus outpatient, inpatient, payroll | `hospital` | + doctor, nurse, ward_incharge, pharmacist, store_keeper |
+
+- A hospital starts with `patients.doctor_sees = own` (doctors see the patients they care for).
+- Eight role templates (`role-templates.php`, names in `lang/*/access.php`), each with only what the job needs:
+  doctor, nurse, receptionist, billing_officer, lab_technician, pathologist (verifies; the technician only enters
+  results), ward_incharge, pharmacist (stock but not stock approval). The menu follows the permissions.
+- Charts `pharmacy` (extends retail), `diagnostic` and `hospital` (extend general) in
+  `Modules/Accounting/database/data/charts`, with patients' receivable, panel receivable, patients' advances,
+  referral commission and medicine sales; every posting key of the health modules maps to an account (tested).
+  Patient billing posts all income to one account for now; the hospital chart has department income accounts
+  for journals until billing posts them apart.
+- On the Starter plan the paid health modules are offered as "available on a higher plan", never forced on.
+- Demo: `php artisan db:seed --class=DemoHealthSeeder` (local and testing only; needs the demo hierarchy) makes
+  "Demo City Hospital" with 100 medicines, 20 tests, 3 doctors with sessions, 2 wards with 12 beds, 5 patients
+  and one admission; logins `hospital.owner@`, `doctor1@`…`doctor3@`, `nurse@`, `reception@`, `lab@`,
+  `pathologist@`, `pharmacist@`, `billing@demo.test`. It only adds: run twice, nothing changes.
+- After deploy: `packaging:sync`, `rules:sync`, `access:sync`. A new health sector or country = one more data entry
+  and its translations.

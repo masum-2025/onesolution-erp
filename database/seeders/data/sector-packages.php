@@ -112,4 +112,32 @@ return [
         ],
         'role_templates' => ['administrator', 'manager', 'accountant', 'staff', 'store_keeper', 'cashier', 'shop_supervisor', 'sales_person', 'sales_manager'],
     ],
+    [
+        'key' => 'pharmacy',
+        'modules' => ['inventory', 'pos', 'pharmacy', 'crm', 'accounting'],
+        'rules' => [
+            ['key' => 'accounting.chart_template', 'value' => 'pharmacy'],
+        ],
+        'role_templates' => ['administrator', 'manager', 'accountant', 'pharmacist', 'cashier', 'store_keeper'],
+    ],
+    [
+        'key' => 'diagnostic',
+        'modules' => ['patients', 'patient_billing', 'diagnostics', 'accounting', 'hrm', 'attendance'],
+        'rules' => [
+            ['key' => 'accounting.chart_template', 'value' => 'diagnostic'],
+        ],
+        'role_templates' => ['administrator', 'manager', 'accountant', 'receptionist', 'billing_officer', 'lab_technician', 'pathologist', 'hr_officer'],
+        'demo_seeder' => \Database\Seeders\DemoHealthSeeder::class,
+    ],
+    [
+        'key' => 'hospital',
+        'modules' => ['patients', 'patient_billing', 'diagnostics', 'outpatient', 'inpatient', 'inventory', 'pos', 'pharmacy', 'accounting', 'hrm', 'attendance', 'payroll'],
+        'rules' => [
+            ['key' => 'accounting.chart_template', 'value' => 'hospital'],
+            // Doctors see the patients they care for; the desk and the admins see all.
+            ['key' => 'patients.doctor_sees', 'value' => 'own'],
+        ],
+        'role_templates' => ['administrator', 'manager', 'accountant', 'hr_officer', 'store_keeper', 'doctor', 'nurse', 'receptionist', 'billing_officer', 'lab_technician', 'pathologist', 'ward_incharge', 'pharmacist'],
+        'demo_seeder' => \Database\Seeders\DemoHealthSeeder::class,
+    ],
 ];
