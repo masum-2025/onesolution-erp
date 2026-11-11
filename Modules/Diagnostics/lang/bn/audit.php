@@ -15,4 +15,8 @@ return [
     'results_verified' => 'ফল যাচাই',
     'results_sent_back' => 'ফল ফেরত পাঠানো',
     'report_delivered' => 'রিপোর্ট দেওয়া',
+    'report_link_made' => 'রিপোর্টের link তৈরি',
+    'commission_earned' => 'কমিশন পাওনা হলো',
+    'commission_reversed' => 'কমিশন ফেরত নেওয়া',
+    'commission_paid' => 'কমিশন পরিশোধ',
 ];

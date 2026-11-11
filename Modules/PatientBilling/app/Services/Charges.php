@@ -43,4 +43,19 @@ class Charges implements PatientCharges
 
         return $bill === null || $bill->status === Bill::VOID ? null : $bill->dueMinor();
     }
+
+    public function chargesOn(Organization $company, string $billId, string $sourceModule): ?array
+    {
+        $bill = $this->store->query(Bill::class, $company)->whereKey($billId)->first();
+        if ($bill === null || $bill->status === Bill::VOID) {
+            return null;
+        }
+        $lines = $this->store->query(BillLine::class, $company)->where('bill_id', $billId)->where('source_module', $sourceModule)->whereNull('voided_at')->get();
+
+        return [
+            'status' => $bill->status,
+            'currency' => $bill->currency,
+            'lines' => $lines->mapWithKeys(fn (BillLine $line) => [(string) $line->source_id => $line->total_minor - $line->tax_minor])->all(),
+        ];
+    }
 }

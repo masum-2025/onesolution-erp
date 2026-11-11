@@ -270,14 +270,14 @@ class LabOrders
         });
     }
 
-    public function deliver(Organization $company, Order $order, string $channel, User $actor): Order
+    public function deliver(Organization $company, Order $order, string $channel, ?User $actor): Order
     {
         return $this->store->transaction($company, function () use ($company, $order, $channel, $actor) {
             $order = $this->lock($company, $order);
             if (! in_array($order->status, ['verified', 'delivered'], true)) {
                 throw DiagnosticsException::because('not_verified', 409);
             }
-            (new Delivery(['organization_id' => $company->getKey(), 'order_id' => $order->getKey(), 'channel' => $channel, 'sent_by' => $actor->getKey(), 'sent_at' => CarbonImmutable::now()]))->save();
+            (new Delivery(['organization_id' => $company->getKey(), 'order_id' => $order->getKey(), 'channel' => $channel, 'sent_by' => $actor?->getKey(), 'sent_at' => CarbonImmutable::now()]))->save();
             $order->fill(['status' => 'delivered', 'delivered_at' => $order->delivered_at ?? CarbonImmutable::now()]);
             $order->version++;
             $order->save();

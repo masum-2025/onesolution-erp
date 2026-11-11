@@ -5843,7 +5843,19 @@ person, amendments that keep the old values, and printed reports. Other modules 
 - Screens: worklist by stage with a scan box, new order (tests ticked, total shown), order bench (take samples,
   labels, enter results with normal ranges and flags, verify / send back, give), tube labels (50 × 25 mm), printed
   report (save as PDF from print), test values and ranges editor, portal reports; guides bn/en.
-- Next (H-2b): referring doctors' commission and payouts, a time-limited report link, SMS.
+- H-2b: referring doctors' commission (`diagnostics_commissions`, append-only: earned once per order when the patient's
+  bill is final, the doctor's own percent or rule `referral_commission_percent` (0, sensitive) of what the tests came to
+  after discounts and without tax; taken back by a reversing line with a reason), payouts (`diagnostics_payouts`,
+  append-only, op ids, never more than owed), postings `diagnostics.commission_expense`, `.commission_payable`, `.cash`,
+  `.bank`, `.mobile` when Accounting is on. API `commissions`, `referrers/{id}/commissions` (`from`, `to`),
+  `referrers/{id}/payouts`, `commissions/{id}/reverse`; permission `diagnostics.commission`; event
+  `diagnostics.commission_due`. Listens to Patient billing's `BillFinalized` (contract `PatientCharges::chargesOn`).
+- Report links (`diagnostics_report_links`, only a hash of the token): `POST orders/{id}/link` (`sms`), opened at
+  `/lab-report/{organization}/{token}` through `GET /api/public/diagnostics/reports/{organization}/{token}` (no sign-in,
+  20 a minute and 300 a day per address; verified values only; expired 403, any miss 404). Rule `report_link_hours`
+  (72); `send_report_sms` (false) texts the link as soon as a report is ready (notification `diagnostics.report_link`,
+  the partner's SMS sender). Making or sending a link counts as giving the report.
+- Later: commission advances, per-test commission rates.
 - After deploy: `composer dump-autoload --no-scripts`, migrate, `rules:sync`, `access:sync`, `addons:sync-prices`.
 - A new country or partner needs no code: ranges, tests and prices are data; verification, turnaround and numbers
   are rules; texts are translations.

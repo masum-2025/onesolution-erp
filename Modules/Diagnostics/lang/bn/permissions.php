@@ -8,4 +8,5 @@ return [
     'verify' => 'ফল যাচাই ও সই',
     'deliver' => 'রিপোর্ট দেওয়া',
     'manage' => 'Test, সীমা আর referral ডাক্তার ঠিক করা',
+    'commission' => 'Referral ডাক্তারের কমিশন দেখা ও পরিশোধ',
 ];

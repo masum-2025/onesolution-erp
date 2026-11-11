@@ -29,9 +29,10 @@ class SetupController extends Controller
         $services = $this->charges->services($company);
 
         return response()->json(['data' => [
-            'can' => collect(['order', 'collect', 'result', 'verify', 'deliver', 'manage'])->mapWithKeys(fn (string $ability) => [$ability => Gate::allows("diagnostics.{$ability}", $unit)])->all(),
+            'can' => collect(['order', 'collect', 'result', 'verify', 'deliver', 'manage', 'commission'])->mapWithKeys(fn (string $ability) => [$ability => Gate::allows("diagnostics.{$ability}", $unit)])->all(),
             'currency' => rescue(fn () => $this->store->currency($company), null, false),
             'require_verification' => (bool) $this->store->rule('require_verification', $unit),
+            'report_link_hours' => (int) $this->store->rule('report_link_hours', $unit),
             'options' => [
                 'tests' => $this->store->query(Test::class, $company)->where('is_active', true)->orderBy('code')->get()->map(fn (Test $test) => [
                     'id' => $test->getKey(), 'code' => $test->code, 'name' => $test->textIn('name'), 'department' => $test->department, 'sample_type' => $test->sample_type,

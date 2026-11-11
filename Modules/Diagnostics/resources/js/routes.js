@@ -15,6 +15,8 @@ export default [
     { path: 'diagnostics/orders/:id/labels', name: 'diagnostics-labels', component: () => import('./pages/LabelsPage.vue'), meta },
     { path: 'diagnostics/orders/:id/report', name: 'diagnostics-report', component: () => import('./pages/ReportPage.vue'), meta },
     { path: 'diagnostics/parameters', name: 'diagnostics-parameters', component: () => import('./pages/ParametersPage.vue'), meta },
+    { path: 'diagnostics/commissions', name: 'diagnostics-commissions', component: () => import('./pages/CommissionsPage.vue'), meta },
+    { path: 'diagnostics/commissions/:id', name: 'diagnostics-referrer-account', component: () => import('./pages/ReferrerAccountPage.vue'), meta },
     // A patient's own lab reports in the client's portal (B2B2C): portal members may open this.
     { path: 'portal/lab-reports', name: 'diagnostics-portal', component: () => import('./pages/PortalReportsPage.vue'), meta: { ...meta, portal: true } },
     ...schema.entities.map((entity) => ({

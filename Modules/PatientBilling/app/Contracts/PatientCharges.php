@@ -28,4 +28,13 @@ interface PatientCharges
 
     /** What is still due on a bill (null when there is no such bill or it is void). */
     public function dueOn(Organization $company, string $billId): ?int;
+
+    /**
+     * A department's charges on one bill, by its source record id: what each line
+     * comes to after discounts and without tax, for lines not voided. Null when there is
+     * no such bill or it is void.
+     *
+     * @return array{status: string, currency: ?string, lines: array<string, int>}|null
+     */
+    public function chargesOn(Organization $company, string $billId, string $sourceModule): ?array;
 }

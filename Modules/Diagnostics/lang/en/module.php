@@ -12,5 +12,13 @@ return [
     'menu_tests' => 'Test list',
     'menu_ranges' => 'Test values and normal ranges',
     'menu_referrers' => 'Referring doctors',
+    'menu_commissions' => 'Doctors\' commission',
     'new_order' => 'New test order',
+    'posting_keys' => [
+        'commission_expense' => 'Referral commission (expense)',
+        'commission_payable' => 'Commission owed to doctors',
+        'cash' => 'Cash for paying commission',
+        'bank' => 'Bank for paying commission',
+        'mobile' => 'Mobile wallet for paying commission',
+    ],
 ];

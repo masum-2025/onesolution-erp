@@ -169,7 +169,16 @@
         "verify": "Verify and sign",
         "verified": "Verified",
         "reason": "Reason",
-        "delivered_at": "Given {time}"
+        "delivered_at": "Given {time}",
+        "link": "Report link",
+        "link_text": "Anyone with this link can see the verified report until {time}. Send it only to the patient.",
+        "link_label": "Link",
+        "copy": "Copy link",
+        "link_copied": "Link copied.",
+        "copy_failed": "Could not copy. Select the link and copy it by hand.",
+        "send_sms": "Send by SMS",
+        "link_sent": "The link was sent to the patient's mobile.",
+        "close": "Close"
     },
     "labels": {
         "title": "Labels {number}",
@@ -287,6 +296,76 @@
             "tips": {
                 "1": "The sample ranges given are a start: your pathologist checks them."
             }
+        },
+        "commission": {
+            "title": "How to pay referring doctors",
+            "steps": {
+                "1": "Give each doctor their percent on their record (blank = the usual percent in the rules).",
+                "2": "Commission is counted by itself when the patient's bill is final.",
+                "3": "At month end open the doctor, check the orders and \"Record a payment\".",
+                "4": "A mistake? \"Take back\" that order's line with a reason."
+            },
+            "tips": {
+                "1": "Nothing is deleted: a taken-back line and every payment stay on record, and go into the books when Accounting is on."
+            }
+        }
+    },
+    "public": {
+        "print": "Print or save as PDF",
+        "try_again": "Try again",
+        "expired": "This link is old",
+        "expired_text": "Report links work for a limited time. Ask the lab to send you a new one.",
+        "not_found": "Report not found",
+        "not_found_text": "Check that the whole link was opened, or ask the lab for a new one."
+    },
+    "commissions": {
+        "title": "Doctors' commission",
+        "text": "What referring doctors earned once their patients' bills were final, and what they are owed now.",
+        "from": "From",
+        "to": "To",
+        "show": "Show",
+        "doctor": "Doctor",
+        "registration": "Registration no.",
+        "percent": "Percent",
+        "earned": "Earned in the period",
+        "owed": "Owed now",
+        "usual": "usual",
+        "empty": "No commission in this period",
+        "empty_text": "Commission is counted when a referred patient's bill is final. The usual percent is {percent}%; a doctor's own percent is set on their record."
+    },
+    "account": {
+        "text": "From {from} to {to}",
+        "back": "All doctors",
+        "not_found": "This doctor is not here",
+        "opening": "Owed at the start",
+        "earned": "Earned",
+        "paid": "Paid",
+        "closing": "Owed at the end",
+        "owed_now": "Owed today: {amount}",
+        "commissions": "Commission by order",
+        "no_commissions": "No commission in this period.",
+        "payouts": "Payments",
+        "no_payouts": "No payments in this period.",
+        "date": "Date",
+        "order": "Order",
+        "base": "Tests came to",
+        "percent": "Percent",
+        "amount": "Amount",
+        "actions": "Actions",
+        "taken_back": "Taken back",
+        "reverse": "Take back",
+        "reverse_text": "The commission of order {number} ({amount}) is taken back with a new line; the first stays on record.",
+        "reversed": "Commission taken back.",
+        "pay": "Record a payment",
+        "pay_text": "The doctor is owed {amount}. Pay at most that.",
+        "paid_ok": "Payment recorded.",
+        "method": "How",
+        "paid_on": "Paid on",
+        "note": "Note (optional)",
+        "methods": {
+            "cash": "Cash",
+            "bank": "Bank",
+            "mobile": "Mobile wallet"
         }
     }
 }

@@ -15,4 +15,8 @@ return [
     'results_verified' => 'Results verified',
     'results_sent_back' => 'Results sent back',
     'report_delivered' => 'Report given',
+    'report_link_made' => 'Report link made',
+    'commission_earned' => 'Commission earned',
+    'commission_reversed' => 'Commission taken back',
+    'commission_paid' => 'Commission paid',
 ];

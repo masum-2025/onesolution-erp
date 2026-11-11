@@ -143,5 +143,10 @@ return [
         'patient_billing.tax_output' => '2130',
         'patient_billing.refunds' => '4190',
         'patient_billing.cash_variance' => '5900',
+        'diagnostics.commission_expense' => '5900',
+        'diagnostics.commission_payable' => '2140',
+        'diagnostics.cash' => '1110',
+        'diagnostics.bank' => '1120',
+        'diagnostics.mobile' => '1130',
     ],
 ];
