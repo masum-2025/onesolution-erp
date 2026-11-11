@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ArrowLeft, Ban, FileText, FlaskConical, PenLine, Printer, ReceiptText, Send, ShieldCheck, Tags, Undo2 } from 'lucide-vue-next';
+import { ArrowLeft, Ban, Copy, FileText, FlaskConical, Link2, MessageSquare, PenLine, Printer, ReceiptText, Send, ShieldCheck, Tags, Undo2 } from 'lucide-vue-next';
 import { AppButton, AppField, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppDialog from '@/components/AppDialog.vue';
@@ -59,6 +59,21 @@ const save = (line) => run(() => lab.saveResults(line.id, { values: inputs[line.
 const verify = (line) => run(() => lab.verify(line.id), t('diagnostics.order.verified'));
 const deliver = () => run(() => lab.deliver(order.value.id, { channel: 'hand' }), t('diagnostics.order.delivered'));
 
+// A time-limited link to the verified report: copied, or texted to the patient.
+const sharing = ref(null);
+async function share(sms) {
+    const answer = await run(() => lab.link(order.value.id, { sms }), sms ? t('diagnostics.order.link_sent') : null);
+    if (answer) sharing.value = answer.data;
+}
+async function copyLink() {
+    try {
+        await navigator.clipboard.writeText(sharing.value.url);
+        toast.success(t('diagnostics.order.link_copied'));
+    } catch {
+        toast.error(t('diagnostics.order.copy_failed'));
+    }
+}
+
 // Send back or reject, both with a reason
 const asking = ref(null);
 const reason = ref('');
@@ -85,6 +100,7 @@ const editable = (line) => can.value.result && ['collected', 'resulted', 'verifi
             <AppButton v-if="can.collect && order.tests.some((line) => line.status === 'ordered')" variant="primary" :icon="FlaskConical" :loading="busy" @click="collect">{{ t('diagnostics.order.collect') }}</AppButton>
             <AppButton v-if="order.samples.length" :icon="Tags" @click="router.push({ name: 'diagnostics-labels', params: { id: order.id } })">{{ t('diagnostics.order.labels') }}</AppButton>
             <AppButton v-if="['verified', 'delivered'].includes(order.status)" :icon="Printer" @click="router.push({ name: 'diagnostics-report', params: { id: order.id } })">{{ t('diagnostics.order.report') }}</AppButton>
+            <AppButton v-if="can.deliver && ['verified', 'delivered'].includes(order.status)" :icon="Link2" :loading="busy" @click="share(false)">{{ t('diagnostics.order.link') }}</AppButton>
             <AppButton v-if="can.deliver && order.status === 'verified'" variant="primary" :icon="Send" :loading="busy" @click="deliver">{{ t('diagnostics.order.deliver') }}</AppButton>
             <AppButton v-if="order.bill_id && router.hasRoute('patient-billing-bill')" variant="ghost" :icon="ReceiptText" @click="router.push({ name: 'patient-billing-bill', params: { id: order.bill_id } })">{{ t('diagnostics.order.bill') }}</AppButton>
         </template>
@@ -148,6 +164,16 @@ const editable = (line) => can.value.result && ['collected', 'resulted', 'verifi
             </section>
             <p v-if="order.delivered_at" class="flex items-center gap-2 text-[13px] text-muted"><FileText class="size-4" aria-hidden="true" />{{ t('diagnostics.order.delivered_at', { time: formatDateTime(order.delivered_at) }) }}</p>
         </template>
+
+        <AppDialog :open="!!sharing" :title="t('diagnostics.order.link')" :description="sharing ? t('diagnostics.order.link_text', { time: formatDateTime(sharing.expires_at) }) : ''" :icon="Link2" @close="sharing = null">
+            <AppField v-slot="{ id }" :label="t('diagnostics.order.link_label')"><input :id="id" :value="sharing?.url" class="field-input font-mono text-[12px]" dir="ltr" readonly @focus="$event.target.select()" /></AppField>
+            <p v-if="sharing?.sent_by_sms" class="mt-2 text-[13px] text-ok" role="status">{{ t('diagnostics.order.link_sent') }}</p>
+            <template #footer>
+                <AppButton variant="ghost" @click="sharing = null">{{ t('diagnostics.order.close') }}</AppButton>
+                <AppButton v-if="!sharing?.sent_by_sms" :icon="MessageSquare" :loading="busy" @click="share(true)">{{ t('diagnostics.order.send_sms') }}</AppButton>
+                <AppButton variant="primary" :icon="Copy" @click="copyLink">{{ t('diagnostics.order.copy') }}</AppButton>
+            </template>
+        </AppDialog>
 
         <AppDialog :open="!!asking" :title="asking?.kind === 'reject' ? t('diagnostics.order.reject') : t('diagnostics.order.send_back')" :description="asking?.kind === 'reject' ? t('diagnostics.order.reject_text') : t('diagnostics.order.send_back_text')" :icon="asking?.kind === 'reject' ? Ban : Undo2" @close="asking = null">
             <AppField v-slot="{ id }" :label="t('diagnostics.order.reason')"><input :id="id" v-model="reason" class="field-input" maxlength="300" /></AppField>

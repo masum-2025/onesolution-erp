@@ -82,6 +82,7 @@ const PAGES_WITHOUT_FRAME = [
     'resources/js/pages/auth/InvitationPage.vue', 'resources/js/pages/auth/LegalPage.vue', 'resources/js/pages/auth/LoginPage.vue',
     'resources/js/pages/auth/SignupPage.vue', 'resources/js/pages/auth/WelcomePage.vue', 'resources/js/pages/portal/JoinPage.vue',
     'resources/js/pages/NotFoundPage.vue', 'resources/js/pages/ModuleAppPage.vue', 'Modules/Education/resources/js/pages/VerifyPage.vue',
+    'Modules/Diagnostics/resources/js/pages/PublicReportPage.vue',
     // Their own paper (an invoice, a receipt, a slip, a report card, a quotation, an offer, issued documents).
     'resources/js/pages/billing/InvoicePage.vue', 'Modules/Accounting/resources/js/pages/PortalInvoicePage.vue', 'Modules/Crm/resources/js/pages/QuotePage.vue',
     'Modules/Education/resources/js/pages/PrintPage.vue', 'Modules/EducationExams/resources/js/pages/PortalReportCardPage.vue',

@@ -24,11 +24,19 @@ export function labApi(organizationId) {
         deliver: (id, body) => api(`${base}/orders/${id}/deliver`, { method: 'POST', body }),
         parameters: (testId) => api(`${base}/tests/${testId}/parameters`),
         saveParameters: (testId, body) => api(`${base}/tests/${testId}/parameters`, { method: 'PUT', body }),
+        link: (id, body = {}) => api(`${base}/orders/${id}/link`, { method: 'POST', body }),
+        commissions: (query = {}) => api(`${base}/commissions`, { query }),
+        account: (referrerId, query = {}) => api(`${base}/referrers/${referrerId}/commissions`, { query }),
+        pay: (referrerId, body) => api(`${base}/referrers/${referrerId}/payouts`, { method: 'POST', body }),
+        reverse: (commissionId, body) => api(`${base}/commissions/${commissionId}/reverse`, { method: 'POST', body }),
     };
 }
 
 /** The portal: a patient's own verified reports. */
 export const portalReports = () => api('/api/portal/diagnostics/reports');
+
+/** A report opened from its link (no sign-in). */
+export const publicReport = (organization, token) => api(`/api/public/diagnostics/reports/${encodeURIComponent(organization)}/${encodeURIComponent(token)}`);
 
 /** The normal range as one short text: "13 – 17", "< 200", "Normal". */
 export function rangeText(range) {

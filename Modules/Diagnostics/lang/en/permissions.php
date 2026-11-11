@@ -8,4 +8,5 @@ return [
     'verify' => 'Verify and sign results',
     'deliver' => 'Give reports',
     'manage' => 'Set up tests, ranges and referring doctors',
+    'commission' => 'See and pay referring doctors\' commission',
 ];

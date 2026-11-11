@@ -18,6 +18,9 @@ class Delivery extends Model
 
     public const CHANNELS = ['print', 'hand'];
 
+    /** Recorded when a report link is made or sent by SMS (not chosen by hand). */
+    public const LINKS = ['link', 'sms'];
+
     public $timestamps = false;
 
     protected $table = 'diagnostics_deliveries';

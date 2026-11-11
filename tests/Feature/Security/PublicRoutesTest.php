@@ -40,6 +40,9 @@ const REVIEWED_PUBLIC_ROUTES = [
     // The QR check of an issued document (Education): throttled per address, one answer for every code that does
     // not verify, no private details.
     'GET api/public/education/verify/{organization}/{code}',
+    // A lab report from its time-limited link (Diagnostics): random token kept only as a hash, throttled per
+    // address, verified values only, expired 403 and every other miss the same 404.
+    'GET api/public/diagnostics/reports/{organization}/{token}',
     // Gateway notices: signature checked and verified with the gateway; throttled.
     'POST payments/{gateway}/notify', 'GET payments/{gateway}/return/{outcome}', 'POST payments/{gateway}/return/{outcome}',
     // TLS certificate check for the web server: answers only for verified domains.
