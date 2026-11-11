@@ -33,7 +33,8 @@
     "common": {
         "loading": "Loading…",
         "refresh": "Refresh",
-        "years": "{count} y"
+        "years": "{count} y",
+        "cancel": "Cancel"
     },
     "status": {
         "booked": "Booked",
@@ -142,7 +143,9 @@
         "text": "{date} · {count} waiting",
         "empty": "No patients for you today",
         "not_linked": "Your sign-in is not linked to a doctor",
-        "not_linked_text": "Ask the manager to pick you as the doctor's sign-in in \"Weekly schedules\"."
+        "not_linked_text": "Ask the manager to pick you as the doctor's sign-in in \"Weekly schedules\".",
+        "open": "Open",
+        "write": "Write"
     },
     "schedules": {
         "title": "Weekly schedules",
@@ -219,6 +222,142 @@
             "tips": {
                 "1": "The fee code is a service in \"Services and prices\" (Patient billing)."
             }
+        },
+        "consult": {
+            "title": "How to write a prescription",
+            "steps": {
+                "1": "Open the next patient.",
+                "2": "Write complaints, findings and diagnosis.",
+                "3": "Add medicines — suggestions appear as you type; or use a template.",
+                "4": "Advise tests.",
+                "5": "\"Finish and print\"."
+            },
+            "tips": {
+                "1": "A finished prescription is never changed: \"Amend\" with a reason makes a new revision.",
+                "2": "Lab tests go to the lab in one tap and onto the patient's bill."
+            },
+            "settings": "The prescription language (Bangla, English or both) is in the Outpatient settings."
+        },
+        "templates": {
+            "title": "How to use templates",
+            "steps": {
+                "1": "Save frequent medicines and advice under a name.",
+                "2": "Insert them in one tap while consulting."
+            },
+            "tips": {
+                "1": "Managers can make templates for every doctor."
+            }
         }
+    },
+    "sex": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+    },
+    "timing": {
+        "before_meal": "before meals",
+        "after_meal": "after meals",
+        "with_meal": "with meals",
+        "empty_stomach": "on an empty stomach",
+        "bedtime": "at bedtime",
+        "as_needed": "when needed"
+    },
+    "finding": {
+        "bp": "BP",
+        "pulse": "Pulse",
+        "temperature": "Temperature",
+        "weight": "Weight",
+        "spo2": "SpO₂",
+        "other": "Other findings"
+    },
+    "consult": {
+        "title": "Seeing {name}",
+        "back": "My patients",
+        "open_record": "Patient record",
+        "history": "Earlier visits",
+        "no_history": "No earlier visits.",
+        "templates": "Templates",
+        "template_used": "Template \"{name}\" put in.",
+        "revisions": "Revisions",
+        "revision": "revision {n}",
+        "superseded": "replaced",
+        "status": {
+            "draft": "Draft",
+            "finished": "Finished"
+        },
+        "complaints": "Complaints",
+        "findings": "Findings",
+        "diagnosis": "Diagnosis",
+        "advice": "Advice",
+        "follow_up": "Come back on",
+        "medicines": "Medicines",
+        "add_medicine": "Add a medicine",
+        "no_medicines": "No medicines yet.",
+        "medicine": "Medicine {n}",
+        "medicine_search": "Type a brand or generic name",
+        "medicine_write": "Medicine name and strength",
+        "dose": "Dose",
+        "duration": "For",
+        "duration_hint": "7 days",
+        "timing": "When",
+        "note": "Note",
+        "remove": "Remove",
+        "tests": "Tests",
+        "add_test": "Add a test",
+        "no_tests": "No tests advised.",
+        "lab_test": "From the lab",
+        "not_from_lab": "Not from the lab list",
+        "test": "Test {n}",
+        "save": "Save draft",
+        "saved": "Draft saved.",
+        "finish": "Finish and print",
+        "finished": "Consultation finished.",
+        "unsaved": "Changes not saved yet.",
+        "amend": "Amend",
+        "amend_title": "Amend this prescription?",
+        "amend_text": "A new revision starts from this one. The first stays on record and is replaced once the new one is finished.",
+        "amending": "Amending: {reason}",
+        "print": "Print prescription",
+        "send_tests": "Send {count} tests to the lab",
+        "tests_sent": "Tests sent to the lab; they are on the patient's bill.",
+        "tests_at_lab": "The lab tests have been sent."
+    },
+    "prescription": {
+        "title": "Prescription: {name}",
+        "back": "Back to the consultation",
+        "not_found": "No finished prescription for this serial",
+        "registration": "Reg. no.",
+        "patient": "Patient",
+        "age": "Age",
+        "complaints": "Complaints",
+        "findings": "Findings",
+        "diagnosis": "Diagnosis",
+        "tests": "Tests",
+        "advice": "Advice",
+        "follow_up": "Come back on",
+        "signature": "Signature"
+    },
+    "templates": {
+        "title": "Prescription templates",
+        "text": "Medicines, tests and advice you write often, put in with one tap while seeing a patient.",
+        "new": "New template",
+        "edit": "Change template",
+        "name": "Name",
+        "share": "For every doctor",
+        "save": "Save",
+        "saved": "Template saved.",
+        "shared": "Every doctor",
+        "mine": "Mine",
+        "counts": "{medicines} medicines · {tests} tests",
+        "remove": "Remove",
+        "remove_title": "Remove \"{name}\"?",
+        "remove_text": "Prescriptions written with it keep what was put in.",
+        "empty": "No templates yet",
+        "empty_text": "Tap \"New template\" and save the medicines and advice you give often."
+    },
+    "portal": {
+        "title": "My prescriptions",
+        "empty": "No prescriptions yet",
+        "empty_text": "Prescriptions show here once the doctor finishes them."
     }
 }

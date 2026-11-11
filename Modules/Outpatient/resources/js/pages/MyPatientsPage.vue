@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { RefreshCw, Stethoscope } from 'lucide-vue-next';
+import { FilePenLine, RefreshCw, Stethoscope } from 'lucide-vue-next';
 import { AppBadge, AppButton, PageFrame, toast } from '@/ui';
 import { useResource } from '@/lib/useResource';
 import { formatDate } from '@/lib/format';
@@ -56,7 +56,8 @@ async function step(row, to) {
                 </span>
                 <AppBadge :tone="statusTones[row.status]" dot>{{ t(`outpatient.status.${row.status}`) }}</AppBadge>
                 <AppButton v-if="row.next.includes('in')" size="sm" variant="primary" :loading="busy === row.id" :disabled="!!busy" @click="step(row, 'in')">{{ t('outpatient.step.in') }}</AppButton>
-                <AppButton v-if="row.next.includes('done')" size="sm" variant="secondary" :loading="busy === row.id" :disabled="!!busy" @click="step(row, 'done')">{{ t('outpatient.step.done') }}</AppButton>
+                <AppButton v-if="['in', 'done'].includes(row.status)" size="sm" :variant="row.status === 'in' ? 'primary' : 'ghost'" :icon="FilePenLine"
+                           @click="router.push({ name: 'outpatient-consult', params: { id: row.id } })">{{ row.status === 'done' ? t('outpatient.mine.open') : t('outpatient.mine.write') }}</AppButton>
             </li>
         </ul>
     </PageFrame>

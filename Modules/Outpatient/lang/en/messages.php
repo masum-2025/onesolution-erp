@@ -21,6 +21,17 @@ return [
         'cannot_move' => 'This serial cannot go to that step now. Reload the page to see where it is.',
         'desk_only' => 'Only the desk does this step. Ask the reception.',
         'own_patients_only' => 'You can move only your own patients\' serials.',
+        'consult_only' => 'Only doctors (permission to consult) write consultations.',
+        'serial_cancelled' => 'This serial was cancelled. Give a new serial first.',
+        'already_finished' => 'This consultation is finished. Use "Amend" with a reason to change it.',
+        'not_finished' => 'Finish the consultation first.',
+        'nothing_written' => 'Write a diagnosis, advice, a medicine or a test before finishing.',
+        'lab_off' => 'Diagnostics is off for this company, so tests cannot be sent to the lab.',
+        'no_lab_tests' => 'None of the advised tests is from the lab\'s list. Pick them from the list to send.',
+        'pharmacy_off' => 'Pharmacy is off for this company: write medicines by name.',
+        'template_not_found' => 'That template is not here. Reload the page.',
+        'shared_templates_managers' => 'Only managers make or change templates for every doctor.',
+        'not_linked' => 'Your sign-in is not a doctor\'s: ask the manager to link it, or make a shared template.',
     ],
     'validation' => [
         'taken' => 'Another record already has this. Use a different one.',
@@ -29,5 +40,10 @@ return [
         'overlap' => 'This session overlaps another of the same day. A doctor sits in one place at a time.',
         'not_staff' => 'Pick a staff member of this company.',
         'user_taken' => 'This person is already the sign-in of another doctor.',
+        'medicine' => 'This medicine is not in the pharmacy\'s list any more. Pick it again or write it by name.',
+        'test' => 'This test is not in the lab\'s list any more. Pick it again or write it by name.',
+    ],
+    'timeline' => [
+        'seen' => 'Seen by :doctor',
     ],
 ];

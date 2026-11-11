@@ -11,5 +11,6 @@ return [
     'menu_book' => 'Give a serial',
     'menu_mine' => 'My patients',
     'menu_schedules' => 'Weekly schedules',
+    'menu_templates' => 'Prescription templates',
     'new_serial' => 'Give a serial',
 ];
