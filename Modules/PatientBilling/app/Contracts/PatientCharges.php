@@ -37,4 +37,11 @@ interface PatientCharges
      * @return array{status: string, currency: ?string, lines: array<string, int>}|null
      */
     public function chargesOn(Organization $company, string $billId, string $sourceModule): ?array;
+
+    /**
+     * Takes a department's charge back off the bill while the bill is still open (the line is
+     * voided and kept on record). False when there is no such line or its bill is final or void:
+     * any refund is then made in billing.
+     */
+    public function withdraw(Organization $company, string $sourceModule, string $sourceType, string $sourceId, User $actor): bool;
 }

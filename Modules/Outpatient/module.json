@@ -1,0 +1,11 @@
+{
+    "name": "Outpatient",
+    "alias": "outpatient",
+    "description": "Doctors' chambers: weekly schedules, serials with the fee on the patient's bill, free follow-ups, the waiting-room screen and the doctor's own patient list.",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Outpatient\\Providers\\OutpatientServiceProvider"
+    ],
+    "files": []
+}
