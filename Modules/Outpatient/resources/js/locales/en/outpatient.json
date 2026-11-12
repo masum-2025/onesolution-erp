@@ -327,6 +327,7 @@
         "back": "Back to the consultation",
         "not_found": "No finished prescription for this serial",
         "registration": "Reg. no.",
+        "code": "Prescription code (scan at the pharmacy)",
         "patient": "Patient",
         "age": "Age",
         "complaints": "Complaints",

@@ -1,7 +1,7 @@
 {
     "sex": { "male": "Male", "female": "Female", "other": "Other" },
     "id_type": { "nid": "National ID", "birth_reg": "Birth registration", "passport": "Passport", "none": "None" },
-    "purpose": { "record": "opened the record", "history": "opened the history", "card": "opened the card" },
+    "purpose": { "record": "opened the record", "history": "opened the history", "card": "opened the card", "prescription": "opened a prescription at the pharmacy" },
     "sources": {
         "patients": "Registration",
         "patient_billing": "Billing",

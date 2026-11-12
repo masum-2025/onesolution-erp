@@ -2,6 +2,7 @@
 
 namespace Modules\Patients\Directory;
 
+use App\Models\User;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Modules\Patients\Contracts\PatientDirectory;
@@ -63,6 +64,14 @@ class Patients implements PatientDirectory
         $patient = $this->resolve($company, $patientId);
         if ($patient !== null) {
             $this->access->linkCarer($company, $patient->getKey(), $userId, $sourceModule);
+        }
+    }
+
+    public function recordLook(Organization $company, string $patientId, User $viewer, string $purpose): void
+    {
+        $patient = $this->resolve($company, $patientId);
+        if ($patient !== null) {
+            $this->access->logView($company, $patient, $viewer, $purpose);
         }
     }
 

@@ -39,6 +39,7 @@ class PharmacySales
         private Tills $tills,
         private Stock $stock,
         private AuditLogger $audit,
+        private PharmacyPrescriptions $prescriptions,
     ) {}
 
     /**
@@ -69,6 +70,10 @@ class PharmacySales
         }
 
         $prescription = array_filter(array_map(fn ($value) => is_string($value) ? trim($value) : $value, (array) ($data['prescription'] ?? [])), fn ($value) => $value !== null && $value !== '');
+        if (isset($prescription['consultation_id'])) {
+            // From a doctor's prescription: the patient and doctor as written there, not as typed at the counter.
+            $prescription = [...$prescription, ...array_filter($this->prescriptions->forSale($company, $unit, $prescription['consultation_id']), fn ($value) => $value !== null && $value !== '')];
+        }
         $byItem = $rows->mapWithKeys(fn (array $row) => [$row['medicine']->item_id => $row])->all();
         if ($this->rules->flag('block_expired_sale', $unit)) {
             $lines = $this->guard->allocate($company, $register->warehouse_id, $lines, array_keys($byItem), $this->rules->today($this->store->timezone($company))->toDateString(),
@@ -89,6 +94,7 @@ class PharmacySales
                 'total_minor' => (int) $sale->total_minor, 'currency' => $sale->currency_code, 'sold_at' => $sale->sold_at,
                 'patient_name' => $prescription['patient_name'] ?? null, 'prescription_ref' => $prescription['ref'] ?? null,
                 'prescriber_name' => $prescription['prescriber_name'] ?? null, 'prescriber_bmdc' => $prescription['prescriber_bmdc'] ?? null,
+                'consultation_id' => $prescription['consultation_id'] ?? null,
                 'has_controlled' => $controlled !== [], 'created_by' => $actor->getKey(), 'op_id' => $data['op_id'],
             ]);
             $link->save();

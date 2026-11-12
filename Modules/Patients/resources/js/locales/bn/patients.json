@@ -1,7 +1,7 @@
 {
     "sex": { "male": "পুরুষ", "female": "নারী", "other": "অন্যান্য" },
     "id_type": { "nid": "জাতীয় পরিচয়পত্র", "birth_reg": "জন্মনিবন্ধন", "passport": "পাসপোর্ট", "none": "নেই" },
-    "purpose": { "record": "record খুলেছেন", "history": "ইতিহাস খুলেছেন", "card": "কার্ড খুলেছেন" },
+    "purpose": { "record": "record খুলেছেন", "history": "ইতিহাস খুলেছেন", "card": "কার্ড খুলেছেন", "prescription": "ফার্মেসিতে প্রেসক্রিপশন খুলেছেন" },
     "sources": {
         "patients": "নিবন্ধন",
         "patient_billing": "বিল",

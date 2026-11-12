@@ -40,6 +40,8 @@ return [
         $rule('block_above_mrp', 'boolean', true, $toCompany, 'selling', 40, ['country_specific' => true]),
         $rule('controlled_requires_prescription', 'boolean', true, $toCompany, 'selling', 50, ['country_specific' => true, 'sensitive' => true]),
         $rule('sell_loose_pieces', 'boolean', true, $toBranch, 'selling', 60),
+        // How far back the counter finds doctors' prescriptions (Outpatient on).
+        $rule('prescription_days', 'integer', 30, $toBranch, 'selling', 65, ['schema' => ['minimum' => 1, 'maximum' => 365]]),
         $rule('number_prefixes', 'json', ['return' => 'SR'], $toCompany, 'numbering', 70, ['schema' => [
             'type' => 'object',
             'properties' => ['return' => ['type' => 'string', 'pattern' => '^[A-Za-z0-9]{1,6}$']],

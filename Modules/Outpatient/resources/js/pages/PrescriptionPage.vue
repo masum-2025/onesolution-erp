@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { ArrowLeft, FileText, Printer } from 'lucide-vue-next';
 import { AppButton, PageFrame } from '@/ui';
 import { useResource } from '@/lib/useResource';
+import { code128Modules } from '@/lib/barcode';
 import { formatDate } from '@/lib/format';
 import { currentOrganization } from '@/lib/session';
 import { loadNamespaces, t, tIn } from '@/lib/i18n';
@@ -32,6 +33,21 @@ watch(languages, async (list) => {
 const say = (key) => languages.value.map((locale) => tIn(locale, key)).join(' / ');
 const findingKeys = computed(() => Object.keys(paper.value?.findings ?? {}).filter((key) => paper.value.findings[key]));
 const printPaper = () => window.print();
+// The prescription's code as a barcode: the pharmacy counter scans it to sell from it.
+const code = computed(() => (paper.value?.id ? String(paper.value.id).toUpperCase() : ''));
+const barcode = computed(() => {
+    const modules = code.value ? code128Modules(code.value) : null;
+    if (!modules) return null;
+    const bars = [];
+    for (let index = 0; index < modules.length; index++) {
+        if (modules[index] !== '1') continue;
+        let width = 1;
+        while (modules[index + width] === '1') width++;
+        bars.push({ x: index + 10, width });
+        index += width - 1;
+    }
+    return { width: modules.length + 20, bars };
+});
 </script>
 
 <template>
@@ -61,6 +77,12 @@ const printPaper = () => window.print();
                 <span><span class="font-semibold">{{ say('outpatient.prescription.patient') }}:</span> {{ paper.serial.patient?.name }}</span>
                 <span dir="ltr">{{ paper.serial.patient?.mrn }}</span>
                 <span>{{ say('outpatient.prescription.age') }}: {{ paper.serial.patient?.age ?? '—' }}</span>
+                <span v-if="barcode" class="ms-auto text-center">
+                    <svg class="block h-[8mm] w-[46mm]" :viewBox="`0 0 ${barcode.width} 40`" preserveAspectRatio="none" role="img" :aria-label="say('outpatient.prescription.code')">
+                        <rect v-for="bar in barcode.bars" :key="bar.x" :x="bar.x" y="0" :width="bar.width" height="40" fill="#000" />
+                    </svg>
+                    <span class="block font-mono text-[6.5pt] tracking-tight" dir="ltr">{{ code }}</span>
+                </span>
             </p>
             <div class="mt-3 grid grid-cols-[38%_1fr] gap-4">
                 <div class="grid content-start gap-3 border-e border-black/30 pe-3">

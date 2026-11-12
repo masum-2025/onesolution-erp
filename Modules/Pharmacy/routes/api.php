@@ -30,6 +30,8 @@ Route::middleware(['auth:sanctum', 'org', 'module:inventory', 'module:pos', 'mod
         Route::get('medicines/{medicine}', [MedicineController::class, 'show']);
         Route::get('medicines/{medicine}/substitutes', [MedicineController::class, 'substitutes']);
         Route::get('counter/{register}', [SaleController::class, 'counter']);
+        Route::get('counter/{register}/prescriptions', [SaleController::class, 'prescriptions'])->middleware('throttle:pharmacy-reports');
+        Route::get('counter/{register}/prescriptions/{consultation}', [SaleController::class, 'prescription'])->middleware('throttle:pharmacy-reports');
         Route::get('sales', [SaleController::class, 'index']);
         Route::get('stock', StockController::class);
         Route::get('purchases', [PurchaseController::class, 'index']);

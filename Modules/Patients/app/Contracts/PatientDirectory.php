@@ -2,6 +2,7 @@
 
 namespace Modules\Patients\Contracts;
 
+use App\Models\User;
 use App\Platform\Tenancy\Models\Organization;
 use Carbon\CarbonImmutable;
 use Modules\Patients\Directory\PatientRecord;
@@ -37,4 +38,10 @@ interface PatientDirectory
 
     /** A member of staff now cares for the patient (used by patients.doctor_sees = own). */
     public function linkCarer(Organization $company, string $patientId, string $userId, string $sourceModule): void;
+
+    /**
+     * Writes in the patient's "who looked" log that this person opened something
+     * of theirs in another module (purpose: one of PatientView::PURPOSES).
+     */
+    public function recordLook(Organization $company, string $patientId, User $viewer, string $purpose): void;
 }

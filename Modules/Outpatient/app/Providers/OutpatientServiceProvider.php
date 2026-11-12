@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Outpatient\Contracts\Prescriptions;
+use Modules\Outpatient\Directory\Prescriptions as PrescriptionsDirectory;
 use Modules\Outpatient\Events\SerialBooked;
 use Modules\Outpatient\Listeners\SmsWhenSerialBooked;
 
@@ -18,6 +20,12 @@ class OutpatientServiceProvider extends ServiceProvider
 {
     /** Writes a person may send a minute. */
     private const WRITES_PER_MINUTE = 60;
+
+    public function register(): void
+    {
+        // Finished prescriptions for the pharmacy counter (medicines only, never the diagnosis).
+        $this->app->bind(Prescriptions::class, PrescriptionsDirectory::class);
+    }
 
     public function boot(): void
     {

@@ -13,6 +13,8 @@ return [
         'medicine_not_found' => 'That medicine does not exist here. Reload the page.',
         'register_not_found' => 'That counter does not exist here. Choose another counter.',
         'return_not_found' => 'That supplier return does not exist here. Reload the page.',
+        'prescription_not_found' => 'That prescription was not found: it may not be finished yet, be too old, or belong to another branch. Search by the patient\'s number or mobile.',
+        'prescriptions_off' => 'Outpatient is not on, so you cannot sell from a prescription. Find the medicines and add them.',
         'above_mrp' => ':medicine sells above its MRP. Lower its selling price in the medicine list, then sell again.',
         'prescription_needed' => ':medicine is a controlled medicine. Enter the patient\'s name and the doctor\'s BMDC number from the prescription.',
         'expired_stock' => 'Only expired stock of :medicine is left. Do not sell it: return it to the supplier, or sell a substitute.',
@@ -25,6 +27,7 @@ return [
     ],
     'validation' => [
         'taken' => 'Another record already has this. Use a different one.',
+        'prescription' => 'This prescription cannot be sold from. Find the prescription again, or sell without it.',
         'above_mrp' => 'The selling price cannot be above the MRP.',
         'medicine' => 'Choose a medicine from the list (in use).',
         'pack' => 'This medicine has no such pack: set its pieces per strip and strips per box first.',

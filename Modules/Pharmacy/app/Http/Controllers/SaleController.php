@@ -12,6 +12,7 @@ use Modules\Pharmacy\Http\Controllers\Concerns\FindsPharmacy;
 use Modules\Pharmacy\Http\PharmacyPresenter;
 use Modules\Pharmacy\Http\Requests\SaleRequest;
 use Modules\Pharmacy\Models\SaleLink;
+use Modules\Pharmacy\Services\PharmacyPrescriptions;
 use Modules\Pharmacy\Services\PharmacySales;
 use Modules\Pharmacy\Services\PharmacyStock;
 use Modules\Pharmacy\Services\PharmacyStore;
@@ -33,6 +34,7 @@ class SaleController extends Controller
         private PharmacyStock $stock,
         private PharmacyRules $rules,
         private PharmacyPresenter $presenter,
+        private PharmacyPrescriptions $prescriptions,
     ) {}
 
     public function counter(string $organization, string $register): JsonResponse
@@ -46,7 +48,37 @@ class SaleController extends Controller
             'near_expiry_days' => $this->rules->days('near_expiry_days', $branch),
             'sell_loose_pieces' => $this->rules->flag('sell_loose_pieces', $branch),
             'controlled_requires_prescription' => $this->rules->flag('controlled_requires_prescription', $branch),
+            'prescriptions_on' => $this->prescriptions->on($company),
+            'prescription_days' => $this->rules->days('prescription_days', $branch),
         ]]);
+    }
+
+    /** Doctors' prescriptions to sell from: by the printed code, or the patient's number, mobile or name. */
+    public function prescriptions(Request $request, string $organization, string $register): JsonResponse
+    {
+        [$company, $branch] = $this->sellingAt($organization, $register);
+        $term = $request->validate(['search' => ['required', 'string', 'min:2', 'max:60']])['search'];
+
+        return response()->json(['data' => $this->prescriptions->search($company, $branch, $term)]);
+    }
+
+    /** One prescription's medicines (opening it is written in the patient's "who looked" log). */
+    public function prescription(Request $request, string $organization, string $register, string $consultation): JsonResponse
+    {
+        [$company, $branch] = $this->sellingAt($organization, $register);
+
+        return response()->json(['data' => $this->prescriptions->show($company, $branch, $consultation, $request->user())]);
+    }
+
+    /** @return array{0: Organization, 1: Organization} The company and the counter's branch, where the person may sell. */
+    private function sellingAt(string $organization, string $register): array
+    {
+        [$unit, $company] = $this->workplace($organization);
+        $found = $this->counterIn($unit, $company, $register);
+        $branch = Organization::query()->findOrFail($found->unit_id);
+        abort_unless(Gate::allows('pharmacy.sell', $branch) && Gate::allows('pos.sell', $branch), 403);
+
+        return [$company, $branch];
     }
 
     public function store(SaleRequest $request, string $organization): JsonResponse
