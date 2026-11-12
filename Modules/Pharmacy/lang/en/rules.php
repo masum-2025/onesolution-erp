@@ -8,6 +8,7 @@ return [
     'block_above_mrp' => ['label' => 'Never sell above MRP', 'description' => 'A medicine\'s selling price cannot be above its printed MRP.'],
     'controlled_requires_prescription' => ['label' => 'Controlled medicines need a prescription', 'description' => 'Selling a controlled medicine needs the patient\'s name and the doctor\'s BMDC number; it goes into the controlled-drug register.'],
     'sell_loose_pieces' => ['label' => 'Sell loose pieces', 'description' => 'Allow selling single pieces of medicines that come in strips.'],
+    'prescription_days' => ['label' => 'Prescriptions found for', 'description' => 'How many days back the counter finds doctors\' prescriptions (with Outpatient on).'],
     'number_prefixes' => ['label' => 'Number prefixes', 'description' => 'The letters before the numbers of supplier returns (e.g. SR-2026-000001).'],
     'categories' => [
         'expiry' => 'Expiry',

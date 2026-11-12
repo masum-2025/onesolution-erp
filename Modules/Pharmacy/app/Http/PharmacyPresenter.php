@@ -80,6 +80,7 @@ class PharmacyPresenter
             'currency' => $link->currency,
             'sold_at' => $link->sold_at->toIso8601String(),
             'has_controlled' => $link->has_controlled,
+            'from_prescription' => $link->consultation_id !== null,
             // The patient and prescriber are health data: only for those who keep the controlled register.
             'prescription' => $withPrescription ? [
                 'patient_name' => $link->patient_name, 'prescriber_name' => $link->prescriber_name, 'prescriber_bmdc' => $link->prescriber_bmdc, 'ref' => $link->prescription_ref,

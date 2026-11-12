@@ -18,7 +18,7 @@ class PatientView extends Model
 {
     use BelongsToOrganization, HasUlids, UsesTenantDatabase;
 
-    public const PURPOSES = ['record', 'history', 'card'];
+    public const PURPOSES = ['record', 'history', 'card', 'prescription'];
 
     public $timestamps = false;
 

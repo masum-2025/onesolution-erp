@@ -5751,11 +5751,33 @@ Medicine shop on top of Inventory and POS (requires both). Plan: `docs/plans/hea
 - A new country or partner needs no code: MRP, expiry and prescription behaviour are rules (country or
   partner can set or lock them), texts are translations. A new sector turns the module on in its package.
 
+### Selling from a doctor's prescription (PH-2a)
+
+With Outpatient on for the company, the counter sells from a finished prescription.
+- Outpatient's contract `Modules\Outpatient\Contracts\Prescriptions` (`search`, `find`) gives only the
+  medicines, the doctor's name and registration no., the patient's name and the date. It never gives the
+  complaints, findings, diagnosis or advice, and never a draft. The code of a replaced revision answers
+  with the amendment once that is finished. Other branches are reached only when
+  `patients.share_between_branches` is on.
+- The printed prescription carries its code as a Code 128 barcode. `GET …/pharmacy/counter/{register}/prescriptions?search=`
+  finds prescriptions by that code or by the patient's number, mobile or name.
+  `GET …/counter/{register}/prescriptions/{id}` returns the medicines plus the counter's earlier sales of the
+  prescription. These need `pharmacy.sell` + `pos.sell` at the counter's branch and have a rate limit. Opening
+  a prescription writes a "prescription" line in the patient's "who looked" log (`PatientDirectory::recordLook`).
+- The screen puts the medicines in the cart with a suggested amount (dose × days, Bangla digits too). Medicines
+  that were written by hand, or are out of stock, are listed with "Find" or "Substitutes". An earlier sale
+  shows a warning; it does not block the sale.
+- A sale sends `prescription.consultation_id`. The server checks it and takes the patient and doctor
+  from the prescription, not from what was typed. `pharmacy_sale_links.consultation_id` is kept.
+- Rule `pharmacy.prescription_days` (30, company → branch): how far back prescriptions are found.
+- Outpatient off: the button is hidden, the lookups return 403 `prescriptions_off`, and a sale with a
+  prescription id is refused (422). Selling without a prescription goes on as before.
+
 ## Patients (module `patients`, H-1)
 
 One record per patient for the whole company (registered at a branch), its history, the "who looked" log and
 the patient portal. Other modules reach patients only through `Modules\Patients\Contracts\PatientDirectory`
-(`find`, `exists`, `label`, `search`, `addToTimeline`, `linkCarer`); a merged patient answers as the record it
+(`find`, `exists`, `label`, `search`, `addToTimeline`, `linkCarer`, `recordLook`); a merged patient answers as the record it
 was merged into.
 
 - Tables `patients_patients` (ID number and allergies encrypted; ID number also as a keyed hash),

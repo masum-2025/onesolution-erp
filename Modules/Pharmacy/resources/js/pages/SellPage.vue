@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, reactive, ref, watch } from 'vue';
-import { AlertTriangle, CloudOff, Minus, Pill, Plus, Printer, Repeat, ScanBarcode, ShieldAlert, Store, Trash2 } from 'lucide-vue-next';
+import { AlertTriangle, CloudOff, FileText, Minus, Pill, Plus, Printer, Repeat, ScanBarcode, Search, ShieldAlert, Store, Trash2, X } from 'lucide-vue-next';
 import { MoneyInput, PageFrame } from '@/ui';
 import AppBadge from '@/components/AppBadge.vue';
 import AppButton from '@/components/AppButton.vue';
@@ -16,12 +16,15 @@ import { can, currentOrganization } from '@/lib/session';
 import { toast } from '@/lib/toast';
 import { t } from '@/lib/i18n';
 import { packsOf, pharmacyApi, pieces, piecesIn } from '../api';
+import { suggestedLine, suggestedPieces } from '../prescription';
 
 /**
  * The pharmacy counter: find a medicine by brand or generic name (or scan it),
  * sell it by piece, strip or box from the good batch expiring first, take the
  * payment and print the POS receipt. Controlled medicines ask for the
  * prescription. The sale is a POS sale in the counter's open shift.
+ * With Outpatient on, a doctor's prescription (scanned code, or the patient)
+ * fills the cart with suggested quantities and the prescription's details.
  */
 const org = currentOrganization();
 const ph = pharmacyApi(org.id);
@@ -115,6 +118,63 @@ const substitutesOf = ref(null);
 const substitutes = computed(() => (substitutesOf.value ? medicines.value.filter((row) => row.medicine_id !== substitutesOf.value.medicine_id && row.generic_id === substitutesOf.value.generic_id
     && row.form === substitutesOf.value.form && row.strength === substitutesOf.value.strength) : []));
 
+// From a doctor's prescription: found by its printed code or the patient, its medicines put in the cart.
+const prescriptionsOn = computed(() => counter.data.value?.meta?.prescriptions_on ?? false);
+const fromRx = ref(null);
+const rx = reactive({ open: false, search: '', rows: null, busy: false, error: '' });
+function openRx() {
+    Object.assign(rx, { open: true, search: '', rows: null, error: '' });
+}
+async function findRx() {
+    const term = rx.search.trim();
+    if (term.length < 2 || rx.busy) return;
+    Object.assign(rx, { busy: true, error: '' });
+    try {
+        const rows = (await ph.prescriptions(register.value.id, term)).data;
+        rx.rows = rows;
+        // A scanned code opens it straight away.
+        if (rows.length === 1 && rows[0].id.toLowerCase() === term.toLowerCase()) await takeRx(rows[0].id);
+    } catch (error) {
+        rx.error = error.message;
+    } finally {
+        rx.busy = false;
+    }
+}
+async function takeRx(id) {
+    rx.busy = true;
+    try {
+        const found = (await ph.prescription(register.value.id, id)).data;
+        const missing = [];
+        for (const medicine of found.medicines) {
+            const row = medicine.medicine_id ? medicines.value.find((entry) => entry.medicine_id === medicine.medicine_id) : null;
+            const piecesWanted = suggestedPieces(medicine.dose, medicine.duration);
+            const line = row && row.sellable_milli ? suggestedLine(row, loose.value, piecesWanted) : null;
+            if (!line) {
+                missing.push({ ...medicine, row });
+                continue;
+            }
+            const same = cart.value.find((entry) => entry.medicine.medicine_id === row.medicine_id && entry.pack === line.pack);
+            if (same) same.quantity = Math.max(same.quantity, line.quantity);
+            else cart.value.push({ key: `${row.medicine_id}-${line.pack}-${Date.now()}`, medicine: row, pack: line.pack, quantity: line.quantity, prescribed: piecesWanted, dose: medicine.dose });
+        }
+        fromRx.value = { ...found, missing };
+        Object.assign(prescription, { patient_name: found.patient_name, prescriber_name: found.doctor_name, prescriber_bmdc: found.doctor_registration_no ?? '', ref: '' });
+        rx.open = false;
+    } catch (error) {
+        rx.error = error.message;
+    } finally {
+        rx.busy = false;
+    }
+}
+function dropRx() {
+    fromRx.value = null;
+    Object.assign(prescription, { patient_name: '', prescriber_name: '', prescriber_bmdc: '', ref: '' });
+}
+function findWritten(medicine) {
+    search.value = medicine.medicine_text;
+    nextTick(() => searchBox.value?.focus());
+}
+
 const floatAmount = ref(0);
 const opening = ref(false);
 async function openShift() {
@@ -146,6 +206,7 @@ async function complete() {
             return;
         }
         const filled = Object.fromEntries(Object.entries(prescription).filter(([, value]) => value.trim()));
+        if (fromRx.value) filled.consultation_id = fromRx.value.id;
         const sale = await ph.sell({
             op_id: opId, register_id: register.value.id, session_id: shift.value?.id ?? null,
             lines: cart.value.map((line, index) => ({ medicine_id: line.medicine.medicine_id, pack: line.pack, quantity: line.quantity, discount_minor: discounts[index] || 0 })),
@@ -185,6 +246,7 @@ async function sellOffline(opId, discounts, payment) {
 }
 function reset() {
     cart.value = [];
+    fromRx.value = null;
     discount.value = 0;
     Object.assign(prescription, { patient_name: '', prescriber_name: '', prescriber_bmdc: '', ref: '' });
     Object.assign(customer, { name: '', phone: '' });
@@ -241,6 +303,10 @@ const failed = computed(() => registers.error.value ?? catalogue.error.value ?? 
                     <ScanBarcode class="pointer-events-none absolute inset-y-0 start-3 my-auto size-5 text-muted" aria-hidden="true" />
                     <input ref="searchBox" v-model="search" class="field-input h-11 ps-10 text-[15px]" :placeholder="t('pharmacy.sell.search')" :aria-label="t('pharmacy.sell.search')" autofocus @keydown.enter.prevent="onEnter" />
                 </div>
+                <div v-if="prescriptionsOn" class="mt-2 flex flex-wrap items-center gap-2">
+                    <AppButton size="sm" :icon="FileText" :disabled="!offline.online" @click="openRx">{{ t('pharmacy.sell.from_rx') }}</AppButton>
+                    <span v-if="!offline.online" class="text-[12px] text-muted">{{ t('pharmacy.sell.rx_offline') }}</span>
+                </div>
                 <EmptyState v-if="!medicines.length" :icon="Pill" :title="t('pharmacy.sell.no_medicines')" :text="t('pharmacy.sell.no_medicines_text')" compact />
                 <ul v-else-if="found.length" class="mt-3 divide-y divide-line">
                     <li v-for="row in found" :key="row.medicine_id" class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
@@ -263,6 +329,30 @@ const failed = computed(() => registers.error.value ?? catalogue.error.value ?? 
             <!-- The sale -->
             <section class="card flex flex-col p-4" :aria-label="t('pharmacy.sell.cart')">
                 <h2 class="mb-2 text-[15px] font-semibold">{{ t('pharmacy.sell.cart') }}</h2>
+                <div v-if="fromRx" class="mb-3 rounded-xl border border-brand/30 bg-brand-soft p-3 text-[13px]" role="status">
+                    <div class="flex items-start gap-2">
+                        <FileText class="mt-0.5 size-4 shrink-0 text-brand-text" aria-hidden="true" />
+                        <span class="min-w-0 flex-1">
+                            <span class="block font-semibold">{{ fromRx.patient_name }} <span class="font-mono text-[12px] font-normal text-muted" dir="ltr">{{ fromRx.patient_mrn }}</span></span>
+                            <span class="block text-[12.5px] text-muted">{{ fromRx.doctor_name }} · {{ formatDate(fromRx.date) }}</span>
+                        </span>
+                        <button type="button" class="grid size-7 place-items-center rounded-lg text-muted hover:bg-subtle" :aria-label="t('pharmacy.sell.rx_remove')" @click="dropRx"><X class="size-4" aria-hidden="true" /></button>
+                    </div>
+                    <p v-if="fromRx.amended" class="mt-1.5 text-[12px] text-muted">{{ t('pharmacy.sell.rx_amended') }}</p>
+                    <p v-if="fromRx.earlier_sales.length" class="mt-1.5 flex items-start gap-1 text-[12.5px] font-medium text-warn">
+                        <AlertTriangle class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />{{ t('pharmacy.sell.rx_sold_before', { number: fromRx.earlier_sales[0].number, date: formatDate(fromRx.earlier_sales[0].sold_at) }) }}
+                    </p>
+                    <template v-if="fromRx.missing.length">
+                        <p class="mt-2 text-[12.5px] font-medium">{{ t('pharmacy.sell.rx_missing') }}</p>
+                        <ul class="mt-1 divide-y divide-brand/20">
+                            <li v-for="(medicine, index) in fromRx.missing" :key="index" class="flex flex-wrap items-center gap-2 py-1.5">
+                                <span class="min-w-0 flex-1">{{ medicine.medicine_text }} <span v-if="medicine.dose" class="text-muted">· {{ medicine.dose }}</span></span>
+                                <AppButton v-if="medicine.row" size="sm" variant="ghost" :icon="Repeat" @click="substitutesOf = medicine.row">{{ t('pharmacy.sell.substitutes') }}</AppButton>
+                                <AppButton v-else size="sm" variant="ghost" :icon="Search" @click="findWritten(medicine)">{{ t('pharmacy.sell.rx_find_medicine') }}</AppButton>
+                            </li>
+                        </ul>
+                    </template>
+                </div>
                 <p v-if="!cart.length" class="py-6 text-center text-[13px] text-muted">{{ t('pharmacy.sell.cart_empty') }}</p>
                 <ul v-else class="divide-y divide-line">
                     <li v-for="line in cart" :key="line.key" class="py-2.5">
@@ -282,6 +372,7 @@ const failed = computed(() => registers.error.value ?? catalogue.error.value ?? 
                             <button type="button" class="grid size-8 place-items-center rounded-lg border border-line" :aria-label="t('pharmacy.sell.more')" @click="line.quantity++"><Plus class="size-4" aria-hidden="true" /></button>
                             <span class="text-[12px] text-muted">= {{ t('pharmacy.sell.pieces', { count: formatNumber(linePieces(line)) }) }}</span>
                         </div>
+                        <p v-if="line.dose" class="mt-1 text-[12px] text-muted">{{ line.prescribed ? t('pharmacy.sell.rx_suggested', { dose: line.dose, count: formatNumber(line.prescribed) }) : t('pharmacy.sell.rx_dose', { dose: line.dose }) }}</p>
                         <p v-if="short(line)" class="mt-1 flex items-center gap-1 text-[12px] text-bad"><AlertTriangle class="size-3.5" aria-hidden="true" />{{ t('pharmacy.sell.short', { count: formatNumber(pieces(line.medicine.sellable_milli)) }) }}</p>
                     </li>
                 </ul>
@@ -289,14 +380,15 @@ const failed = computed(() => registers.error.value ?? catalogue.error.value ?? 
                 <fieldset v-if="hasControlled" class="mt-3 grid gap-2 rounded-xl border border-warn/40 bg-warn-soft p-3">
                     <legend class="px-1 text-[13px] font-semibold"><ShieldAlert class="me-1 inline size-4" aria-hidden="true" />{{ t('pharmacy.sell.prescription') }}</legend>
                     <AppField v-slot="{ id }" :label="t('pharmacy.sell.patient_name')" :error="errors['prescription.patient_name']?.[0]">
-                        <input :id="id" v-model="prescription.patient_name" class="field-input" maxlength="120" />
+                        <input :id="id" v-model="prescription.patient_name" class="field-input" maxlength="120" :readonly="!!fromRx" />
                     </AppField>
+                    <p v-if="fromRx" class="text-[12px] text-muted">{{ t('pharmacy.sell.rx_details') }}</p>
                     <div class="grid grid-cols-2 gap-2">
                         <AppField v-slot="{ id }" :label="t('pharmacy.sell.bmdc')" :error="errors['prescription.prescriber_bmdc']?.[0]">
-                            <input :id="id" v-model="prescription.prescriber_bmdc" class="field-input font-mono" dir="ltr" maxlength="20" placeholder="A-12345" />
+                            <input :id="id" v-model="prescription.prescriber_bmdc" class="field-input font-mono" dir="ltr" maxlength="20" placeholder="A-12345" :readonly="!!fromRx && !!fromRx.doctor_registration_no" />
                         </AppField>
                         <AppField v-slot="{ id }" :label="t('pharmacy.sell.doctor')" optional>
-                            <input :id="id" v-model="prescription.prescriber_name" class="field-input" maxlength="120" />
+                            <input :id="id" v-model="prescription.prescriber_name" class="field-input" maxlength="120" :readonly="!!fromRx" />
                         </AppField>
                     </div>
                 </fieldset>
@@ -333,6 +425,25 @@ const failed = computed(() => registers.error.value ?? catalogue.error.value ?? 
                 <p v-if="needsPrescription && !(prescription.patient_name.trim() && prescription.prescriber_bmdc.trim())" class="mt-2 text-center text-[12px] text-muted">{{ t('pharmacy.sell.prescription_hint') }}</p>
             </section>
         </div>
+
+        <AppDialog :open="rx.open" :title="t('pharmacy.sell.rx_title')" :icon="FileText" @close="rx.open = false">
+            <form class="flex gap-2" novalidate @submit.prevent="findRx">
+                <input v-model="rx.search" class="field-input" maxlength="60" :placeholder="t('pharmacy.sell.rx_search')" :aria-label="t('pharmacy.sell.rx_search')" data-autofocus />
+                <AppButton type="submit" variant="primary" :icon="Search" :loading="rx.busy" :disabled="rx.search.trim().length < 2">{{ t('pharmacy.sell.rx_find') }}</AppButton>
+            </form>
+            <p class="mt-1.5 text-[12px] text-muted">{{ t('pharmacy.sell.rx_hint', { days: formatNumber(counter.data.value?.meta?.prescription_days ?? 30) }) }}</p>
+            <p v-if="rx.error" class="mt-3 text-[13px] text-bad" role="alert">{{ rx.error }}</p>
+            <p v-else-if="rx.rows && !rx.rows.length" class="mt-3 text-[13.5px] text-muted">{{ t('pharmacy.sell.rx_none') }}</p>
+            <ul v-else-if="rx.rows" class="mt-3 divide-y divide-line">
+                <li v-for="row in rx.rows" :key="row.id" class="flex items-center gap-3 py-2.5">
+                    <span class="min-w-0 flex-1 text-[13.5px]">
+                        <span class="block font-medium">{{ row.patient_name }} <span class="font-mono text-[12px] font-normal text-muted" dir="ltr">{{ row.patient_mrn }}</span></span>
+                        <span class="block text-[12.5px] text-muted">{{ row.doctor_name }} · {{ formatDate(row.date) }}</span>
+                    </span>
+                    <AppButton size="sm" variant="primary" :disabled="rx.busy" @click="takeRx(row.id)">{{ t('pharmacy.sell.rx_take') }}</AppButton>
+                </li>
+            </ul>
+        </AppDialog>
 
         <AppDialog :open="!!substitutesOf" :title="t('pharmacy.sell.substitutes_of', { name: substitutesOf ? name(substitutesOf) : '' })" :icon="Repeat" @close="substitutesOf = null">
             <p v-if="!substitutes.length" class="text-[13.5px] text-muted">{{ t('pharmacy.sell.no_substitutes') }}</p>

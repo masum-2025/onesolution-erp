@@ -94,6 +94,12 @@ class PharmacyException extends TenancyException
         return new self('batch_short', 409, ['medicine' => $medicine, 'batch' => $batch]);
     }
 
+    /** Selling from a prescription needs Outpatient on for the company. */
+    public static function prescriptionsOff(): self
+    {
+        return new self('prescriptions_off', 403);
+    }
+
     /** Other records still use this one. */
     public static function inUse(): self
     {

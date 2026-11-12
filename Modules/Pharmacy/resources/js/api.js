@@ -18,6 +18,8 @@ export function pharmacyApi(organizationId) {
         updateMedicine: (id, body) => api(`${base}/medicines/${id}`, { method: 'PATCH', body }),
 
         counter: (registerId) => api(`${base}/counter/${registerId}`),
+        prescriptions: (registerId, search) => api(`${base}/counter/${registerId}/prescriptions`, { query: { search } }),
+        prescription: (registerId, id) => api(`${base}/counter/${registerId}/prescriptions/${id}`),
         sell: (body) => api(`${base}/sales`, { method: 'POST', body }),
         sales: (query = {}) => api(`${base}/sales`, { query }),
 

@@ -108,6 +108,22 @@
         "prescription_hint": "Enter the patient's name and the doctor's BMDC no. to sell a controlled medicine.",
         "substitutes_of": "Instead of {name}",
         "no_substitutes": "No other brand of the same generic and strength is in the list.",
+        "from_rx": "From a prescription",
+        "rx_offline": "Finding a prescription needs the internet.",
+        "rx_title": "Doctor's prescription",
+        "rx_search": "Scan the prescription's barcode, or the patient's number, mobile or name",
+        "rx_find": "Find",
+        "rx_hint": "Prescriptions finished in the last {days} days are found.",
+        "rx_none": "No prescription found. Check the number, or ask whether the doctor has finished the prescription.",
+        "rx_take": "Use",
+        "rx_remove": "Remove the prescription",
+        "rx_amended": "The doctor amended this one: the new prescription is shown.",
+        "rx_sold_before": "Already sold from this prescription ({number}, {date}). Ask whether the patient still has the medicines.",
+        "rx_missing": "Not added to the cart (not in the list, or out of stock):",
+        "rx_find_medicine": "Find",
+        "rx_suggested": "Dose {dose}: {count} pieces for the whole course (suggested)",
+        "rx_dose": "Dose {dose}",
+        "rx_details": "The patient and doctor come from the prescription.",
         "add": "Add",
         "controlled_offline": "Controlled medicines are not sold offline. Wait for the internet.",
         "offline_off": "Selling offline is switched off for this counter."
@@ -268,14 +284,16 @@
                 "2": "Tap Piece, Strip or Box; change the quantity with + and −.",
                 "3": "The batch expiring first (and still good) is sold for you. Red means it expires soon.",
                 "4": "Out of stock? Tap \"Substitutes\" to see other brands of the same generic.",
-                "5": "Take the payment (cash, card, bKash/Nagad) and print the receipt."
+                "5": "Take the payment (cash, card, bKash/Nagad) and print the receipt.",
+                "6": "Have the doctor's prescription? Tap \"From a prescription\", scan its barcode or type the patient's number: the medicines come into the cart in suggested amounts."
             },
             "tips": {
                 "1": "You cannot charge above the MRP, and expired batches are never sold.",
                 "2": "No internet? Keep selling; sales are sent when you are back online."
             },
             "mistakes": {
-                "1": "A controlled medicine needs the patient's name and the doctor's BMDC number."
+                "1": "A controlled medicine needs the patient's name and the doctor's BMDC number.",
+                "2": "The suggested amount is worked out from the dose and days only; ask how many days the patient wants and set the amount."
             },
             "settings": "Near-expiry days, loose pieces and the prescription rule are in the Pharmacy settings."
         },
